@@ -1,5 +1,6 @@
 channels:
   - conda-forge
   - nvidia
+  - https://conda.anaconda.org/sleap/label/dev
   - sleap
   - anaconda

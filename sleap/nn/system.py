@@ -48,7 +48,17 @@ def get_current_gpu() -> tf.config.PhysicalDevice:
 
 def use_cpu_only():
     """Hide GPUs from TensorFlow to ensure only the CPU is available."""
-    tf.config.set_visible_devices([], "GPU")
+    try:
+        tf.config.set_visible_devices([], "GPU")
+    except RuntimeError as ex:
+        if (
+            len(ex.args) > 0
+            and ex.args[0]
+            == "Visible devices cannot be modified after being initialized"
+        ):
+            print(
+                "Failed to set visible GPU. Visible devices cannot be modified after being initialized."
+            )
 
 
 def use_gpu(device_ind: int):
@@ -58,7 +68,17 @@ def use_gpu(device_ind: int):
         device_ind: Index of the GPU within the list of system GPUs.
     """
     gpus = get_all_gpus()
-    tf.config.set_visible_devices(gpus[device_ind], "GPU")
+    try:
+        tf.config.set_visible_devices(gpus[device_ind], "GPU")
+    except RuntimeError as ex:
+        if (
+            len(ex.args) > 0
+            and ex.args[0]
+            == "Visible devices cannot be modified after being initialized"
+        ):
+            print(
+                "Failed to set visible GPU. Visible devices cannot be modified after being initialized."
+            )
 
 
 def use_first_gpu():
@@ -159,7 +179,7 @@ def summary():
         for gpu in all_gpus:
             print(f"  Device: {gpu.name}")
             print(f"         Available: {gpu in gpus}")
-            print(f"        Initalized: {is_initialized(gpu)}")
+            print(f"       Initialized: {is_initialized(gpu)}")
             print(
                 f"     Memory growth: {tf.config.experimental.get_memory_growth(gpu)}"
             )

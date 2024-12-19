@@ -19,6 +19,19 @@ from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
 from sleap.gui.state import GuiState
 from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
+from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+
+
+def test_sleap_analysis_read(small_robot_3_frame_vid, small_robot_3_frame_hdf5):
+
+    # Single instance hdf5 analysis file test
+    read_labels = SleapAnalysisAdaptor.read(
+        file=small_robot_3_frame_hdf5, video=small_robot_3_frame_vid
+    )
+
+    assert len(read_labels.videos) == 1
+    assert len(read_labels.tracks) == 1
+    assert len(read_labels.skeletons) == 1
 
 
 def test_text_adaptor(tmpdir):
@@ -198,7 +211,6 @@ def test_matching_adaptor(centered_pair_predictions_hdf5_path):
     [
         "tests/data/dlc/labeled-data/video/madlc_testdata.csv",
         "tests/data/dlc/labeled-data/video/madlc_testdata_v2.csv",
-        "tests/data/dlc/madlc_230_config.yaml",
     ],
 )
 def test_madlc(test_data):
@@ -230,6 +242,78 @@ def test_madlc(test_data):
     assert_array_equal(labels[1][1].numpy(), [[17, 18], [np.nan, np.nan], [20, 21]])
     assert_array_equal(labels[2][0].numpy(), [[22, 23], [24, 25], [26, 27]])
     assert labels[2].frame_idx == 3
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        "tests/data/dlc/labeled-data/video/maudlc_testdata.csv",
+        "tests/data/dlc/labeled-data/video/maudlc_testdata_v2.csv",
+        "tests/data/dlc/madlc_230_config.yaml",
+    ],
+)
+def test_maudlc(test_data):
+    labels = read(
+        test_data,
+        for_object="labels",
+        as_format="deeplabcut",
+    )
+
+    assert labels.skeleton.node_names == ["A", "B", "C", "D", "E"]
+    assert len(labels.videos) == 1
+    assert len(labels.video.filenames) == 4
+    assert labels.videos[0].filenames[0].endswith("img000.png")
+    assert labels.videos[0].filenames[1].endswith("img001.png")
+    assert labels.videos[0].filenames[2].endswith("img002.png")
+    assert labels.videos[0].filenames[3].endswith("img003.png")
+
+    # Assert frames without any coor are not labeled
+    assert len(labels) == 3
+
+    # Assert number of instances per frame is correct
+    assert len(labels[0]) == 2
+    assert len(labels[1]) == 3
+    assert len(labels[2]) == 2
+
+    assert_array_equal(
+        labels[0][0].numpy(),
+        [[0, 1], [2, 3], [4, 5], [np.nan, np.nan], [np.nan, np.nan]],
+    )
+    assert_array_equal(
+        labels[0][1].numpy(),
+        [[6, 7], [8, 9], [10, 11], [np.nan, np.nan], [np.nan, np.nan]],
+    )
+    assert_array_equal(
+        labels[1][0].numpy(),
+        [[12, 13], [np.nan, np.nan], [15, 16], [np.nan, np.nan], [np.nan, np.nan]],
+    )
+    assert_array_equal(
+        labels[1][1].numpy(),
+        [[17, 18], [np.nan, np.nan], [20, 21], [np.nan, np.nan], [np.nan, np.nan]],
+    )
+    assert_array_equal(
+        labels[1][2].numpy(),
+        [[np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan], [22, 23], [24, 25]],
+    )
+    assert_array_equal(
+        labels[2][0].numpy(),
+        [[26, 27], [28, 29], [30, 31], [np.nan, np.nan], [np.nan, np.nan]],
+    )
+    assert_array_equal(
+        labels[2][1].numpy(),
+        [[np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan], [32, 33], [34, 35]],
+    )
+    assert labels[2].frame_idx == 3
+
+    # Assert tracks are correct
+    assert len(labels.tracks) == 3
+    sorted_animals = sorted(["Animal1", "Animal2", "single"])
+    assert sorted([t.name for t in labels.tracks]) == sorted_animals
+    for t in labels.tracks:
+        if t.name == "single":
+            assert t.spawned_on == 1
+        else:
+            assert t.spawned_on == 0
 
 
 @pytest.mark.parametrize(

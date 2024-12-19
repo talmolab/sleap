@@ -1,4 +1,5 @@
 """Run training/inference in background process via CLI."""
+
 import abc
 import attr
 import os
@@ -151,6 +152,7 @@ class ItemsForInference:
 
     items: List[ItemForInference]
     total_frame_count: int
+    batch_size: int
 
     def __len__(self):
         return len(self.items)
@@ -160,6 +162,7 @@ class ItemsForInference:
         cls,
         video_frames_dict: Dict[Video, List[int]],
         total_frame_count: int,
+        batch_size: int,
         labels: Labels,
         labels_path: Optional[str] = None,
     ):
@@ -174,7 +177,9 @@ class ItemsForInference:
                         video_idx=labels.videos.index(video),
                     )
                 )
-        return cls(items=items, total_frame_count=total_frame_count)
+        return cls(
+            items=items, total_frame_count=total_frame_count, batch_size=batch_size
+        )
 
 
 @attr.s(auto_attribs=True)
@@ -255,11 +260,19 @@ class InferenceTask:
             "tracking.max_tracking",
             "tracking.post_connect_single_breaks",
             "tracking.save_shifted_instances",
+            "tracking.oks_score_weighting",
         )
 
         for key in bool_items_as_ints:
             if key in self.inference_params:
                 self.inference_params[key] = int(self.inference_params[key])
+
+        remove_spaces_items = ("tracking.similarity",)
+
+        for key in remove_spaces_items:
+            if key in self.inference_params:
+                value = self.inference_params[key]
+                self.inference_params[key] = value.replace(" ", "_")
 
         for key, val in self.inference_params.items():
             if not key.startswith(("_", "outputs.", "model.", "data.")):
@@ -496,9 +509,11 @@ def write_pipeline_files(
                 "data_path": os.path.basename(data_path),
                 "models": [Path(p).as_posix() for p in new_cfg_filenames],
                 "output_path": prediction_output_path,
-                "type": "labels"
-                if type(item_for_inference) == DatasetItemForInference
-                else "video",
+                "type": (
+                    "labels"
+                    if type(item_for_inference) == DatasetItemForInference
+                    else "video"
+                ),
                 "only_suggested_frames": only_suggested_frames,
                 "tracking": tracking_args,
             }
@@ -540,6 +555,7 @@ def run_learning_pipeline(
     """
 
     save_viz = inference_params.get("_save_viz", False)
+    keep_viz = inference_params.get("_keep_viz", False)
 
     if "movenet" in inference_params["_pipeline"]:
         trained_job_paths = [inference_params["_pipeline"]]
@@ -550,8 +566,10 @@ def run_learning_pipeline(
             labels_filename=labels_filename,
             labels=labels,
             config_info_list=config_info_list,
+            inference_params=inference_params,
             gui=True,
             save_viz=save_viz,
+            keep_viz=keep_viz,
         )
 
         # Check that all the models were trained
@@ -577,8 +595,10 @@ def run_gui_training(
     labels_filename: str,
     labels: Labels,
     config_info_list: List[ConfigFileInfo],
+    inference_params: Dict[str, Any],
     gui: bool = True,
     save_viz: bool = False,
+    keep_viz: bool = False,
 ) -> Dict[Text, Text]:
     """
     Runs training for each training job.
@@ -588,19 +608,28 @@ def run_gui_training(
         config_info_list: List of ConfigFileInfo with configs for training.
         gui: Whether to show gui windows and process gui events.
         save_viz: Whether to save visualizations from training.
+        keep_viz: Whether to keep prediction visualization images after training.
 
     Returns:
         Dictionary, keys are head name, values are path to trained config.
     """
 
     trained_job_paths = dict()
-
+    zmq_ports = None
     if gui:
         from sleap.gui.widgets.monitor import LossViewer
         from sleap.gui.widgets.imagedir import QtImageDirectoryWidget
 
-        # open training monitor window
-        win = LossViewer()
+        zmq_ports = dict()
+        zmq_ports["controller_port"] = inference_params.get("controller_port", 9000)
+        zmq_ports["publish_port"] = inference_params.get("publish_port", 9001)
+
+        # Open training monitor window
+        win = LossViewer(zmq_ports=zmq_ports)
+
+        # Reassign the values in the inference parameters in case the ports were changed
+        inference_params["controller_port"] = win.zmq_ports["controller_port"]
+        inference_params["publish_port"] = win.zmq_ports["publish_port"]
         win.resize(600, 400)
         win.show()
 
@@ -664,10 +693,12 @@ def run_gui_training(
             # Run training
             trained_job_path, ret = train_subprocess(
                 job_config=job,
+                inference_params=inference_params,
                 labels_filename=labels_filename,
                 video_paths=video_path_list,
                 waiting_callback=waiting,
                 save_viz=save_viz,
+                keep_viz=keep_viz,
             )
 
             if ret == "success":
@@ -806,9 +837,11 @@ def run_gui_inference(
 def train_subprocess(
     job_config: TrainingJobConfig,
     labels_filename: str,
+    inference_params: Dict[str, Any],
     video_paths: Optional[List[Text]] = None,
     waiting_callback: Optional[Callable] = None,
     save_viz: bool = False,
+    keep_viz: bool = False,
 ):
     """Runs training inside subprocess."""
     run_path = job_config.outputs.run_path
@@ -829,10 +862,16 @@ def train_subprocess(
             training_job_path,
             labels_filename,
             "--zmq",
+            "--controller_port",
+            str(inference_params["controller_port"]),
+            "--publish_port",
+            str(inference_params["publish_port"]),
         ]
 
         if save_viz:
             cli_args.append("--save_viz")
+        if keep_viz:
+            cli_args.append("--keep_viz")
 
         # Use cli arg since cli ignores setting in config
         if job_config.outputs.tensorboard.write_logs:

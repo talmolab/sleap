@@ -16,7 +16,7 @@ source:
   path: ../
 
 build:
-  number: 1
+  number: 0
 
 requirements:
   host:
@@ -32,12 +32,12 @@ requirements:
     # unnecessary pypi packages are installed via the build script (bld.bat, build.sh)
     - conda-forge::attrs ==21.4.0
     - conda-forge::cattrs ==1.1.1
-    - conda-forge::h5py ==3.1  # [not win]
-    - conda-forge::imgaug ==0.4.0
+    - conda-forge::h5py ==3.7.0
+    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
-    - conda-forge::opencv
+    - conda-forge::opencv <4.9.0
     - conda-forge::pandas
     - conda-forge::pillow >=8.3.2
     - conda-forge::psutil
@@ -53,20 +53,24 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose <0.2.0
+    - conda-forge::importlib-metadata ==4.11.4
   run:
     - conda-forge::python ==3.7.12  # Run into _MAX_WINDOWS_WORKERS not found if <
     - conda-forge::attrs ==21.4.0
     - conda-forge::cattrs ==1.1.1
+    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
     - conda-forge::cudatoolkit ==11.3.1
     - conda-forge::cudnn=8.2.1
     - nvidia::cuda-nvcc=11.3
-    - conda-forge::h5py ==3.1  # [not win]
-    - conda-forge::imgaug ==0.4.0
+    - conda-forge::h5py ==3.7.0
     - conda-forge::jsmin
     - conda-forge::jsonpickle ==1.2
     - conda-forge::networkx
     - numpy >=1.19.5,<1.23.0  # Linux likes anaconda, windows likes conda-forge
-    - conda-forge::opencv
+    - conda-forge::opencv <4.9.0
     - conda-forge::pandas
     - conda-forge::pillow >=8.3.2
     - conda-forge::psutil
@@ -82,9 +86,15 @@ requirements:
     - conda-forge::scikit-learn ==1.0
     - conda-forge::scikit-video
     - conda-forge::seaborn
-    - sleap::tensorflow >=2.6.3,<2.11  # No windows GPU support for >2.10, sleap channel has 2.6.3
+    - sleap/label/dev::tensorflow ==2.7.0  # TODO: Switch to main label when updated
     - conda-forge::tensorflow-hub <0.14.0  # Causes pynwb conflicts on linux GH-1446
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose <0.2.0
+    - conda-forge::importlib-metadata ==4.11.4
 
-test:
-  imports:
-    - sleap
+# This no longer works so we have moved it to the build workflow
+# https://github.com/talmolab/sleap/pull/1744
+# test:
+#   imports:
+#     - sleap

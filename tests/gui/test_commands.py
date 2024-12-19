@@ -3,11 +3,15 @@ import shutil
 import sys
 import time
 
+import numpy as np
 from pathlib import PurePath, Path
+from qtpy import QtCore
 from typing import List
 
 from sleap import Skeleton, Track, PredictedInstance
+from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
+    AddInstance,
     CommandContext,
     ExportAnalysisFile,
     ExportDatasetWithImages,
@@ -16,6 +20,7 @@ from sleap.gui.commands import (
     ReplaceVideo,
     OpenSkeleton,
     SaveProjectAs,
+    DeleteFrameLimitPredictions,
     get_new_version_filename,
 )
 from sleap.instance import Instance, LabeledFrame
@@ -65,7 +70,7 @@ def test_import_labels_from_dlc_folder():
     assert len(labels.videos) == 2
     assert len(labels.skeletons) == 1
     assert len(labels.nodes) == 3
-    assert len(labels.tracks) == 0
+    assert len(labels.tracks) == 3
 
     assert set(
         [fix_path_separator(l.video.backend.filename) for l in labels.labeled_frames]
@@ -847,6 +852,26 @@ def test_LoadProjectFile(
         shutil.move(new_video_path, expected_video_path)
 
 
+def test_DeleteFrameLimitPredictions(
+    centered_pair_predictions: Labels, centered_pair_vid: Video
+):
+    """Test deleting instances beyond a certain frame limit."""
+    labels = centered_pair_predictions
+
+    # Set-up command context
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = centered_pair_vid
+
+    # Set-up params for the command
+    params = {"min_frame_idx": 900, "max_frame_idx": 1000}
+
+    instances_to_delete = DeleteFrameLimitPredictions.get_frame_instance_list(
+        context, params
+    )
+
+    assert len(instances_to_delete) == 2070
+
+
 @pytest.mark.parametrize("export_extension", [".json.zip", ".slp"])
 def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmpdir):
     def assert_loaded_package_similar(path_to_pkg: Path, sugg=False, pred=False):
@@ -922,3 +947,102 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
     # Case 3: Export all frames and suggested frames with image data.
     context.exportFullPackage()
     assert_loaded_package_similar(path_to_pkg, sugg=True, pred=True)
+
+
+def test_newInstance(qtbot, centered_pair_predictions: Labels):
+
+    # Get the data
+    labels = centered_pair_predictions
+    lf = labels[0]
+    pred_inst = lf.instances[0]
+    video = labels.video
+
+    # Set-up command context
+    main_window = MainWindow(labels=labels)
+    context = main_window.commands
+    context.state["labeled_frame"] = lf
+    context.state["frame_idx"] = lf.frame_idx
+    context.state["skeleton"] = labels.skeleton
+    context.state["video"] = labels.videos[0]
+
+    # Case 1: Double clicking a prediction results in no offset for new instance
+
+    # Double click on prediction
+    assert len(lf.instances) == 2
+    main_window._handle_instance_double_click(instance=pred_inst)
+
+    # Check new instance
+    assert len(lf.instances) == 3
+    new_inst = lf.instances[-1]
+    assert new_inst.from_predicted is pred_inst
+    assert np.array_equal(new_inst.numpy(), pred_inst.numpy())  # No offset
+
+    # Case 2: Using Ctrl + I (or menu "Add Instance" button)
+
+    # Connect the action to a slot
+    add_instance_menu_action = main_window._menu_actions["add instance"]
+    triggered = False
+
+    def on_triggered():
+        nonlocal triggered
+        triggered = True
+
+    add_instance_menu_action.triggered.connect(on_triggered)
+
+    # Find which instance we are going to copy from
+    (
+        copy_instance,
+        from_predicted,
+        from_prev_frame,
+    ) = AddInstance.find_instance_to_copy_from(
+        context, copy_instance=None, init_method="best"
+    )
+
+    # Click on the menu action
+    assert len(lf.instances) == 3
+    add_instance_menu_action.trigger()
+    assert triggered, "Action not triggered"
+
+    # Check new instance
+    assert len(lf.instances) == 4
+    new_inst = lf.instances[-1]
+    offset = 10
+    np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset)
+    assert np.all(
+        np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset) == offset
+    )
+
+    # Case 3: Using right click and "Default" option
+
+    # Find which instance we are going to copy from
+    (
+        copy_instance,
+        from_predicted,
+        from_prev_frame,
+    ) = AddInstance.find_instance_to_copy_from(
+        context, copy_instance=None, init_method="best"
+    )
+
+    video_player = main_window.player
+    right_click_location_x = video.shape[2] / 2
+    right_click_location_y = video.shape[1] / 2
+    right_click_location = QtCore.QPointF(
+        right_click_location_x, right_click_location_y
+    )
+    video_player.create_contextual_menu(scene_pos=right_click_location)
+    default_action = video_player._menu_actions["Default"]
+    default_action.trigger()
+
+    # Check new instance
+    assert len(lf.instances) == 5
+    new_inst = lf.instances[-1]
+    reference_node_idx = np.where(
+        np.all(
+            new_inst.numpy() == [right_click_location_x, right_click_location_y], axis=1
+        )
+    )[0][0]
+    offset = (
+        new_inst.numpy()[reference_node_idx] - copy_instance.numpy()[reference_node_idx]
+    )
+    diff = np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset)
+    assert np.all(diff == offset)

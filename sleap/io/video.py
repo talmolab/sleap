@@ -1118,8 +1118,9 @@ class Video:
 
     def get_frames_safely(self, idxs: Iterable[int]) -> Tuple[List[int], np.ndarray]:
         """Return list of frame indices and frames which were successfully loaded.
+        Args:
+            idxs: An iterable object that contains the indices of frames.
 
-        idxs: An iterable object that contains the indices of frames.
 
         Returns: A tuple of (frame indices, frames), where
             * frame indices is a subset of the specified idxs, and
@@ -1442,19 +1443,31 @@ class Video:
 
                 def encode(img):
                     _, encoded = cv2.imencode("." + format, img)
-                    return np.squeeze(encoded)
+                    return np.squeeze(encoded).astype("int8")
 
-                dtype = h5.special_dtype(vlen=np.dtype("int8"))
+                # pad with zeroes to guarantee int8 type in hdf5 file
+                frames = []
+                for i in range(len(frame_numbers)):
+                    frames.append(encode(frame_data[i]))
+
+                max_frame_size = (
+                    max([len(x) if len(x) else 0 for x in frames]) if len(frames) else 0
+                )
+
                 dset = f.create_dataset(
-                    dataset + "/video", (len(frame_numbers),), dtype=dtype
+                    dataset + "/video",
+                    (len(frame_numbers), max_frame_size),
+                    dtype="int8",
+                    compression="gzip",
                 )
                 dset.attrs["format"] = format
                 dset.attrs["channels"] = self.channels
                 dset.attrs["height"] = self.height
                 dset.attrs["width"] = self.width
 
-                for i in range(len(frame_numbers)):
-                    dset[i] = encode(frame_data[i])
+                for i, frame in enumerate(frames):
+                    dset[i, 0 : len(frame)] = frame
+
             else:
                 f.create_dataset(
                     dataset + "/video",
@@ -1532,22 +1545,17 @@ class Video:
             A cattr converter.
         """
 
-        # When we are structuring video backends, try to fixup the video file paths
-        # in case they are coming from a different computer or the file has been moved.
-        def fixup_video(x, cl):
-            if "filename" in x:
-                x["filename"] = Video.fixup_path(x["filename"])
-            if "file" in x:
-                x["file"] = Video.fixup_path(x["file"])
+        # Use from_filename to fixup the video path and determine backend
+        def fixup_video(x: dict, cl: Video):
+            backend_dict = x.pop("backend")
+            filename = backend_dict.pop("filename", None) or backend_dict.pop(
+                "file", None
+            )
 
-            return Video.make_specific_backend(cl, x)
+            return Video.from_filename(filename, **backend_dict)
 
         vid_cattr = cattr.Converter()
-
-        # Check the type hint for backend and register the video path
-        # fixup hook for each type in the Union.
-        for t in attr.fields(Video).backend.type.__args__:
-            vid_cattr.register_structure_hook(t, fixup_video)
+        vid_cattr.register_structure_hook(Video, fixup_video)
 
         return vid_cattr
 

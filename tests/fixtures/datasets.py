@@ -42,6 +42,13 @@ def centered_pair_predictions():
 
 
 @pytest.fixture
+def centered_pair_predictions_sorted(centered_pair_predictions):
+    labels: Labels = centered_pair_predictions
+    labels.labeled_frames.sort(key=lambda lf: lf.frame_idx)
+    return labels
+
+
+@pytest.fixture
 def min_labels():
     return Labels.load_file(TEST_JSON_MIN_LABELS)
 
@@ -87,6 +94,20 @@ def siv_robot_caching():
 def min_tracks_2node_labels():
     return Labels.load_file(
         TEST_MIN_TRACKS_2NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"]
+    )
+
+
+@pytest.fixture
+def min_tracks_2node_predictions():
+    """
+    Generated with:
+    ```
+    sleap-track -m "tests/data/models/min_tracks_2node.UNet.bottomup_multiclass" "tests/data/tracks/clip.mp4"
+    ```
+    """
+    return Labels.load_file(
+        "tests/data/tracks/clip.predictions.slp",
+        video_search=["tests/data/tracks/clip.mp4"],
     )
 
 

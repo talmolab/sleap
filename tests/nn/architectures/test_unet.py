@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from sleap.nn.system import use_cpu_only
 
-use_cpu_only()  # hide GPUs for test
+# use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.architectures import unet
 from sleap.nn.config import UNetConfig
