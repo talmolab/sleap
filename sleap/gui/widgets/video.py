@@ -2157,13 +2157,13 @@ class QtInstance(QGraphicsObject):
                 if qt_inst.instance == new_instance:
                     self.player.view.updatedSelection.disconnect(on_selection_update)
 
-                    print("Setting flag")
                     # Set this QtInstance to be movable
                     qt_inst.setFlag(QGraphicsItem.ItemIsMovable)
 
                     # Optionally grab the mouse and change cursor, so user can immediately drag
                     qt_inst.setCursor(Qt.ClosedHandCursor)
                     qt_inst.grabMouse()
+                    qt_inst.updateBox()
                     break
 
         self.player.view.updatedSelection.connect(on_selection_update)
@@ -2181,6 +2181,9 @@ class QtInstance(QGraphicsObject):
         """Custom event handler to emit signal on event."""
         if self.flags() & QGraphicsItem.ItemIsMovable:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
+            self.setCursor(Qt.ArrowCursor)
+            self.updatePoints(user_change=True)
+            self.updateBox()
             self.ungrabMouse()
             super().mouseReleaseEvent(event)
 
