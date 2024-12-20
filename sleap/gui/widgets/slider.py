@@ -384,10 +384,6 @@ class VideoSlider(QtWidgets.QGraphicsView):
         val *= max(1, self._val_max - self._val_min)
         val += self._val_min
         val = round(val)
-
-        # Clamp value to ensure it stays within valid range
-        val = max(self._val_min, min(val, self._val_max))
-
         return val
 
     @property
