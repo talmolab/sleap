@@ -611,6 +611,13 @@ class VisualPredictor(Predictor):
 
         return cls(config=cfg, model=model)
 
+    def _initialize_inference_model(self):
+        """Initialize the inference model from the trained model and configuration."""
+        pass
+
+    def is_grayscale(self) -> bool:
+        return self.model.keras_model.input.shape[-1] == 1
+
     def head_specific_output_keys(self) -> List[Text]:
         keys = []
 
