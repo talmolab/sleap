@@ -1563,17 +1563,28 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
         for inst in lf.instances:
             inst.track = None
 
-        track_args = dict(untracked_instances=lf.instances)
+        # Prefer user instances over predicted instances
+        instances = []
+        if lf.has_user_instances:
+            instances_to_track = lf.user_instances
+            if lf.has_predicted_instances:
+                instances = lf.predicted_instances
+        else:
+            instances_to_track = lf.predicted_instances
+
+        track_args = {"untracked_instances": instances_to_track}
+
         if tracker.uses_image:
             track_args["img"] = lf.video[lf.frame_idx]
         else:
             track_args["img"] = None
         track_args["img_hw"] = lf.image.shape[-3:-1]
 
+        instances.extend(tracker.track(**track_args))
         new_lf = LabeledFrame(
             frame_idx=lf.frame_idx,
             video=lf.video,
-            instances=tracker.track(**track_args),
+            instances=instances,
         )
         new_lfs.append(new_lf)
 

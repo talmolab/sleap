@@ -357,6 +357,7 @@ class Instance:
         frame: A back reference to the :class:`LabeledFrame` that this
             :class:`Instance` belongs to. This field is set when
             instances are added to :class:`LabeledFrame` objects.
+        tracking_score: The instance-level track matching score.
     """
 
     skeleton: Skeleton = attr.ib()
@@ -368,6 +369,8 @@ class Instance:
 
     # The underlying Point array type that this instances point array should be.
     _point_array_type = PointArray
+
+    tracking_score: float = attr.ib(default=0.0, converter=float)
 
     @from_predicted.validator
     def _validate_from_predicted_(
@@ -662,7 +665,8 @@ class Instance:
             f"video={self.video}, "
             f"frame_idx={self.frame_idx}, "
             f"points=[{pts}], "
-            f"track={self.track}"
+            f"track={self.track}, "
+            f"tracking_score={self.tracking_score:.2f}"
             ")"
         )
 
@@ -998,11 +1002,9 @@ class PredictedInstance(Instance):
 
     Args:
         score: The instance-level grouping prediction score.
-        tracking_score: The instance-level track matching score.
     """
 
     score: float = attr.ib(default=0.0, converter=float)
-    tracking_score: float = attr.ib(default=0.0, converter=float)
 
     # The underlying Point array type that this instances point array should be.
     _point_array_type = PredictedPointArray
@@ -1453,7 +1455,7 @@ class LabeledFrame:
         """Return number of instances associated with frame."""
         return len(self.instances)
 
-    def __getitem__(self, index) -> Instance:
+    def __getitem__(self, index) -> Union[Instance, PredictedInstance]:
         """Return instance (retrieved by index)."""
         return self.instances.__getitem__(index)
 
