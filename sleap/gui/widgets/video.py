@@ -1571,7 +1571,7 @@ class QtNode(QGraphicsEllipseItem):
                 self.parentObject().updatePoints(complete=True, user_change=True)
             # Ctrl-click to duplicate instance
             elif event.modifiers() == Qt.ControlModifier:
-                self.parentObject().duplicate_instance()
+                self.parentObject().mousePressEvent(event)
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
@@ -2150,16 +2150,13 @@ class QtInstance(QGraphicsObject):
         )[0]
         new_instance = lf.instances[-1]
 
-        if not new_instance:
-            return
-
         # Select the duplicated QtInstance object
         self.player.state["instance"] = new_instance
 
         # Refresh the plot
         self.player.plot()
 
-        # Track if the new instance is connected for cleanu
+        # Track if the new instance is connected for clean up
         callback_connected = False
 
         def on_selection_update():
