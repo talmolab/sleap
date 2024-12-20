@@ -2146,7 +2146,28 @@ class QtInstance(QGraphicsObject):
 
         # Select the duplicated QtInstance object
         self.player.state["instance"] = new_instance
+
+        # Refresh the plot
         self.player.plot()
+
+        def on_selection_update():
+            """Callback to set the new QtInstance to be movable."""
+            # Find the QtInstance corresponding to the newly created instance
+            for qt_inst in self.player.view.all_instances:
+                if qt_inst.instance == new_instance:
+                    self.player.view.updatedSelection.disconnect(on_selection_update)
+
+                    print("Setting flag")
+                    # Set this QtInstance to be movable
+                    qt_inst.setFlag(QGraphicsItem.ItemIsMovable)
+
+                    # Optionally grab the mouse and change cursor, so user can immediately drag
+                    qt_inst.setCursor(Qt.ClosedHandCursor)
+                    qt_inst.grabMouse()
+                    break
+
+        self.player.view.updatedSelection.connect(on_selection_update)
+        self.player.view.updatedSelection.emit()
 
     def mouseMoveEvent(self, event):
         """Custom event handler to emit signal on event."""
