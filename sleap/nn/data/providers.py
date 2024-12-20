@@ -6,6 +6,7 @@ import attr
 from typing import Text, Optional, List, Sequence, Union, Tuple
 import sleap
 from sleap.instance import Instance
+from sleap.nn.data.utils import filter_oob_points
 
 
 @attr.s(auto_attribs=True)
@@ -199,8 +200,6 @@ class LabelsReader:
             raw_image = lf.image
             raw_image_size = np.array(raw_image.shape).astype("int32")
 
-            height, width = raw_image_size[:2]
-
             if self.user_instances_only:
                 insts = lf.user_instances
             else:
@@ -211,11 +210,7 @@ class LabelsReader:
             for inst in insts:
 
                 # Filter OOB
-                pts = inst.numpy()
-                pts[pts < 0] = np.NaN
-
-                pts[:, 0][pts[:, 0] > width - 1] = np.NaN
-                pts[:, 1][pts[:, 1] > height - 1] = np.NaN
+                pts = filter_oob_points(inst.numpy(), raw_image_size[:2])
 
                 instance = Instance.from_numpy(pts, inst.skeleton, inst.track)
 
