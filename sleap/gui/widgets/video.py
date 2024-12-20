@@ -2126,9 +2126,7 @@ class QtInstance(QGraphicsObject):
         return super().hoverLeaveEvent(event)
 
     def mousePressEvent(self, event):
-        """Custom event handler for mouse press.
-
-        This method is called when the user clicks on the labeled instance."""
+        """Custom event handler for mouse press."""
         if event.buttons() == Qt.LeftButton:
             if event.modifiers() == Qt.ControlModifier:
                 self._duplicate_instance()
@@ -2185,8 +2183,9 @@ class QtInstance(QGraphicsObject):
         """Custom event handler to emit signal on event."""
         is_move = self.flags() & QGraphicsItem.ItemIsMovable
         is_ctrl_pressed = (event.modifiers() & Qt.ControlModifier) == Qt.ControlModifier
+        is_alt_pressed = (event.modifiers() & Qt.AltModifier) == Qt.AltModifier
 
-        if is_move and is_ctrl_pressed:
+        if is_move and (is_ctrl_pressed or is_alt_pressed):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
