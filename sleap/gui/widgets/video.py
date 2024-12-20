@@ -2140,6 +2140,7 @@ class QtInstance(QGraphicsObject):
         if self.player.context is None:
             return
 
+        # Copy the instance and add it to the context
         context = self.player.context
         context.newInstance(copy_instance=self.instance)
 
@@ -2148,6 +2149,9 @@ class QtInstance(QGraphicsObject):
             context.state["video"], context.state["frame_idx"], return_new=True
         )[0]
         new_instance = lf.instances[-1]
+
+        if not new_instance:
+            return
 
         # Select the duplicated QtInstance object
         self.player.state["instance"] = new_instance
