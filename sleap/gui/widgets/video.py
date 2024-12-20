@@ -2135,39 +2135,18 @@ class QtInstance(QGraphicsObject):
         """Duplicate the instance and add it to the scene."""
         scene = self.scene()
 
-        # Create a new instance by copying this one
-        new_instance = Instance.from_numpy(
-            self.instance.numpy(), skeleton=self.skeleton
-        )
-        new_instance.track = None
-
         # Add instance to the context
         context = self.player.context
-        current_frame = self.player.state["labeled_frame"]
-        if context:
-            context.labels.labeled_frames.insert(
-                self.player.state["frame_idx"], new_instance
-            )
-            context.labels.add_instance(current_frame, new_instance)
+        context.newInstance(copy_instance=self.instance)
 
-        # Create a new QtInstance object for the new instance
-        new_instance_gui = QtInstance(
-            instance=new_instance,
-            player=self.player,
-            markerRadius=self.markerRadius,
-            nodeLabelSize=self.nodeLabelSize,
-            show_non_visible=self.show_non_visible,
-        )
-        scene.addItem(new_instance_gui)
-        self.player.update_plot()
+        lf = context.labels.find(
+            context.state["video"], context.state["frame_idx"], return_new=True
+        )[0]
+        new_instance = lf.instances[-1]
 
         # Select the duplicated QtInstance object
-        new_instance_gui.setFlag(QGraphicsItem.ItemIsMovable)
-        new_instance_gui.setTransformOriginPoint(self.pos())
-        new_instance_gui.setSelected(True)
-        new_instance_gui.setCursor(Qt.ClosedHandCursor)
-        new_instance_gui.grabMouse()
         self.player.state["instance"] = new_instance
+        self.player.plot()
 
     def mouseMoveEvent(self, event):
         """Custom event handler to emit signal on event."""
