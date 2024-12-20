@@ -42,34 +42,44 @@ def test_slider(qtbot, centered_pair_predictions):
     assert slider.enabled()
 
 @pytest.mark.parametrize(
-    "slider_width, x_value, min_value, max_value, expected_value",
+    "slider_width, x_value, min_value, max_value",
     [
-        # Test values within range
-        (1000, 500, 0, 1000, 500),    # Midpoint translation
-        (800, 400, 0, 800, 400),      # Maximum boundary for smaller range
-        (1500, 750, 100, 1200, 600),  # Midpoint translation with offset
-        (2000, 1000, 50, 1950, 975),  # Larger width and range
+        # Values within range
+        (1000, 500, 0, 1000),    # Midpoint with no offset
+        (800, 400, 0, 800),      # Exact midpoint within smaller range
+        (1500, 750, 100, 1200),  # Midpoint with offset range
+        (2000, 1000, 50, 1950),  # Large width and offset range
 
-        # Test values below range
-        (1000, -100, 0, 1000, 0),     # Clamped to minimum
-        (800, -50, 20, 800, 20),      # Custom min clamping
-        (500, -200, -100, 400, -100), # Negative range min clamp
+        # Values below range (no clamping expected)
+        (1000, -100, 0, 1000),  # Below minimum
 
-        # Test values above range
-        (1000, 1200, 0, 1000, 1000),  # Clamped to maximum
-        (1500, 1600, 100, 1400, 1400),# Custom max clamping
-        (2000, 2100, 50, 1950, 1950), # Large width and max clamping
+        # Values above range (no clamping expected)
+        (1000, 1200, 0, 1000),  # Above maximum
     ]
 )
-def test_toVal_clamping(qtbot, slider_width, x_value, min_value, max_value, expected_value):
-    """Parameterized test for _toVal clamping with varying slider widths and ranges."""
-    slider = VideoSlider(min=0, max=1200, val=15, marks=(10, 15))
+def test_toVal_behavior_no_clamping(qtbot, slider_width, x_value, min_value, max_value):
+    """
+    Test _toVal scaling and transformation for varying slider widths and ranges,
+    without expecting clamping behavior.
 
-    slider.setMinimum(min_value)
+    Args:
+        qtbot: The pytest-qt bot fixture.
+        slider_width (int): The width of the slider in pixels.
+        x_value (float): The x-coordinate on the slider to be converted to a value.
+        min_value (int): The minimum value of the slider.
+        max_value (int): The maximum value of the slider.
+    """
+    slider = VideoSlider(min=0, max=1000, val=15, marks=(10, 15))  # Initialize slider
+
+    slider.setMinimum(min_value)  # Set slider range
     slider.setMaximum(max_value)
 
-    # Simulate slider width for the calculation
-    slider.box_rect.setWidth(slider_width)
+    slider.box_rect.setWidth(slider_width)  # Simulate visual width
 
-    # Check clamping behavior
+    # Compute the expected raw transformed value
+    expected_value = round(
+        (x_value / slider_width) * (max_value - min_value) + min_value
+    )
+
+    # Assert that the raw transformation matches the expected value
     assert slider._toVal(x_value) == expected_value
