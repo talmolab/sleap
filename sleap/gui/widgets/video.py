@@ -2133,6 +2133,9 @@ class QtInstance(QGraphicsObject):
         if event.buttons() == Qt.LeftButton:
             if event.modifiers() == Qt.ControlModifier:
                 self.duplicate_instance()
+            else:
+                # Default behavior is to select the instance
+                super(QtInstance, self).mousePressEvent(event)
 
     def duplicate_instance(self):
         """Duplicate the instance and add it to the scene."""
