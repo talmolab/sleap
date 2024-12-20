@@ -1198,6 +1198,25 @@ class PredictedInstance(Instance):
         )
 
 
+def convert_to_predicted_instance(
+    inst: Union[Instance, PredictedInstance],
+    *,
+    score: float = 1.0,
+    tracking_score: float = 0.0,
+) -> PredictedInstance:
+    """Convert an Instance to a PredictedInstance, if it's not one already.
+
+    Score is by default 1.0, like a user-defined instance.
+    """
+    if isinstance(inst, PredictedInstance):
+        return inst
+
+    kwargs = attr.asdict(inst)
+    kwargs["score"] = score
+    kwargs["tracking_score"] = tracking_score
+    return PredictedInstance(**kwargs)
+
+
 def make_instance_cattr() -> cattr.Converter:
     """Create a cattr converter for Lists of Instances/PredictedInstances.
 

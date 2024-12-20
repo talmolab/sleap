@@ -1,6 +1,6 @@
 """Tracking tools for linking grouped instances over time."""
 
-from collections import deque, defaultdict
+from collections import deque
 import abc
 import attr
 import numpy as np
@@ -9,6 +9,7 @@ import functools
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 
 from sleap import Track, LabeledFrame, Skeleton
+from sleap.instance import convert_to_predicted_instance
 
 from sleap.nn.tracker.components import (
     factory_object_keypoint_similarity,
@@ -580,6 +581,7 @@ class Tracker(BaseTracker):
     robust_best_instance: float = 1.0
 
     min_new_track_points: int = 0
+    only_predicted_instances: bool = True
 
     track_matching_queue: Deque[MatchedFrameInstances] = attr.ib()
 
@@ -639,6 +641,28 @@ class Tracker(BaseTracker):
     def uses_image(self):
         return getattr(self.candidate_maker, "uses_image", False)
 
+    def infer_next_timestep(self, t: Optional[int] = None) -> int:
+        """Infer timestep if not provided."""
+        # Timestep was provided
+        if t is not None:
+            return t
+
+        if self.has_max_tracking and len(self.track_matching_queue_dict) > 0:
+            # Default to last timestep + 1 if available.
+            # Here we find the track that has the most instances.
+            track_with_max_instances = max(
+                self.track_matching_queue_dict,
+                key=lambda track: len(self.track_matching_queue_dict[track]),
+            )
+            return 1 + self.track_matching_queue_dict[track_with_max_instances][-1].t
+
+        # Default to last timestep + 1 if available.
+        if not self.has_max_tracking and len(self.track_matching_queue) > 0:
+            return self.track_matching_queue[-1].t + 1
+
+        # Default to 0
+        return 0
+
     def track(
         self,
         untracked_instances: List[InstanceType],
@@ -667,31 +691,7 @@ class Tracker(BaseTracker):
             return untracked_instances
 
         # Infer timestep if not provided.
-        if t is None:
-            if self.has_max_tracking:
-                if len(self.track_matching_queue_dict) > 0:
-
-                    # Default to last timestep + 1 if available.
-                    # Here we find the track that has the most instances.
-                    track_with_max_instances = max(
-                        self.track_matching_queue_dict,
-                        key=lambda track: len(self.track_matching_queue_dict[track]),
-                    )
-                    t = (
-                        self.track_matching_queue_dict[track_with_max_instances][-1].t
-                        + 1
-                    )
-
-                else:
-                    t = 0
-            else:
-                if len(self.track_matching_queue) > 0:
-
-                    # Default to last timestep + 1 if available.
-                    t = self.track_matching_queue[-1].t + 1
-
-                else:
-                    t = 0
+        t = self.infer_next_timestep(t)
 
         # Initialize containers for tracked instances at the current timestep.
         tracked_instances = []
@@ -851,6 +851,7 @@ class Tracker(BaseTracker):
         robust: float = 1.0,
         min_new_track_points: int = 0,
         min_match_points: int = 0,
+        only_predicted_instances: bool = True,
         # Optical flow options
         img_scale: float = 1.0,
         of_window_size: int = 21,
@@ -950,6 +951,7 @@ class Tracker(BaseTracker):
             max_tracks=max_tracks,
             target_instance_count=target_instance_count,  # TODO: deprecate target_instance_count
             post_connect_single_breaks=post_connect_single_breaks,
+            only_predicted_instances=only_predicted_instances,
         )
 
         # Kalman filter requires deprecated target_instance_count
@@ -1091,6 +1093,11 @@ class Tracker(BaseTracker):
         option["help"] = "Minimum points for match candidates"
         options.append(option)
 
+        option = dict(name="only_predicted_instances", default=1)
+        option["type"] = int
+        option["help"] = "Track only predicted instances, not user-defined instances."
+        options.append(option)
+
         option = dict(name="img_scale", default=1.0)
         option["type"] = float
         option["help"] = "For optical-flow: Image scale"
@@ -1199,9 +1206,7 @@ class FlowTracker(Tracker):
     candidate_maker: object = attr.ib(factory=FlowCandidateMaker)
 
 
-attr.s(auto_attribs=True)
-
-
+@attr.s(auto_attribs=True)
 class FlowMaxTracker(Tracker):
     """Pre-configured tracker to use optical flow shifted candidates with max tracks."""
 
@@ -1558,12 +1563,17 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
 
     # Run tracking on every frame
     for lf in frames:
+        # Use only the predicted instances
+        if tracker.only_predicted_instances:
+            instances = lf.predicted_instances
+        else:
+            instances = [convert_to_predicted_instance(inst) for inst in lf.instances]
 
         # Clear the tracks
-        for inst in lf.instances:
+        for inst in instances:
             inst.track = None
 
-        track_args = dict(untracked_instances=lf.instances)
+        track_args = dict(untracked_instances=instances)
         if tracker.uses_image:
             track_args["img"] = lf.video[lf.frame_idx]
         else:
