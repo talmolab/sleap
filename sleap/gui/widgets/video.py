@@ -1569,6 +1569,8 @@ class QtNode(QGraphicsEllipseItem):
             # Shift-click to mark all points as complete
             elif event.modifiers() == Qt.ShiftModifier:
                 self.parentObject().updatePoints(complete=True, user_change=True)
+            elif event.modifiers() == Qt.ControlModifier:
+                self.parentObject().duplicate_instance()
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
@@ -2129,9 +2131,9 @@ class QtInstance(QGraphicsObject):
         """Custom event handler for mouse press."""
         if event.buttons() == Qt.LeftButton:
             if event.modifiers() == Qt.ControlModifier:
-                self._duplicate_instance()
+                self.duplicate_instance()
 
-    def _duplicate_instance(self):
+    def duplicate_instance(self):
         """Duplicate the instance and add it to the scene."""
         # Add instance to the context
         if self.player.context is None:
@@ -2172,6 +2174,7 @@ class QtInstance(QGraphicsObject):
                     qt_inst.grabMouse()
                     break
 
+        # Connect the callback to the updatedSelection signal
         self.player.view.updatedSelection.connect(on_selection_update)
         self.player.view.updatedSelection.emit()
 
@@ -2185,6 +2188,7 @@ class QtInstance(QGraphicsObject):
         is_ctrl_pressed = (event.modifiers() & Qt.ControlModifier) == Qt.ControlModifier
         is_alt_pressed = (event.modifiers() & Qt.AltModifier) == Qt.AltModifier
 
+        # Only allow moving if the instance is selected
         if is_move and (is_ctrl_pressed or is_alt_pressed):
             super().mouseMoveEvent(event)
 
