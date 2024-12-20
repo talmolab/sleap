@@ -387,13 +387,13 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
         # Clamp value to ensure it stays within valid range
         val = max(self._val_min, min(val, self._val_max))
-        
+
         return val
 
     @property
     def _slider_width(self) -> float:
         """Returns visual width of slider."""
-        return self.box_rect.width() - self.handle.rect().width()
+        return self.box_rect.width() - self.handle.rect().width() + 6
 
     @property
     def slider_visible_value_range(self) -> float:
