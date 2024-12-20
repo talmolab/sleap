@@ -1,8 +1,8 @@
 {
     "data": {
         "labels": {
-            "training_labels": "C:\\Users\\TalmoLab\\Desktop\\Divya\\SLEAP\\sleap\\tests\\data\\slp_hdf5\\minimal_instance.slp",
-            "validation_labels": "C:\\Users\\TalmoLab\\Desktop\\Divya\\SLEAP\\sleap\\tests\\data\\slp_hdf5\\minimal_instance.slp",
+            "training_labels": null,
+            "validation_labels": null,
             "validation_fraction": 0.1,
             "test_labels": null,
             "split_by_inds": false,
