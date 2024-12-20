@@ -6,7 +6,7 @@ After labeling about 10 frames and saving the project you can train your first m
 
 .. note::
 
-    This tutorial assumes you have a GPU in your local machine and that TensorFlow is able to use your GPU. If you don't have a GPU or you're having trouble getting it to work, you can run training and inference in the cloud. See our :ref:`colab` guide! Or take a look at our other :ref:`guides` about running SLEAP on remote machines.
+    This tutorial assumes you have an **NVIDIA GPU** or **Apple Silicon Mac**, and that TensorFlow is able to use your GPU. Training on other GPU architectures may fail. If you don't have a supported GPU or you're having trouble getting it to work, you can run training and inference in the cloud. See our :ref:`colab` guide! Or take a look at our other :ref:`guides` about running SLEAP on remote machines.
 
 
 .. _training-options:

@@ -1,5 +1,6 @@
 # Installation
 
+
 SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For quick install using conda, see below:
 
 ````{tabs}
@@ -15,7 +16,11 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For qu
    ```
 ````
 
-. For more in-depth installation instructions, see the [installation methods](installation-methods). The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
+```{note}
+SLEAP currently supports GPU-accelerated training on **NVIDIA GPUs** and **Apple Silicon Macs**. Training on other GPU architectures (e.g., AMD GPUs and older Macs) is not supported and may lead to failures or unexpected behavior. If no supported GPU is available, SLEAP can still run in CPU mode, but training speed may be reduced.
+```
+
+For more in-depth installation instructions, see the [installation methods](installation-methods). The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
 
 ```{contents} Contents
 ---
@@ -299,6 +304,7 @@ python -c "import sleap; sleap.versions()"
     Python: 3.7.11
     OS: Windows-10-10.0.19041-SP0
 
+(gpu-support)=
 ### GPU support
 
 Assuming you installed using either of the `conda`-based methods on Windows or Linux, SLEAP should automatically have GPU support enabled.

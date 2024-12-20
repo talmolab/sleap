@@ -43,6 +43,7 @@ cli
 troubleshooting-workflows
 skeletons
 choosing-models
+training
 merging
 proofreading
 colab
