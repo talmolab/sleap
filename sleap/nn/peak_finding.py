@@ -170,6 +170,8 @@ def crop_bboxes(
     box_size = tf.cast(tf.math.round((y2x2 - y1x1) + 1), tf.int32)  # (height, width)
 
     # Normalize bounding boxes.
+    if isinstance(images, tf.RaggedTensor):
+        images = images.to_tensor()
     image_height = tf.shape(images)[1]
     image_width = tf.shape(images)[2]
     normalized_bboxes = normalize_bboxes(

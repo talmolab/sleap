@@ -773,6 +773,8 @@ class CentroidCropGroundTruth(tf.keras.layers.Layer):
         crops = sleap.nn.peak_finding.crop_bboxes(full_imgs, bboxes, crop_sample_inds)
 
         # Reshape to (n_peaks, crop_height, crop_width, channels)
+        if isinstance(full_imgs, tf.RaggedTensor):
+            full_imgs = full_imgs.to_tensor()
         img_channels = tf.shape(full_imgs)[3]
         crops = tf.reshape(
             crops, [n_peaks, self.crop_size, self.crop_size, img_channels]
