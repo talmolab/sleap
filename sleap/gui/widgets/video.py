@@ -2126,19 +2126,17 @@ class QtInstance(QGraphicsObject):
         return super().hoverLeaveEvent(event)
 
     def mousePressEvent(self, event):
-        """Custom event handler to emit signal on event."""
         if event.buttons() == Qt.LeftButton:
             if event.modifiers() == Qt.ControlModifier:
-                self._duplicate_instance(event)
+                self._duplicate_instance()
 
-    def _duplicate_instance(self, event):
+    def _duplicate_instance(self):
         """Duplicate the instance and add it to the scene."""
-        scene = self.scene()
-
         # Add instance to the context
         context = self.player.context
         context.newInstance(copy_instance=self.instance)
 
+        # Find the new instance and its last label
         lf = context.labels.find(
             context.state["video"], context.state["frame_idx"], return_new=True
         )[0]
@@ -2163,7 +2161,6 @@ class QtInstance(QGraphicsObject):
                     # Optionally grab the mouse and change cursor, so user can immediately drag
                     qt_inst.setCursor(Qt.ClosedHandCursor)
                     qt_inst.grabMouse()
-                    qt_inst.updateBox()
                     break
 
         self.player.view.updatedSelection.connect(on_selection_update)
@@ -2181,7 +2178,6 @@ class QtInstance(QGraphicsObject):
         """Custom event handler to emit signal on event."""
         if self.flags() & QGraphicsItem.ItemIsMovable:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
-            self.setCursor(Qt.ArrowCursor)
             self.updatePoints(user_change=True)
             self.updateBox()
             self.ungrabMouse()
