@@ -466,34 +466,42 @@ class Labels(MutableSequence):
                 self.videos.extend(list(new_videos))
 
         # Ditto for skeletons
-        if merge or len(self.skeletons) == 0:
-
-            if not self.skeletons:
-                # if `labels.skeletons` is empty, then add all new skeletons
-                self.skeletons = list(
-                    set(self.skeletons).union(
-                        {
-                            instance.skeleton
-                            for label in self.labels
-                            for instance in label.instances
-                        }
-                    )
+        if len(self.skeletons) == 0:
+            # if `labels.skeletons` is empty, then add all new skeletons
+            self.skeletons = list(
+                set(self.skeletons).union(
+                    {
+                        instance.skeleton
+                        for label in self.labels
+                        for instance in label.instances
+                    }
                 )
+            )
 
-            else:
-                for lf in self.labels:
-                    for instance in lf.instances:
-                        for skeleton in self.skeletons:
-                            # check if the new skeleton is already in `labels.skeletons`
-                            if not skeleton.matches(instance.skeleton):
-                                self.skeletons.append(instance.skeleton)
-                            else:
-                                # assign the existing skeleton if the instance has duplicate skeleton
-                                instance.skeleton = skeleton
+        if len(self.nodes) == 0:
+            self.nodes = list(
+                set().union(
+                    {node for skeleton in self.skeletons for node in skeleton.nodes}
+                )
+            )
 
-        # Ditto for nodes
-        if merge or len(self.nodes) == 0:
+        if merge:
 
+            # remove duplicate skeletons during merge
+            skeletons = [self.skeletons[0]]
+            for lf in self.labels:
+                for instance in lf.instances:
+                    for skeleton in skeletons:
+                        # check if the new skeleton is already in `labels.skeletons`
+                        if not skeleton.matches(instance.skeleton):
+                            skeletons.append(instance.skeleton)
+                        else:
+                            # assign the existing skeleton if the instance has duplicate skeleton
+                            instance.skeleton = skeleton
+
+            self.skeletons = skeletons
+
+            # updates nodes after removing duplicate skeletons
             self.nodes = list(
                 set().union(
                     {node for skeleton in self.skeletons for node in skeleton.nodes}
