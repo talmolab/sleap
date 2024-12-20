@@ -733,6 +733,7 @@ def test_dont_unify_skeletons():
 
     skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
     skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    # skeleton_b.add_node("foo")
 
     lf_a = LabeledFrame(vid, frame_idx=2, instances=[Instance(skeleton_a)])
     lf_b = LabeledFrame(vid, frame_idx=3, instances=[Instance(skeleton_b)])

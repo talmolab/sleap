@@ -466,7 +466,8 @@ class Labels(MutableSequence):
                 self.videos.extend(list(new_videos))
 
         # Ditto for skeletons
-        if merge or len(self.skeletons) == 0:
+        if len(self.skeletons) == 0:
+            # if `labels.skeletons` is empty, then add all new skeletons
             self.skeletons = list(
                 set(self.skeletons).union(
                     {
@@ -477,10 +478,32 @@ class Labels(MutableSequence):
                 )
             )
 
-        # Ditto for nodes
-        if merge or len(self.nodes) == 0:
+        if len(self.nodes) == 0:
             self.nodes = list(
-                set(self.nodes).union(
+                set().union(
+                    {node for skeleton in self.skeletons for node in skeleton.nodes}
+                )
+            )
+
+        if merge:
+
+            # remove duplicate skeletons during merge
+            skeletons = [self.skeletons[0]]
+            for lf in self.labels:
+                for instance in lf.instances:
+                    for skeleton in skeletons:
+                        # check if the new skeleton is already in `labels.skeletons`
+                        if not skeleton.matches(instance.skeleton):
+                            skeletons.append(instance.skeleton)
+                        else:
+                            # assign the existing skeleton if the instance has duplicate skeleton
+                            instance.skeleton = skeleton
+
+            self.skeletons = skeletons
+
+            # updates nodes after removing duplicate skeletons
+            self.nodes = list(
+                set().union(
                     {node for skeleton in self.skeletons for node in skeleton.nodes}
                 )
             )
@@ -508,7 +531,15 @@ class Labels(MutableSequence):
             )
 
             # Get list of other tracks not already in track list
-            new_tracks = list(other_tracks - set(self.tracks))
+            # new_tracks = list(other_tracks - set(self.tracks))
+            new_tracks = []
+            if not self.tracks:
+                new_tracks = list(other_tracks)
+            else:
+                for t in other_tracks:
+                    for track in self.tracks:
+                        if not track.matches(t):
+                            new_tracks.append(t)
 
             # Sort the new tracks by spawned on and then name
             new_tracks.sort(key=lambda t: (t.spawned_on, t.name))
@@ -1898,7 +1929,7 @@ class Labels(MutableSequence):
         # We shouldn't have to do this here, but for some reason we're missing nodes
         # which are in the skeleton but don't have points (in the first instance?).
         self.nodes = list(
-            set(self.nodes).union(
+            set().union(
                 {node for skeleton in self.skeletons for node in skeleton.nodes}
             )
         )
