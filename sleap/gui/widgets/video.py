@@ -1569,6 +1569,7 @@ class QtNode(QGraphicsEllipseItem):
             # Shift-click to mark all points as complete
             elif event.modifiers() == Qt.ShiftModifier:
                 self.parentObject().updatePoints(complete=True, user_change=True)
+            # Ctrl-click to duplicate instance
             elif event.modifiers() == Qt.ControlModifier:
                 self.parentObject().duplicate_instance()
             else:
