@@ -7,8 +7,8 @@ on:
     branches:
       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
       - main
-      - develop
-      - liezl/add-channels-for-pip-conda-env
+      - develop # Run
+      - liezl/bump-to-1.4.1
     paths:
       - "docs/**"
       - "README.rst"

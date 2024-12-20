@@ -28,7 +28,7 @@ author = "SLEAP Developers"
 copyright = f"2019–{date.today().year}, Talmo Lab"
 
 # The short X.Y version
-version = "1.4.1a2"
+version = "1.4.1"
 
 # Get the sleap version
 # with open("../sleap/version.py") as f:
@@ -36,7 +36,7 @@ version = "1.4.1a2"
 #     version = re.search("\d.+(?=['\"])", version_file).group(0)
 
 # Release should be the full branch name
-release = "v1.4.1a2"
+release = "v1.4.1"
 
 html_title = f"SLEAP ({release})"
 html_short_title = "SLEAP"
@@ -178,7 +178,7 @@ html_static_path = ["_static"]
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
 html_css_files = [
-    'css/tabs.css',
+    "css/tabs.css",
 ]
 
 # Custom sidebar templates, must be a dictionary that maps document names
