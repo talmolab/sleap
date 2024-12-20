@@ -1832,12 +1832,12 @@ class CentroidCrop(InferenceLayer):
             # See: https://github.com/tensorflow/tensorflow/issues/6720
             centroid_points = (centroid_points / self.input_scale) + 0.5
 
-            # resize full images
-            if self.precrop_resize != 1.0:
-                full_imgs = sleap.nn.data.resizing.resize_image(
-                    full_imgs, self.precrop_resize
-                )
-                centroid_points *= self.precrop_resize
+        # resize full images
+        if self.precrop_resize != 1.0:
+            full_imgs = sleap.nn.data.resizing.resize_image(
+                full_imgs, self.precrop_resize
+            )
+            centroid_points *= self.precrop_resize
 
         # Store crop offsets.
         crop_offsets = centroid_points - (self.crop_size / 2)
