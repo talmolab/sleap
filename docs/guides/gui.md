@@ -148,6 +148,8 @@ Note that many of the menu command have keyboard shortcuts which can be configur
 
 **Click** elsewhere on image: Clear selection
 
+**Control + left-click (hold) + drag** on instance: Duplicate the selected instance and drag the entire copied instance
+
 ## Navigation Keys
 
 **Right arrow**: Move one frame forward
