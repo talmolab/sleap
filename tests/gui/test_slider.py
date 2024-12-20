@@ -57,7 +57,7 @@ def test_slider(qtbot, centered_pair_predictions):
         (1000, 1200, 0, 1000),  # Above maximum
     ]
 )
-def test_toVal_behavior_no_clamping(qtbot, slider_width, x_value, min_value, max_value):
+def test_toVal(qtbot, slider_width, x_value, min_value, max_value):
     """
     Test _toVal scaling and transformation for varying slider widths and ranges,
     without expecting clamping behavior.
