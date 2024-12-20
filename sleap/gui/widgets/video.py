@@ -2195,7 +2195,7 @@ class QtInstance(QGraphicsObject):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        """Custom event handler to emit signal on event."""
+        """Custom event handler for mouse release."""
         if self.flags() & QGraphicsItem.ItemIsMovable:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
             self.updatePoints(user_change=True)
