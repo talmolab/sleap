@@ -2126,6 +2126,9 @@ class QtInstance(QGraphicsObject):
         return super().hoverLeaveEvent(event)
 
     def mousePressEvent(self, event):
+        """Custom event handler for mouse press.
+
+        This method is called when the user clicks on the labeled instance."""
         if event.buttons() == Qt.LeftButton:
             if event.modifiers() == Qt.ControlModifier:
                 self._duplicate_instance()
@@ -2133,6 +2136,9 @@ class QtInstance(QGraphicsObject):
     def _duplicate_instance(self):
         """Duplicate the instance and add it to the scene."""
         # Add instance to the context
+        if self.player.context is None:
+            return
+
         context = self.player.context
         context.newInstance(copy_instance=self.instance)
 
@@ -2148,12 +2154,17 @@ class QtInstance(QGraphicsObject):
         # Refresh the plot
         self.player.plot()
 
+        # Track if the new instance is connected for cleanu
+        callback_connected = False
+
         def on_selection_update():
             """Callback to set the new QtInstance to be movable."""
             # Find the QtInstance corresponding to the newly created instance
             for qt_inst in self.player.view.all_instances:
                 if qt_inst.instance == new_instance:
                     self.player.view.updatedSelection.disconnect(on_selection_update)
+                    nonlocal callback_connected
+                    callback_connected = True
 
                     # Set this QtInstance to be movable
                     qt_inst.setFlag(QGraphicsItem.ItemIsMovable)
@@ -2165,6 +2176,10 @@ class QtInstance(QGraphicsObject):
 
         self.player.view.updatedSelection.connect(on_selection_update)
         self.player.view.updatedSelection.emit()
+
+        # Clean up callback if QtInstance was not found
+        if not callback_connected:
+            self.player.view.updatedSelection.disconnect(on_selection_update)
 
     def mouseMoveEvent(self, event):
         """Custom event handler to emit signal on event."""
