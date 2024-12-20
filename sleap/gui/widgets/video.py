@@ -2156,17 +2156,12 @@ class QtInstance(QGraphicsObject):
         # Refresh the plot
         self.player.plot()
 
-        # Track if the new instance is connected for clean up
-        callback_connected = False
-
         def on_selection_update():
             """Callback to set the new QtInstance to be movable."""
             # Find the QtInstance corresponding to the newly created instance
             for qt_inst in self.player.view.all_instances:
                 if qt_inst.instance == new_instance:
                     self.player.view.updatedSelection.disconnect(on_selection_update)
-                    nonlocal callback_connected
-                    callback_connected = True
 
                     # Set this QtInstance to be movable
                     qt_inst.setFlag(QGraphicsItem.ItemIsMovable)
@@ -2179,10 +2174,6 @@ class QtInstance(QGraphicsObject):
         # Connect the callback to the updatedSelection signal
         self.player.view.updatedSelection.connect(on_selection_update)
         self.player.view.updatedSelection.emit()
-
-        # Clean up callback if QtInstance was not found
-        if not callback_connected:
-            self.player.view.updatedSelection.disconnect(on_selection_update)
 
     def mouseMoveEvent(self, event):
         """Custom event handler to emit signal on event."""
