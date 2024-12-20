@@ -11,6 +11,24 @@ from sleap.nn.data import instance_cropping
 from sleap.nn.config import InstanceCroppingConfig
 
 
+def test_find_instance_crop_size(min_labels):
+    labels = min_labels.copy()
+    assert len(labels.labeled_frames[0].instances) == 2
+
+    crop_size = instance_cropping.find_instance_crop_size(labels)
+    assert crop_size == 74
+
+    assert labels[0].instances[0].numpy().shape[0] == 2  # 2 nodes
+
+    labels[0].instances[1][0] = (390, 187.9)  # exceeds img height
+    crop_size = instance_cropping.find_instance_crop_size(labels)
+    assert crop_size == 60
+
+    labels[0].instances[1][0] = (-100, 187.9)  # exceeds img height
+    crop_size = instance_cropping.find_instance_crop_size(labels)
+    assert crop_size == 60
+
+
 def test_normalize_bboxes():
     bbox = tf.convert_to_tensor([[0, 0, 3, 3]], tf.float32)
     norm_bbox = instance_cropping.normalize_bboxes(bbox, 9, 9)

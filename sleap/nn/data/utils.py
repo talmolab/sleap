@@ -6,6 +6,16 @@ import numpy as np
 from typing import Any, List, Tuple, Dict, Text, Optional
 
 
+def filter_oob_points(pts: np.ndarray, img_hw: tuple) -> np.ndarray:
+    """Convert negative/ out-of-boundary pts to NaNs."""
+    pts[pts < 0] = np.NaN
+    height, width = img_hw
+    pts[:, 0][pts[:, 0] > width - 1] = np.NaN
+    pts[:, 1][pts[:, 1] > height - 1] = np.NaN
+
+    return pts
+
+
 def ensure_list(x: Any) -> List[Any]:
     """Convert the input into a list if it is not already."""
     if not isinstance(x, list):

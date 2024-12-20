@@ -6,6 +6,7 @@ import attr
 from typing import Optional, List, Text
 import sleap
 from sleap.nn.config import InstanceCroppingConfig
+from sleap.nn.data.utils import filter_oob_points
 
 
 def find_instance_crop_size(
@@ -42,12 +43,21 @@ def find_instance_crop_size(
     # Calculate crop size
     min_crop_size_no_pad = min_crop_size - padding
     max_length = 0.0
-    for inst in labels.user_instances:
-        pts = inst.points_array
-        pts *= input_scaling
-        max_length = np.maximum(max_length, np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0]))
-        max_length = np.maximum(max_length, np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1]))
-        max_length = np.maximum(max_length, min_crop_size_no_pad)
+    for lf in labels:
+        for inst in lf:
+            if isinstance(inst, sleap.PredictedInstance):
+                continue
+
+            pts = filter_oob_points(inst.numpy(), lf.image.shape[:2])
+
+            pts *= input_scaling
+            max_length: float = np.nanmax(
+                [max_length, np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0])]
+            )
+            max_length: float = np.nanmax(
+                [max_length, np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1])]
+            )
+            max_length: float = np.nanmax([max_length, min_crop_size_no_pad])
 
     max_length += float(padding)
     crop_size = np.math.ceil(max_length / float(maximum_stride)) * maximum_stride

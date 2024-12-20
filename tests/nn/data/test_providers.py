@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import tensorflow as tf
 from sleap.nn.system import use_cpu_only
 
@@ -66,6 +67,26 @@ def test_labels_reader_no_visible_points(min_labels):
     labels_reader = providers.LabelsReader.from_user_instances(labels)
     assert len(labels) == 0
     assert len(labels_reader) == 0
+
+
+@pytest.mark.parametrize(
+    "oob_point,test_case",
+    [((390, 187.9), "exceeding_image_dim"), ((-100, 187.9), "negative_coordinates")],
+)
+def test_labels_filter_oob_points(min_labels, oob_point, test_case):
+    # There should be two instances in the labels dataset
+    labels = min_labels.copy()
+    assert len(labels.labeled_frames[0].instances) == 2
+
+    assert labels[0].instances[0].numpy().shape[0] == 2  # 2 nodes
+
+    labels[0].instances[0][0] = oob_point
+
+    labels_reader = providers.LabelsReader.from_user_instances(labels)
+    examples = list(iter(labels_reader.make_dataset()))
+    assert len(examples) == 1
+
+    assert all(np.isnan(examples[0]["instances"][0][0]))
 
 
 def test_labels_reader_subset(min_labels):

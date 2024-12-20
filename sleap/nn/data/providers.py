@@ -5,6 +5,8 @@ import tensorflow as tf
 import attr
 from typing import Text, Optional, List, Sequence, Union, Tuple
 import sleap
+from sleap.instance import Instance
+from sleap.nn.data.utils import filter_oob_points
 
 
 @attr.s(auto_attribs=True)
@@ -202,30 +204,51 @@ class LabelsReader:
                 insts = lf.user_instances
             else:
                 insts = lf.instances
-            insts = [inst for inst in insts if len(inst) > 0]
-            if self.with_track_only:
-                insts = [inst for inst in insts if inst.track is not None]
-            n_instances = len(insts)
-            n_nodes = len(insts[0].skeleton) if n_instances > 0 else 0
 
-            instances = np.full((n_instances, n_nodes, 2), np.nan, dtype="float32")
-            for i, instance in enumerate(insts):
-                instances[i] = instance.numpy()
+            instances = []
 
-            skeleton_inds = np.array(
-                [self.labels.skeletons.index(inst.skeleton) for inst in insts]
-            ).astype("int32")
-            track_inds = np.array(
-                [
-                    self.tracks.index(inst.track) if inst.track is not None else -1
-                    for inst in insts
-                ]
-            ).astype("int32")
+            for inst in insts:
+
+                # Filter OOB
+                pts = filter_oob_points(inst.numpy(), raw_image_size[:2])
+
+                instance = Instance.from_numpy(pts, inst.skeleton, inst.track)
+
+                if len(instance) > 0:
+
+                    if self.with_track_only:
+                        if instance.track is not None:
+                            instances.append(instance)
+
+                    else:
+                        instances.append(instance)
+
+            n_instances = len(instances)
+            n_nodes = len(instances[0].skeleton) if n_instances > 0 else 0
+
+            insts = np.full((n_instances, n_nodes, 2), np.nan, dtype="float32")
+            track_inds = []
+            skeleton_inds = []
+            for i, instance in enumerate(instances):
+
+                track_inds.append(
+                    self.tracks.index(instance.track)
+                    if instance.track is not None
+                    else -1
+                )
+
+                skeleton_inds.append(self.labels.skeletons.index(instance.skeleton))
+
+                insts[i] = instance.numpy()
+
+            track_inds = np.array(track_inds).astype("int32")
+            skeleton_inds = np.array(skeleton_inds).astype("int32")
+
             n_tracks = np.array(len(self.tracks)).astype("int32")
             return (
                 raw_image,
                 raw_image_size,
-                instances,
+                insts,
                 video_ind,
                 frame_ind,
                 skeleton_inds,
