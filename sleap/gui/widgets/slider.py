@@ -369,7 +369,16 @@ class VideoSlider(QtWidgets.QGraphicsView):
         return x
 
     def _toVal(self, x: float, center=False) -> float:
-        """Converts x position to slider value."""
+        """
+        Converts x position to slider value.
+
+        Args:
+            x: x position on the slider.
+            center: Whether to offset by half the width of the handle.
+
+        Returns:
+            Slider value (frame index).
+        """
         val = x
         val /= self._slider_width
         val *= max(1, self._val_max - self._val_min)
@@ -380,7 +389,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
     @property
     def _slider_width(self) -> float:
         """Returns visual width of slider."""
-        return self.box_rect.width() - self.handle.rect().width()
+        return self.box_rect.width()
 
     @property
     def slider_visible_value_range(self) -> float:

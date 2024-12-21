@@ -1304,7 +1304,7 @@ class MainWindow(QMainWindow):
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
                 message += spacer
-                message += f"Selection: {start+1:,}-{end:,} ({end-start+1:,} frames)"
+                message += f"Selection: {start+1:,}-{end:,} ({end-start:,} frames)"
 
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
