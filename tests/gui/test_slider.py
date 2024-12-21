@@ -41,21 +41,20 @@ def test_slider(qtbot, centered_pair_predictions):
     slider.setEnabled(True)
     assert slider.enabled()
 
+
 @pytest.mark.parametrize(
     "slider_width, x_value, min_value, max_value",
     [
         # Values within range
-        (1000, 500, 0, 1000),    # Midpoint with no offset
-        (800, 400, 0, 800),      # Exact midpoint within smaller range
+        (1000, 500, 0, 1000),  # Midpoint with no offset
+        (800, 400, 0, 800),  # Exact midpoint within smaller range
         (1500, 750, 100, 1200),  # Midpoint with offset range
         (2000, 1000, 50, 1950),  # Large width and offset range
-
         # Values below range (no clamping expected)
         (1000, -100, 0, 1000),  # Below minimum
-
         # Values above range (no clamping expected)
         (1000, 1200, 0, 1000),  # Above maximum
-    ]
+    ],
 )
 def test_toVal(qtbot, slider_width, x_value, min_value, max_value):
     """
@@ -84,6 +83,7 @@ def test_toVal(qtbot, slider_width, x_value, min_value, max_value):
     # Assert that the raw transformation matches the expected value
     assert slider._toVal(x_value) == expected_value
 
+
 def test_slider_width_property(qtbot):
     """
     Test the _slider_width property to ensure it accurately reflects
@@ -94,11 +94,17 @@ def test_slider_width_property(qtbot):
     # Test various box_rect widths
     for width in [800, 1000, 1200, 1500]:
         slider.box_rect.setWidth(width)  # Simulate setting the visual width
-        assert slider._slider_width == width, f"Expected _slider_width to be {width}, but got {slider._slider_width}"
+        assert (
+            slider._slider_width == width
+        ), f"Expected _slider_width to be {width}, but got {slider._slider_width}"
 
     # Test edge cases with very small and large widths
     slider.box_rect.setWidth(0)
-    assert slider._slider_width == 0, "Expected _slider_width to be 0 when box_rect width is 0"
+    assert (
+        slider._slider_width == 0
+    ), "Expected _slider_width to be 0 when box_rect width is 0"
 
     slider.box_rect.setWidth(10000)
-    assert slider._slider_width == 10000, "Expected _slider_width to handle large values correctly"
+    assert (
+        slider._slider_width == 10000
+    ), "Expected _slider_width to handle large values correctly"
