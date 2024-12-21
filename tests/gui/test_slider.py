@@ -83,3 +83,22 @@ def test_toVal(qtbot, slider_width, x_value, min_value, max_value):
 
     # Assert that the raw transformation matches the expected value
     assert slider._toVal(x_value) == expected_value
+
+def test_slider_width_property(qtbot):
+    """
+    Test the _slider_width property to ensure it accurately reflects
+    the visual width of the slider's box_rect.
+    """
+    slider = VideoSlider(min=0, max=1000, val=15, marks=(10, 15))  # Initialize slider
+
+    # Test various box_rect widths
+    for width in [800, 1000, 1200, 1500]:
+        slider.box_rect.setWidth(width)  # Simulate setting the visual width
+        assert slider._slider_width == width, f"Expected _slider_width to be {width}, but got {slider._slider_width}"
+
+    # Test edge cases with very small and large widths
+    slider.box_rect.setWidth(0)
+    assert slider._slider_width == 0, "Expected _slider_width to be 0 when box_rect width is 0"
+
+    slider.box_rect.setWidth(10000)
+    assert slider._slider_width == 10000, "Expected _slider_width to handle large values correctly"
