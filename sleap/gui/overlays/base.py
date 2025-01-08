@@ -20,7 +20,7 @@ from qtpy.QtWidgets import QGraphicsItem
 from sleap import Labels, Video
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.nn.data.providers import VideoReader
-from sleap.nn.inference import VisualPredictor
+from sleap.nn.inference import VisualPredictorWrapper as VisualPredictor
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,9 @@ class BaseOverlay(abc.ABC):
             try:
                 self.player.scene.removeItem(item)
 
-            except RuntimeError as e:  # Internal C++ object (PySide2.QtWidgets.QGraphicsPathItem) already deleted.
+            except (
+                RuntimeError
+            ) as e:  # Internal C++ object (PySide2.QtWidgets.QGraphicsPathItem) already deleted.
                 logger.debug(e)
 
         # Stop tracking the items after they been removed from the scene
@@ -97,9 +99,12 @@ class ModelData(Sequence):
     def __getitem__(self, i: int) -> np.ndarray:
         """Data data for frame i from predictor."""
         # Get predictions for frame i
-        frame_result = self.predictor.predict(VideoReader(self.video, [i]))
+        frame_result = self.predictor.predict(
+            VideoReader(self.video, [i]), make_labels=False
+        )
 
         # We just want the single image results
+        print("results key = ", self.result_key)
         frame_result = frame_result[0][self.result_key]
 
         if self.adjust_vals:
@@ -160,7 +165,7 @@ class DataOverlay(BaseOverlay):
 
     @classmethod
     def make_predictor(cls, filename: str) -> VisualPredictor:
-        return VisualPredictor.from_trained_models(filename)
+        return VisualPredictor.from_model_paths(filename)
 
     @classmethod
     def from_model(cls, filename: str, *args, **kwargs):

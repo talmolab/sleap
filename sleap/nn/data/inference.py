@@ -35,7 +35,7 @@ class KerasModelPredictor:
 
     def transform_dataset(self, input_ds: tf.data.Dataset) -> tf.data.Dataset:
         test_ex = next(iter(input_ds))
-        input_shapes = [test_ex[k].shape for k in self.model_input_keys]
+        input_shapes = [test_ex[k].shape[1:] for k in self.model_input_keys]
         input_layers = [tf.keras.layers.Input(shape) for shape in input_shapes]
         keras_model = tf.keras.Model(input_layers, self.keras_model(input_layers))
 

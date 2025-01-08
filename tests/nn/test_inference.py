@@ -47,6 +47,7 @@ from sleap.nn.inference import (
     MoveNetInferenceLayer,
     MoveNetInferenceModel,
     VisualPredictor,
+    VisualPredictorWrapper,
     MOVENET_MODELS,
     load_model,
     export_model,
@@ -2082,3 +2083,14 @@ def test_visual_predictor(min_bottomup_model_path):
     # Test bottom-up model
     model_path: str = min_bottomup_model_path
     predictor = VisualPredictor.from_trained_models(model_path=model_path)
+
+
+def test_visual_predictor_wrapper(min_bottomup_model_path):
+
+    # Test bottom-up model
+    model_path: str = min_bottomup_model_path
+    predictor = VisualPredictorWrapper.from_model_paths(model_path=model_path)
+
+
+if __name__ == "__main__":
+    pytest.main([f"{__file__}::test_visual_predictor_wrapper"])

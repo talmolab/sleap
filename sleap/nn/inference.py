@@ -21,6 +21,8 @@ The recommended high-level API for loading saved models is the `sleap.load_model
 function which provides a simplified interface for creating `Predictor`s.
 """
 
+from __future__ import annotations
+
 import attr
 import argparse
 import logging
@@ -589,6 +591,108 @@ class Predictor(ABC):
         )
 
 
+class VisualPredictorWrapper:
+
+    def __init__(self, predictor: Predictor):
+
+        self.predictor = predictor
+        self.wrap_make_pipeline()
+
+    def __getattr__(self, name):
+        """Pass through all unfound attributes to the wrapped predictor."""
+
+        # Check if the attribute is a method of the wrapped predictor.
+        return getattr(self.predictor, name)
+
+    @property
+    def model(self) -> Model:
+        model_by_predictor = {
+            BottomUpPredictor: "bottomup_model",
+        }
+        if type(self.predictor) in model_by_predictor:
+            return getattr(
+                self.predictor, model_by_predictor.get(type(self.predictor), "model")
+            )
+
+        raise ValueError(
+            f"Predictor type {type(self.predictor)} not yet supported by "
+            "VisualPredictor. Please select a different predictor type."
+        )
+
+    @property
+    def confidence_maps_key_name(self) -> str | None:
+
+        key_names = {
+            SingleInstancePredictor: "predicted_confidence_maps",
+            BottomUpPredictor: "predicted_confidence_maps",
+            TopDownPredictor: "predicted_centroid_confidence_maps",
+        }
+
+        if type(self.predictor) in key_names:
+            return key_names.get(type(self.predictor), None)
+
+        raise ValueError(
+            f"Predictor type {type(self.predictor)} not yet supported by "
+            "VisualPredictor. Please select a different predictor type."
+        )
+
+    @property
+    def part_affinity_fields_key_name(self) -> str | None:
+
+        if isinstance(self.predictor, BottomUpPredictor):
+            return "predicted_part_affinity_fields"
+
+        raise ValueError(
+            f"Predictor type {type(self.predictor)} cannot display Part Affinity Fields."
+        )
+
+    def head_specific_output_keys(self) -> List[Text]:
+        keys = []
+
+        key = self.confidence_maps_key_name
+        if key:
+            keys.append(key)
+
+        key = self.part_affinity_fields_key_name
+        if key:
+            keys.append(key)
+
+        return keys
+
+    def wrap_make_pipeline(self):
+        """Wrap the `make_pipeline` method of the predictor to add additional logic."""
+        original_make_pipeline = self.predictor.make_pipeline
+
+        def wrapped_method(*args, **kwargs):
+            pipeline = original_make_pipeline(*args, **kwargs)
+            pipeline = self.extend_pipeline(pipeline)
+            return pipeline
+
+        self.predictor.make_pipeline = wrapped_method
+
+    def extend_pipeline(self, pipeline: Pipeline):
+        """Extend the data pipeline for the predictor."""
+
+        pipeline += KerasModelPredictor(
+            keras_model=self.model.keras_model,
+            model_input_keys="image",
+            model_output_keys=self.head_specific_output_keys(),
+        )
+        self.predictor.pipeline = pipeline
+        return pipeline
+
+    @classmethod
+    def from_model_paths(cls, model_path: str) -> VisualPredictorWrapper:
+        """Create the appropriate `Predictos` subclass from a list of model paths.
+
+        Args:
+            model_path: A single or list of trained model paths. Special cases of
+                non-SLEAP models include "movenet-thunder" and "movenet-lightning".
+        """
+        predictor = Predictor.from_model_paths(model_path)
+        return cls(predictor=predictor)
+
+
 # TODO: Rewrite this class.
 @attr.s(auto_attribs=True)
 class VisualPredictor(Predictor):
@@ -633,10 +737,8 @@ class VisualPredictor(Predictor):
 
     @property
     def confidence_maps_key_name(self) -> Optional[Text]:
-        head_key = self.config.model.heads.which_oneof_attrib_name()
 
-        if head_key in ("multi_instance", "single_instance"):
-            return "predicted_confidence_maps"
+        return "predicted_confidence_maps"
 
         if head_key == "centroid":
             return "predicted_centroid_confidence_maps"
@@ -647,10 +749,8 @@ class VisualPredictor(Predictor):
 
     @property
     def part_affinity_fields_key_name(self) -> Optional[Text]:
-        head_key = self.config.model.heads.which_oneof_attrib_name()
 
-        if head_key == "multi_instance":
-            return "predicted_part_affinity_fields"
+        return "predicted_part_affinity_fields"
 
         return None
 
