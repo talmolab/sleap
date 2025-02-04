@@ -61,6 +61,7 @@ class VideoFrameSuggestions(object):
             prediction_score=cls.prediction_score,
             velocity=cls.velocity,
             frame_chunk=cls.frame_chunk,
+            max_point_displacement=cls.max_point_displacement,
         )
 
         method = str.replace(params["method"], " ", "_")
@@ -213,6 +214,7 @@ class VideoFrameSuggestions(object):
     ):
         lfs = labels.find(video)
         frames = len(lfs)
+
         # initiate an array filled with -1 to store frame index (starting from 0).
         idxs = np.full((frames), -1, dtype="int")
 
@@ -288,6 +290,56 @@ class VideoFrameSuggestions(object):
                 ),
             )
         )
+
+        return cls.idx_list_to_frame_list(frame_idxs, video)
+
+    @classmethod
+    def max_point_displacement(
+        cls,
+        labels: "Labels",
+        videos: List[Video],
+        displacement_threshold: float,
+        **kwargs,
+    ):
+        """Finds frames with maximum point displacement above a threshold."""
+
+        proposed_suggestions = []
+        for video in videos:
+            proposed_suggestions.extend(
+                cls._max_point_displacement_video(video, labels, displacement_threshold)
+            )
+
+        suggestions = VideoFrameSuggestions.filter_unique_suggestions(
+            labels, videos, proposed_suggestions
+        )
+
+        return suggestions
+
+    @classmethod
+    def _max_point_displacement_video(
+        cls, video: Video, labels: "Labels", displacement_threshold: float
+    ):
+        # Get numpy of shape (frames, tracks, nodes, x, y)
+        labels_numpy = labels.numpy(video=video, all_frames=True, untracked=False)
+
+        # Return empty list if not enough frames
+        n_frames, n_tracks, n_nodes, _ = labels_numpy.shape
+
+        if n_frames < 2:
+            return []
+
+        # Calculate displacements
+        diff = labels_numpy[1:] - labels_numpy[:-1]  # (frames - 1, tracks, nodes, x, y)
+        euc_norm = np.linalg.norm(diff, axis=-1)  # (frames - 1, tracks, nodes)
+        mean_euc_norm = np.nanmean(euc_norm, axis=-1)  # (frames - 1, tracks)
+
+        # Find frames where mean displacement is above threshold
+        threshold_mask = np.any(
+            mean_euc_norm > displacement_threshold, axis=-1
+        )  # (frames - 1,)
+        frame_idxs = list(
+            np.argwhere(threshold_mask).flatten() + 1
+        )  # [0, len(frames - 1)]
 
         return cls.idx_list_to_frame_list(frame_idxs, video)
 

@@ -28,6 +28,8 @@ class Preferences(object):
         "node label size": 12,
         "show non-visible nodes": True,
         "share usage data": True,
+        "node marker sizes": (1, 2, 3, 4, 6, 8, 12),
+        "node label sizes": (6, 9, 12, 18, 24, 36),
     }
     _filename = "preferences.yaml"
 
@@ -43,10 +45,14 @@ class Preferences(object):
         """Load preferences from file (regardless of whether loaded already)."""
         try:
             self._prefs = util.get_config_yaml(self._filename)
-            if not hasattr(self._prefs, "get"):
-                self._prefs = self._defaults
         except FileNotFoundError:
-            self._prefs = self._defaults
+            pass
+
+        self._prefs = self._prefs or {}
+
+        for k, v in self._defaults.items():
+            if k not in self._prefs:
+                self._prefs[k] = v
 
     def save(self):
         """Save preferences to file."""

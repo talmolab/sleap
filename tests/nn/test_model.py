@@ -15,7 +15,7 @@ from sleap.nn.config import (
     ModelConfig,
 )
 
-sleap.use_cpu_only()
+# sleap.use_cpu_only()
 
 
 def test_model_from_config():

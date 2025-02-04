@@ -21,7 +21,7 @@ from sleap.nn.config import (
 )
 
 
-sleap.use_cpu_only()
+# sleap.use_cpu_only()
 
 
 def test_single_instance_confmaps_head():

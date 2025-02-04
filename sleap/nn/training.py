@@ -1,85 +1,83 @@
 """Training functionality and high level APIs."""
 
+import copy
+import json
+import logging
 import os
+import platform
 import re
+import shutil
+from abc import ABC, abstractmethod
 from datetime import datetime
 from time import time
-import logging
-import shutil
-import platform
-
-import tensorflow as tf
-import numpy as np
+from typing import Callable, List, Optional, Text, TypeVar, Union
 
 import attr
-from typing import Optional, Callable, List, Union, Text, TypeVar
-from abc import ABC, abstractmethod
-
 import cattr
-import json
-import copy
-
-import sleap
-from sleap import Labels
-from sleap.util import get_package_file
-
-# Config
-from sleap.nn.config import (
-    TrainingJobConfig,
-    SingleInstanceConfmapsHeadConfig,
-    CentroidsHeadConfig,
-    CenteredInstanceConfmapsHeadConfig,
-    MultiInstanceConfig,
-    MultiClassBottomUpConfig,
-    MultiClassTopDownConfig,
-)
-
-# Model
-from sleap.nn.model import Model
-
-# Data
-from sleap.nn.config import LabelsConfig
-from sleap.nn.data.pipelines import LabelsReader
-from sleap.nn.data.pipelines import (
-    Pipeline,
-    SingleInstanceConfmapsPipeline,
-    CentroidConfmapsPipeline,
-    TopdownConfmapsPipeline,
-    BottomUpPipeline,
-    BottomUpMultiClassPipeline,
-    TopDownMultiClassPipeline,
-    KeyMapper,
-)
-from sleap.nn.data.training import split_labels_train_val
-
-# Optimization
-from sleap.nn.config import OptimizationConfig
-from sleap.nn.losses import OHKMLoss, PartLoss
-from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping
-
-# Outputs
-from sleap.nn.config import (
-    OutputsConfig,
-    ZMQConfig,
-    TensorBoardConfig,
-    CheckpointingConfig,
-)
-from sleap.nn.callbacks import (
-    TrainingControllerZMQ,
-    ProgressReporterZMQ,
-    ModelCheckpointOnEvent,
-)
-from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, CSVLogger
-
-# Inference
-from sleap.nn.inference import FindInstancePeaks, SingleInstanceInferenceLayer
 
 # Visualization
 import matplotlib
 import matplotlib.pyplot as plt
-from sleap.nn.callbacks import TensorBoardMatplotlibWriter, MatplotlibSaver
-from sleap.nn.viz import plot_img, plot_confmaps, plot_peaks, plot_pafs
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.callbacks import (
+    CSVLogger,
+    EarlyStopping,
+    ModelCheckpoint,
+    ReduceLROnPlateau,
+    TensorBoard,
+)
 
+import sleap
+from sleap import Labels
+from sleap.nn.callbacks import (
+    MatplotlibSaver,
+    ModelCheckpointOnEvent,
+    ProgressReporterZMQ,
+    TensorBoardMatplotlibWriter,
+    TrainingControllerZMQ,
+)
+
+# Outputs
+# Optimization
+# Data
+# Config
+from sleap.nn.config import (
+    CenteredInstanceConfmapsHeadConfig,
+    CentroidsHeadConfig,
+    CheckpointingConfig,
+    LabelsConfig,
+    MultiClassBottomUpConfig,
+    MultiClassTopDownConfig,
+    MultiInstanceConfig,
+    OptimizationConfig,
+    OutputsConfig,
+    SingleInstanceConfmapsHeadConfig,
+    TensorBoardConfig,
+    TrainingJobConfig,
+    ZMQConfig,
+)
+from sleap.nn.data.pipelines import (
+    BottomUpMultiClassPipeline,
+    BottomUpPipeline,
+    CentroidConfmapsPipeline,
+    KeyMapper,
+    LabelsReader,
+    Pipeline,
+    SingleInstanceConfmapsPipeline,
+    TopdownConfmapsPipeline,
+    TopDownMultiClassPipeline,
+)
+from sleap.nn.data.training import split_labels_train_val
+
+# Inference
+from sleap.nn.inference import FindInstancePeaks, SingleInstanceInferenceLayer
+from sleap.nn.losses import OHKMLoss, PartLoss
+
+# Model
+from sleap.nn.model import Model
+from sleap.nn.viz import plot_confmaps, plot_img, plot_pafs, plot_peaks
+from sleap.util import get_package_file
 
 logger = logging.getLogger(__name__)
 
@@ -510,7 +508,7 @@ def setup_visualization(
     callbacks = []
 
     try:
-        matplotlib.use("Qt5Agg")
+        matplotlib.use("QtAgg")
     except ImportError:
         print(
             "Unable to use Qt backend for matplotlib. "
@@ -948,7 +946,7 @@ class Trainer(ABC):
         if self.config.outputs.save_outputs:
             if (
                 self.config.outputs.save_visualizations
-                and self.config.outputs.delete_viz_images
+                and not self.config.outputs.keep_viz_images
             ):
                 self.cleanup()
 
@@ -962,14 +960,14 @@ class Trainer(ABC):
         logger.info("Saving evaluation metrics to model folder...")
         sleap.nn.evals.evaluate_model(
             cfg=self.config,
-            labels_reader=self.data_readers.training_labels_reader,
+            labels_gt=self.data_readers.training_labels_reader,
             model=self.model,
             save=True,
             split_name="train",
         )
         sleap.nn.evals.evaluate_model(
             cfg=self.config,
-            labels_reader=self.data_readers.validation_labels_reader,
+            labels_gt=self.data_readers.validation_labels_reader,
             model=self.model,
             save=True,
             split_name="val",
@@ -977,7 +975,7 @@ class Trainer(ABC):
         if self.data_readers.test_labels_reader is not None:
             sleap.nn.evals.evaluate_model(
                 cfg=self.config,
-                labels_reader=self.data_readers.test_labels_reader,
+                labels_gt=self.data_readers.test_labels_reader,
                 model=self.model,
                 save=True,
                 split_name="test",
@@ -999,7 +997,7 @@ class Trainer(ABC):
 
     def package(self):
         """Package model folder into a zip file for portability."""
-        if self.config.outputs.delete_viz_images:
+        if not self.config.outputs.keep_viz_images:
             self.cleanup()
         logger.info(f"Packaging results to: {self.run_path}.zip")
         shutil.make_archive(
@@ -1317,10 +1315,11 @@ class TopdownConfmapsModelTrainer(Trainer):
         # Create an instance peak finding layer.
         find_peaks = FindInstancePeaks(
             keras_model=self.keras_model,
-            input_scale=self.config.data.preprocessing.input_scaling,
+            input_scale=1.0,
             peak_threshold=0.2,
             refinement="local",
             return_confmaps=True,
+            resize_input_image=False,
         )
 
         def visualize_example(example):
@@ -1757,10 +1756,11 @@ class TopDownMultiClassModelTrainer(Trainer):
         # Create an instance peak finding layer.
         find_peaks = FindInstancePeaks(
             keras_model=self.keras_model,
-            input_scale=self.config.data.preprocessing.input_scaling,
+            input_scale=1.0,
             peak_threshold=0.2,
             refinement="local",
             return_confmaps=True,
+            resize_input_image=False,
         )
 
         def visualize_example(example):
@@ -1844,9 +1844,10 @@ def create_trainer_using_cli(args: Optional[List] = None):
     parser.add_argument(
         "--base_checkpoint",
         type=str,
+        default=None,
         help=(
             "Path to base checkpoint (directory containing best_model.h5) to resume "
-            "training from."
+            "training from. Default is None."
         ),
     )
     parser.add_argument(
@@ -1866,12 +1867,32 @@ def create_trainer_using_cli(args: Optional[List] = None):
         ),
     )
     parser.add_argument(
+        "--keep_viz",
+        action="store_true",
+        help=(
+            "Keep prediction visualization images in the run folder after training when "
+            "--save_viz is enabled."
+        ),
+    )
+    parser.add_argument(
         "--zmq",
         action="store_true",
         help=(
             "Enable ZMQ logging (for GUI) if not already specified in the training "
             "job config."
         ),
+    )
+    parser.add_argument(
+        "--publish_port",
+        type=int,
+        default=9001,
+        help="Port to set up the publish address while using ZMQ, defaults to 9001.",
+    )
+    parser.add_argument(
+        "--controller_port",
+        type=int,
+        default=9000,
+        help="Port to set up the controller address while using ZMQ, defaults to 9000.",
     )
     parser.add_argument(
         "--run_name",
@@ -1912,7 +1933,7 @@ def create_trainer_using_cli(args: Optional[List] = None):
     # Find job configuration file.
     job_filename = args.training_job_path
     if not os.path.exists(job_filename):
-        profile_dir = get_package_file("sleap/training_profiles")
+        profile_dir = get_package_file("training_profiles")
 
         if os.path.exists(os.path.join(profile_dir, job_filename)):
             job_filename = os.path.join(profile_dir, job_filename)
@@ -1927,6 +1948,10 @@ def create_trainer_using_cli(args: Optional[List] = None):
     job_config.outputs.tensorboard.write_logs |= args.tensorboard
     job_config.outputs.zmq.publish_updates |= args.zmq
     job_config.outputs.zmq.subscribe_to_controller |= args.zmq
+    job_config.outputs.zmq.controller_address = "tcp://127.0.0.1:" + str(
+        args.controller_port
+    )
+    job_config.outputs.zmq.publish_address = "tcp://127.0.0.1:" + str(args.publish_port)
     if args.run_name != "":
         job_config.outputs.run_name = args.run_name
     if args.prefix != "":
@@ -1934,13 +1959,15 @@ def create_trainer_using_cli(args: Optional[List] = None):
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
     job_config.outputs.save_visualizations |= args.save_viz
+    job_config.outputs.keep_viz_images = args.keep_viz
     if args.labels_path == "":
         args.labels_path = None
     args.video_paths = args.video_paths.split(",")
     if len(args.video_paths) == 0:
         args.video_paths = None
 
-    job_config.model.base_checkpoint = args.base_checkpoint
+    if args.base_checkpoint is not None:
+        job_config.model.base_checkpoint = args.base_checkpoint
 
     logger.info("Versions:")
     sleap.versions()

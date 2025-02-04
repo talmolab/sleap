@@ -1,25 +1,12 @@
-name: sleap
+name: sleap_ci
+
+channels:
+    - conda-forge
+    - anaconda
 
 dependencies:
-    - python=3.7
-    - conda-forge::numpy=1.19.5
-    - sleap::tensorflow=2.6.3
-    - conda-forge::pyside2=5.13.2
-    - conda-forge::h5py=3.1.0
-    - conda-forge::scipy=1.7.3
-    - pillow=8.4.0
-    - shapely=1.7.1
-    - conda-forge::pandas
-    - ffmpeg
-    # - cudatoolkit=11.3.1
-    # - cudnn=8.2.1
-    # - nvidia::cuda-nvcc=11.3
-    - protobuf=3.20.*  # https://developers.google.com/protocol-buffers/docs/news/2022-05-06#python-updates
-    - qtpy>=2.0.1
-    - conda-build=3.21.7
+    # Needed for the build
+    - conda-build
     - anaconda-client
     - conda-verify
-    - conda-forge::pip!=22.0.4
-    - pip:
-        - "."
-        - "--requirement=./dev_requirements.txt"
+    - twine

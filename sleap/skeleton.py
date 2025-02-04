@@ -6,23 +6,23 @@ is to provide a common interface for defining the parts of the animal,
 their connection to each other, and needed meta-data.
 """
 
-import attr
-import cattr
-import numpy as np
-import jsonpickle
-import json
-import h5py
+import base64
 import copy
-
+import json
 import operator
 from enum import Enum
+from io import BytesIO
 from itertools import count
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Text
+from typing import Any, Dict, Iterable, List, Optional, Text, Tuple, Union
 
+import attr
+import cattr
+import h5py
 import networkx as nx
+import numpy as np
 from networkx.readwrite import json_graph
+from PIL import Image
 from scipy.io import loadmat
-
 
 NodeRef = Union[str, "Node"]
 H5FileRef = Union[str, h5py.File]
@@ -83,6 +83,502 @@ class Node:
             True if all attributes match, False otherwise.
         """
         return other.name == self.name and other.weight == self.weight
+
+
+class SkeletonDecoder:
+    """Replace jsonpickle.decode with our own decoder.
+
+    This function will decode the following from jsonpickle's encoded format:
+
+    `Node` objects from
+        {
+            "py/object": "sleap.skeleton.Node",
+            "py/state": { "py/tuple": ["thorax1", 1.0] }
+        }
+    to `Node(name="thorax1", weight=1.0)`
+
+    `EdgeType` objects from
+        {
+            "py/reduce": [
+                { "py/type": "sleap.skeleton.EdgeType" },
+                { "py/tuple": [1] }
+            ]
+        }
+    to `EdgeType(1)`
+
+    `bytes` from
+        {
+            "py/b64": "aVZC..."
+        }
+    to `b"iVBO..."`
+
+    and any repeated objects from
+        {
+            "py/id": 1
+        }
+    to the object with the same reconstruction id (from top to bottom).
+    """
+
+    def __init__(self):
+        self.decoded_objects: List[Union[Node, EdgeType]] = []
+
+    def _decode_id(self, id: int) -> Union[Node, EdgeType]:
+        """Decode the object with the given `py/id` value of `id`.
+
+        Args:
+            id: The `py/id` value to decode (1-indexed).
+            objects: The dictionary of objects that have already been decoded.
+
+        Returns:
+            The object with the given `py/id` value.
+        """
+        return self.decoded_objects[id - 1]
+
+    @staticmethod
+    def _decode_state(state: dict) -> Node:
+        """Reconstruct the `Node` object from 'py/state' key in the serialized nx_graph.
+
+        We support states in either dictionary or tuple format:
+        {
+            "py/state": { "py/tuple": ["thorax1", 1.0] }
+        }
+        or
+        {
+            "py/state": {"name": "thorax1", "weight": 1.0}
+        }
+
+        Args:
+            state: The state to decode, i.e. state = dict["py/state"]
+
+        Returns:
+            The `Node` object reconstructed from the state.
+        """
+
+        if "py/tuple" in state:
+            return Node(*state["py/tuple"])
+
+        return Node(**state)
+
+    @staticmethod
+    def _decode_object_dict(object_dict) -> Node:
+        """Decode dict containing `py/object` key in the serialized nx_graph.
+
+        Args:
+            object_dict: The dict to decode, i.e.
+                object_dict = {"py/object": ..., "py/state":...}
+
+        Raises:
+            ValueError: If object_dict does not have 'py/object' and 'py/state' keys.
+            ValueError: If object_dict['py/object'] is not 'sleap.skeleton.Node'.
+
+        Returns:
+            The decoded `Node` object.
+        """
+
+        if object_dict["py/object"] != "sleap.skeleton.Node":
+            raise ValueError("Only 'sleap.skeleton.Node' objects are supported.")
+
+        node: Node = SkeletonDecoder._decode_state(state=object_dict["py/state"])
+        return node
+
+    def _decode_node(self, encoded_node: dict) -> Node:
+        """Decode an item believed to be an encoded `Node` object.
+
+        Also updates the list of decoded objects.
+
+        Args:
+            encoded_node: The encoded node to decode.
+
+        Returns:
+            The decoded node and the updated list of decoded objects.
+        """
+
+        if isinstance(encoded_node, int):
+            # Using index mapping to replace the object (load from Labels)
+            return encoded_node
+        elif "py/object" in encoded_node:
+            decoded_node: Node = SkeletonDecoder._decode_object_dict(encoded_node)
+            self.decoded_objects.append(decoded_node)
+        elif "py/id" in encoded_node:
+            decoded_node: Node = self._decode_id(encoded_node["py/id"])
+
+        return decoded_node
+
+    def _decode_nodes(self, encoded_nodes: List[dict]) -> List[Dict[str, Node]]:
+        """Decode the 'nodes' key in the serialized nx_graph.
+
+        The encoded_nodes is a list of dictionary of two types:
+            - A dictionary with 'py/object' and 'py/state' keys.
+            - A dictionary with 'py/id' key.
+
+        Args:
+            encoded_nodes: The list of encoded nodes to decode.
+
+        Returns:
+            The decoded nodes.
+        """
+
+        decoded_nodes: List[Dict[str, Node]] = []
+        for e_node_dict in encoded_nodes:
+            e_node = e_node_dict["id"]
+            d_node = self._decode_node(e_node)
+            decoded_nodes.append({"id": d_node})
+
+        return decoded_nodes
+
+    def _decode_reduce_dict(self, reduce_dict: Dict[str, List[dict]]) -> EdgeType:
+        """Decode the 'reduce' key in the serialized nx_graph.
+
+        The reduce_dict is a dictionary in the following format:
+        {
+            "py/reduce": [
+                { "py/type": "sleap.skeleton.EdgeType" },
+                { "py/tuple": [1] }
+            ]
+        }
+
+        Args:
+            reduce_dict: The dictionary to decode i.e. reduce_dict = {"py/reduce": ...}
+
+        Returns:
+            The decoded `EdgeType` object.
+        """
+
+        reduce_list = reduce_dict["py/reduce"]
+        has_py_type = has_py_tuple = False
+        for reduce_item in reduce_list:
+            if reduce_item is None:
+                # Sometimes the reduce list has None values, skip them
+                continue
+            if (
+                "py/type" in reduce_item
+                and reduce_item["py/type"] == "sleap.skeleton.EdgeType"
+            ):
+                has_py_type = True
+            elif "py/tuple" in reduce_item:
+                edge_type: int = reduce_item["py/tuple"][0]
+                has_py_tuple = True
+
+        if not has_py_type or not has_py_tuple:
+            raise ValueError(
+                "Only 'sleap.skeleton.EdgeType' objects are supported. "
+                "The 'py/reduce' list must have dictionaries with 'py/type' and "
+                "'py/tuple' keys."
+                f"\n\tHas py/type: {has_py_type}\n\tHas py/tuple: {has_py_tuple}"
+            )
+
+        edge = EdgeType(edge_type)
+        self.decoded_objects.append(edge)
+
+        return edge
+
+    def _decode_edge_type(self, encoded_edge_type: dict) -> EdgeType:
+        """Decode the 'type' key in the serialized nx_graph.
+
+        Args:
+            encoded_edge_type: a dictionary with either 'py/id' or 'py/reduce' key.
+
+        Returns:
+            The decoded `EdgeType` object.
+        """
+
+        if "py/reduce" in encoded_edge_type:
+            edge_type = self._decode_reduce_dict(encoded_edge_type)
+        else:
+            # Expect a "py/id" instead of "py/reduce"
+            edge_type = self._decode_id(encoded_edge_type["py/id"])
+        return edge_type
+
+    def _decode_links(
+        self, links: List[dict]
+    ) -> List[Dict[str, Union[int, Node, EdgeType]]]:
+        """Decode the 'links' key in the serialized nx_graph.
+
+        The links are the edges in the graph and will have the following keys:
+            - source: The source node of the edge.
+            - target: The destination node of the edge.
+            - type: The type of the edge (e.g. BODY, SYMMETRY).
+        and more.
+
+        Args:
+            encoded_links: The list of encoded links to decode.
+        """
+
+        for link in links:
+            for key, value in link.items():
+                if key == "source":
+                    link[key] = self._decode_node(value)
+                elif key == "target":
+                    link[key] = self._decode_node(value)
+                elif key == "type":
+                    link[key] = self._decode_edge_type(value)
+
+        return links
+
+    @staticmethod
+    def decode_preview_image(
+        img_b64: bytes, return_bytes: bool = False
+    ) -> Union[Image.Image, bytes]:
+        """Decode a skeleton preview image byte string representation to a `PIL.Image`
+
+        Args:
+            img_b64: a byte string representation of a skeleton preview image
+            return_bytes: whether to return the decoded image as bytes
+
+        Returns:
+            Either a PIL.Image of the skeleton preview image or the decoded image as bytes
+            (if `return_bytes` is True).
+        """
+        bytes = base64.b64decode(img_b64)
+        if return_bytes:
+            return bytes
+
+        buffer = BytesIO(bytes)
+        img = Image.open(buffer)
+        return img
+
+    def _decode(self, json_str: str):
+        dicts = json.loads(json_str)
+
+        # Enforce same format across template and non-template skeletons
+        if "nx_graph" not in dicts:
+            # Non-template skeletons use the dicts as the "nx_graph"
+            dicts = {"nx_graph": dicts}
+
+        # Decode the graph
+        nx_graph = dicts["nx_graph"]
+
+        self.decoded_objects = []  # Reset the decoded objects incase reusing decoder
+        for key, value in nx_graph.items():
+            if key == "nodes":
+                nx_graph[key] = self._decode_nodes(value)
+            elif key == "links":
+                nx_graph[key] = self._decode_links(value)
+
+        # Decode the preview image (if it exists)
+        preview_image = dicts.get("preview_image", None)
+        if preview_image is not None:
+            dicts["preview_image"] = SkeletonDecoder.decode_preview_image(
+                preview_image["py/b64"], return_bytes=True
+            )
+
+        return dicts
+
+    @classmethod
+    def decode(cls, json_str: str) -> Dict:
+        """Decode the given json string into a dictionary.
+
+        Returns:
+            A dict with `Node`s, `EdgeType`s, and `bytes` decoded/reconstructed.
+        """
+        decoder = cls()
+        return decoder._decode(json_str)
+
+
+class SkeletonEncoder:
+    """Replace jsonpickle.encode with our own encoder.
+
+    The input is a dictionary containing python objects that need to be encoded as
+    JSON strings. The output is a JSON string that represents the input dictionary.
+
+    `Node(name='neck', weight=1.0)` =>
+        {
+            "py/object": "sleap.Skeleton.Node",
+            "py/state": {"py/tuple" ["neck", 1.0]}
+        }
+
+    `<EdgeType.BODY: 1>` =>
+        {"py/reduce": [
+            {"py/type": "sleap.Skeleton.EdgeType"},
+            {"py/tuple": [1] }
+            ]
+        }`
+
+    Where `name` and `weight` are the attributes of the `Node` class; weight is always 1.0.
+    `EdgeType` is an enum with values `BODY = 1` and `SYMMETRY = 2`.
+
+    See sleap.skeleton.Node and sleap.skeleton.EdgeType.
+
+    If the object has been "seen" before, it will not be encoded as the full JSON string
+    but referenced by its `py/id`, which starts at 1 and indexes the objects in the
+    order they are seen so that the second time the first object is used, it will be
+    referenced as `{"py/id": 1}`.
+    """
+
+    def __init__(self):
+        """Initializes a SkeletonEncoder instance."""
+        # Maps object id to py/id
+        self._encoded_objects: Dict[int, int] = {}
+
+    @classmethod
+    def encode(cls, data: Dict[str, Any]) -> str:
+        """Encodes the input dictionary as a JSON string.
+
+        Args:
+            data: The data to encode.
+
+        Returns:
+            json_str: The JSON string representation of the data.
+        """
+
+        # This is required for backwards compatibility with SLEAP <=1.3.4
+        sorted_data = cls._recursively_sort_dict(data)
+
+        encoder = cls()
+        encoded_data = encoder._encode(sorted_data)
+        json_str = json.dumps(encoded_data)
+        return json_str
+
+    @staticmethod
+    def _recursively_sort_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+        """Recursively sorts the dictionary by keys."""
+        sorted_dict = dict(sorted(dictionary.items()))
+        for key, value in sorted_dict.items():
+            if isinstance(value, dict):
+                sorted_dict[key] = SkeletonEncoder._recursively_sort_dict(value)
+            elif isinstance(value, list):
+                for i, item in enumerate(value):
+                    if isinstance(item, dict):
+                        sorted_dict[key][i] = SkeletonEncoder._recursively_sort_dict(
+                            item
+                        )
+        return sorted_dict
+
+    def _encode(self, obj: Any) -> Any:
+        """Recursively encodes the input object.
+
+        Args:
+            obj: The object to encode. Can be a dictionary, list, Node, EdgeType or
+                primitive data type.
+
+        Returns:
+            The encoded object as a dictionary.
+        """
+        if isinstance(obj, dict):
+            encoded_obj = {}
+            for key, value in obj.items():
+                if key == "links":
+                    encoded_obj[key] = self._encode_links(value)
+                else:
+                    encoded_obj[key] = self._encode(value)
+            return encoded_obj
+        elif isinstance(obj, list):
+            return [self._encode(v) for v in obj]
+        elif isinstance(obj, EdgeType):
+            return self._encode_edge_type(obj)
+        elif isinstance(obj, Node):
+            return self._encode_node(obj)
+        else:
+            return obj  # Primitive data types
+
+    def _encode_links(self, links: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Encodes the list of links (edges) in the skeleton graph.
+
+        Args:
+            links: A list of dictionaries, each representing an edge in the graph.
+
+        Returns:
+            A list of encoded edge dictionaries with keys ordered as specified.
+        """
+        encoded_links = []
+        for link in links:
+            # Use a regular dict (insertion order preserved in Python 3.7+)
+            encoded_link = {}
+
+            for key, value in link.items():
+                if key in ("source", "target"):
+                    encoded_link[key] = self._encode_node(value)
+                elif key == "type":
+                    encoded_link[key] = self._encode_edge_type(value)
+                else:
+                    encoded_link[key] = self._encode(value)
+            encoded_links.append(encoded_link)
+
+        return encoded_links
+
+    def _encode_node(self, node: Union["Node", int]) -> Dict[str, Any]:
+        """Encodes a Node object.
+
+        Args:
+            node: The Node object to encode or integer index. The latter requires that
+                the class has the `idx_to_node` attribute set.
+
+        Returns:
+            The encoded `Node` object as a dictionary.
+        """
+        if isinstance(node, int):
+            # We sometimes have the node object already replaced by its index (when
+            # `node_to_idx` is provided). In this case, the node is already encoded.
+            return node
+
+        # Check if object has been encoded before
+        first_encoding = self._is_first_encoding(node)
+        py_id = self._get_or_assign_id(node, first_encoding)
+        if first_encoding:
+            # Full encoding
+            return {
+                "py/object": "sleap.skeleton.Node",
+                "py/state": {"py/tuple": [node.name, node.weight]},
+            }
+        else:
+            # Reference by py/id
+            return {"py/id": py_id}
+
+    def _encode_edge_type(self, edge_type: "EdgeType") -> Dict[str, Any]:
+        """Encodes an EdgeType object.
+
+        Args:
+            edge_type: The EdgeType object to encode. Either `EdgeType.BODY` or
+                `EdgeType.SYMMETRY` enum with values 1 and 2 respectively.
+
+        Returns:
+            The encoded EdgeType object as a dictionary.
+        """
+        # Check if object has been encoded before
+        first_encoding = self._is_first_encoding(edge_type)
+        py_id = self._get_or_assign_id(edge_type, first_encoding)
+        if first_encoding:
+            # Full encoding
+            return {
+                "py/reduce": [
+                    {"py/type": "sleap.skeleton.EdgeType"},
+                    {"py/tuple": [edge_type.value]},
+                ]
+            }
+        else:
+            # Reference by py/id
+            return {"py/id": py_id}
+
+    def _get_or_assign_id(self, obj: Any, first_encoding: bool) -> int:
+        """Gets or assigns a py/id for the object.
+
+        Args:
+            The object to get or assign a py/id for.
+
+        Returns:
+            The py/id assigned to the object.
+        """
+        # Object id is unique for each object in the current session
+        obj_id = id(obj)
+        # Assign a py/id to the object if it hasn't been assigned one yet
+        if first_encoding:
+            py_id = len(self._encoded_objects) + 1  # py/id starts at 1
+            # Assign the py/id to the object and store it in _encoded_objects
+            self._encoded_objects[obj_id] = py_id
+        return self._encoded_objects[obj_id]
+
+    def _is_first_encoding(self, obj: Any) -> bool:
+        """Checks if the object is being encoded for the first time.
+
+        Args:
+            obj: The object to check.
+
+        Returns:
+            True if this is the first encoding of the object, False otherwise.
+        """
+        obj_id = id(obj)
+        first_time = obj_id not in self._encoded_objects
+        return first_time
 
 
 class Skeleton:
@@ -937,7 +1433,7 @@ class Skeleton:
 
         # This is a weird hack to serialize the whole _graph into a dict.
         # I use the underlying to_json and parse it.
-        return json.loads(obj.to_json(node_to_idx))
+        return json.loads(obj.to_json(node_to_idx=node_to_idx))
 
     @classmethod
     def from_dict(cls, d: Dict, node_to_idx: Dict[Node, int] = None) -> "Skeleton":
@@ -999,12 +1495,12 @@ class Skeleton:
         Returns:
             A string containing the JSON representation of the skeleton.
         """
-        jsonpickle.set_encoder_options("simplejson", sort_keys=True, indent=4)
+
         if node_to_idx is not None:
-            indexed_node_graph = nx.relabel_nodes(
-                G=self._graph, mapping=node_to_idx
-            )  # map nodes to int
+            # Map Nodes to int
+            indexed_node_graph = nx.relabel_nodes(G=self._graph, mapping=node_to_idx)
         else:
+            # Keep graph nodes as Node objects
             indexed_node_graph = self._graph
 
         # Encode to JSON
@@ -1023,7 +1519,7 @@ class Skeleton:
         else:
             data = graph
 
-        json_str = jsonpickle.encode(data)
+        json_str = SkeletonEncoder.encode(data)
 
         return json_str
 
@@ -1071,7 +1567,7 @@ class Skeleton:
         Returns:
             An instance of the `Skeleton` object decoded from the JSON.
         """
-        dicts = jsonpickle.decode(json_str)
+        dicts: dict = SkeletonDecoder.decode(json_str)
         nx_graph = dicts.get("nx_graph", dicts)
         graph = json_graph.node_link_graph(nx_graph)
 

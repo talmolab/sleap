@@ -4,7 +4,7 @@ import sleap
 from sleap.nn.data import offset_regression
 
 
-sleap.use_cpu_only()  # hide GPUs for test
+# sleap.use_cpu_only()  # hide GPUs for test
 
 
 def test_make_offsets():

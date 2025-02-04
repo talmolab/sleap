@@ -69,14 +69,13 @@ Quick install
 
 .. code-block:: bash
 
-    conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap
-
+    conda create -y -n sleap -c conda-forge -c nvidia -c sleap/label/dev -c sleap -c anaconda sleap
 
 `pip` **(any OS except Apple silicon)**:
 
 .. code-block:: bash
 
-    pip install sleap
+    pip install sleap[pypi]
 
 
 See the docs for `full installation instructions <https://sleap.ai/installation.html>`_.
@@ -85,7 +84,7 @@ Learn to SLEAP
 --------------
 - **Learn step-by-step**: `Tutorial <https://sleap.ai/tutorials/tutorial.html>`_
 - **Learn more advanced usage**: `Guides <https://sleap.ai/guides/>`__ and `Notebooks <https://sleap.ai/notebooks/>`__
-- **Learn by watching**: `MIT CBMM Tutorial <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_
+- **Learn by watching**: `ABL:AOC 2023 Workshop <https://www.youtube.com/watch?v=BfW-HgeDfMI>`_ and `MIT CBMM Tutorial <https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking>`_
 - **Learn by reading**: `Paper (Pereira et al., Nature Methods, 2022) <https://www.nature.com/articles/s41592-022-01426-1>`__ and `Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020) <https://rdcu.be/caH3H>`_
 - **Learn from others**: `Discussions on Github <https://github.com/talmolab/sleap/discussions>`_
 

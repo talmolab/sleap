@@ -13,6 +13,11 @@ def min_centered_instance_model_path():
 
 
 @pytest.fixture
+def min_centered_instance_with_scaling_model_path():
+    return "tests/data/models/minimal_instance.UNet.centered_instance_with_scaling"
+
+
+@pytest.fixture
 def min_bottomup_model_path():
     return "tests/data/models/minimal_instance.UNet.bottomup"
 

@@ -11,16 +11,16 @@ class ExportClipDialog(FormBuilderModalDialog):
 
         super().__init__(form_name="labeled_clip_form")
 
-        can_use_skvideo = VideoWriter.can_use_skvideo()
+        can_use_ffmpeg = VideoWriter.can_use_ffmpeg()
 
-        if can_use_skvideo:
+        if can_use_ffmpeg:
             message = (
                 "<i><b>MP4</b> file will be encoded using "
-                "system ffmpeg via scikit-video (preferred option).</i>"
+                "system ffmpeg via imageio (preferred option).</i>"
             )
         else:
             message = (
-                "<i>Unable to use ffpmeg via scikit-video. "
+                "<i>Unable to use ffpmeg via imageio. "
                 "<b>AVI</b> file will be encoding using OpenCV.</i>"
             )
 

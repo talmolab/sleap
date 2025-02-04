@@ -1,9 +1,11 @@
 import os
+import pandas as pd
 import pytest
 import numpy as np
 from pathlib import Path, PurePath
 
 import sleap
+from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
@@ -1263,7 +1265,7 @@ def test_has_frame():
 @pytest.fixture
 def removal_test_labels():
     skeleton = Skeleton()
-    video = Video(backend=MediaVideo(filename="test"))
+    video = Video(backend=MediaVideo(filename="test.mp4"))
     lf_user_only = LabeledFrame(
         video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
     )
@@ -1378,6 +1380,13 @@ def test_labels_numpy(centered_pair_predictions: Labels):
     trx = centered_pair_predictions.numpy(video=None, all_frames=True, untracked=False)
     assert trx.shape == (1100, 27, 24, 2)
 
+    centered_pair_predictions.remove_frame(centered_pair_predictions[-1])
+    trx = centered_pair_predictions.numpy(video=None, all_frames=False, untracked=False)
+    assert trx.shape == (1098, 27, 24, 2)
+
+    trx = centered_pair_predictions.numpy(video=None, all_frames=True, untracked=False)
+    assert trx.shape == (1100, 27, 24, 2)
+
     labels_single = Labels(
         [
             LabeledFrame(
@@ -1388,7 +1397,7 @@ def test_labels_numpy(centered_pair_predictions: Labels):
     )
     assert labels_single.numpy().shape == (1100, 1, 24, 2)
 
-    assert centered_pair_predictions.numpy(untracked=True).shape == (1100, 5, 24, 2)
+    assert centered_pair_predictions.numpy(untracked=True).shape == (1100, 4, 24, 2)
     for lf in centered_pair_predictions:
         for inst in lf:
             inst.track = None
@@ -1404,6 +1413,30 @@ def test_labels_numpy(centered_pair_predictions: Labels):
     lf.instances.append(user_inst)
     labels_np = centered_pair_predictions.numpy(untracked=True, return_confidence=True)
     np.testing.assert_array_equal(labels_np[lf.frame_idx, 0, :, :-1], user_inst.numpy())
+
+
+def test_add_track(centered_pair_labels: Labels, small_robot_mp4_vid: Video):
+    labels = centered_pair_labels
+    new_video = small_robot_mp4_vid
+
+    track = Track()
+    labels.add_track(new_video, track)
+    assert track in labels.tracks
+    assert new_video in labels._cache._track_occupancy
+    assert track in labels._cache._track_occupancy[new_video]
+
+
+def test_add_instance(centered_pair_labels: Labels):
+    labels = centered_pair_labels
+    lf = labels[0]
+    track = Track()
+    inst = Instance(skeleton=labels.skeleton, track=track, frame=lf)
+
+    labels.add_instance(lf, inst)
+    assert inst in labels.instances()
+    assert inst in lf.instances
+    assert track in labels.tracks
+    assert track in labels._cache._track_occupancy[lf.video]
 
 
 def test_remove_track(centered_pair_predictions):
@@ -1557,3 +1590,45 @@ def test_export_nwb(centered_pair_predictions: Labels, tmpdir):
     # Read from NWB file
     read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
     assert_read_labels_match(centered_pair_predictions, read_labels)
+
+
+@pytest.mark.parametrize(
+    "labels_fixture_name",
+    [
+        "centered_pair_labels",
+        "centered_pair_predictions",
+        "min_labels",
+        "min_labels_slp",
+        "min_labels_robot",
+    ],
+)
+def test_export_csv(labels_fixture_name, tmpdir, request):
+    # Retrieve Labels fixture by name
+    labels_fixture = request.getfixturevalue(labels_fixture_name)
+
+    # Generate the filename for the CSV file
+    csv_filename = Path(tmpdir) / (labels_fixture_name + "_export.csv")
+
+    # Export to CSV file
+    labels_fixture.export_csv(str(csv_filename))
+
+    # Assert that the CSV file was created
+    assert csv_filename.is_file(), f"CSV file '{csv_filename}' was not created"
+
+
+def test_exported_csv(tmpdir, min_labels_slp, minimal_instance_predictions_csv_path):
+    # Construct the filename for the CSV file
+    filename_csv = Path(tmpdir) / "minimal_instance_predictions_export.csv"
+    labels = min_labels_slp
+    # Export to CSV file
+    labels.export_csv(filename_csv)
+    # Read the CSV file
+    labels_csv = pd.read_csv(filename_csv)
+
+    # Read the csv file fixture
+    csv_predictions = pd.read_csv(minimal_instance_predictions_csv_path)
+
+    assert labels_csv.equals(csv_predictions)
+
+    # check number of cols
+    assert len(labels_csv.columns) - 3 == len(get_nodes_as_np_strings(labels)) * 3

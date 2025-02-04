@@ -1,25 +1,26 @@
 """Module for creating dock widgets for the `MainWindow`."""
 
 from typing import Callable, Iterable, List, Optional, Type, Union
+
 from qtpy import QtGui
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
-    QWidget,
-    QDockWidget,
-    QMainWindow,
-    QLabel,
     QComboBox,
+    QDockWidget,
     QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLayout,
+    QMainWindow,
     QPushButton,
     QTabWidget,
-    QLayout,
-    QHBoxLayout,
     QVBoxLayout,
+    QWidget,
 )
 
 from sleap.gui.dataviews import (
-    GenericTableView,
     GenericTableModel,
+    GenericTableView,
     LabeledFrameTableModel,
     SkeletonEdgesTableModel,
     SkeletonNodeModel,
@@ -29,10 +30,8 @@ from sleap.gui.dataviews import (
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
-from sleap.skeleton import Skeleton
-from sleap.util import decode_preview_image, find_files_by_suffix, get_package_file
-
-# from sleap.gui.app import MainWindow
+from sleap.skeleton import Skeleton, SkeletonDecoder
+from sleap.util import find_files_by_suffix, get_package_file
 
 
 class DockWidget(QDockWidget):
@@ -179,6 +178,7 @@ class VideosDock(DockWidget):
             is_activatable=True,
             model=self.model,
             ellipsis_left=True,
+            multiple_selection=True,
         )
 
         return self.table
@@ -192,7 +192,6 @@ class VideosDock(DockWidget):
         self.add_button(hb, "Show Video", self.table.activateSelected)
         self.add_button(hb, "Add Videos", main_window.commands.addVideo)
         self.add_button(hb, "Remove Video", main_window.commands.removeVideo)
-
         hbw = QWidget()
         hbw.setLayout(hb)
         return hbw
@@ -331,7 +330,7 @@ class SkeletonDock(DockWidget):
         vb = QVBoxLayout()
         hb = QHBoxLayout()
 
-        skeletons_folder = get_package_file("sleap/skeletons")
+        skeletons_folder = get_package_file("skeletons")
         skeletons_json_files = find_files_by_suffix(
             skeletons_folder, suffix=".json", depth=1
         )
@@ -364,7 +363,7 @@ class SkeletonDock(DockWidget):
         def updatePreviewImage(preview_image_bytes: bytes):
 
             # Decode the preview image
-            preview_image = decode_preview_image(preview_image_bytes)
+            preview_image = SkeletonDecoder.decode_preview_image(preview_image_bytes)
 
             # Create a QImage from the Image
             preview_image = QtGui.QImage(
@@ -556,7 +555,7 @@ class InstancesDock(DockWidget):
 
         hb = QHBoxLayout()
         self.add_button(
-            hb, "New Instance", lambda x: main_window.commands.newInstance()
+            hb, "New Instance", lambda x: main_window.commands.newInstance(offset=10)
         )
         self.add_button(
             hb, "Delete Instance", main_window.commands.deleteSelectedInstance

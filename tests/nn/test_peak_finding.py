@@ -22,7 +22,7 @@ from sleap.nn.data.confidence_maps import (
 )
 
 
-sleap.nn.system.use_cpu_only()
+# sleap.nn.system.use_cpu_only()
 
 
 def test_find_local_offsets():

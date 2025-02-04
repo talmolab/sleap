@@ -30,38 +30,37 @@ import logging
 import operator
 import os
 import re
-import sys
 import subprocess
+import sys
+import traceback
 from enum import Enum
 from glob import glob
-from pathlib import PurePath, Path
-import traceback
-from typing import Callable, Dict, Iterator, List, Optional, Type, Tuple
+from pathlib import Path, PurePath
+from typing import Callable, Dict, Iterator, List, Optional, Tuple, Type, Union, cast
 
-import numpy as np
-import cv2
 import attr
-from qtpy import QtCore, QtWidgets, QtGui
-from qtpy.QtWidgets import QMessageBox, QProgressDialog
+import cv2
+import numpy as np
+from qtpy import QtCore, QtGui, QtWidgets
 
-from sleap.util import get_package_file
-from sleap.skeleton import Node, Skeleton
-from sleap.instance import Instance, PredictedInstance, Point, Track, LabeledFrame
-from sleap.io.video import Video
+from sleap.gui.dialogs.delete import DeleteDialog
+from sleap.gui.dialogs.filedialog import FileDialog
+from sleap.gui.dialogs.importvideos import ImportVideos
+from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
+from sleap.gui.dialogs.message import MessageDialog
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+from sleap.gui.dialogs.frame_range import FrameRangeDialog
+from sleap.gui.state import GuiState
+from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
+from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.gui.dialogs.delete import DeleteDialog
-from sleap.gui.dialogs.importvideos import ImportVideos
-from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.dialogs.missingfiles import MissingFilesDialog
-from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
-from sleap.gui.dialogs.message import MessageDialog
-from sleap.gui.dialogs.query import QueryDialog
-from sleap.gui.suggestions import VideoFrameSuggestions
-from sleap.gui.state import GuiState
-
+from sleap.io.video import Video
+from sleap.skeleton import Node, Skeleton
+from sleap.util import get_package_file
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -201,6 +200,7 @@ class CommandContext:
     def from_labels(cls, labels: Labels) -> "CommandContext":
         """Creates a command context for use independently of GUI app."""
         state = GuiState()
+        state["labels"] = labels
         app = FakeApp(labels)
         return cls(state=state, app=app)
 
@@ -260,16 +260,15 @@ class CommandContext:
         """
         self.execute(LoadLabelsObject, labels=labels, filename=filename)
 
-    def loadProjectFile(self, filename: str):
+    def loadProjectFile(self, filename: Union[str, Labels]):
         """Loads given labels file into GUI.
 
         Args:
-            filename: The path to the saved labels dataset. If None,
-                then don't do anything.
+            filename: The path to the saved labels dataset or the `Labels` object.
+                If None, then don't do anything.
 
         Returns:
             None
-
         """
         self.execute(LoadProjectFile, filename=filename)
 
@@ -330,7 +329,11 @@ class CommandContext:
 
     def exportAnalysisFile(self, all_videos: bool = False):
         """Shows gui for exporting analysis h5 file."""
-        self.execute(ExportAnalysisFile, all_videos=all_videos)
+        self.execute(ExportAnalysisFile, all_videos=all_videos, csv=False)
+
+    def exportCSVFile(self, all_videos: bool = False):
+        """Shows gui for exporting analysis csv file."""
+        self.execute(ExportAnalysisFile, all_videos=all_videos, csv=True)
 
     def exportNWB(self):
         """Show gui for exporting nwb file."""
@@ -488,8 +491,12 @@ class CommandContext:
         """Gui for deleting instances below some score threshold."""
         self.execute(DeleteLowScorePredictions)
 
-    def deleteFrameLimitPredictions(self):
+    def deleteInstanceLimitPredictions(self):
         """Gui for deleting instances beyond some number in each frame."""
+        self.execute(DeleteInstanceLimitPredictions)
+
+    def deleteFrameLimitPredictions(self):
+        """Gui for deleting instances beyond some frame number."""
         self.execute(DeleteFrameLimitPredictions)
 
     def completeInstanceNodes(self, instance: Instance):
@@ -502,6 +509,7 @@ class CommandContext:
         init_method: str = "best",
         location: Optional[QtCore.QPoint] = None,
         mark_complete: bool = False,
+        offset: int = 0,
     ):
         """Creates a new instance, copying node coordinates as appropriate.
 
@@ -511,6 +519,8 @@ class CommandContext:
             init_method: Method to use for positioning nodes.
             location: The location where instance should be added (if node init
                 method supports custom location).
+            mark_complete: Whether to mark the instance as complete.
+            offset: Offset to apply to the location if given.
         """
         self.execute(
             AddInstance,
@@ -518,6 +528,7 @@ class CommandContext:
             init_method=init_method,
             location=location,
             mark_complete=mark_complete,
+            offset=offset,
         )
 
     def setPointLocations(
@@ -643,9 +654,8 @@ class LoadLabelsObject(AppCommand):
 
         Returns:
             None.
-
         """
-        filename = params["filename"]
+        filename = params.get("filename", None)  # If called with just a Labels object
         labels: Labels = params["labels"]
 
         context.state["labels"] = labels
@@ -665,7 +675,9 @@ class LoadLabelsObject(AppCommand):
             context.state["video"] = labels.videos[0]
 
         context.state["project_loaded"] = True
-        context.state["has_changes"] = params.get("changed_on_load", False)
+        context.state["has_changes"] = params.get("changed_on_load", False) or (
+            filename is None
+        )
 
         # This is not listed as an edit command since we want a clean changestack
         context.app.on_data_update([UpdateTopic.project, UpdateTopic.all])
@@ -679,17 +691,16 @@ class LoadProjectFile(LoadLabelsObject):
         if len(filename) == 0:
             return
 
-        gui_video_callback = Labels.make_gui_video_callback(
-            search_paths=[os.path.dirname(filename)], context=params
-        )
-
         has_loaded = False
         labels = None
-        if type(filename) == Labels:
+        if isinstance(filename, Labels):
             labels = filename
             filename = None
             has_loaded = True
         else:
+            gui_video_callback = Labels.make_gui_video_callback(
+                search_paths=[os.path.dirname(filename)], context=params
+            )
             try:
                 labels = Labels.load_file(filename, video_search=gui_video_callback)
                 has_loaded = True
@@ -747,7 +758,6 @@ class OpenProject(AppCommand):
 class ImportAlphaTracker(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         video_path = params["video_path"] if "video_path" in params else None
 
         labels = Labels.load_alphatracker(
@@ -787,7 +797,6 @@ class ImportAlphaTracker(AppCommand):
 class ImportNWB(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.load_nwb(filename=params["filename"])
 
         new_window = context.app.__class__()
@@ -820,7 +829,6 @@ class ImportNWB(AppCommand):
 class ImportDeepPoseKit(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.from_deepposekit(
             filename=params["filename"],
             video_path=params["video_path"],
@@ -869,7 +877,6 @@ class ImportDeepPoseKit(AppCommand):
 class ImportLEAP(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.load_leap_matlab(
             filename=params["filename"],
         )
@@ -900,7 +907,6 @@ class ImportLEAP(AppCommand):
 class ImportCoco(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.load_coco(
             filename=params["filename"], img_dir=params["img_dir"], use_missing_gui=True
         )
@@ -932,7 +938,6 @@ class ImportCoco(AppCommand):
 class ImportDeepLabCut(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-
         labels = Labels.load_deeplabcut(filename=params["filename"])
 
         new_window = context.app.__class__()
@@ -1129,13 +1134,20 @@ class ExportAnalysisFile(AppCommand):
     }
     export_filter = ";;".join(export_formats.keys())
 
+    export_formats_csv = {
+        "CSV (*.csv)": "csv",
+    }
+    export_filter_csv = ";;".join(export_formats_csv.keys())
+
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
         from sleap.io.format.nix import NixAdaptor
+        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
         for output_path, video in params["analysis_videos"]:
-            if Path(output_path).suffix[1:] == "nix":
+            if params["csv"]:
+                adaptor = CSVAdaptor
+            elif Path(output_path).suffix[1:] == "nix":
                 adaptor = NixAdaptor
             else:
                 adaptor = SleapAnalysisAdaptor
@@ -1148,18 +1160,24 @@ class ExportAnalysisFile(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        def ask_for_filename(default_name: str) -> str:
+        def ask_for_filename(default_name: str, csv: bool) -> str:
             """Allow user to specify the filename"""
+            filter = (
+                ExportAnalysisFile.export_filter_csv
+                if csv
+                else ExportAnalysisFile.export_filter
+            )
             filename, selected_filter = FileDialog.save(
                 context.app,
                 caption="Export Analysis File...",
                 dir=default_name,
-                filter=ExportAnalysisFile.export_filter,
+                filter=filter,
             )
             return filename
 
         # Ensure labels has labeled frames
         labels = context.labels
+        is_csv = params["csv"]
         if len(labels.labeled_frames) == 0:
             raise ValueError("No labeled frames in project. Nothing to export.")
 
@@ -1177,7 +1195,7 @@ class ExportAnalysisFile(AppCommand):
         # Specify (how to get) the output filename
         default_name = context.state["filename"] or "labels"
         fn = PurePath(default_name)
-        file_extension = "h5"
+        file_extension = "csv" if is_csv else "h5"
         if len(videos) == 1:
             # Allow user to specify the filename
             use_default = False
@@ -1190,18 +1208,23 @@ class ExportAnalysisFile(AppCommand):
                 caption="Select Folder to Export Analysis Files...",
                 dir=str(fn.parent),
             )
-            if len(ExportAnalysisFile.export_formats) > 1:
+            export_format = (
+                ExportAnalysisFile.export_formats_csv
+                if is_csv
+                else ExportAnalysisFile.export_formats
+            )
+            if len(export_format) > 1:
                 item, ok = QtWidgets.QInputDialog.getItem(
                     context.app,
                     "Select export format",
                     "Available export formats",
-                    list(ExportAnalysisFile.export_formats.keys()),
+                    list(export_format.keys()),
                     0,
                     False,
                 )
                 if not ok:
                     return False
-                file_extension = ExportAnalysisFile.export_formats[item]
+                file_extension = export_format[item]
             if len(dirname) == 0:
                 return False
 
@@ -1218,7 +1241,9 @@ class ExportAnalysisFile(AppCommand):
                 format_suffix=file_extension,
             )
 
-            filename = default_name if use_default else ask_for_filename(default_name)
+            filename = (
+                default_name if use_default else ask_for_filename(default_name, is_csv)
+            )
             # Check that filename is valid and create list of video / output paths
             if len(filename) != 0:
                 analysis_videos.append(video)
@@ -1271,6 +1296,7 @@ class ExportLabeledClip(AppCommand):
             frames=list(params["frames"]),
             fps=params["fps"],
             color_manager=params["color_manager"],
+            background=params["background"],
             show_edges=params["show edges"],
             edge_is_wedge=params["edge_is_wedge"],
             marker_size=params["marker size"],
@@ -1285,7 +1311,6 @@ class ExportLabeledClip(AppCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-
         from sleap.gui.dialogs.export_clip import ExportClipDialog
 
         dialog = ExportClipDialog()
@@ -1309,17 +1334,15 @@ class ExportLabeledClip(AppCommand):
         # makes mp4's that most programs can't open (VLC can).
         default_out_filename = context.state["filename"] + ".avi"
 
-        # But if we can write mpegs using sci-kit video, use .mp4
-        # since it has trouble writing .avi files.
-        if VideoWriter.can_use_skvideo():
+        if VideoWriter.can_use_ffmpeg():
             default_out_filename = context.state["filename"] + ".mp4"
 
-        # Ask where use wants to save video file
+        # Ask where user wants to save video file
         filename, _ = FileDialog.save(
             context.app,
             caption="Save Video As...",
             dir=default_out_filename,
-            filter="Video (*.avi *mp4)",
+            filter="Video (*.avi *.mp4)",
         )
 
         # Check if user hit cancel
@@ -1330,6 +1353,7 @@ class ExportLabeledClip(AppCommand):
         params["fps"] = export_options["fps"]
         params["scale"] = export_options["scale"]
         params["open_when_done"] = export_options["open_when_done"]
+        params["background"] = export_options["background"]
 
         params["crop"] = None
 
@@ -1364,7 +1388,11 @@ class ExportLabeledClip(AppCommand):
 
 
 def export_dataset_gui(
-    labels: Labels, filename: str, all_labeled: bool = False, suggested: bool = False
+    labels: Labels,
+    filename: str,
+    all_labeled: bool = False,
+    suggested: bool = False,
+    verbose: bool = True,
 ) -> str:
     """Export dataset with image data and display progress GUI dialog.
 
@@ -1372,12 +1400,15 @@ def export_dataset_gui(
         labels: `sleap.Labels` dataset to export.
         filename: Output filename. Should end in `.pkg.slp`.
         all_labeled: If `True`, export all labeled frames, including frames with no user
-            instances.
-        suggested: If `True`, include image data for suggested frames.
+            instances. Defaults to `False`.
+        suggested: If `True`, include image data for suggested frames. Defaults to
+            `False`.
+        verbose: If `True`, display progress dialog. Defaults to `True`.
     """
-    win = QtWidgets.QProgressDialog(
-        "Exporting dataset with frame images...", "Cancel", 0, 1
-    )
+    if verbose:
+        win = QtWidgets.QProgressDialog(
+            "Exporting dataset with frame images...", "Cancel", 0, 1
+        )
 
     def update_progress(n, n_total):
         if win.wasCanceled():
@@ -1398,15 +1429,16 @@ def export_dataset_gui(
         save_frame_data=True,
         all_labeled=all_labeled,
         suggested=suggested,
-        progress_callback=update_progress,
+        progress_callback=update_progress if verbose else None,
     )
 
-    if win.wasCanceled():
-        # Delete output if saving was canceled.
-        os.remove(filename)
-        return "canceled"
+    if verbose:
+        if win.wasCanceled():
+            # Delete output if saving was canceled.
+            os.remove(filename)
+            return "canceled"
 
-    win.hide()
+        win.hide()
 
     return filename
 
@@ -1422,6 +1454,7 @@ class ExportDatasetWithImages(AppCommand):
             filename=params["filename"],
             all_labeled=cls.all_labeled,
             suggested=cls.suggested,
+            verbose=params.get("verbose", True),
         )
 
     @staticmethod
@@ -1551,7 +1584,6 @@ class GoNextSuggestedFrame(NavCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-
         next_suggestion_frame = context.labels.get_next_suggestion(
             context.state["video"], context.state["frame_idx"], cls.seek_direction
         )
@@ -1737,7 +1769,6 @@ class ReplaceVideo(EditCommand):
 
     @staticmethod
     def do_action(context: CommandContext, params: dict) -> bool:
-
         import_list = params["import_list"]
 
         for import_item, video in import_list:
@@ -1837,44 +1868,60 @@ class ReplaceVideo(EditCommand):
 
 
 class RemoveVideo(EditCommand):
-    topics = [UpdateTopic.video, UpdateTopic.suggestions]
+    topics = [UpdateTopic.video, UpdateTopic.suggestions, UpdateTopic.frame]
 
     @staticmethod
     def do_action(context: CommandContext, params: dict):
-        video = params["video"]
-        # Remove video
-        context.labels.remove_video(video)
+        videos = context.labels.videos
+        row_idxs = context.state["selected_batch_video"]
+        videos_to_be_removed = [videos[i] for i in row_idxs]
 
-        # Update view if this was the current video
-        if context.state["video"] == video:
-            if len(context.labels.videos) > 0:
+        # Remove selected videos in the project
+        for video in videos_to_be_removed:
+            context.labels.remove_video(video)
+
+        # Update the view if state has the removed video
+        if context.state["video"] in videos_to_be_removed:
+            if len(context.labels.videos):
                 context.state["video"] = context.labels.videos[-1]
             else:
                 context.state["video"] = None
 
+        if len(context.labels.videos) == 0:
+            context.app.updateStatusMessage(" ")
+
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        video = context.state["selected_video"]
-        if video is None:
-            return False
+        videos = context.labels.videos.copy()
+        row_idxs = context.state["selected_batch_video"]
+        video_file_names = []
+        total_num_labeled_frames = 0
+        for idx in row_idxs:
+            video = videos[idx]
+            if video is None:
+                return False
 
-        # Count labeled frames for this video
-        n = len(context.labels.find(video))
+            # Count labeled frames for this video
+            n = len(context.labels.find(video))
+
+            if n > 0:
+                total_num_labeled_frames += n
+                video_file_names.append(
+                    f"{video}".split(", shape")[0].split("filename=")[-1].split("/")[-1]
+                )
 
         # Warn if there are labels that will be deleted
-        if n > 0:
+        if len(video_file_names) >= 1:
             response = QtWidgets.QMessageBox.critical(
                 context.app,
                 "Removing video with labels",
-                f"{n} labeled frames in this video will be deleted, "
-                "are you sure you want to remove this video?",
+                f"{total_num_labeled_frames} labeled frames in {', '.join(video_file_names)} will be deleted, "
+                "are you sure you want to remove the videos?",
                 QtWidgets.QMessageBox.Yes,
                 QtWidgets.QMessageBox.No,
             )
             if response == QtWidgets.QMessageBox.No:
                 return False
-
-        params["video"] = video
         return True
 
 
@@ -1894,7 +1941,6 @@ class OpenSkeleton(EditCommand):
     def compare_skeletons(
         skeleton: Skeleton, new_skeleton: Skeleton
     ) -> Tuple[List[str], List[str], List[str]]:
-
         delete_nodes = []
         add_nodes = []
         if skeleton.node_names != new_skeleton.node_names:
@@ -1931,14 +1977,27 @@ class OpenSkeleton(EditCommand):
             labels.skeletons = skeletons_used
 
     @staticmethod
+    def get_template_skeleton_filename(context: CommandContext) -> str:
+        """Helper function to get the template skeleton filename from dropdown.
+
+        Args:
+            context: The `CommandContext`.
+
+        Returns:
+            Path to the template skeleton shipped with SLEAP.
+        """
+
+        template = context.app.skeleton_dock.skeleton_templates.currentText()
+        filename = get_package_file(f"skeletons/{template}.json")
+        return filename
+
+    @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
         filters = ["JSON skeleton (*.json)", "HDF5 skeleton (*.h5 *.hdf5)"]
         # Check whether to load from file or preset
         if params.get("template", False):
             # Get selected template from dropdown
-            template = context.app.skeletonTemplates.currentText()
-            # Load from selected preset
-            filename = get_package_file(f"sleap/skeletons/{template}.json")
+            filename = OpenSkeleton.get_template_skeleton_filename(context)
         else:
             filename, selected_filter = FileDialog.open(
                 context.app,
@@ -2013,7 +2072,7 @@ class OpenSkeleton(EditCommand):
                 func(*args, **kwargs)
             except Exception as e:
                 tb_str = traceback.format_exception(
-                    etype=type(e), value=e, tb=e.__traceback__
+                    type(e), value=e, tb=e.__traceback__
                 )
                 logger.warning(
                     f"Recieved the following error while replacing skeleton:\n"
@@ -2244,6 +2303,8 @@ class InstanceDeleteCommand(EditCommand):
         lfs_to_remove = []
         for lf, inst in lf_inst_list:
             context.labels.remove_instance(lf, inst, in_transaction=True)
+            if context.state["instance"] == inst:
+                context.state["instance"] = None
             if len(lf.instances) == 0:
                 lfs_to_remove.append(lf)
 
@@ -2386,7 +2447,7 @@ class DeleteLowScorePredictions(InstanceDeleteCommand):
             return super().ask(context, params)
 
 
-class DeleteFrameLimitPredictions(InstanceDeleteCommand):
+class DeleteInstanceLimitPredictions(InstanceDeleteCommand):
     @staticmethod
     def get_frame_instance_list(context: CommandContext, params: dict):
         count_thresh = params["count_threshold"]
@@ -2416,6 +2477,36 @@ class DeleteFrameLimitPredictions(InstanceDeleteCommand):
             return super().ask(context, params)
 
 
+class DeleteFrameLimitPredictions(InstanceDeleteCommand):
+    @staticmethod
+    def get_frame_instance_list(context: CommandContext, params: Dict):
+        """Called from the parent `InstanceDeleteCommand.ask` method.
+
+        Returns:
+            List of instances to be deleted.
+        """
+        instances = []
+        # Select the instances to be deleted
+        for lf in context.labels.labeled_frames:
+            if lf.frame_idx < (params["min_frame_idx"] - 1) or lf.frame_idx > (
+                params["max_frame_idx"] - 1
+            ):
+                instances.extend([(lf, inst) for inst in lf.instances])
+        return instances
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: Dict) -> bool:
+        current_video = context.state["video"]
+        dialog = FrameRangeDialog(
+            title="Delete Instances in Frame Range...", max_frame_idx=len(current_video)
+        )
+        results = dialog.get_results()
+        if results:
+            params["min_frame_idx"] = results["min_frame_idx"]
+            params["max_frame_idx"] = results["max_frame_idx"]
+            return super().ask(context, params)
+
+
 class TransposeInstances(EditCommand):
     topics = [UpdateTopic.project_instances, UpdateTopic.tracks]
 
@@ -2429,7 +2520,16 @@ class TransposeInstances(EditCommand):
         # Swap tracks for current and subsequent frames when we have tracks
         old_track, new_track = instances[0].track, instances[1].track
         if old_track is not None and new_track is not None:
-            frame_range = (context.state["frame_idx"], context.state["video"].frames)
+            if context.state["propagate track labels"]:
+                frame_range = (
+                    context.state["frame_idx"],
+                    context.state["video"].frames,
+                )
+            else:
+                frame_range = (
+                    context.state["frame_idx"],
+                    context.state["frame_idx"] + 1,
+                )
             context.labels.track_swap(
                 context.state["video"], new_track, old_track, frame_range
             )
@@ -2472,6 +2572,7 @@ class DeleteSelectedInstance(EditCommand):
             return
 
         context.labels.remove_instance(context.state["labeled_frame"], selected_inst)
+        context.state["instance"] = None
 
 
 class DeleteSelectedInstanceTrack(EditCommand):
@@ -2489,6 +2590,7 @@ class DeleteSelectedInstanceTrack(EditCommand):
 
         track = selected_inst.track
         context.labels.remove_instance(context.state["labeled_frame"], selected_inst)
+        context.state["instance"] = None
 
         if track is not None:
             # remove any instance on this track
@@ -2660,7 +2762,6 @@ class GenerateSuggestions(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-
         if len(context.labels.videos) == 0:
             print("Error: no videos to generate suggestions for")
             return
@@ -2788,33 +2889,263 @@ class MergeProject(EditCommand):
 class AddInstance(EditCommand):
     topics = [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.suggestions]
 
-    @staticmethod
-    def get_previous_frame_index(context: CommandContext) -> Optional[int]:
-        frames = context.labels.frames(
-            context.state["video"],
-            from_frame_idx=context.state["frame_idx"],
-            reverse=True,
-        )
-
-        try:
-            next_idx = next(frames).frame_idx
-        except:
-            return
-
-        return next_idx
-
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         copy_instance = params.get("copy_instance", None)
         init_method = params.get("init_method", "best")
         location = params.get("location", None)
         mark_complete = params.get("mark_complete", False)
+        offset = params.get("offset", 0)
 
         if context.state["labeled_frame"] is None:
             return
 
         if len(context.state["skeleton"]) == 0:
             return
+
+        (
+            copy_instance,
+            from_predicted,
+            from_prev_frame,
+        ) = AddInstance.find_instance_to_copy_from(
+            context, copy_instance=copy_instance, init_method=init_method
+        )
+
+        new_instance = AddInstance.create_new_instance(
+            context=context,
+            from_predicted=from_predicted,
+            copy_instance=copy_instance,
+            mark_complete=mark_complete,
+            init_method=init_method,
+            location=location,
+            from_prev_frame=from_prev_frame,
+            offset=offset,
+        )
+
+        # Add the instance
+        context.labels.add_instance(context.state["labeled_frame"], new_instance)
+
+        if context.state["labeled_frame"] not in context.labels.labels:
+            context.labels.append(context.state["labeled_frame"])
+
+    @staticmethod
+    def create_new_instance(
+        context: CommandContext,
+        from_predicted: Optional[PredictedInstance],
+        copy_instance: Optional[Union[Instance, PredictedInstance]],
+        mark_complete: bool,
+        init_method: str,
+        location: Optional[QtCore.QPoint],
+        from_prev_frame: bool,
+        offset: int = 0,
+    ) -> Instance:
+        """Create new instance."""
+
+        # Now create the new instance
+        new_instance = Instance(
+            skeleton=context.state["skeleton"],
+            from_predicted=from_predicted,
+            frame=context.state["labeled_frame"],
+        )
+
+        has_missing_nodes = AddInstance.set_visible_nodes(
+            context=context,
+            copy_instance=copy_instance,
+            new_instance=new_instance,
+            mark_complete=mark_complete,
+            init_method=init_method,
+            location=location,
+            offset=offset,
+        )
+
+        if has_missing_nodes:
+            AddInstance.fill_missing_nodes(
+                context=context,
+                copy_instance=copy_instance,
+                init_method=init_method,
+                new_instance=new_instance,
+                location=location,
+            )
+
+        # If we're copying a predicted instance or from another frame, copy the track
+        if hasattr(copy_instance, "score") or from_prev_frame:
+            copy_instance = cast(Union[PredictedInstance, Instance], copy_instance)
+            new_instance.track = copy_instance.track
+
+        return new_instance
+
+    @staticmethod
+    def fill_missing_nodes(
+        context: CommandContext,
+        copy_instance: Optional[Union[Instance, PredictedInstance]],
+        init_method: str,
+        new_instance: Instance,
+        location: Optional[QtCore.QPoint],
+    ):
+        """Fill in missing nodes for new instance.
+
+        Args:
+            context: The command context.
+            copy_instance: The instance to copy from.
+            init_method: The initialization method.
+            new_instance: The new instance.
+            location: The location of the instance.
+
+        Returns:
+            None
+        """
+
+        # mark the node as not "visible" if we're copying from a predicted instance without this node
+        is_visible = copy_instance is None or (not hasattr(copy_instance, "score"))
+
+        if init_method == "force_directed":
+            AddMissingInstanceNodes.add_force_directed_nodes(
+                context=context,
+                instance=new_instance,
+                visible=is_visible,
+                center_point=location,
+            )
+        elif init_method == "random":
+            AddMissingInstanceNodes.add_random_nodes(
+                context=context, instance=new_instance, visible=is_visible
+            )
+        elif init_method == "template":
+            AddMissingInstanceNodes.add_nodes_from_template(
+                context=context,
+                instance=new_instance,
+                visible=is_visible,
+                center_point=location,
+            )
+        else:
+            AddMissingInstanceNodes.add_best_nodes(
+                context=context, instance=new_instance, visible=is_visible
+            )
+
+    @staticmethod
+    def set_visible_nodes(
+        context: CommandContext,
+        copy_instance: Optional[Union[Instance, PredictedInstance]],
+        new_instance: Instance,
+        mark_complete: bool,
+        init_method: str,
+        location: Optional[QtCore.QPoint] = None,
+        offset: int = 0,
+    ) -> bool:
+        """Sets visible nodes for new instance.
+
+        Args:
+            context: The command context.
+            copy_instance: The instance to copy from.
+            new_instance: The new instance.
+            mark_complete: Whether to mark the instance as complete.
+            init_method: The initialization method.
+            location: The location of the mouse click if any.
+            offset: The offset to apply to all nodes.
+
+        Returns:
+            Whether the new instance has missing nodes.
+        """
+
+        if copy_instance is None:
+            return True
+
+        has_missing_nodes = False
+
+        # Calculate scale factor for getting new x and y values.
+        old_size_width = copy_instance.frame.video.shape[2]
+        old_size_height = copy_instance.frame.video.shape[1]
+        new_size_width = new_instance.frame.video.shape[2]
+        new_size_height = new_instance.frame.video.shape[1]
+        scale_width = new_size_width / old_size_width
+        scale_height = new_size_height / old_size_height
+
+        # The offset is 0, except when using Ctrl + I or Add Instance button.
+        offset_x = offset
+        offset_y = offset
+
+        # Using right click and context menu with option "best"
+        if (init_method == "best") and (location is not None):
+            reference_node = next(
+                (node for node in copy_instance if not node.isnan()), None
+            )
+            reference_x = reference_node.x
+            reference_y = reference_node.y
+            offset_x = location.x() - (reference_x * scale_width)
+            offset_y = location.y() - (reference_y * scale_height)
+
+        # Go through each node in skeleton.
+        for node in context.state["skeleton"].node_names:
+            # If we're copying from a skeleton that has this node.
+            if node in copy_instance and not copy_instance[node].isnan():
+                # Ensure x, y inside current frame, then copy x, y, and visible.
+                # We don't want to copy a PredictedPoint or score attribute.
+                x_old = copy_instance[node].x
+                y_old = copy_instance[node].y
+
+                # Copy the instance without scale or offset if predicted
+                if isinstance(copy_instance, PredictedInstance):
+                    x_new = x_old
+                    y_new = y_old
+                else:
+                    x_new = x_old * scale_width
+                    y_new = y_old * scale_height
+
+                # Apply offset if in bounds
+                x_new_offset = x_new + offset_x
+                y_new_offset = y_new + offset_y
+
+                # Default visibility is same as copied instance.
+                visible = copy_instance[node].visible
+
+                # If the node is offset to outside the frame, mark as not visible.
+                if x_new_offset < 0:
+                    x_new = 0
+                    visible = False
+                elif x_new_offset > new_size_width:
+                    x_new = new_size_width
+                    visible = False
+                else:
+                    x_new = x_new_offset
+                if y_new_offset < 0:
+                    y_new = 0
+                    visible = False
+                elif y_new_offset > new_size_height:
+                    y_new = new_size_height
+                    visible = False
+                else:
+                    y_new = y_new_offset
+
+                # Update the new instance with the new x, y, and visibility.
+                new_instance[node] = Point(
+                    x=x_new,
+                    y=y_new,
+                    visible=visible,
+                    complete=mark_complete,
+                )
+            else:
+                has_missing_nodes = True
+
+        return has_missing_nodes
+
+    @staticmethod
+    def find_instance_to_copy_from(
+        context: CommandContext,
+        copy_instance: Optional[Union[Instance, PredictedInstance]],
+        init_method: bool,
+    ) -> Tuple[
+        Optional[Union[Instance, PredictedInstance]], Optional[PredictedInstance], bool
+    ]:
+        """Find instance to copy from.
+
+        Args:
+            context: The command context.
+            copy_instance: The `Instance` to copy from.
+            init_method: The initialization method.
+
+        Returns:
+            The instance to copy from, the predicted instance (if it is from a predicted
+            instance, else None), and whether it's from a previous frame.
+        """
 
         from_predicted = copy_instance
         from_prev_frame = False
@@ -2841,7 +3172,7 @@ class AddInstance(EditCommand):
         ) or init_method == "prior_frame":
             # Otherwise, if there are instances in previous frames,
             # copy the points from one of those instances.
-            prev_idx = cls.get_previous_frame_index(context)
+            prev_idx = AddInstance.get_previous_frame_index(context)
 
             if prev_idx is not None:
                 prev_instances = context.labels.find(
@@ -2866,71 +3197,26 @@ class AddInstance(EditCommand):
                     from_prev_frame = True
 
         from_predicted = from_predicted if hasattr(from_predicted, "score") else None
+        from_predicted = cast(Optional[PredictedInstance], from_predicted)
 
-        # Now create the new instance
-        new_instance = Instance(
-            skeleton=context.state["skeleton"],
-            from_predicted=from_predicted,
-            frame=context.state["labeled_frame"],
+        return copy_instance, from_predicted, from_prev_frame
+
+    @staticmethod
+    def get_previous_frame_index(context: CommandContext) -> Optional[int]:
+        """Returns index of previous frame."""
+
+        frames = context.labels.frames(
+            context.state["video"],
+            from_frame_idx=context.state["frame_idx"],
+            reverse=True,
         )
 
-        has_missing_nodes = False
+        try:
+            next_idx = next(frames).frame_idx
+        except:
+            return
 
-        # go through each node in skeleton
-        for node in context.state["skeleton"].node_names:
-            # if we're copying from a skeleton that has this node
-            if (
-                copy_instance is not None
-                and node in copy_instance
-                and not copy_instance[node].isnan()
-            ):
-                # just copy x, y, and visible
-                # we don't want to copy a PredictedPoint or score attribute
-                new_instance[node] = Point(
-                    x=copy_instance[node].x,
-                    y=copy_instance[node].y,
-                    visible=copy_instance[node].visible,
-                    complete=mark_complete,
-                )
-            else:
-                has_missing_nodes = True
-
-        if has_missing_nodes:
-            # mark the node as not "visible" if we're copying from a predicted instance without this node
-            is_visible = copy_instance is None or (not hasattr(copy_instance, "score"))
-
-            if init_method == "force_directed":
-                AddMissingInstanceNodes.add_force_directed_nodes(
-                    context=context,
-                    instance=new_instance,
-                    visible=is_visible,
-                    center_point=location,
-                )
-            elif init_method == "random":
-                AddMissingInstanceNodes.add_random_nodes(
-                    context=context, instance=new_instance, visible=is_visible
-                )
-            elif init_method == "template":
-                AddMissingInstanceNodes.add_nodes_from_template(
-                    context=context,
-                    instance=new_instance,
-                    visible=is_visible,
-                    center_point=location,
-                )
-            else:
-                AddMissingInstanceNodes.add_best_nodes(
-                    context=context, instance=new_instance, visible=is_visible
-                )
-
-        # If we're copying a predicted instance or from another frame, copy the track
-        if hasattr(copy_instance, "score") or from_prev_frame:
-            new_instance.track = copy_instance.track
-
-        # Add the instance
-        context.labels.add_instance(context.state["labeled_frame"], new_instance)
-
-        if context.state["labeled_frame"] not in context.labels.labels:
-            context.labels.append(context.state["labeled_frame"])
+        return next_idx
 
 
 class SetInstancePointLocations(EditCommand):

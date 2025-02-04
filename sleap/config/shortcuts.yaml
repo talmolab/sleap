@@ -39,3 +39,4 @@ frame next medium step: Ctrl+Right
 frame prev medium step: Ctrl+Left
 frame next large step: Ctrl+Alt+Right
 frame prev large step: Ctrl+Alt+Left
+export_analysis_current: Ctrl+Alt+E

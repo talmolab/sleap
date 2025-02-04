@@ -15,20 +15,17 @@ as is. For example::
 
 """
 
-from qtpy import QtCore, QtWidgets, QtGui
+import os
+from operator import itemgetter
+from pathlib import Path
+from typing import Any, Callable, List, Optional
 
 import numpy as np
-import os
+from qtpy import QtCore, QtGui, QtWidgets
 
-from operator import itemgetter
-
-from typing import Any, Callable, Dict, List, Optional, Type
-
-from sleap.gui.state import GuiState
 from sleap.gui.commands import CommandContext
-from sleap.gui.color import ColorManager
-from sleap.io.dataset import Labels
-from sleap.instance import LabeledFrame, Instance
+from sleap.gui.state import GuiState
+from sleap.instance import LabeledFrame
 from sleap.skeleton import Skeleton
 
 
@@ -301,6 +298,7 @@ class GenericTableView(QtWidgets.QTableView):
         is_sortable: bool = False,
         is_activatable: bool = False,
         ellipsis_left: bool = False,
+        multiple_selection: bool = False,
     ):
         super(GenericTableView, self).__init__()
 
@@ -309,6 +307,7 @@ class GenericTableView(QtWidgets.QTableView):
         self.name_prefix = name_prefix if name_prefix is not None else self.name_prefix
         self.is_sortable = is_sortable or self.is_sortable
         self.is_activatable = is_activatable or self.is_activatable
+        self.multiple_selection = multiple_selection
 
         self.setModel(model)
 
@@ -317,7 +316,10 @@ class GenericTableView(QtWidgets.QTableView):
             self.setWordWrap(False)
         self.horizontalHeader().setStretchLastSection(True)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        if self.multiple_selection:
+            self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        else:
+            self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.setSortingEnabled(self.is_sortable)
 
         self.doubleClicked.connect(self.activateSelected)
@@ -370,16 +372,36 @@ class GenericTableView(QtWidgets.QTableView):
         not the converted dict.
         """
         idx = self.currentIndex()
+
+        if self.multiple_selection:
+            idx_temp = set([x.row() for x in self.selectedIndexes()])
+            self.state[f"selected_batch_{self.row_name}"] = idx_temp
+
         if not idx.isValid():
             return None
         return self.model().original_items[idx.row()]
 
 
 class VideosTableModel(GenericTableModel):
-    properties = ("filename", "frames", "height", "width", "channels")
+    properties = (
+        "name",
+        "filepath",
+        "frames",
+        "height",
+        "width",
+        "channels",
+    )
 
-    def item_to_data(self, obj, item):
-        return {key: getattr(item, key) for key in self.properties}
+    def item_to_data(self, obj, item: "Video"):
+        data = {}
+        for property in self.properties:
+            if property == "name":
+                data[property] = Path(item.filename).name
+            elif property == "filepath":
+                data[property] = str(Path(item.filename).parent)
+            else:
+                data[property] = getattr(item, property)
+        return data
 
 
 class SkeletonNodesTableModel(GenericTableModel):
@@ -403,13 +425,6 @@ class SkeletonNodesTableModel(GenericTableModel):
         elif key == "symmetry":
             self.context.setNodeSymmetry(skeleton=self.obj, node=item, symmetry=value)
 
-    def get_item_color(self, item: Any, key: str):
-        if self.skeleton:
-            color = self.context.app.color_manager.get_item_color(
-                item, parent_skeleton=self.skeleton
-            )
-            return QtGui.QColor(*color)
-
 
 class SkeletonEdgesTableModel(GenericTableModel):
     """Table model for skeleton edges."""
@@ -425,14 +440,6 @@ class SkeletonEdgesTableModel(GenericTableModel):
                 for edge in skeleton.edges
             ]
         return items
-
-    def get_item_color(self, item: Any, key: str):
-        if self.skeleton:
-            edge_pair = (item["source"], item["destination"])
-            color = self.context.app.color_manager.get_item_color(
-                edge_pair, parent_skeleton=self.skeleton
-            )
-            return QtGui.QColor(*color)
 
 
 class LabeledFrameTableModel(GenericTableModel):

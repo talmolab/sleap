@@ -33,6 +33,7 @@ import shutil
 import atexit
 import subprocess
 import rich.progress
+import pandas as pd
 from rich.pretty import pprint
 from collections import deque
 import json
@@ -68,7 +69,7 @@ from sleap.nn.data.pipelines import (
 )
 from sleap.nn.utils import reset_input_layer
 from sleap.io.dataset import Labels
-from sleap.util import frame_list
+from sleap.util import frame_list, make_scoped_dictionary
 from sleap.instance import PredictedInstance, LabeledFrame
 
 from tensorflow.python.framework.convert_to_constants import (
@@ -180,6 +181,7 @@ class Predictor(ABC):
         integral_patch_size: int = 5,
         batch_size: int = 4,
         resize_input_layer: bool = True,
+        max_instances: Optional[int] = None,
     ) -> "Predictor":
         """Create the appropriate `Predictor` subclass from a list of model paths.
 
@@ -198,12 +200,17 @@ class Predictor(ABC):
                 usage.
             resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
                 resized to (None, None, None, num_color_channels).
+            max_instances: If not `None`, discard instances beyond this count when
+                predicting, regardless of whether filtering is done at the tracking
+                stage. This is useful for preventing extraneous instances from being
+                created when tracking is not being applied.
 
         Returns:
             A subclass of `Predictor`.
 
         See also: `SingleInstancePredictor`, `TopDownPredictor`, `BottomUpPredictor`,
-            `MoveNetPredictor`
+            `MoveNetPredictor`, `TopDownMultiClassPredictor`,
+            `BottomUpMultiClassPredictor`.
         """
         # Read configs and find model types.
         if isinstance(model_paths, str):
@@ -272,6 +279,7 @@ class Predictor(ABC):
                     integral_refinement=integral_refinement,
                     integral_patch_size=integral_patch_size,
                     resize_input_layer=resize_input_layer,
+                    max_instances=max_instances,
                 )
 
         elif "multi_instance" in model_types:
@@ -282,6 +290,7 @@ class Predictor(ABC):
                 integral_patch_size=integral_patch_size,
                 batch_size=batch_size,
                 resize_input_layer=resize_input_layer,
+                max_instances=max_instances,
             )
 
         elif "multi_class_bottomup" in model_types:
@@ -531,7 +540,6 @@ class Predictor(ABC):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         """Export a trained SLEAP model as a frozen graph. Initializes model,
         creates a dummy tracing batch and passes it through the model. The
         frozen graph is saved along with training meta info.
@@ -719,11 +727,18 @@ class CentroidCropGroundTruth(tf.keras.layers.Layer):
 
     Attributes:
         crop_size: The length of the square box to extract around each centroid.
+        input_scale: Float indicating if the images should be resized before being
+            passed to the model.
     """
 
-    def __init__(self, crop_size: int):
+    def __init__(
+        self,
+        crop_size: int,
+        input_scale: float = 1.0,
+    ):
         super().__init__()
         self.crop_size = crop_size
+        self.input_scale = input_scale
 
     def call(self, example_gt: Dict[str, tf.Tensor]) -> Dict[str, tf.Tensor]:
         """Return the ground truth instance crops.
@@ -750,6 +765,9 @@ class CentroidCropGroundTruth(tf.keras.layers.Layer):
         """
         # Pull out data from example.
         full_imgs = example_gt["image"]
+        if self.input_scale != 1.0:
+            full_imgs = sleap.nn.data.resizing.resize_image(full_imgs, self.input_scale)
+            example_gt["centroids"] *= self.input_scale
         crop_sample_inds = example_gt["centroids"].value_rowids()  # (n_peaks,)
         n_peaks = tf.shape(crop_sample_inds)[0]  # total number of peaks in the batch
         centroid_points = example_gt["centroids"].flat_values  # (n_peaks, 2)
@@ -919,11 +937,12 @@ class InferenceLayer(tf.keras.layers.Layer):
         self.ensure_grayscale = ensure_grayscale
         self.ensure_float = ensure_float
 
-    def preprocess(self, imgs: tf.Tensor) -> tf.Tensor:
+    def preprocess(self, imgs: tf.Tensor, resize_img: bool = True) -> tf.Tensor:
         """Apply all preprocessing operations configured for this layer.
 
         Args:
             imgs: A batch of images as a tensor.
+            resize_img: Bool to indicate if the images should be resized.
 
         Returns:
             The input tensor after applying preprocessing operations. The tensor will
@@ -939,7 +958,7 @@ class InferenceLayer(tf.keras.layers.Layer):
         if self.ensure_float:
             imgs = sleap.nn.data.normalization.ensure_float(imgs)
 
-        if self.input_scale != 1.0:
+        if resize_img and self.input_scale != 1.0:
             imgs = sleap.nn.data.resizing.resize_image(imgs, self.input_scale)
 
         if self.pad_to_stride > 1:
@@ -1104,7 +1123,6 @@ class InferenceModel(tf.keras.Model):
         os.makedirs(save_path, exist_ok=True)
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-
             self.save(tmp_dir, save_format="tf", save_traces=save_traces)
 
             imported = tf.saved_model.load(tmp_dir)
@@ -1122,9 +1140,11 @@ class InferenceModel(tf.keras.Model):
             info["predicted_tensors"] = tensors
 
         full_model = tf.function(
-            lambda x: sleap.nn.data.utils.unrag_example(model(x), numpy=False)
-            if unrag_outputs
-            else model(x)
+            lambda x: (
+                sleap.nn.data.utils.unrag_example(model(x), numpy=False)
+                if unrag_outputs
+                else model(x)
+            )
         )
 
         full_model = full_model.get_concrete_function(
@@ -1136,6 +1156,7 @@ class InferenceModel(tf.keras.Model):
 
         info["frozen_model_inputs"] = frozen_func.inputs
         info["frozen_model_outputs"] = frozen_func.outputs
+        info["unragged_outputs"] = unrag_outputs
 
         with (Path(save_path) / "info.json").open("w") as fp:
             json.dump(
@@ -1576,6 +1597,15 @@ class SingleInstancePredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -1592,7 +1622,6 @@ class SingleInstancePredictor(Predictor):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         super().export_model(
             save_path,
             signatures,
@@ -1620,6 +1649,9 @@ class CentroidCrop(InferenceLayer):
         crop_size: Integer scalar specifying the height/width of the centered crops.
         input_scale: Float indicating if the images should be resized before being
             passed to the model.
+        precrop_resize: Float indicating the factor by which the original images
+            (not images resized for centroid model) should be resized before cropping.
+            Note: this resize only after getting the predictions for centroid model.
         pad_to_stride: If not 1, input image will be paded to ensure that it is
             divisible by this value (after scaling). This should be set to the max
             stride of the model.
@@ -1660,6 +1692,7 @@ class CentroidCrop(InferenceLayer):
         keras_model: tf.keras.Model,
         crop_size: int,
         input_scale: float = 1.0,
+        precrop_resize: float = 1.0,
         pad_to_stride: int = 1,
         output_stride: Optional[int] = None,
         peak_threshold: float = 0.2,
@@ -1680,6 +1713,7 @@ class CentroidCrop(InferenceLayer):
         )
 
         self.crop_size = crop_size
+        self.precrop_resize = precrop_resize
 
         self.confmaps_ind = confmaps_ind
         self.offsets_ind = offsets_ind
@@ -1798,6 +1832,13 @@ class CentroidCrop(InferenceLayer):
             # See: https://github.com/tensorflow/tensorflow/issues/6720
             centroid_points = (centroid_points / self.input_scale) + 0.5
 
+        # resize full images
+        if self.precrop_resize != 1.0:
+            full_imgs = sleap.nn.data.resizing.resize_image(
+                full_imgs, self.precrop_resize
+            )
+            centroid_points *= self.precrop_resize
+
         # Store crop offsets.
         crop_offsets = centroid_points - (self.crop_size / 2)
 
@@ -1806,9 +1847,7 @@ class CentroidCrop(InferenceLayer):
         n_peaks = tf.shape(centroid_points)[0]
 
         if n_peaks > 0:
-
             if self.max_instances is not None:
-
                 centroid_points = tf.RaggedTensor.from_value_rowids(
                     centroid_points, crop_sample_inds, nrows=samples
                 )
@@ -1838,21 +1877,35 @@ class CentroidCrop(InferenceLayer):
                 )
 
                 for sample in range(samples):
+                    n_centroids = tf.shape(centroid_vals[sample])[0]
+                    if self.max_instances < n_centroids:
+                        top_points = tf.math.top_k(
+                            centroid_vals[sample],
+                            k=self.max_instances,
+                        )
+                        top_inds = top_points.indices
 
-                    top_points = tf.math.top_k(
-                        centroid_vals[sample], k=self.max_instances
-                    )
-                    top_inds = top_points.indices
+                        _centroid_vals = _centroid_vals.write(
+                            sample, tf.gather(centroid_vals[sample], top_inds)
+                        )
 
-                    _centroid_vals = _centroid_vals.write(
-                        sample, tf.gather(centroid_vals[sample], top_inds)
-                    )
+                        _centroid_points = _centroid_points.write(
+                            sample, tf.gather(centroid_points[sample], top_inds)
+                        )
 
-                    _centroid_points = _centroid_points.write(
-                        sample, tf.gather(centroid_points[sample], top_inds)
-                    )
-
-                    _row_ids = _row_ids.write(sample, tf.fill([len(top_inds)], sample))
+                        _row_ids = _row_ids.write(
+                            sample, tf.fill([len(top_inds)], sample)
+                        )
+                    else:
+                        _centroid_vals = _centroid_vals.write(
+                            sample, centroid_vals[sample]
+                        )
+                        _centroid_points = _centroid_points.write(
+                            sample, centroid_points[sample]
+                        )
+                        _row_ids = _row_ids.write(
+                            sample, tf.fill([n_centroids], sample)
+                        )
 
                 centroid_vals = _centroid_vals.concat()
                 centroid_points = _centroid_points.concat()
@@ -1926,6 +1979,11 @@ class FindInstancePeaks(InferenceLayer):
             centered instance confidence maps.
         input_scale: Float indicating if the images should be resized before being
             passed to the model.
+        resize_input_image: Bool indicating if the crops should be resized. If
+            `CentroidCropGroundTruth` or `CentroidCrop` is used along with `FindInstancePeaks`,
+            then the images are resized in the `CentroidCropGroundTruth` or `CentroidCrop`
+            before cropping and this is set to `False`. However, the output keypoints
+            are adjusted to the actual scale with the `input_scaling` argument.
         output_stride: Output stride of the model, denoting the scale of the output
             confidence maps relative to the images (after input scaling). This is used
             for adjusting the peak coordinates to the image grid. This will be inferred
@@ -1956,6 +2014,7 @@ class FindInstancePeaks(InferenceLayer):
         self,
         keras_model: tf.keras.Model,
         input_scale: float = 1.0,
+        resize_input_image: bool = True,
         output_stride: Optional[int] = None,
         peak_threshold: float = 0.2,
         refinement: Optional[str] = "local",
@@ -1968,6 +2027,7 @@ class FindInstancePeaks(InferenceLayer):
         super().__init__(
             keras_model=keras_model, input_scale=input_scale, pad_to_stride=1, **kwargs
         )
+        self.resize_input_image = resize_input_image
         self.peak_threshold = peak_threshold
         self.refinement = refinement
         self.integral_patch_size = integral_patch_size
@@ -2065,7 +2125,7 @@ class FindInstancePeaks(InferenceLayer):
                 crop_sample_inds = tf.range(samples, dtype=tf.int32)
 
         # Preprocess inputs (scaling, padding, colorspace, int to float).
-        crops = self.preprocess(crops)
+        crops = self.preprocess(crops, resize_img=self.resize_input_image)
 
         # Network forward pass.
         out = self.keras_model(crops)
@@ -2112,7 +2172,9 @@ class FindInstancePeaks(InferenceLayer):
         if "crop_offsets" in inputs:
             # Flatten (samples, ?, 2) -> (n_peaks, 2).
             crop_offsets = inputs["crop_offsets"].merge_dims(0, 1)
-            peak_points = peak_points + tf.expand_dims(crop_offsets, axis=1)
+            peak_points = peak_points + (
+                tf.expand_dims(crop_offsets, axis=1) / self.input_scale
+            )
 
         # Group peaks by sample (samples, ?, nodes, 2).
         peaks = tf.RaggedTensor.from_value_rowids(
@@ -2237,7 +2299,6 @@ class TopDownInferenceModel(InferenceModel):
         crop_output = self.centroid_crop(example)
 
         if isinstance(self.instance_peaks, FindInstancePeaksGroundTruth):
-
             if "instances" in example:
                 peaks_output = self.instance_peaks(example, crop_output)
             else:
@@ -2290,6 +2351,10 @@ class TopDownPredictor(Predictor):
             head.
         integral_patch_size: Size of patches to crop around each rough peak for integral
             refinement as an integer scalar.
+        max_instances: If not `None`, discard instances beyond this count when
+            predicting, regardless of whether filtering is done at the tracking stage.
+            This is useful for preventing extraneous instances from being created when
+            tracking is not being applied.
     """
 
     centroid_config: Optional[TrainingJobConfig] = attr.ib(default=None)
@@ -2303,6 +2368,7 @@ class TopDownPredictor(Predictor):
     peak_threshold: float = 0.2
     integral_refinement: bool = True
     integral_patch_size: int = 5
+    max_instances: Optional[int] = None
 
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained models and configuration."""
@@ -2311,7 +2377,7 @@ class TopDownPredictor(Predictor):
 
         if use_gt_centroid:
             centroid_crop_layer = CentroidCropGroundTruth(
-                crop_size=self.confmap_config.data.instance_cropping.crop_size
+                crop_size=self.confmap_config.data.instance_cropping.crop_size,
             )
         else:
             if use_gt_confmap:
@@ -2322,12 +2388,14 @@ class TopDownPredictor(Predictor):
                 keras_model=self.centroid_model.keras_model,
                 crop_size=crop_size,
                 input_scale=self.centroid_config.data.preprocessing.input_scaling,
+                precrop_resize=1.0,
                 pad_to_stride=self.centroid_config.data.preprocessing.pad_to_stride,
                 output_stride=self.centroid_config.model.heads.centroid.output_stride,
                 peak_threshold=self.peak_threshold,
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
                 return_confmaps=False,
+                max_instances=self.max_instances,
             )
 
         if use_gt_confmap:
@@ -2342,7 +2410,14 @@ class TopDownPredictor(Predictor):
                 refinement="integral" if self.integral_refinement else "local",
                 integral_patch_size=self.integral_patch_size,
                 return_confmaps=False,
+                resize_input_image=False,
             )
+            if use_gt_centroid:
+                centroid_crop_layer.input_scale = cfg.data.preprocessing.input_scaling
+            else:
+                centroid_crop_layer.precrop_resize = (
+                    cfg.data.preprocessing.input_scaling
+                )
 
         self.inference_model = TopDownInferenceModel(
             centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
@@ -2366,6 +2441,7 @@ class TopDownPredictor(Predictor):
         integral_refinement: bool = True,
         integral_patch_size: int = 5,
         resize_input_layer: bool = True,
+        max_instances: Optional[int] = None,
     ) -> "TopDownPredictor":
         """Create predictor from saved models.
 
@@ -2389,6 +2465,10 @@ class TopDownPredictor(Predictor):
                 integral refinement as an integer scalar.
             resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
                 resized to (None, None, None, num_color_channels).
+            max_instances: If not `None`, discard instances beyond this count when
+                predicting, regardless of whether filtering is done at the tracking
+                stage. This is useful for preventing extraneous instances from being
+                created when tracking is not being applied.
 
         Returns:
             An instance of `TopDownPredictor` with the loaded models.
@@ -2444,6 +2524,7 @@ class TopDownPredictor(Predictor):
             peak_threshold=peak_threshold,
             integral_refinement=integral_refinement,
             integral_patch_size=integral_patch_size,
+            max_instances=max_instances,
         )
         obj._initialize_inference_model()
         return obj
@@ -2564,7 +2645,6 @@ class TopDownPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["centroid_vals"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for pts, confs, score in zip(points, confidences, scores):
@@ -2584,6 +2664,7 @@ class TopDownPredictor(Predictor):
                         # Set tracks for predicted instances in this frame.
                         predicted_instances = self.tracker.track(
                             untracked_instances=predicted_instances,
+                            img_hw=ex["image"].shape[-3:-1],
                             img=image,
                             t=frame_ind,
                         )
@@ -2605,6 +2686,15 @@ class TopDownPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -2624,7 +2714,6 @@ class TopDownPredictor(Predictor):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         super().export_model(
             save_path,
             signatures,
@@ -2682,6 +2771,10 @@ class BottomUpInferenceLayer(InferenceLayer):
             the predicted instances. This will result in slower inference times since
             the data must be copied off of the GPU, but is useful for visualizing the
             raw output of the model.
+        return_paf_graph: If `True`, the part affinity field graph will be returned
+            together with the predicted instances. The graph is obtained by parsing the
+            part affinity fields with the `paf_scorer` instance and is an intermediate
+            representation used during instance grouping.
         confmaps_ind: Index of the output tensor of the model corresponding to
             confidence maps. If `None` (the default), this will be detected
             automatically by searching for the first tensor that contains
@@ -2710,6 +2803,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         integral_patch_size: int = 5,
         return_confmaps: bool = False,
         return_pafs: bool = False,
+        return_paf_graph: bool = False,
         confmaps_ind: Optional[int] = None,
         pafs_ind: Optional[int] = None,
         offsets_ind: Optional[int] = None,
@@ -2765,6 +2859,7 @@ class BottomUpInferenceLayer(InferenceLayer):
         self.integral_patch_size = integral_patch_size
         self.return_confmaps = return_confmaps
         self.return_pafs = return_pafs
+        self.return_paf_graph = return_paf_graph
 
     def forward_pass(self, data):
         """Run preprocessing and model inference on a batch."""
@@ -2865,6 +2960,10 @@ class BottomUpInferenceLayer(InferenceLayer):
 
             If `BottomUpInferenceLayer.return_pafs` is `True`, the predicted PAFs will
             be returned in the `"part_affinity_fields"` key.
+
+            If `BottomUpInferenceLayer.return_paf_graph` is `True`, the predicted PAF
+            graph will be returned in the `"peaks"`, `"peak_vals"`, `"peak_channel_inds"`,
+            `"edge_inds"`, `"edge_peak_inds"` and `"line_scores"` keys.
         """
         cms, pafs, offsets = self.forward_pass(data)
         peaks, peak_vals, peak_channel_inds = self.find_peaks(cms, offsets)
@@ -2872,6 +2971,9 @@ class BottomUpInferenceLayer(InferenceLayer):
             predicted_instances,
             predicted_peak_scores,
             predicted_instance_scores,
+            edge_inds,
+            edge_peak_inds,
+            line_scores,
         ) = self.paf_scorer.predict(pafs, peaks, peak_vals, peak_channel_inds)
 
         # Adjust for input scaling.
@@ -2891,6 +2993,13 @@ class BottomUpInferenceLayer(InferenceLayer):
             out["confmaps"] = cms
         if self.return_pafs:
             out["part_affinity_fields"] = pafs
+        if self.return_paf_graph:
+            out["peaks"] = peaks
+            out["peak_vals"] = peak_vals
+            out["peak_channel_inds"] = peak_channel_inds
+            out["edge_inds"] = edge_inds
+            out["edge_peak_inds"] = edge_peak_inds
+            out["line_scores"] = line_scores
         return out
 
 
@@ -2986,6 +3095,10 @@ class BottomUpPredictor(Predictor):
         min_line_scores: Minimum line score (between -1 and 1) required to form a match
             between candidate point pairs. Useful for rejecting spurious detections when
             there are no better ones.
+        max_instances: If not `None`, discard instances beyond this count when
+            predicting, regardless of whether filtering is done at the tracking stage.
+            This is useful for preventing extraneous instances from being created when
+            tracking is not being applied.
     """
 
     bottomup_config: TrainingJobConfig
@@ -3001,6 +3114,7 @@ class BottomUpPredictor(Predictor):
     dist_penalty_weight: float = 1.0
     paf_line_points: int = 10
     min_line_scores: float = 0.25
+    max_instances: Optional[int] = None
 
     def _initialize_inference_model(self):
         """Initialize the inference model from the trained model and configuration."""
@@ -3047,6 +3161,7 @@ class BottomUpPredictor(Predictor):
         paf_line_points: int = 10,
         min_line_scores: float = 0.25,
         resize_input_layer: bool = True,
+        max_instances: Optional[int] = None,
     ) -> "BottomUpPredictor":
         """Create predictor from a saved model.
 
@@ -3077,6 +3192,10 @@ class BottomUpPredictor(Predictor):
                 detections when there are no better ones.
             resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
                 resized to (None, None, None, num_color_channels).
+            max_instances: If not `None`, discard instances beyond this count when
+                predicting, regardless of whether filtering is done at the tracking
+                stage. This is useful for preventing extraneous instances from being
+                created when tracking is not being applied.
 
         Returns:
             An instance of `BottomUpPredictor` with the loaded model.
@@ -3103,6 +3222,7 @@ class BottomUpPredictor(Predictor):
             dist_penalty_weight=dist_penalty_weight,
             paf_line_points=paf_line_points,
             min_line_scores=min_line_scores,
+            max_instances=max_instances,
         )
         obj._initialize_inference_model()
         return obj
@@ -3159,7 +3279,6 @@ class BottomUpPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for pts, confs, score in zip(points, confidences, scores):
@@ -3175,10 +3294,20 @@ class BottomUpPredictor(Predictor):
                             )
                         )
 
+                    if self.max_instances is not None:
+                        # Filter by score.
+                        predicted_instances = sorted(
+                            predicted_instances, key=lambda x: x.score, reverse=True
+                        )
+                        predicted_instances = predicted_instances[
+                            : min(self.max_instances, len(predicted_instances))
+                        ]
+
                     if self.tracker:
                         # Set tracks for predicted instances in this frame.
                         predicted_instances = self.tracker.track(
                             untracked_instances=predicted_instances,
+                            img_hw=ex["image"].shape[-3:-1],
                             img=image,
                             t=frame_ind,
                         )
@@ -3200,6 +3329,15 @@ class BottomUpPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -3668,7 +3806,6 @@ class BottomUpMultiClassPredictor(Predictor):
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
                     for i, (pts, confs, score) in enumerate(
@@ -3683,9 +3820,10 @@ class BottomUpMultiClassPredictor(Predictor):
                             PredictedInstance.from_numpy(
                                 points=pts,
                                 point_confidences=confs,
-                                instance_score=np.nanmean(score),
+                                instance_score=np.nanmean(confs),
                                 skeleton=skeleton,
                                 track=track,
+                                tracking_score=np.nanmean(score),
                             )
                         )
 
@@ -3706,6 +3844,15 @@ class BottomUpMultiClassPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -3727,6 +3874,11 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
             centered instance confidence maps and classification.
         input_scale: Float indicating if the images should be resized before being
             passed to the model.
+        resize_input_image: Bool indicating if the crops should be resized. If
+            `CentroidCropGroundTruth` is used along with `FindInstancePeaks`, then the
+            images are resized in the `CentroidCropGroundTruth` and this is set to `False`.
+            However, the output keypoints are adjusted to the actual scale with the
+            `input_scaling` argument.
         output_stride: Output stride of the model, denoting the scale of the output
             confidence maps relative to the images (after input scaling). This is used
             for adjusting the peak coordinates to the image grid. This will be inferred
@@ -3768,6 +3920,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         self,
         keras_model: tf.keras.Model,
         input_scale: float = 1.0,
+        resize_input_image: bool = True,
         output_stride: Optional[int] = None,
         peak_threshold: float = 0.2,
         refinement: Optional[str] = "local",
@@ -3783,6 +3936,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
         super().__init__(
             keras_model=keras_model, input_scale=input_scale, pad_to_stride=1, **kwargs
         )
+        self.resize_input_image = resize_input_image
         self.peak_threshold = peak_threshold
         self.refinement = refinement
         self.integral_patch_size = integral_patch_size
@@ -3900,7 +4054,7 @@ class TopDownMultiClassFindPeaks(InferenceLayer):
                 crop_sample_inds = tf.range(samples, dtype=tf.int32)
 
         # Preprocess inputs (scaling, padding, colorspace, int to float).
-        crops = self.preprocess(crops)
+        crops = self.preprocess(crops, resize_img=self.resize_input_image)
 
         # Network forward pass.
         out = self.keras_model(crops)
@@ -4048,7 +4202,6 @@ class TopDownMultiClassInferenceModel(InferenceModel):
         tensors: Optional[Dict[str, str]] = None,
         unrag_outputs: bool = True,
     ):
-
         self.instance_peaks.optimal_grouping = False
 
         super().export_model(
@@ -4150,7 +4303,10 @@ class TopDownMultiClassPredictor(Predictor):
             refinement="integral" if self.integral_refinement else "local",
             integral_patch_size=self.integral_patch_size,
             return_confmaps=False,
+            resize_input_image=False,
         )
+        if use_gt_centroid:
+            centroid_crop_layer.input_scale = cfg.data.preprocessing.input_scaling
 
         self.inference_model = TopDownMultiClassInferenceModel(
             centroid_crop=centroid_crop_layer, instance_peaks=instance_peaks_layer
@@ -4191,7 +4347,7 @@ class TopDownMultiClassPredictor(Predictor):
                 resized to (None, None, None, num_color_channels).
 
         Returns:
-            An instance of `TopDownPredictor` with the loaded models.
+            An instance of `TopDownMultiClassPredictor` with the loaded models.
 
             One of the two models can be left as `None` to perform inference with ground
             truth data. This will only work with `LabelsReader` as the provider.
@@ -4349,19 +4505,27 @@ class TopDownMultiClassPredictor(Predictor):
                     break
 
                 # Loop over frames.
-                for image, video_ind, frame_ind, points, confidences, scores in zip(
+                for (
+                    image,
+                    video_ind,
+                    frame_ind,
+                    centroid_vals,
+                    points,
+                    confidences,
+                    scores,
+                ) in zip(
                     ex["image"],
                     ex["video_ind"],
                     ex["frame_ind"],
+                    ex["centroid_vals"],
                     ex["instance_peaks"],
                     ex["instance_peak_vals"],
                     ex["instance_scores"],
                 ):
-
                     # Loop over instances.
                     predicted_instances = []
-                    for i, (pts, confs, score) in enumerate(
-                        zip(points, confidences, scores)
+                    for i, (pts, centroid_val, confs, score) in enumerate(
+                        zip(points, centroid_vals, confidences, scores)
                     ):
                         if np.isnan(pts).all():
                             continue
@@ -4372,9 +4536,10 @@ class TopDownMultiClassPredictor(Predictor):
                             PredictedInstance.from_numpy(
                                 points=pts,
                                 point_confidences=confs,
-                                instance_score=np.nanmean(score),
+                                instance_score=centroid_val,
                                 skeleton=skeleton,
                                 track=track,
+                                tracking_score=score,
                             )
                         )
 
@@ -4395,6 +4560,15 @@ class TopDownMultiClassPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -4411,7 +4585,6 @@ class TopDownMultiClassPredictor(Predictor):
         unrag_outputs: bool = True,
         max_instances: Optional[int] = None,
     ):
-
         super().export_model(
             save_path,
             signatures,
@@ -4583,7 +4756,6 @@ class MoveNetPredictor(Predictor):
 
     @property
     def data_config(self) -> DataConfig:
-
         if self.inference_model is None:
             self._initialize_inference_model()
 
@@ -4625,7 +4797,6 @@ class MoveNetPredictor(Predictor):
     def _make_labeled_frames_from_generator(
         self, generator: Iterator[Dict[str, np.ndarray]], data_provider: Provider
     ) -> List[sleap.LabeledFrame]:
-
         skeleton = MOVENET_SKELETON
         predicted_frames = []
 
@@ -4675,6 +4846,15 @@ class MoveNetPredictor(Predictor):
         try:
             for ex in generator:
                 prediction_queue.put(ex)
+
+        except KeyError as e:
+            # Gracefully handle seeking errors by early termination.
+            if "Unable to load frame" in str(e):
+                pass  # TODO: Print warning obeying verbosity? (This code path is also
+                # called for interactive prediction where we don't want any spam.)
+            else:
+                raise
+
         finally:
             prediction_queue.put(None)
             object_builder.join()
@@ -4693,6 +4873,7 @@ def load_model(
     disable_gpu_preallocation: bool = True,
     progress_reporting: str = "rich",
     resize_input_layer: bool = True,
+    max_instances: Optional[int] = None,
 ) -> Predictor:
     """Load a trained SLEAP model.
 
@@ -4713,8 +4894,7 @@ def load_model(
             be performed.
         tracker_window: Number of frames of history to use when tracking. No effect when
             `tracker` is `None`.
-        tracker_max_instances: If not `None`, discard instances beyond this count when
-            tracking. No effect when `tracker` is `None`.
+        tracker_max_instances: If not `None`, create at most this many tracks.
         disable_gpu_preallocation: If `True` (the default), initialize the GPU and
             disable preallocation of memory. This is necessary to prevent freezing on
             some systems with low GPU memory and has negligible impact on performance.
@@ -4728,6 +4908,10 @@ def load_model(
             machines where the output is captured to a log file.
         resize_input_layer: If True, the the input layer of the `tf.Keras.model` is
             resized to (None, None, None, num_color_channels).
+        max_instances: If not `None`, discard instances beyond this count when
+            predicting, regardless of whether filtering is done at the tracking stage.
+            This is useful for preventing extraneous instances from being created when
+            tracking is not being applied.
 
     Returns:
         An instance of a `Predictor` based on which model type was detected.
@@ -4760,6 +4944,7 @@ def load_model(
         # Uncompress ZIP packaged models.
         tmp_dirs = []
         for i, model_path in enumerate(model_paths):
+            mp = Path(model_path)
             if model_path.endswith(".zip"):
                 # Create temp dir on demand.
                 tmp_dir = tempfile.TemporaryDirectory()
@@ -4770,7 +4955,12 @@ def load_model(
 
                 # Extract and replace in the list.
                 shutil.unpack_archive(model_path, extract_dir=tmp_dir.name)
-                model_paths[i] = tmp_dir.name
+                unzipped_mp = Path(tmp_dir.name, mp.name).with_suffix("")
+                if Path(unzipped_mp, "best_model.h5").exists():
+                    unzipped_model_path = str(unzipped_mp)
+                else:
+                    unzipped_model_path = str(unzipped_mp.parent)
+                model_paths[i] = unzipped_model_path
 
         return model_paths, tmp_dirs
 
@@ -4789,14 +4979,22 @@ def load_model(
         integral_refinement=refinement == "integral",
         batch_size=batch_size,
         resize_input_layer=resize_input_layer,
+        max_instances=max_instances,
     )
     predictor.verbosity = progress_reporting
     if tracker is not None:
+        use_max_tracker = tracker_max_instances is not None
+        if use_max_tracker and not tracker.endswith("maxtracks"):
+            # Append maxtracks to the tracker name to use the right tracker variants.
+            tracker += "maxtracks"
+
         predictor.tracker = Tracker.make_tracker_by_name(
             tracker=tracker,
             track_window=tracker_window,
             post_connect_single_breaks=True,
-            clean_instance_count=tracker_max_instances,
+            max_tracking=use_max_tracker,
+            max_tracks=tracker_max_instances,
+            # clean_instance_count=tracker_max_instances,
         )
 
     # Remove temp dirs.
@@ -4862,7 +5060,7 @@ def export_cli(args: Optional[list] = None):
     export_model(
         args.models,
         args.export_path,
-        unrag_outputs=args.unrag,
+        unrag_outputs=(not args.ragged),
         max_instances=args.max_instances,
     )
 
@@ -4894,22 +5092,22 @@ def _make_export_cli_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "-u",
-        "--unrag",
+        "-r",
+        "--ragged",
         action="store_true",
-        default=True,
+        default=False,
         help=(
-            "Convert ragged tensors into regular tensors with NaN padding. "
-            "Defaults to True."
+            "Keep tensors ragged if present. If ommited, convert ragged tensors"
+            " into regular tensors with NaN padding."
         ),
     )
     parser.add_argument(
-        "-i",
+        "-n",
         "--max_instances",
         type=int,
         help=(
-            "Limit maximum number of instances in multi-instance models"
-            "Defaults to None"
+            "Limit maximum number of instances in multi-instance models. "
+            "Not available for ID models. Defaults to None."
         ),
     )
 
@@ -5085,6 +5283,15 @@ def _make_cli_parser() -> argparse.ArgumentParser:
         default=0.2,
         help="Minimum confidence map value to consider a peak as valid.",
     )
+    parser.add_argument(
+        "-n",
+        "--max_instances",
+        type=int,
+        help=(
+            "Limit maximum number of instances in multi-instance models. "
+            "Not available for ID models. Defaults to None."
+        ),
+    )
 
     # Deprecated legacy args. These will still be parsed for backward compatibility but
     # are hidden from the CLI help.
@@ -5144,15 +5351,14 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
         args: Parsed CLI namespace.
 
     Returns:
-        A tuple of `(provider, data_path)` with the data `Provider` and path to the data
-        that was specified in the args.
+        `(provider_list, data_path_list, output_path_list)` where `provider_list` contains the data providers,
+        `data_path_list` contains the paths to the specified data, and the `output_path_list` contains the list
+        of output paths if a CSV file with a column of output paths was provided; otherwise, `output_path_list`
+        defaults to None
     """
+
     # Figure out which input path to use.
-    labels_path = getattr(args, "labels", None)
-    if labels_path is not None:
-        data_path = labels_path
-    else:
-        data_path = args.data_path
+    data_path = args.data_path
 
     if data_path is None or data_path == "":
         raise ValueError(
@@ -5160,33 +5366,117 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
             "Run 'sleap-track -h' to see full command documentation."
         )
 
-    if data_path.endswith(".slp"):
-        labels = sleap.load_file(data_path)
+    data_path_obj = Path(data_path)
 
-        if args.only_labeled_frames:
-            provider = LabelsReader.from_user_labeled_frames(labels)
-        elif args.only_suggested_frames:
-            provider = LabelsReader.from_unlabeled_suggestions(labels)
-        elif getattr(args, "video.index") != "":
-            provider = VideoReader(
-                video=labels.videos[int(getattr(args, "video.index"))],
-                example_indices=frame_list(args.frames),
-            )
+    # Set output_path_list to None as a default to return later
+    output_path_list = None
+
+    # Check that input value is valid
+    if not data_path_obj.exists():
+        raise ValueError("Path to data_path does not exist")
+
+    elif data_path_obj.is_file():
+        # If the file is a CSV file, check for data_paths and output_paths
+        if data_path_obj.suffix.lower() == ".csv":
+            try:
+                data_path_column = None
+                # Read the CSV file
+                df = pd.read_csv(data_path)
+
+                # collect data_paths from column
+                for col_index in range(df.shape[1]):
+                    path_str = df.iloc[0, col_index]
+                    if Path(path_str).exists():
+                        data_path_column = df.columns[col_index]
+                        break
+                if data_path_column is None:
+                    raise ValueError(
+                        f"Column containing valid data_paths does not exist in the CSV file: {data_path}"
+                    )
+                raw_data_path_list = df[data_path_column].tolist()
+
+                # optional output_path column to specify multiple output_paths
+                output_path_column_index = df.columns.get_loc(data_path_column) + 1
+                if (
+                    output_path_column_index < df.shape[1]
+                    and df.iloc[:, output_path_column_index].dtype == object
+                ):
+                    # Ensure the next column exists
+                    output_path_list = df.iloc[:, output_path_column_index].tolist()
+                else:
+                    output_path_list = None
+
+            except pd.errors.EmptyDataError as e:
+                raise ValueError(f"CSV file is empty: {data_path}. Error: {e}") from e
+
+        # If the file is a text file, collect data_paths
+        elif data_path_obj.suffix.lower() == ".txt":
+            try:
+                with open(data_path_obj, "r") as file:
+                    raw_data_path_list = [line.strip() for line in file.readlines()]
+            except Exception as e:
+                raise ValueError(
+                    f"Error reading text file: {data_path}. Error: {e}"
+                ) from e
         else:
-            provider = LabelsReader(labels)
+            raw_data_path_list = [data_path_obj.as_posix()]
 
-    else:
-        print(f"Video: {data_path}")
-        # TODO: Clean this up.
-        video_kwargs = dict(
-            dataset=vars(args).get("video.dataset"),
-            input_format=vars(args).get("video.input_format"),
-        )
-        provider = VideoReader.from_filepath(
-            filename=data_path, example_indices=frame_list(args.frames), **video_kwargs
-        )
+        raw_data_path_list = [Path(p) for p in raw_data_path_list]
 
-    return provider, data_path
+    # Check for multiple video inputs
+    # Compile file(s) into a list for later iteration
+    elif data_path_obj.is_dir():
+        raw_data_path_list = [
+            file_path for file_path in data_path_obj.iterdir() if file_path.is_file()
+        ]
+
+    # Provider list to accomodate multiple video inputs
+    provider_list = []
+    data_path_list = []
+    for file_path in raw_data_path_list:
+        # Create a provider for each file
+        if file_path.as_posix().endswith(".slp") and len(raw_data_path_list) > 1:
+            print(f"slp file skipped: {file_path.as_posix()}")
+
+        elif file_path.as_posix().endswith(".slp"):
+            labels = sleap.load_file(file_path.as_posix())
+
+            if args.only_labeled_frames:
+                provider_list.append(LabelsReader.from_user_labeled_frames(labels))
+            elif args.only_suggested_frames:
+                provider_list.append(LabelsReader.from_unlabeled_suggestions(labels))
+            elif getattr(args, "video.index") != "":
+                provider_list.append(
+                    VideoReader(
+                        video=labels.videos[int(getattr(args, "video.index"))],
+                        example_indices=frame_list(args.frames),
+                    )
+                )
+            else:
+                provider_list.append(LabelsReader(labels))
+
+            data_path_list.append(file_path)
+
+        else:
+            try:
+                video_kwargs = dict(
+                    dataset=vars(args).get("video.dataset"),
+                    input_format=vars(args).get("video.input_format"),
+                )
+                provider_list.append(
+                    VideoReader.from_filepath(
+                        filename=file_path.as_posix(),
+                        example_indices=frame_list(args.frames),
+                        **video_kwargs,
+                    )
+                )
+                print(f"Video: {file_path.as_posix()}")
+                data_path_list.append(file_path)
+                # TODO: Clean this up.
+            except Exception:
+                print(f"Error reading file: {file_path.as_posix()}")
+
+    return provider_list, data_path_list, output_path_list
 
 
 def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
@@ -5229,6 +5519,7 @@ def _make_predictor_from_cli(args: argparse.Namespace) -> Predictor:
             batch_size=batch_size,
             refinement="integral",
             progress_reporting=args.verbosity,
+            max_instances=args.max_instances,
         )
 
         if type(predictor) == BottomUpPredictor:
@@ -5254,7 +5545,7 @@ def _make_tracker_from_cli(args: argparse.Namespace) -> Optional[Tracker]:
     Returns:
         An instance of `Tracker` or `None` if tracking method was not specified.
     """
-    policy_args = sleap.util.make_scoped_dictionary(vars(args), exclude_nones=True)
+    policy_args = make_scoped_dictionary(vars(args), exclude_nones=True)
     if "tracking" in policy_args:
         tracker = Tracker.make_tracker_by_name(**policy_args["tracking"])
         return tracker
@@ -5279,8 +5570,6 @@ def main(args: Optional[list] = None):
     print("Args:")
     pprint(vars(args))
     print()
-
-    output_path = args.output
 
     # Setup devices.
     if args.cpu or not sleap.nn.system.is_gpu_system():
@@ -5319,7 +5608,20 @@ def main(args: Optional[list] = None):
     print()
 
     # Setup data loader.
-    provider, data_path = _make_provider_from_cli(args)
+    provider_list, data_path_list, output_path_list = _make_provider_from_cli(args)
+
+    output_path = None
+
+    # if output_path has not been extracted from a csv file yet
+    if output_path_list is None and args.output is not None:
+        output_path = args.output
+        output_path_obj = Path(output_path)
+
+        # check if output_path is valid before running inference
+        if Path(output_path).is_file() and len(data_path_list) > 1:
+            raise ValueError(
+                "output_path argument must be a directory if multiple video inputs are given"
+            )
 
     # Setup tracker.
     tracker = _make_tracker_from_cli(args)
@@ -5327,26 +5629,94 @@ def main(args: Optional[list] = None):
     if args.models is not None and "movenet" in args.models[0]:
         args.models = args.models[0]
 
-    # Either run inference (and tracking) or just run tracking
+    # Either run inference (and tracking) or just run tracking (if using an existing prediction where inference has already been run)
     if args.models is not None:
 
-        # Setup models.
-        predictor = _make_predictor_from_cli(args)
-        predictor.tracker = tracker
+        # Run inference on all files inputed
+        for i, (data_path, provider) in enumerate(zip(data_path_list, provider_list)):
+            # Setup models.
+            data_path_obj = Path(data_path)
+            predictor = _make_predictor_from_cli(args)
+            predictor.tracker = tracker
 
-        # Run inference!
-        labels_pr = predictor.predict(provider)
+            # Run inference!
+            labels_pr = predictor.predict(provider)
 
-        if output_path is None:
-            output_path = data_path + ".predictions.slp"
+            # if output path was not provided, create an output path
+            if output_path is None:
+                # if output path was not provided, create an output path
+                if output_path_list:
+                    output_path = output_path_list[i]
 
-        labels_pr.provenance["model_paths"] = predictor.model_paths
-        labels_pr.provenance["predictor"] = type(predictor).__name__
+                else:
+                    output_path = data_path_obj.with_suffix(".predictions.slp")
 
+                output_path_obj = Path(output_path)
+
+            # if output_path was provided and multiple inputs were provided, create a directory to store outputs
+            elif len(data_path_list) > 1:
+                output_path_obj = Path(output_path)
+                output_path = (
+                    output_path_obj
+                    / (data_path_obj.with_suffix(".predictions.slp")).name
+                )
+                output_path_obj = Path(output_path)
+                # Create the containing directory if needed.
+                output_path_obj.parent.mkdir(exist_ok=True, parents=True)
+
+            labels_pr.provenance["model_paths"] = predictor.model_paths
+            labels_pr.provenance["predictor"] = type(predictor).__name__
+
+            if args.no_empty_frames:
+                # Clear empty frames if specified.
+                labels_pr.remove_empty_frames()
+
+            finish_timestamp = str(datetime.now())
+            total_elapsed = time() - t0
+            print("Finished inference at:", finish_timestamp)
+            print(f"Total runtime: {total_elapsed} secs")
+            print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
+
+            # Add provenance metadata to predictions.
+            labels_pr.provenance["sleap_version"] = sleap.__version__
+            labels_pr.provenance["platform"] = platform.platform()
+            labels_pr.provenance["command"] = " ".join(sys.argv)
+            labels_pr.provenance["data_path"] = data_path_obj.as_posix()
+            labels_pr.provenance["output_path"] = output_path_obj.as_posix()
+            labels_pr.provenance["total_elapsed"] = total_elapsed
+            labels_pr.provenance["start_timestamp"] = start_timestamp
+            labels_pr.provenance["finish_timestamp"] = finish_timestamp
+
+            print("Provenance:")
+            pprint(labels_pr.provenance)
+            print()
+
+            labels_pr.provenance["args"] = vars(args)
+
+            # Save results.
+            try:
+                labels_pr.save(output_path)
+            except Exception:
+                print("WARNING: Provided output path invalid.")
+                fallback_path = data_path_obj.with_suffix(".predictions.slp")
+                labels_pr.save(fallback_path)
+            print("Saved output:", output_path)
+
+            if args.open_in_gui:
+                subprocess.call(["sleap-label", output_path])
+
+            # Reset output_path for next iteration
+            output_path = args.output
+
+    # running tracking on existing prediction file
     elif getattr(args, "tracking.tracker") is not None:
+        provider = provider_list[0]
+        data_path = data_path_list[0]
+
         # Load predictions
+        data_path = args.data_path
         print("Loading predictions...")
-        labels_pr = sleap.load_file(args.data_path)
+        labels_pr = sleap.load_file(data_path)
         frames = sorted(labels_pr.labeled_frames, key=lambda lf: lf.frame_idx)
 
         print("Starting tracker...")
@@ -5358,6 +5728,40 @@ def main(args: Optional[list] = None):
         if output_path is None:
             output_path = f"{data_path}.{tracker.get_name()}.slp"
 
+        if args.no_empty_frames:
+            # Clear empty frames if specified.
+            labels_pr.remove_empty_frames()
+
+        finish_timestamp = str(datetime.now())
+        total_elapsed = time() - t0
+        print("Finished inference at:", finish_timestamp)
+        print(f"Total runtime: {total_elapsed} secs")
+        print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
+
+        # Add provenance metadata to predictions.
+        labels_pr.provenance["sleap_version"] = sleap.__version__
+        labels_pr.provenance["platform"] = platform.platform()
+        labels_pr.provenance["command"] = " ".join(sys.argv)
+        labels_pr.provenance["data_path"] = data_path
+        labels_pr.provenance["output_path"] = output_path
+        labels_pr.provenance["total_elapsed"] = total_elapsed
+        labels_pr.provenance["start_timestamp"] = start_timestamp
+        labels_pr.provenance["finish_timestamp"] = finish_timestamp
+
+        print("Provenance:")
+        pprint(labels_pr.provenance)
+        print()
+
+        labels_pr.provenance["args"] = vars(args)
+
+        # Save results.
+        labels_pr.save(output_path)
+
+        print("Saved output:", output_path)
+
+        if args.open_in_gui:
+            subprocess.call(["sleap-label", output_path])
+
     else:
         raise ValueError(
             "Neither tracker type nor path to trained models specified. "
@@ -5366,35 +5770,6 @@ def main(args: Optional[list] = None):
             "Use \"sleap-track --tracking.tracker ...' to specify tracker to use."
         )
 
-    if args.no_empty_frames:
-        # Clear empty frames if specified.
-        labels_pr.remove_empty_frames()
 
-    finish_timestamp = str(datetime.now())
-    total_elapsed = time() - t0
-    print("Finished inference at:", finish_timestamp)
-    print(f"Total runtime: {total_elapsed} secs")
-    print(f"Predicted frames: {len(labels_pr)}/{len(provider)}")
-
-    # Add provenance metadata to predictions.
-    labels_pr.provenance["sleap_version"] = sleap.__version__
-    labels_pr.provenance["platform"] = platform.platform()
-    labels_pr.provenance["command"] = " ".join(sys.argv)
-    labels_pr.provenance["data_path"] = data_path
-    labels_pr.provenance["output_path"] = output_path
-    labels_pr.provenance["total_elapsed"] = total_elapsed
-    labels_pr.provenance["start_timestamp"] = start_timestamp
-    labels_pr.provenance["finish_timestamp"] = finish_timestamp
-
-    print("Provenance:")
-    pprint(labels_pr.provenance)
-    print()
-
-    labels_pr.provenance["args"] = vars(args)
-
-    # Save results.
-    labels_pr.save(output_path)
-    print("Saved output:", output_path)
-
-    if args.open_in_gui:
-        subprocess.call(["sleap-label", output_path])
+if __name__ == "__main__":
+    main()

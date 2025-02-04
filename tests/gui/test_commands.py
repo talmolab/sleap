@@ -1,19 +1,26 @@
-from pathlib import PurePath, Path
+import pytest
 import shutil
 import sys
+import time
+
+import numpy as np
+from pathlib import PurePath, Path
+from qtpy import QtCore
 from typing import List
 
-import pytest
-from qtpy.QtWidgets import QComboBox
-
-from sleap import Skeleton, Track
+from sleap import Skeleton, Track, PredictedInstance
+from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
+    AddInstance,
     CommandContext,
-    ImportDeepLabCutFolder,
     ExportAnalysisFile,
+    ExportDatasetWithImages,
+    ImportDeepLabCutFolder,
+    RemoveVideo,
     ReplaceVideo,
     OpenSkeleton,
     SaveProjectAs,
+    DeleteFrameLimitPredictions,
     get_new_version_filename,
 )
 from sleap.instance import Instance, LabeledFrame
@@ -63,7 +70,7 @@ def test_import_labels_from_dlc_folder():
     assert len(labels.videos) == 2
     assert len(labels.skeletons) == 1
     assert len(labels.nodes) == 3
-    assert len(labels.tracks) == 0
+    assert len(labels.tracks) == 3
 
     assert set(
         [fix_path_separator(l.video.backend.filename) for l in labels.labeled_frames]
@@ -90,13 +97,49 @@ def test_get_new_version_filename():
     )
 
 
-@pytest.mark.parametrize("out_suffix", ["h5", "nix"])
+def test_RemoveVideo(
+    centered_pair_predictions: Labels,
+    small_robot_mp4_vid: Video,
+    centered_pair_vid: Video,
+):
+    def ask(obj: RemoveVideo, context: CommandContext, params: dict) -> bool:
+        return True
+
+    RemoveVideo.ask = ask
+
+    labels = centered_pair_predictions.copy()
+    labels.add_video(small_robot_mp4_vid)
+    labels.add_video(centered_pair_vid)
+
+    all_videos = labels.videos
+    assert len(all_videos) == 3
+
+    video_idxs = [1, 2]
+    videos_to_remove = [labels.videos[i] for i in video_idxs]
+
+    context = CommandContext.from_labels(labels)
+    context.state["selected_batch_video"] = video_idxs
+    context.state["video"] = labels.videos[1]
+
+    context.removeVideo()
+
+    assert len(labels.videos) == 1
+    assert context.state["video"] not in videos_to_remove
+
+
+@pytest.mark.parametrize("out_suffix", ["h5", "nix", "csv"])
 def test_ExportAnalysisFile(
     centered_pair_predictions: Labels,
+    centered_pair_predictions_hdf5_path: str,
     small_robot_mp4_vid: Video,
     out_suffix: str,
     tmpdir,
 ):
+    if out_suffix == "csv":
+        csv = True
+    else:
+        csv = False
+
     def ExportAnalysisFile_ask(context: CommandContext, params: dict):
         """Taken from ExportAnalysisFile.ask()"""
 
@@ -119,7 +162,7 @@ def test_ExportAnalysisFile(
         if len(videos) == 0:
             raise ValueError("No labeled frames in video(s). Nothing to export.")
 
-        default_name = context.state["filename"] or "labels"
+        default_name = "labels"
         fn = PurePath(tmpdir, default_name)
         if len(videos) == 1:
             # Allow user to specify the filename
@@ -162,7 +205,7 @@ def test_ExportAnalysisFile(
             assert Path(output_path).exists()
             output_paths.append(output_path)
 
-            if labels_path is not None:
+            if labels_path is not None and not params["csv"]:
                 meta_reader = extract_meta_hdf5 if out_suffix == "h5" else read_nix_meta
                 labels_key = "labels_path" if out_suffix == "h5" else "project"
                 read_meta = meta_reader(output_path, dset_names_in=["labels_path"])
@@ -177,8 +220,20 @@ def test_ExportAnalysisFile(
     context = CommandContext.from_labels(labels)
     context.state["filename"] = None
 
+    if csv:
+
+        context.state["filename"] = centered_pair_predictions_hdf5_path
+
+        params = {"all_videos": True, "csv": csv}
+        okay = ExportAnalysisFile_ask(context=context, params=params)
+        assert okay == True
+        ExportAnalysisFile.do_action(context=context, params=params)
+        assert_videos_written(num_videos=1, labels_path=context.state["filename"])
+
+        return
+
     # Test with all_videos False (single video)
-    params = {"all_videos": False}
+    params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -186,7 +241,7 @@ def test_ExportAnalysisFile(
 
     # Add labels path and test with all_videos True (single video)
     context.state["filename"] = str(tmpdir.with_name("path.to.labels"))
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -195,7 +250,7 @@ def test_ExportAnalysisFile(
     # Add a video (no labels) and test with all_videos True
     labels.add_video(small_robot_mp4_vid)
 
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -207,7 +262,7 @@ def test_ExportAnalysisFile(
     labels.add_instance(frame=labeled_frame, instance=instance)
     labels.append(labeled_frame)
 
-    params = {"all_videos": False}
+    params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -216,14 +271,14 @@ def test_ExportAnalysisFile(
     # Add specific video and test with all_videos False
     context.state["videos"] = labels.videos[1]
 
-    params = {"all_videos": False}
+    params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Test with all videos True
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -241,7 +296,7 @@ def test_ExportAnalysisFile(
     labels.videos[0].backend.filename = str(tmpdir / "session1" / "video.mp4")
     labels.videos[1].backend.filename = str(tmpdir / "session2" / "video.mp4")
 
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
     assert okay == True
     ExportAnalysisFile.do_action(context=context, params=params)
@@ -252,7 +307,7 @@ def test_ExportAnalysisFile(
     for video in all_videos:
         labels.remove_video(labels.videos[-1])
 
-    params = {"all_videos": True}
+    params = {"all_videos": True, "csv": csv}
     with pytest.raises(ValueError):
         okay = ExportAnalysisFile_ask(context=context, params=params)
 
@@ -406,7 +461,7 @@ def test_OpenSkeleton(
             # Original function opens FileDialog here
             filename = params["filename_in"]
         else:
-            filename = get_package_file(f"sleap/skeletons/{template}.json")
+            filename = get_package_file(f"skeletons/{template}.json")
         if len(filename) == 0:
             return False
 
@@ -472,7 +527,7 @@ def test_OpenSkeleton(
 
     # Run again with template set
     context.app.currentText = "fly32"
-    fly32_json = get_package_file(f"sleap/skeletons/fly32.json")
+    fly32_json = get_package_file(f"skeletons/fly32.json")
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly32_json
     fly32_skeleton = Skeleton.load_json(fly32_json)
@@ -795,3 +850,199 @@ def test_LoadProjectFile(
         load_and_assert_changes(search_path)
     finally:  # Move video back to original location - for ease of re-testing
         shutil.move(new_video_path, expected_video_path)
+
+
+def test_DeleteFrameLimitPredictions(
+    centered_pair_predictions: Labels, centered_pair_vid: Video
+):
+    """Test deleting instances beyond a certain frame limit."""
+    labels = centered_pair_predictions
+
+    # Set-up command context
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = centered_pair_vid
+
+    # Set-up params for the command
+    params = {"min_frame_idx": 900, "max_frame_idx": 1000}
+
+    instances_to_delete = DeleteFrameLimitPredictions.get_frame_instance_list(
+        context, params
+    )
+
+    assert len(instances_to_delete) == 2070
+
+
+@pytest.mark.parametrize("export_extension", [".json.zip", ".slp"])
+def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmpdir):
+    def assert_loaded_package_similar(path_to_pkg: Path, sugg=False, pred=False):
+        """Assert that the loaded labels are similar to the original."""
+
+        # Load the labels, but first copy file to a location (which pytest can and will
+        # keep in memory, but won't affect our re-use of the original file name)
+        filename_for_pytest_to_hoard: Path = path_to_pkg.with_name(
+            f"pytest_labels_{time.perf_counter_ns()}{export_extension}"
+        )
+        shutil.copyfile(path_to_pkg.as_posix(), filename_for_pytest_to_hoard.as_posix())
+        labels_reload: Labels = Labels.load_file(
+            filename_for_pytest_to_hoard.as_posix()
+        )
+
+        assert len(labels_reload.labeled_frames) == len(centered_pair_labels)
+        assert len(labels_reload.videos) == len(centered_pair_labels.videos)
+        assert len(labels_reload.suggestions) == len(centered_pair_labels.suggestions)
+        assert len(labels_reload.tracks) == len(centered_pair_labels.tracks)
+        assert len(labels_reload.skeletons) == len(centered_pair_labels.skeletons)
+        assert (
+            len(
+                set(labels_reload.skeleton.node_names)
+                - set(centered_pair_labels.skeleton.node_names)
+            )
+            == 0
+        )
+        num_images = len(labels_reload)
+        if sugg:
+            num_images += len(lfs_sugg)
+        if not pred:
+            num_images -= len(lfs_pred)
+        assert labels_reload.video.num_frames == num_images
+
+    # Set-up CommandContext
+    path_to_pkg = Path(tmpdir, "test_exportLabelsPackage.ext")
+    path_to_pkg = path_to_pkg.with_suffix(export_extension)
+
+    def no_gui_ask(cls, context, params):
+        """No GUI version of `ExportDatasetWithImages.ask`."""
+        params["filename"] = path_to_pkg.as_posix()
+        params["verbose"] = False
+        return True
+
+    ExportDatasetWithImages.ask = no_gui_ask
+
+    # Remove frames we want to use for suggestions and predictions
+    lfs_sugg = [centered_pair_labels[idx] for idx in [-1, -2]]
+    lfs_pred = [centered_pair_labels[idx] for idx in [-3, -4]]
+    centered_pair_labels.remove_frames(lfs_sugg)
+
+    # Add suggestions
+    for lf in lfs_sugg:
+        centered_pair_labels.add_suggestion(centered_pair_labels.video, lf.frame_idx)
+
+    # Add predictions and remove user instances from those frames
+    for lf in lfs_pred:
+        predicted_inst = PredictedInstance.from_instance(lf.instances[0], score=0.5)
+        centered_pair_labels.add_instance(lf, predicted_inst)
+        for inst in lf.user_instances:
+            centered_pair_labels.remove_instance(lf, inst)
+    context = CommandContext.from_labels(centered_pair_labels)
+
+    # Case 1: Export user-labeled frames with image data into a single SLP file.
+    context.exportUserLabelsPackage()
+    assert path_to_pkg.exists()
+    assert_loaded_package_similar(path_to_pkg)
+
+    # Case 2: Export user-labeled frames and suggested frames with image data.
+    context.exportTrainingPackage()
+    assert_loaded_package_similar(path_to_pkg, sugg=True)
+
+    # Case 3: Export all frames and suggested frames with image data.
+    context.exportFullPackage()
+    assert_loaded_package_similar(path_to_pkg, sugg=True, pred=True)
+
+
+def test_newInstance(qtbot, centered_pair_predictions: Labels):
+
+    # Get the data
+    labels = centered_pair_predictions
+    lf = labels[0]
+    pred_inst = lf.instances[0]
+    video = labels.video
+
+    # Set-up command context
+    main_window = MainWindow(labels=labels)
+    context = main_window.commands
+    context.state["labeled_frame"] = lf
+    context.state["frame_idx"] = lf.frame_idx
+    context.state["skeleton"] = labels.skeleton
+    context.state["video"] = labels.videos[0]
+
+    # Case 1: Double clicking a prediction results in no offset for new instance
+
+    # Double click on prediction
+    assert len(lf.instances) == 2
+    main_window._handle_instance_double_click(instance=pred_inst)
+
+    # Check new instance
+    assert len(lf.instances) == 3
+    new_inst = lf.instances[-1]
+    assert new_inst.from_predicted is pred_inst
+    assert np.array_equal(new_inst.numpy(), pred_inst.numpy())  # No offset
+
+    # Case 2: Using Ctrl + I (or menu "Add Instance" button)
+
+    # Connect the action to a slot
+    add_instance_menu_action = main_window._menu_actions["add instance"]
+    triggered = False
+
+    def on_triggered():
+        nonlocal triggered
+        triggered = True
+
+    add_instance_menu_action.triggered.connect(on_triggered)
+
+    # Find which instance we are going to copy from
+    (
+        copy_instance,
+        from_predicted,
+        from_prev_frame,
+    ) = AddInstance.find_instance_to_copy_from(
+        context, copy_instance=None, init_method="best"
+    )
+
+    # Click on the menu action
+    assert len(lf.instances) == 3
+    add_instance_menu_action.trigger()
+    assert triggered, "Action not triggered"
+
+    # Check new instance
+    assert len(lf.instances) == 4
+    new_inst = lf.instances[-1]
+    offset = 10
+    np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset)
+    assert np.all(
+        np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset) == offset
+    )
+
+    # Case 3: Using right click and "Default" option
+
+    # Find which instance we are going to copy from
+    (
+        copy_instance,
+        from_predicted,
+        from_prev_frame,
+    ) = AddInstance.find_instance_to_copy_from(
+        context, copy_instance=None, init_method="best"
+    )
+
+    video_player = main_window.player
+    right_click_location_x = video.shape[2] / 2
+    right_click_location_y = video.shape[1] / 2
+    right_click_location = QtCore.QPointF(
+        right_click_location_x, right_click_location_y
+    )
+    video_player.create_contextual_menu(scene_pos=right_click_location)
+    default_action = video_player._menu_actions["Default"]
+    default_action.trigger()
+
+    # Check new instance
+    assert len(lf.instances) == 5
+    new_inst = lf.instances[-1]
+    reference_node_idx = np.where(
+        np.all(
+            new_inst.numpy() == [right_click_location_x, right_click_location_y], axis=1
+        )
+    )[0][0]
+    offset = (
+        new_inst.numpy()[reference_node_idx] - copy_instance.numpy()[reference_node_idx]
+    )
+    diff = np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset)
+    assert np.all(diff == offset)

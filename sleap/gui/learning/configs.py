@@ -1,23 +1,22 @@
 """
 Find, load, and show lists of saved `TrainingJobConfig`.
 """
-import attr
 import datetime
-import h5py
 import os
 import re
-import numpy as np
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Text
+
+import attr
+import h5py
+import numpy as np
+from qtpy import QtCore, QtWidgets
 
 from sleap import Labels, Skeleton
 from sleap import util as sleap_utils
 from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.nn.config import TrainingJobConfig
 from sleap.gui.dialogs.formbuilder import FieldComboWidget
-
-from typing import Any, Dict, List, Optional, Text
-
-from qtpy import QtCore, QtWidgets
+from sleap.nn.config import TrainingJobConfig
 
 
 @attr.s(auto_attribs=True, slots=True)
@@ -404,7 +403,7 @@ class TrainingConfigsGetter:
         """Returns filtered subset of loaded configs."""
 
         base_config_dir = os.path.realpath(
-            sleap_utils.get_package_file("sleap/training_profiles")
+            sleap_utils.get_package_file("training_profiles")
         )
 
         cfgs_to_return = []
@@ -474,7 +473,7 @@ class TrainingConfigsGetter:
             labels_model_dir = os.path.join(os.path.dirname(labels_filename), "models")
             dir_paths.append(labels_model_dir)
 
-        base_config_dir = sleap_utils.get_package_file("sleap/training_profiles")
+        base_config_dir = sleap_utils.get_package_file("training_profiles")
         dir_paths.append(base_config_dir)
 
         return cls(dir_paths=dir_paths, head_filter=head_filter)

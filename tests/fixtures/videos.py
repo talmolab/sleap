@@ -1,12 +1,21 @@
 import pytest
 
 from sleap.io.video import Video
+from sleap.io.format.filehandle import FileHandle
 
 TEST_H5_FILE = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 TEST_H5_DSET = "/box"
 TEST_H5_CONFMAPS = "/confmaps"
 TEST_H5_AFFINITY = "/pafs"
 TEST_H5_INPUT_FORMAT = "channels_first"
+TEST_SMALL_ROBOT3_FRAME_H5 = (
+    "tests/data/hdf5_format_v1/small_robot.000_small_robot_3_frame.analysis.h5"
+)
+
+
+@pytest.fixture
+def small_robot_3_frame_hdf5():
+    return FileHandle(filename=TEST_SMALL_ROBOT3_FRAME_H5)
 
 
 @pytest.fixture

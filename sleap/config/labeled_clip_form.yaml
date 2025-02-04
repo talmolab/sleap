@@ -18,6 +18,10 @@ main:
     label: Use GUI Visual Settings (colors, line widths)
     type: bool
     default: true
+  - name: background
+    label: Video Background
+    type: list
+    options: original,black,white,grey
   - name: open_when_done
     label: Open When Done Saving
     type: bool

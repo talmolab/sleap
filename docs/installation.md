@@ -1,10 +1,21 @@
 # Installation
 
-SLEAP can be installed as a Python package on Windows, Linux and Mac OS X. We currently provide {ref}`experimental support for Apple Silicon Macs <apple-silicon>`.
+SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For quick install using conda, see below:
 
-SLEAP requires many complex dependencies, so we **strongly** recommend using [Miniconda](https://docs.conda.io/en/latest/miniconda.html) to install it in its own isolated environment. See {ref}`Installing Miniconda<miniconda>` below for more instructions.
+````{tabs}
+   ```{group-tab} Windows and Linux
+      ```bash
+      conda create -y -n sleap -c conda-forge -c nvidia -c sleap/label/dev -c sleap -c anaconda sleap=1.4.1
+      ```
+   ```
+   ```{group-tab} Mac OS
+      ```bash
+      conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1
+      ```
+   ```
+````
 
-The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
+. For more in-depth installation instructions, see the [installation methods](installation-methods). The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
 
 ```{contents} Contents
 ---
@@ -12,180 +23,239 @@ local:
 ---
 ```
 
-(miniconda)=
+`````{hint}
+   Installation requires entering commands in a terminal. To open one:
+   ````{tabs}
+      ```{tab} Windows
+         Open the *Start menu* and search for the *Anaconda Prompt* (if using Miniconda) or the *Command Prompt* if not.
+         ```{note}
+         On Windows, our personal preference is to use alternative terminal apps like [Cmder](https://cmder.net) or [Windows Terminal](https://aka.ms/terminal).
+         ```
+      ```
+      ```{tab} Linux
+         Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.
+      ```
+      ```{group-tab} Mac OS
+         Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for _Terminal_.
+      ```
+   ````
+`````
 
-## Installing Miniconda
+## Package Manager
 
-**Anaconda** is a Python environment manager that makes it easy to install SLEAP and its necessary dependencies without affecting other Python software on your computer.
+SLEAP requires many complex dependencies, so we **strongly** recommend using a package manager such as [Miniforge](https://github.com/conda-forge/miniforge) or [Miniconda](https://docs.anaconda.com/free/miniconda/) to install SLEAP in its own isolated environment.
 
-**Miniconda** is a lightweight version of Anaconda that we recommend. To install it:
-
-1. Go to: https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links
-2. Download the latest version for your OS.
-3. Follow the installer instructions.
-
-**On Windows**, just click through the installation steps. We recommend using the following settings:
-
-- Install for: All Users (requires admin privileges)
-- Destination folder: `C:\Miniconda3`
-- Advanced Options: Add Miniconda3 to the system PATH environment variable
-- Advanced Options: Register Miniconda3 as the system Python 3.X
-  These will make sure that Anaconda is easily accessible from most places on your computer.
-
-**On Linux**, it might be easier to do this straight from the terminal (<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>) with this one-liner:
-
-```bash
-wget -nc https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && bash Miniconda3-latest-Linux-x86_64.sh -b && ~/miniconda3/bin/conda init bash
-```
-
-Restart the terminal after running this command.
-
-**On Macs**, you can run the graphical installer using the pkg file, or this terminal command:
+````{note}
+If you already have Anaconda on your computer (and it is an [older installation](https://conda.org/blog/2023-11-06-conda-23-10-0-release/)), then make sure to [set the solver to `libmamba`](https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community) in the `base` environment.
 
 ```bash
-wget -nc https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh && bash Miniconda3-latest-MacOSX-x86_64.sh -b && ~/miniconda3/bin/conda init zsh
-```
-
-## Installation methods
-
-````{hint}
-Installation requires entering commands in a terminal. To open one:
-
-**Windows:** Open the *Start menu* and search for the *Anaconda Command Prompt* (if using Miniconda) or the *Command Prompt* if not.
-```{note}
-On Windows, our personal preference is to use alternative terminal apps like [Cmder](https://cmder.net) or [Windows Terminal](https://aka.ms/terminal).
-```
-
-**Linux:** Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.
-
-**Mac:** Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for *Terminal*.
-````
-
-### `conda` package
-
-```bash
-conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.3.0
-```
-
-**This is the recommended installation method**. Works on **Windows** and **Linux**.
-
-```{note}
-- This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
-- If you already have CUDA installed on your system, this will not conflict with it.
-- This will also work in CPU mode if you don't have a GPU on your machine.
-```
-
-### `conda` from source
-
-1. First, ensure git is installed:
-
-   ```bash
-   git --version
-   ```
-
-   If 'git' is not recognized, then [install git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
-
-2. Then, clone the repository:
-
-   ```bash
-   git clone https://github.com/talmolab/sleap && cd sleap
-   ```
-
-3. Finally, install from the environment file:
-
-   ```bash
-   conda env create -f environment.yml -n sleap
-   ```
-
-   If you do not have a NVIDIA GPU, then you should use the no CUDA environment file:
-
-   ```bash
-   conda env create -f environment_no_cuda.yml -n sleap
-   ```
-
-   This works on **Windows**, **Linux** and **Mac OS X** (pre Apple Silicon). This is the **recommended method for development**.
-
-```{note}
-- This installs SLEAP in development mode, which means that edits to the source code will be applied the next time you run SLEAP.
-- Change the `-n sleap` in the command to create an environment with a different name (e.g., `-n sleap_develop`).
-```
-
-### `pip` package
-
-```bash
-pip install sleap==1.3.0
-```
-
-This works on **any OS except Apple silicon** and on **Google Colab**.
-
-```{note}
-- Requires Python 3.7 or 3.8.
-- To enable GPU support, make sure that you have **CUDA Toolkit v11.3** and **cuDNN v8.2** installed.
+conda update -n base conda
+conda install -n base conda-libmamba-solver
+conda config --set solver libmamba
 ```
 
 ```{warning}
-This will uninstall existing libraries and potentially install conflicting ones.
-
-We strongly recommend that you **only use this method if you know what you're doing**!
+Any subsequent `conda` commands in the docs will need to be replaced with `mamba` if you have [Mamba](https://mamba.readthedocs.io/en/latest/) installed instead of Anaconda or Miniconda.
 ```
 
-(apple-silicon)=
+````
 
-### Apple Silicon Macs
+If you don't have a `conda` package manager installation, here are some quick install options:
 
-SLEAP can be installed on newer Apple Silicon Macs by following these instructions:
+### Miniforge (recommended)
 
-1. In addition to being on an Apple Silicon Mac, make sure you're on **macOS Monterey**, i.e., version 12+. We've tested this on a MacBook Pro (14-inch, 2021) running macOS version 12.0.1.
+Miniforge is a minimal installer for conda that includes the `conda` package manager and is maintained by the [conda-forge](https://conda-forge.org) community. The only difference between Miniforge and Miniconda is that Miniforge uses the `conda-forge` channel by default, which provides a much wider selection of community-maintained packages.
 
-2. If you don't have it yet, install **homebrew**, a convenient package manager for Macs (skip this if you can run `brew` from the terminal):
+````{tabs}
+   ```{group-tab} Windows
+      Open a new PowerShell terminal (does not need to be admin) and enter:
 
-   ```bash
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      ```bash
+      Invoke-WebRequest -Uri "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe" -OutFile "$env:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe"; Start-Process -FilePath "$env:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe" -ArgumentList "/InstallationType=JustMe /RegisterPython=1 /S" -Wait; Remove-Item -Path "$env:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe"
+      ```
    ```
+   ```{group-tab} Linux
+      Open a new terminal and enter:
 
-   This might take a little while since it'll also install Xcode (which we'll need later). Once it's finished, run this to enable the `brew` command in your shell, then close and re-open the terminal for it to take effect:
-
-   ```bash
-   echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && eval "$(/opt/homebrew/bin/brew shellenv)"
+      ```bash
+      curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -o "~/Downloads/Miniforge3-Linux-x86_64.sh" && chmod +x "~/Downloads/Miniforge3-Linux-x86_64.sh" && "~/Downloads/Miniforge3-Linux-x86_64.sh" -b -p ~/miniforge3 && rm "~/Downloads/Miniforge3-Linux-x86_64.sh" && ~/miniforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
    ```
+   ```{group-tab} Mac (Apple Silicon)
+      Open a new terminal and enter:
 
-3. Install wget, a CLI downloading utility (also makes sure your homebrew setup worked):
-
-   ```bash
-   brew install wget
+      ```bash
+      curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh -o "~/Downloads/Miniforge3-MacOSX-arm64.sh" && chmod +x "~/Downloads/Miniforge3-MacOSX-arm64.sh" && "~/Downloads/Miniforge3-MacOSX-arm64.sh" -b -p ~/miniforge3 && rm "~/Downloads/Miniforge3-MacOSX-arm64.sh" && ~/miniforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
    ```
+   ```{group-tab} Mac (Intel)
+      Open a new terminal and enter:
 
-4. Install the **Apple Silicon Mac version of Miniconda** -- this is important, so make sure you don't have the regular Mac version! If you're not sure, type `which conda` and delete the containing directory to uninstall your existing conda. To install the correct Miniconda, just run:
-
-   ```bash
-   wget -nc https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh && bash Miniconda3-latest-MacOSX-arm64.sh -b && rm Miniconda3-latest-MacOSX-arm64.sh && ~/miniconda3/bin/conda init zsh
+      ```bash
+      curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-x86_64.sh -o "~/Downloads/Miniforge3-MacOSX-x86_64.sh" && chmod +x "~/Downloads/Miniforge3-MacOSX-x86_64.sh" && "~/Downloads/Miniforge3-MacOSX-x86_64.sh" -b -p ~/miniforge3 && rm "~/Downloads/Miniforge3-MacOSX-x86_64.sh" && ~/miniforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
    ```
+````
 
-   Then close and re-open the terminal again.
+### Miniconda
 
-5. **Download the SLEAP**:
+This is a minimal installer for conda that includes the `conda` package manager and is maintained by the [Anaconda](https://www.anaconda.com) company.
 
-   ```bash
-   cd ~ && git clone https://github.com/talmolab/sleap.git sleap && cd sleap
+````{tabs}
+   ```{group-tab} Windows
+      Open a new PowerShell terminal (does not need to be admin) and enter:
+
+      ```bash
+      curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -o miniconda.exe; Start-Process -FilePath ".\miniconda.exe" -ArgumentList "/S" -Wait; del miniconda.exe
+      ```
    ```
+   ```{group-tab} Linux
+      Open a new terminal and enter:
 
-6. **Install SLEAP in a conda environment**:
-
-   ```bash
-   conda env create -f environment_apple_silicon.yml
+      ```bash
+      mkdir -p ~/miniconda3 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh && bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3 && rm ~/miniconda3/miniconda.sh && ~/miniconda3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
    ```
+   ```{group-tab} Mac (Apple Silicon)
+      Open a new terminal and enter:
 
-   Your Mac will then automatically sign a devil's pact with Apple to install the correct versions of everything on your system. Once the blood sacrifice/installation process completes, SLEAP will be available in an environment called `sleap`.
-
-   _Note:_ This installs SLEAP in development mode, so changes to the source code are immediately applied in case you wanted to mess around with it. You can also just do a `git pull` to update it (no need to re-do any of the previous steps).
-
-7. **Test it out** by activating the environment and opening the GUI!
-   ```bash
-   conda activate sleap
+      ```bash
+      curl -fsSL --compressed https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o "~/Downloads/Miniconda3-latest-MacOSX-arm64.sh" && chmod +x "~/Downloads/Miniconda3-latest-MacOSX-arm64.sh" && "~/Downloads/Miniconda3-latest-MacOSX-arm64.sh" -b -u -p ~/miniconda3 && rm "~/Downloads/Miniconda3-latest-MacOSX-arm64.sh" && ~/miniconda3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
    ```
-   ```bash
-   sleap-label
+   ```{group-tab} Mac (Intel)
+      Open a new terminal and enter:
+
+      ```bash
+      curl -fsSL --compressed https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o "~/Downloads/Miniconda3-latest-MacOSX-x86_64.sh" && chmod +x "~/Downloads/Miniconda3-latest-MacOSX-x86_64.sh" && "~/Downloads/Miniconda3-latest-MacOSX-x86_64.sh" -b -u -p ~/miniconda3 && rm "~/Downloads/Miniconda3-latest-MacOSX-x86_64.sh" && ~/miniconda3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
+      ```
    ```
+````
+
+See the [Miniconda website](https://docs.anaconda.com/free/miniconda/) for up-to-date installation instructions if the above instructions don't work for your system.
+
+(installation-methods)=
+
+## Installation methods
+
+SLEAP can be installed three different ways: via {ref}`conda package<condapackage>`, {ref}`conda from source<condasource>`, or {ref}`pip package<pippackage>`. Select one of the methods below to install SLEAP. We recommend {ref}`conda package<condapackage>`.
+
+`````{tabs}
+   ```{tab} conda package
+      **This is the recommended installation method**.
+      ````{tabs}
+         ```{group-tab} Windows and Linux
+            ```bash
+            conda create -y -n sleap -c conda-forge -c nvidia -c sleap/label/dev -c sleap -c anaconda sleap=1.4.1
+            ```
+            ```{note}
+            - This comes with CUDA to enable GPU support. All you need is to have an NVIDIA GPU and [updated drivers](https://nvidia.com/drivers).
+            - If you already have CUDA installed on your system, this will not conflict with it.
+            - This will also work in CPU mode if you don't have a GPU on your machine.
+            ```
+         ```
+         ```{group-tab} Mac OS
+            ```bash
+            conda create -y -n sleap -c conda-forge -c anaconda -c sleap sleap=1.4.1
+            ```
+            ```{note}
+            This will also work in CPU mode if you don't have a GPU on your machine.
+            ```
+         ```
+      ````
+
+   ```
+   ```{tab} conda from source
+      This is the **recommended method for development**.
+      1. First, ensure git is installed:
+         ```bash
+         git --version
+         ```
+         If `git` is not recognized, then [install git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+      2. Then, clone the repository:
+         ```bash
+         git clone https://github.com/talmolab/sleap && cd sleap
+         ```
+      3. Finally, install SLEAP from the environment file:
+         ````{tabs}
+            ```{group-tab} Windows and Linux
+               ````{tabs}
+                  ```{group-tab} NVIDIA GPU
+                     ```bash
+                     conda env create -f environment.yml -n sleap
+                     ```
+                  ```
+                  ```{group-tab} CPU or other GPU
+                     ```bash
+                     conda env create -f environment_no_cuda.yml -n sleap
+                     ```
+                  ```
+               ````
+            ```
+            ```{group-tab} Mac OS
+               ```bash
+               conda env create -f environment_mac.yml -n sleap
+               ```
+            ```
+         ````
+      ```{note}
+      - This installs SLEAP in development mode, which means that edits to the source code will be applied the next time you run SLEAP.
+      - Change the `-n sleap` in the command to create an environment with a different name (e.g., `-n sleap_develop`).
+      ```
+   ```
+   ```{tab} pip package
+      This is the **recommended method for Google Colab only**.
+      ```{warning}
+      This will uninstall existing libraries and potentially install conflicting ones.
+
+      We strongly recommend that you **only use this method if you know what you're doing**!
+      ```
+      ````{tabs}
+         ```{group-tab} Windows and Linux
+            ```{note}
+            - Requires Python 3.7
+            - To enable GPU support, make sure that you have **CUDA Toolkit v11.3** and **cuDNN v8.2** installed.
+            ```
+            Although you do not need Miniconda installed to perform a `pip install`, we recommend [installing Miniconda](https://docs.anaconda.com/free/miniconda/) to create a new environment where we can isolate the `pip install`. Alternatively, you can use a venv if you have an existing Python 3.7 installation. If you are working on **Google Colab**, skip to step 3 to perform the `pip install` without using a conda environment.
+            1. Otherwise, create a new conda environment where we will `pip install sleap`:
+               ````{tabs}
+                  ```{group-tab} NVIDIA GPU
+                     ```bash
+                     conda create --name sleap pip python=3.7.12 cudatoolkit=11.3 cudnn=8.2 -c conda-forge -c nvidia
+                     ```
+                  ```
+                  ```{group-tab} CPU or other GPU
+                     ```bash
+                     conda create --name sleap pip python=3.7.12
+                     ```
+                  ```
+               ````
+            2. Then activate the environment to isolate the `pip install` from other environments on your computer:
+               ```bash
+               conda activate sleap
+               ```
+               ```{warning}
+               Refrain from installing anything into the `base` environment. Always create a new environment to install new packages.
+               ```
+            3. Finally, we can perform the `pip install`:
+               ```bash
+               pip install sleap[pypi]==1.4.1
+               ```
+               ```{note}
+               The pypi distributed package of SLEAP ships with the following extras:
+               - **pypi**: For installation without an conda environment file. All dependencies come from PyPI.
+               - **jupyter**: This installs all *pypi* and jupyter lab dependencies.
+               - **dev**: This installs all *jupyter* dependencies and developement tools for testing and building docs.
+               - **conda_jupyter**: For installation using a conda environment file included in the source code. Most dependencies are listed as conda packages in the environment file and only a few come from PyPI to allow jupyter lab support.
+               - **conda_dev**: For installation using [a conda environment](https://github.com/search?q=repo%3Atalmolab%2Fsleap+path%3Aenvironment*.yml&type=code) with a few PyPI dependencies for development tools.
+               ```
+         ```
+         ```{group-tab} Mac OS
+            Not supported.
+         ```
+         ````
+   ```
+`````
 
 ## Testing that things are working
 
@@ -273,10 +343,45 @@ python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU')
 ````{warning}
 TensorFlow 2.7+ is currently failing to detect CUDA Toolkit and CuDNN on some systems (see [Issue thread](https://github.com/tensorflow/tensorflow/issues/52988)).
 
-If you run into issues, try downgrading the TensorFlow 2.6:
+If you run into issues, either try downgrading the TensorFlow 2.6:
 ```bash
 pip install tensorflow==2.6.3
 ```
+or follow the note below.
+````
+
+````{note}
+If you are on Linux, have a NVIDIA GPU, but cannot detect your GPU:
+
+```bash
+W tensorflow/stream_executor/platform/default/dso_loader.cc:64 Could not load dynamic
+library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object
+file: No such file or directory
+```
+
+then activate the environment:
+
+```bash
+conda activate sleap
+```
+
+and run the commands:
+```bash
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+echo 'export SLEAP_OLD_LD_LIBRARY_PATH=$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+echo 'export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+source $CONDA_PREFIX/etc/conda/activate.d/sleap_activate.sh
+```
+
+This will set the environment variable `LD_LIBRARY_PATH` each time the environment is activated. The environment variable will remain set in the current terminal even if we deactivate the environment. Although not strictly necessary, if you would also like the environment variable to be reset to the original value when deactivating the environment, we can run the following commands:
+```bash
+mkdir -p $CONDA_PREFIX/etc/conda/deactivate.d
+echo '#!/bin/sh' >> $CONDA_PREFIX/etc/conda/deactivate.d/sleap_deactivate.sh
+echo 'export LD_LIBRARY_PATH=$SLEAP_OLD_LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/deactivate.d/sleap_deactivate.sh
+```
+
+These commands only need to be run once and will subsequently run automatically upon [de]activating your `sleap` environment.
 ````
 
 ## Upgrading and uninstalling

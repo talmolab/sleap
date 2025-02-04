@@ -10,6 +10,7 @@ ignore_modules = [
     "sleap.version",
 ]
 
+
 def make_api_doctree():
     doctree = ""
 

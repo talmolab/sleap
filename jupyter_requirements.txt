@@ -1,0 +1,5 @@
+# This file contains the dependencies to be installed for jupyter lab support. 
+
+ipykernel
+ipywidgets
+jupyterlab

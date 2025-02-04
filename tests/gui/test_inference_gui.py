@@ -41,17 +41,21 @@ def test_scoped_key_dict():
 
 
 @pytest.mark.parametrize(
-    "labels_path, video_path", [("labels.slp", "video.mp4"), (None, "video.mp4")]
+    "labels_path, video_path, max_instances, frames",
+    [
+        ("labels.slp", "video.mp4", None, [0, 1, 2]),
+        (None, "video.mp4", 1, [0, -1]),
+        (None, "video.mp4", 2, [1, -4]),
+    ],
 )
-def test_inference_cli_builder(labels_path, video_path):
-
+def test_inference_cli_builder(labels_path, video_path, max_instances, frames):
     inference_task = runners.InferenceTask(
         trained_job_paths=["model1", "model2"],
-        inference_params={"tracking.tracker": "simple"},
+        inference_params={"tracking.tracker": "simple", "max_instances": max_instances},
     )
 
     item_for_inference = runners.VideoItemForInference(
-        video=Video.from_filename(video_path), frames=[1, 2, 3], labels_path=labels_path
+        video=Video.from_filename(video_path), frames=frames, labels_path=labels_path
     )
 
     cli_args, output_path = inference_task.make_predict_cli_call(item_for_inference)
@@ -62,7 +66,20 @@ def test_inference_cli_builder(labels_path, video_path):
     assert "model1" in cli_args
     assert "model2" in cli_args
     assert "--frames" in cli_args
+
+    frames_idx = cli_args.index("--frames")
+    if -1 in frames:
+        assert cli_args[frames_idx + 1] == "0"  # No redundant frames
+    elif -4 in frames:
+        assert cli_args[frames_idx + 1] == "1,-3"  # Ordered correctly
+    else:
+        assert cli_args[frames_idx + 1] == ",".join([str(f) for f in frames])
     assert "--tracking.tracker" in cli_args
+    assert (
+        "--max_instances" in cli_args
+        if max_instances is not None
+        else max_instances is None
+    )
 
     assert output_path.startswith(data_path)
     assert output_path.endswith("predictions.slp")

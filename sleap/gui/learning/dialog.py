@@ -1,23 +1,20 @@
 """
 Dialogs for running training and/or inference in GUI.
 """
-import cattr
-import os
+import json
 import shutil
-import atexit
 import tempfile
 from pathlib import Path
+from typing import Dict, List, Optional, Text, cast
+
+import cattr
+from qtpy import QtCore, QtGui, QtWidgets
 
 import sleap
 from sleap import Labels, Video
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
-from sleap.gui.learning import runners, scopedkeydict, configs, datagen, receptivefield
-
-from typing import Dict, List, Optional, Text, Optional, cast
-
-from qtpy import QtWidgets, QtCore
-
+from sleap.gui.learning import configs, datagen, receptivefield, runners, scopedkeydict
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -85,6 +82,9 @@ class LearningDialog(QtWidgets.QDialog):
 
         # Layout for buttons
         buttons = QtWidgets.QDialogButtonBox()
+        self.copy_button = buttons.addButton(
+            "Copy to clipboard", QtWidgets.QDialogButtonBox.ActionRole
+        )
         self.save_button = buttons.addButton(
             "Save configuration files...", QtWidgets.QDialogButtonBox.ActionRole
         )
@@ -94,6 +94,7 @@ class LearningDialog(QtWidgets.QDialog):
         self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
         self.run_button = buttons.addButton("Run", QtWidgets.QDialogButtonBox.ApplyRole)
 
+        self.copy_button.setToolTip("Copy configuration to the clipboard")
         self.save_button.setToolTip("Save scripts and configuration to run pipeline.")
         self.export_button.setToolTip(
             "Export data, configuration, and scripts for remote training and inference."
@@ -123,12 +124,25 @@ class LearningDialog(QtWidgets.QDialog):
         self.message_widget = QtWidgets.QLabel("")
 
         # Layout for entire dialog
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self.tab_widget)
-        layout.addWidget(self.message_widget)
-        layout.addWidget(buttons_layout_widget)
+        content_widget = QtWidgets.QWidget()
+        content_layout = QtWidgets.QVBoxLayout(content_widget)
 
-        self.setLayout(layout)
+        content_layout.addWidget(self.tab_widget)
+        content_layout.addWidget(self.message_widget)
+        content_layout.addWidget(buttons_layout_widget)
+
+        # Create the QScrollArea.
+        scroll_area = QtWidgets.QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(content_widget)
+
+        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(scroll_area)
+
+        self.adjust_initial_size()
 
         # Default to most recently trained pipeline (if there is one)
         self.set_default_pipeline_tab()
@@ -140,6 +154,7 @@ class LearningDialog(QtWidgets.QDialog):
         self.connect_signals()
 
         # Connect actions for buttons
+        self.copy_button.clicked.connect(self.copy)
         self.save_button.clicked.connect(self.save)
         self.export_button.clicked.connect(self.export_package)
         self.cancel_button.clicked.connect(self.reject)
@@ -150,6 +165,20 @@ class LearningDialog(QtWidgets.QDialog):
             self.pipeline_form_widget.buttons["_view_datagen"].clicked.connect(
                 self.view_datagen
             )
+
+    def adjust_initial_size(self):
+        # Get screen size
+        screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
+
+        max_width = 1860
+        max_height = 1150
+        margin = 0.10
+
+        # Calculate target width and height
+        target_width = min(screen.width() - screen.width() * margin, max_width)
+        target_height = min(screen.height() - screen.height() * margin, max_height)
+        # Set the dialog's dimensions
+        self.resize(target_width, target_height)
 
     def update_file_lists(self):
         self._cfg_getter.update()
@@ -573,6 +602,7 @@ class LearningDialog(QtWidgets.QDialog):
 
     def get_items_for_inference(self, pipeline_form_data) -> runners.ItemsForInference:
         predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
+        batch_size = pipeline_form_data.get("batch_size")
 
         frame_selection = self.get_selected_frames_to_predict(pipeline_form_data)
         frame_count = self.count_total_frames_for_selection_option(frame_selection)
@@ -585,6 +615,7 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
+                batch_size=batch_size,
             )
         elif predict_frames_choice.startswith("suggested"):
             items_for_inference = runners.ItemsForInference(
@@ -594,6 +625,7 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
+                batch_size=batch_size,
             )
         else:
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
@@ -601,8 +633,23 @@ class LearningDialog(QtWidgets.QDialog):
                 total_frame_count=frame_count,
                 labels_path=self.labels_filename,
                 labels=self.labels,
+                batch_size=batch_size,
             )
         return items_for_inference
+
+    def _validate_id_model(self) -> bool:
+        """Make sure we have instances with tracks set for ID models."""
+        if not self.labels.tracks:
+            message = "Cannot run ID model training without tracks."
+            return False
+
+        found_tracks = False
+        for inst in self.labels.instances():
+            if type(inst) == sleap.Instance and inst.track is not None:
+                found_tracks = True
+                break
+
+        return found_tracks
 
     def _validate_pipeline(self):
         can_run = True
@@ -621,6 +668,15 @@ class LearningDialog(QtWidgets.QDialog):
                     "Cannot run inference with untrained models "
                     f"({', '.join(untrained)})."
                 )
+
+        # Make sure we have instances with tracks set for ID models.
+        if self.mode == "training" and self.current_pipeline in (
+            "top-down-id",
+            "bottom-up-id",
+        ):
+            can_run = self.validate_id_model()
+            if not can_run:
+                message = "Cannot run ID model training without tracks."
 
         # Make sure skeleton will be valid for bottom-up inference.
         if self.mode == "training" and self.current_pipeline == "bottom-up":
@@ -674,10 +730,6 @@ class LearningDialog(QtWidgets.QDialog):
         datagen.show_datagen_preview(self.labels, config_info_list)
         self.hide()
 
-    def on_button_click(self, button):
-        if button == self.save_button:
-            self.save()
-
     def run(self):
         """Run with current dialog settings."""
 
@@ -717,14 +769,38 @@ class LearningDialog(QtWidgets.QDialog):
             win.setWindowTitle("Inference Results")
             win.exec_()
 
+    def copy(self):
+        """Copy scripts and configs to clipboard"""
+
+        # Get all info from dialog
+        pipeline_form_data = self.pipeline_form_widget.get_form_data()
+        config_info_list = self.get_every_head_config_data(pipeline_form_data)
+        pipeline_form_data = json.dumps(pipeline_form_data, indent=2)
+
+        # Format information for each tab in dialog
+        output = [pipeline_form_data]
+        for config_info in config_info_list:
+            config_info = config_info.config.to_json()
+            config_info = json.loads(config_info)
+            config_info = json.dumps(config_info, indent=2)
+            output.append(config_info)
+        output = "\n".join(output)
+
+        # Set the clipboard text
+        clipboard = QtWidgets.QApplication.clipboard()
+        clipboard.setText(output)
+
     def save(
         self, output_dir: Optional[str] = None, labels_filename: Optional[str] = None
     ):
         """Save scripts and configs to run pipeline."""
         if output_dir is None:
-            models_dir = os.path.join(os.path.dirname(self.labels_filename), "/models")
+            labels_fn = Path(self.labels_filename)
+            models_dir = Path(labels_fn.parent, "models")
             output_dir = FileDialog.openDir(
-                None, directory=models_dir, caption="Select directory to save scripts"
+                None,
+                dir=models_dir.as_posix(),
+                caption="Select directory to save scripts",
             )
 
             if not output_dir:
@@ -1062,8 +1138,12 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     @classmethod
-    def from_trained_config(cls, cfg_info: configs.ConfigFileInfo):
-        widget = cls(require_trained=True, head=cfg_info.head_name)
+    def from_trained_config(
+        cls, cfg_info: configs.ConfigFileInfo, cfg_getter: configs.TrainingConfigsGetter
+    ):
+        widget = cls(
+            require_trained=True, head=cfg_info.head_name, cfg_getter=cfg_getter
+        )
         widget.acceptSelectedConfigInfo(cfg_info)
         widget.setWindowTitle(cfg_info.path_dir)
         return widget
@@ -1245,17 +1325,25 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self._cfg_list_widget is None:
             return None
 
-        trained_config_info: Optional[
+        selected_config_info: Optional[
             configs.ConfigFileInfo
         ] = self._cfg_list_widget.getSelectedConfigInfo()
-        if (trained_config_info is None) or (not trained_config_info.has_trained_model):
+        if (selected_config_info is None) or (
+            not selected_config_info.has_trained_model
+        ):
             return None
 
+        trained_config_info = configs.ConfigFileInfo.from_config_file(
+            selected_config_info.path
+        )
         if self.use_trained:
             trained_config_info.dont_retrain = True
         else:
             # Set certain parameters to defaults
             trained_config = trained_config_info.config
+            trained_config.data.labels.validation_labels = None
+            trained_config.data.labels.test_labels = None
+            trained_config.data.labels.split_by_inds = False
             trained_config.data.labels.skeletons = []
             trained_config.outputs.run_name = None
             trained_config.outputs.run_name_prefix = ""

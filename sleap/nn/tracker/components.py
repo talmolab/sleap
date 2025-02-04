@@ -12,9 +12,11 @@ Main types of functions:
 
 
 """
+
 import operator
 from collections import defaultdict
-from typing import List, Tuple, Optional, TypeVar, Callable
+import logging
+from typing import List, Tuple, Union, Optional, TypeVar, Callable
 
 import attr
 import numpy as np
@@ -23,7 +25,24 @@ from scipy.optimize import linear_sum_assignment
 from sleap import PredictedInstance, Instance, Track
 from sleap.nn import utils
 
+logger = logging.getLogger(__name__)
+
 InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
+
+
+def normalized_instance_similarity(
+    ref_instance: InstanceType, query_instance: InstanceType, img_hw: Tuple[int]
+) -> float:
+    """Computes similarity between instances with normalized keypoints."""
+
+    normalize_factors = np.array((img_hw[1], img_hw[0]))
+    ref_visible = ~(np.isnan(ref_instance.points_array).any(axis=1))
+    normalized_query_keypoints = query_instance.points_array / normalize_factors
+    normalized_ref_keypoints = ref_instance.points_array / normalize_factors
+    dists = np.sum((normalized_query_keypoints - normalized_ref_keypoints) ** 2, axis=1)
+    similarity = np.nansum(np.exp(-dists)) / np.sum(ref_visible)
+
+    return similarity
 
 
 def instance_similarity(
@@ -38,6 +57,95 @@ def instance_similarity(
     similarity = np.nansum(np.exp(-dists)) / np.sum(ref_visible)
 
     return similarity
+
+
+def factory_object_keypoint_similarity(
+    keypoint_errors: Optional[Union[List, int, float]] = None,
+    score_weighting: bool = False,
+    normalization_keypoints: str = "all",
+) -> Callable:
+    """Factory for similarity function based on object keypoints.
+
+    Args:
+        keypoint_errors: The standard error of the distance between the predicted
+            keypoint and the true value, in pixels.
+            If None or empty list, defaults to 1.
+            If a scalar or singleton list, every keypoint has the same error.
+            If a list, defines the error for each keypoint, the length should be equal
+            to the number of keypoints in the skeleton.
+        score_weighting: If True, use `score` of `PredictedPoint` to weigh
+            `keypoint_errors`. If False, do not add a weight to `keypoint_errors`.
+        normalization_keypoints: Determine how to normalize similarity score. One of
+            ["all", "ref", "union"]. If "all", similarity score is normalized by number
+            of reference points. If "ref", similarity score is normalized by number of
+            visible reference points. If "union", similarity score is normalized by
+            number of points both visible in query and reference instance.
+            Default is "all".
+
+    Returns:
+        Callable that returns object keypoint similarity between two `Instance`s.
+
+    """
+    keypoint_errors = 1 if keypoint_errors is None else keypoint_errors
+    with np.errstate(divide="ignore"):
+        kp_precision = 1 / (2 * np.array(keypoint_errors) ** 2)
+
+    def object_keypoint_similarity(
+        ref_instance: InstanceType, query_instance: InstanceType
+    ) -> float:
+        nonlocal kp_precision
+        # Keypoints
+        ref_points = ref_instance.points_array
+        query_points = query_instance.points_array
+        # Keypoint scores
+        if score_weighting:
+            ref_scores = getattr(ref_instance, "scores", np.ones(len(ref_points)))
+            query_scores = getattr(query_instance, "scores", np.ones(len(query_points)))
+        else:
+            ref_scores = 1
+            query_scores = 1
+        # Number of keypoint for normalization
+        if normalization_keypoints in ("ref", "union"):
+            ref_visible = ~(np.isnan(ref_points).any(axis=1))
+            if normalization_keypoints == "ref":
+                max_n_keypoints = np.sum(ref_visible)
+            elif normalization_keypoints == "union":
+                query_visible = ~(np.isnan(query_points).any(axis=1))
+                max_n_keypoints = np.sum(np.logical_and(ref_visible, query_visible))
+        else:  # if normalization_keypoints == "all":
+            max_n_keypoints = len(ref_points)
+        if max_n_keypoints == 0:
+            return 0
+
+        # Make sure the sizes of kp_precision and n_points match
+        if kp_precision.size > 1 and 2 * kp_precision.size != ref_points.size:
+            # Correct kp_precision size to fit number of points
+            n_points = ref_points.size // 2
+            mess = (
+                "keypoint_errors array should have the same size as the number of "
+                f"keypoints in the instance: {kp_precision.size} != {n_points}"
+            )
+
+            if kp_precision.size > n_points:
+                kp_precision = kp_precision[:n_points]
+                mess += "\nTruncating keypoint_errors array."
+
+            else:  # elif kp_precision.size < n_points:
+                pad = n_points - kp_precision.size
+                kp_precision = np.pad(kp_precision, (0, pad), "edge")
+                mess += "\nPadding keypoint_errors array by repeating the last value."
+            logger.warning(mess)
+
+        # Compute distances
+        dists = np.sum((query_points - ref_points) ** 2, axis=1) * kp_precision
+
+        similarity = (
+            np.nansum(ref_scores * query_scores * np.exp(-dists)) / max_n_keypoints
+        )
+
+        return similarity
+
+    return object_keypoint_similarity
 
 
 def centroid_distance(

@@ -13,6 +13,14 @@ training:
       a "<u>confidence map</u>" head to predicts the
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   - name: model.heads.multi_instance.confmaps.sigma
     label: Sigma for Nodes
@@ -45,6 +53,14 @@ training:
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -196,6 +212,21 @@ training:
   type: list
 
 - type: text
+  text: '<b>ZMQ Options</b>'
+
+- name: controller_port
+  label: Controller Port
+  type: int
+  default: 9000
+  range: 1024,65535
+
+- name: publish_port
+  label: Publish Port
+  type: int
+  default: 9001
+  range: 1024,65535
+
+- type: text
   text: '<b>Output Options</b>'
 
 - default: ''
@@ -255,6 +286,11 @@ training:
   type: bool
   default: true
 
+- name: _keep_viz
+  label: Keep Prediction Visualization Images After Training
+  type: bool
+  default: false
+
 - name: _predict_frames
   label: Predict On
   type: list
@@ -271,7 +307,7 @@ inference:
   label: Training/Inference Pipeline Type
   type: stacked
   default: "multi-animal bottom-up "
-  options: "multi-animal bottom-up,multi-animal top-down,multi-animal bottom-up-id,multi-animal top-down-id,single animal,movenet-lightning,movenet-thunder,none"
+  options: "multi-animal bottom-up,multi-animal top-down,multi-animal bottom-up-id,multi-animal top-down-id,single animal,movenet-lightning,movenet-thunder,tracking-only"
 
   multi-animal bottom-up:
   - type: text
@@ -280,6 +316,14 @@ inference:
       a "<u>confidence map</u>" head to predicts the
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   multi-animal top-down:
   - type: text
@@ -288,6 +332,14 @@ inference:
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
+  - label: Max Instances
+    name: max_instances
+    type: optional_int
+    help: Maximum number of instances per frame.
+    none_label: No max
+    default_disabled: true
+    range: 1,100
+    default: 1
 
   multi-animal bottom-up-id:
   - type: text
@@ -333,7 +385,13 @@ inference:
       Note that this model is intended for human pose estimation. There is no
       support for videos containing more than one instance'
 
-  none:
+  tracking-only:
+
+- name: batch_size
+  label: Batch Size
+  type: int
+  default: 4
+  range: 1,512
 
 - name: tracking.tracker
   label: Tracker (cross-frame identity) Method
@@ -344,33 +402,44 @@ inference:
   none:
 
   flow:
-    - type: text
-      text: '<b>Pre-tracker data cleaning</b>:'
-    - name: tracking.target_instance_count
-      label: Target Number of Instances Per Frame
-      type: optional_int
-      none_label: No target
-      default_disabled: true
-      range: 1,100
-      default: 1
-    - name: tracking.pre_cull_to_target
-      label: Cull to Target Instance Count
-      type: bool
-      default: false
-    - name: tracking.pre_cull_iou_threshold
-      label: Cull using IoU Threshold
-      type: double
-      default: 0.8
+    # - type: text
+    #   text: '<b>Pre-tracker data cleaning</b>:'
+    # - name: tracking.target_instance_count
+    #   label: Target Number of Instances Per Frame
+    #   type: optional_int
+    #   none_label: No target
+    #   default_disabled: true
+    #   range: 1,100
+    #   default: 1
+    # - name: tracking.pre_cull_to_target
+    #   label: Cull to Target Instance Count
+    #   type: bool
+    #   default: false
+    # - name: tracking.pre_cull_iou_threshold
+    #   label: Cull using IoU Threshold
+    #   type: double
+    #   default: 0.8
     - type: text
       text: '<b>Tracking with optical flow</b>:<br />
       This tracker "shifts" instances from previous frames using optical flow
       before matching instances in each frame to the <i>shifted</i> instances from
       prior frames.'
+    # - name: tracking.max_tracking
+    #   label: Limit max number of tracks
+    #   type: bool
+      default: false
+    - name: tracking.max_tracks
+      label: Max number of tracks
+      type: optional_int
+      none_label: No limit
+      default_disabled: true
+      range: 1,100
+      default: 1
     - name: tracking.similarity
       label: Similarity Method
       type: list
       default: instance
-      options: instance,centroid,iou
+      options: "instance,normalized_instance,centroid,iou,object keypoint"
     - name: tracking.match
       label: Matching Method
       type: list
@@ -390,10 +459,10 @@ inference:
       none_label: Use max (non-robust)
       range: 0,1
       default: 0.95
-    - name: tracking.save_shifted_instances
-      label: Save shifted instances
-      type: bool
-      default: false
+    # - name: tracking.save_shifted_instances
+    #   label: Save shifted instances
+    #   type: bool
+    #   default: false
     - type: text
       text: '<b>Kalman filter-based tracking</b>:<br />
       Uses the above tracking options to track instances for an initial
@@ -410,6 +479,22 @@ inference:
       type: string
       default: 0,1,2
     - type: text
+      text: '<b>Object keypoint similarity options</b>:<br />
+      Only used if this similarity method is selected.'
+    - name: tracking.oks_errors
+      label: Keypoints errors in pixels
+      help: 'Standard error in pixels of the distance for each keypoint.
+      If the list is empty, defaults to 1. If singleton list, each keypoint has
+      the same error. Otherwise, the length should be the same as the number of
+      keypoints in the skeleton.'
+      type: string
+      default:
+    - name: tracking.oks_score_weighting
+      label: Use prediction score for weighting
+      help: 'Use prediction scores to weight the similarity of each keypoint'
+      type: bool
+      default: false
+    - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks
       label: Connect Single Track Breaks
@@ -417,32 +502,43 @@ inference:
       default: false
 
   simple:
-    - type: text
-      text: '<b>Pre-tracker data cleaning</b>:'
-    - name: tracking.target_instance_count
-      label: Target Number of Instances Per Frame
-      type: optional_int
-      none_label: No target
-      default_disabled: true
-      range: 1,100
-      default: 1
-    - name: tracking.pre_cull_to_target
-      label: Cull to Target Instance Count
-      type: bool
-      default: false
-    - name: tracking.pre_cull_iou_threshold
-      label: Cull using IoU Threshold
-      type: double
-      default: 0.8
+    # - type: text
+    #   text: '<b>Pre-tracker data cleaning</b>:'
+    # - name: tracking.target_instance_count
+    #   label: Target Number of Instances Per Frame
+    #   type: optional_int
+    #   none_label: No target
+    #   default_disabled: true
+    #   range: 1,100
+    #   default: 1
+    # - name: tracking.pre_cull_to_target
+    #   label: Cull to Target Instance Count
+    #   type: bool
+    #   default: false
+    # - name: tracking.pre_cull_iou_threshold
+    #   label: Cull using IoU Threshold
+    #   type: double
+    #   default: 0.8
     - type: text
       text: '<b>Tracking</b>:<br />
         This tracker assigns track identities by matching instances from prior
         frames to instances on subsequent frames.'
+    # - name: tracking.max_tracking
+    #   label: Limit max number of tracks
+    #   type: bool
+    #   default: false
+    - name: tracking.max_tracks
+      label: Max number of tracks
+      type: optional_int
+      none_label: No limit
+      default_disabled: true
+      range: 1,100
+      default: 1
     - name: tracking.similarity
       label: Similarity Method
       type: list
-      default: iou
-      options: instance,centroid,iou
+      default: instance
+      options: "instance,normalized_instance,centroid,iou,object keypoint"
     - name: tracking.match
       label: Matching Method
       type: list
@@ -477,6 +573,22 @@ inference:
       label: Nodes to use for Tracking
       type: string
       default: 0,1,2
+    - type: text
+      text: '<b>Object keypoint similarity options</b>:<br />
+      Only used if this similarity method is selected.'
+    - name: tracking.oks_errors
+      label: Keypoints errors in pixels
+      help: 'Standard error in pixels of the distance for each keypoint.
+      If the list is empty, defaults to 1. If singleton list, each keypoint has
+      the same error. Otherwise, the length should be the same as the number of
+      keypoints in the skeleton.'
+      type: string
+      default:
+    - name: tracking.oks_score_weighting
+      label: Use prediction score for weighting
+      help: 'Use prediction scores to weight the similarity of each keypoint'
+      type: bool
+      default: false
     - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks

@@ -1,0 +1,24 @@
+name: Comment on New Discussions and Issues
+
+on:
+  discussion:
+    types: [created]
+  issues:
+    types: [opened]
+
+jobs:
+  comment_on_discussion:
+    if: github.event_name == 'discussion'
+    uses: ./.github/workflows/comment-template.yml
+    with:
+      subject_id: ${{ github.event.discussion.node_id }}
+      body_prefix: "Thank you for starting a new discussion!"
+      comment_type: "discussion"
+
+  comment_on_issue:
+    if: github.event_name == 'issues'
+    uses: ./.github/workflows/comment-template.yml
+    with:
+      subject_id: ${{ github.event.issue.node_id }}
+      body_prefix: "Thank you for opening a new issue!"
+      comment_type: "issue"

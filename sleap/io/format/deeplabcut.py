@@ -19,10 +19,11 @@ import yaml
 import numpy as np
 import pandas as pd
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Tuple
+from pathlib import Path
 
 from sleap import Labels, Video, Skeleton
-from sleap.instance import Instance, LabeledFrame, Point
+from sleap.instance import Instance, LabeledFrame, Point, Track
 from sleap.util import find_files_by_suffix
 
 from .adaptor import Adaptor, SleapObjectType
@@ -80,20 +81,71 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
         )
 
     @classmethod
-    def make_video_for_image_list(cls, image_dir, filenames) -> Video:
-        """Creates a Video object from frame images."""
+    def make_video_for_image_list(
+        cls, image_dir, filenames
+    ) -> Tuple[List[Video], List[int], List[int]]:
+        """Creates a Video object from frame images.
+
+        Args:
+            image_dir: Directory where images are stored.
+            filenames: List of image filenames.
+
+        Returns:
+            Tuple containing:
+                - List of Video objects created from the images.
+                - List of video indices for each image.
+                - List of frame indices for each image.
+        """
 
         # the image filenames in the csv may not match where the user has them
         # so we'll change the directory to match where the user has the csv
         def fix_img_path(img_dir, img_filename):
+            img_filename = (Path(img_dir) / Path(img_filename).name).as_posix()
             img_filename = img_filename.replace("\\", "/")
-            img_filename = os.path.basename(img_filename)
-            img_filename = os.path.join(img_dir, img_filename)
             return img_filename
 
+        def get_shape(filename):
+            import cv2
+
+            img = cv2.imread(filename)
+            return img.shape[:2]
+
+        # Fix image paths to match the CSV directory.
         filenames = list(map(lambda f: fix_img_path(image_dir, f), filenames))
 
-        return Video.from_image_filenames(filenames)
+        try:
+            # Group by shape.
+            shapes = list(map(get_shape, filenames))
+            imgs_by_shape = {}
+            for filename, shape in zip(filenames, shapes):
+                if shape not in imgs_by_shape:
+                    imgs_by_shape[shape] = []
+                imgs_by_shape[shape].append(filename)
+
+            # Create videos for each shape group.
+            videos = []
+            inds_by_img = {}
+            for video_ind, (shape, img_fns) in enumerate(imgs_by_shape.items()):
+                videos.append(
+                    Video.from_image_filenames(img_fns, height=shape[0], width=shape[1])
+                )
+                for fidx, img_fn in enumerate(img_fns):
+                    inds_by_img[img_fn] = (video_ind, fidx)
+
+            # Return videos and indices in the input ordering.
+            video_inds = []
+            frame_inds = []
+            for filename in filenames:
+                video_ind, frame_ind = inds_by_img[filename]
+                video_inds.append(video_ind)
+                frame_inds.append(frame_ind)
+        except:
+            # If we couldn't group by shape, create a single video for all images.
+            videos = [Video.from_image_filenames(filenames)]
+            video_inds = [0] * len(filenames)
+            frame_inds = list(range(len(filenames)))
+
+        return videos, video_inds, frame_inds
 
     @classmethod
     def read_frames(
@@ -119,11 +171,12 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
 
             # Pull out animal and node names from the columns.
             start_col = 3 if is_new_format else 1
-            animal_names = []
+            tracks: Dict[str, Optional[Track]] = {}
             node_names = []
             for animal_name, node_name, _ in data.columns[start_col:][::2]:
-                if animal_name not in animal_names:
-                    animal_names.append(animal_name)
+                # Keep the starting frame index for each individual/track
+                if animal_name not in tracks.keys():
+                    tracks[animal_name] = None
                 if node_name not in node_names:
                     node_names.append(node_name)
 
@@ -146,23 +199,21 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
             # Old format has filenames in a single column.
             img_files = data.iloc[:, 0]
 
-        if full_video:
-            video = full_video
-            index_frames_by_original_index = True
-        else:
-            # Create the Video object
+        if not full_video:
+            # Create the Video objects grouped by shape
             img_dir = os.path.dirname(filename)
-            video = cls.make_video_for_image_list(img_dir, img_files)
-
-            # The frames in the video we created will be indexed from 0 to N
-            # rather than having their index from the original source video.
-            index_frames_by_original_index = False
+            videos, video_inds, frame_inds = cls.make_video_for_image_list(
+                img_dir, img_files
+            )
 
         lfs = []
         for i in range(len(data)):
 
-            # Figure out frame index to use.
-            if index_frames_by_original_index:
+            # Figure out the video and frame index to use.
+            if full_video:
+                # Use the input provided one.
+                video = full_video
+
                 # Extract "0123" from "path/img0123.png" as original frame index.
                 frame_idx_match = re.search("(?<=img)(\\d+)(?=\\.png)", img_files[i])
 
@@ -173,27 +224,39 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                         f"Unable to determine frame index for image {img_files[i]}"
                     )
             else:
-                frame_idx = i
+                # Get from pregrouped list.
+                video = videos[video_inds[i]]
+                frame_idx = frame_inds[i]
 
             instances = []
             if is_multianimal:
-                for animal_name in animal_names:
+                for animal_name in tracks.keys():
                     any_not_missing = False
                     # Get points for each node.
                     instance_points = dict()
                     for node in node_names:
-                        x, y = (
-                            data[(animal_name, node, "x")][i],
-                            data[(animal_name, node, "y")][i],
-                        )
+                        if (animal_name, node) in data.columns:
+                            x, y = (
+                                data[(animal_name, node, "x")][i],
+                                data[(animal_name, node, "y")][i],
+                            )
+                        else:
+                            x, y = np.nan, np.nan
                         instance_points[node] = Point(x, y)
                         if ~(np.isnan(x) and np.isnan(y)):
                             any_not_missing = True
 
                     if any_not_missing:
+                        # Create track
+                        if tracks[animal_name] is None:
+                            tracks[animal_name] = Track(spawned_on=i, name=animal_name)
                         # Create instance with points.
                         instances.append(
-                            Instance(skeleton=skeleton, points=instance_points)
+                            Instance(
+                                skeleton=skeleton,
+                                points=instance_points,
+                                track=tracks[animal_name],
+                            )
                         )
             else:
                 # Get points for each node.
@@ -270,6 +333,8 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
         skeleton = Skeleton()
         if project_data.get("multianimalbodyparts", False):
             skeleton.add_nodes(project_data["multianimalbodyparts"])
+            if "uniquebodyparts" in project_data:
+                skeleton.add_nodes(project_data["uniquebodyparts"])
         else:
             skeleton.add_nodes(project_data["bodyparts"])
 
@@ -298,13 +363,24 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
                 # If subdirectory is foo, we look for foo.mp4 in videos dir.
 
                 shortname = os.path.split(data_subdir)[-1]
-                video_path = os.path.join(videos_dir, f"{shortname}.mp4")
+                video_path = None
+                if os.path.exists(videos_dir):
+                    with os.scandir(videos_dir) as file_iterator:
+                        for file in file_iterator:
+                            if not file.is_file():
+                                continue
+                            if os.path.splitext(file.name)[0] != shortname:
+                                continue
+                            video_path = os.path.join(videos_dir, file.name)
+                            break
 
-                if os.path.exists(video_path):
+                if video_path is not None and os.path.exists(video_path):
                     video = Video.from_filename(video_path)
                 else:
                     # When no video is found, the individual frame images
                     # stored in the labeled data subdir will be used.
+                    if video_path is None:
+                        video_path = os.path.join(videos_dir, f"{shortname}.mp4")
                     print(
                         f"Unable to find {video_path} so using individual frame images."
                     )

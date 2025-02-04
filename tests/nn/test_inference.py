@@ -1,25 +1,31 @@
 import ast
-from typing import cast
-import pytest
-import numpy as np
 import json
-from sleap.io.dataset import Labels
-from sleap.nn.tracking import FlowCandidateMaker, Tracker
-import tensorflow as tf
-import sleap
-from numpy.testing import assert_array_equal, assert_allclose
+import zipfile
 from pathlib import Path
-import tensorflow_hub as hub
+from typing import cast
+import shutil
+import csv
+
+import numpy as np
+import pytest
+import pandas as pd
+import tensorflow as tf
+from numpy.testing import assert_array_equal, assert_allclose
+from sleap.io.video import available_video_exts
+
+import sleap
+from sleap.gui.learning import runners
+from sleap.io.dataset import Labels
 from sleap.nn.data.confidence_maps import (
     make_confmaps,
     make_grid_vectors,
     make_multi_confmaps,
 )
-
 from sleap.nn.inference import (
     InferenceLayer,
     InferenceModel,
     Predictor,
+    _make_predictor_from_cli,
     get_model_output_stride,
     find_head,
     SingleInstanceInferenceLayer,
@@ -47,12 +53,18 @@ from sleap.nn.inference import (
     _make_tracker_from_cli,
     main as sleap_track,
     export_cli as sleap_export,
+    _make_export_cli_parser,
 )
+from sleap.nn.tracking import (
+    MatchedFrameInstance,
+    FlowCandidateMaker,
+    FlowMaxTracksCandidateMaker,
+    Tracker,
+)
+from sleap.instance import Track
 
 
-from sleap.gui.learning import runners
-
-sleap.nn.system.use_cpu_only()
+# sleap.nn.system.use_cpu_only()
 
 
 @pytest.fixture
@@ -643,12 +655,20 @@ def test_topdown_predictor_centroid(min_labels, min_centroid_model_path):
     inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
 
-    # test max_instances (>2 will fail)
-    predictor.inference_model.centroid_crop.max_instances = 2
-    labels_pr = predictor.predict(min_labels)
 
-    assert len(labels_pr) == 1
-    assert len(labels_pr[0].instances) == 2
+def test_topdown_predictor_centroid_max_instances(min_labels, min_centroid_model_path):
+    predictor = TopDownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path
+    )
+
+    # Test max_instances <, =, and > than number of expected instances
+    for i in [1, 2, 3]:
+        predictor._initialize_inference_model()
+        predictor.inference_model.centroid_crop.max_instances = i
+        labels_pr = predictor.predict(min_labels)
+
+        assert len(labels_pr) == 1
+        assert len(labels_pr[0].instances) == min(i, 2)
 
 
 def test_topdown_predictor_centroid_high_threshold(min_labels, min_centroid_model_path):
@@ -666,6 +686,55 @@ def test_topdown_predictor_centered_instance(
 ):
     predictor = TopDownPredictor.from_trained_models(
         confmap_model_path=min_centered_instance_model_path
+    )
+
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    assert predictor.is_grayscale == True
+
+    points_gt = np.concatenate(
+        [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0
+    )
+    inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
+    assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+
+
+def test_topdown_predictor_centered_instance_with_scaling(
+    min_labels, min_centered_instance_with_scaling_model_path
+):
+    predictor = TopDownPredictor.from_trained_models(
+        confmap_model_path=min_centered_instance_with_scaling_model_path
+    )
+
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    assert predictor.is_grayscale == True
+
+    points_gt = np.concatenate(
+        [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0
+    )
+    inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
+    assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+
+
+def test_topdown_predictor_centroid_centered_instance_with_scaling(
+    min_labels, min_centered_instance_with_scaling_model_path, min_centroid_model_path
+):
+    predictor = TopDownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path,
+        confmap_model_path=min_centered_instance_with_scaling_model_path,
     )
 
     predictor.verbosity = "none"
@@ -823,6 +892,47 @@ def test_topdown_multiclass_predictor_high_threshold(
     assert len(labels_pr[0].instances) == 0
 
 
+def zip_directory_with_itself(src_dir, output_path):
+    """Zip a directory, including the directory itself.
+
+    Args:
+        src_dir: Path to directory to zip.
+        output_path: Path to output zip file.
+    """
+
+    src_path = Path(src_dir)
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob("*"):
+            arcname = src_path.name / file_path.relative_to(src_path)
+            zipf.write(file_path, arcname)
+
+
+def zip_directory_contents(src_dir, output_path):
+    """Zip the contents of a directory, not the directory itself.
+
+    Args:
+        src_dir: Path to directory to zip.
+        output_path: Path to output zip file.
+    """
+
+    src_path = Path(src_dir)
+    with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file_path in src_path.rglob("*"):
+            arcname = file_path.relative_to(src_path)
+            zipf.write(file_path, arcname)
+
+
+@pytest.mark.parametrize(
+    "zip_func", [zip_directory_with_itself, zip_directory_contents]
+)
+def test_load_model_zipped(tmpdir, min_centroid_model_path, zip_func):
+    mp = Path(min_centroid_model_path)
+    zip_dir = Path(tmpdir, mp.name).with_name(mp.name + ".zip")
+    zip_func(mp, zip_dir)
+
+    predictor = load_model(str(zip_dir))
+
+
 @pytest.mark.parametrize("resize_input_shape", [True, False])
 @pytest.mark.parametrize(
     "model_fixture_name",
@@ -868,7 +978,7 @@ def test_load_model(resize_input_shape, model_fixture_name, request):
     predictor = load_model(model_path, resize_input_layer=resize_input_shape)
 
     # Determine predictor type
-    for (fname, mname, ptype, ishape) in fname_mname_ptype_ishape:
+    for fname, mname, ptype, ishape in fname_mname_ptype_ishape:
         if fname in model_fixture_name:
             expected_model_name = mname
             expected_predictor_type = ptype
@@ -909,7 +1019,6 @@ def test_topdown_multi_size_inference(
 def test_ensure_numpy(
     min_centroid_model_path, min_centered_instance_model_path, min_labels_slp
 ):
-
     model = load_model([min_centroid_model_path, min_centered_instance_model_path])
 
     # each frame has same number of instances
@@ -980,7 +1089,6 @@ def test_ensure_numpy(
 
 
 def test_centroid_inference():
-
     xv, yv = make_grid_vectors(image_height=12, image_width=12, output_stride=1)
     points = tf.cast([[[1.75, 2.75]], [[3.75, 4.75]], [[5.75, 6.75]]], tf.float32)
     cms = tf.expand_dims(make_multi_confmaps(points, xv, yv, sigma=1.5), axis=0)
@@ -1036,7 +1144,6 @@ def test_centroid_inference():
 
 
 def export_frozen_graph(model, preds, output_path):
-
     tensors = {}
 
     for key, val in preds.items():
@@ -1063,7 +1170,6 @@ def export_frozen_graph(model, preds, output_path):
             info = json.load(json_file)
 
         for tensor_info in info["frozen_model_inputs"] + info["frozen_model_outputs"]:
-
             saved_name = (
                 tensor_info.split("Tensor(")[1].split(", shape")[0].replace('"', "")
             )
@@ -1080,7 +1186,6 @@ def export_frozen_graph(model, preds, output_path):
 
 
 def test_single_instance_save(min_single_instance_robot_model_path, tmp_path):
-
     single_instance_model = tf.keras.models.load_model(
         min_single_instance_robot_model_path + "/best_model.h5", compile=False
     )
@@ -1095,7 +1200,6 @@ def test_single_instance_save(min_single_instance_robot_model_path, tmp_path):
 
 
 def test_centroid_save(min_centroid_model_path, tmp_path):
-
     centroid_model = tf.keras.models.load_model(
         min_centroid_model_path + "/best_model.h5", compile=False
     )
@@ -1114,7 +1218,6 @@ def test_centroid_save(min_centroid_model_path, tmp_path):
 def test_topdown_save(
     min_centroid_model_path, min_centered_instance_model_path, min_labels_slp, tmp_path
 ):
-
     centroid_model = tf.keras.models.load_model(
         min_centroid_model_path + "/best_model.h5", compile=False
     )
@@ -1138,7 +1241,6 @@ def test_topdown_save(
 def test_topdown_id_save(
     min_centroid_model_path, min_topdown_multiclass_model_path, min_labels_slp, tmp_path
 ):
-
     centroid_model = tf.keras.models.load_model(
         min_centroid_model_path + "/best_model.h5", compile=False
     )
@@ -1160,7 +1262,6 @@ def test_topdown_id_save(
 
 
 def test_single_instance_predictor_save(min_single_instance_robot_model_path, tmp_path):
-
     # directly initialize predictor
     predictor = SingleInstancePredictor.from_trained_models(
         min_single_instance_robot_model_path, resize_input_layer=False
@@ -1197,10 +1298,33 @@ def test_single_instance_predictor_save(min_single_instance_robot_model_path, tm
         )
 
 
+def test_make_export_cli():
+    models_path = r"psuedo/models/path"
+    export_path = r"psuedo/test/path"
+    max_instances = 5
+
+    parser = _make_export_cli_parser()
+
+    # Test default values
+    args = None
+    args, _ = parser.parse_known_args(args=args)
+    assert args.models is None
+    assert args.export_path == "exported_model"
+    assert not args.ragged
+    assert args.max_instances is None
+
+    # Test all arguments
+    cmd = f"-m {models_path} -e {export_path} -r -n {max_instances}"
+    args, _ = parser.parse_known_args(args=cmd.split())
+    assert args.models == [models_path]
+    assert args.export_path == export_path
+    assert args.ragged
+    assert args.max_instances == max_instances
+
+
 def test_topdown_predictor_save(
     min_centroid_model_path, min_centered_instance_model_path, tmp_path
 ):
-
     # directly initialize predictor
     predictor = TopDownPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path,
@@ -1243,7 +1367,6 @@ def test_topdown_predictor_save(
 def test_topdown_id_predictor_save(
     min_centroid_model_path, min_topdown_multiclass_model_path, tmp_path
 ):
-
     # directly initialize predictor
     predictor = TopDownMultiClassPredictor.from_trained_models(
         centroid_model_path=min_centroid_model_path,
@@ -1284,7 +1407,13 @@ def test_topdown_id_predictor_save(
 
 
 @pytest.mark.parametrize(
-    "output_path,tracker_method", [("not_default", "flow"), (None, "simple")]
+    "output_path,tracker_method",
+    [
+        ("not_default", "flow"),
+        ("not_default", "flowmaxtracks"),
+        (None, "simple"),
+        (None, "simplemaxtracks"),
+    ],
 )
 def test_retracking(
     centered_pair_predictions: Labels, tmpdir, output_path, tracker_method
@@ -1295,10 +1424,13 @@ def test_retracking(
     # Create sleap-track command
     cmd = (
         f"{slp_path} --tracking.tracker {tracker_method} --video.index 0 --frames 1-3 "
-        "--cpu"
+        "--tracking.similarity object_keypoint --cpu"
     )
     if tracker_method == "flow":
         cmd += " --tracking.save_shifted_instances 1"
+    elif tracker_method == "simplemaxtracks" or tracker_method == "flowmaxtracks":
+        cmd += " --tracking.max_tracking 1"
+        cmd += " --tracking.max_tracks 2"
     if output_path == "not_default":
         output_path = Path(tmpdir, "tracked_slp.slp")
         cmd += f" --output {output_path}"
@@ -1312,6 +1444,8 @@ def test_retracking(
         parser = _make_cli_parser()
         args, _ = parser.parse_known_args(args=args)
         tracker = _make_tracker_from_cli(args)
+        # Additional check for similarity method
+        assert tracker.similarity_function.__name__ == "object_keypoint_similarity"
         output_path = f"{slp_path}.{tracker.get_name()}.slp"
 
     # Assert tracked predictions file exists
@@ -1328,17 +1462,97 @@ def test_retracking(
     assert new_inst.track != old_inst.track
 
 
-def test_sleap_track(
+@pytest.mark.parametrize("cmd", ["--max_instances 1", "-n 1"])
+def test_valid_cli_command(cmd):
+    """Test that sleap-track CLI command is valid."""
+    parser = _make_cli_parser()
+    args = parser.parse_args(cmd.split())
+    assert args.max_instances == 1
+
+
+def test_make_predictor_from_cli(
+    centered_pair_predictions: Labels,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    min_bottomup_model_path: str,
+    tmpdir,
+):
+    slp_path = str(Path(tmpdir, "old_slp.slp"))
+    Labels.save(centered_pair_predictions, slp_path)
+
+    # Create sleap-track command
+    model_args = [
+        f"--model {min_centroid_model_path} --model {min_centered_instance_model_path}",
+        f"--model {min_bottomup_model_path}",
+    ]
+    for model_arg in model_args:
+        args = (
+            f"{slp_path} {model_arg} --video.index 0 --frames 1-3 "
+            "--cpu --max_instances 5"
+        ).split()
+        parser = _make_cli_parser()
+        args, _ = parser.parse_known_args(args=args)
+
+        # Create predictor
+        predictor = _make_predictor_from_cli(args=args)
+        if isinstance(predictor, TopDownPredictor):
+            assert predictor.inference_model.centroid_crop.max_instances == 5
+        elif isinstance(predictor, BottomUpPredictor):
+            assert predictor.max_instances == 5
+
+
+def test_make_predictor_from_cli_mult_input(
+    centered_pair_predictions: Labels,
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    min_bottomup_model_path: str,
+    tmpdir,
+):
+    slp_path = tmpdir.mkdir("slp_directory")
+
+    slp_file = slp_path / "old_slp.slp"
+    Labels.save(centered_pair_predictions, slp_file)
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name for the video
+
+        # Construct the destination path with a unique name for the SLP file
+        slp_dest_path = slp_path / f"old_slp_copy_{i}.slp"
+        shutil.copy(slp_file, slp_dest_path)
+
+    # Create sleap-track command
+    model_args = [
+        f"--model {min_centroid_model_path} --model {min_centered_instance_model_path}",
+        f"--model {min_bottomup_model_path}",
+    ]
+    for model_arg in model_args:
+        args = (
+            f"{slp_path} {model_arg} --video.index 0 --frames 1-3 "
+            "--cpu --max_instances 5"
+        ).split()
+        parser = _make_cli_parser()
+        args, _ = parser.parse_known_args(args=args)
+
+        # Create predictor
+        predictor = _make_predictor_from_cli(args=args)
+        if isinstance(predictor, TopDownPredictor):
+            assert predictor.inference_model.centroid_crop.max_instances == 5
+        elif isinstance(predictor, BottomUpPredictor):
+            assert predictor.max_instances == 5
+
+
+def test_sleap_track_single_input(
     centered_pair_predictions: Labels,
     min_centroid_model_path: str,
     min_centered_instance_model_path: str,
     tmpdir,
 ):
     slp_path = str(Path(tmpdir, "old_slp.slp"))
-    labels: Labels = Labels.save(centered_pair_predictions, slp_path)
+    Labels.save(centered_pair_predictions, slp_path)
 
     # Create sleap-track command
-    args = f"{slp_path} --model {min_centered_instance_model_path} --frames 1-3 --cpu".split()
     args = (
         f"{slp_path} --model {min_centroid_model_path} "
         f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
@@ -1348,7 +1562,7 @@ def test_sleap_track(
     sleap_track(args=args)
 
     # Assert predictions file exists
-    output_path = f"{slp_path}.predictions.slp"
+    output_path = Path(slp_path).with_suffix(".predictions.slp")
     assert Path(output_path).exists()
 
     # Create invalid sleap-track command
@@ -1357,9 +1571,398 @@ def test_sleap_track(
         sleap_track(args=args)
 
 
-def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
+@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+def test_sleap_track_mult_input_slp(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    tmpdir,
+    centered_pair_predictions: Labels,
+    tracking,
+):
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("slp_directory")
+
+    slp_file = slp_path / "old_slp.slp"
+    Labels.save(centered_pair_predictions, slp_file)
+
+    slp_path_obj = Path(slp_path)
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name for the SLP file
+        slp_dest_path = slp_path / f"old_slp_copy_{i}.slp"
+        shutil.copy(slp_file, slp_dest_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker {tracking} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+
+    # Assert predictions file exists
+    expected_extensions = available_video_exts()
+
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = Path(file_path).with_suffix(".predictions.slp")
+            assert Path(expected_output_file).exists()
+
+
+@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+def test_sleap_track_mult_input_slp_mp4(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    tracking,
+    tmpdir,
+    centered_pair_predictions: Labels,
+):
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("slp_mp4_directory")
+
+    slp_file = slp_path / "old_slp.slp"
+    Labels.save(centered_pair_predictions, slp_file)
+
+    # Copy and paste the video into temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker {tracking} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+
+    expected_extensions = available_video_exts()
+
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = Path(file_path).with_suffix(".predictions.slp")
+            assert Path(expected_output_file).exists()
+
+
+@pytest.mark.parametrize("tracking", ["simple", "flow", "None"])
+def test_sleap_track_mult_input_mp4(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    tracking,
+    tmpdir,
+):
+
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("mp4_directory")
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker {tracking} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+
+    # Assert predictions file exists
+    expected_extensions = available_video_exts()
+
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = Path(file_path).with_suffix(".predictions.slp")
+            assert Path(expected_output_file).exists()
+
+
+def test_sleap_track_output_mult(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    tmpdir,
+):
+
+    output_path = tmpdir.mkdir("output_directory")
+    output_path_obj = Path(output_path)
+
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("mp4_directory")
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"-o {output_path} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+    slp_path = Path(slp_path)
+
+    # Check if there are any files in the directory
+    expected_extensions = available_video_exts()
+
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = output_path_obj / (
+                file_path.stem + ".predictions.slp"
+            )
+            assert Path(expected_output_file).exists()
+
+
+def test_sleap_track_invalid_output(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    centered_pair_predictions: Labels,
+    tmpdir,
+):
+
+    output_path = Path(tmpdir, "output_file.slp").as_posix()
+    Labels.save(centered_pair_predictions, output_path)
+
+    # Create temporary directory with the structured video files
+    slp_path = tmpdir.mkdir("mp4_directory")
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"-o {output_path} "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    # Run inference
+    with pytest.raises(ValueError):
+        sleap_track(args=args)
+
+
+def test_sleap_track_invalid_input(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+):
+
+    slp_path = ""
+
+    # Create sleap-track command
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    # Run inference
+    with pytest.raises(ValueError):
+        sleap_track(args=args)
+
+    # Test with a non-existent path
+    slp_path = "/path/to/nonexistent/file.mp4"
+
+    # Create sleap-track command for non-existent path
+    args = (
+        f"{slp_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    # Run inference and expect a ValueError for non-existent path
+    with pytest.raises(ValueError):
+        sleap_track(args=args)
+
+
+def test_sleap_track_csv_input(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    tmpdir,
+):
+
+    # Create temporary directory with the structured video files
+    slp_path = Path(tmpdir.mkdir("mp4_directory"))
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    file_paths = []
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+        file_paths.append(dest_path)
+
+    # Generate output paths for each data_path
+    output_paths = [
+        file_path.with_suffix(".TESTpredictions.slp") for file_path in file_paths
+    ]
+
+    # Create a CSV file with the file paths
+    csv_file_path = slp_path / "file_paths.csv"
+    with open(csv_file_path, mode="w", newline="") as csv_file:
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(["data_path", "output_path"])
+        for data_path, output_path in zip(file_paths, output_paths):
+            csv_writer.writerow([data_path, output_path])
+
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{csv_file_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+
+    # Assert predictions file exists
+    expected_extensions = available_video_exts()
+
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = file_path.with_suffix(".TESTpredictions.slp")
+            assert Path(expected_output_file).exists()
+
+
+def test_sleap_track_invalid_csv(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    tmpdir,
+):
+
+    # Create a CSV file with nonexistant data files
+    csv_nonexistant_files_path = tmpdir / "nonexistant_files.csv"
+    df_nonexistant_files = pd.DataFrame(
+        {"data_path": ["video1.mp4", "video2.mp4", "video3.mp4"]}
+    )
+    df_nonexistant_files.to_csv(csv_nonexistant_files_path, index=False)
+
+    # Create an empty CSV file
+    csv_empty_path = tmpdir / "empty.csv"
+    open(csv_empty_path, "w").close()
+
+    # Create sleap-track command for missing 'data_path' column
+    args_missing_column = (
+        f"{csv_nonexistant_files_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    # Run inference and expect ValueError for missing 'data_path' column
+    with pytest.raises(
+        ValueError,
+    ):
+        sleap_track(args=args_missing_column)
+
+    # Create sleap-track command for empty CSV file
+    args_empty = (
+        f"{csv_empty_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    # Run inference and expect ValueError for empty CSV file
+    with pytest.raises(ValueError):
+        sleap_track(args=args_empty)
+
+
+def test_sleap_track_text_file_input(
+    min_centroid_model_path: str,
+    min_centered_instance_model_path: str,
+    centered_pair_vid_path,
+    tmpdir,
+):
+
+    # Create temporary directory with the structured video files
+    slp_path = Path(tmpdir.mkdir("mp4_directory"))
+
+    # Copy and paste the video into the temp dir multiple times
+    num_copies = 3
+    file_paths = []
+    for i in range(num_copies):
+        # Construct the destination path with a unique name
+        dest_path = slp_path / f"centered_pair_vid_copy_{i}.mp4"
+        shutil.copy(centered_pair_vid_path, dest_path)
+        file_paths.append(dest_path)
+
+    # Create a text file with the file paths
+    txt_file_path = slp_path / "file_paths.txt"
+    with open(txt_file_path, mode="w") as txt_file:
+        for file_path in file_paths:
+            txt_file.write(f"{file_path}\n")
+
+    slp_path_obj = Path(slp_path)
+
+    # Create sleap-track command
+    args = (
+        f"{txt_file_path} --model {min_centroid_model_path} "
+        f"--tracking.tracker simple "
+        f"--model {min_centered_instance_model_path} --video.index 0 --frames 1-3 --cpu"
+    ).split()
+
+    slp_path_list = [file for file in slp_path_obj.iterdir() if file.is_file()]
+
+    # Run inference
+    sleap_track(args=args)
+
+    # Assert predictions file exists
+    expected_extensions = available_video_exts()
+
+    for file_path in slp_path_list:
+        if file_path.suffix in expected_extensions:
+            expected_output_file = Path(file_path).with_suffix(".predictions.slp")
+            assert Path(expected_output_file).exists()
+
+
+def test_flow_tracker(centered_pair_predictions_sorted: Labels, tmpdir):
     """Test flow tracker instances are pruned."""
-    labels: Labels = centered_pair_predictions
+    labels: Labels = centered_pair_predictions_sorted
     track_window = 5
 
     # Setup tracker
@@ -1369,23 +1972,81 @@ def test_flow_tracker(centered_pair_predictions: Labels, tmpdir):
     tracker.candidate_maker = cast(FlowCandidateMaker, tracker.candidate_maker)
 
     # Run tracking
-    frames = sorted(labels.labeled_frames, key=lambda lf: lf.frame_idx)
+    frames = labels.labeled_frames
 
     # Run tracking on subset of frames using psuedo-implementation of
     # sleap.nn.tracking.run_tracker
     for lf in frames[:20]:
-
         # Clear the tracks
         for inst in lf.instances:
             inst.track = None
 
-        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
+        track_args = dict(
+            untracked_instances=lf.instances,
+            img=lf.video[lf.frame_idx],
+            img_hw=lf.image.shape[-3:-1],
+        )
         tracker.track(**track_args)
 
         # Check that saved instances are pruned to track window
         for key in tracker.candidate_maker.shifted_instances.keys():
             assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
             assert abs(key[0] - key[1]) <= track_window  # References within window
+
+
+@pytest.mark.parametrize(
+    "max_tracks, trackername",
+    [
+        (2, "flowmaxtracks"),
+        (2, "simplemaxtracks"),
+    ],
+)
+def test_max_tracks_matching_queue(
+    centered_pair_predictions: Labels, max_tracks, trackername
+):
+    """Test flow max tracks instance generation."""
+    labels: Labels = centered_pair_predictions
+    max_tracking = True
+    track_window = 5
+
+    # Setup flow max tracker
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        tracker=trackername,
+        track_window=track_window,
+        save_shifted_instances=True,
+        max_tracking=max_tracking,
+        max_tracks=max_tracks,
+    )
+
+    tracker.candidate_maker = cast(FlowMaxTracksCandidateMaker, tracker.candidate_maker)
+
+    # Run tracking
+    frames = sorted(labels.labeled_frames, key=lambda lf: lf.frame_idx)
+
+    for lf in frames[:20]:
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(
+            untracked_instances=lf.instances,
+            img=lf.video[lf.frame_idx],
+            img_hw=lf.image.shape[-3:-1],
+        )
+        tracker.track(**track_args)
+
+        if trackername == "flowmaxtracks":
+            # Check that saved instances are pruned to track window
+            for key in tracker.candidate_maker.shifted_instances.keys():
+                assert lf.frame_idx - key[0] <= track_window  # Keys are pruned
+                assert abs(key[0] - key[1]) <= track_window
+
+        # Check if the length of each of the tracks is not more than the track window
+        for track in tracker.track_matching_queue_dict.keys():
+            assert len(tracker.track_matching_queue_dict[track]) <= track_window
+
+        # Check if number of tracks that are generated are not more than the maximum tracks
+        assert len(tracker.track_matching_queue_dict) <= max_tracks
 
 
 def test_movenet_inference(movenet_video):
@@ -1427,8 +2088,7 @@ def test_movenet_predictor(min_dance_labels, movenet_video):
         [labels_pr[0][0].numpy(), labels_pr[1][0].numpy()], axis=0
     )
 
-    max_diff = np.nanmax(np.abs(points_gt - points_pr))
-    assert max_diff < 0.1
+    np.testing.assert_allclose(points_gt, points_pr, atol=0.75)
 
 
 @pytest.mark.parametrize(
