@@ -1856,6 +1856,7 @@ class FrameGroup:
         instance_groups: Optional[List[InstanceGroup]] = None,
         pred_as_nan: bool = False,
         invisible_as_nan: bool = True,
+        undistorted: bool = False,
     ) -> np.ndarray:
         """Numpy array of all `InstanceGroup`s in `FrameGroup.cams_to_include`.
 
@@ -1890,6 +1891,7 @@ class FrameGroup:
                 pred_as_nan=pred_as_nan,
                 invisible_as_nan=invisible_as_nan,
                 cams_to_include=self.cams_to_include,
+                undistorted=undistorted,
             )  # M=include x N x 2
             instance_group_numpys.append(instance_group_numpy)
 
