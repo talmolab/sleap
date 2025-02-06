@@ -615,6 +615,7 @@ class InstanceGroup:
         pred_as_nan: bool = False,
         invisible_as_nan=True,
         cams_to_include: Optional[List[Camcorder]] = None,
+        undistorted: bool = False,
     ) -> np.ndarray:
         """Return instances as a numpy array of shape (n_views, n_nodes, 2).
 
@@ -656,6 +657,16 @@ class InstanceGroup:
             instance_numpy: np.ndarray = instance.get_points_array(
                 invisible_as_nan=invisible_as_nan
             )  # N x 2
+
+            if undistorted:
+                instance_numpy_shape = instance_numpy.shape
+                instance_numpy = instance_numpy.reshape(-1, 2)
+                instance_numpy = cv2.undistortPoints(
+                    instance_numpy.astype("float64"),
+                    cameraMatrix=cam.camera.matrix,
+                    distCoeffs=cam.camera.dist,
+                ).reshape(instance_numpy_shape)
+
             instance_numpys.append(instance_numpy)
 
         return np.stack(instance_numpys, axis=0)  # M x N x 2
