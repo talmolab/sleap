@@ -5,6 +5,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
+import cv2
 import cattr
 import numpy as np
 import toml
