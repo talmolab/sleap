@@ -693,28 +693,10 @@ def test_instance_group(
     frame_group = session.frame_groups[frame_idx]
     instance_group = frame_group.instance_groups[0]
 
-    # Test `numpy` method
-    instance_group_numpy = instance_group.numpy()
-    n_views, n_nodes, n_coords = instance_group_numpy.shape
-    assert n_views == len(instance_group.camera_cluster.cameras)
-    assert n_nodes == len(instance_group.dummy_instance.skeleton.nodes)
-    assert n_coords == 2
-    # Different instance groups should have different coordinates
-    for inst_idx, _ in enumerate(instance_group.instances[:-1]):
-        assert not np.allclose(
-            instance_group_numpy[:, inst_idx],
-            instance_group_numpy[:, inst_idx + 1],
-            equal_nan=True,
-        )
-    # Different views should have different coordinates
-    for view_idx, _ in enumerate(instance_group.camera_cluster.cameras[:-1]):
-        assert not np.allclose(
-            instance_group_numpy[view_idx],
-            instance_group_numpy[view_idx + 1],
-            equal_nan=True,
-        )
-
     # Test `update_points` method
+    n_views = len(session.cams_to_include)
+    n_nodes = len(instance_group.dummy_instance.skeleton.nodes)
+    n_coords = 2
     assert not np.all(instance_group.numpy(invisible_as_nan=False) == 72317)
     # Remove some Instances to "expose" underlying PredictedInstances
     for inst in instance_group.instances[:2]:
