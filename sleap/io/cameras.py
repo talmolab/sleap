@@ -615,7 +615,7 @@ class InstanceGroup:
         pred_as_nan: bool = False,
         invisible_as_nan=True,
         cams_to_include: Optional[List[Camcorder]] = None,
-        undistorted: bool = False,
+        undistort: bool = False,
     ) -> np.ndarray:
         """Return instances as a numpy array of shape (n_views, n_nodes, 2).
 
@@ -633,6 +633,8 @@ class InstanceGroup:
             cams_to_include: List of `Camcorder`s to include in the numpy array. If
                 None, then all `Camcorder`s in the `CameraCluster` are included. Default
                 is None.
+            undistort: If True, then undistort the points using cv2.undistortPoints.
+                Default is False.
 
         Returns:
             Numpy array of shape (n_views, n_nodes, 2).
