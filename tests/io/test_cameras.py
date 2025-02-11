@@ -734,6 +734,46 @@ def test_instance_group(
     assert cam not in instance_group.cameras
 
 
+def test_instance_group_numpy(multiview_min_session_frame_groups: Labels):
+    """Test `InstanceGroup.numpy` method."""
+    labels = multiview_min_session_frame_groups
+    session = labels.sessions[0]
+    frame_group = session.frame_groups[0]
+    instance_group = frame_group.instance_groups[0]
+
+    instance_group_numpy = instance_group.numpy()
+    n_views, n_nodes, n_coords = instance_group_numpy.shape
+    assert n_views == len(instance_group.camera_cluster.cameras)
+    assert n_nodes == len(instance_group.dummy_instance.skeleton.nodes)
+    assert n_coords == 2
+
+    # Different instance groups should have different coordinates
+    for inst_idx, _ in enumerate(instance_group.instances[:-1]):
+        assert not np.allclose(
+            instance_group_numpy[:, inst_idx],
+            instance_group_numpy[:, inst_idx + 1],
+            equal_nan=True,
+        )
+
+    # Different views should have different coordinates
+    for view_idx, _ in enumerate(instance_group.camera_cluster.cameras[:-1]):
+        assert not np.allclose(
+            instance_group_numpy[view_idx],
+            instance_group_numpy[view_idx + 1],
+            equal_nan=True,
+        )
+
+    # Test for undisorted points
+    instance_group_numpy_0 = instance_group.numpy(undistort=False)
+    instance_group_numpy_undistorted = instance_group.numpy(undistort=True)
+    assert np.allclose(
+        instance_group_numpy_0, instance_group_numpy, atol=1e-3, equal_nan=True
+    )
+    assert not np.allclose(
+        instance_group_numpy, instance_group_numpy_undistorted, equal_nan=True
+    )
+
+
 def test_frame_group(
     multiview_min_session_labels: Labels, multiview_min_session_frame_groups: Labels
 ):
