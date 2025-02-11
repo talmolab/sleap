@@ -1059,6 +1059,29 @@ def test_frame_group(
     assert np.all(frame_group_numpy[value_mask] == value)  # Updated to value
 
 
+def test_frame_group_numpy(multiview_min_session_frame_groups: Labels):
+    """Test `FrameGroup.numpy` method."""
+    labels = multiview_min_session_frame_groups
+    session = labels.sessions[0]
+    frame_group = session.frame_groups[0]
+
+    # Test `numpy` method
+    frame_group_np = frame_group.numpy()
+    n_views, n_inst_groups, n_nodes, n_coords = frame_group_np.shape
+    assert n_views == len(frame_group.cams_to_include)
+    assert n_inst_groups == len(frame_group.instance_groups)
+    assert n_nodes == len(labels.skeleton.nodes)
+    assert n_coords == 2
+    # Different instance groups should have different coordinates
+    assert not np.allclose(frame_group_np[:, 0], frame_group_np[:, 1], equal_nan=True)
+    # Different views should have different coordinates
+    assert not np.allclose(frame_group_np[0], frame_group_np[1], equal_nan=True)
+    frame_group_np_0 = frame_group.numpy(undistort=False)
+    frame_group_np_undistorted = frame_group.numpy(undistort=True)
+    assert np.allclose(frame_group_np_0, frame_group_np, atol=1e-3, equal_nan=True)
+    assert not np.allclose(frame_group_np, frame_group_np_undistorted, equal_nan=True)
+
+
 def test_cameras_are_not_sorted():
     """Test that cameras are not sorted in `RecordingSession`.
 
