@@ -660,7 +660,7 @@ class InstanceGroup:
                 invisible_as_nan=invisible_as_nan
             )  # N x 2
 
-            if undistorted:
+            if undistort:
                 instance_numpy_shape = instance_numpy.shape
                 instance_numpy = instance_numpy.reshape(-1, 2)
                 instance_numpy = cv2.undistortPoints(
