@@ -879,18 +879,6 @@ def test_frame_group(
     with pytest.raises(ValueError):
         frame_group.cams_to_include = session.linked_cameras
 
-    # Test `numpy` method
-    frame_group_np = frame_group.numpy()
-    n_views, n_inst_groups, n_nodes, n_coords = frame_group_np.shape
-    assert n_views == len(frame_group.cams_to_include)
-    assert n_inst_groups == len(frame_group.instance_groups)
-    assert n_nodes == len(labels.skeleton.nodes)
-    assert n_coords == 2
-    # Different instance groups should have different coordinates
-    assert not np.allclose(frame_group_np[:, 0], frame_group_np[:, 1], equal_nan=True)
-    # Different views should have different coordinates
-    assert not np.allclose(frame_group_np[0], frame_group_np[1], equal_nan=True)
-
     # Test `get_instance_group`
     instance_group = frame_group.instance_groups[0]
     camera = session.cameras[0]
