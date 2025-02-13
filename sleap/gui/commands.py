@@ -3711,7 +3711,9 @@ class TriangulateSession(EditCommand):
     topics = [UpdateTopic.frame, UpdateTopic.project_instances]
 
     @classmethod
-    def do_action(cls, context: CommandContext, params: dict):
+    def do_action(
+        cls, context: CommandContext, params: dict, pred_as_nan: bool = False
+    ):
         """Triangulate, reproject, and update instances in a session at a frame index.
 
         Args:
@@ -3723,6 +3725,8 @@ class TriangulateSession(EditCommand):
                 instance: The `Instance` object to use. Default is current instance.
                 show_dialog: If True, then show a warning dialog. Default is True.
                 ask_again: If True, then ask for views/instances again. Default is False.
+                pre
+            pred_as_nan: If True, then set predicted values as NaN. Default is False.
         """
 
         session: RecordingSession = (
