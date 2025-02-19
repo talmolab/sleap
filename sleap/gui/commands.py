@@ -656,6 +656,7 @@ class CommandContext:
         session: Optional[RecordingSession] = None,
         frame_idx: Optional[int] = None,
         instance: Optional[Instance] = None,
+        triangulate_predictions: bool = False,
     ):
         """Triangulates `Instance`s for selected views in a `RecordingSession`."""
         self.execute(
@@ -663,6 +664,7 @@ class CommandContext:
             session=session,
             frame_idx=frame_idx,
             instance=instance,
+            triangulate_predictions=triangulate_predictions,
         )
 
     def openWebsite(self, url):
