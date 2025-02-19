@@ -3714,7 +3714,9 @@ class TriangulateSession(EditCommand):
 
     @classmethod
     def do_action(
-        cls, context: CommandContext, params: dict, pred_as_nan: bool = False
+        cls,
+        context: CommandContext,
+        params: dict,
     ):
         """Triangulate, reproject, and update instances in a session at a frame index.
 
@@ -3725,10 +3727,9 @@ class TriangulateSession(EditCommand):
                     video's session.
                 frame_idx: The frame index to use. Default is current frame index.
                 instance: The `Instance` object to use. Default is current instance.
-                show_dialog: If True, then show a warning dialog. Default is True.
-                ask_again: If True, then ask for views/instances again. Default is False.
-                pre
-            pred_as_nan: If True, then set predicted values as NaN. Default is False.
+                triangulate_predictions: If True, then include predicted instances in
+                    triangulation. Otherwise, only use user labeled instances. Default
+                    is False.
         """
 
         session: RecordingSession = (
@@ -3749,6 +3750,8 @@ class TriangulateSession(EditCommand):
         instance = params.get("instance", None) or context.state["instance"]
         instance_group = frame_group.get_instance_group(instance)
 
+        triangulate_predictions = params.get("triangulate_predictions", False)
+
         # If instance_group is None, then we will try to triangulate entire frame_group
         instance_groups = (
             [instance_group]
@@ -3767,11 +3770,10 @@ class TriangulateSession(EditCommand):
             return  # Not enough instances for triangulation
 
         # Get the `FrameGroup` of shape  M=include x T x N x 2
-        fg_tensor = frame_group.numpy(instance_groups=instance_groups, pred_as_nan=True)
-
-        # Save the predicted values if pred_as_nan is False
-        if not pred_as_nan:
-            context.state["predicted_values"] = fg_tensor
+        pred_as_nan = not triangulate_predictions
+        fg_tensor = frame_group.numpy(
+            instance_groups=instance_groups, pred_as_nan=pred_as_nan
+        )
 
         # Add extra dimension for number of frames
         frame_group_tensor = np.expand_dims(fg_tensor, axis=1)  # M=include x F=1 xTxNx2
@@ -3792,10 +3794,6 @@ class TriangulateSession(EditCommand):
 
         # Sqeeze back to the original shape
         points_reprojected = np.squeeze(pts_reprojected, axis=1)  # M=include x TxNx2
-
-        # If pred_as_nan is True, set the predictions to NaN
-        if pred_as_nan:
-            points_reprojected[:] = np.nan
 
         # Update or create/insert ("upsert") instance points
         frame_group.upsert_points(
