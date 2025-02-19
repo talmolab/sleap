@@ -1103,7 +1103,41 @@ def test_TriangulateSession_do_action(multiview_min_session_frame_groups):
         else:
             assert np.allclose(inst_group_np, inst_group_np_post_tri, equal_nan=True)
 
-    # TODO(LM): Test with `PredictedInstance`s
+    # Test triangulate session with `triangulate_predictions` set to `True` and `False`
+
+    # Looping through labeled frames and calling remove_instance on each instance to
+    # ensure only predicted instances in FrameGroup
+    for labeled_frame in frame_group.labeled_frames:
+        for instance in labeled_frame.user_instances:
+            labels.remove_instance(labeled_frame, instance)
+    for instance_group in frame_group.instance_groups:
+        for instance in instance_group.instances:
+            assert isinstance(instance, PredictedInstance)
+    frame_group_np = frame_group.numpy()
+
+    # Test triangulate session with `triangulate_predictions` set to default
+    TriangulateSession.do_action(context, params)
+    assert np.allclose(frame_group_np, frame_group.numpy(), equal_nan=True)
+
+    # Test triangulate session with `triangulate_predictions` set to `False`
+    params = {
+        "session": session,
+        "frame_idx": frame_idx,
+        "frame_group": frame_group,
+        "triangulate_predictions": False,
+    }
+    TriangulateSession.do_action(context, params)
+    assert np.allclose(frame_group_np, frame_group.numpy(), equal_nan=True)
+
+    # Test triangulate session with `triangulate_predictions` set to `True`
+    params = {
+        "session": session,
+        "frame_idx": frame_idx,
+        "frame_group": frame_group,
+        "triangulate_predictions": True,
+    }
+    TriangulateSession.do_action(context, params)
+    assert not np.allclose(frame_group_np, frame_group.numpy(), equal_nan=True)
 
 
 def test_SetSelectedInstanceGroup(multiview_min_session_frame_groups: Labels):
