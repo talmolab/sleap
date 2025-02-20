@@ -1140,6 +1140,45 @@ def test_TriangulateSession_do_action(multiview_min_session_frame_groups):
     assert not np.allclose(frame_group_np, frame_group.numpy(), equal_nan=True)
 
 
+def test_TriangulateSession_with_predictions(multiview_min_session_frame_groups):
+    """Test that `triangulateSession` command works with triangulate_predictions"""
+
+    labels: Labels = multiview_min_session_frame_groups
+    session: RecordingSession = labels.sessions[0]
+    frame_idx: int = 0
+    frame_group: FrameGroup = session.frame_groups[frame_idx]
+
+    # Test triangulateSession command with triangulate_predictions set to True and False
+
+    # Looping through labeled frames and calling remove_instance on each instance to
+    # ensure only predicted instances in FrameGroup
+    for labeled_frame in frame_group.labeled_frames:
+        for instance in labeled_frame.user_instances:
+            labels.remove_instance(labeled_frame, instance)
+    for instance_group in frame_group.instance_groups:
+        for instance in instance_group.instances:
+            assert isinstance(instance, PredictedInstance)
+    frame_group_np = frame_group.numpy()
+
+    context = CommandContext.from_labels(labels)
+
+    # Test triangulate session with triangulate_predictions set to default (False)
+    context.triangulateSession(session=session, frame_idx=frame_idx)
+    assert np.allclose(frame_group_np, frame_group.numpy(), equal_nan=True)
+
+    # Test triangulate session with triangulate_predictions set to False
+    context.triangulateSession(
+        session=session, frame_idx=frame_idx, triangulate_predictions=False
+    )
+    assert np.allclose(frame_group_np, frame_group.numpy(), equal_nan=True)
+
+    # Test triangulate session with triangulate_predictions set to True
+    context.triangulateSession(
+        session=session, frame_idx=frame_idx, triangulate_predictions=True
+    )
+    assert not np.allclose(frame_group_np, frame_group.numpy(), equal_nan=True)
+
+
 def test_SetSelectedInstanceGroup(multiview_min_session_frame_groups: Labels):
     """Test that setting a new instance group works."""
 
