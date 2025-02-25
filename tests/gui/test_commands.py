@@ -1140,7 +1140,7 @@ def test_TriangulateSession_do_action(multiview_min_session_frame_groups):
     assert not np.allclose(frame_group_np, frame_group.numpy(), equal_nan=True)
 
 
-def test_TriangulateSession_with_predictions(multiview_min_session_frame_groups):
+def test_triangulateSession_with_predictions(multiview_min_session_frame_groups):
     """Test that `triangulateSession` command works with triangulate_predictions"""
 
     labels: Labels = multiview_min_session_frame_groups
