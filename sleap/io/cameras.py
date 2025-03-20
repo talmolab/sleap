@@ -5,6 +5,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
+import cv2
 import cattr
 import numpy as np
 import toml
@@ -614,6 +615,7 @@ class InstanceGroup:
         pred_as_nan: bool = False,
         invisible_as_nan=True,
         cams_to_include: Optional[List[Camcorder]] = None,
+        undistort: bool = False,
     ) -> np.ndarray:
         """Return instances as a numpy array of shape (n_views, n_nodes, 2).
 
@@ -631,6 +633,8 @@ class InstanceGroup:
             cams_to_include: List of `Camcorder`s to include in the numpy array. If
                 None, then all `Camcorder`s in the `CameraCluster` are included. Default
                 is None.
+            undistort: If True, then undistort the points using cv2.undistortPoints.
+                Default is False.
 
         Returns:
             Numpy array of shape (n_views, n_nodes, 2).
@@ -655,6 +659,16 @@ class InstanceGroup:
             instance_numpy: np.ndarray = instance.get_points_array(
                 invisible_as_nan=invisible_as_nan
             )  # N x 2
+
+            if undistort:
+                instance_numpy_shape = instance_numpy.shape
+                instance_numpy = instance_numpy.reshape(-1, 2)
+                instance_numpy = cv2.undistortPoints(
+                    instance_numpy.astype("float64"),
+                    cameraMatrix=cam.camera.matrix,
+                    distCoeffs=cam.camera.dist,
+                ).reshape(instance_numpy_shape)
+
             instance_numpys.append(instance_numpy)
 
         return np.stack(instance_numpys, axis=0)  # M x N x 2
@@ -1844,6 +1858,7 @@ class FrameGroup:
         instance_groups: Optional[List[InstanceGroup]] = None,
         pred_as_nan: bool = False,
         invisible_as_nan: bool = True,
+        undistort: bool = False,
     ) -> np.ndarray:
         """Numpy array of all `InstanceGroup`s in `FrameGroup.cams_to_include`.
 
@@ -1854,6 +1869,8 @@ class FrameGroup:
                 self.dummy_instance. Default is False.
             invisible_as_nan: If True, then replaces invisible points with nan. Default
                 is True.
+            undistort: If True, then undistort the points. Default is False.
+
         Returns:
             Numpy array of shape (M, T, N, 2) where M is the number of views (determined
             by self.cams_to_include), T is the number of `InstanceGroup`s, N is the
@@ -1878,6 +1895,7 @@ class FrameGroup:
                 pred_as_nan=pred_as_nan,
                 invisible_as_nan=invisible_as_nan,
                 cams_to_include=self.cams_to_include,
+                undistort=undistort,
             )  # M=include x N x 2
             instance_group_numpys.append(instance_group_numpy)
 
