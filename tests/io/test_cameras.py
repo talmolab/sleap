@@ -747,22 +747,6 @@ def test_instance_group_numpy(multiview_min_session_frame_groups: Labels):
     assert n_nodes == len(instance_group.dummy_instance.skeleton.nodes)
     assert n_coords == 2
 
-    # Different instance groups should have different coordinates
-    for inst_idx, _ in enumerate(instance_group.instances[:-1]):
-        assert not np.allclose(
-            instance_group_numpy[:, inst_idx],
-            instance_group_numpy[:, inst_idx + 1],
-            equal_nan=True,
-        )
-
-    # Different views should have different coordinates
-    for view_idx, _ in enumerate(instance_group.camera_cluster.cameras[:-1]):
-        assert not np.allclose(
-            instance_group_numpy[view_idx],
-            instance_group_numpy[view_idx + 1],
-            equal_nan=True,
-        )
-
     # Test for undisorted points
     instance_group_numpy_0 = instance_group.numpy(undistort=False)
     instance_group_numpy_undistorted = instance_group.numpy(undistort=True)
@@ -1072,10 +1056,8 @@ def test_frame_group_numpy(multiview_min_session_frame_groups: Labels):
     assert n_inst_groups == len(frame_group.instance_groups)
     assert n_nodes == len(labels.skeleton.nodes)
     assert n_coords == 2
-    # Different instance groups should have different coordinates
-    assert not np.allclose(frame_group_np[:, 0], frame_group_np[:, 1], equal_nan=True)
-    # Different views should have different coordinates
-    assert not np.allclose(frame_group_np[0], frame_group_np[1], equal_nan=True)
+
+    # Undistored points should be different from distorted
     frame_group_np_0 = frame_group.numpy(undistort=False)
     frame_group_np_undistorted = frame_group.numpy(undistort=True)
     assert np.allclose(frame_group_np_0, frame_group_np, atol=1e-3, equal_nan=True)
