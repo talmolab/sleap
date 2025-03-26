@@ -194,6 +194,8 @@ optional arguments:
   --tracking.pre_cull_iou_threshold TRACKING.PRE_CULL_IOU_THRESHOLD
                         If non-zero and pre_cull_to_target also set, then use IOU threshold to remove overlapping instances over count *before*
                         tracking. (default: 0)
+  --tracking.pre_cull_general_iou_threshold TRACKING.PRE_CULL_GENERAL_IOU_THRESHOLD
+                        If non-zero, then use IOU threshold to remove overlapping instances regardless of the target count *before* tracking. (default: 0)
   --tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS
                         If non-zero and target_instance_count is also non-zero, then connect track breaks when exactly one track is lost and exactly
                         one track is spawned in frame. (default: 0)
