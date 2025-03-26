@@ -827,6 +827,7 @@ class Tracker(BaseTracker):
         target_instance_count: int = 0,
         pre_cull_to_target: bool = False,
         pre_cull_iou_threshold: Optional[float] = None,
+        pre_cull_general_iou_threshold: Optional[float] = None,
         # Post-tracking options to connect broken tracks
         post_connect_single_breaks: bool = False,
         # TODO: deprecate these post-tracking cleaning options
@@ -878,13 +879,18 @@ class Tracker(BaseTracker):
             )
 
         pre_cull_function = None
-        if target_instance_count and pre_cull_to_target:
+        if (
+            target_instance_count
+            and pre_cull_to_target
+            or pre_cull_general_iou_threshold
+        ):
 
             def pre_cull_function(inst_list):
                 cull_frame_instances(
                     inst_list,
                     instance_count=target_instance_count,
                     iou_threshold=pre_cull_iou_threshold,
+                    general_iou_threshold=pre_cull_general_iou_threshold,
                 )
 
         tracker_obj = cls(

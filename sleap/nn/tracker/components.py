@@ -259,6 +259,7 @@ def cull_frame_instances(
     instances_list: List[InstanceType],
     instance_count: int,
     iou_threshold: Optional[float] = None,
+    general_iou_threshold: Optional[float] = None,
 ) -> List["LabeledFrame"]:
     """
     Removes instances (for single frame) over instance per frame threshold.
@@ -266,9 +267,12 @@ def cull_frame_instances(
     Args:
         instances_list: The list of instances for a single frame.
         instance_count: The maximum number of instances we want per frame.
-        iou_threshold: Intersection over Union (IOU) threshold to use when
-            removing overlapping instances over target count; if None, then
-            only use score to determine which instances to remove.
+        iou_threshold: Intersection over Union (IOU) threshold to use when removing
+            overlapping instances over target count; if None, then only use score to
+            determine which instances to remove.
+        general_iou_threshold: Intersection over Union (IOU) threshold to use when
+            removing overlapping instances - regardless of count. If None, then only use
+            score to determine which instances to remove.
 
     Returns:
         Updated list of frames, also modifies frames in place.
@@ -276,6 +280,22 @@ def cull_frame_instances(
     if not instances_list:
         return
 
+    # First, let's remove instances over the general IOU threshold
+    if general_iou_threshold:
+        # List of instances which we'll pare down
+        keep_instances = instances_list
+
+        # Use NMS to remove overlapping instances over target count
+        keep_instances, extra_instances = nms_instances(
+            keep_instances,
+            iou_threshold=general_iou_threshold,
+        )
+
+        # Remove the extra instances
+        for inst in extra_instances:
+            instances_list.remove(inst)
+
+    # Now, let's remove instances over the target count using the target IOU threshold
     if len(instances_list) > instance_count:
         # List of instances which we'll pare down
         keep_instances = instances_list
