@@ -967,6 +967,14 @@ class Tracker(BaseTracker):
         )
         options.append(option)
 
+        option = dict(name="pre_cull_general_iou_threshold", default=0)
+        option["type"] = float
+        option["help"] = (
+            "If non-zero, then use IOU threshold to remove overlapping instances "
+            "regardless of the target count *before* tracking."
+        )
+        options.append(option)
+
         option = dict(name="post_connect_single_breaks", default=0)
         option["type"] = int
         option["help"] = (
