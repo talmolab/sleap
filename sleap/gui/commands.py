@@ -632,6 +632,14 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
+    def nextInstanceChange(self):
+        """Go to next frame where number of instances changes."""
+        self.execute(GoNextInstanceChange)
+
+    def prevInstanceChange(self):
+        """Goes to previous frame with different instance count."""
+        self.execute(GoPrevInstanceChange)
+
 
 # File Commands
 
@@ -1599,6 +1607,54 @@ class GoNextSuggestedFrame(NavCommand):
 
 class GoPrevSuggestedFrame(GoNextSuggestedFrame):
     seek_direction = -1
+
+
+class GoNextInstanceChange(NavCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        video = context.state["video"]
+        cur_idx = context.state["frame_idx"]
+
+        # Get current number of instances
+        current_frame = context.labels.find(video, cur_idx, return_new=True)[0]
+        current_instance_count = len(current_frame.instances_to_show)
+
+        # Get all labeled frames after current frame
+        for frame in range(cur_idx + 1, video.frames):
+            if (
+                len(
+                    context.labels.find(video, frame, return_new=True)[
+                        0
+                    ].instances_to_show
+                )
+                != current_instance_count
+            ):
+                cls.go_to(context, frame)
+                break
+
+
+class GoPrevInstanceChange(NavCommand):
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        video = context.state["video"]
+        cur_idx = context.state["frame_idx"]
+
+        # Get current number of instances
+        current_frame = context.labels.find(video, cur_idx, return_new=True)[0]
+        current_instance_count = len(current_frame.instances_to_show)
+
+        # Get all labeled frames after current frame
+        for frame in range(cur_idx - 1, -1, -1):
+            if (
+                len(
+                    context.labels.find(video, frame, return_new=True)[
+                        0
+                    ].instances_to_show
+                )
+                != current_instance_count
+            ):
+                cls.go_to(context, frame)
+                break
 
 
 class GoNextTrackFrame(NavCommand):

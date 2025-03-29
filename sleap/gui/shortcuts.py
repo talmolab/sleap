@@ -41,6 +41,8 @@ class Shortcuts(object):
         "goto next suggestion",
         "goto prev suggestion",
         "goto next track spawn",
+        "goto next instance change",
+        "goto prev instance change",
         "show instances",
         "show labels",
         "show edges",

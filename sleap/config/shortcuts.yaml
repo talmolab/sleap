@@ -18,6 +18,8 @@ goto next user: Ctrl+U
 goto next labeled: Alt+Right
 goto prev suggestion: Shift+Space
 goto prev labeled: Alt+Left
+goto next instance change: Ctrl+Shift+Right
+goto prev instance change: Ctrl+Shift+Left
 learning: Ctrl+L
 mark frame: Ctrl+M
 new: Ctrl+N
