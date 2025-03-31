@@ -62,11 +62,20 @@ def test_cull_frame_instances_no_target(centered_pair_predictions: Labels):
     )
     assert len(labeled_frame.instances) == 2
 
+    # Test with Tracker
+
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        pre_cull_general_iou_threshold=0.999999999999999,
+    )
+    assert tracker.pre_cull_function is not None
+
     # There is also an instance with an IOU of 0.67, so expect 1 instance back.
     assert len(labeled_frame.instances) == 2
-    cull_frame_instances(
-        instances_list=labeled_frame.instances, general_iou_threshold=0.6
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        pre_cull_general_iou_threshold=0.6,
     )
+    assert tracker.pre_cull_function is not None
+    tracker.pre_cull_function(inst_list=labeled_frame.instances)
     assert len(labeled_frame.instances) == 1
 
 
@@ -112,53 +121,63 @@ def test_cull_frame_instances_with_target(centered_pair_predictions: Labels):
     )
     assert len(labeled_frame.instances) == target_count
 
-    # Test with both target count and general IOU threshold. Switching frames.
+    # Test with both target count and general IOU threshold. Switching frames and using
+    # Tracker.
 
     labeled_frame: LabeledFrame = labels.find_last(video=video, frame_idx=1095)
+    tracker: Tracker = Tracker.make_tracker_by_name(target_instance_count=target_count)
+    assert tracker.pre_cull_function is None
 
     # No instances removed.
 
     target_count = 4
     general_iou_threshold = 1
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        target_instance_count=target_count,
+        pre_cull_general_iou_threshold=general_iou_threshold,
+    )
+    assert tracker.pre_cull_function is not None
 
     # Without non-general IOU.
     assert len(labeled_frame.instances) == target_count
-    cull_frame_instances(
-        instances_list=labeled_frame.instances,
-        instance_count=target_count,
-        general_iou_threshold=general_iou_threshold,
-    )
+    tracker.pre_cull_function(inst_list=labeled_frame.instances)
+    assert len(labeled_frame.instances) == target_count
 
     # With non-general IOU.
+    iou_threshold = 0.0
     assert len(labeled_frame.instances) == target_count
-    cull_frame_instances(
-        instances_list=labeled_frame.instances,
-        instance_count=target_count,
-        general_iou_threshold=general_iou_threshold,
-        iou_threshold=0.0,
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        target_instance_count=target_count,
+        pre_cull_iou_threshold=iou_threshold,
+        pre_cull_general_iou_threshold=general_iou_threshold,
     )
+    assert tracker.pre_cull_function is not None
+    tracker.pre_cull_function(inst_list=labeled_frame.instances)
     assert len(labeled_frame.instances) == target_count
 
     # Instance removed via general IOU.
     target_count = 4
     general_iou_threshold = 0.999999999999999
     assert len(labeled_frame.instances) == 4
-    cull_frame_instances(
-        instances_list=labeled_frame.instances,
-        instance_count=target_count,
-        general_iou_threshold=general_iou_threshold,
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        target_instance_count=target_count,
+        pre_cull_general_iou_threshold=general_iou_threshold,
     )
+    assert tracker.pre_cull_function is not None
+    tracker.pre_cull_function(inst_list=labeled_frame.instances)
     assert len(labeled_frame.instances) == target_count - 1
 
     # Instance removed via non-general IOU.
     target_count = 2
     iou_threshold = 0.0
     assert len(labeled_frame.instances) == 3
-    cull_frame_instances(
-        instances_list=labeled_frame.instances,
-        instance_count=target_count,
-        iou_threshold=iou_threshold,
+    tracker: Tracker = Tracker.make_tracker_by_name(
+        target_instance_count=target_count,
+        pre_cull_to_target=True,
+        pre_cull_iou_threshold=iou_threshold,
     )
+    assert tracker.pre_cull_function is not None
+    tracker.pre_cull_function(inst_list=labeled_frame.instances)
     assert len(labeled_frame.instances) == target_count
 
 
