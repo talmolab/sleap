@@ -294,7 +294,7 @@ def cull_frame_instances(
     keep_instances = instances_list
 
     # First, let's remove instances over the general IOU threshold
-    if general_iou_threshold:
+    if general_iou_threshold is not None:
 
         # Use NMS to remove overlapping instances over target count
         keep_instances, extra_instances = nms_instances(
@@ -314,7 +314,7 @@ def cull_frame_instances(
     extra_instances = []
 
     # ...using NMS to remove overlapping instances over target count.
-    if iou_threshold:
+    if iou_threshold is not None:
         keep_instances, extra_instances = nms_instances(
             keep_instances,
             iou_threshold=iou_threshold,
