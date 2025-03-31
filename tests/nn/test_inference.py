@@ -1408,12 +1408,19 @@ def test_retracking(
     assert new_inst.track != old_inst.track
 
 
-@pytest.mark.parametrize("cmd", ["--max_instances 1", "-n 1"])
-def test_valid_cli_command(cmd):
+def test_valid_cli_command():
     """Test that sleap-track CLI command is valid."""
     parser = _make_cli_parser()
+
+    for cmd in ["--max_instances 1", "-n 1"]:
+        args = parser.parse_args(cmd.split())
+        assert args.max_instances == 1
+
+    cmd = "--tracking.pre_cull_general_iou_threshold 0.5"
     args = parser.parse_args(cmd.split())
-    assert args.max_instances == 1
+    assert getattr(args, "tracking.pre_cull_general_iou_threshold") == 0.5
+    tracker = _make_tracker_from_cli(args)
+    assert tracker.pre_cull_function is not None
 
 
 def test_make_predictor_from_cli(
