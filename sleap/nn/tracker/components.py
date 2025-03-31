@@ -17,13 +17,13 @@ from __future__ import annotations
 
 import operator
 from collections import defaultdict
-from typing import List, Tuple, Optional, TypeVar, Callable
+from typing import Callable, List, Optional, Tuple, TypeVar
 
 import attr
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-from sleap import PredictedInstance, Instance, Track
+from sleap import Instance, LabeledFrame, PredictedInstance, Track
 from sleap.nn import utils
 
 InstanceType = TypeVar("InstanceType", Instance, PredictedInstance)
@@ -113,11 +113,27 @@ def greedy_matching(cost_matrix: np.ndarray) -> List[Tuple[int, int]]:
 
 
 def nms_instances(
-    instances, iou_threshold, target_count=None
-) -> Tuple[List[PredictedInstance], List[PredictedInstance]]:
+    instances: list[PredictedInstance],
+    iou_threshold: float | None,
+    target_count: int | None = None,
+) -> tuple[list[PredictedInstance], list[PredictedInstance]]:
+    """Finds `Instance`s to keep using non-maximum suppression.
+
+    Args:
+        instances: The list of `PredictedInstance` objects to filter.
+        iou_threshold: The IOU threshold for suppression. If None, then no suppression
+            is applied and `PredictedInstance.score` is used to determine which
+            instances to keep.
+        target_count: The maximum number of instances to keep. Default is None,
+            which means all instances are kept.
+
+    Returns:
+        A tuple of two lists: the first list contains the instances to keep, and
+        the second list contains the instances to remove.
+    """
     boxes = np.array([inst.bounding_box for inst in instances])
     scores = np.array([inst.score for inst in instances])
-    picks = nms_fast(boxes, scores, iou_threshold, target_count)
+    picks: list[int] = nms_fast(boxes, scores, iou_threshold, target_count)
 
     to_keep = [inst for i, inst in enumerate(instances) if i in picks]
     to_remove = [inst for i, inst in enumerate(instances) if i not in picks]
@@ -136,18 +152,22 @@ def nms_fast(
     https://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/
 
     Args:
-        boxes: The bounding boxes to filter. Shape is (N, 4) where N is the number of
-            boxes. Each box is represented by its coordinates in the format
-            (x1, y1, x2, y2) where (x1, y1) is the top-left corner and (x2, y2) is the
-            bottom-right corner.
+        boxes: The bounding boxes to filter. Each box is represented by its coordinates
+            in the format (x1, y1, x2, y2) where (x1, y1) is the corner closest to
+            (0, 0) and (x2, y2) is the corner farthest from (0, 0). Shape is (N, 4)
+            where N is the number of boxes.
         scores: The scores for each bounding box (e.g., confidence scores associated
-            with `PredictedInstance`).
-        iou_threshold: The IOU threshold for suppression.
+            with `PredictedInstance`). Scores are used to pick which boxes to evaluate
+            first (i.e. the highest scoring box is never removed). Shape is (N,) where
+            N is the number of boxes.
+        iou_threshold: The IOU threshold for suppression. This is a soft threshold since
+            boxes are added back if there are too few boxes picked (determined by
+            `target_count`).
         target_count: The maximum number of boxes to keep. Default is None, which
-            means all boxes are kept.
+            means only boxes with IOU less than the threshold are kept.
 
     Returns:
-        A list of indices of the boxes that have an IOU greater than the IOU threshold.
+        A list of indices of the boxes that have an IOU less than the IOU threshold.
     """
     # Return an empty list if no boxes.
     if len(boxes) == 0:
@@ -210,12 +230,11 @@ def nms_fast(
 
 
 def cull_instances(
-    frames: List["LabeledFrame"],
+    frames: List[LabeledFrame],
     instance_count: int,
     iou_threshold: Optional[float] = None,
-):
-    """
-    Removes instances from frames over instance per frame threshold.
+) -> None:
+    """Removes instances from frames over instance per frame threshold.
 
     Args:
         frames: The list of `LabeledFrame` objects with predictions.
