@@ -1,16 +1,17 @@
-import pytest
 import numpy as np
+import pytest
 
-from sleap.nn.tracking import Tracker
+from sleap.instance import LabeledFrame, PredictedInstance
+from sleap.io.dataset import Labels
 from sleap.nn.tracker.components import (
-    nms_instances,
-    nms_fast,
+    FrameMatches,
     cull_instances,
     FrameMatches,
     greedy_matching,
+    nms_fast,
+    nms_instances,
 )
-
-from sleap.instance import PredictedInstance
+from sleap.nn.tracking import Tracker
 from sleap.skeleton import Skeleton
 
 
