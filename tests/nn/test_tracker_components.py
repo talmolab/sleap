@@ -6,7 +6,7 @@ from sleap.io.dataset import Labels
 from sleap.nn.tracker.components import (
     FrameMatches,
     cull_instances,
-    FrameMatches,
+    cull_frame_instances,
     greedy_matching,
     nms_fast,
     nms_instances,
@@ -41,6 +41,125 @@ def test_cull_instances(centered_pair_predictions):
 
     for frame in frames:
         assert len(frame.instances) == 1
+
+
+def test_cull_frame_instances_no_target(centered_pair_predictions: Labels):
+    labels = centered_pair_predictions
+    video = labels.video
+    labeled_frame: LabeledFrame = labels.find_last(video=video, frame_idx=1098)
+
+    # There will never be an IOU greater than 1, so expect all instances back.
+    assert len(labeled_frame.instances) == 3
+    cull_frame_instances(
+        instances_list=labeled_frame.instances, general_iou_threshold=1
+    )
+    assert len(labeled_frame.instances) == 3
+
+    # There is an instance with an IOU of 1 though, so expect 2 instances back.
+    assert len(labeled_frame.instances) == 3
+    cull_frame_instances(
+        instances_list=labeled_frame.instances, general_iou_threshold=0.999999999999999
+    )
+    assert len(labeled_frame.instances) == 2
+
+    # There is also an instance with an IOU of 0.67, so expect 1 instance back.
+    assert len(labeled_frame.instances) == 2
+    cull_frame_instances(
+        instances_list=labeled_frame.instances, general_iou_threshold=0.6
+    )
+    assert len(labeled_frame.instances) == 1
+
+
+def test_cull_frame_instances_with_target(centered_pair_predictions: Labels):
+    labels = centered_pair_predictions
+    video = labels.video
+    labeled_frame: LabeledFrame = labels.find_last(video=video, frame_idx=1098)
+
+    # Target count equal to the number of instances. Expect all instances back.
+    target_count = 3
+
+    # No IOU threshold.
+    assert len(labeled_frame.instances) == target_count
+    cull_frame_instances(instances_list=labeled_frame.instances, instance_count=3)
+    assert len(labeled_frame.instances) == target_count
+
+    # With IOU threshold.
+    assert len(labeled_frame.instances) == target_count
+    cull_frame_instances(
+        instances_list=labeled_frame.instances,
+        instance_count=target_count,
+        iou_threshold=0.0,
+    )
+    assert len(labeled_frame.instances) == target_count
+
+    # Target count less than the number of instances. Expect target count instances back
+
+    # Without IOU.
+    target_count = 2
+    assert len(labeled_frame.instances) == 3
+    cull_frame_instances(
+        instances_list=labeled_frame.instances, instance_count=target_count
+    )
+    assert len(labeled_frame.instances) == target_count
+
+    # With IOU.
+    target_count = 1
+    assert len(labeled_frame.instances) == 2
+    cull_frame_instances(
+        instances_list=labeled_frame.instances,
+        instance_count=target_count,
+        iou_threshold=0.0,
+    )
+    assert len(labeled_frame.instances) == target_count
+
+    # Test with both target count and general IOU threshold. Switching frames.
+
+    labeled_frame: LabeledFrame = labels.find_last(video=video, frame_idx=1095)
+
+    # No instances removed.
+
+    target_count = 4
+    general_iou_threshold = 1
+
+    # Without non-general IOU.
+    assert len(labeled_frame.instances) == target_count
+    cull_frame_instances(
+        instances_list=labeled_frame.instances,
+        instance_count=target_count,
+        general_iou_threshold=general_iou_threshold,
+    )
+
+    # With non-general IOU.
+    assert len(labeled_frame.instances) == target_count
+    cull_frame_instances(
+        instances_list=labeled_frame.instances,
+        instance_count=target_count,
+        general_iou_threshold=general_iou_threshold,
+        iou_threshold=0.0,
+    )
+    assert len(labeled_frame.instances) == target_count
+
+    # Instance removed via general IOU.
+    target_count = 4
+    general_iou_threshold = 0.999999999999999
+    assert len(labeled_frame.instances) == 4
+    cull_frame_instances(
+        instances_list=labeled_frame.instances,
+        instance_count=target_count,
+        general_iou_threshold=general_iou_threshold,
+    )
+    assert len(labeled_frame.instances) == target_count - 1
+
+    # Instance removed via non-general IOU.
+    target_count = 2
+    iou_threshold = 0.0
+    assert len(labeled_frame.instances) == 3
+    cull_frame_instances(
+        instances_list=labeled_frame.instances,
+        instance_count=target_count,
+        iou_threshold=iou_threshold,
+    )
+    assert len(labeled_frame.instances) == target_count
 
 
 def test_nms():
