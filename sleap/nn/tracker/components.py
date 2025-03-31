@@ -161,27 +161,20 @@ def nms_fast(
     if boxes.dtype.kind == "i":
         boxes = boxes.astype("float")
 
-    # initialize the list of picked indexes
-    picked_idxs = []
-
-    # init list of boxes removed by nms
-    nms_idxs = []
-
-    # grab the coordinates of the bounding boxes
-    x1 = boxes[:, 0]
-    y1 = boxes[:, 1]
+    # Grab the coordinates of all the bounding boxes.
+    x1 = boxes[:, 0]  # x1 <= x2
+    y1 = boxes[:, 1]  # y1 <= y2
     x2 = boxes[:, 2]
     y2 = boxes[:, 3]
 
-    # compute the area of the bounding boxes and sort the bounding
-    # boxes by their scores
-    area = (x2 - x1 + 1) * (y2 - y1 + 1)
-    idxs = np.argsort(scores)
+    # Compute the area of all the bounding boxes.
+    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
 
-    # keep looping while some indexes still remain in the indexes list
-    while len(idxs) > 0:
-
-        # we want to add the best box which is the last box in sorted list
+    picked_idxs = []
+    nms_idxs = []
+    idxs = np.argsort(scores)  # The higher-scoring boxes are at the end of the list.
+    while len(idxs) > 0:  # Each iteration, we remove the last box in `idxs`.
+        # Get highest score box (last in list) and add to picked boxes.
         picked_box_idx = idxs[-1]
         picked_idxs.append(picked_box_idx)
 
@@ -200,10 +193,11 @@ def nms_fast(
 
         # Find and remove boxes with iou over threshold.
         nms_for_new_box = np.where(overlap > iou_threshold)[0]
-        nms_idxs.extend(list(idxs[nms_for_new_box]))
+        nms_idxs.extend(list(idxs[nms_for_new_box]))  # In case we need to add back.
+        idxs = np.delete(idxs, nms_for_new_box)
 
-        # delete new box (last in list) plus nms boxes
-        idxs = np.delete(idxs, nms_for_new_box)[:-1]
+        # Remove the last box (the one we just picked).
+        idxs = idxs[:-1]
 
     # Add some boxes back if we have too few picked boxes.
     if target_count and nms_idxs and len(picked_idxs) < target_count:
