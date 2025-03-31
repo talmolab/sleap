@@ -12,6 +12,9 @@ Main types of functions:
 
 
 """
+
+from __future__ import annotations
+
 import operator
 from collections import defaultdict
 from typing import List, Tuple, Optional, TypeVar, Callable
@@ -256,13 +259,12 @@ def cull_instances(
 
 
 def cull_frame_instances(
-    instances_list: List[InstanceType],
-    instance_count: int,
-    iou_threshold: Optional[float] = None,
-    general_iou_threshold: Optional[float] = None,
-) -> List["LabeledFrame"]:
-    """
-    Removes instances (for single frame) over instance per frame threshold.
+    instances_list: list[InstanceType],
+    instance_count: int | None = None,
+    iou_threshold: float | None = None,
+    general_iou_threshold: float | None = None,
+) -> list[InstanceType]:
+    """Removes instances (for single frame) over instance per frame threshold.
 
     Args:
         instances_list: The list of instances for a single frame.
