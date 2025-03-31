@@ -125,10 +125,31 @@ def nms_instances(
     return to_keep, to_remove
 
 
-def nms_fast(boxes, scores, iou_threshold, target_count=None) -> List[int]:
-    """https://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/"""
+def nms_fast(
+    boxes: np.ndarray,
+    scores: np.ndarray,
+    iou_threshold: float,
+    target_count: int | None = None,
+) -> list[int]:
+    """Finds indices of boxes to keep using non-maximum suppression.
 
-    # if there are no boxes, return an empty list
+    https://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/
+
+    Args:
+        boxes: The bounding boxes to filter. Shape is (N, 4) where N is the number of
+            boxes. Each box is represented by its coordinates in the format
+            (x1, y1, x2, y2) where (x1, y1) is the top-left corner and (x2, y2) is the
+            bottom-right corner.
+        scores: The scores for each bounding box (e.g., confidence scores associated
+            with `PredictedInstance`).
+        iou_threshold: The IOU threshold for suppression.
+        target_count: The maximum number of boxes to keep. Default is None, which
+            means all boxes are kept.
+
+    Returns:
+        A list of indices of the boxes that have an IOU greater than the IOU threshold.
+    """
+    # Return an empty list if no boxes.
     if len(boxes) == 0:
         return []
 
@@ -268,16 +289,17 @@ def cull_frame_instances(
 
     Args:
         instances_list: The list of instances for a single frame.
-        instance_count: The maximum number of instances we want per frame.
+        instance_count: The maximum number of instances we want per frame. If None, then
+            no limit is applied. Default is None.
         iou_threshold: Intersection over Union (IOU) threshold to use when removing
-            overlapping instances over target count; if None, then only use score to
-            determine which instances to remove.
+            overlapping instances over `instance_count`. If None, then only use score to
+            determine which instances to remove over `instance_count`. Default is None.
         general_iou_threshold: Intersection over Union (IOU) threshold to use when
-            removing overlapping instances - regardless of count. If None, then only use
-            score to determine which instances to remove.
+            removing overlapping instances - regardless of `instance_count`. If None,
+            then no general IOU threshold is applied. Default is None.
 
     Returns:
-        Updated list of frames, also modifies frames in place.
+        Updated `instances_list` (modified in-place).
     """
     if not instances_list:
         return
