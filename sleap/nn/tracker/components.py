@@ -282,10 +282,11 @@ def cull_frame_instances(
     if not instances_list:
         return
 
+    # List of instances which we'll pare down
+    keep_instances = instances_list
+
     # First, let's remove instances over the general IOU threshold
     if general_iou_threshold:
-        # List of instances which we'll pare down
-        keep_instances = instances_list
 
         # Use NMS to remove overlapping instances over target count
         keep_instances, extra_instances = nms_instances(
@@ -297,33 +298,30 @@ def cull_frame_instances(
         for inst in extra_instances:
             instances_list.remove(inst)
 
-    # Now, let's remove instances over the target count using the target IOU threshold
-    if len(instances_list) > instance_count:
-        # List of instances which we'll pare down
-        keep_instances = instances_list
+    # If we have no restrictions on instance count, return the list.
+    if instance_count is None or len(instances_list) <= instance_count:
+        return instances_list
 
-        # Use NMS to remove overlapping instances over target count
-        if iou_threshold:
-            keep_instances, extra_instances = nms_instances(
-                keep_instances,
-                iou_threshold=iou_threshold,
-                target_count=instance_count,
-            )
-            # Remove the extra instances
-            for inst in extra_instances:
-                instances_list.remove(inst)
+    # Otherwise, let's determine instances to remove over the target count...
+    extra_instances = []
 
-        # Use lower score to remove instances over target count
-        if len(keep_instances) > instance_count:
-            # Sort by ascending score, get target number of instances
-            # from the end of list (i.e., with highest score)
-            extra_instances = sorted(keep_instances, key=operator.attrgetter("score"))[
-                :-instance_count
-            ]
+    # ...using NMS to remove overlapping instances over target count.
+    if iou_threshold:
+        keep_instances, extra_instances = nms_instances(
+            keep_instances,
+            iou_threshold=iou_threshold,
+            target_count=instance_count,
+        )
 
-            # Remove the extra instances
-            for inst in extra_instances:
-                instances_list.remove(inst)
+    # ...using lower score to remove instances over target count.
+    elif len(keep_instances) > instance_count:  # Only true if no iou threshold.
+        extra_instances = sorted(keep_instances, key=operator.attrgetter("score"))[
+            :-instance_count
+        ]
+
+    # Remove the extra instances.
+    for inst in extra_instances:
+        instances_list.remove(inst)
 
     return instances_list
 
