@@ -153,12 +153,11 @@ def nms_fast(
     if len(boxes) == 0:
         return []
 
-    # if we already have fewer boxes than the target count, return all boxes
+    # Return all boxes (if target_count is None or greater than the number of boxes).
     if target_count and len(boxes) < target_count:
         return list(range(len(boxes)))
 
-    # if the bounding boxes coordinates are integers, convert them to floats --
-    # this is important since we'll be doing a bunch of divisions
+    # Convert boxes to float if they are integers (for higher precision division).
     if boxes.dtype.kind == "i":
         boxes = boxes.astype("float")
 
@@ -184,42 +183,35 @@ def nms_fast(
 
         # we want to add the best box which is the last box in sorted list
         picked_box_idx = idxs[-1]
-
-        # last = len(idxs) - 1
-        # i = idxs[last]
         picked_idxs.append(picked_box_idx)
 
-        # find the largest (x, y) coordinates for the start of
-        # the bounding box and the smallest (x, y) coordinates
-        # for the end of the bounding box
+        # Find the smallest (x, y) coordinates for corner 1 of the bounding box.
         xx1 = np.maximum(x1[picked_box_idx], x1[idxs[:-1]])
         yy1 = np.maximum(y1[picked_box_idx], y1[idxs[:-1]])
+
+        # Find the largest (x, y) coordinates for corner 2 of the bounding box.
         xx2 = np.minimum(x2[picked_box_idx], x2[idxs[:-1]])
         yy2 = np.minimum(y2[picked_box_idx], y2[idxs[:-1]])
 
-        # compute the width and height of the bounding box
+        # Compute the ratio of overlap.
         w = np.maximum(0, xx2 - xx1 + 1)
         h = np.maximum(0, yy2 - yy1 + 1)
+        overlap = (w * h) / areas[idxs[:-1]]
 
-        # compute the ratio of overlap
-        overlap = (w * h) / area[idxs[:-1]]
-
-        # find boxes with iou over threshold
+        # Find and remove boxes with iou over threshold.
         nms_for_new_box = np.where(overlap > iou_threshold)[0]
         nms_idxs.extend(list(idxs[nms_for_new_box]))
 
         # delete new box (last in list) plus nms boxes
         idxs = np.delete(idxs, nms_for_new_box)[:-1]
 
-    # if we're below the target number of boxes, add some back
+    # Add some boxes back if we have too few picked boxes.
     if target_count and nms_idxs and len(picked_idxs) < target_count:
-        # sort by descending score
+        # Add back boxes with the highest scores.
         nms_idxs.sort(key=lambda idx: -scores[idx])
-
         add_back_count = min(len(nms_idxs), len(picked_idxs) - target_count)
         picked_idxs.extend(nms_idxs[:add_back_count])
 
-    # return the list of picked boxes
     return picked_idxs
 
 
