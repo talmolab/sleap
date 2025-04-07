@@ -1,0 +1,10 @@
+main:
+  - name: fps
+    label: Frames Per Second
+    type: int
+    range: 1,200
+    default: 30
+  - name: open_when_done
+    label: Open When Done Saving
+    type: bool
+    default: true
