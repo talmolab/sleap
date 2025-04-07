@@ -12,7 +12,7 @@ from matplotlib.collections import PathCollection
 import matplotlib.transforms as mtransforms
 from qtpy import QtCore, QtWidgets
 
-from sleap.gui.utils import is_port_free, select_zmq_port
+from sleap.gui.utils import find_free_port
 from sleap.gui.widgets.mpl import MplCanvas
 from sleap.nn.config.training_job import TrainingJobConfig
 
@@ -787,30 +787,6 @@ class LossViewer(QtWidgets.QMainWindow):
         # Progress monitoring, SUBSCRIBER
         self.sub = self.ctx.socket(zmq.SUB)
         self.sub.subscribe("")
-
-        def find_free_port(port: int, zmq_context: zmq.Context):
-            """Find free port to bind to.
-
-            Args:
-                port: The port to start searching from.
-                zmq_context: The ZMQ context to use.
-
-            Returns:
-                The free port.
-            """
-            attempts = 0
-            max_attempts = 10
-            while not is_port_free(port=port, zmq_context=zmq_context):
-                if attempts >= max_attempts:
-                    raise RuntimeError(
-                        f"Could not find free port to display training progress after "
-                        f"{max_attempts} attempts. Please check your network settings "
-                        "or use the CLI `sleap-train` command."
-                    )
-                port = select_zmq_port(zmq_context=self.ctx)
-                attempts += 1
-
-            return port
 
         # Find a free port and bind to it.
         self.zmq_ports["publish_port"] = find_free_port(

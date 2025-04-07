@@ -62,6 +62,7 @@ from qtpy.QtWidgets import (
     QShortcut,
     QVBoxLayout,
     QWidget,
+    QPinchGesture,
 )
 
 import sleap
@@ -823,6 +824,8 @@ class GraphicsView(QGraphicsView):
         # Set icon as default background.
         self.setImage(QImage(sleap.util.get_package_file("gui/background.png")))
 
+        self.grabGesture(Qt.GestureType.PinchGesture)
+
     def dragEnterEvent(self, event):
         if self.parentWidget():
             self.parentWidget().dragEnterEvent(event)
@@ -1188,6 +1191,23 @@ class GraphicsView(QGraphicsView):
     def keyReleaseEvent(self, event):
         """Custom event hander, disables default QGraphicsView behavior."""
         event.ignore()  # Kicks the event up to parent
+
+    def event(self, event):
+        if event.type() == QtCore.QEvent.Gesture:
+            return self.handleGestureEvent(event)
+        return super().event(event)
+
+    def handleGestureEvent(self, event):
+        gesture = event.gesture(Qt.GestureType.PinchGesture)
+        if gesture:
+            self.handlePinchGesture(gesture)
+        return True
+
+    def handlePinchGesture(self, gesture: QPinchGesture):
+        if gesture.state() == Qt.GestureState.GestureUpdated:
+            factor = gesture.scaleFactor()
+            self.zoomFactor = max(factor * self.zoomFactor, 1)
+            self.updateViewer()
 
 
 class QtNodeLabel(QGraphicsTextItem):
@@ -1570,7 +1590,6 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseMoveEvent(self, event):
         """Custom event handler for mouse move."""
-        # print(event)
         if self.dragParent:
             self.parentObject().mouseMoveEvent(event)
         else:
@@ -1581,7 +1600,6 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseReleaseEvent(self, event):
         """Custom event handler for mouse release."""
-        # print(event)
         self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
@@ -1609,6 +1627,10 @@ class QtNode(QGraphicsEllipseItem):
         if scene is not None:
             view = scene.views()[0]
             view.instanceDoubleClicked.emit(self.parentObject().instance, event)
+
+    def hoverEnterEvent(self, event):
+        """Custom event handler for mouse hover enter."""
+        return super().hoverEnterEvent(event)
 
 
 class QtEdge(QGraphicsPolygonItem):
@@ -1809,6 +1831,7 @@ class QtInstance(QGraphicsObject):
         self.labels = {}
         self.labels_shown = True
         self._selected = False
+        self._is_hovering = False
         self._bounding_rect = QRectF()
 
         # Show predicted instances behind non-predicted ones
@@ -1830,6 +1853,7 @@ class QtInstance(QGraphicsObject):
         box_pen.setStyle(Qt.DashLine)
         box_pen.setCosmetic(True)
         self.box.setPen(box_pen)
+        self.setAcceptHoverEvents(True)
 
         # Add label for highlighted instance
         self.highlight_label = QtTextWithBackground(parent=self)
@@ -1991,7 +2015,12 @@ class QtInstance(QGraphicsObject):
         select this instance.
         """
         # Only show box if instance is selected
-        op = 0.7 if self._selected else 0
+        op = 0
+        if self._selected:
+            op = 0.8
+        elif self._is_hovering:
+            op = 0.4
+
         self.box.setOpacity(op)
         # Update the position for the box
         rect = self.getPointsBoundingRect()
@@ -2084,6 +2113,16 @@ class QtInstance(QGraphicsObject):
     def paint(self, painter, option, widget=None):
         """Method required by Qt."""
         pass
+
+    def hoverEnterEvent(self, event):
+        self._is_hovering = True
+        self.updateBox()
+        return super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self._is_hovering = False
+        self.updateBox()
+        return super().hoverLeaveEvent(event)
 
 
 class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
@@ -2275,7 +2314,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
                 self.parent.nodes[node_key].setPos(new_x, new_y)
 
             # Update the instance
-            self.parent.updatePoints(complete=True, user_change=True)
+            self.parent.updatePoints(complete=False, user_change=True)
             self.resizing = None
 
 

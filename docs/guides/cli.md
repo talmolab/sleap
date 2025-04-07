@@ -230,7 +230,7 @@ optional arguments:
   --tracking.kf_node_indices TRACKING.KF_NODE_INDICES
                         For Kalman filter: Indices of nodes to track. (default: )
   --tracking.kf_init_frame_count TRACKING.KF_INIT_FRAME_COUNT
-                        For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used. (default: 0)
+                        For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used. (default: 0) Kalman filters require TRACKING.KF_NODE_INDICES, TRACKING.MAX_TRACKING and TRACKING.MAX_TRACKS or TRACKING.TARGET_INSTANCE_COUNT, TRACKING.TRACKER to be simple or simplemaxtracks, and TRACKING.SIMILARITY to not be normalized_instance.
 ```
 
 #### Examples:
@@ -283,6 +283,12 @@ sleap-track --gpu 1 ...
 
 ```none
 sleap-track -m "models/my_model" --frames 1000-2000 "input_video.mp4"
+```
+
+**9. Use Kalman tracker (not recommended since flow is preferred):**
+
+```none
+sleap-track -m "models/my_model" --tracking.similarity instance --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 --tracking.kf_init_frame_count 10 --tracking.kf_node_indices 0,1 -o "output_predictions.slp" "input_video.mp4"
 ```
 
 ## Dataset files

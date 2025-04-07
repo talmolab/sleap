@@ -705,6 +705,55 @@ def test_topdown_predictor_centered_instance(
     assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
 
 
+def test_topdown_predictor_centered_instance_with_scaling(
+    min_labels, min_centered_instance_with_scaling_model_path
+):
+    predictor = TopDownPredictor.from_trained_models(
+        confmap_model_path=min_centered_instance_with_scaling_model_path
+    )
+
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    assert predictor.is_grayscale == True
+
+    points_gt = np.concatenate(
+        [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0
+    )
+    inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
+    assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+
+
+def test_topdown_predictor_centroid_centered_instance_with_scaling(
+    min_labels, min_centered_instance_with_scaling_model_path, min_centroid_model_path
+):
+    predictor = TopDownPredictor.from_trained_models(
+        centroid_model_path=min_centroid_model_path,
+        confmap_model_path=min_centered_instance_with_scaling_model_path,
+    )
+
+    predictor.verbosity = "none"
+    labels_pr = predictor.predict(min_labels)
+    assert len(labels_pr) == 1
+    assert len(labels_pr[0].instances) == 2
+
+    assert predictor.is_grayscale == True
+
+    points_gt = np.concatenate(
+        [min_labels[0][0].numpy(), min_labels[0][1].numpy()], axis=0
+    )
+    points_pr = np.concatenate(
+        [labels_pr[0][0].numpy(), labels_pr[0][1].numpy()], axis=0
+    )
+    inds1, inds2 = sleap.nn.utils.match_points(points_gt, points_pr)
+    assert_allclose(points_gt[inds1.numpy()], points_pr[inds2.numpy()], atol=1.5)
+
+
 def test_topdown_predictor_centered_instance_high_threshold(
     min_labels, min_centered_instance_model_path
 ):

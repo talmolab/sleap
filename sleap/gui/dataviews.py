@@ -15,20 +15,17 @@ as is. For example::
 
 """
 
-from qtpy import QtCore, QtWidgets, QtGui
+import os
+from operator import itemgetter
+from pathlib import Path
+from typing import Any, Callable, List, Optional
 
 import numpy as np
-import os
+from qtpy import QtCore, QtGui, QtWidgets
 
-from operator import itemgetter
-
-from typing import Any, Callable, Dict, List, Optional, Type
-
-from sleap.gui.state import GuiState
 from sleap.gui.commands import CommandContext
-from sleap.gui.color import ColorManager
-from sleap.io.dataset import Labels
-from sleap.instance import LabeledFrame, Instance
+from sleap.gui.state import GuiState
+from sleap.instance import LabeledFrame
 from sleap.skeleton import Skeleton
 
 
@@ -386,10 +383,25 @@ class GenericTableView(QtWidgets.QTableView):
 
 
 class VideosTableModel(GenericTableModel):
-    properties = ("filename", "frames", "height", "width", "channels")
+    properties = (
+        "name",
+        "filepath",
+        "frames",
+        "height",
+        "width",
+        "channels",
+    )
 
-    def item_to_data(self, obj, item):
-        return {key: getattr(item, key) for key in self.properties}
+    def item_to_data(self, obj, item: "Video"):
+        data = {}
+        for property in self.properties:
+            if property == "name":
+                data[property] = Path(item.filename).name
+            elif property == "filepath":
+                data[property] = str(Path(item.filename).parent)
+            else:
+                data[property] = getattr(item, property)
+        return data
 
 
 class SkeletonNodesTableModel(GenericTableModel):

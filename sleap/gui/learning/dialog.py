@@ -637,6 +637,20 @@ class LearningDialog(QtWidgets.QDialog):
             )
         return items_for_inference
 
+    def _validate_id_model(self) -> bool:
+        """Make sure we have instances with tracks set for ID models."""
+        if not self.labels.tracks:
+            message = "Cannot run ID model training without tracks."
+            return False
+
+        found_tracks = False
+        for inst in self.labels.instances():
+            if type(inst) == sleap.Instance and inst.track is not None:
+                found_tracks = True
+                break
+
+        return found_tracks
+
     def _validate_pipeline(self):
         can_run = True
         message = ""
@@ -654,6 +668,15 @@ class LearningDialog(QtWidgets.QDialog):
                     "Cannot run inference with untrained models "
                     f"({', '.join(untrained)})."
                 )
+
+        # Make sure we have instances with tracks set for ID models.
+        if self.mode == "training" and self.current_pipeline in (
+            "top-down-id",
+            "bottom-up-id",
+        ):
+            can_run = self.validate_id_model()
+            if not can_run:
+                message = "Cannot run ID model training without tracks."
 
         # Make sure skeleton will be valid for bottom-up inference.
         if self.mode == "training" and self.current_pipeline == "bottom-up":
