@@ -26,6 +26,8 @@ and "do" for all commands (this is important if we're going to implement undo)--
 for now it's at least easy to see where this separation is violated.
 """
 
+from __future__ import annotations
+
 import logging
 import operator
 import os
@@ -49,7 +51,7 @@ from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
 from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
-from sleap.gui.dialogs.export_clip import ExportClipAndLabelsDialog
+from sleap.gui.dialogs.export_clip import ExportClipDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
@@ -60,7 +62,8 @@ from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.video import Video, MediaVideo
-from sleap.io.videowriter import VideoWriter
+from sleap.io.videowriter import VideoWriter, write_video
+from sleap.io.visuals import save_labeled_video
 from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
 
@@ -637,8 +640,8 @@ class CommandContext:
 
     def exportClipVideo(self):
         """Exports a selected range of video frames and their corresponding labels."""
-        self.execute(ExportClipVideo)
-    
+        self.execute(ExportVideoClip)
+
     def exportClipPkg(self):
         """Exports a selected range of video frames and their corresponding labels."""
         self.execute(ExportClipPkg)
@@ -1295,36 +1298,98 @@ def open_file(filename: str):
         subprocess.call([opener, filename])
 
 
-class ExportLabeledClip(AppCommand):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        from sleap.io.visuals import save_labeled_video
+class ExportVideoClip(AppCommand):
+    """Base class for exporting video clips.
 
-        save_labeled_video(
+    The ask method provides all functionality to gather parameters from the export
+    dialog.
+    """
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: dict) -> bool:
+        """Ask the user for parameters to export a video clip.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+
+        Returns:
+            bool: True if the user provided valid parameters, False otherwise.
+        """
+        # Open export dialog.
+        export_options = cls.get_export_options(context, params)
+        if export_options is None:  # User hit cancel.
+            return False
+
+        # If we had a pop-up dialog, then we can also show GUI progress.
+        params["gui_progress"] = True
+
+        # Get video save parameters.
+        params = cls.get_video_save_params(context, params, export_options)
+
+        # Get frame range parameters.
+        params = cls.get_frame_range_params(context, params, export_options)
+
+        # Get video augmentation parameters.
+        params = cls.get_video_augmentation_params(context, params, export_options)
+
+        # Get video markup parameters.
+        params = cls.get_video_markup_params(context, params, export_options)
+
+        return True
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        """Export video clip using the parameters provided.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+        """
+        # Write the new video using the parameters provided.
+        cls.write_new_video(context, params)
+
+        # Open the file using default video playing app
+        if params["open_when_done"]:
+            open_file(params["filename"])
+
+    @classmethod
+    def write_new_video(
+        cls,
+        context: CommandContext,
+        params: dict,
+    ) -> None:
+        """Write a new video using the parameters provided.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+        """
+        write_video(
             filename=params["filename"],
-            labels=context.state["labels"],
             video=context.state["video"],
             frames=list(params["frames"]),
             fps=params["fps"],
-            color_manager=params["color_manager"],
-            background=params["background"],
-            show_edges=params["show edges"],
-            edge_is_wedge=params["edge_is_wedge"],
-            marker_size=params["marker size"],
             scale=params["scale"],
-            crop_size_xy=params["crop"],
-            gui_progress=True,
+            background=params["background"],
+            gui_progress=params["gui_progress"],
         )
 
-        if params["open_when_done"]:
-            # Open the file using default video playing app
-            open_file(params["filename"])
+    @classmethod
+    def get_export_options(cls, context: CommandContext, params: dict) -> dict | None:
+        """Get export options from the user.
 
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+
+        Returns:
+            dict: The export options.
+        """
         from sleap.gui.dialogs.export_clip import ExportClipDialog
 
-        dialog = ExportClipDialog()
+        form_name = params.get("form_name", "video_clip_form")
+        dialog = ExportClipDialog(form_name=form_name)
 
         # Set default fps from video (if video has fps attribute)
         dialog.form_widget.set_form_data(
@@ -1358,26 +1423,115 @@ class ExportLabeledClip(AppCommand):
 
         # Check if user hit cancel
         if len(filename) == 0:
-            return False
+            return None
 
-        params["filename"] = filename
+        export_options["filename"] = filename
+        return export_options
+
+    @classmethod
+    def get_video_save_params(
+        cls, context: CommandContext, params: dict, export_options: dict
+    ) -> dict:
+        """Get video save parameters.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+            export_options: The export options.
+
+        Side Effects:
+            Sets "filename", "fps", and "open_when_done" in params.
+
+        Returns:
+            dict: Containing the video save parameters (in addition to other params).
+        """
+        params["filename"] = export_options["filename"]
         params["fps"] = export_options["fps"]
-        params["scale"] = export_options["scale"]
         params["open_when_done"] = export_options["open_when_done"]
-        params["background"] = export_options["background"]
+        return params
 
+    @classmethod
+    def get_frame_range_params(
+        cls, context: CommandContext, params: dict, export_options: dict
+    ) -> dict:
+        """Get frame range parameters.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+            export_options: The export options.
+
+        Side Effects:
+            Sets "frames" in params.
+
+        Returns:
+            dict: Containing the frame range parameters (in addition to other params).
+        """
+        # If user selected a clip, use that; otherwise include all frames.
+        if context.state["has_frame_range"]:
+            params["frames"] = range(*context.state["frame_range"])
+        else:
+            params["frames"] = range(context.state["video"].frames)
+
+        return params
+
+    @classmethod
+    def get_video_augmentation_params(
+        cls, context: CommandContext, params: dict, export_options: dict
+    ) -> dict:
+        """Get video augmentation parameters.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+            export_options: The export options.
+
+        Side Effects:
+            Sets "scale", "background", and "crop" in params.
+
+        Returns:
+            dict: Containing the video augmentation parameters (in addition to other
+                params).
+        """
+        params["scale"] = export_options.get("scale", 1.0)
+        params["background"] = export_options.get("background", None)
         params["crop"] = None
+
+        export_options_crop = export_options.get("crop", None)
+        if export_options_crop is None:
+            return params
 
         # Determine crop size relative to original size and scale
         # (crop size should be *final* output size, thus already scaled).
-        w = int(context.state["video"].width * params["scale"])
-        h = int(context.state["video"].height * params["scale"])
-        if export_options["crop"] == "Half":
+        video = context.state["video"]
+        w = int(video.width * params["scale"])
+        h = int(video.height * params["scale"])
+        if export_options_crop == "Half":
             params["crop"] = (w // 2, h // 2)
-        elif export_options["crop"] == "Quarter":
+        elif export_options_crop == "Quarter":
             params["crop"] = (w // 4, h // 4)
 
-        if export_options["use_gui_visuals"]:
+        return params
+
+    @classmethod
+    def get_video_markup_params(
+        cls, context: CommandContext, params: dict, export_options: dict
+    ) -> dict:
+        """Get video markup parameters.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+            export_options: The export options.
+
+        Side Effects:
+            Sets "color_manager", "show edges", "edge_is_wedge", and "marker size" in
+            params.
+
+        Returns:
+            dict: Containing the video markup parameters (in addition to other params).
+        """
+        if export_options.get("use_gui_visuals", False):
             params["color_manager"] = context.app.color_manager
         else:
             params["color_manager"] = None
@@ -1388,14 +1542,47 @@ class ExportLabeledClip(AppCommand):
         )
 
         params["marker size"] = context.state.get("marker size", default=4)
+        return params
 
-        # If user selected a clip, use that; otherwise include all frames.
-        if context.state["has_frame_range"]:
-            params["frames"] = range(*context.state["frame_range"])
-        else:
-            params["frames"] = range(context.state["video"].frames)
 
-        return True
+class ExportLabeledClip(ExportVideoClip):
+    """Export a labeled video clip with labels and edges.
+
+    This command is used to export a labeled video clip with labels and edges. It
+    inherits from the `ExportVideoClip` class and provides additional functionality for
+    exporting labeled videos.
+    """
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: dict) -> bool:
+        """Ask the user for parameters to export a labeled video clip."""
+        params["form_name"] = "labeled_clip_form"
+        ok = super().ask(context, params)
+        return ok
+
+    @classmethod
+    def write_new_video(cls, context, params):
+        """Write a new annotated video using the parameters provided.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+        """
+        save_labeled_video(
+            filename=params["filename"],
+            labels=context.state["labels"],
+            video=context.state["video"],
+            frames=list(params["frames"]),
+            fps=params["fps"],
+            color_manager=params["color_manager"],
+            background=params["background"],
+            show_edges=params["show edges"],
+            edge_is_wedge=params["edge_is_wedge"],
+            marker_size=params["marker size"],
+            scale=params["scale"],
+            crop_size_xy=params["crop"],
+            gui_progress=params["gui_progress"],
+        )
 
 
 def export_dataset_gui(
