@@ -424,8 +424,11 @@ class Predictor(ABC):
                 "{task.description}",
                 rich.progress.BarColumn(),
                 "[progress.percentage]{task.percentage:>3.0f}%",
+                rich.progress.MofNCompleteColumn(),
                 "ETA:",
                 rich.progress.TimeRemainingColumn(),
+                "Elapsed:",
+                rich.progress.TimeElapsedColumn(),
                 RateColumn(),
                 auto_refresh=False,
                 refresh_per_second=self.report_rate,
@@ -2700,7 +2703,9 @@ class TopDownPredictor(Predictor):
             object_builder.join()
 
         if self.tracker:
+            print("Starting final pass of the tracker...")
             self.tracker.final_pass(predicted_frames)
+            print("Finished final pass of the tracker.")
 
         return predicted_frames
 
