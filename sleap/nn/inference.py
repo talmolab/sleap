@@ -33,6 +33,7 @@ import shutil
 import atexit
 import subprocess
 import rich.progress
+from queue import Empty
 import pandas as pd
 from rich.pretty import pprint
 from collections import deque
@@ -2703,9 +2704,12 @@ class TopDownPredictor(Predictor):
             object_builder.join()
 
         if self.tracker:
-            print("Starting final pass of the tracker...")
+            t0 = time()
+            print("Starting final pass of the tracker...", flush=True)
             self.tracker.final_pass(predicted_frames)
-            print("Finished final pass of the tracker.")
+            print(
+                f"Finished final pass of the tracker in {time() - t0:.2f} seconds."
+            )
 
         return predicted_frames
 
@@ -3258,9 +3262,26 @@ class BottomUpPredictor(Predictor):
         predicted_frames = []
 
         def _object_builder():
+            n_timeouts = 0
             while True:
-                ex = prediction_queue.get()
+                try:
+                    # Get the next example from the queue.
+                    ex = prediction_queue.get(timeout=0.5)
+
+                except Empty:
+                    n_timeouts += 1
+                    if n_timeouts > 5:
+                        # Too many timeouts, exit.
+                        print(
+                            "Timeout waiting for prediction queue, "
+                            "exiting prediction loop."
+                        )
+                        break
+                    continue
+
                 if ex is None:
+                    # Poison pill, exit.
+                    print("Got poison pill, exiting prediction loop.")
                     break
 
                 if "n_valid" in ex:
@@ -3348,7 +3369,12 @@ class BottomUpPredictor(Predictor):
             object_builder.join()
 
         if self.tracker:
+            t0 = time()
+            print("Starting final pass of the tracker...", flush=True)
             self.tracker.final_pass(predicted_frames)
+            print(
+                f"Finished final pass of the tracker in {time() - t0:.2f} seconds."
+            )
 
         return predicted_frames
 
