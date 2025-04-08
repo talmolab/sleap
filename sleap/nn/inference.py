@@ -1559,9 +1559,26 @@ class SingleInstancePredictor(Predictor):
         predicted_frames = []
 
         def _object_builder():
+            n_timeouts = 0
             while True:
-                ex = prediction_queue.get()
+                try:
+                    # Get the next example from the queue.
+                    ex = prediction_queue.get(timeout=10)
+
+                except Empty:
+                    n_timeouts += 1
+                    if n_timeouts >= 3:
+                        # Too many timeouts, exit.
+                        print(
+                            "Timeout waiting for prediction queue, "
+                            "exiting prediction loop."
+                        )
+                        break
+                    continue
+
                 if ex is None:
+                    # Poison pill, exit.
+                    print("Got poison pill, exiting prediction loop.")
                     break
 
                 # Loop over frames.
@@ -1613,6 +1630,11 @@ class SingleInstancePredictor(Predictor):
         finally:
             prediction_queue.put(None)
             object_builder.join()
+
+        print(
+            f"Finished building {len(predicted_frames):,} predicted frames.",
+            flush=True
+        )
 
         return predicted_frames
 
@@ -2621,9 +2643,26 @@ class TopDownPredictor(Predictor):
         predicted_frames = []
 
         def _object_builder():
+            n_timeouts = 0
             while True:
-                ex = prediction_queue.get()
+                try:
+                    # Get the next example from the queue.
+                    ex = prediction_queue.get(timeout=10)
+
+                except Empty:
+                    n_timeouts += 1
+                    if n_timeouts >= 3:
+                        # Too many timeouts, exit.
+                        print(
+                            "Timeout waiting for prediction queue, "
+                            "exiting prediction loop."
+                        )
+                        break
+                    continue
+
                 if ex is None:
+                    # Poison pill, exit.
+                    print("Got poison pill, exiting prediction loop.")
                     break
 
                 if "n_valid" in ex:
@@ -2702,6 +2741,11 @@ class TopDownPredictor(Predictor):
         finally:
             prediction_queue.put(None)
             object_builder.join()
+
+        print(
+            f"Finished building {len(predicted_frames):,} predicted frames.",
+            flush=True
+        )
 
         if self.tracker:
             t0 = time()
@@ -3266,11 +3310,11 @@ class BottomUpPredictor(Predictor):
             while True:
                 try:
                     # Get the next example from the queue.
-                    ex = prediction_queue.get(timeout=0.5)
+                    ex = prediction_queue.get(timeout=10)
 
                 except Empty:
                     n_timeouts += 1
-                    if n_timeouts > 5:
+                    if n_timeouts >= 3:
                         # Too many timeouts, exit.
                         print(
                             "Timeout waiting for prediction queue, "
@@ -3367,6 +3411,11 @@ class BottomUpPredictor(Predictor):
         finally:
             prediction_queue.put(None)
             object_builder.join()
+
+        print(
+            f"Finished building {len(predicted_frames):,} predicted frames.",
+            flush=True
+        )
 
         if self.tracker:
             t0 = time()
@@ -3823,10 +3872,27 @@ class BottomUpMultiClassPredictor(Predictor):
         predicted_frames = []
 
         def _object_builder():
+            n_timeouts = 0
             while True:
-                ex = prediction_queue.get()
+                try:
+                    # Get the next example from the queue.
+                    ex = prediction_queue.get(timeout=10)
+
+                except Empty:
+                    n_timeouts += 1
+                    if n_timeouts >= 3:
+                        # Too many timeouts, exit.
+                        print(
+                            "Timeout waiting for prediction queue, "
+                            "exiting prediction loop."
+                        )
+                        break
+                    continue
+
                 if ex is None:
-                    return
+                    # Poison pill, exit.
+                    print("Got poison pill, exiting prediction loop.")
+                    break
 
                 # Loop over frames.
                 for image, video_ind, frame_ind, points, confidences, scores in zip(
@@ -3887,6 +3953,11 @@ class BottomUpMultiClassPredictor(Predictor):
         finally:
             prediction_queue.put(None)
             object_builder.join()
+
+        print(
+            f"Finished building {len(predicted_frames):,} predicted frames.",
+            flush=True
+        )
 
         return predicted_frames
 
@@ -4530,9 +4601,26 @@ class TopDownMultiClassPredictor(Predictor):
         predicted_frames = []
 
         def _object_builder():
+            n_timeouts = 0
             while True:
-                ex = prediction_queue.get()
+                try:
+                    # Get the next example from the queue.
+                    ex = prediction_queue.get(timeout=10)
+
+                except Empty:
+                    n_timeouts += 1
+                    if n_timeouts >= 3:
+                        # Too many timeouts, exit.
+                        print(
+                            "Timeout waiting for prediction queue, "
+                            "exiting prediction loop."
+                        )
+                        break
+                    continue
+
                 if ex is None:
+                    # Poison pill, exit.
+                    print("Got poison pill, exiting prediction loop.")
                     break
 
                 # Loop over frames.
@@ -4603,6 +4691,11 @@ class TopDownMultiClassPredictor(Predictor):
         finally:
             prediction_queue.put(None)
             object_builder.join()
+
+        print(
+            f"Finished building {len(predicted_frames):,} predicted frames.",
+            flush=True
+        )
 
         return predicted_frames
 
@@ -4832,9 +4925,26 @@ class MoveNetPredictor(Predictor):
         predicted_frames = []
 
         def _object_builder():
+            n_timeouts = 0
             while True:
-                ex = prediction_queue.get()
+                try:
+                    # Get the next example from the queue.
+                    ex = prediction_queue.get(timeout=10)
+
+                except Empty:
+                    n_timeouts += 1
+                    if n_timeouts >= 3:
+                        # Too many timeouts, exit.
+                        print(
+                            "Timeout waiting for prediction queue, "
+                            "exiting prediction loop."
+                        )
+                        break
+                    continue
+
                 if ex is None:
+                    # Poison pill, exit.
+                    print("Got poison pill, exiting prediction loop.")
                     break
 
                 # Loop over frames.
@@ -4889,6 +4999,11 @@ class MoveNetPredictor(Predictor):
         finally:
             prediction_queue.put(None)
             object_builder.join()
+
+        print(
+            f"Finished building {len(predicted_frames):,} predicted frames.",
+            flush=True
+        )
 
         return predicted_frames
 
