@@ -1325,10 +1325,10 @@ class ExportVideoClip(AppCommand):
         params["gui_progress"] = True
 
         # Get video save parameters.
-        params = cls.get_video_save_params(context, params, export_options)
+        params = cls.get_video_save_params(params, export_options)
 
         # Get frame range parameters.
-        params = cls.get_frame_range_params(context, params, export_options)
+        params = cls.get_frame_range_params(context, params)
 
         # Get video augmentation parameters.
         params = cls.get_video_augmentation_params(context, params, export_options)
@@ -1351,7 +1351,7 @@ class ExportVideoClip(AppCommand):
 
         # Open the file using default video playing app
         if params["open_when_done"]:
-            open_file(params["filename"])
+            open_file(params["video_filename"])
 
     @classmethod
     def write_new_video(
@@ -1366,7 +1366,7 @@ class ExportVideoClip(AppCommand):
             params: The parameters for the export.
         """
         write_video(
-            filename=params["filename"],
+            filename=params["video_filename"],
             video=context.state["video"],
             frames=list(params["frames"]),
             fps=params["fps"],
@@ -1427,41 +1427,35 @@ class ExportVideoClip(AppCommand):
         if len(filename) == 0:
             return None
 
-        export_options["filename"] = filename
+        export_options["video_filename"] = filename
         return export_options
 
     @classmethod
-    def get_video_save_params(
-        cls, context: CommandContext, params: dict, export_options: dict
-    ) -> dict:
+    def get_video_save_params(cls, params: dict, export_options: dict) -> dict:
         """Get video save parameters.
 
         Args:
-            context: The command context.
             params: The parameters for the export.
             export_options: The export options.
 
         Side Effects:
-            Sets "filename", "fps", and "open_when_done" in params.
+            Sets "video_filename", "fps", and "open_when_done" in params.
 
         Returns:
             dict: Containing the video save parameters (in addition to other params).
         """
-        params["filename"] = export_options["filename"]
+        params["video_filename"] = export_options["video_filename"]
         params["fps"] = export_options["fps"]
         params["open_when_done"] = export_options["open_when_done"]
         return params
 
     @classmethod
-    def get_frame_range_params(
-        cls, context: CommandContext, params: dict, export_options: dict
-    ) -> dict:
+    def get_frame_range_params(cls, context: CommandContext, params: dict) -> dict:
         """Get frame range parameters.
 
         Args:
             context: The command context.
             params: The parameters for the export.
-            export_options: The export options.
 
         Side Effects:
             Sets "frames" in params.
@@ -1571,7 +1565,7 @@ class ExportLabeledClip(ExportVideoClip):
             params: The parameters for the export.
         """
         save_labeled_video(
-            filename=params["filename"],
+            filename=params["video_filename"],
             labels=context.state["labels"],
             video=context.state["video"],
             frames=list(params["frames"]),
@@ -1708,47 +1702,77 @@ class ExportFullPackage(ExportDatasetWithImages):
 class ExportLabelsSubset(ExportFullPackage):
     """Export a subset of labels to a new file with either images or a trimmed video.
 
-    This command subclasses both `ExportFullPackage` and `ExportVideoClip` to provide
-    functionality for exporting a subset of labels to a new file with either images or
-    a trimmed video. It allows the user to specify the labels to export and the format
-    of the output file.
-
-    Note that methods from `ExportFullPackage` will override methods with the same name
-    in `ExportVideoClip`.
+    This command subclasses `ExportFullPackage`, but uses also uses methods from
+    `ExportVideoClip` to provide functionality for exporting a subset of labels to a new
+    file with either images or a trimmed video. It allows the user to specify the labels
+    to export and the format of the output file.
     """
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
+        as_package = params.get("as_package", False)
+
+        video: Video = context.state["video"]
+        n_frames = video.frames
+        frames: range = params["frames"]
+        start_frame_idx = frames[0]  # 0-indexed
+        end_frame_idx = frames[-1]
+
+        # If the user
+        video_subset = None
+        if (end_frame_idx < n_frames - 1) and not as_package:
+            # Export the video clip using the parameters provided.
+            ExportVideoClip.do_action(context=context, params=params)
+            video_subset_filename = params["video_filename"]
+            video_subset = Video.from_filename(filename=video_subset_filename)
+
         # Get subset of labels to export
         labels: Labels = context.state["labels"]
-        video: Video = context.state["video"]
-        frames: Iterator[list] = context.state["frame_range"]
-        labels_subset: Labels = labels.extract(inds=(video, frames), copy=True)
+        labels_subset_unshifted: Labels = labels.extract(
+            inds=(video, frames), copy=True
+        )
 
-        # TODO: Replace video in labels subset with the one from context
-        ...
+        # Update the video and frame indices of the labels.
+        lfs_subset = labels_subset_unshifted.labeled_frames if as_package else []
+        video_subset = video_subset or video
+        for lf in labels_subset_unshifted.labeled_frames:
+            # Use the new video for the subset (need to do this even if video is same,
+            # otherwise, fails in Labels __init__ when updating cache).
+            lf.video = video_subset
+
+            if not as_package:
+                # Shift the frame index to match the new video
+                lf.frame_idx -= start_frame_idx
+
+                # Add the labeled frame to the subset
+                lfs_subset.append(lf)
+
+        labels_subset = Labels(
+            labeled_frames=lfs_subset,
+            videos=[video_subset],
+            skeletons=labels_subset_unshifted.skeletons,
+            tracks=labels_subset_unshifted.tracks,
+            suggestions=labels_subset_unshifted.suggestions,
+            provenance=labels_subset_unshifted.provenance,
+        )
 
         # Save the labels subset to a new file.
         params["labels"] = labels_subset
-        params["as_package"] = params.get("as_package", False)
-        ExportFullPackage.do_action(context=context, params=params)
-
-        # Export the video clip using the parameters provided.
-        ExportVideoClip.do_action(context=context, params=params)
+        params["as_package"] = as_package
+        super().do_action(context=context, params=params)
 
     @classmethod
     def ask(cls, context: CommandContext, params: dict) -> bool:
         # Ask for the labels subset to export.
-        if not ExportFullPackage.ask(context=context, params=params):
+        if not super().ask(context=context, params=params):
             return False
 
-        # Ask for the video clip parameters.
-        if not ExportVideoClip.ask(context=context, params=params):
+        # If we are exporting as a pkg.slp, then we just need the frame range.
+        if params.get("as_package", False):
+            ExportVideoClip.get_frame_range_params(context=context, params=params)
+        # Otherwise, exporting as slp and need to get video clip parameters.
+        elif not ExportVideoClip.ask(context=context, params=params):
             return False
-
-        # Set the video and frame range in the parameters.
-        params["video"] = context.state["video"]
-        params["frames"] = context.state["frame_range"]
 
         return True
 
