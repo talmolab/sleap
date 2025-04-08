@@ -5613,10 +5613,13 @@ def _make_provider_from_cli(args: argparse.Namespace) -> Tuple[Provider, str]:
                         example_indices=frame_list(args.frames),
                     )
                 )
-            else:
+            elif len(labels.videos) == 1:
+                # Allow selecting the frames to include if there is only one video
                 provider_list.append(
                     LabelsReader(labels, example_indices=frame_list(args.frames))
                 )
+            else:
+                provider_list.append(LabelsReader(labels))
 
             data_path_list.append(file_path)
 
