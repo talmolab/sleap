@@ -1718,7 +1718,7 @@ class ExportLabelsSubset(ExportFullPackage):
         start_frame_idx = frames[0]  # 0-indexed
         end_frame_idx = frames[-1]
 
-        # If the user
+        # If the user selected the entire video, then do not create a new video.
         video_subset = None
         if (end_frame_idx < n_frames - 1) and not as_package:
             # Export the video clip using the parameters provided.
@@ -1747,12 +1747,28 @@ class ExportLabelsSubset(ExportFullPackage):
                 # Add the labeled frame to the subset
                 lfs_subset.append(lf)
 
+        # Also need to update anything that references the video or frame index.
+        suggestions = []
+        for suggestion in labels_subset_unshifted.suggestions:
+            suggestion.video = video_subset
+
+            # Shift the frame index to match the new video
+            if not as_package:
+                suggestion.frame_idx -= start_frame_idx
+                if suggestion.frame_idx >= 0:  # Suggestions are 0-indexed
+                    suggestions.append(suggestion)
+            elif (
+                suggestion.frame_idx >= start_frame_idx
+                and suggestion.frame_idx < end_frame_idx
+            ):
+                suggestions.append(suggestion)
+
         labels_subset = Labels(
             labeled_frames=lfs_subset,
             videos=[video_subset],
             skeletons=labels_subset_unshifted.skeletons,
             tracks=labels_subset_unshifted.tracks,
-            suggestions=labels_subset_unshifted.suggestions,
+            suggestions=suggestions,
             provenance=labels_subset_unshifted.provenance,
         )
 

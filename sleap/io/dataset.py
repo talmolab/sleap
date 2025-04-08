@@ -37,6 +37,7 @@ If the filename has a supported extension (e.g., ".slp", ".h5", ".json") then
 the file will be saved in the corresponding format. You can also specify the
 default extension to use if none is provided in the filename.
 """
+
 import itertools
 import os
 from collections.abc import MutableSequence
@@ -797,14 +798,26 @@ class Labels(MutableSequence):
                 - `Labels.suggestions`
                 - `Labels.provenance`
         """
-        # TODO: Also get subset of suggestions, tracks, and videos.
+        # Get subset of labeled frames.
         lfs = self.__getitem__(inds)
-        new_labels = type(self)(
+
+        # Get subset of videos.
+        videos_used = set([lf.video for lf in lfs])
+        videos = list(videos_used)
+
+        # Get subset of suggestions.
+        suggestions = [
+            suggestion
+            for suggestion in self.suggestions
+            if suggestion.video in videos_used
+        ]
+
+        new_labels = Labels(
             labeled_frames=lfs,
-            videos=self.videos,
+            videos=videos,
             skeletons=self.skeletons,
             tracks=self.tracks,
-            suggestions=self.suggestions,
+            suggestions=suggestions,
             provenance=self.provenance,
         )
         if copy:
