@@ -640,11 +640,11 @@ class CommandContext:
 
     def exportClipVideo(self):
         """Exports a selected range of video frames and their corresponding labels."""
-        self.execute(ExportVideoClip)
+        self.execute(ExportLabelsSubset, as_package=False)
 
     def exportClipPkg(self):
         """Exports a selected range of video frames and their corresponding labels."""
-        self.execute(ExportClipPkg)
+        self.execute(ExportLabelsSubset, as_package=True)
 
 
 # File Commands
@@ -1406,12 +1406,14 @@ class ExportVideoClip(AppCommand):
         # Use VideoWriter to determine default video type to use
         from sleap.io.videowriter import VideoWriter
 
+        default_out_basename = params.get("filename", context.state["filename"])
+
         # For OpenCV we default to avi since the bundled ffmpeg
         # makes mp4's that most programs can't open (VLC can).
-        default_out_filename = context.state["filename"] + ".avi"
+        default_out_filename = default_out_basename + ".avi"
 
         if VideoWriter.can_use_ffmpeg():
-            default_out_filename = context.state["filename"] + ".mp4"
+            default_out_filename = default_out_basename + ".mp4"
 
         # Ask where user wants to save video file
         filename, _ = FileDialog.save(
@@ -1591,6 +1593,7 @@ def export_dataset_gui(
     all_labeled: bool = False,
     suggested: bool = False,
     verbose: bool = True,
+    as_package: bool = True,
 ) -> str:
     """Export dataset with image data and display progress GUI dialog.
 
@@ -1602,6 +1605,8 @@ def export_dataset_gui(
         suggested: If `True`, include image data for suggested frames. Defaults to
             `False`.
         verbose: If `True`, display progress dialog. Defaults to `True`.
+        as_package: If `True`, save as a package (saves image data instead of
+            referencing video). Defaults to `True`.
     """
     if verbose:
         win = QtWidgets.QProgressDialog(
@@ -1624,7 +1629,7 @@ def export_dataset_gui(
         labels,
         filename,
         default_suffix="slp",
-        save_frame_data=True,
+        save_frame_data=as_package,
         all_labeled=all_labeled,
         suggested=suggested,
         progress_callback=update_progress if verbose else None,
@@ -1647,31 +1652,35 @@ class ExportDatasetWithImages(AppCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
+        labels = params.get("labels", context.state["labels"])
         export_dataset_gui(
-            labels=context.state["labels"],
+            labels=labels,
             filename=params["filename"],
             all_labeled=cls.all_labeled,
             suggested=cls.suggested,
             verbose=params.get("verbose", True),
+            as_package=params.get("as_package", True),
         )
 
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
+    @classmethod
+    def ask(cls, context: CommandContext, params: dict) -> bool:
+        as_package = params.get("as_package", True)
+        filename = Path(context.state["filename"])
+        new_filename = (
+            filename.with_suffix(".pkg.slp")
+            if as_package
+            else filename.with_suffix(".slp")
+        )
+
         filters = [
             "SLEAP HDF5 dataset (*.slp *.h5)",
             "Compressed JSON dataset (*.json *.json.zip)",
         ]
 
-        dirname = os.path.dirname(context.state["filename"])
-        basename = os.path.basename(context.state["filename"])
-
-        new_basename = f"{os.path.splitext(basename)[0]}.pkg.slp"
-        new_filename = os.path.join(dirname, new_basename)
-
         filename, _ = FileDialog.save(
             context.app,
             caption="Save Labeled Frames As...",
-            dir=new_filename,
+            dir=str(new_filename),
             filter=";;".join(filters),
         )
         if len(filename) == 0:
@@ -1694,6 +1703,54 @@ class ExportTrainingPackage(ExportDatasetWithImages):
 class ExportFullPackage(ExportDatasetWithImages):
     all_labeled = True
     suggested = True
+
+
+class ExportLabelsSubset(ExportFullPackage):
+    """Export a subset of labels to a new file with either images or a trimmed video.
+
+    This command subclasses both `ExportFullPackage` and `ExportVideoClip` to provide
+    functionality for exporting a subset of labels to a new file with either images or
+    a trimmed video. It allows the user to specify the labels to export and the format
+    of the output file.
+
+    Note that methods from `ExportFullPackage` will override methods with the same name
+    in `ExportVideoClip`.
+    """
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        # Get subset of labels to export
+        labels: Labels = context.state["labels"]
+        video: Video = context.state["video"]
+        frames: Iterator[list] = context.state["frame_range"]
+        labels_subset: Labels = labels.extract(inds=(video, frames), copy=True)
+
+        # TODO: Replace video in labels subset with the one from context
+        ...
+
+        # Save the labels subset to a new file.
+        params["labels"] = labels_subset
+        params["as_package"] = params.get("as_package", False)
+        ExportFullPackage.do_action(context=context, params=params)
+
+        # Export the video clip using the parameters provided.
+        ExportVideoClip.do_action(context=context, params=params)
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: dict) -> bool:
+        # Ask for the labels subset to export.
+        if not ExportFullPackage.ask(context=context, params=params):
+            return False
+
+        # Ask for the video clip parameters.
+        if not ExportVideoClip.ask(context=context, params=params):
+            return False
+
+        # Set the video and frame range in the parameters.
+        params["video"] = context.state["video"]
+        params["frames"] = context.state["frame_range"]
+
+        return True
 
 
 # Navigation Commands
@@ -3702,231 +3759,3 @@ class OpenPrereleaseVersion(AppCommand):
         rls = context.app.release_checker.latest_prerelease
         if rls is not None:
             context.openWebsite(rls.url)
-
-class ExportClipVideo(AppCommand):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        """
-        Executes the export action for a video clip and its labels.
-
-        Args:
-            context (CommandContext): The application context containing the current state.
-            params (dict): Parameters for the export, including:
-                - 'filename' (str): The path to save the exported video.
-                - 'fps' (int): Frames per second for the exported video.
-                - 'open_when_done' (bool): Whether to open the video file after exporting.
-
-        Raises:
-            ValueError: If the frame range is invalid or no clip is selected.
-            RuntimeError: If there are issues with video writing or saving labels.
-        """
-        # Extract video and labels from context
-        video = context.state["video"]
-        labels = context.state["labels"]
-
-        # Ensure frame range is set; default to all frames if None
-        frame_range = context.state.get("frame_range", (0, video.frames))
-
-        # Validate frame range
-        if frame_range[0] < 0 or frame_range[1] > video.frames:
-            raise ValueError(f"Frame range {frame_range} is outside video bounds [0, {video.frames}]")
-
-        # Check if clip is selected, raise error if no clip selected
-        if frame_range == (0, 1) or frame_range[0] == frame_range[1]:
-            raise ValueError("No valid clip frame range selected! Please select a valid frame range using shift + click in the GUI.")
-
-        # Map frame indices to the actual labeled frame objects
-        frame_to_index = {lf.frame_idx: idx for idx, lf in enumerate(labels.labeled_frames) if lf.video == video}
-        valid_frame_indices = [frame for frame in range(*frame_range) if frame in frame_to_index]
-
-        if not valid_frame_indices:
-            raise ValueError("No valid labeled frames found in the selected frame range.")
-
-        # Extract only the selected frames into a new Labels object
-        pruned_labels = labels.extract(
-            inds=[frame_to_index[frame] for frame in valid_frame_indices],
-            copy=True  # Ensures a deep copy of the extracted labels
-        )
-
-        # Remap frame indices in pruned_labels to start from 0 while maintaining spacing
-        frame_offset = frame_range[0]
-        for labeled_frame in pruned_labels.labeled_frames:
-            labeled_frame.frame_idx -= frame_offset
-
-        # Initialize VideoWriter
-        height, width = video.height, video.width
-        fps = params["fps"]
-        writer = VideoWriter.safe_builder(params["filename"], height, width, fps)
-
-        # Conditionally show progress bar
-        show_progress = os.getenv("PYTEST_RUNNING") != "1"
-        if show_progress:
-            app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-            progress = QtWidgets.QProgressDialog("Exporting video...", "Cancel", 0, len(valid_frame_indices))
-            progress.setWindowModality(QtCore.Qt.WindowModal)
-            progress.setValue(0)
-        else:
-            progress = None  # Progress bar disabled during tests
-
-        # Write frames to the video
-        try:
-            for idx, frame_idx in enumerate(valid_frame_indices):
-                if show_progress and progress.wasCanceled():
-                    writer.close()
-                    os.remove(params["filename"])
-                    return
-
-                # Read and process frame
-                try:
-                    frame = video.get_frame(frame_idx)
-                    if frame.ndim == 2:  # Grayscale frames
-                        frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
-                    writer.add_frame(frame, bgr=True)
-                except Exception as e:
-                    writer.close()
-                    os.remove(params["filename"])
-                    raise RuntimeError(f"Failed to write frame {frame_idx}: {str(e)}")
-
-                # Update progress
-                if show_progress:
-                    progress.setValue(idx + 1)
-                    QtWidgets.QApplication.processEvents()
-
-        finally:
-            writer.close()
-            if show_progress:
-                progress.setValue(len(valid_frame_indices))  # Complete progress
-
-        # Create a new Video object for the output video
-        new_media_video = MediaVideo(
-            filename=params["filename"], grayscale=video.channels == 1, bgr=True
-        )
-        new_video = Video(backend=new_media_video)
-
-        # Update pruned labels to point to the new video
-        for labeled_frame in pruned_labels.labeled_frames:
-            labeled_frame.video = new_video
-
-        pruned_labels.videos = [new_video]
-
-        # Save the pruned labels
-        labels_filename = params["filename"].replace(".mp4", ".slp")
-        try:
-            pruned_labels.save(labels_filename)
-        except Exception as e:
-            raise RuntimeError(f"Failed to save labels to {labels_filename}: {str(e)}")
-
-        # Open the video file when done, if specified
-        if params.get("open_when_done", False):
-            open_file(params["filename"])
-
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
-        """
-        Asks the user for export parameters via a custom dialog.
-
-        Args:
-            context: Command context, providing state and application access.
-            params: A dictionary to populate with user-defined options.
-
-        Returns:
-            bool: True if the user confirmed the action, False if canceled.
-        """
-        # Extract FPS from video metadata (fallback to 30 if unavailable)
-        video_fps = getattr(context.state["video"], "fps", 30)
-
-        # Initialize and show the export dialog
-        dialog = ExportClipAndLabelsDialog(video_fps=video_fps)
-        if dialog.exec_() != QtWidgets.QDialog.Accepted:
-            return False  # User canceled
-
-        # Get user input from dialog
-        export_options = dialog.get_results()
-
-        # Prompt user to select output file
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            None, "Save Clip As...", "", "Video (*.mp4 *.avi)"
-        )
-        if not filename:
-            return False  # User canceled file selection
-
-        # Populate export parameters
-        params["filename"] = filename
-        params["fps"] = export_options["fps"]
-        params["open_when_done"] = export_options["open_when_done"]
-
-        # Access frame range
-        if context.state.get("frame_range"):
-            params["frames"] = range(*context.state["frame_range"])
-        else:
-            params["frames"] = range(context.state["video"].frames)
-
-        return True
-
-
-class ExportClipPkg(AppCommand):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        """
-        Exports a pruned labels package based on selected frame range.
-
-        Args:
-            context (CommandContext): Contains state information like video and labels.
-            params (dict): Parameters including filename, fps, and open_when_done.
-        """
-        # Extract video and labels from context
-        video = context.state["video"]
-        labels = context.state["labels"]
-
-        # Ensure frame range is set; default to all frames if None
-        frame_range = context.state.get("frame_range", (0, video.frames))
-
-        # Check if clip is selected, raise error if no clip selected
-        if frame_range == (0, 1) or frame_range[0] == frame_range[1]:
-            raise ValueError("No valid clip frame range selected! Please select a valid frame range using shift + click in the GUI.")
-
-        # Map frame indices to the actual labeled frame objects
-        frame_to_index = {lf.frame_idx: idx for idx, lf in enumerate(labels.labeled_frames) if lf.video == video}
-        valid_frame_indices = [frame for frame in range(*frame_range) if frame in frame_to_index]
-
-        if not valid_frame_indices:
-            raise ValueError("No valid labeled frames found in the selected frame range.")
-
-        # Extract only the selected frames into a new Labels object
-        pruned_labels = labels.extract(
-            inds=[frame_to_index[frame] for frame in valid_frame_indices],
-            copy=True  # Ensures a deep copy of the extracted labels
-        )
-
-        # Remap frame indices in pruned_labels to start from 0
-        for labeled_frame in pruned_labels.labeled_frames:
-            labeled_frame.frame_idx -= frame_range[0]
-
-        try:
-            pkg_filename = params["filename"]
-            pruned_labels.save(pkg_filename, with_images=True)
-        except Exception as e:
-            raise RuntimeError(f"Failed to save labels pkg to {pkg_filename}.")
-
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
-        """
-        Asks the user for export parameters via a custom dialog.
-
-        Args:
-            context: Command context, providing state and application access.
-            params: A dictionary to populate with user-defined options.
-
-        Returns:
-            bool: True if the user confirmed the action, False if canceled.
-        """
-
-        # Prompt user to select output file
-        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
-            None, "Save Clip Package As...", "", "Label Package (*.pkg.slp)"
-        )
-        if not filename:
-            return False  # User canceled file selection
-         # Update the params dictionary with the selected filename
-        params["filename"] = filename
-        return True
