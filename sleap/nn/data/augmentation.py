@@ -188,8 +188,8 @@ class AlbumentationsAugmenter:
             )
         if config.brightness:
             aug_stack.append(
-                A.RandomBrightness(
-                    limit=(config.brightness_min_val, config.brightness_max_val), p=1.0
+                A.RandomBrightnessContrast(
+                    brightness_limit=(config.brightness_min_val, config.brightness_max_val), p=1.0
                 )
             )
 
@@ -232,6 +232,11 @@ class AlbumentationsAugmenter:
             """Local processing function that will not be autographed."""
             # Convert to numpy arrays.
             img = image.numpy()
+
+            # Convert to float32 if not already.
+            if img.dtype not in [np.uint8, np.float32]:
+              img = img.astype(np.float32)
+
             kps = instances.numpy()
             original_shape = kps.shape
             kps = kps.reshape(-1, 2)
