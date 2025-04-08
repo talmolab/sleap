@@ -41,12 +41,6 @@ from threading import Thread
 from time import time
 from typing import Dict, Iterator, List, Optional, Text, Tuple, Union
 
-if sys.version_info >= (3, 8):
-    from functools import cached_property
-
-else:  # cached_property is defined only for python >=3.8
-    cached_property = property
-
 import attr
 import numpy as np
 import pandas as pd
@@ -161,7 +155,7 @@ class Predictor(ABC):
     report_rate: float = attr.ib(default=2.0, kw_only=True)
     model_paths: List[str] = attr.ib(factory=list, kw_only=True)
 
-    @cached_property
+    @property
     def report_period(self) -> float:
         """Time between progress reports in seconds."""
         if self.report_rate <= 0:
