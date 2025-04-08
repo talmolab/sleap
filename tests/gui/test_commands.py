@@ -1058,13 +1058,18 @@ def test_ExportLabelsSubset(
     labels = centered_pair_predictions
     n_labels_original = len(labels.labeled_frames)
     video: Video = labels.videos[0]
-    video_extra = small_robot_mp4_vid
-    labels.add_video(video_extra)
 
     # Select subset of frames
     n_frames = video.frames
     lower_bound = int(n_frames / 4)
-    upper_bound = int(n_frames / 2)
+    upper_bound = int(n_frames / 4 + 2)
+
+    # Alter data.
+    labels.add_suggestion(video, lower_bound)  # Should be included.
+    labels.add_suggestion(video, 1)  # Should be excluded since outside video clip.
+    video_extra = small_robot_mp4_vid
+    labels.add_video(video_extra)  # Should be excluded since outside video clip.
+    labels.add_suggestion(video_extra, 0)  # Should be excluded since outside video clip
 
     # Path to save the exported labels
     name_to_export = "export_labels_subset.slp"
@@ -1127,17 +1132,22 @@ def test_ExportLabelsSubset(
     )
     assert min([lf.frame_idx for lf in labels_subset.labeled_frames]) >= 0
 
+    # Verify suggestions were pruned.
+    video_subset = labels_subset.videos[0]
+    assert len(labels_subset.suggestions) == 1
+    assert labels_subset.suggestions[0].video == video_subset
+
     # Verify the video file.
     assert Path(video_path_to_export).exists()
     assert Path(video_path_to_export).is_file()
     assert Path(video_path_to_export).name == video_name_to_export
-    video_subset = labels_subset.videos[0]
     assert video_subset.filename == video_path_to_export
     assert video_subset.frames == n_frames_expected
 
     # Do not mutate original labels.
     assert len(labels.labeled_frames) == n_labels_original
     assert len(labels.videos) == 2
+    assert len(labels.suggestions) == 3
 
     # Case 2: Export labels as pkg.slp
     context.exportClipPkg()
@@ -1146,7 +1156,7 @@ def test_ExportLabelsSubset(
     path_to_export = Path(path_to_export.with_suffix(".pkg.slp"))
     assert path_to_export.exists()
     assert path_to_export.is_file()
-    labels_subset = Labels.load_file(path_to_export.as_posix())
+    labels_subset: Labels = Labels.load_file(path_to_export.as_posix())
     # Should only contain video from selected clip.
     assert len(labels_subset.videos) == 1
     n_frames_expected = upper_bound - lower_bound
@@ -1155,11 +1165,16 @@ def test_ExportLabelsSubset(
     assert max([lf.frame_idx for lf in labels_subset.labeled_frames]) < upper_bound
     assert min([lf.frame_idx for lf in labels_subset.labeled_frames]) >= lower_bound
 
-    # Videos in package reference pkg.slp. filename.
+    # Verify suggestions were pruned.
     video_subset = labels_subset.videos[0]
+    assert len(labels_subset.suggestions) == 1
+    assert labels_subset.suggestions[0].video == video_subset
+
+    # Videos in package reference pkg.slp. filename.
     assert video_subset.filename == path_to_export.as_posix()
-    assert video_subset.frames == n_frames_expected
+    assert video_subset.frames <= n_frames_expected + len(labels_subset.suggestions)
 
     # Do not mutate original labels.
     assert len(labels.labeled_frames) == n_labels_original
     assert len(labels.videos) == 2
+    assert len(labels.suggestions) == 3
