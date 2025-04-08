@@ -778,6 +778,7 @@ class Labels(MutableSequence):
 
     def extract(self, inds, copy: bool = False) -> "Labels":
         """Extract labeled frames from indices and return a new `Labels` object.
+
         Args:
             inds: Any valid indexing keys, e.g., a range, slice, list of label indices,
                 numpy array, `Video`, etc. See `__getitem__` for full list.
@@ -785,6 +786,7 @@ class Labels(MutableSequence):
                 and associated labels. If `False` (the default), a shallow copy with
                 references to the original labeled frames and other objects will be
                 returned.
+
         Returns:
             A new `Labels` object with the specified labeled frames.
             This will preserve the other data structures even if they are not found in
@@ -795,6 +797,7 @@ class Labels(MutableSequence):
                 - `Labels.suggestions`
                 - `Labels.provenance`
         """
+        # TODO: Also get subset of suggestions, tracks, and videos.
         lfs = self.__getitem__(inds)
         new_labels = type(self)(
             labeled_frames=lfs,
