@@ -8,6 +8,7 @@ use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.data import providers
 from sleap.nn.data import augmentation
+from sleap.nn.data.pipelines import Pipeline
 
 
 @pytest.fixture
@@ -133,7 +134,7 @@ def test_augmentation_with_no_instances(min_labels):
         )
     )
 
-    p = min_labels.to_pipeline(user_labeled_only=False)
+    p: Pipeline = Pipeline.from_data(min_labels, user_labeled_only=False)
     p += augmentation.AlbumentationsAugmenter.from_config(
         augmentation.AugmentationConfig(rotate=True)
     )
@@ -246,7 +247,7 @@ def test_random_flipper():
         ]
     )
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
         skel, horizontal=True, probability=1.0
     )
@@ -262,7 +263,7 @@ def test_random_flipper():
 
     skel.add_symmetry("BL", "BR")
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
         skel, horizontal=True, probability=1.0
     )
@@ -276,7 +277,7 @@ def test_random_flipper():
         ],
     )
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
         skel, horizontal=True, probability=0.0
     )
@@ -287,7 +288,7 @@ def test_random_flipper():
         [[[25, 50], [50, 25], [25, 25]], [[125, 150], [150, 125], [125, 125]]],
     )
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
         skel, horizontal=False, probability=1.0
     )

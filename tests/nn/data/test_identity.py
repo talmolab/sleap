@@ -8,6 +8,7 @@ from sleap.nn.data.identity import (
     ClassVectorGenerator,
     ClassMapGenerator,
 )
+from sleap.nn.data.pipelines import Pipeline
 
 
 # sleap.use_cpu_only()
@@ -33,7 +34,7 @@ def test_class_vector_generator(min_tracks_2node_labels):
 
     gen = ClassVectorGenerator()
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     ds = p.make_dataset()
     ds = gen.transform_dataset(ds)
     ex = next(iter(ds))
@@ -41,7 +42,7 @@ def test_class_vector_generator(min_tracks_2node_labels):
     np.testing.assert_array_equal(ex["class_vectors"], [[0, 1], [1, 0]])
     assert ex["class_vectors"].dtype == tf.float32
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += gen
     p += sleap.pipelines.InstanceCentroidFinder()
     p += sleap.pipelines.InstanceCropper(32, 32)
@@ -58,7 +59,7 @@ def test_class_map_generator(min_tracks_2node_labels):
         sigma=4.0, output_stride=4, centroids=False, class_map_threshold=0.2
     )
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     ds = p.make_dataset()
     ds = gen.transform_dataset(ds)
     ex = next(iter(ds))
@@ -80,7 +81,7 @@ def test_class_map_generator(min_tracks_2node_labels):
         sigma=4.0, output_stride=4, centroids=True, class_map_threshold=0.2
     )
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += sleap.nn.data.instance_centroids.InstanceCentroidFinder(
         center_on_anchor_part=True,
         anchor_part_names="thorax",
