@@ -51,18 +51,17 @@ from sleap.gui.dialogs.importvideos import ImportVideos
 from sleap.gui.dialogs.merge import MergeDialog, ReplaceSkeletonTableDialog
 from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
-from sleap.gui.dialogs.export_clip import ExportClipDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
-from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.io.video import Video, MediaVideo
-from sleap.io.videowriter import VideoWriter, write_video
+from sleap.io.video import Video
+from sleap.io.videowriter import write_video
 from sleap.io.visuals import save_labeled_video
 from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
@@ -1709,75 +1708,6 @@ class ExportLabelsSubset(ExportFullPackage):
     """
 
     @classmethod
-    def do_action(cls, context: CommandContext, params: dict):
-        as_package = params.get("as_package", False)
-
-        video: Video = context.state["video"]
-        n_frames = video.frames
-        frames: range = params["frames"]
-        start_frame_idx = frames[0]  # 0-indexed
-        end_frame_idx = frames[-1]
-
-        # If the user selected the entire video, then do not create a new video.
-        video_subset = None
-        if (end_frame_idx < n_frames - 1) and not as_package:
-            # Export the video clip using the parameters provided.
-            ExportVideoClip.do_action(context=context, params=params)
-            video_subset_filename = params["video_filename"]
-            video_subset = Video.from_filename(filename=video_subset_filename)
-
-        # Get subset of labels to export
-        labels: Labels = context.state["labels"]
-        labels_subset_unshifted: Labels = labels.extract(
-            inds=(video, frames), copy=True
-        )
-
-        # Update the video and frame indices of the labels.
-        lfs_subset = labels_subset_unshifted.labeled_frames if as_package else []
-        video_subset = video_subset or video
-        for lf in labels_subset_unshifted.labeled_frames:
-            # Use the new video for the subset (need to do this even if video is same,
-            # otherwise, fails in Labels __init__ when updating cache).
-            lf.video = video_subset
-
-            if not as_package:
-                # Shift the frame index to match the new video
-                lf.frame_idx -= start_frame_idx
-
-                # Add the labeled frame to the subset
-                lfs_subset.append(lf)
-
-        # Also need to update anything that references the video or frame index.
-        suggestions = []
-        for suggestion in labels_subset_unshifted.suggestions:
-            suggestion.video = video_subset
-
-            # Shift the frame index to match the new video
-            if not as_package:
-                suggestion.frame_idx -= start_frame_idx
-                if suggestion.frame_idx >= 0:  # Suggestions are 0-indexed
-                    suggestions.append(suggestion)
-            elif (
-                suggestion.frame_idx >= start_frame_idx
-                and suggestion.frame_idx < end_frame_idx
-            ):
-                suggestions.append(suggestion)
-
-        labels_subset = Labels(
-            labeled_frames=lfs_subset,
-            videos=[video_subset],
-            skeletons=labels_subset_unshifted.skeletons,
-            tracks=labels_subset_unshifted.tracks,
-            suggestions=suggestions,
-            provenance=labels_subset_unshifted.provenance,
-        )
-
-        # Save the labels subset to a new file.
-        params["labels"] = labels_subset
-        params["as_package"] = as_package
-        super().do_action(context=context, params=params)
-
-    @classmethod
     def ask(cls, context: CommandContext, params: dict) -> bool:
         # Ask for the labels subset to export.
         if not super().ask(context=context, params=params):
@@ -1791,6 +1721,173 @@ class ExportLabelsSubset(ExportFullPackage):
             return False
 
         return True
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        # Get the video subset for the export.
+        video_subset = cls.get_video_subset(context=context, params=params)
+
+        # Get the (unshifted) labels subset for the export.
+        labels_subset_unshifted: Labels = cls.get_labels_subset_unshifted(
+            context=context, params=params
+        )
+
+        # Get the shifted and updated labels frames subset for the export.
+        lfs_subset = cls.get_lfs_subset(
+            labels_subset_unshifted=labels_subset_unshifted,
+            video_subset=video_subset,
+            params=params,
+        )
+
+        # Also need to update anything that references the video or frame index.
+        suggestions_subset = cls.get_suggestions_subset(
+            labels_subset_unshifted=labels_subset_unshifted,
+            video_subset=video_subset,
+            params=params,
+        )
+
+        # Create the labels subset for the export.
+        labels_subset = Labels(
+            labeled_frames=lfs_subset,
+            videos=[video_subset],
+            skeletons=labels_subset_unshifted.skeletons,
+            tracks=labels_subset_unshifted.tracks,
+            suggestions=suggestions_subset,
+            provenance=labels_subset_unshifted.provenance,
+        )
+
+        # Save the labels subset to a new file.
+        params["labels"] = labels_subset
+        super().do_action(context=context, params=params)
+
+    @classmethod
+    def get_video_subset(cls, context: CommandContext, params: dict) -> Video:
+        """Get the video subset for the export.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+
+        Returns:
+            Video: The video subset for the export.
+        """
+        # Get variables from params and context.
+        as_package = params.get("as_package", False)
+        frames = params["frames"]
+        end_frame_idx = frames[-1]  # 0-indexed
+        video: Video = context.state["video"]
+        n_frames = video.frames
+
+        # Initialize video subset.
+        video_subset = video
+
+        # If the user selected the entire video, then do not create a new video.
+        if (end_frame_idx < n_frames - 1) and not as_package:
+            # Export the video clip using the parameters provided.
+            ExportVideoClip.do_action(context=context, params=params)
+            video_subset_filename = params["video_filename"]
+            video_subset = Video.from_filename(filename=video_subset_filename)
+
+        return video_subset
+
+    @classmethod
+    def get_labels_subset_unshifted(
+        cls, context: CommandContext, params: dict
+    ) -> Labels:
+        """Get the labels subset for the export.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+
+        Returns:
+            Labels: The labels subset for the export.
+        """
+        # Get variables from params.
+        video: Video = context.state["video"]
+        frames: range = params["frames"]
+
+        # Get subset of labels to export
+        labels: Labels = context.state["labels"]
+        labels_subset_unshifted: Labels = labels.extract(
+            inds=(video, frames), copy=True
+        )
+        return labels_subset_unshifted
+
+    @classmethod
+    def get_lfs_subset(
+        cls, labels_subset_unshifted: Labels, video_subset: Video, params: dict
+    ) -> list[LabeledFrame]:
+        """Get the labeled frames subset for the export.
+
+        Args:
+            labels_subset_unshifted: The labels subset to export.
+            video_subset: The video subset to export.
+            params: The parameters for the export.
+
+        Returns:
+            list[LabeledFrame]: The labeled frames subset for the export.
+        """
+        # Get variables from params.
+        as_package = params.get("as_package", False)
+        frames: range = params["frames"]
+        start_frame_idx = frames[0]  # 0-indexed
+
+        # Update the video and frame indices of the labels.
+        lfs_subset = labels_subset_unshifted.labeled_frames if as_package else []
+        for lf in labels_subset_unshifted.labeled_frames:
+            # Use the new video for the subset (need to do this even if video is same,
+            # otherwise, fails in Labels __init__ when updating cache).
+            lf.video = video_subset
+
+            if not as_package:
+                # Shift the frame index to match the new video
+                lf.frame_idx -= start_frame_idx
+
+                # Add the labeled frame to the subset
+                lfs_subset.append(lf)
+
+        return lfs_subset
+
+    @classmethod
+    def get_suggestions_subset(
+        cls,
+        labels_subset_unshifted: Labels,
+        video_subset: Video,
+        params: dict,
+    ) -> list[SuggestionFrame]:
+        """Get the suggestions subset for the labels.
+
+        Args:
+            labels_subset_unshifted: The labels subset to export.
+            video_subset: The video subset to export.
+
+        Returns:
+            list[SuggestionFrame]: The suggestions subset for the labels.
+        """
+        # Get variables from params.
+        as_package = params.get("as_package", False)
+        frames = params["frames"]
+        start_frame_idx = frames[0]  # 0-indexed
+        end_frame_idx = frames[-1]
+
+        # Get the suggestions subset for the labels.
+        suggestions_subset = []
+        for suggestion in labels_subset_unshifted.suggestions:
+            suggestion.video = video_subset
+
+            # Shift the frame index to match the new video
+            if not as_package:
+                suggestion.frame_idx -= start_frame_idx
+                if suggestion.frame_idx >= 0:  # Suggestions are 0-indexed
+                    suggestions_subset.append(suggestion)
+            elif (
+                suggestion.frame_idx >= start_frame_idx
+                and suggestion.frame_idx < end_frame_idx
+            ):
+                suggestions_subset.append(suggestion)
+
+        return suggestions_subset
 
 
 # Navigation Commands
