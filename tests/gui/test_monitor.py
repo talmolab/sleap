@@ -2,6 +2,15 @@ from sleap.gui.widgets.monitor import LossViewer
 from sleap import TrainingJobConfig
 
 
+def test_monitor_reset(qtbot, min_centroid_model_path):
+    win = LossViewer()
+    win.show()
+
+    # Ensure win loads config correctly
+    win.reset(what="Model Type")
+    assert isinstance(win.config, TrainingJobConfig)
+
+
 def test_monitor_release(qtbot, min_centroid_model_path):
     win = LossViewer()
     win.show()
