@@ -637,13 +637,17 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
-    def exportClipVideo(self):
+    def exportClipVideo(self, open_new_project: bool = True):
         """Exports a selected range of video frames and their corresponding labels."""
-        self.execute(ExportLabelsSubset, as_package=False)
+        self.execute(
+            ExportLabelsSubset, as_package=False, open_new_project=open_new_project
+        )
 
-    def exportClipPkg(self):
+    def exportClipPkg(self, open_new_project: bool = True):
         """Exports a selected range of video frames and their corresponding labels."""
-        self.execute(ExportLabelsSubset, as_package=True)
+        self.execute(
+            ExportLabelsSubset, as_package=True, open_new_project=open_new_project
+        )
 
 
 # File Commands
@@ -1759,6 +1763,10 @@ class ExportLabelsSubset(ExportFullPackage):
         # Save the labels subset to a new file.
         params["labels"] = labels_subset
         super().do_action(context=context, params=params)
+
+        # Now let's open the new file.
+        if params.get("open_new_project", False):
+            OpenProject.do_action(context=context, params=params)
 
     @classmethod
     def get_video_subset(cls, context: CommandContext, params: dict) -> Video:
