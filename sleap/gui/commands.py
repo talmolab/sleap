@@ -1892,15 +1892,14 @@ class ExportLabelsSubset(ExportFullPackage):
         for suggestion in labels_subset_unshifted.suggestions:
             suggestion.video = video_subset
 
-            # Shift the frame index to match the new video
-            if not as_package:
-                suggestion.frame_idx -= start_frame_idx
-                if suggestion.frame_idx >= 0:  # Suggestions are 0-indexed
-                    suggestions_subset.append(suggestion)
-            elif (
+            if (
                 suggestion.frame_idx >= start_frame_idx
                 and suggestion.frame_idx < end_frame_idx
             ):
+                # Shift the frame index to match the new video if not a package.
+                if not as_package:
+                    suggestion.frame_idx -= start_frame_idx
+
                 suggestions_subset.append(suggestion)
 
         return suggestions_subset
