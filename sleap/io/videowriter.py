@@ -14,7 +14,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import math
 from time import perf_counter
-from typing import Literal
 from queue import Queue
 from threading import Thread
 
@@ -167,9 +166,7 @@ def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
     return np.stack([resize_image(img, scale) for img in images])
 
 
-def augment_background(
-    images: np.ndarray, background: Literal["original", "black", "white", "grey"] | None
-) -> np.ndarray:
+def augment_background(images: np.ndarray, background: str | None) -> np.ndarray:
     """Augment the background of the video frame images.
 
     Args:
@@ -204,7 +201,7 @@ def reader(
     video: Video,
     frames: list[int],
     scale: float = 1.0,
-    background: Literal["original", "black", "white", "grey"] | None = None,
+    background: str | None = None,
 ):
     """Read frame images from video and send them into queue.
 
@@ -439,7 +436,7 @@ def write_video(
     frames: list[int],
     fps: int = 15,
     scale: float = 1.0,
-    background: Literal["original", "black", "white", "grey"] | None = None,
+    background: str | None = None,
     gui_progress: bool = False,
     in_queue: Queue[tuple[list[int], np.ndarray]] | None = None,
     out_queue: Queue[np.ndarray] | None = None,
