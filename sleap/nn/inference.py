@@ -1632,8 +1632,7 @@ class SingleInstancePredictor(Predictor):
             object_builder.join()
 
         print(
-            f"Finished building {len(predicted_frames):,} predicted frames.",
-            flush=True
+            f"Finished building {len(predicted_frames):,} predicted frames.", flush=True
         )
 
         return predicted_frames
@@ -2743,17 +2742,14 @@ class TopDownPredictor(Predictor):
             object_builder.join()
 
         print(
-            f"Finished building {len(predicted_frames):,} predicted frames.",
-            flush=True
+            f"Finished building {len(predicted_frames):,} predicted frames.", flush=True
         )
 
         if self.tracker:
             t0 = time()
             print("Starting final pass of the tracker...", flush=True)
             self.tracker.final_pass(predicted_frames)
-            print(
-                f"Finished final pass of the tracker in {time() - t0:.2f} seconds."
-            )
+            print(f"Finished final pass of the tracker in {time() - t0:.2f} seconds.")
 
         return predicted_frames
 
@@ -3413,17 +3409,14 @@ class BottomUpPredictor(Predictor):
             object_builder.join()
 
         print(
-            f"Finished building {len(predicted_frames):,} predicted frames.",
-            flush=True
+            f"Finished building {len(predicted_frames):,} predicted frames.", flush=True
         )
 
         if self.tracker:
             t0 = time()
             print("Starting final pass of the tracker...", flush=True)
             self.tracker.final_pass(predicted_frames)
-            print(
-                f"Finished final pass of the tracker in {time() - t0:.2f} seconds."
-            )
+            print(f"Finished final pass of the tracker in {time() - t0:.2f} seconds.")
 
         return predicted_frames
 
@@ -3955,8 +3948,7 @@ class BottomUpMultiClassPredictor(Predictor):
             object_builder.join()
 
         print(
-            f"Finished building {len(predicted_frames):,} predicted frames.",
-            flush=True
+            f"Finished building {len(predicted_frames):,} predicted frames.", flush=True
         )
 
         return predicted_frames
@@ -4693,8 +4685,7 @@ class TopDownMultiClassPredictor(Predictor):
             object_builder.join()
 
         print(
-            f"Finished building {len(predicted_frames):,} predicted frames.",
-            flush=True
+            f"Finished building {len(predicted_frames):,} predicted frames.", flush=True
         )
 
         return predicted_frames
@@ -5001,8 +4992,7 @@ class MoveNetPredictor(Predictor):
             object_builder.join()
 
         print(
-            f"Finished building {len(predicted_frames):,} predicted frames.",
-            flush=True
+            f"Finished building {len(predicted_frames):,} predicted frames.", flush=True
         )
 
         return predicted_frames
