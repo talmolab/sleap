@@ -239,13 +239,12 @@ class NixAdaptor(Adaptor):
                         positions[index, :, node_map[m]] = np.array([np.nan, np.nan])
 
                     centroids[index, :] = inst.centroid
+                    trackscore[index] = inst.tracking_score
                     if hasattr(inst, "score"):
                         instscore[index] = inst.score
-                        trackscore[index] = inst.tracking_score
                         pointscore[index, :] = inst.scores
                     else:
                         instscore[index] = 0.0
-                        trackscore[index] = 0.0
                         pointscore[index, :] = dflt_pointscore
 
                 frameid_array[start:end] = indices[: end - start]

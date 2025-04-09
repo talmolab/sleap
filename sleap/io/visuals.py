@@ -2,173 +2,26 @@
 Module for generating videos with visual annotation overlays.
 """
 
-from sleap.io.video import Video
-from sleap.io.videowriter import VideoWriter
-from sleap.io.dataset import Labels
-from sleap.gui.color import ColorManager
-from sleap.util import usable_cpu_count
+from __future__ import annotations
 
-import cv2
+import logging
 import os
-import numpy as np
-import math
 from collections import deque
+from queue import Queue
+from threading import Thread
 from time import perf_counter
 from typing import List, Optional, Tuple
 
-from queue import Queue
-from threading import Thread
+import cv2
+import numpy as np
 
-import logging
+from sleap.gui.color import ColorManager
+from sleap.io.dataset import Labels
+from sleap.io.video import Video
+from sleap.io.videowriter import _sentinel, write_video
+from sleap.util import usable_cpu_count
 
 logger = logging.getLogger(__name__)
-
-# Object that signals shutdown
-_sentinel = object()
-
-
-def reader(
-    out_q: Queue,
-    video: Video,
-    frames: List[int],
-    scale: float = 1.0,
-    background: str = "original",
-):
-    """Read frame images from video and send them into queue.
-
-    Args:
-        out_q: Queue to send (list of frame indexes, ndarray of frame images)
-            for chunks of video.
-        video: The `Video` object to read.
-        frames: Full list frame indexes we want to read.
-        scale: Output scale for frame images.
-        background: output video background. Either original, black, white, grey
-
-    Returns:
-        None.
-    """
-
-    background = background.lower()
-    cv2.setNumThreads(usable_cpu_count())
-
-    total_count = len(frames)
-    chunk_size = 64
-    chunk_count = math.ceil(total_count / chunk_size)
-
-    logger.info(f"Chunks: {chunk_count}, chunk size: {chunk_size}")
-
-    try:
-        i = 0
-        for chunk_i in range(chunk_count):
-
-            # Read the next chunk of frames
-            frame_start = chunk_size * chunk_i
-            frame_end = min(frame_start + chunk_size, total_count)
-            frames_idx_chunk = frames[frame_start:frame_end]
-
-            t0 = perf_counter()
-
-            # Safely load frames from video, skipping frames we can't load
-            loaded_chunk_idxs, video_frame_images = video.get_frames_safely(
-                frames_idx_chunk
-            )
-            if background != "original":
-                # fill the frame with the color
-                fill_values = {"black": 0, "grey": 127, "white": 255}
-                try:
-                    fill = fill_values[background]
-                except KeyError:
-                    raise ValueError(
-                        f"Invalid background color: {background}. Options include: {', '.join(fill_values.keys())}"
-                    )
-                video_frame_images = video_frame_images * 0 + fill
-
-            if not loaded_chunk_idxs:
-                print(f"No frames could be loaded from chunk {chunk_i}")
-                i += 1
-                continue
-
-            if scale != 1.0:
-                video_frame_images = resize_images(video_frame_images, scale)
-
-            elapsed = perf_counter() - t0
-            fps = len(loaded_chunk_idxs) / elapsed
-            logger.debug(f"reading chunk {i} in {elapsed} s = {fps} fps")
-            i += 1
-
-            out_q.put((loaded_chunk_idxs, video_frame_images))
-    except Exception as e:
-        raise e
-    finally:
-        # send _sentinal object into queue to signal that we're done
-        out_q.put(_sentinel)
-
-
-def writer(
-    in_q: Queue,
-    progress_queue: Queue,
-    filename: str,
-    fps: float,
-):
-    """Write annotated images to video.
-
-    Image size is determined by the first image received in queue.
-
-    Args:
-        in_q: Queue with annotated images as (images, h, w, channels) ndarray
-        progress_queue: Queue to send progress as
-            (total frames written: int, elapsed time: float).
-            Send (-1, elapsed time) when done.
-        filename: full path to output video
-        fps: frames per second for output video
-
-    Returns:
-        None.
-    """
-
-    cv2.setNumThreads(usable_cpu_count())
-
-    writer_object = None
-    total_elapsed = 0
-    total_frames_written = 0
-    start_time = perf_counter()
-    i = 0
-    try:
-        while True:
-            data = in_q.get()
-
-            if data is _sentinel:
-                # no more data to be received so stop
-                in_q.put(_sentinel)
-                break
-
-            if writer_object is None and data:
-                h, w = data[0].shape[:2]
-                writer_object = VideoWriter.safe_builder(
-                    filename, height=h, width=w, fps=fps
-                )
-
-            t0 = perf_counter()
-            for img in data:
-                writer_object.add_frame(img, bgr=True)
-
-            elapsed = perf_counter() - t0
-            fps = len(data) / elapsed
-            logger.debug(f"writing chunk {i} in {elapsed} s = {fps} fps")
-            i += 1
-
-            total_frames_written += len(data)
-            total_elapsed = perf_counter() - start_time
-            progress_queue.put((total_frames_written, total_elapsed))
-    except Exception as e:
-        # Stop receiving data
-        in_q.put(_sentinel)
-        raise e
-    finally:
-        if writer_object is not None:
-            writer_object.close()
-        # Send (-1, time) to signal done
-        progress_queue.put((-1, total_elapsed))
 
 
 class VideoMarkerThread(Thread):
@@ -456,7 +309,7 @@ class VideoMarkerThread(Thread):
                 )
 
         if self.show_edges:
-            for (src, dst) in instance.skeleton.edge_inds:
+            for src, dst in instance.skeleton.edge_inds:
                 # Get points for the nodes connected by this edge
                 src_x, src_y = points_array[src]
                 dst_x, dst_y = points_array[dst]
@@ -511,15 +364,15 @@ def save_labeled_video(
     filename: str,
     labels: Labels,
     video: Video,
-    frames: List[int],
+    frames: list[int],
     fps: int = 15,
     scale: float = 1.0,
-    crop_size_xy: Optional[Tuple[int, int]] = None,
+    crop_size_xy: tuple[int, int] | None = None,
     background: str = "original",
     show_edges: bool = True,
     edge_is_wedge: bool = False,
     marker_size: int = 4,
-    color_manager: Optional[ColorManager] = None,
+    color_manager: ColorManager | None = None,
     palette: str = "standard",
     distinctly_color: str = "instances",
     gui_progress: bool = False,
@@ -549,15 +402,9 @@ def save_labeled_video(
     Returns:
         None.
     """
-    print(f"Writing video with {len(frames)} frame images...")
-
-    t0 = perf_counter()
-
+    # Create marker thread and queues.
     q1 = Queue(maxsize=10)
     q2 = Queue(maxsize=10)
-    progress_queue = Queue()
-
-    thread_read = Thread(target=reader, args=(q1, video, frames, scale, background))
     thread_mark = VideoMarkerThread(
         in_q=q1,
         out_q=q2,
@@ -572,45 +419,21 @@ def save_labeled_video(
         palette=palette,
         distinctly_color=distinctly_color,
     )
-    thread_write = Thread(
-        target=writer,
-        args=(q2, progress_queue, filename, fps),
+
+    # Pass marker thread in as intrmediate thread to write_video (and write video).
+    intermediate_threads = [thread_mark]
+    write_video(
+        filename=filename,
+        video=video,
+        frames=frames,
+        fps=fps,
+        scale=scale,
+        background=background,
+        gui_progress=gui_progress,
+        in_queue=q1,
+        out_queue=q2,
+        intermediate_threads=intermediate_threads,
     )
-
-    thread_read.start()
-    thread_mark.start()
-    thread_write.start()
-
-    progress_win = None
-    if gui_progress:
-        from qtpy import QtWidgets, QtCore
-
-        progress_win = QtWidgets.QProgressDialog(
-            f"Generating video with {len(frames)} frames...", "Cancel", 0, len(frames)
-        )
-        progress_win.setMinimumWidth(300)
-        progress_win.setWindowModality(QtCore.Qt.WindowModal)
-
-    while True:
-        frames_complete, elapsed = progress_queue.get()
-        if frames_complete == -1:
-            break
-        if progress_win is not None and progress_win.wasCanceled():
-            break
-        fps = frames_complete / elapsed
-        remaining_frames = len(frames) - frames_complete
-        remaining_time = remaining_frames / fps
-
-        if gui_progress:
-            progress_win.setValue(frames_complete)
-        else:
-            print(
-                f"Finished {frames_complete} frames in {elapsed:.1f} s, fps = {round(fps)}, approx {remaining_time:.1f} s remaining"
-            )
-
-    elapsed = perf_counter() - t0
-    fps = len(frames) / elapsed
-    print(f"Done in {elapsed} s, fps = {fps}.")
 
 
 def has_nans(*vals):
@@ -628,28 +451,9 @@ def img_to_cv(img: np.ndarray) -> np.ndarray:
     return img
 
 
-def resize_image(img: np.ndarray, scale: float) -> np.ndarray:
-    """Resizes single image with shape (height, width, channels)."""
-    height, width, channels = img.shape
-    new_height, new_width = int(height // (1 / scale)), int(width // (1 / scale))
-
-    # Note that OpenCV takes shape as (width, height).
-
-    if channels == 1:
-        # opencv doesn't want a single channel to have its own dimension
-        img = cv2.resize(img[:, :], (new_width, new_height))[..., None]
-    else:
-        img = cv2.resize(img, (new_width, new_height))
-
-    return img
-
-
-def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
-    return np.stack([resize_image(img, scale) for img in images])
-
-
 def main(args: list = None):
     import argparse
+
     from sleap.util import frame_list
 
     parser = argparse.ArgumentParser()

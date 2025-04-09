@@ -5,21 +5,10 @@ import cv2
 from sleap.io.dataset import Labels
 from sleap.io.visuals import (
     save_labeled_video,
-    resize_images,
     VideoMarkerThread,
     main as sleap_render,
 )
-
-
-def test_resize(small_robot_mp4_vid):
-    imgs = small_robot_mp4_vid[:4]
-
-    resized_imgs = resize_images(imgs, 0.25)
-
-    assert resized_imgs.shape[0] == imgs.shape[0]
-    assert resized_imgs.shape[1] == imgs.shape[1] // 4
-    assert resized_imgs.shape[2] == imgs.shape[2] // 4
-    assert resized_imgs.shape[3] == imgs.shape[3]
+from sleap.io.videowriter import resize_images
 
 
 def test_serial_pipeline(centered_pair_predictions, tmpdir):

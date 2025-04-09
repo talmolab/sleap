@@ -3,13 +3,15 @@ Dialog for exporting clip; shows message depending on available encoder.
 """
 
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
+from qtpy import QtWidgets
 
 
 class ExportClipDialog(FormBuilderModalDialog):
-    def __init__(self):
+    def __init__(self, form_name=None):
         from sleap.io.videowriter import VideoWriter
 
-        super().__init__(form_name="labeled_clip_form")
+        form_name = form_name or "video_clip_form"
+        super().__init__(form_name=form_name)
 
         can_use_ffmpeg = VideoWriter.can_use_ffmpeg()
 
@@ -20,7 +22,7 @@ class ExportClipDialog(FormBuilderModalDialog):
             )
         else:
             message = (
-                "<i>Unable to use ffpmeg via imageio. "
+                "<i>Unable to use ffmpeg via imageio. "
                 "<b>AVI</b> file will be encoding using OpenCV.</i>"
             )
 

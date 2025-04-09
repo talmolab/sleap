@@ -1,7 +1,12 @@
 import os
 import cv2
 from pathlib import Path
-from sleap.io.videowriter import VideoWriter, VideoWriterOpenCV, VideoWriterImageio
+from sleap.io.videowriter import (
+    VideoWriter,
+    VideoWriterOpenCV,
+    VideoWriterImageio,
+    resize_images,
+)
 
 
 def test_video_writer(tmpdir, small_robot_mp4_vid):
@@ -99,3 +104,14 @@ def test_imageio_video_writer_odd_size(tmpdir, movenet_video):
     assert writer.filename == out_path
     assert writer.crf == 21
     assert writer.preset == "superfast"
+
+
+def test_resize(small_robot_mp4_vid):
+    imgs = small_robot_mp4_vid[:4]
+
+    resized_imgs = resize_images(imgs, 0.25)
+
+    assert resized_imgs.shape[0] == imgs.shape[0]
+    assert resized_imgs.shape[1] == imgs.shape[1] // 4
+    assert resized_imgs.shape[2] == imgs.shape[2] // 4
+    assert resized_imgs.shape[3] == imgs.shape[3]

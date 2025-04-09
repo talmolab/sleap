@@ -26,6 +26,8 @@ and "do" for all commands (this is important if we're going to implement undo)--
 for now it's at least easy to see where this separation is violated.
 """
 
+from __future__ import annotations
+
 import logging
 import operator
 import os
@@ -51,7 +53,7 @@ from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
-from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
@@ -59,8 +61,11 @@ from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.video import Video
+from sleap.io.videowriter import write_video
+from sleap.io.visuals import save_labeled_video
 from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
+
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -631,6 +636,19 @@ class CommandContext:
     def openPrereleaseVersion(self):
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
+
+    def exportLabelsSubset(
+        self, as_package: bool = False, open_new_project: bool = True
+    ):
+        """Exports a selected range of video frames and their corresponding labels.
+
+        Args:
+            as_package: Whether to export as a package.
+            open_new_project: Whether to open the exported labels in a new project GUI.
+        """
+        self.execute(
+            ExportLabelsSubset, as_package=as_package, open_new_project=open_new_project
+        )
 
 
 # File Commands
@@ -1284,36 +1302,98 @@ def open_file(filename: str):
         subprocess.call([opener, filename])
 
 
-class ExportLabeledClip(AppCommand):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        from sleap.io.visuals import save_labeled_video
+class ExportVideoClip(AppCommand):
+    """Base class for exporting video clips.
 
-        save_labeled_video(
-            filename=params["filename"],
-            labels=context.state["labels"],
+    The ask method provides all functionality to gather parameters from the export
+    dialog.
+    """
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: dict) -> bool:
+        """Ask the user for parameters to export a video clip.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+
+        Returns:
+            bool: True if the user provided valid parameters, False otherwise.
+        """
+        # Open export dialog.
+        export_options = cls.get_export_options(context, params)
+        if export_options is None:  # User hit cancel.
+            return False
+
+        # If we had a pop-up dialog, then we can also show GUI progress.
+        params["gui_progress"] = True
+
+        # Get video save parameters.
+        params = cls.get_video_save_params(params, export_options)
+
+        # Get frame range parameters.
+        params = cls.get_frame_range_params(context, params)
+
+        # Get video augmentation parameters.
+        params = cls.get_video_augmentation_params(context, params, export_options)
+
+        # Get video markup parameters.
+        params = cls.get_video_markup_params(context, params, export_options)
+
+        return True
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        """Export video clip using the parameters provided.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+        """
+        # Write the new video using the parameters provided.
+        cls.write_new_video(context, params)
+
+        # Open the file using default video playing app
+        if params["open_when_done"]:
+            open_file(params["video_filename"])
+
+    @classmethod
+    def write_new_video(
+        cls,
+        context: CommandContext,
+        params: dict,
+    ) -> None:
+        """Write a new video using the parameters provided.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+        """
+        write_video(
+            filename=params["video_filename"],
             video=context.state["video"],
             frames=list(params["frames"]),
             fps=params["fps"],
-            color_manager=params["color_manager"],
-            background=params["background"],
-            show_edges=params["show edges"],
-            edge_is_wedge=params["edge_is_wedge"],
-            marker_size=params["marker size"],
             scale=params["scale"],
-            crop_size_xy=params["crop"],
-            gui_progress=True,
+            background=params["background"],
+            gui_progress=params["gui_progress"],
         )
 
-        if params["open_when_done"]:
-            # Open the file using default video playing app
-            open_file(params["filename"])
+    @classmethod
+    def get_export_options(cls, context: CommandContext, params: dict) -> dict | None:
+        """Get export options from the user.
 
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+
+        Returns:
+            dict: The export options.
+        """
         from sleap.gui.dialogs.export_clip import ExportClipDialog
 
-        dialog = ExportClipDialog()
+        form_name = params.get("form_name", "video_clip_form")
+        dialog = ExportClipDialog(form_name=form_name)
 
         # Set default fps from video (if video has fps attribute)
         dialog.form_widget.set_form_data(
@@ -1330,12 +1410,14 @@ class ExportLabeledClip(AppCommand):
         # Use VideoWriter to determine default video type to use
         from sleap.io.videowriter import VideoWriter
 
+        default_out_basename = params.get("filename", context.state["filename"])
+
         # For OpenCV we default to avi since the bundled ffmpeg
         # makes mp4's that most programs can't open (VLC can).
-        default_out_filename = context.state["filename"] + ".avi"
+        default_out_filename = default_out_basename + ".avi"
 
         if VideoWriter.can_use_ffmpeg():
-            default_out_filename = context.state["filename"] + ".mp4"
+            default_out_filename = default_out_basename + ".mp4"
 
         # Ask where user wants to save video file
         filename, _ = FileDialog.save(
@@ -1347,26 +1429,109 @@ class ExportLabeledClip(AppCommand):
 
         # Check if user hit cancel
         if len(filename) == 0:
-            return False
+            return None
 
-        params["filename"] = filename
+        export_options["video_filename"] = filename
+        return export_options
+
+    @classmethod
+    def get_video_save_params(cls, params: dict, export_options: dict) -> dict:
+        """Get video save parameters.
+
+        Args:
+            params: The parameters for the export.
+            export_options: The export options.
+
+        Side Effects:
+            Sets "video_filename", "fps", and "open_when_done" in params.
+
+        Returns:
+            dict: Containing the video save parameters (in addition to other params).
+        """
+        params["video_filename"] = export_options["video_filename"]
         params["fps"] = export_options["fps"]
-        params["scale"] = export_options["scale"]
         params["open_when_done"] = export_options["open_when_done"]
-        params["background"] = export_options["background"]
+        return params
 
+    @classmethod
+    def get_frame_range_params(cls, context: CommandContext, params: dict) -> dict:
+        """Get frame range parameters.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+
+        Side Effects:
+            Sets "frames" in params.
+
+        Returns:
+            dict: Containing the frame range parameters (in addition to other params).
+        """
+        # If user selected a clip, use that; otherwise include all frames.
+        if context.state["has_frame_range"]:
+            params["frames"] = range(*context.state["frame_range"])
+        else:
+            params["frames"] = range(context.state["video"].frames)
+
+        return params
+
+    @classmethod
+    def get_video_augmentation_params(
+        cls, context: CommandContext, params: dict, export_options: dict
+    ) -> dict:
+        """Get video augmentation parameters.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+            export_options: The export options.
+
+        Side Effects:
+            Sets "scale", "background", and "crop" in params.
+
+        Returns:
+            dict: Containing the video augmentation parameters (in addition to other
+                params).
+        """
+        params["scale"] = export_options.get("scale", 1.0)
+        params["background"] = export_options.get("background", None)
         params["crop"] = None
+
+        export_options_crop = export_options.get("crop", None)
+        if export_options_crop is None:
+            return params
 
         # Determine crop size relative to original size and scale
         # (crop size should be *final* output size, thus already scaled).
-        w = int(context.state["video"].width * params["scale"])
-        h = int(context.state["video"].height * params["scale"])
-        if export_options["crop"] == "Half":
+        video = context.state["video"]
+        w = int(video.width * params["scale"])
+        h = int(video.height * params["scale"])
+        if export_options_crop == "Half":
             params["crop"] = (w // 2, h // 2)
-        elif export_options["crop"] == "Quarter":
+        elif export_options_crop == "Quarter":
             params["crop"] = (w // 4, h // 4)
 
-        if export_options["use_gui_visuals"]:
+        return params
+
+    @classmethod
+    def get_video_markup_params(
+        cls, context: CommandContext, params: dict, export_options: dict
+    ) -> dict:
+        """Get video markup parameters.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+            export_options: The export options.
+
+        Side Effects:
+            Sets "color_manager", "show edges", "edge_is_wedge", and "marker size" in
+            params.
+
+        Returns:
+            dict: Containing the video markup parameters (in addition to other params).
+        """
+        if export_options.get("use_gui_visuals", False):
             params["color_manager"] = context.app.color_manager
         else:
             params["color_manager"] = None
@@ -1377,14 +1542,47 @@ class ExportLabeledClip(AppCommand):
         )
 
         params["marker size"] = context.state.get("marker size", default=4)
+        return params
 
-        # If user selected a clip, use that; otherwise include all frames.
-        if context.state["has_frame_range"]:
-            params["frames"] = range(*context.state["frame_range"])
-        else:
-            params["frames"] = range(context.state["video"].frames)
 
-        return True
+class ExportLabeledClip(ExportVideoClip):
+    """Export a labeled video clip with labels and edges.
+
+    This command is used to export a labeled video clip with labels and edges. It
+    inherits from the `ExportVideoClip` class and provides additional functionality for
+    exporting labeled videos.
+    """
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: dict) -> bool:
+        """Ask the user for parameters to export a labeled video clip."""
+        params["form_name"] = "labeled_clip_form"
+        ok = super().ask(context, params)
+        return ok
+
+    @classmethod
+    def write_new_video(cls, context, params):
+        """Write a new annotated video using the parameters provided.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+        """
+        save_labeled_video(
+            filename=params["video_filename"],
+            labels=context.state["labels"],
+            video=context.state["video"],
+            frames=list(params["frames"]),
+            fps=params["fps"],
+            color_manager=params["color_manager"],
+            background=params["background"],
+            show_edges=params["show edges"],
+            edge_is_wedge=params["edge_is_wedge"],
+            marker_size=params["marker size"],
+            scale=params["scale"],
+            crop_size_xy=params["crop"],
+            gui_progress=params["gui_progress"],
+        )
 
 
 def export_dataset_gui(
@@ -1393,6 +1591,7 @@ def export_dataset_gui(
     all_labeled: bool = False,
     suggested: bool = False,
     verbose: bool = True,
+    as_package: bool = True,
 ) -> str:
     """Export dataset with image data and display progress GUI dialog.
 
@@ -1404,6 +1603,8 @@ def export_dataset_gui(
         suggested: If `True`, include image data for suggested frames. Defaults to
             `False`.
         verbose: If `True`, display progress dialog. Defaults to `True`.
+        as_package: If `True`, save as a package (saves image data instead of
+            referencing video). Defaults to `True`.
     """
     if verbose:
         win = QtWidgets.QProgressDialog(
@@ -1426,7 +1627,7 @@ def export_dataset_gui(
         labels,
         filename,
         default_suffix="slp",
-        save_frame_data=True,
+        save_frame_data=as_package,
         all_labeled=all_labeled,
         suggested=suggested,
         progress_callback=update_progress if verbose else None,
@@ -1449,31 +1650,35 @@ class ExportDatasetWithImages(AppCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
+        labels = params.get("labels", context.state["labels"])
         export_dataset_gui(
-            labels=context.state["labels"],
+            labels=labels,
             filename=params["filename"],
             all_labeled=cls.all_labeled,
             suggested=cls.suggested,
             verbose=params.get("verbose", True),
+            as_package=params.get("as_package", True),
         )
 
-    @staticmethod
-    def ask(context: CommandContext, params: dict) -> bool:
+    @classmethod
+    def ask(cls, context: CommandContext, params: dict) -> bool:
+        as_package = params.get("as_package", True)
+        filename = Path(context.state["filename"])
+        new_filename = (
+            filename.with_suffix(".pkg.slp")
+            if as_package
+            else filename.with_suffix(".slp")
+        )
+
         filters = [
             "SLEAP HDF5 dataset (*.slp *.h5)",
             "Compressed JSON dataset (*.json *.json.zip)",
         ]
 
-        dirname = os.path.dirname(context.state["filename"])
-        basename = os.path.basename(context.state["filename"])
-
-        new_basename = f"{os.path.splitext(basename)[0]}.pkg.slp"
-        new_filename = os.path.join(dirname, new_basename)
-
         filename, _ = FileDialog.save(
             context.app,
             caption="Save Labeled Frames As...",
-            dir=new_filename,
+            dir=str(new_filename),
             filter=";;".join(filters),
         )
         if len(filename) == 0:
@@ -1496,6 +1701,209 @@ class ExportTrainingPackage(ExportDatasetWithImages):
 class ExportFullPackage(ExportDatasetWithImages):
     all_labeled = True
     suggested = True
+
+
+class ExportLabelsSubset(ExportFullPackage):
+    """Export a subset of labels to a new file with either images or a trimmed video.
+
+    This command subclasses `ExportFullPackage`, but uses also uses methods from
+    `ExportVideoClip` to provide functionality for exporting a subset of labels to a new
+    file with either images or a trimmed video. It allows the user to specify the labels
+    to export and the format of the output file.
+    """
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: dict) -> bool:
+        # Ask for the labels subset to export.
+        if not super().ask(context=context, params=params):
+            return False
+
+        # If we are exporting as a pkg.slp, then we just need the frame range. # Not interested in opening the video.
+        if params.get("as_package", False):
+            ExportVideoClip.get_frame_range_params(context=context, params=params)
+        # Otherwise, exporting as slp and need to get video clip parameters.
+        elif not ExportVideoClip.ask(context=context, params=params):
+            return False
+
+        return True
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        # Get the video subset for the export.
+        video_subset = cls.get_or_create_video_subset(context=context, params=params)
+
+        # Get the (unshifted) labels subset for the export.
+        labels_subset_unshifted: Labels = cls.get_labels_subset_unshifted(
+            context=context, params=params
+        )
+
+        # Get the shifted and updated labels frames subset for the export.
+        lfs_subset = cls.get_lfs_subset(
+            labels_subset_unshifted=labels_subset_unshifted,
+            video_subset=video_subset,
+            params=params,
+        )
+
+        # Also need to update anything that references the video or frame index.
+        suggestions_subset = cls.get_suggestions_subset(
+            labels_subset_unshifted=labels_subset_unshifted,
+            video_subset=video_subset,
+            params=params,
+        )
+
+        # Create the labels subset for the export.
+        labels_subset = Labels(
+            labeled_frames=lfs_subset,
+            videos=[video_subset],
+            skeletons=labels_subset_unshifted.skeletons,
+            tracks=labels_subset_unshifted.tracks,
+            suggestions=suggestions_subset,
+            provenance=labels_subset_unshifted.provenance,
+        )
+
+        # Save the labels subset to a new file.
+        params["labels"] = labels_subset
+        super().do_action(context=context, params=params)
+
+        # Now let's open the new file.
+        if params.get("open_new_project", False):
+            OpenProject.do_action(context=context, params=params)
+
+    @classmethod
+    def get_or_create_video_subset(cls, context: CommandContext, params: dict) -> Video:
+        """Get the video subset for the export.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+
+        Returns:
+            Video: The video subset for the export.
+        """
+        # Get variables from params and context.
+        as_package = params.get("as_package", False)
+        frames = params["frames"]
+        end_frame_idx = frames[-1]  # 0-indexed
+        video: Video = context.state["video"]
+        n_frames = video.frames
+
+        # Initialize video subset.
+        video_subset = video
+
+        # If the user selected the entire video, then do not create a new video.
+        if (end_frame_idx < n_frames - 1) and not as_package:
+            # Do not open the video when done.
+            open_when_done = params.get("open_when_done", False)
+            params["open_when_done"] = False
+
+            # Export the video clip using the parameters provided.
+            ExportVideoClip.do_action(context=context, params=params)
+            video_subset_filename = params["video_filename"]
+            video_subset = Video.from_filename(filename=video_subset_filename)
+
+            # Reset the open_when_done parameter. Not currently used, but maybe we
+            # should use this for opening the new project.
+            params["open_when_done"] = open_when_done
+
+        return video_subset
+
+    @classmethod
+    def get_labels_subset_unshifted(
+        cls, context: CommandContext, params: dict
+    ) -> Labels:
+        """Get the labels subset for the export.
+
+        Args:
+            context: The command context.
+            params: The parameters for the export.
+
+        Returns:
+            Labels: The labels subset for the export.
+        """
+        # Get variables from params.
+        video: Video = context.state["video"]
+        frames: range = params["frames"]
+
+        # Get subset of labels to export
+        labels: Labels = context.state["labels"]
+        labels_subset_unshifted: Labels = labels.extract(
+            inds=(video, frames), copy=True
+        )
+        return labels_subset_unshifted
+
+    @classmethod
+    def get_lfs_subset(
+        cls, labels_subset_unshifted: Labels, video_subset: Video, params: dict
+    ) -> list[LabeledFrame]:
+        """Get the labeled frames subset for the export.
+
+        Args:
+            labels_subset_unshifted: The labels subset to export.
+            video_subset: The video subset to export.
+            params: The parameters for the export.
+
+        Returns:
+            list[LabeledFrame]: The labeled frames subset for the export.
+        """
+        # Get variables from params.
+        as_package = params.get("as_package", False)
+        frames: range = params["frames"]
+        start_frame_idx = frames[0]  # 0-indexed
+
+        # Update the video and frame indices of the labels.
+        lfs_subset = labels_subset_unshifted.labeled_frames if as_package else []
+        for lf in labels_subset_unshifted.labeled_frames:
+            # Use the new video for the subset (need to do this even if video is same,
+            # otherwise, fails in Labels __init__ when updating cache).
+            lf.video = video_subset
+
+            if not as_package:
+                # Shift the frame index to match the new video
+                lf.frame_idx -= start_frame_idx
+
+                # Add the labeled frame to the subset
+                lfs_subset.append(lf)
+
+        return lfs_subset
+
+    @classmethod
+    def get_suggestions_subset(
+        cls,
+        labels_subset_unshifted: Labels,
+        video_subset: Video,
+        params: dict,
+    ) -> list[SuggestionFrame]:
+        """Get the suggestions subset for the labels.
+
+        Args:
+            labels_subset_unshifted: The labels subset to export.
+            video_subset: The video subset to export.
+
+        Returns:
+            list[SuggestionFrame]: The suggestions subset for the labels.
+        """
+        # Get variables from params.
+        as_package = params.get("as_package", False)
+        frames = params["frames"]
+        start_frame_idx = frames[0]  # 0-indexed
+        end_frame_idx = frames[-1]
+
+        # Get the suggestions subset for the labels.
+        suggestions_subset = []
+        for suggestion in labels_subset_unshifted.suggestions:
+            suggestion.video = video_subset
+
+            if (
+                suggestion.frame_idx >= start_frame_idx
+                and suggestion.frame_idx < end_frame_idx
+            ):
+                # Shift the frame index to match the new video if not a package.
+                if not as_package:
+                    suggestion.frame_idx -= start_frame_idx
+
+                suggestions_subset.append(suggestion)
+
+        return suggestions_subset
 
 
 # Navigation Commands
@@ -3508,7 +3916,6 @@ class OpenPrereleaseVersion(AppCommand):
 
 def copy_to_clipboard(text: str):
     """Copy a string to the system clipboard.
-
     Args:
         text: String to copy to clipboard.
     """

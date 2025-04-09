@@ -15,6 +15,8 @@ from sleap.gui.commands import (
     CommandContext,
     ExportAnalysisFile,
     ExportDatasetWithImages,
+    ExportFullPackage,
+    ExportVideoClip,
     ImportDeepLabCutFolder,
     RemoveVideo,
     ReplaceVideo,
@@ -1046,3 +1048,136 @@ def test_newInstance(qtbot, centered_pair_predictions: Labels):
     )
     diff = np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset)
     assert np.all(diff == offset)
+
+
+def test_ExportLabelsSubset(
+    tmp_path, centered_pair_predictions: Labels, small_robot_mp4_vid: Video
+):
+    """Test that exporting a subset of labels works as expected."""
+    # Get the data
+    labels = centered_pair_predictions
+    n_labels_original = len(labels.labeled_frames)
+    video: Video = labels.videos[0]
+
+    # Select subset of frames
+    n_frames = video.frames
+    lower_bound = int(n_frames / 4)
+    upper_bound = int(n_frames / 4 + 2)
+
+    # Alter data.
+    labels.add_suggestion(video, lower_bound)  # Should be included.
+    labels.add_suggestion(video, 1)  # Should be excluded since outside video clip.
+    labels.add_suggestion(video, upper_bound + 1)  # Should be excluded.
+    video_extra = small_robot_mp4_vid
+    labels.add_video(video_extra)  # Should be excluded since outside video clip.
+    labels.add_suggestion(video_extra, 0)  # Should be excluded since outside video clip
+    n_suggestions_original = len(labels.suggestions)
+    n_videos_original = len(labels.videos)
+
+    # Path to save the exported labels
+    name_to_export = "export_labels_subset.slp"
+    path_to_export = Path(tmp_path).with_name(name_to_export)
+    video_path_to_export = path_to_export.as_posix() + ".mp4"
+    video_name_to_export = name_to_export + ".mp4"
+
+    # Set-up command context
+    context = CommandContext.from_labels(labels)
+    context.state["labels"] = labels
+    context.state["video"] = video
+    context.state["frame_range"] = (lower_bound, upper_bound)
+    context.state["has_frame_range"] = True
+
+    # 1. Mimick ExportDatasetWithImages.ask() method
+    def ExportFullPackage_ask(context, params):
+        """No GUI version of `ExportVideoClip.ask`."""
+        as_package = params["as_package"]
+        params["filename"] = (
+            path_to_export.with_suffix(".pkg.slp")
+            if as_package
+            else path_to_export.as_posix()
+        )
+        params["verbose"] = False
+        return True
+
+    ExportFullPackage.ask = ExportFullPackage_ask
+
+    # 2. Mimick ExportVideoClip.ask() method
+    def ExportVideoClip_ask(context, params):
+        """No GUI version of `ExportVideoClip.ask`."""
+        params["video_filename"] = video_path_to_export
+        params["fps"] = 30
+        params["open_when_done"] = False
+        params["frames"] = range(lower_bound, upper_bound)
+        params["scale"] = 1.0
+        params["background"] = None
+        params["crop"] = None
+        params["gui_progress"] = False
+        return True
+
+    ExportVideoClip.ask = ExportVideoClip_ask
+
+    # Case 1: Export labels as slp and trimmed video
+    context.exportLabelsSubset(as_package=False, open_new_project=False)
+
+    # Verify the slp file.
+    assert path_to_export.exists()
+    assert path_to_export.is_file()
+    assert path_to_export.name == name_to_export
+    labels_subset = Labels.load_file(path_to_export.as_posix())
+    # Should only contain video from selected clip.
+    assert len(labels_subset.videos) == 1
+    # Should only contain frames from selected clip.
+    n_frames_expected = upper_bound - lower_bound
+    assert len(labels_subset.labeled_frames) <= n_frames_expected
+    # Labels are shifted since reference trimmed video.
+    assert (
+        max([lf.frame_idx for lf in labels_subset.labeled_frames]) < n_frames_expected
+    )
+    assert min([lf.frame_idx for lf in labels_subset.labeled_frames]) >= 0
+
+    # Verify suggestions were pruned.
+    video_subset = labels_subset.videos[0]
+    assert len(labels_subset.suggestions) == 1
+    assert labels_subset.suggestions[0].video == video_subset
+
+    # Verify the video file.
+    assert Path(video_path_to_export).exists()
+    assert Path(video_path_to_export).is_file()
+    assert Path(video_path_to_export).name == video_name_to_export
+    assert video_subset.filename == video_path_to_export
+    assert video_subset.frames == n_frames_expected
+
+    # Do not mutate original labels.
+    assert len(labels.labeled_frames) == n_labels_original
+    assert len(labels.videos) == n_videos_original
+    assert len(labels.suggestions) == n_suggestions_original
+
+    # Case 2: Export labels as pkg.slp
+    context.exportLabelsSubset(as_package=True, open_new_project=False)
+
+    # Verify the slp file.
+    path_to_export = Path(path_to_export.with_suffix(".pkg.slp"))
+    assert path_to_export.exists()
+    assert path_to_export.is_file()
+    labels_subset: Labels = Labels.load_file(path_to_export.as_posix())
+    # Should only contain video from selected clip.
+    assert len(labels_subset.videos) == 1
+    n_frames_expected = upper_bound - lower_bound
+    assert len(labels_subset.labeled_frames) <= n_frames_expected
+    # Labels are not shifted since reference original video.
+    assert max([lf.frame_idx for lf in labels_subset.labeled_frames]) < upper_bound
+    assert min([lf.frame_idx for lf in labels_subset.labeled_frames]) >= lower_bound
+
+    # Verify suggestions were pruned.
+    video_subset = labels_subset.videos[0]
+    assert len(labels_subset.suggestions) == 1
+    assert labels_subset.suggestions[0].video == video_subset
+
+    # Videos in package reference pkg.slp. filename.
+    assert video_subset.filename == path_to_export.as_posix()
+    assert video_subset.frames <= n_frames_expected + len(labels_subset.suggestions)
+
+    # Do not mutate original labels.
+    assert len(labels.labeled_frames) == n_labels_original
+    assert len(labels.videos) == n_videos_original
+    assert len(labels.suggestions) == n_suggestions_original
