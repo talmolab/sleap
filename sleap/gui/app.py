@@ -1143,7 +1143,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
         self._menu_actions["delete clip predictions"].setEnabled(has_frame_range)
-        
+
         # Enable/disable "Extract Clip and Labels" and "Extract Clip Labels Package"
         self._menu_actions["extract clip and labels"].setEnabled(has_frame_range)
         self._menu_actions["extract clip labels package"].setEnabled(has_frame_range)
