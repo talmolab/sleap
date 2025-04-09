@@ -3912,3 +3912,13 @@ class OpenPrereleaseVersion(AppCommand):
         rls = context.app.release_checker.latest_prerelease
         if rls is not None:
             context.openWebsite(rls.url)
+
+
+def copy_to_clipboard(text: str):
+    """Copy a string to the system clipboard.
+    Args:
+        text: String to copy to clipboard.
+    """
+    clipboard = QtWidgets.QApplication.clipboard()
+    clipboard.clear(mode=clipboard.Clipboard)
+    clipboard.setText(text, mode=clipboard.Clipboard)
