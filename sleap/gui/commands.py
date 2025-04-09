@@ -1717,7 +1717,7 @@ class ExportLabelsSubset(ExportFullPackage):
         if not super().ask(context=context, params=params):
             return False
 
-        # If we are exporting as a pkg.slp, then we just need the frame range.
+        # If we are exporting as a pkg.slp, then we just need the frame range. # Not interested in opening the video.
         if params.get("as_package", False):
             ExportVideoClip.get_frame_range_params(context=context, params=params)
         # Otherwise, exporting as slp and need to get video clip parameters.
@@ -1729,7 +1729,7 @@ class ExportLabelsSubset(ExportFullPackage):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         # Get the video subset for the export.
-        video_subset = cls.get_video_subset(context=context, params=params)
+        video_subset = cls.get_or_create_video_subset(context=context, params=params)
 
         # Get the (unshifted) labels subset for the export.
         labels_subset_unshifted: Labels = cls.get_labels_subset_unshifted(
@@ -1769,7 +1769,7 @@ class ExportLabelsSubset(ExportFullPackage):
             OpenProject.do_action(context=context, params=params)
 
     @classmethod
-    def get_video_subset(cls, context: CommandContext, params: dict) -> Video:
+    def get_or_create_video_subset(cls, context: CommandContext, params: dict) -> Video:
         """Get the video subset for the export.
 
         Args:
@@ -1791,10 +1791,18 @@ class ExportLabelsSubset(ExportFullPackage):
 
         # If the user selected the entire video, then do not create a new video.
         if (end_frame_idx < n_frames - 1) and not as_package:
+            # Do not open the video when done.
+            open_when_done = params.get("open_when_done", False)
+            params["open_when_done"] = False
+
             # Export the video clip using the parameters provided.
             ExportVideoClip.do_action(context=context, params=params)
             video_subset_filename = params["video_filename"]
             video_subset = Video.from_filename(filename=video_subset_filename)
+
+            # Reset the open_when_done parameter. Not currently used, but maybe we
+            # should use this for opening the new project.
+            params["open_when_done"] = open_when_done
 
         return video_subset
 
