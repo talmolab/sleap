@@ -637,16 +637,17 @@ class CommandContext:
         """Open the current prerelease version."""
         self.execute(OpenPrereleaseVersion)
 
-    def exportClipVideo(self, open_new_project: bool = True):
-        """Exports a selected range of video frames and their corresponding labels."""
-        self.execute(
-            ExportLabelsSubset, as_package=False, open_new_project=open_new_project
-        )
+    def exportLabelsSubset(
+        self, as_package: bool = False, open_new_project: bool = True
+    ):
+        """Exports a selected range of video frames and their corresponding labels.
 
-    def exportClipPkg(self, open_new_project: bool = True):
-        """Exports a selected range of video frames and their corresponding labels."""
+        Args:
+            as_package: Whether to export as a package.
+            open_new_project: Whether to open the exported labels in a new project GUI.
+        """
         self.execute(
-            ExportLabelsSubset, as_package=True, open_new_project=open_new_project
+            ExportLabelsSubset, as_package=as_package, open_new_project=open_new_project
         )
 
 

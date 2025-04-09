@@ -1117,7 +1117,7 @@ def test_ExportLabelsSubset(
     ExportVideoClip.ask = ExportVideoClip_ask
 
     # Case 1: Export labels as slp and trimmed video
-    context.exportClipVideo(open_new_project=False)
+    context.exportLabelsSubset(as_package=False, open_new_project=False)
 
     # Verify the slp file.
     assert path_to_export.exists()
@@ -1153,7 +1153,7 @@ def test_ExportLabelsSubset(
     assert len(labels.suggestions) == n_suggestions_original
 
     # Case 2: Export labels as pkg.slp
-    context.exportClipPkg(open_new_project=False)
+    context.exportLabelsSubset(as_package=True, open_new_project=False)
 
     # Verify the slp file.
     path_to_export = Path(path_to_export.with_suffix(".pkg.slp"))
