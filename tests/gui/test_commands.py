@@ -1067,9 +1067,12 @@ def test_ExportLabelsSubset(
     # Alter data.
     labels.add_suggestion(video, lower_bound)  # Should be included.
     labels.add_suggestion(video, 1)  # Should be excluded since outside video clip.
+    labels.add_suggestion(video, upper_bound + 1)  # Should be excluded.
     video_extra = small_robot_mp4_vid
     labels.add_video(video_extra)  # Should be excluded since outside video clip.
     labels.add_suggestion(video_extra, 0)  # Should be excluded since outside video clip
+    n_suggestions_original = len(labels.suggestions)
+    n_videos_original = len(labels.videos)
 
     # Path to save the exported labels
     name_to_export = "export_labels_subset.slp"
@@ -1146,8 +1149,8 @@ def test_ExportLabelsSubset(
 
     # Do not mutate original labels.
     assert len(labels.labeled_frames) == n_labels_original
-    assert len(labels.videos) == 2
-    assert len(labels.suggestions) == 3
+    assert len(labels.videos) == n_videos_original
+    assert len(labels.suggestions) == n_suggestions_original
 
     # Case 2: Export labels as pkg.slp
     context.exportClipPkg(open_new_project=False)
@@ -1176,5 +1179,5 @@ def test_ExportLabelsSubset(
 
     # Do not mutate original labels.
     assert len(labels.labeled_frames) == n_labels_original
-    assert len(labels.videos) == 2
-    assert len(labels.suggestions) == 3
+    assert len(labels.videos) == n_videos_original
+    assert len(labels.suggestions) == n_suggestions_original
