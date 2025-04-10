@@ -20,7 +20,6 @@ from qtpy.QtWidgets import QGraphicsItem
 from sleap import Labels, Video
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.nn.data.providers import VideoReader
-from sleap.nn.inference import VisualPredictor
 
 logger = logging.getLogger(__name__)
 
