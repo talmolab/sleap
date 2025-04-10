@@ -253,7 +253,7 @@ class AlbumentationsAugmenter:
             image, instances = tf.py_function(
                 py_augment,
                 [frame_data["image"], frame_data["instances"]],
-                [frame_data["image"].dtype, frame_data["instances"].dtype],
+                [np.dtype(frame_data["image"].dtype.as_numpy_dtype), frame_data["instances"].dtype],
             )
             image.set_shape(frame_data["image"].get_shape())
             instances.set_shape(frame_data["instances"].get_shape())
