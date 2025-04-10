@@ -14,7 +14,7 @@ import math
 
 from sleap.io.video import HDF5Video
 
-from sleap.gui.overlays.base import DataOverlay, h5_colors
+from sleap.gui.overlays.base import h5_colors
 
 
 class PafOverlay(DataOverlay):
