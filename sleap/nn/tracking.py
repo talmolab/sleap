@@ -4,7 +4,6 @@ import abc
 import functools
 import json
 import logging
-import sys
 from collections import deque
 from time import time
 from typing import Callable, Deque, Dict, Iterable, Iterator, List, Optional, Tuple
@@ -34,12 +33,6 @@ from sleap.nn.tracker.components import (
 from sleap.nn.tracker.kalman import BareKalmanTracker
 from sleap.nn.data.normalization import ensure_int
 from sleap.util import RateColumn
-
-if sys.version_info >= (3, 8):
-    from functools import cached_property
-
-else:  # cached_property is defined only for python >=3.8
-    cached_property = property
 
 logger = logging.getLogger(__name__)
 
@@ -535,7 +528,7 @@ class BaseTracker(abc.ABC):
     def is_valid(self):
         return False
 
-    @cached_property
+    @property
     def report_period(self) -> float:
         """Time between progress reports in seconds."""
         if self.report_rate <= 0:
