@@ -9,6 +9,22 @@ use_cpu_only()  # hide GPUs for test
 from sleap.nn.data import providers
 from sleap.nn.data import augmentation
 
+MAX_VALUES_BY_DTYPE = {
+    np.dtype("uint8"): 255,
+    np.dtype("uint16"): 65535,
+    np.dtype("uint32"): 4294967295,
+    np.dtype("float16"): 1.0,
+    np.dtype("float32"): 1.0,
+    np.dtype("float64"): 1.0,
+    np.uint8: 255,
+    np.uint16: 65535,
+    np.uint32: 4294967295,
+    np.float16: 1.0,
+    np.float32: 1.0,
+    np.float64: 1.0,
+    np.int32: 2147483647,
+}
+
 
 @pytest.fixture
 def dummy_instances_data_nans():
@@ -297,3 +313,26 @@ def test_random_flipper():
         ex["instances"],
         [[[25, 333], [25, 358], [50, 358]], [[125, 233], [125, 258], [150, 258]]],
     )
+
+
+def test_augmentation_np_casts():
+    # Create dummy float64 image
+    float64_image = np.random.rand(64, 64, 3).astype(np.float64)
+    dummy_instances = np.zeros((2, 2), dtype=np.float32)
+
+    dataset = tf.data.Dataset.from_tensor_slices(
+        {"image": [float64_image], "instances": [dummy_instances]}
+    )
+
+    config = augmentation.AugmentationConfig(
+        brightness=True, brightness_min_val=-20, brightness_max_val=20
+    )
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(config)
+
+    # Transform the dataset
+    augmented_ds = augmenter.transform_dataset(dataset)
+    example = next(iter(augmented_ds))
+
+    # Assert that tf.float64 input has been cast correctly to np.float64 for MAX_VALUES_BY_DTYPE compability
+    assert np.dtype(example["image"].dtype.as_numpy_dtype) == np.float64
+    assert example["image"].shape == (64, 64, 3)
