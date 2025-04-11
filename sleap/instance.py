@@ -17,7 +17,11 @@ The relationships between objects in this module:
   out of sync if the skeleton is manipulated.
 """
 
-from __future__ import annotations
+# WARNING: We can't from __future__ import annotations here because it causes problems
+# with cattrs. Basically, we found that the generic type of `int` was not recognized as
+# an instance of typing._GenericAlias and made our converters fail. The line:
+# https://github.com/python-attrs/cattrs/blob/3a02a04e82ffd93bb06ef7bc476bde797ceefcdf/src/cattr/converters.py#L258-L268)
+
 
 import math
 from copy import copy
