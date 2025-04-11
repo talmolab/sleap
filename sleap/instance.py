@@ -17,21 +17,20 @@ The relationships between objects in this module:
   out of sync if the skeleton is manipulated.
 """
 
+from __future__ import annotations
+
 import math
-
-import numpy as np
-import cattr
-
 from copy import copy
-from typing import Dict, List, Optional, Union, Tuple, ForwardRef
-
-from numpy.lib.recfunctions import structured_to_unstructured
-
-import sleap
-from sleap.skeleton import Skeleton, Node
-from sleap.io.video import Video
+from typing import Dict, List, Optional, Tuple, Union
 
 import attr
+import cattr
+import numpy as np
+from numpy.lib.recfunctions import structured_to_unstructured
+
+from sleap.io.video import Video  # Only used for type hinting
+from sleap.skeleton import Node, Skeleton
+from sleap.util import plot_img, plot_instances
 
 
 class Point(np.record):
@@ -1919,5 +1918,5 @@ class LabeledFrame:
             plotting options.
         """
         if image:
-            sleap.nn.viz.plot_img(self.image, scale=scale)
-        sleap.nn.viz.plot_instances(self.instances)
+            plot_img(self.image, scale=scale)
+        plot_instances(self.instances)
