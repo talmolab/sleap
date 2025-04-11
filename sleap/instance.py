@@ -1914,7 +1914,7 @@ class LabeledFrame:
             scale: Relative scaling for the figure.
 
         Notes:
-            See `sleap.nn.viz.plot_img` and `sleap.nn.viz.plot_instances` for more
+            See `sleap.util.plot_img` and `sleap.util.plot_instances` for more
             plotting options.
         """
         if image:
