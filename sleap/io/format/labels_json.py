@@ -402,12 +402,12 @@ class LabelsJsonAdaptor(Adaptor):
                 unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE
             )
             tracks = track_cattr.structure(dicts["tracks"], List[Track])
-        except:
+        except Exception as e:
             # Then try unstructuring dict (older format)
             try:
                 tracks = cattr.structure(dicts["tracks"], List[Track])
             except:
-                raise ValueError("Unable to load tracks as tuple or dict!")
+                raise ValueError("Unable to load tracks as tuple or dict!") from e
 
         # if we're given a Labels object to match, use its objects when they match
         if match_to is not None:
