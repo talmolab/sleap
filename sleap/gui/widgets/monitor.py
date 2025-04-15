@@ -1,10 +1,11 @@
 """GUI for monitoring training progress interactively."""
 
+from __future__ import annotations
+
 import logging
 from time import perf_counter
 from typing import Dict, Optional, Tuple
 
-import attr
 import jsonpickle
 import numpy as np
 import zmq
@@ -14,7 +15,6 @@ from qtpy import QtCore, QtWidgets
 
 from sleap.gui.utils import find_free_port
 from sleap.gui.widgets.mpl import MplCanvas
-from sleap.nn.config.training_job import TrainingJobConfig
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +222,7 @@ class LossPlot(MplCanvas):
         mean_epoch_time_sec: int = None,
         eta_ten_epochs_min: int = None,
         epochs_in_plateau: int = None,
-        plateau_patience: int = None,
+        plateau_patience: int | None = None,
         epoch_in_plateau_flag: bool = False,
         best_val_x: int = None,
         best_val_y: float = None,
@@ -664,13 +664,17 @@ class LossViewer(QtWidgets.QMainWindow):
     def reset(
         self,
         what: str = "",
-        config: TrainingJobConfig = attr.ib(factory=TrainingJobConfig),
+        plateau_patience: int | None = None,
+        plateau_min_delta: float | None = None,
     ):
         """Reset all chart series.
 
         Args:
             what: String identifier indicating which job type the current run
                 corresponds to.
+            plateau_patience: Number of epochs to wait in plateau before stopping.
+            plateau_min_delta: Minimum change in validation loss to be considered
+                significant.
         """
         self.canvas = LossPlot(
             width=5,
@@ -741,7 +745,8 @@ class LossViewer(QtWidgets.QMainWindow):
         wid.setLayout(layout)
         self.setCentralWidget(wid)
 
-        self.config = config
+        self.plateau_patience = plateau_patience
+        self.plateau_min_delta = plateau_min_delta
         self.X = []
         self.Y = []
         self.best_val_x = None
@@ -851,7 +856,7 @@ class LossViewer(QtWidgets.QMainWindow):
                 mean_epoch_time_sec=self.mean_epoch_time_sec,
                 eta_ten_epochs_min=self.eta_ten_epochs_min,
                 epochs_in_plateau=self.epochs_in_plateau,
-                plateau_patience=self.config.optimization.early_stopping.plateau_patience,
+                plateau_patience=self.plateau_patience,
                 epoch_in_plateau_flag=self.epoch_in_plateau_flag,
                 best_val_x=self.best_val_x,
                 best_val_y=self.best_val_y,
@@ -935,9 +940,11 @@ class LossViewer(QtWidgets.QMainWindow):
                                 - self.last_epoch_val_loss
                             )
                             self.epoch_in_plateau_flag = (
-                                val_loss_delta
-                                < self.config.optimization.early_stopping.plateau_min_delta
-                            ) or (self.best_val_y < self.last_epoch_val_loss)
+                                self.plateau_min_delta is not None
+                            ) and (
+                                (val_loss_delta < self.plateau_min_delta)
+                                or (self.best_val_y < self.last_epoch_val_loss)
+                            )
                             self.epochs_in_plateau = (
                                 self.epochs_in_plateau + 1
                                 if self.epoch_in_plateau_flag

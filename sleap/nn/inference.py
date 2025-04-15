@@ -903,7 +903,7 @@ class InferenceModel(tf.keras.Model):
             1 of the tensors.
         """
         if isinstance(data, (sleap.Video, sleap.Labels)):
-            data = data.to_pipeline(batch_size=batch_size)
+            data = Pipeline.from_data(data, batch_size=batch_size)
         if isinstance(data, Pipeline):
             data = data.make_dataset()
 
