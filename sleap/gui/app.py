@@ -1569,7 +1569,10 @@ class MainWindow(QMainWindow):
             # Update data in existing dialog widget.
             self._child_windows[mode].labels = self.labels
             self._child_windows[mode].labels_filename = self.state["filename"]
-            self._child_windows[mode].skeleton = self.labels.skeleton
+            try:
+                self._child_windows[mode].skeleton = self.labels.skeleton
+            except ValueError:
+                self._child_windows[mode].skeleton = None
 
         self._child_windows[mode].update_file_lists()
 
