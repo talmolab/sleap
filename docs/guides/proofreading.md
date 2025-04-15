@@ -76,18 +76,6 @@ Once you have the desired number of instances in every frame, SLEAP connects ide
 
 Often your models will fail to predict *all* of the instances on *all* of the frames. Even if you're happy enough with the result since you can interpolate missing data, it's possible that the missing instances will cause problems when we try to determine track identities across frames, so if your tracking results are poor, you may wish to {ref}`merging`.
 
-## The "track cleaning" script
-
-There's an experimental command-line utility which tries to match up lost identities. You need to give it a predictions file which already has track assignments, and specify how many instances there should be. It looks for frames where there's exactly one lost identity and exactly one newly spawned identity, and it joins these into a single track. Suppose you have a predictions file at {code}`path/to/predictions.h5` and you want to end up with three distinct tracks. You can run
-
-```
-python -m sleap.info.trackcleaner path/to/predictions.h5 -c 3
-```
-
-This will result in a new file at {code}`path/to/predictions.cleaned.h5`. This file has the same format as the SLEAP labels and predictions files.
-
-The main worry is that this script will connect identities which should be distinct, so that in place of **lost** identities you'll now have more **mistaken** identities, which can be harder to locate when proofreading. Tools and techniques for finding **mistaken** identities during proofreading are explained below.
-
 ## Color palettes
 
 When you're proofreading track identities, the first step should always be to enable "**Color Predicted Instances**" in the View menu. Choosing the right color palette can also make a difference. If there are a small number of instances you're tracking, the "five+" palette will make it easier to see instances which were assigned to later tracks, both in on the video frame:

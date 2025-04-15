@@ -8,6 +8,7 @@ use_cpu_only()  # hide GPUs for test
 
 from sleap.nn.data import providers
 from sleap.nn.data import augmentation
+from sleap.nn.data.pipelines import Pipeline
 
 
 @pytest.fixture
@@ -120,20 +121,22 @@ def test_augmentation(min_labels):
 
 def test_augmentation_with_no_instances(min_labels):
     # reproduces #555
-    min_labels.append(
+    labels = min_labels
+    labels.append(
         sleap.LabeledFrame(
-            video=min_labels.video,
-            frame_idx=min_labels[-1].frame_idx + 1,
+            video=labels.video,
+            frame_idx=labels[-1].frame_idx + 1,
             instances=[
                 sleap.Instance.from_numpy(
-                    np.full([len(min_labels.skeleton.nodes), 2], np.nan),
-                    skeleton=min_labels.skeleton,
+                    np.full([len(labels.skeleton.nodes), 2], np.nan),
+                    skeleton=labels.skeleton,
                 )
             ],
         )
     )
 
-    p = min_labels.to_pipeline(user_labeled_only=False)
+    reader = providers.LabelsReader(labels)
+    p: Pipeline = Pipeline(reader)
     p += augmentation.AlbumentationsAugmenter.from_config(
         augmentation.AugmentationConfig(rotate=True)
     )
@@ -246,7 +249,7 @@ def test_random_flipper():
         ]
     )
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
         skel, horizontal=True, probability=1.0
     )
@@ -262,7 +265,7 @@ def test_random_flipper():
 
     skel.add_symmetry("BL", "BR")
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
         skel, horizontal=True, probability=1.0
     )
@@ -276,7 +279,7 @@ def test_random_flipper():
         ],
     )
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
         skel, horizontal=True, probability=0.0
     )
@@ -287,7 +290,7 @@ def test_random_flipper():
         [[[25, 50], [50, 25], [25, 25]], [[125, 150], [150, 125], [125, 125]]],
     )
 
-    p = labels.to_pipeline()
+    p: Pipeline = Pipeline.from_data(labels)
     p += sleap.nn.data.augmentation.RandomFlipper.from_skeleton(
         skel, horizontal=False, probability=1.0
     )

@@ -943,13 +943,6 @@ class MainWindow(QMainWindow):
             self._show_metrics_dialog,
         )
 
-        add_menu_item(
-            predictionMenu,
-            "visualize models",
-            "Visualize Model Outputs...",
-            self._handle_model_overlay_command,
-        )
-
         predictionMenu.addSeparator()
 
         labels_package_menu = predictionMenu.addMenu("Export Labels Package...")
@@ -1595,56 +1588,6 @@ class MainWindow(QMainWindow):
     def _show_metrics_dialog(self):
         self._child_windows["metrics"] = MetricsTableDialog(self.state["filename"])
         self._child_windows["metrics"].show()
-
-    def _handle_model_overlay_command(self):
-        """Gui for adding overlay with live visualization of predictions."""
-        filters = ["Model (*.json)"]
-
-        # Default to opening from models directory from project
-        models_dir = None
-        if self.state["filename"] is not None:
-            models_dir = os.path.join(
-                os.path.dirname(self.state["filename"]), "models/"
-            )
-
-        # Show dialog
-        filename, selected_filter = FileDialog.open(
-            self,
-            dir=models_dir,
-            caption="Import model outputs...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return
-
-        # Model as overlay datasource
-        # This will show live inference results
-
-        from sleap.gui.overlays.base import DataOverlay
-
-        predictor = DataOverlay.make_predictor(filename)
-        show_pafs = False
-
-        # If multi-head model with both confmaps and pafs,
-        # ask user which to show.
-        if (
-            predictor.confidence_maps_key_name
-            and predictor.part_affinity_fields_key_name
-        ):
-            results = FormBuilderModalDialog(form_name="head_type_form").get_results()
-            show_pafs = "Part Affinity" in results["head_type"]
-
-        overlay = DataOverlay.from_predictor(
-            predictor=predictor,
-            video=self.state["video"],
-            player=self.player,
-            show_pafs=show_pafs,
-        )
-
-        self.overlays["inference"] = overlay
-
-        self.plotFrame()
 
     def _handle_instance_double_click(
         self, instance: Instance, event: QtGui.QMouseEvent = None
