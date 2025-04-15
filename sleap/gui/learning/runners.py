@@ -672,7 +672,13 @@ def run_gui_training(
 
             if gui:
                 print("Resetting monitor window.")
-                win.reset(what=str(model_type), config=job)
+                plateau_patience = job.optimization.early_stopping.plateau_patience
+                plateau_min_delta = job.optimization.early_stopping.plateau_min_delta
+                win.reset(
+                    what=str(model_type),
+                    plateau_patience=plateau_patience,
+                    plateau_min_delta=plateau_min_delta,
+                )
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
                 win.set_message(f"Preparing to run training...")
                 if save_viz:
