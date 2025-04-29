@@ -17,21 +17,24 @@ The relationships between objects in this module:
   out of sync if the skeleton is manipulated.
 """
 
+# WARNING: We can't from __future__ import annotations here because it causes problems
+# with cattrs. Basically, we found that the generic type of `int` was not recognized as
+# an instance of typing._GenericAlias and made our converters fail. The line:
+# https://github.com/python-attrs/cattrs/blob/3a02a04e82ffd93bb06ef7bc476bde797ceefcdf/src/cattr/converters.py#L258-L268)
+
+
 import math
-
-import numpy as np
-import cattr
-
 from copy import copy
-from typing import Dict, List, Optional, Union, Tuple, ForwardRef
-
-from numpy.lib.recfunctions import structured_to_unstructured
-
-import sleap
-from sleap.skeleton import Skeleton, Node
-from sleap.io.video import Video
+from typing import Dict, List, Optional, Tuple, Union
 
 import attr
+import cattr
+import numpy as np
+from numpy.lib.recfunctions import structured_to_unstructured
+
+from sleap.io.video import Video  # Only used for type hinting
+from sleap.skeleton import Node, Skeleton
+from sleap.util import plot_img, plot_instances
 
 
 class Point(np.record):
@@ -1915,29 +1918,9 @@ class LabeledFrame:
             scale: Relative scaling for the figure.
 
         Notes:
-            See `sleap.nn.viz.plot_img` and `sleap.nn.viz.plot_instances` for more
+            See `sleap.util.plot_img` and `sleap.util.plot_instances` for more
             plotting options.
         """
         if image:
-            sleap.nn.viz.plot_img(self.image, scale=scale)
-        sleap.nn.viz.plot_instances(self.instances)
-
-    def plot_predicted(self, image: bool = True, scale: float = 1.0):
-        """Plot the frame with all predicted instances.
-
-        Args:
-            image: If False, only the instances will be plotted without loading the
-                original image.
-            scale: Relative scaling for the figure.
-
-        Notes:
-            See `sleap.nn.viz.plot_img` and `sleap.nn.viz.plot_instances` for more
-            plotting options.
-        """
-        if image:
-            sleap.nn.viz.plot_img(self.image, scale=scale)
-        sleap.nn.viz.plot_instances(
-            self.predicted_instances,
-            color_by_track=(len(self.predicted_instances) > 0)
-            and (self.predicted_instances[0].track is not None),
-        )
+            plot_img(self.image, scale=scale)
+        plot_instances(self.instances)

@@ -76,8 +76,8 @@ from sleap.nn.losses import OHKMLoss, PartLoss
 
 # Model
 from sleap.nn.model import Model
-from sleap.nn.viz import plot_confmaps, plot_img, plot_pafs, plot_peaks
-from sleap.util import get_package_file
+from sleap.nn.viz import plot_confmaps, plot_peaks
+from sleap.util import get_package_file, plot_img
 
 logger = logging.getLogger(__name__)
 

@@ -7,6 +7,8 @@ This allows for convenient ways to configure individual variants of common pipel
 well as to define training vs inference versions based on the same configurations.
 """
 
+from __future__ import annotations
+
 import tensorflow as tf
 import numpy as np
 import attr
@@ -168,6 +170,40 @@ class Pipeline:
             blocks.extend(pipeline.providers)
             blocks.extend(pipeline.transformers)
         return cls.from_blocks(blocks)
+
+    @classmethod
+    def from_data(
+        cls, data: sleap.Video | sleap.Labels, batch_size: int = None
+    ) -> Pipeline:
+        """Create a pipeline from `data`.
+
+        Args:
+            data: A `Video` or `Labels` instance.
+            batch_size: Optional batch size for the pipeline. If `None`, no batching is
+                applied.
+
+        Returns:
+            A `Pipeline` instance with the appropriate provider.
+        """
+        if isinstance(data, sleap.Video):
+            reader = VideoReader(video=data)
+        elif isinstance(data, sleap.Labels):
+            reader = LabelsReader.from_user_instances(labels=data)
+        else:
+            raise ValueError(
+                f"Unrecognized data type: {type(data)}. Must be a sleap.Video or "
+                f"sleap.Labels instance."
+            )
+
+        pipeline = Pipeline(reader)
+
+        if batch_size is not None:
+            pipeline += Batcher(
+                batch_size=batch_size, drop_remainder=False, unrag=False
+            )
+
+        pipeline += Prefetcher()
+        return pipeline
 
     def __add__(self, other: "Pipeline") -> "Pipeline":
         """Overload for + operator concatenation."""
