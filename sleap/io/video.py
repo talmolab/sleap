@@ -1,4 +1,4 @@
-""" Video reading and writing interfaces for different formats. """
+"""Video reading and writing interfaces for different formats."""
 
 import os
 import shutil
@@ -1492,40 +1492,6 @@ class Video:
             )
         )
 
-    def to_pipeline(
-        self,
-        batch_size: Optional[int] = None,
-        prefetch: bool = True,
-        frame_indices: Optional[List[int]] = None,
-    ) -> "sleap.pipelines.Pipeline":
-        """Create a pipeline for reading the video.
-
-        Args:
-            batch_size: If not `None`, the video frames will be batched into rank-4
-                tensors. Otherwise, single rank-3 images will be returned.
-            prefetch: If `True`, pipeline will include prefetching.
-            frame_indices: Frame indices to limit the pipeline reader to. If not
-                specified (default), pipeline will read the entire video.
-
-        Returns:
-            A `sleap.pipelines.Pipeline` that builds `tf.data.Dataset` for high
-            throughput I/O during inference.
-
-        See also: sleap.pipelines.VideoReader
-        """
-        from sleap.nn.data import pipelines
-
-        pipeline = pipelines.Pipeline(
-            pipelines.VideoReader(self, example_indices=frame_indices)
-        )
-        if batch_size is not None:
-            pipeline += pipelines.Batcher(
-                batch_size=batch_size, drop_remainder=False, unrag=False
-            )
-
-        pipeline += pipelines.Prefetcher()
-        return pipeline
-
     @staticmethod
     def make_specific_backend(backend_class, kwargs):
         # Only pass through the kwargs that match attributes for the backend
@@ -1545,22 +1511,17 @@ class Video:
             A cattr converter.
         """
 
-        # When we are structuring video backends, try to fixup the video file paths
-        # in case they are coming from a different computer or the file has been moved.
-        def fixup_video(x, cl):
-            if "filename" in x:
-                x["filename"] = Video.fixup_path(x["filename"])
-            if "file" in x:
-                x["file"] = Video.fixup_path(x["file"])
+        # Use from_filename to fixup the video path and determine backend
+        def fixup_video(x: dict, cl: Video):
+            backend_dict = x.pop("backend")
+            filename = backend_dict.pop("filename", None) or backend_dict.pop(
+                "file", None
+            )
 
-            return Video.make_specific_backend(cl, x)
+            return Video.from_filename(filename, **backend_dict)
 
         vid_cattr = cattr.Converter()
-
-        # Check the type hint for backend and register the video path
-        # fixup hook for each type in the Union.
-        for t in attr.fields(Video).backend.type.__args__:
-            vid_cattr.register_structure_hook(t, fixup_video)
+        vid_cattr.register_structure_hook(Video, fixup_video)
 
         return vid_cattr
 

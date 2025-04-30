@@ -9,7 +9,7 @@ from sleap.nn.identity import (
 )
 
 
-sleap.use_cpu_only()
+# sleap.use_cpu_only()
 
 
 def test_group_class_peaks():

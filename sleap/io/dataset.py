@@ -37,6 +37,7 @@ If the filename has a supported extension (e.g., ".slp", ".h5", ".json") then
 the file will be saved in the corresponding format. You can also specify the
 default extension to use if none is provided in the filename.
 """
+
 import itertools
 import os
 from collections.abc import MutableSequence
@@ -778,6 +779,7 @@ class Labels(MutableSequence):
 
     def extract(self, inds, copy: bool = False) -> "Labels":
         """Extract labeled frames from indices and return a new `Labels` object.
+
         Args:
             inds: Any valid indexing keys, e.g., a range, slice, list of label indices,
                 numpy array, `Video`, etc. See `__getitem__` for full list.
@@ -785,6 +787,7 @@ class Labels(MutableSequence):
                 and associated labels. If `False` (the default), a shallow copy with
                 references to the original labeled frames and other objects will be
                 returned.
+
         Returns:
             A new `Labels` object with the specified labeled frames.
             This will preserve the other data structures even if they are not found in
@@ -795,13 +798,26 @@ class Labels(MutableSequence):
                 - `Labels.suggestions`
                 - `Labels.provenance`
         """
+        # Get subset of labeled frames.
         lfs = self.__getitem__(inds)
-        new_labels = type(self)(
+
+        # Get subset of videos.
+        videos_used = set([lf.video for lf in lfs])
+        videos = list(videos_used)
+
+        # Get subset of suggestions.
+        suggestions = [
+            suggestion
+            for suggestion in self.suggestions
+            if suggestion.video in videos_used
+        ]
+
+        new_labels = Labels(
             labeled_frames=lfs,
-            videos=self.videos,
+            videos=videos,
             skeletons=self.skeletons,
             tracks=self.tracks,
-            suggestions=self.suggestions,
+            suggestions=suggestions,
             provenance=self.provenance,
         )
         if copy:
@@ -2055,6 +2071,19 @@ class Labels(MutableSequence):
 
         SleapAnalysisAdaptor.write(filename, self)
 
+    def export_csv(self, filename: str):
+        """Export labels to CSV format.
+
+        Args:
+            filename: Output path for the CSV format file.
+
+        Notes:
+            This will write the contents of the labels out as a CSV file.
+        """
+        from sleap.io.format.csv import CSVAdaptor
+
+        CSVAdaptor.write(filename, self)
+
     def export_nwb(
         self,
         filename: str,
@@ -2384,47 +2413,6 @@ class Labels(MutableSequence):
             new_vids.append(vid)
 
         return new_vids
-
-    def to_pipeline(
-        self,
-        batch_size: Optional[int] = None,
-        prefetch: bool = True,
-        frame_indices: Optional[List[int]] = None,
-        user_labeled_only: bool = True,
-    ) -> "sleap.pipelines.Pipeline":
-        """Create a pipeline for reading the dataset.
-
-        Args:
-            batch_size: If not `None`, the video frames will be batched into rank-4
-                tensors. Otherwise, single rank-3 images will be returned.
-            prefetch: If `True`, pipeline will include prefetching.
-            frame_indices: Labeled frame indices to limit the pipeline reader to. If not
-                specified (default), pipeline will read all the labeled frames in the
-                dataset.
-            user_labeled_only: If `True` (default), will only read frames with user
-                labeled instances.
-
-        Returns:
-            A `sleap.pipelines.Pipeline` that builds `tf.data.Dataset` for high
-            throughput I/O during inference.
-
-        See also: sleap.pipelines.LabelsReader
-        """
-        from sleap.nn.data import pipelines
-
-        if user_labeled_only:
-            reader = pipelines.LabelsReader.from_user_instances(self)
-            reader.example_indices = frame_indices
-        else:
-            reader = pipelines.LabelsReader(self, example_indices=frame_indices)
-        pipeline = pipelines.Pipeline(reader)
-        if batch_size is not None:
-            pipeline += pipelines.Batcher(
-                batch_size=batch_size, drop_remainder=False, unrag=False
-            )
-
-        pipeline += pipelines.Prefetcher()
-        return pipeline
 
     def numpy(
         self,

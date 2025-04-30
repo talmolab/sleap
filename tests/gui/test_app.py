@@ -142,6 +142,7 @@ def test_app_workflow(
     # Select and delete instance
     app.state["instance"] = inst_27_1
     app.commands.deleteSelectedInstance()
+    assert app.state["instance"] is None
 
     assert len(app.state["labeled_frame"].instances) == 1
     assert app.state["labeled_frame"].instances == [inst_27_0]
@@ -179,6 +180,7 @@ def test_app_workflow(
 
     # Delete all instances in track
     app.commands.deleteSelectedInstanceTrack()
+    assert app.state["instance"] is None
 
     assert len(app.state["labeled_frame"].instances) == 0
     app.state["frame_idx"] = 29
@@ -411,6 +413,12 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     with qtbot.waitActive(window, timeout=2000):
         window.showNormal()
     vp = window.player
+
+    # Change state and ensure menu-item check updates
+    color_predicted = window.state["color predicted"]
+    assert window._menu_actions["color predicted"].isChecked() == color_predicted
+    window.state["color predicted"] = not color_predicted
+    assert window._menu_actions["color predicted"].isChecked() == (not color_predicted)
 
     # Enable distinct colors
     window.state["color predicted"] = True

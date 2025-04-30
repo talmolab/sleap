@@ -19,6 +19,19 @@ from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
 from sleap.gui.state import GuiState
 from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
+from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+
+
+def test_sleap_analysis_read(small_robot_3_frame_vid, small_robot_3_frame_hdf5):
+
+    # Single instance hdf5 analysis file test
+    read_labels = SleapAnalysisAdaptor.read(
+        file=small_robot_3_frame_hdf5, video=small_robot_3_frame_vid
+    )
+
+    assert len(read_labels.videos) == 1
+    assert len(read_labels.tracks) == 1
+    assert len(read_labels.skeletons) == 1
 
 
 def test_text_adaptor(tmpdir):

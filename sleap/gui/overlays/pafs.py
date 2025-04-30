@@ -14,17 +14,7 @@ import math
 
 from sleap.io.video import HDF5Video
 
-from sleap.gui.overlays.base import DataOverlay, h5_colors
-
-
-class PafOverlay(DataOverlay):
-    """Class show pafs saved in HDF5 (not currently used)."""
-
-    @classmethod
-    def from_h5(cls, filename, input_format="channels_last", **kwargs):
-        return DataOverlay.from_h5(
-            filename, "/pafs", input_format, overlay_class=MultiQuiverPlot, **kwargs
-        )
+from sleap.gui.overlays.base import h5_colors
 
 
 class MultiQuiverPlot(QtWidgets.QGraphicsObject):

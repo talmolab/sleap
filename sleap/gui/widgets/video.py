@@ -12,6 +12,7 @@ Example usage: ::
     >>> vp.addInstance(instance=my_instance, color=(r, g, b))
 
 """
+
 from collections import deque
 
 # FORCE_REQUESTS controls whether we emit a signal to process frame requests
@@ -62,6 +63,7 @@ from qtpy.QtWidgets import (
     QShortcut,
     QVBoxLayout,
     QWidget,
+    QPinchGesture,
 )
 
 import sleap
@@ -240,6 +242,8 @@ class QtVideoPlayer(QWidget):
 
         self._register_shortcuts()
 
+        self.context_menu = None
+        self._menu_actions = dict()
         if self.context:
             self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
             self.customContextMenuRequested.connect(self.show_contextual_menu)
@@ -358,41 +362,54 @@ class QtVideoPlayer(QWidget):
     def setSeekbarSelection(self, a: int, b: int):
         self.seekbar.setSelection(a, b)
 
+    def create_contextual_menu(self, scene_pos: QtCore.QPointF) -> QtWidgets.QMenu:
+        """Create the context menu for the viewer.
+
+        This is called when the user right-clicks in the viewer. This function also
+        stores the menu actions in the `_menu_actions` attribute so that they can be
+        accessed later and stores the context menu in the `context_menu` attribute.
+
+        Args:
+            scene_pos: The position in the scene where the menu was requested.
+
+        Returns:
+            The created context menu.
+        """
+
+        self.context_menu = QtWidgets.QMenu()
+        self.context_menu.addAction("Add Instance:").setEnabled(False)
+
+        self._menu_actions = dict()
+        params_by_action_name = {
+            "Default": {"init_method": "best", "location": scene_pos},
+            "Average": {"init_method": "template", "location": scene_pos},
+            "Force Directed": {"init_method": "force_directed", "location": scene_pos},
+            "Copy Prior Frame": {"init_method": "prior_frame"},
+            "Random": {"init_method": "random", "location": scene_pos},
+        }
+        for action_name, params in params_by_action_name.items():
+            self._menu_actions[action_name] = self.context_menu.addAction(
+                action_name, lambda params=params: self.context.newInstance(**params)
+            )
+
+        return self.context_menu
+
     def show_contextual_menu(self, where: QtCore.QPoint):
+        """Show the context menu at the given position in the viewer.
+
+        This is called when the user right-clicks in the viewer. This function calls
+        `create_contextual_menu` to create the menu and then shows the menu at the
+        given position.
+
+        Args:
+            where: The position in the viewer where the menu was requested.
+        """
+
         if not self.is_menu_enabled:
             return
 
         scene_pos = self.view.mapToScene(where)
-        menu = QtWidgets.QMenu()
-
-        menu.addAction("Add Instance:").setEnabled(False)
-
-        menu.addAction("Default", lambda: self.context.newInstance(init_method="best"))
-
-        menu.addAction(
-            "Average",
-            lambda: self.context.newInstance(
-                init_method="template", location=scene_pos
-            ),
-        )
-
-        menu.addAction(
-            "Force Directed",
-            lambda: self.context.newInstance(
-                init_method="force_directed", location=scene_pos
-            ),
-        )
-
-        menu.addAction(
-            "Copy Prior Frame",
-            lambda: self.context.newInstance(init_method="prior_frame"),
-        )
-
-        menu.addAction(
-            "Random",
-            lambda: self.context.newInstance(init_method="random", location=scene_pos),
-        )
-
+        menu = self.create_contextual_menu(scene_pos)
         menu.exec_(self.mapToGlobal(where))
 
     def load_video(self, video: Video, plot=True):
@@ -808,6 +825,8 @@ class GraphicsView(QGraphicsView):
         # Set icon as default background.
         self.setImage(QImage(sleap.util.get_package_file("gui/background.png")))
 
+        self.grabGesture(Qt.GestureType.PinchGesture)
+
     def dragEnterEvent(self, event):
         if self.parentWidget():
             self.parentWidget().dragEnterEvent(event)
@@ -1147,8 +1166,13 @@ class GraphicsView(QGraphicsView):
         QGraphicsView.mouseDoubleClickEvent(self, event)
 
     def wheelEvent(self, event):
-        """Custom event handler. Zoom in/out based on scroll wheel change."""
-        # zoom on wheel when no mouse buttons are pressed
+        """Custom event handler to zoom in/out based on scroll wheel change.
+
+        We cannot use the default QGraphicsView.wheelEvent behavior since that will
+        scroll the view.
+        """
+
+        # Zoom on wheel when no mouse buttons are pressed
         if event.buttons() == Qt.NoButton:
             angle = event.angleDelta().y()
             factor = 1.1 if angle > 0 else 0.9
@@ -1156,20 +1180,10 @@ class GraphicsView(QGraphicsView):
             self.zoomFactor = max(factor * self.zoomFactor, 1)
             self.updateViewer()
 
-        # Trigger wheelEvent for all child elements. This is a bit of a hack.
-        # We can't use QGraphicsView.wheelEvent(self, event) since that will scroll
-        # view.
-        # We want to trigger for all children, since wheelEvent should continue rotating
-        # an skeleton even if the skeleton node/node label is no longer under the
-        # cursor.
-        # Note that children expect a QGraphicsSceneWheelEvent event, which is why we're
-        # explicitly ignoring TypeErrors. Everything seems to work fine since we don't
-        # care about the mouse position; if we did, we'd need to map pos to scene.
+        # Trigger only for rotation-relevant children (otherwise GUI crashes)
         for child in self.items():
-            try:
+            if isinstance(child, (QtNode, QtNodeLabel)):
                 child.wheelEvent(event)
-            except TypeError:
-                pass
 
     def keyPressEvent(self, event):
         """Custom event hander, disables default QGraphicsView behavior."""
@@ -1178,6 +1192,23 @@ class GraphicsView(QGraphicsView):
     def keyReleaseEvent(self, event):
         """Custom event hander, disables default QGraphicsView behavior."""
         event.ignore()  # Kicks the event up to parent
+
+    def event(self, event):
+        if event.type() == QtCore.QEvent.Gesture:
+            return self.handleGestureEvent(event)
+        return super().event(event)
+
+    def handleGestureEvent(self, event):
+        gesture = event.gesture(Qt.GestureType.PinchGesture)
+        if gesture:
+            self.handlePinchGesture(gesture)
+        return True
+
+    def handlePinchGesture(self, gesture: QPinchGesture):
+        if gesture.state() == Qt.GestureState.GestureUpdated:
+            factor = gesture.scaleFactor()
+            self.zoomFactor = max(factor * self.zoomFactor, 1)
+            self.updateViewer()
 
 
 class QtNodeLabel(QGraphicsTextItem):
@@ -1538,6 +1569,9 @@ class QtNode(QGraphicsEllipseItem):
             # Shift-click to mark all points as complete
             elif event.modifiers() == Qt.ShiftModifier:
                 self.parentObject().updatePoints(complete=True, user_change=True)
+            # Ctrl-click to duplicate instance
+            elif event.modifiers() == Qt.ControlModifier:
+                self.parentObject().mousePressEvent(event)
             else:
                 self.dragParent = False
                 super(QtNode, self).mousePressEvent(event)
@@ -1560,7 +1594,6 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseMoveEvent(self, event):
         """Custom event handler for mouse move."""
-        # print(event)
         if self.dragParent:
             self.parentObject().mouseMoveEvent(event)
         else:
@@ -1571,7 +1604,6 @@ class QtNode(QGraphicsEllipseItem):
 
     def mouseReleaseEvent(self, event):
         """Custom event handler for mouse release."""
-        # print(event)
         self.unsetCursor()
         if self.dragParent:
             self.parentObject().mouseReleaseEvent(event)
@@ -1587,7 +1619,9 @@ class QtNode(QGraphicsEllipseItem):
     def wheelEvent(self, event):
         """Custom event handler for mouse scroll wheel."""
         if self.dragParent:
-            angle = event.delta() / 20 + self.parentObject().rotation()
+            angle = (
+                event.angleDelta().x() + event.angleDelta().y()
+            ) / 20 + self.parentObject().rotation()
             self.parentObject().setRotation(angle)
             event.accept()
 
@@ -1597,6 +1631,10 @@ class QtNode(QGraphicsEllipseItem):
         if scene is not None:
             view = scene.views()[0]
             view.instanceDoubleClicked.emit(self.parentObject().instance, event)
+
+    def hoverEnterEvent(self, event):
+        """Custom event handler for mouse hover enter."""
+        return super().hoverEnterEvent(event)
 
 
 class QtEdge(QGraphicsPolygonItem):
@@ -1797,6 +1835,7 @@ class QtInstance(QGraphicsObject):
         self.labels = {}
         self.labels_shown = True
         self._selected = False
+        self._is_hovering = False
         self._bounding_rect = QRectF()
 
         # Show predicted instances behind non-predicted ones
@@ -1818,6 +1857,7 @@ class QtInstance(QGraphicsObject):
         box_pen.setStyle(Qt.DashLine)
         box_pen.setCosmetic(True)
         self.box.setPen(box_pen)
+        self.setAcceptHoverEvents(True)
 
         # Add label for highlighted instance
         self.highlight_label = QtTextWithBackground(parent=self)
@@ -1850,7 +1890,7 @@ class QtInstance(QGraphicsObject):
         self.track_label.setHtml(instance_label_text)
 
         # Add nodes
-        for (node, point) in self.instance.nodes_points:
+        for node, point in self.instance.nodes_points:
             if point.visible or self.show_non_visible:
                 node_item = QtNode(
                     parent=self,
@@ -1865,7 +1905,7 @@ class QtInstance(QGraphicsObject):
                 self.nodes[node.name] = node_item
 
         # Add edges
-        for (src, dst) in self.skeleton.edge_names:
+        for src, dst in self.skeleton.edge_names:
             # Make sure that both nodes are present in this instance before drawing edge
             if src in self.nodes and dst in self.nodes:
                 edge_item = QtEdge(
@@ -1979,7 +2019,12 @@ class QtInstance(QGraphicsObject):
         select this instance.
         """
         # Only show box if instance is selected
-        op = 0.7 if self._selected else 0
+        op = 0
+        if self._selected:
+            op = 0.8
+        elif self._is_hovering:
+            op = 0.4
+
         self.box.setOpacity(op)
         # Update the position for the box
         rect = self.getPointsBoundingRect()
@@ -2072,6 +2117,85 @@ class QtInstance(QGraphicsObject):
     def paint(self, painter, option, widget=None):
         """Method required by Qt."""
         pass
+
+    def hoverEnterEvent(self, event):
+        self._is_hovering = True
+        self.updateBox()
+        return super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self._is_hovering = False
+        self.updateBox()
+        return super().hoverLeaveEvent(event)
+
+    def mousePressEvent(self, event):
+        """Custom event handler for mouse press."""
+        if event.buttons() == Qt.LeftButton:
+            if event.modifiers() == Qt.ControlModifier:
+                self.duplicate_instance()
+            else:
+                # Default behavior is to select the instance
+                super(QtInstance, self).mousePressEvent(event)
+
+    def duplicate_instance(self):
+        """Duplicate the instance and add it to the scene."""
+        # Add instance to the context
+        if self.player.context is None:
+            return
+
+        # Copy the instance and add it to the context
+        context = self.player.context
+        context.newInstance(copy_instance=self.instance)
+
+        # Find the new instance and its last label
+        lf = context.labels.find(
+            context.state["video"], context.state["frame_idx"], return_new=True
+        )[0]
+        new_instance = lf.instances[-1]
+
+        # Select the duplicated QtInstance object
+        self.player.state["instance"] = new_instance
+
+        # Refresh the plot
+        self.player.plot()
+
+        def on_selection_update():
+            """Callback to set the new QtInstance to be movable."""
+            # Find the QtInstance corresponding to the newly created instance
+            for qt_inst in self.player.view.all_instances:
+                if qt_inst.instance == new_instance:
+                    self.player.view.updatedSelection.disconnect(on_selection_update)
+
+                    # Set this QtInstance to be movable
+                    qt_inst.setFlag(QGraphicsItem.ItemIsMovable)
+
+                    # Optionally grab the mouse and change cursor, so user can immediately drag
+                    qt_inst.setCursor(Qt.ClosedHandCursor)
+                    qt_inst.grabMouse()
+                    break
+
+        # Connect the callback to the updatedSelection signal
+        self.player.view.updatedSelection.connect(on_selection_update)
+        self.player.view.updatedSelection.emit()
+
+    def mouseMoveEvent(self, event):
+        """Custom event handler to emit signal on event."""
+        is_move = self.flags() & QGraphicsItem.ItemIsMovable
+        is_ctrl_pressed = (event.modifiers() & Qt.ControlModifier) == Qt.ControlModifier
+        is_alt_pressed = (event.modifiers() & Qt.AltModifier) == Qt.AltModifier
+
+        # Only allow moving if the instance is selected
+        if is_move and (is_ctrl_pressed or is_alt_pressed):
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """Custom event handler for mouse release."""
+        if self.flags() & QGraphicsItem.ItemIsMovable:
+            self.setFlag(QGraphicsItem.ItemIsMovable, False)
+            self.updatePoints(user_change=True)
+            self.updateBox()
+            self.ungrabMouse()
+            super().mouseReleaseEvent(event)
 
 
 class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
@@ -2263,7 +2387,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
                 self.parent.nodes[node_key].setPos(new_x, new_y)
 
             # Update the instance
-            self.parent.updatePoints(complete=True, user_change=True)
+            self.parent.updatePoints(complete=False, user_change=True)
             self.resizing = None
 
 

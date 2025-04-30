@@ -25,7 +25,7 @@ from sleap.nn.training import (
     create_trainer_using_cli as sleap_train,
 )
 
-sleap.use_cpu_only()
+# sleap.use_cpu_only()
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def cfg():
     cfg = TrainingJobConfig()
     cfg.data.instance_cropping.center_on_part = "A"
     cfg.model.backbone.unet = UNetConfig(
-        max_stride=8, output_stride=1, filters=8, filters_rate=1.0
+        max_stride=8, output_stride=1, filters=2, filters_rate=1.0
     )
     cfg.optimization.preload_data = False
     cfg.optimization.batch_size = 1
@@ -123,33 +123,60 @@ def test_train_load_single_instance(
             assert (w == w2).all()
 
 
-def test_train_single_instance(min_labels_robot, cfg):
+def test_train_single_instance(min_labels_robot, cfg, tmp_path):
     cfg.model.heads.single_instance = SingleInstanceConfmapsHeadConfig(
         sigma=1.5, output_stride=1, offset_refinement=False
     )
+
+    # Set save directory
+    cfg.outputs.run_name = "test_run"
+    cfg.outputs.runs_folder = str(tmp_path / "training_runs")  # ensure it's a string
+    cfg.outputs.save_visualizations = True
+    cfg.outputs.keep_viz_images = True
+    cfg.outputs.save_outputs = True  # enable saving
+
     trainer = SingleInstanceModelTrainer.from_config(
         cfg, training_labels=min_labels_robot
     )
     trainer.setup()
     trainer.train()
+
+    run_path = Path(cfg.outputs.runs_folder, cfg.outputs.run_name)
+    viz_path = run_path / "viz"
+
     assert trainer.keras_model.output_names[0] == "SingleInstanceConfmapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 320, 560, 2)
+    assert viz_path.exists()
 
 
-def test_train_single_instance_with_offset(min_labels_robot, cfg):
+def test_train_single_instance_with_offset(min_labels_robot, cfg, tmp_path):
     cfg.model.heads.single_instance = SingleInstanceConfmapsHeadConfig(
         sigma=1.5, output_stride=1, offset_refinement=True
     )
+
+    # Set save directory
+    cfg.outputs.run_name = "test_run"
+    cfg.outputs.runs_folder = str(tmp_path / "training_runs")  # ensure it's a string
+    cfg.outputs.save_visualizations = False
+    cfg.outputs.keep_viz_images = False
+    cfg.outputs.save_outputs = True  # enable saving
+
     trainer = SingleInstanceModelTrainer.from_config(
         cfg, training_labels=min_labels_robot
     )
     trainer.setup()
     trainer.train()
+
+    run_path = Path(cfg.outputs.runs_folder, cfg.outputs.run_name)
+    viz_path = run_path / "viz"
+
     assert trainer.keras_model.output_names[0] == "SingleInstanceConfmapsHead"
     assert tuple(trainer.keras_model.outputs[0].shape) == (None, 320, 560, 2)
 
     assert trainer.keras_model.output_names[1] == "OffsetRefinementHead"
     assert tuple(trainer.keras_model.outputs[1].shape) == (None, 320, 560, 4)
+
+    assert not viz_path.exists()
 
 
 def test_train_centroids(training_labels, cfg):
@@ -251,12 +278,12 @@ def test_train_bottomup_with_offset(training_labels, cfg):
 
 def test_train_bottomup_multiclass(min_tracks_2node_labels, cfg):
     labels = min_tracks_2node_labels
-    cfg.data.preprocessing.input_scaling = 0.5
+    cfg.data.preprocessing.input_scaling = 0.25
     cfg.model.heads.multi_class_bottomup = sleap.nn.config.MultiClassBottomUpConfig(
         confmaps=sleap.nn.config.MultiInstanceConfmapsHeadConfig(
-            output_stride=2, offset_refinement=False
+            output_stride=4, offset_refinement=False
         ),
-        class_maps=sleap.nn.config.ClassMapsHeadConfig(output_stride=2),
+        class_maps=sleap.nn.config.ClassMapsHeadConfig(output_stride=4),
     )
     trainer = sleap.nn.training.BottomUpMultiClassModelTrainer.from_config(
         cfg, training_labels=labels
@@ -266,8 +293,8 @@ def test_train_bottomup_multiclass(min_tracks_2node_labels, cfg):
 
     assert trainer.keras_model.output_names[0] == "MultiInstanceConfmapsHead"
     assert trainer.keras_model.output_names[1] == "ClassMapsHead"
-    assert tuple(trainer.keras_model.outputs[0].shape) == (None, 256, 256, 2)
-    assert tuple(trainer.keras_model.outputs[1].shape) == (None, 256, 256, 2)
+    assert tuple(trainer.keras_model.outputs[0].shape) == (None, 64, 64, 2)
+    assert tuple(trainer.keras_model.outputs[1].shape) == (None, 64, 64, 2)
 
 
 def test_train_topdown_multiclass(min_tracks_2node_labels, cfg):
@@ -360,3 +387,26 @@ def test_resume_training_cli(
 
         trainer = sleap_train(cli_args)
         assert trainer.config.model.base_checkpoint == base_checkpoint_path
+
+
+@pytest.mark.parametrize("keep_viz_cli", ["", "--keep_viz"])
+def test_keep_viz_cli(
+    keep_viz_cli,
+    min_single_instance_robot_model_path: str,
+    tmp_path: str,
+):
+    """Test training CLI for --keep_viz option."""
+    cfg_dir = min_single_instance_robot_model_path
+    cfg = TrainingJobConfig.load_json(str(Path(cfg_dir, "training_config.json")))
+
+    # Save training config to tmp folder
+    cfg_path = str(Path(tmp_path, "training_config.json"))
+    cfg.save_json(cfg_path)
+
+    cli_args = [cfg_path, keep_viz_cli]
+    trainer = sleap_train(cli_args)
+
+    # Check that --keep_viz is set correctly
+    assert trainer.config.outputs.keep_viz_images == (
+        True if keep_viz_cli == "--keep_viz" else False
+    )

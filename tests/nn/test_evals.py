@@ -20,7 +20,7 @@ from sleap.nn.evals import (
 from sleap.nn.model import Model
 
 
-sleap.use_cpu_only()
+# sleap.use_cpu_only()
 
 
 def test_compute_oks():

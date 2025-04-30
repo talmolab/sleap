@@ -3,7 +3,7 @@ import sleap
 from sleap.nn.data.training import split_labels_train_val
 
 
-sleap.use_cpu_only()  # hide GPUs for test
+# sleap.use_cpu_only()  # hide GPUs for test
 
 
 def test_split_labels_train_val():

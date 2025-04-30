@@ -60,7 +60,7 @@ Note that many of the menu command have keyboard shortcuts which can be configur
 
 "**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the {ref}`orientation` of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a "bottom-up" approach).
 
-"**Trail Length**" allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames.
+"**Trail Length**" allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames. By default, you can only select trail lengths of up to 250 frames. You can use a custom trail length by modifying the default length in the `preferences.yaml` file. However, using trail lengths longer than about 500 frames can result in significant lag.
 
 "**Fit Instances to View**" allows you to toggle whether the view is auto-zoomed to the instances in each frame. This can be useful when proofreading predictions.
 
@@ -97,8 +97,6 @@ Note that many of the menu command have keyboard shortcuts which can be configur
 "**Run Inference...**" allows you to generate predictions using a pre-trained set of models. Any trained models in the `models` directory next to your current project will be listed, and you also have the option to select models saved elsewhere.
 
 "**Evaluate Metrics for Trained Models...**" provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).
-
-"**Visualize Model Outputs...**" allows you to select a trained model and see the intermediate inference data plotted on the frame image. In particular, looking at the confidence maps used to predict each node can be helpful for understanding why and where your model isn't preforming well.
 
 "**Add Instances from All Predictions on Current Frame**" converts ever predicted instance on the current frame into a user editable instance (which allows you to make corrections and/or use it for training).
 
@@ -147,6 +145,8 @@ Note that many of the menu command have keyboard shortcuts which can be configur
 **Click** on instance: Select that instance
 
 **Click** elsewhere on image: Clear selection
+
+**Control + left-click (hold) + drag** on instance: Duplicate the selected instance and drag the entire copied instance
 
 ## Navigation Keys
 

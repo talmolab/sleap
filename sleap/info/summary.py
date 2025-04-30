@@ -21,7 +21,7 @@ class StatisticSeries:
     are frame index and value are some numerical value for the frame.
 
     Args:
-        labels: The :class:`Labels` for which to calculate series.
+        labels: The `Labels` for which to calculate series.
     """
 
     labels: Labels
@@ -41,7 +41,7 @@ class StatisticSeries:
         """Get series with statistic of point scores in each frame.
 
         Args:
-            video: The :class:`Video` for which to calculate statistic.
+            video: The `Video` for which to calculate statistic.
             reduction: name of function applied to scores:
                 * sum
                 * min
@@ -67,7 +67,7 @@ class StatisticSeries:
         """Get series with statistic of instance scores in each frame.
 
         Args:
-            video: The :class:`Video` for which to calculate statistic.
+            video: The `Video` for which to calculate statistic.
             reduction: name of function applied to scores:
                 * sum
                 * min
@@ -93,7 +93,7 @@ class StatisticSeries:
         same track) from the closest earlier labeled frame.
 
         Args:
-            video: The :class:`Video` for which to calculate statistic.
+            video: The `Video` for which to calculate statistic.
             reduction: name of function applied to point scores:
                 * sum
                 * mean
@@ -121,7 +121,7 @@ class StatisticSeries:
         Get sum of displacement for single node of each instance per frame.
 
         Args:
-            video: The :class:`Video` for which to calculate statistic.
+            video: The `Video` for which to calculate statistic.
             reduction: name of function applied to point scores:
                 * sum
                 * mean
@@ -226,7 +226,7 @@ class StatisticSeries:
         Calculate total point displacement between two given frames.
 
         Args:
-            lf: The :class:`LabeledFrame` for which we want velocity
+            lf: The `LabeledFrame` for which we want velocity
             last_lf: The frame from which to calculate displacement.
             reduce_function: Numpy function (e.g., np.sum, np.nanmean)
                 is applied to *point* displacement, and then those
@@ -246,3 +246,35 @@ class StatisticSeries:
                     inst_dist = reduce_function(point_dist)
                     val += inst_dist if not np.isnan(inst_dist) else 0
         return val
+
+    def get_tracking_score_series(
+        self, video: Video, reduction: str = "min"
+    ) -> Dict[int, float]:
+        """Get series with statistic of tracking scores in each frame.
+
+        Args:
+            video: The `Video` for which to calculate statistic.
+            reduction: name of function applied to scores:
+                * mean
+                * min
+
+        Returns:
+            The series dictionary (see class docs for details)
+        """
+        reduce_fn = {
+            "min": np.nanmin,
+            "mean": np.nanmean,
+        }[reduction]
+
+        series = dict()
+
+        for lf in self.labels.find(video):
+            vals = [
+                inst.tracking_score for inst in lf if hasattr(inst, "tracking_score")
+            ]
+            if vals:
+                val = reduce_fn(vals)
+                if not np.isnan(val):
+                    series[lf.frame_idx] = val
+
+        return series

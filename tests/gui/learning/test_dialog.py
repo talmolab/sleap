@@ -7,6 +7,7 @@ import cattr
 import pytest
 from qtpy import QtWidgets
 
+import sleap
 from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
 from sleap.gui.learning.configs import (
     TrainingConfigFilesWidget,
@@ -429,3 +430,22 @@ def test_immutablilty_of_trained_config_info(
     # saving multiple configs from one config info.
     ld.save(output_dir=tmpdir)
     ld.save(output_dir=tmpdir)
+
+
+def test_validate_id_model(qtbot, min_labels_slp, min_labels_slp_path):
+    app = MainWindow(no_usage_data=True)
+    ld = LearningDialog(
+        mode="training",
+        labels_filename=Path(min_labels_slp_path),
+        labels=min_labels_slp,
+    )
+    assert not ld._validate_id_model()
+
+    # Add track but don't assign it to instances
+    new_track = sleap.Track(name="new_track")
+    min_labels_slp.tracks.append(new_track)
+    assert not ld._validate_id_model()
+
+    # Assign track to instances
+    min_labels_slp[0][0].track = new_track
+    assert ld._validate_id_model()

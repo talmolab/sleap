@@ -7,6 +7,8 @@ This allows for convenient ways to configure individual variants of common pipel
 well as to define training vs inference versions based on the same configurations.
 """
 
+from __future__ import annotations
+
 import tensorflow as tf
 import numpy as np
 import attr
@@ -18,7 +20,7 @@ import sleap
 from sleap.nn.data.providers import LabelsReader, VideoReader
 from sleap.nn.data.augmentation import (
     AugmentationConfig,
-    ImgaugAugmenter,
+    AlbumentationsAugmenter,
     RandomCropper,
     RandomFlipper,
 )
@@ -68,7 +70,7 @@ from sleap.nn.heads import (
 
 PROVIDERS = (LabelsReader, VideoReader)
 TRANSFORMERS = (
-    ImgaugAugmenter,
+    AlbumentationsAugmenter,
     RandomCropper,
     Normalizer,
     Resizer,
@@ -168,6 +170,40 @@ class Pipeline:
             blocks.extend(pipeline.providers)
             blocks.extend(pipeline.transformers)
         return cls.from_blocks(blocks)
+
+    @classmethod
+    def from_data(
+        cls, data: sleap.Video | sleap.Labels, batch_size: int = None
+    ) -> Pipeline:
+        """Create a pipeline from `data`.
+
+        Args:
+            data: A `Video` or `Labels` instance.
+            batch_size: Optional batch size for the pipeline. If `None`, no batching is
+                applied.
+
+        Returns:
+            A `Pipeline` instance with the appropriate provider.
+        """
+        if isinstance(data, sleap.Video):
+            reader = VideoReader(video=data)
+        elif isinstance(data, sleap.Labels):
+            reader = LabelsReader.from_user_instances(labels=data)
+        else:
+            raise ValueError(
+                f"Unrecognized data type: {type(data)}. Must be a sleap.Video or "
+                f"sleap.Labels instance."
+            )
+
+        pipeline = Pipeline(reader)
+
+        if batch_size is not None:
+            pipeline += Batcher(
+                batch_size=batch_size, drop_remainder=False, unrag=False
+            )
+
+        pipeline += Prefetcher()
+        return pipeline
 
     def __add__(self, other: "Pipeline") -> "Pipeline":
         """Overload for + operator concatenation."""
@@ -406,7 +442,7 @@ class SingleInstanceConfmapsPipeline:
                 self.data_config.labels.skeletons[0],
                 horizontal=self.optimization_config.augmentation_config.flip_horizontal,
             )
-        pipeline += ImgaugAugmenter.from_config(
+        pipeline += AlbumentationsAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
         if self.optimization_config.augmentation_config.random_crop:
@@ -550,7 +586,7 @@ class CentroidConfmapsPipeline:
                 self.data_config.labels.skeletons[0],
                 horizontal=self.optimization_config.augmentation_config.flip_horizontal,
             )
-        pipeline += ImgaugAugmenter.from_config(
+        pipeline += AlbumentationsAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
         if self.optimization_config.augmentation_config.random_crop:
@@ -713,7 +749,7 @@ class TopdownConfmapsPipeline:
                 self.data_config.labels.skeletons[0],
                 horizontal=self.optimization_config.augmentation_config.flip_horizontal,
             )
-        pipeline += ImgaugAugmenter.from_config(
+        pipeline += AlbumentationsAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
@@ -775,6 +811,7 @@ class TopdownConfmapsPipeline:
                 provider=data_provider,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,
@@ -863,7 +900,7 @@ class BottomUpPipeline:
                 self.data_config.labels.skeletons[0],
                 horizontal=aug_config.flip_horizontal,
             )
-        pipeline += ImgaugAugmenter.from_config(aug_config)
+        pipeline += AlbumentationsAugmenter.from_config(aug_config)
         if aug_config.random_crop:
             pipeline += RandomCropper(
                 crop_height=aug_config.random_crop_height,
@@ -1028,7 +1065,7 @@ class BottomUpMultiClassPipeline:
                 horizontal=aug_config.flip_horizontal,
             )
 
-        pipeline += ImgaugAugmenter.from_config(aug_config)
+        pipeline += AlbumentationsAugmenter.from_config(aug_config)
         if aug_config.random_crop:
             pipeline += RandomCropper(
                 crop_height=aug_config.random_crop_height,
@@ -1186,7 +1223,7 @@ class TopDownMultiClassPipeline:
                 config=self.data_config.preprocessing,
                 provider=data_provider,
             )
-        pipeline += ImgaugAugmenter.from_config(
+        pipeline += AlbumentationsAugmenter.from_config(
             self.optimization_config.augmentation_config
         )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
@@ -1250,6 +1287,7 @@ class TopDownMultiClassPipeline:
                 provider=data_provider,
             )
         pipeline += Normalizer.from_config(self.data_config.preprocessing)
+        pipeline += Resizer.from_config(self.data_config.preprocessing)
         pipeline += InstanceCentroidFinder.from_config(
             self.data_config.instance_cropping,
             skeletons=self.data_config.labels.skeletons,

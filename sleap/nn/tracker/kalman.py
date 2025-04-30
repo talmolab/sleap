@@ -608,7 +608,7 @@ def remove_second_bests_from_cost_matrix(
          cost matrix with invalid matches set to specified invalid value.
     """
 
-    valid_match_mask = np.full_like(cost_matrix, True, dtype=np.bool)
+    valid_match_mask = np.full_like(cost_matrix, True, dtype=bool)
 
     rows, columns = cost_matrix.shape
 

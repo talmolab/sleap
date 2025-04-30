@@ -11,45 +11,28 @@ on:
       - "environment_no_cuda.yml"
       - "requirements.txt"
       - "dev_requirements.txt"
-  push:
-    branches:
-      - master
-      - develop
-    paths:
-      - "sleap/**"
-      - "tests/**"
-      - ".github/workflows/ci.yml"
-      - "environment_no_cuda.yml"
-      - "requirements.txt"
-      - "dev_requirements.txt"
+  # push:
+  #   branches:
+  #     - main
+  #     - develop
+  #   paths:
+  #     - "sleap/**"
+  #     - "tests/**"
+  #     - ".github/workflows/ci.yml"
+  #     - "environment_no_cuda.yml"
+  #     - "requirements.txt"
+  #     - "dev_requirements.txt"
 
 jobs:
-  type_check:
-    name: Type Check
-    runs-on: "ubuntu-22.04"
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-      - name: Install Dependencies
-        run: |
-          pip install mypy
-      - name: Run MyPy
-        # TODO: remove this once all MyPy errors get fixed
-        continue-on-error: true
-        run: |
-          mypy --follow-imports=skip --ignore-missing-imports sleap tests
+  # Lint
   lint:
     name: Lint
     runs-on: "ubuntu-22.04"
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python 3.7
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.7
       - name: Install Dependencies
@@ -59,58 +42,52 @@ jobs:
       - name: Run Black
         run: |
           black --check sleap tests
+
+  # Tests
   tests:
     name: Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
         include:
           # Default values
           - env_file: environment_no_cuda.yml
-          - test_args: --durations=-1 tests/
           # Mac specific values
-          - os: macos-latest
+          - os: macos-14
             env_file: environment_mac.yml
-          # Ubuntu specific values
-          - os: ubuntu-22.04
-            test_args: --cov=sleap --cov-report=xml --durations=-1 tests/
+
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Micromamba
-        # https://github.com/mamba-org/setup-micromamba
-        uses: mamba-org/setup-micromamba@v1
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          micromamba-version: '1.4.6-0'
+          miniforge-version: latest
+          conda-solver: "libmamba"
           environment-file: ${{ matrix.env_file }}
-          environment-name: sleap_ci
-          init-shell: >-
-            bash
-            powershell
-          post-cleanup: all
+          activate-environment: sleap_ci
       
       # Print environment info
       - name: Print environment info
         shell: bash -l {0}
         run: |
           which python
-          micromamba info
-          micromamba list
+          conda info
+          conda list
           pip freeze
       
       # Test environment
       - name: Test with pytest
         shell: bash -l {0}
         run: |
-          pytest ${{ matrix.test_args }}
+          pytest --cov=sleap --cov-report=xml --durations=-1 tests/
 
       # Upload coverage
       - name: Upload coverage
-        uses: codecov/codecov-action@v1
-        if: matrix.os == 'ubuntu-22.04'
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true

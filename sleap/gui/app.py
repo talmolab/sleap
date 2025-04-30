@@ -44,7 +44,6 @@ ensures consistency (e.g.) between color of instances drawn on video
 frame and instances listed in data view table.
 """
 
-
 import os
 import platform
 import random
@@ -53,6 +52,8 @@ import traceback
 from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
+import sys
+import subprocess
 
 from qtpy import QtCore, QtGui
 from qtpy.QtCore import QEvent, Qt
@@ -84,7 +85,7 @@ from sleap.io.dataset import Labels
 from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
 from sleap.skeleton import Skeleton
-from sleap.util import parse_uri_path
+from sleap.util import parse_uri_path, get_config_file
 
 
 logger = getLogger(__name__)
@@ -151,6 +152,7 @@ class MainWindow(QMainWindow):
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["color predicted"] = prefs["color predicted"]
+        self.state["trail_length"] = prefs["trail length"]
         self.state["trail_shade"] = prefs["trail shade"]
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
@@ -221,6 +223,7 @@ class MainWindow(QMainWindow):
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
+        prefs["trail length"] = self.state["trail_length"]
         prefs["trail shade"] = self.state["trail_shade"]
         prefs["share usage data"] = self.state["share usage data"]
 
@@ -374,7 +377,9 @@ class MainWindow(QMainWindow):
         def connect_check(key):
             self._menu_actions[key].setCheckable(True)
             self._menu_actions[key].setChecked(self.state[key])
-            self.state.connect(key, self._menu_actions[key].setChecked)
+            self.state.connect(
+                key, lambda checked: self._menu_actions[key].setChecked(checked)
+            )
 
         # add checkable menu item connected to state variable
         def add_menu_check_item(menu, key: str, name: str):
@@ -527,6 +532,13 @@ class MainWindow(QMainWindow):
             fileMenu, "reset prefs", "Reset preferences to defaults...", self.resetPrefs
         )
 
+        add_menu_item(
+            fileMenu,
+            "open preference directory",
+            "Open Preferences Directory...",
+            self.openPrefs,
+        )
+
         fileMenu.addSeparator()
         add_menu_item(fileMenu, "close", "Quit", self.close)
 
@@ -658,17 +670,18 @@ class MainWindow(QMainWindow):
             key="edge style",
         )
 
+        # XXX
         add_submenu_choices(
             menu=viewMenu,
             title="Node Marker Size",
-            options=(1, 2, 4, 6, 8, 12),
+            options=prefs["node marker sizes"],
             key="marker size",
         )
 
         add_submenu_choices(
             menu=viewMenu,
             title="Node Label Size",
-            options=(6, 12, 18, 24, 36),
+            options=prefs["node label sizes"],
             key="node label size",
         )
 
@@ -707,13 +720,17 @@ class MainWindow(QMainWindow):
         )
 
         def new_instance_menu_action():
+            """Determine which action to use when using Ctrl + I or menu Add Instance.
+
+            We always add an offset of 10.
+            """
             method_key = [
                 key
                 for (key, val) in instance_adding_methods.items()
                 if val == self.state["instance_init_method"]
             ]
             if method_key:
-                self.commands.newInstance(init_method=method_key[0])
+                self.commands.newInstance(init_method=method_key[0], offset=10)
 
         labelMenu = self.menuBar().addMenu("Labels")
         add_menu_item(
@@ -746,6 +763,22 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             labelMenu,
+            "extract clip and labels",
+            "Extract Clip and Labels...",
+            lambda: self.commands.exportLabelsSubset(as_package=False),
+        )
+
+        add_menu_item(
+            labelMenu,
+            "extract clip labels package",
+            "Extract Clip Labels Package...",
+            lambda: self.commands.exportLabelsSubset(as_package=True),
+        )
+
+        labelMenu.addSeparator()
+
+        add_menu_item(
+            labelMenu,
             "add instances from all frame predictions",
             "Add Instances from All Predictions on Current Frame",
             self.commands.addUserInstancesFromPredictions,
@@ -756,12 +789,12 @@ class MainWindow(QMainWindow):
         labelMenu.addAction(
             "Copy Instance",
             self.commands.copyInstance,
-            Qt.CTRL + Qt.Key_C,
+            Qt.CTRL | Qt.Key_C,
         )
         labelMenu.addAction(
             "Paste Instance",
             self.commands.pasteInstance,
-            Qt.CTRL + Qt.Key_V,
+            Qt.CTRL | Qt.Key_V,
         )
 
         labelMenu.addSeparator()
@@ -795,6 +828,12 @@ class MainWindow(QMainWindow):
             "delete score predictions",
             "Delete Predictions with Low Score...",
             self.commands.deleteLowScorePredictions,
+        )
+        add_menu_item(
+            labelMenu,
+            "delete max instance predictions",
+            "Delete Predictions beyond Max Instances...",
+            self.commands.deleteInstanceLimitPredictions,
         )
         add_menu_item(
             labelMenu,
@@ -855,12 +894,12 @@ class MainWindow(QMainWindow):
         tracksMenu.addAction(
             "Copy Instance Track",
             self.commands.copyInstanceTrack,
-            Qt.CTRL + Qt.SHIFT + Qt.Key_C,
+            Qt.CTRL | Qt.SHIFT | Qt.Key_C,
         )
         tracksMenu.addAction(
             "Paste Instance Track",
             self.commands.pasteInstanceTrack,
-            Qt.CTRL + Qt.SHIFT + Qt.Key_V,
+            Qt.CTRL | Qt.SHIFT | Qt.Key_V,
         )
 
         tracksMenu.addSeparator()
@@ -871,6 +910,8 @@ class MainWindow(QMainWindow):
             "Point Displacement (max)",
             "Primary Point Displacement (sum)",
             "Primary Point Displacement (max)",
+            "Tracking Score (mean)",
+            "Tracking Score (min)",
             "Instance Score (sum)",
             "Instance Score (min)",
             "Point Score (sum)",
@@ -914,13 +955,6 @@ class MainWindow(QMainWindow):
             "show metrics",
             "Evaluation Metrics for Trained Models...",
             self._show_metrics_dialog,
-        )
-
-        add_menu_item(
-            predictionMenu,
-            "visualize models",
-            "Visualize Model Outputs...",
-            self._handle_model_overlay_command,
         )
 
         predictionMenu.addSeparator()
@@ -1039,6 +1073,7 @@ class MainWindow(QMainWindow):
             labels=self.labels,
             player=self.player,
             trail_shade=self.state["trail_shade"],
+            trail_length=self.state["trail_length"],
         )
         self.overlays["instance"] = InstanceOverlay(
             labels=self.labels, player=self.player, state=self.state
@@ -1080,7 +1115,7 @@ class MainWindow(QMainWindow):
         self.state.emit("color predicted")
 
     def _update_gui_state(self):
-        """Enable/disable gui items based on current state."""
+        """Enable/disable GUI items based on the current state."""
         has_selected_instance = self.state["instance"] is not None
         has_selected_node = self.state["selected_node"] is not None
         has_selected_edge = self.state["selected_edge"] is not None
@@ -1115,7 +1150,10 @@ class MainWindow(QMainWindow):
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
         self._menu_actions["delete clip predictions"].setEnabled(has_frame_range)
-        # self._menu_actions["export clip"].setEnabled(has_frame_range)
+
+        # Enable/disable "Extract Clip and Labels" and "Extract Clip Labels Package"
+        self._menu_actions["extract clip and labels"].setEnabled(has_frame_range)
+        self._menu_actions["extract clip labels package"].setEnabled(has_frame_range)
 
         self._menu_actions["transpose"].setEnabled(has_multiple_instances)
 
@@ -1328,7 +1366,7 @@ class MainWindow(QMainWindow):
                 message += f" [Hidden] Press '{hide_key}' to toggle."
                 self.statusBar().setStyleSheet("color: red")
             else:
-                self.statusBar().setStyleSheet("color: black")
+                self.statusBar().setStyleSheet("")
 
         self.statusBar().showMessage(message)
 
@@ -1341,14 +1379,42 @@ class MainWindow(QMainWindow):
         )
         msg.exec_()
 
+    def openPrefs(self):
+        """Open preference file directory"""
+        pref_path = get_config_file("preferences.yaml")
+        # Make sure the pref_path is a directory rather than a file
+        if pref_path.is_file():
+            pref_path = pref_path.parent
+        # Open the file explorer at the folder containing the preferences.yaml file
+        if sys.platform == "win32":
+            subprocess.Popen(["explorer", str(pref_path)])
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", str(pref_path)])
+        else:
+            subprocess.Popen(["xdg-open", str(pref_path)])
+
     def _update_track_menu(self):
         """Updates track menu options."""
         self.track_menu.clear()
         self.delete_tracks_menu.clear()
+
+        # Create a dictionary mapping track indices to Qt.Key values
+        key_mapping = {
+            0: Qt.Key_1,
+            1: Qt.Key_2,
+            2: Qt.Key_3,
+            3: Qt.Key_4,
+            4: Qt.Key_5,
+            5: Qt.Key_6,
+            6: Qt.Key_7,
+            7: Qt.Key_8,
+            8: Qt.Key_9,
+            9: Qt.Key_0,
+        }
         for track_ind, track in enumerate(self.labels.tracks):
             key_command = ""
             if track_ind < 9:
-                key_command = Qt.CTRL + Qt.Key_0 + self.labels.tracks.index(track) + 1
+                key_command = Qt.CTRL | key_mapping[track_ind]
             self.track_menu.addAction(
                 f"{track.name}",
                 lambda x=track: self.commands.setInstanceTrack(x),
@@ -1358,7 +1424,7 @@ class MainWindow(QMainWindow):
                 f"{track.name}", lambda x=track: self.commands.deleteTrack(x)
             )
         self.track_menu.addAction(
-            "New Track", self.commands.addTrack, Qt.CTRL + Qt.Key_0
+            "New Track", self.commands.addTrack, Qt.CTRL | Qt.Key_0
         )
 
     def _update_seekbar_marks(self):
@@ -1375,6 +1441,8 @@ class MainWindow(QMainWindow):
             "Point Displacement (max)": data_obj.get_point_displacement_series,
             "Primary Point Displacement (sum)": data_obj.get_primary_point_displacement_series,
             "Primary Point Displacement (max)": data_obj.get_primary_point_displacement_series,
+            "Tracking Score (mean)": data_obj.get_tracking_score_series,
+            "Tracking Score (min)": data_obj.get_tracking_score_series,
             "Instance Score (sum)": data_obj.get_instance_score_series,
             "Instance Score (min)": data_obj.get_instance_score_series,
             "Point Score (sum)": data_obj.get_point_score_series,
@@ -1388,7 +1456,7 @@ class MainWindow(QMainWindow):
         else:
             if graph_name in header_functions:
                 kwargs = dict(video=self.state["video"])
-                reduction_name = re.search("\\((sum|max|min)\\)", graph_name)
+                reduction_name = re.search("\\((sum|max|min|mean)\\)", graph_name)
                 if reduction_name is not None:
                     kwargs["reduction"] = reduction_name.group(1)
                 series = header_functions[graph_name](**kwargs)
@@ -1508,7 +1576,10 @@ class MainWindow(QMainWindow):
             # Update data in existing dialog widget.
             self._child_windows[mode].labels = self.labels
             self._child_windows[mode].labels_filename = self.state["filename"]
-            self._child_windows[mode].skeleton = self.labels.skeleton
+            try:
+                self._child_windows[mode].skeleton = self.labels.skeleton
+            except ValueError:
+                self._child_windows[mode].skeleton = None
 
         self._child_windows[mode].update_file_lists()
 
@@ -1531,56 +1602,6 @@ class MainWindow(QMainWindow):
     def _show_metrics_dialog(self):
         self._child_windows["metrics"] = MetricsTableDialog(self.state["filename"])
         self._child_windows["metrics"].show()
-
-    def _handle_model_overlay_command(self):
-        """Gui for adding overlay with live visualization of predictions."""
-        filters = ["Model (*.json)"]
-
-        # Default to opening from models directory from project
-        models_dir = None
-        if self.state["filename"] is not None:
-            models_dir = os.path.join(
-                os.path.dirname(self.state["filename"]), "models/"
-            )
-
-        # Show dialog
-        filename, selected_filter = FileDialog.open(
-            self,
-            dir=models_dir,
-            caption="Import model outputs...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return
-
-        # Model as overlay datasource
-        # This will show live inference results
-
-        from sleap.gui.overlays.base import DataOverlay
-
-        predictor = DataOverlay.make_predictor(filename)
-        show_pafs = False
-
-        # If multi-head model with both confmaps and pafs,
-        # ask user which to show.
-        if (
-            predictor.confidence_maps_key_name
-            and predictor.part_affinity_fields_key_name
-        ):
-            results = FormBuilderModalDialog(form_name="head_type_form").get_results()
-            show_pafs = "Part Affinity" in results["head_type"]
-
-        overlay = DataOverlay.from_predictor(
-            predictor=predictor,
-            video=self.state["video"],
-            player=self.player,
-            show_pafs=show_pafs,
-        )
-
-        self.overlays["inference"] = overlay
-
-        self.plotFrame()
 
     def _handle_instance_double_click(
         self, instance: Instance, event: QtGui.QMouseEvent = None

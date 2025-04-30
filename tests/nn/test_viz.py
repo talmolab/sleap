@@ -3,7 +3,7 @@
 import sleap
 from sleap.instance import LabeledFrame, Track
 from sleap.io.dataset import Labels
-from sleap.nn.viz import generate_skeleton_preview_image
+from sleap.util import generate_skeleton_preview_image
 
 
 def test_generate_skeleton_preview_image(

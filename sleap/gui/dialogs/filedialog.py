@@ -29,7 +29,8 @@ def os_specific_method(func) -> Callable:
 
         if cls.is_non_native:
             kwargs["options"] = kwargs.get("options", 0)
-            kwargs["options"] |= QtWidgets.QFileDialog.DontUseNativeDialog
+            if not kwargs["options"]:
+                kwargs["options"] = QtWidgets.QFileDialog.DontUseNativeDialog
 
         # Make sure we don't send empty options argument
         if "options" in kwargs and not kwargs["options"]:

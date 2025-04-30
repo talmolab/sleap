@@ -5,12 +5,15 @@ import abc
 import attr
 import numpy as np
 import cv2
+import functools
 from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
 
 from sleap import Track, LabeledFrame, Skeleton
 
 from sleap.nn.tracker.components import (
+    factory_object_keypoint_similarity,
     instance_similarity,
+    normalized_instance_similarity,
     centroid_distance,
     instance_iou,
     hungarian_matching,
@@ -391,6 +394,7 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
     def get_candidates(
         self,
         track_matching_queue_dict: Dict[Track, Deque[MatchedFrameInstance]],
+        max_tracking: bool,
         t: int,
         img: np.ndarray,
         *args,
@@ -404,7 +408,7 @@ class FlowMaxTracksCandidateMaker(FlowCandidateMaker):
         tracks = []
 
         for track, matched_items in track_matching_queue_dict.items():
-            if len(tracks) <= self.max_tracks:
+            if not max_tracking or len(tracks) < self.max_tracks:
                 tracks.append(track)
                 for matched_item in matched_items:
                     ref_t, ref_img = (
@@ -466,6 +470,7 @@ class SimpleMaxTracksCandidateMaker(SimpleCandidateMaker):
     def get_candidates(
         self,
         track_matching_queue_dict: Dict,
+        max_tracking: bool,
         *args,
         **kwargs,
     ) -> List[InstanceType]:
@@ -473,7 +478,7 @@ class SimpleMaxTracksCandidateMaker(SimpleCandidateMaker):
         candidate_instances = []
         tracks = []
         for track, matched_instances in track_matching_queue_dict.items():
-            if len(tracks) <= self.max_tracks:
+            if not max_tracking or len(tracks) < self.max_tracks:
                 tracks.append(track)
                 for ref_instance in matched_instances:
                     if ref_instance.instance_t.n_visible_points >= self.min_points:
@@ -492,6 +497,8 @@ similarity_policies = dict(
     instance=instance_similarity,
     centroid=centroid_distance,
     iou=instance_iou,
+    normalized_instance=normalized_instance_similarity,
+    object_keypoint=factory_object_keypoint_similarity,
 )
 
 match_policies = dict(
@@ -567,7 +574,7 @@ class Tracker(BaseTracker):
     max_tracking: bool = False  # To enable maximum tracking.
 
     cleaner: Optional[Callable] = None  # TODO: deprecate
-    target_instance_count: int = 0
+    target_instance_count: int = 0  # TODO: deprecate
     pre_cull_function: Optional[Callable] = None
     post_connect_single_breaks: bool = False
     robust_best_instance: float = 1.0
@@ -598,8 +605,15 @@ class Tracker(BaseTracker):
         """Factory for instantiating default matching queue with specified size."""
         return deque(maxlen=self.track_window)
 
+    @property
+    def has_max_tracking(self) -> bool:
+        return isinstance(
+            self.candidate_maker,
+            (SimpleMaxTracksCandidateMaker, FlowMaxTracksCandidateMaker),
+        )
+
     def reset_candidates(self):
-        if self.max_tracking:
+        if self.has_max_tracking:
             for track in self.track_matching_queue_dict:
                 self.track_matching_queue_dict[track] = deque(maxlen=self.track_window)
         else:
@@ -610,13 +624,14 @@ class Tracker(BaseTracker):
         """Returns the unique tracks in the matching queue."""
 
         unique_tracks = set()
-        for match_item in self.track_matching_queue:
-            for instance in match_item.instances_t:
-                unique_tracks.add(instance.track)
-
-        if self.max_tracking:
+        if self.has_max_tracking:
             for track in self.track_matching_queue_dict.keys():
                 unique_tracks.add(track)
+
+        else:
+            for match_item in self.track_matching_queue:
+                for instance in match_item.instances_t:
+                    unique_tracks.add(instance.track)
 
         return list(unique_tracks)
 
@@ -627,6 +642,7 @@ class Tracker(BaseTracker):
     def track(
         self,
         untracked_instances: List[InstanceType],
+        img_hw: Tuple[int],
         img: Optional[np.ndarray] = None,
         t: int = None,
     ) -> List[InstanceType]:
@@ -634,19 +650,25 @@ class Tracker(BaseTracker):
 
         Args:
             untracked_instances: List of instances to assign to tracks.
+            img_hw: (height, width) of the image used to normalize the keypoints.
             img: Image data of the current frame for flow shifting.
             t: Current timestep. If not provided, increments from the internal queue.
 
         Returns:
             A list of the instances that were tracked.
         """
+        if self.similarity_function == normalized_instance_similarity:
+            factory_normalized_instance = functools.partial(
+                normalized_instance_similarity, img_hw=img_hw
+            )
+            self.similarity_function = factory_normalized_instance
 
         if self.candidate_maker is None:
             return untracked_instances
 
         # Infer timestep if not provided.
         if t is None:
-            if self.max_tracking:
+            if self.has_max_tracking:
                 if len(self.track_matching_queue_dict) > 0:
 
                     # Default to last timestep + 1 if available.
@@ -684,10 +706,10 @@ class Tracker(BaseTracker):
                 self.pre_cull_function(untracked_instances)
 
             # Build a pool of matchable candidate instances.
-            if self.max_tracking:
+            if self.has_max_tracking:
                 candidate_instances = self.candidate_maker.get_candidates(
                     track_matching_queue_dict=self.track_matching_queue_dict,
-                    max_tracks=self.max_tracks,
+                    max_tracking=self.max_tracking,
                     t=t,
                     img=img,
                 )
@@ -721,13 +743,16 @@ class Tracker(BaseTracker):
             )
 
         # Add the tracked instances to the dictionary of matched instances.
-        if self.max_tracking:
+        if self.has_max_tracking:
             for tracked_instance in tracked_instances:
                 if tracked_instance.track in self.track_matching_queue_dict:
                     self.track_matching_queue_dict[tracked_instance.track].append(
                         MatchedFrameInstance(t, tracked_instance, img)
                     )
-                elif len(self.track_matching_queue_dict) < self.max_tracks:
+                elif (
+                    not self.max_tracking
+                    or len(self.track_matching_queue_dict) < self.max_tracks
+                ):
                     self.track_matching_queue_dict[tracked_instance.track] = deque(
                         maxlen=self.track_window
                     )
@@ -773,7 +798,8 @@ class Tracker(BaseTracker):
 
             # Skip if we've reached the maximum number of tracks.
             if (
-                self.max_tracking
+                self.has_max_tracking
+                and self.max_tracking
                 and len(self.track_matching_queue_dict) >= self.max_tracks
             ):
                 break
@@ -798,8 +824,15 @@ class Tracker(BaseTracker):
             #         "tracking."
             #     )
             self.cleaner.run(frames)
-        elif self.target_instance_count and self.post_connect_single_breaks:
+        elif (
+            self.target_instance_count or self.max_tracks
+        ) and self.post_connect_single_breaks:
+            if not self.target_instance_count:
+                # If target_instance_count is not set, use max_tracks instead
+                # target_instance_count not available in the GUI
+                self.target_instance_count = self.max_tracks
             connect_single_track_breaks(frames, self.target_instance_count)
+            print("Connecting single track breaks.")
 
     def get_name(self):
         tracker_name = self.candidate_maker.__class__.__name__
@@ -824,7 +857,7 @@ class Tracker(BaseTracker):
         of_max_levels: int = 3,
         save_shifted_instances: bool = False,
         # Pre-tracking options to cull instances
-        target_instance_count: int = 0,
+        target_instance_count: int = 0,  # TODO: deprecate target_instance_count
         pre_cull_to_target: bool = False,
         pre_cull_iou_threshold: Optional[float] = None,
         # Post-tracking options to connect broken tracks
@@ -838,8 +871,17 @@ class Tracker(BaseTracker):
         # Max tracking options
         max_tracks: Optional[int] = None,
         max_tracking: bool = False,
+        # Object keypoint similarity options
+        oks_errors: Optional[list] = None,
+        oks_score_weighting: bool = False,
+        oks_normalization: str = "all",
         **kwargs,
     ) -> BaseTracker:
+        # Parse max_tracking arguments, only True if max_tracks is not None and > 0
+        max_tracking = max_tracking if max_tracks else False
+        if max_tracking and tracker in ("simple", "flow"):
+            # Force a candidate maker of 'maxtracks' type
+            tracker += "maxtracks"
 
         if tracker.lower() == "none":
             candidate_maker = None
@@ -858,7 +900,14 @@ class Tracker(BaseTracker):
                 raise ValueError(f"{match} is not a valid tracker matching function.")
 
             candidate_maker = tracker_policies[tracker](min_points=min_match_points)
-            similarity_function = similarity_policies[similarity]
+            if similarity == "object_keypoint":
+                similarity_function = factory_object_keypoint_similarity(
+                    keypoint_errors=oks_errors,
+                    score_weighting=oks_score_weighting,
+                    normalization_keypoints=oks_normalization,
+                )
+            else:
+                similarity_function = similarity_policies[similarity]
             matching_function = match_policies[match]
 
         if tracker == "flow":
@@ -879,6 +928,7 @@ class Tracker(BaseTracker):
 
         pre_cull_function = None
         if target_instance_count and pre_cull_to_target:
+            # Right now this is not accessible from the GUI
 
             def pre_cull_function(inst_list):
                 cull_frame_instances(
@@ -898,11 +948,34 @@ class Tracker(BaseTracker):
             pre_cull_function=pre_cull_function,
             max_tracking=max_tracking,
             max_tracks=max_tracks,
-            target_instance_count=target_instance_count,
+            target_instance_count=target_instance_count,  # TODO: deprecate target_instance_count
             post_connect_single_breaks=post_connect_single_breaks,
         )
 
-        if target_instance_count and kf_init_frame_count:
+        # Kalman filter requires deprecated target_instance_count
+        if (max_tracks or target_instance_count) and kf_init_frame_count:
+            if not kf_node_indices:
+                raise ValueError(
+                    "Kalman filter requires node indices for instance tracking."
+                )
+
+            if tracker == "flow" or tracker == "flowmaxtracks":
+                # Tracking with Kalman filter requires initial tracker object to be simple
+                raise ValueError(
+                    "Kalman filter requires simple tracker for initial tracking."
+                )
+
+            if similarity == "normalized_instance":
+                # Kalman filter doesnot support normalized_instance_similarity
+                raise ValueError(
+                    "Kalman filter does not support normalized_instance_similarity."
+                )
+
+            if not target_instance_count:
+                # If target_instance_count is not set, use max_tracks instead
+                # target_instance_count not available in the GUI
+                target_instance_count = max_tracks
+
             kalman_obj = KalmanTracker.make_tracker(
                 init_tracker=tracker_obj,
                 init_frame_count=kf_init_frame_count,
@@ -912,8 +985,10 @@ class Tracker(BaseTracker):
             )
 
             return kalman_obj
-        elif kf_init_frame_count and not target_instance_count:
-            raise ValueError("Kalman filter requires target instance count.")
+        elif kf_init_frame_count and not (max_tracks or target_instance_count):
+            raise ValueError(
+                "Kalman filter requires max tracks or target instance count."
+            )
         else:
             return tracker_obj
 
@@ -931,7 +1006,10 @@ class Tracker(BaseTracker):
 
         option = dict(name="max_tracking", default=False)
         option["type"] = bool
-        option["help"] = "If true then the tracker will cap the max number of tracks."
+        option["help"] = (
+            "If true then the tracker will cap the max number of tracks. "
+            "Falls back to false if `max_tracks` is not defined or 0."
+        )
         options.append(option)
 
         option = dict(name="max_tracks", default=None)
@@ -1052,6 +1130,42 @@ class Tracker(BaseTracker):
         option[
             "help"
         ] = "For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used."
+        options.append(option)
+
+        def float_list_func(s):
+            return [float(x.strip()) for x in s.split(",")] if s else None
+
+        option = dict(name="oks_errors", default="1")
+        option["type"] = float_list_func
+        option["help"] = (
+            "For Object Keypoint similarity: the standard error of the distance "
+            "between the predicted keypoint and the true value, in pixels.\n"
+            "If None or empty list, defaults to 1. If a scalar or singleton list, "
+            "every keypoint has the same error. If a list, defines the error for each "
+            "keypoint, the length should be equal to the number of keypoints in the "
+            "skeleton."
+        )
+        options.append(option)
+
+        option = dict(name="oks_score_weighting", default="0")
+        option["type"] = int
+        option["help"] = (
+            "For Object Keypoint similarity: if 0 (default), only the distance between the reference "
+            "and query keypoint is used to compute the similarity. If 1, each distance is weighted "
+            "by the prediction scores of the reference and query keypoint."
+        )
+        options.append(option)
+
+        option = dict(name="oks_normalization", default="all")
+        option["type"] = str
+        option["options"] = ["all", "ref", "union"]
+        option["help"] = (
+            "For Object Keypoint similarity: Determine how to normalize similarity score. "
+            "If 'all', similarity score is normalized by number of reference points. "
+            "If 'ref', similarity score is normalized by number of visible reference points. "
+            "If 'union', similarity score is normalized by number of points both visible "
+            "in query and reference instance."
+        )
         options.append(option)
 
         return options
@@ -1288,6 +1402,10 @@ class KalmanTracker(BaseTracker):
         if init_tracker.pre_cull_function is None:
             init_tracker.pre_cull_function = cull_function
 
+        print(
+            f"Using {init_tracker.get_name()} to track {init_frame_count} frames for Kalman filters."
+        )
+
         return cls(
             init_tracker=init_tracker,
             kalman_tracker=kalman_tracker,
@@ -1305,6 +1423,7 @@ class KalmanTracker(BaseTracker):
         untracked_instances: List[InstanceType],
         img: Optional[np.ndarray] = None,
         t: int = None,
+        **kwargs,
     ) -> List[InstanceType]:
         """Tracks individual frame, using Kalman filters if possible."""
 
@@ -1339,7 +1458,7 @@ class KalmanTracker(BaseTracker):
                 # Initialize the Kalman filters
                 self.kalman_tracker.init_filters(self.init_set.instances)
 
-                # print(f"Kalman filters initialized (frame {t})")
+                print(f"Kalman filters initialized (frame {t})")
 
                 # Clear the data used to init filters, so that if the filters
                 # stop tracking and we need to re-init, we won't re-use the
@@ -1444,16 +1563,28 @@ def run_tracker(frames: List[LabeledFrame], tracker: BaseTracker) -> List[Labele
         for inst in lf.instances:
             inst.track = None
 
-        track_args = dict(untracked_instances=lf.instances)
+        # Prefer user instances over predicted instances
+        instances = []
+        if lf.has_user_instances:
+            instances_to_track = lf.user_instances
+            if lf.has_predicted_instances:
+                instances = lf.predicted_instances
+        else:
+            instances_to_track = lf.predicted_instances
+
+        track_args = {"untracked_instances": instances_to_track}
+
         if tracker.uses_image:
             track_args["img"] = lf.video[lf.frame_idx]
         else:
             track_args["img"] = None
+        track_args["img_hw"] = lf.image.shape[-3:-1]
 
+        instances.extend(tracker.track(**track_args))
         new_lf = LabeledFrame(
             frame_idx=lf.frame_idx,
             video=lf.video,
-            instances=tracker.track(**track_args),
+            instances=instances,
         )
         new_lfs.append(new_lf)
 

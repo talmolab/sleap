@@ -37,6 +37,19 @@ def test_frame_statistics(simple_predictions):
 
     x = stats.get_point_displacement_series(video, "max")
     assert len(x) == 2
-    assert len(x) == 2
     assert x[0] == 0
     assert x[1] == 18.0
+
+
+def test_get_tracking_score_series(min_tracks_2node_predictions):
+
+    stats = StatisticSeries(min_tracks_2node_predictions)
+    x = stats.get_tracking_score_series(min_tracks_2node_predictions.video, "min")
+    assert len(x) == 1500
+    assert x[0] == 0.9999966621398926
+    assert x[1000] == 0.9998022317886353
+
+    x = stats.get_tracking_score_series(min_tracks_2node_predictions.video, "mean")
+    assert len(x) == 1500
+    assert x[0] == 0.9999983310699463
+    assert x[1000] == 0.9999011158943176

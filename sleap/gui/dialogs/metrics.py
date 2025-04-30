@@ -120,10 +120,11 @@ class MetricsTableDialog(QtWidgets.QWidget):
         if cfg_info is None:
             cfg_info = self.table_view.getSelectedRowItem()
 
+        cfg_getter = self._cfg_getter
         key = cfg_info.path
         if key not in model_detail_widgets:
             model_detail_widgets[key] = TrainingEditorWidget.from_trained_config(
-                cfg_info
+                cfg_info, cfg_getter
             )
 
         model_detail_widgets[key].show()

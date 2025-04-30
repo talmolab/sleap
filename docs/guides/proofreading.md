@@ -50,6 +50,8 @@ There are currently three methods for matching instances in frame N against thes
 - “**centroid**” measures similarity by the distance between the instance centroids
 - “**iou**” measures similarity by the intersection/overlap of the instance bounding boxes
 - “**instance**” measures similarity by looking at the distances between corresponding nodes in the instances, normalized by the number of valid nodes in the candidate instance.
+- “**normalized_instance**” measures similarity by looking at the distances between corresponding nodes in the instances, normalized by the number of valid nodes in the candidate instance and the keypoints normalized by the image size.
+- “**object_keypoint**” measures similarity by measuring the distance between each keypoints from a reference instance and a query instance, takes the exp(-d**2), sum for all the keypoints and divide by the number of visible keypoints in the reference instance.
 
 Once SLEAP has measured the similarity between all the candidates and the instances in frame N, you need to choose a way to pair them up. You can do this either by picking the best match, and the picking the best remaining match for each remaining instance in turn—this is “**greedy**” matching—or you can find the way of matching identities which minimizes the total cost (or: maximizes the total similarity)—this is “**Hungarian**” matching.
 
@@ -73,18 +75,6 @@ Once you have the desired number of instances in every frame, SLEAP connects ide
 ## More training data?
 
 Often your models will fail to predict *all* of the instances on *all* of the frames. Even if you're happy enough with the result since you can interpolate missing data, it's possible that the missing instances will cause problems when we try to determine track identities across frames, so if your tracking results are poor, you may wish to {ref}`merging`.
-
-## The "track cleaning" script
-
-There's an experimental command-line utility which tries to match up lost identities. You need to give it a predictions file which already has track assignments, and specify how many instances there should be. It looks for frames where there's exactly one lost identity and exactly one newly spawned identity, and it joins these into a single track. Suppose you have a predictions file at {code}`path/to/predictions.h5` and you want to end up with three distinct tracks. You can run
-
-```
-python -m sleap.info.trackcleaner path/to/predictions.h5 -c 3
-```
-
-This will result in a new file at {code}`path/to/predictions.cleaned.h5`. This file has the same format as the SLEAP labels and predictions files.
-
-The main worry is that this script will connect identities which should be distinct, so that in place of **lost** identities you'll now have more **mistaken** identities, which can be harder to locate when proofreading. Tools and techniques for finding **mistaken** identities during proofreading are explained below.
 
 ## Color palettes
 

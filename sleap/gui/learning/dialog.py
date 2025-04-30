@@ -1,24 +1,20 @@
 """
 Dialogs for running training and/or inference in GUI.
 """
-import cattr
-import os
+import json
 import shutil
-import atexit
 import tempfile
 from pathlib import Path
+from typing import Dict, List, Optional, Text, cast
+
+import cattr
+from qtpy import QtCore, QtGui, QtWidgets
 
 import sleap
 from sleap import Labels, Video
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
-from sleap.gui.learning import runners, scopedkeydict, configs, datagen, receptivefield
-
-from typing import Dict, List, Optional, Text, Optional, cast
-
-from qtpy import QtWidgets, QtCore
-
-import json
+from sleap.gui.learning import configs, datagen, receptivefield, runners, scopedkeydict
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -128,12 +124,25 @@ class LearningDialog(QtWidgets.QDialog):
         self.message_widget = QtWidgets.QLabel("")
 
         # Layout for entire dialog
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self.tab_widget)
-        layout.addWidget(self.message_widget)
-        layout.addWidget(buttons_layout_widget)
+        content_widget = QtWidgets.QWidget()
+        content_layout = QtWidgets.QVBoxLayout(content_widget)
 
-        self.setLayout(layout)
+        content_layout.addWidget(self.tab_widget)
+        content_layout.addWidget(self.message_widget)
+        content_layout.addWidget(buttons_layout_widget)
+
+        # Create the QScrollArea.
+        scroll_area = QtWidgets.QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(content_widget)
+
+        scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(scroll_area)
+
+        self.adjust_initial_size()
 
         # Default to most recently trained pipeline (if there is one)
         self.set_default_pipeline_tab()
@@ -156,6 +165,20 @@ class LearningDialog(QtWidgets.QDialog):
             self.pipeline_form_widget.buttons["_view_datagen"].clicked.connect(
                 self.view_datagen
             )
+
+    def adjust_initial_size(self):
+        # Get screen size
+        screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
+
+        max_width = 1860
+        max_height = 1150
+        margin = 0.10
+
+        # Calculate target width and height
+        target_width = min(screen.width() - screen.width() * margin, max_width)
+        target_height = min(screen.height() - screen.height() * margin, max_height)
+        # Set the dialog's dimensions
+        self.resize(target_width, target_height)
 
     def update_file_lists(self):
         self._cfg_getter.update()
@@ -579,6 +602,7 @@ class LearningDialog(QtWidgets.QDialog):
 
     def get_items_for_inference(self, pipeline_form_data) -> runners.ItemsForInference:
         predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
+        batch_size = pipeline_form_data.get("batch_size")
 
         frame_selection = self.get_selected_frames_to_predict(pipeline_form_data)
         frame_count = self.count_total_frames_for_selection_option(frame_selection)
@@ -591,6 +615,7 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
+                batch_size=batch_size,
             )
         elif predict_frames_choice.startswith("suggested"):
             items_for_inference = runners.ItemsForInference(
@@ -600,6 +625,7 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
+                batch_size=batch_size,
             )
         else:
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
@@ -607,8 +633,23 @@ class LearningDialog(QtWidgets.QDialog):
                 total_frame_count=frame_count,
                 labels_path=self.labels_filename,
                 labels=self.labels,
+                batch_size=batch_size,
             )
         return items_for_inference
+
+    def _validate_id_model(self) -> bool:
+        """Make sure we have instances with tracks set for ID models."""
+        if not self.labels.tracks:
+            message = "Cannot run ID model training without tracks."
+            return False
+
+        found_tracks = False
+        for inst in self.labels.instances():
+            if type(inst) == sleap.Instance and inst.track is not None:
+                found_tracks = True
+                break
+
+        return found_tracks
 
     def _validate_pipeline(self):
         can_run = True
@@ -627,6 +668,15 @@ class LearningDialog(QtWidgets.QDialog):
                     "Cannot run inference with untrained models "
                     f"({', '.join(untrained)})."
                 )
+
+        # Make sure we have instances with tracks set for ID models.
+        if self.mode == "training" and self.current_pipeline in (
+            "top-down-id",
+            "bottom-up-id",
+        ):
+            can_run = self.validate_id_model()
+            if not can_run:
+                message = "Cannot run ID model training without tracks."
 
         # Make sure skeleton will be valid for bottom-up inference.
         if self.mode == "training" and self.current_pipeline == "bottom-up":
@@ -1088,8 +1138,12 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self.setLayout(layout)
 
     @classmethod
-    def from_trained_config(cls, cfg_info: configs.ConfigFileInfo):
-        widget = cls(require_trained=True, head=cfg_info.head_name)
+    def from_trained_config(
+        cls, cfg_info: configs.ConfigFileInfo, cfg_getter: configs.TrainingConfigsGetter
+    ):
+        widget = cls(
+            require_trained=True, head=cfg_info.head_name, cfg_getter=cfg_getter
+        )
         widget.acceptSelectedConfigInfo(cfg_info)
         widget.setWindowTitle(cfg_info.path_dir)
         return widget

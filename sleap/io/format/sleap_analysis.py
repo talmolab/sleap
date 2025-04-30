@@ -78,7 +78,7 @@ class SleapAnalysisAdaptor(Adaptor):
         # shape: frames * nodes * 2 * tracks
         frame_count, node_count, _, track_count = tracks_matrix.shape
 
-        if "track_names" in f:
+        if "track_names" in f and len(f["track_names"]):
             track_names_list = f["track_names"][:].T
             tracks = [Track(0, track_name.decode()) for track_name in track_names_list]
         else:

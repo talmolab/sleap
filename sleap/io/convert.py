@@ -70,6 +70,7 @@ def create_parser():
         help="Output format. Default ('slp') is SLEAP dataset; "
         "'analysis' results in analysis.h5 file; "
         "'analysis.nix' results in an analysis nix file;"
+        "'analysis.csv' results in an analysis csv file;"
         "'h5' or 'json' results in SLEAP dataset "
         "with specified file format.",
     )
@@ -135,7 +136,12 @@ def main(args: list = None):
         outnames = [path for path in args.outputs]
         if len(outnames) < len(vids):
             # if there are less outnames provided than videos to convert...
-            out_suffix = "nix" if "nix" in args.format else "h5"
+            if "nix" in args.format:
+                out_suffix = "nix"
+            elif "csv" in args.format:
+                out_suffix = "csv"
+            else:
+                out_suffix = "h5"
             fn = args.input_path
             fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
             fn = PurePath(fn)
@@ -158,6 +164,20 @@ def main(args: list = None):
                     NixAdaptor.write(outname, labels, args.input_path, video)
                 except ValueError as e:
                     print(e.args[0])
+
+        elif "csv" in args.format:
+            from sleap.info.write_tracking_h5 import main as write_analysis
+
+            for video, output_path in zip(vids, outnames):
+                write_analysis(
+                    labels,
+                    output_path=output_path,
+                    labels_path=args.input_path,
+                    all_frames=True,
+                    video=video,
+                    csv=True,
+                )
+
         else:
             from sleap.info.write_tracking_h5 import main as write_analysis
 

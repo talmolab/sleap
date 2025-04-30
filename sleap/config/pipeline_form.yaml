@@ -52,7 +52,7 @@ training:
     This pipeline uses two models: a "<u>centroid</u>" model to
     locate and crop around each animal in the frame, and a
     "<u>centered-instance confidence map</u>" model for predicted node locations
-    for each individual animal predicted by the centroid model.' 
+    for each individual animal predicted by the centroid model.'
   - label: Max Instances
     name: max_instances
     type: optional_int
@@ -212,6 +212,21 @@ training:
   type: list
 
 - type: text
+  text: '<b>ZMQ Options</b>'
+
+- name: controller_port
+  label: Controller Port
+  type: int
+  default: 9000
+  range: 1024,65535
+
+- name: publish_port
+  label: Publish Port
+  type: int
+  default: 9001
+  range: 1024,65535
+
+- type: text
   text: '<b>Output Options</b>'
 
 - default: ''
@@ -271,6 +286,11 @@ training:
   type: bool
   default: true
 
+- name: _keep_viz
+  label: Keep Prediction Visualization Images After Training
+  type: bool
+  default: false
+
 - name: _predict_frames
   label: Predict On
   type: list
@@ -287,7 +307,7 @@ inference:
   label: Training/Inference Pipeline Type
   type: stacked
   default: "multi-animal bottom-up "
-  options: "multi-animal bottom-up,multi-animal top-down,multi-animal bottom-up-id,multi-animal top-down-id,single animal,movenet-lightning,movenet-thunder,none"
+  options: "multi-animal bottom-up,multi-animal top-down,multi-animal bottom-up-id,multi-animal top-down-id,single animal,movenet-lightning,movenet-thunder,tracking-only"
 
   multi-animal bottom-up:
   - type: text
@@ -365,7 +385,13 @@ inference:
       Note that this model is intended for human pose estimation. There is no
       support for videos containing more than one instance'
 
-  none:
+  tracking-only:
+
+- name: batch_size
+  label: Batch Size
+  type: int
+  default: 4
+  range: 1,512
 
 - name: tracking.tracker
   label: Tracker (cross-frame identity) Method
@@ -413,7 +439,7 @@ inference:
       label: Similarity Method
       type: list
       default: instance
-      options: instance,centroid,iou
+      options: "instance,normalized_instance,centroid,iou,object keypoint"
     - name: tracking.match
       label: Matching Method
       type: list
@@ -452,6 +478,22 @@ inference:
       label: Nodes to use for Tracking
       type: string
       default: 0,1,2
+    - type: text
+      text: '<b>Object keypoint similarity options</b>:<br />
+      Only used if this similarity method is selected.'
+    - name: tracking.oks_errors
+      label: Keypoints errors in pixels
+      help: 'Standard error in pixels of the distance for each keypoint.
+      If the list is empty, defaults to 1. If singleton list, each keypoint has
+      the same error. Otherwise, the length should be the same as the number of
+      keypoints in the skeleton.'
+      type: string
+      default:
+    - name: tracking.oks_score_weighting
+      label: Use prediction score for weighting
+      help: 'Use prediction scores to weight the similarity of each keypoint'
+      type: bool
+      default: false
     - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks
@@ -495,8 +537,8 @@ inference:
     - name: tracking.similarity
       label: Similarity Method
       type: list
-      default: iou
-      options: instance,centroid,iou
+      default: instance
+      options: "instance,normalized_instance,centroid,iou,object keypoint"
     - name: tracking.match
       label: Matching Method
       type: list
@@ -531,6 +573,22 @@ inference:
       label: Nodes to use for Tracking
       type: string
       default: 0,1,2
+    - type: text
+      text: '<b>Object keypoint similarity options</b>:<br />
+      Only used if this similarity method is selected.'
+    - name: tracking.oks_errors
+      label: Keypoints errors in pixels
+      help: 'Standard error in pixels of the distance for each keypoint.
+      If the list is empty, defaults to 1. If singleton list, each keypoint has
+      the same error. Otherwise, the length should be the same as the number of
+      keypoints in the skeleton.'
+      type: string
+      default:
+    - name: tracking.oks_score_weighting
+      label: Use prediction score for weighting
+      help: 'Use prediction scores to weight the similarity of each keypoint'
+      type: bool
+      default: false
     - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks

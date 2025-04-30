@@ -1,14 +1,15 @@
 import os
+import pandas as pd
 import pytest
 import numpy as np
 from pathlib import Path, PurePath
 
 import sleap
+from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 from sleap.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels, load_file
-from sleap.io.legacy import load_labels_json_old
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
@@ -746,6 +747,36 @@ def test_dont_unify_skeletons():
     labels.to_dict()
 
 
+def test_instance_cattr(centered_pair_predictions: Labels, tmpdir: str):
+    labels = centered_pair_predictions
+    lf = labels.labeled_frames[0]
+    pred_inst: PredictedInstance = lf[0]
+    skeleton = pred_inst.skeleton
+    track = pred_inst.track
+
+    # Initialize Instance
+    instance = Instance.from_pointsarray(
+        points=pred_inst.numpy(), skeleton=skeleton, track=track
+    )
+    instance.from_predicted = pred_inst
+    assert instance.tracking_score == 0.0
+    labels.add_instance(lf, instance)
+
+    instance.tracking_score = 0.5
+    pred_inst.tracking_score = 0.7
+
+    filename = str(PurePath(tmpdir, "labels.slp"))
+    labels.save(filename)
+
+    labels_loaded = sleap.load_file(filename)
+    lf_loaded = labels_loaded.labeled_frames[0]
+    pred_inst_loaded = lf_loaded.predicted_instances[0]
+    instance_loaded = lf_loaded.user_instances[0]
+
+    assert round(pred_inst_loaded.tracking_score, 1) == pred_inst.tracking_score
+    assert round(instance_loaded.tracking_score, 1) == instance.tracking_score
+
+
 def test_instance_access():
     labels = Labels()
 
@@ -1234,7 +1265,7 @@ def test_has_frame():
 @pytest.fixture
 def removal_test_labels():
     skeleton = Skeleton()
-    video = Video(backend=MediaVideo(filename="test"))
+    video = Video(backend=MediaVideo(filename="test.mp4"))
     lf_user_only = LabeledFrame(
         video=video, frame_idx=0, instances=[Instance(skeleton=skeleton)]
     )
@@ -1559,3 +1590,45 @@ def test_export_nwb(centered_pair_predictions: Labels, tmpdir):
     # Read from NWB file
     read_labels = NDXPoseAdaptor.read(NDXPoseAdaptor, filehandle.FileHandle(filename))
     assert_read_labels_match(centered_pair_predictions, read_labels)
+
+
+@pytest.mark.parametrize(
+    "labels_fixture_name",
+    [
+        "centered_pair_labels",
+        "centered_pair_predictions",
+        "min_labels",
+        "min_labels_slp",
+        "min_labels_robot",
+    ],
+)
+def test_export_csv(labels_fixture_name, tmpdir, request):
+    # Retrieve Labels fixture by name
+    labels_fixture = request.getfixturevalue(labels_fixture_name)
+
+    # Generate the filename for the CSV file
+    csv_filename = Path(tmpdir) / (labels_fixture_name + "_export.csv")
+
+    # Export to CSV file
+    labels_fixture.export_csv(str(csv_filename))
+
+    # Assert that the CSV file was created
+    assert csv_filename.is_file(), f"CSV file '{csv_filename}' was not created"
+
+
+def test_exported_csv(tmpdir, min_labels_slp, minimal_instance_predictions_csv_path):
+    # Construct the filename for the CSV file
+    filename_csv = Path(tmpdir) / "minimal_instance_predictions_export.csv"
+    labels = min_labels_slp
+    # Export to CSV file
+    labels.export_csv(filename_csv)
+    # Read the CSV file
+    labels_csv = pd.read_csv(filename_csv)
+
+    # Read the csv file fixture
+    csv_predictions = pd.read_csv(minimal_instance_predictions_csv_path)
+
+    assert labels_csv.equals(csv_predictions)
+
+    # check number of cols
+    assert len(labels_csv.columns) - 3 == len(get_nodes_as_np_strings(labels)) * 3

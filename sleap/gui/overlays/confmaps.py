@@ -1,8 +1,7 @@
-"""
-Overlay for confidence maps.
+"""GUI overlay for confidence maps (not currently used).
 
-Currently a `DataOverlay` gets data from a model (i.e., it runs inference on the
-current frame) and then uses a `ConfMapsPlot` object to show the resulting
+Previously, a `DataOverlay` class retrieved data from a model (i.e., it ran inference
+on the current frame) and then used a `ConfMapsPlot` object to show the resulting
 confidence maps.
 
 Example: ::
@@ -17,11 +16,13 @@ from qtpy import QtWidgets, QtCore, QtGui
 import numpy as np
 import qimage2ndarray
 
-from sleap.gui.overlays.base import DataOverlay, h5_colors
+from sleap.gui.overlays.base import h5_colors
 
 
 class ConfMapsPlot(QtWidgets.QGraphicsObject):
     """QGraphicsObject to display multiple confidence maps in a QGraphicsView.
+
+    Not currently used.
 
     Args:
         frame (numpy.array): Data for one frame of confidence map data.
@@ -69,6 +70,8 @@ class ConfMapsPlot(QtWidgets.QGraphicsObject):
 
 class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
     """QGraphicsPixmapItem object for drawing single channel of confidence map.
+
+    Not currently used.
 
     Args:
         confmap (numpy.array): (h, w) array of one confidence map channel.

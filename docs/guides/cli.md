@@ -36,8 +36,8 @@ optional arguments:
 
 ```none
 usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
-                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz]
-                   [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
+                   [--test_labels TEST_LABELS] [--tensorboard] [--save_viz] 
+                   [--keep_viz] [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
                    [--suffix SUFFIX]
                    training_job_path [labels_path]
 
@@ -68,6 +68,8 @@ optional arguments:
   --save_viz            Enable saving of prediction visualizations to the run
                         folder if not already specified in the training job
                         config.
+  --keep_viz            Keep prediction visualization images in the run
+                        folder after training if --save_viz is enabled.
   --zmq                 Enable ZMQ logging (for GUI) if not already specified
                         in the training job config.
   --run_name RUN_NAME   Run name to use when saving file, overrides other run
@@ -136,7 +138,10 @@ usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [-
                    [data_path]
 
 positional arguments:
-  data_path             Path to data to predict on. This can be a labels (.slp) file or any supported video format.
+  data_path             Path to data to predict on. This can be one of the following: A .slp file containing labeled data; A folder containing multiple
+                        video files in supported formats; An individual video file in a supported format; A CSV file with a column of video file paths. 
+                        If more than one column is provided in the CSV file, the first will be used for the input data paths and the next column will be
+                        used as the output paths; A text file with a path to a video file on each line
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -151,7 +156,7 @@ optional arguments:
                         Only run inference on unlabeled suggested frames when running on labels dataset. This is useful for generating predictions for
                         initialization during labeling.
   -o OUTPUT, --output OUTPUT
-                        The output filename to use for the predicted data. If not provided, defaults to '[data_path].predictions.slp'.
+                        The output filename or directory path to use for the predicted data. If not provided, defaults to '[data_path].predictions.slp'.
   --no-empty-frames     Clear any empty frames that did not have any detected instances before saving to output.
   --verbosity {none,rich,json}
                         Verbosity of inference progress reporting. 'none' does not output anything during inference, 'rich' displays an updating
@@ -202,7 +207,7 @@ optional arguments:
   --tracking.clean_iou_threshold TRACKING.CLEAN_IOU_THRESHOLD
                         IOU to use when culling instances *after* tracking. (default: 0)
   --tracking.similarity TRACKING.SIMILARITY
-                        Options: instance, centroid, iou (default: instance)
+                        Options: instance, normalized_instance, object_keypoint, centroid, iou (default: instance)
   --tracking.match TRACKING.MATCH
                         Options: hungarian, greedy (default: greedy)
   --tracking.robust TRACKING.ROBUST
@@ -225,7 +230,7 @@ optional arguments:
   --tracking.kf_node_indices TRACKING.KF_NODE_INDICES
                         For Kalman filter: Indices of nodes to track. (default: )
   --tracking.kf_init_frame_count TRACKING.KF_INIT_FRAME_COUNT
-                        For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used. (default: 0)
+                        For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used. (default: 0) Kalman filters require TRACKING.KF_NODE_INDICES, TRACKING.MAX_TRACKING and TRACKING.MAX_TRACKS or TRACKING.TARGET_INSTANCE_COUNT, TRACKING.TRACKER to be simple or simplemaxtracks, and TRACKING.SIMILARITY to not be normalized_instance.
 ```
 
 #### Examples:
@@ -280,6 +285,12 @@ sleap-track --gpu 1 ...
 sleap-track -m "models/my_model" --frames 1000-2000 "input_video.mp4"
 ```
 
+**9. Use Kalman tracker (not recommended since flow is preferred):**
+
+```none
+sleap-track -m "models/my_model" --tracking.similarity instance --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 --tracking.kf_init_frame_count 10 --tracking.kf_node_indices 0,1 -o "output_predictions.slp" "input_video.mp4"
+```
+
 ## Dataset files
 
 (sleap-convert)=
@@ -322,7 +333,8 @@ optional arguments:
                               analysis file for the latter video is given a default name.
   --format FORMAT       Output format. Default ('slp') is SLEAP dataset;
                         'analysis' results in analysis.h5 file; 'analysis.nix' results
-                        in an analysis nix file; 'h5' or 'json' results in SLEAP dataset
+                        in an analysis nix file; 'analysis.csv' results
+                        in an analysis csv file; 'h5' or 'json' results in SLEAP dataset
                         with specified file format.
   --video VIDEO         Path to video (if needed for conversion).
 ```

@@ -13,39 +13,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-latest"]
+        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
         # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
         include:
           # Use this condarc as default
           - condarc: .conda/condarc.yaml
+          - pyver: "3.7"
           # Use special condarc if macos
-          - os: "macos-latest"
+          - os: "macos-14"
             condarc: .conda_mac/condarc.yaml
+            pyver: "3.9"
     steps:
       # Setup
-      - uses: actions/checkout@v2
-      - name: Cache conda
-        uses: actions/cache@v1
-        env:
-          # Increase this value to reset cache if environment_build.yml has not changed
-          CACHE_NUMBER: 0
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment_build.yml', 'requirements.txt') }}
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Miniconda
-        # https://github.com/conda-incubator/setup-miniconda
-        uses: conda-incubator/setup-miniconda@v2.0.1
+        uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          python-version: 3.7
-          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
-          environment-file: environment_build.yml
+          miniforge-version: latest
           condarc-file: ${{ matrix.condarc }}
+          python-version: ${{ matrix.pyver }}
+          environment-file: environment_build.yml
           activate-environment: sleap_ci
+          conda-solver: "libmamba"
+
       - name: Print environment info
         shell: bash -l {0}
         run: |
           which python
           conda info
+          conda list
 
       # Build pip wheel (Ubuntu)
       - name: Build pip wheel (Ubuntu)
@@ -69,21 +67,92 @@ jobs:
         shell: bash -l {0}
         run: |
           conda build .conda --output-folder build
+          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
-      # Build conda package (Windows)
+      # Build conda package (Windows) 
       - name: Build conda package (Windows)
         if: matrix.os == 'windows-2022'
         shell: powershell
         run: |
           conda build .conda --output-folder build
+          echo "BUILD_PATH=\$(pwd)\build" >> "$env:GITHUB_ENV"
 
       # Build conda package (Mac)
       - name: Build conda package (Mac)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-14'
         shell: bash -l {0}
         run: |
           conda build .conda_mac --output-folder build
+          echo "BUILD_PATH=$(pwd)/build" >> "$GITHUB_ENV"
 
+      # Test built conda package (Ubuntu and Windows)
+      - name: Test built conda package (Ubuntu and Windows)
+        if: matrix.os != 'macos-14'
+        shell: bash -l {0}
+        run: |
+          echo "Current build path: $BUILD_PATH"
+          conda deactivate
+    
+          echo "Python executable before activating environment:"
+          which python
+          echo "Python version before activating environment:"
+          python --version
+          echo "Conda info before activating environment:"
+          conda info
+
+          echo "Creating and testing conda environment with sleap package..."
+          conda create -y -n sleap_test -c file://$BUILD_PATH -c sleap/label/dev -c conda-forge -c nvidia -c anaconda sleap
+          conda activate sleap_test
+
+          echo "Python executable after activating sleap_test environment:"
+          which python
+          echo "Python version after activating sleap_test environment:"
+          python --version
+          echo "Conda info after activating sleap_test environment:"
+          conda info
+          echo "List of installed conda packages in the sleap_test environment:"
+          conda list
+          echo "List of installed pip packages in the sleap_test environment:"
+          pip list
+    
+          echo "Testing sleap package installation..."
+          sleap_version=$(python -c "import sleap; print(sleap.__version__)")
+          echo "Test completed using sleap version: $sleap_version"
+
+      # Test built conda package (Mac)
+      - name: Test built conda package (Mac)
+        if: matrix.os == 'macos-14'
+        shell: bash -l {0}
+        run: |
+          echo "Current build path: $BUILD_PATH"
+          conda deactivate
+    
+          echo "Python executable before activating environment:"
+          which python
+          echo "Python version before activating environment:"
+          python --version
+          echo "Conda info before activating environment:"
+          conda info
+    
+          echo "Creating and testing conda environment with sleap package..."
+          conda create -y -n sleap_test -c file://$BUILD_PATH -c conda-forge -c anaconda sleap
+          conda activate sleap_test
+    
+          echo "Python executable after activating sleap_test environment:"
+          which python
+          echo "Python version after activating sleap_test environment:"
+          python --version
+          echo "Conda info after activating sleap_test environment:"
+          conda info
+          echo "List of installed conda packages in the sleap_test environment:"
+          conda list
+          echo "List of installed pip packages in the sleap_test environment:"
+          pip list
+    
+          echo "Testing sleap package installation..."
+          sleap_version=$(python -c "import sleap; print(sleap.__version__)")
+          echo "Test completed using sleap version: $sleap_version"
+      
       # Login to conda (Ubuntu)
       - name: Login to Anaconda (Ubuntu)
         if: matrix.os == 'ubuntu-22.04'
@@ -95,7 +164,7 @@ jobs:
 
       # Login to conda (Windows)
       - name: Login to Anaconda (Windows)
-        if: matrix.os == 'windows-2019'
+        if: matrix.os == 'windows-2022'
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: powershell
@@ -104,7 +173,7 @@ jobs:
       
       # Login to conda (Mac)
       - name: Login to Anaconda (Mac)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-14'
         env:
           ANACONDA_LOGIN: ${{ secrets.ANACONDA_LOGIN }}
         shell: bash -l {0}
@@ -113,12 +182,12 @@ jobs:
       
       # Upload conda package (Windows)
       - name: Upload conda package (Windows/main)
-        if: matrix.os == 'windows-2019' && !github.event.release.prerelease
+        if: matrix.os == 'windows-2022' && !github.event.release.prerelease
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2"
       - name: Upload conda package (Windows/dev)
-        if: matrix.os == 'windows-2019' && github.event.release.prerelease
+        if: matrix.os == 'windows-2022' && github.event.release.prerelease
         shell: powershell
         run: |
           anaconda -v upload "build\win-64\*.tar.bz2" --label dev
@@ -137,15 +206,15 @@ jobs:
       
       # Upload conda package (Mac)
       - name: Upload conda package (Mac/main)
-        if: matrix.os == 'macos-latest' && !github.event.release.prerelease
+        if: matrix.os == 'macos-14' && !github.event.release.prerelease
         shell: bash -l {0}
         run: |
-          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
+          anaconda -v upload build/osx-arm64/*.tar.bz2 --label dev
       - name: Upload conda package (Mac/dev)
-        if: matrix.os == 'macos-latest' && github.event.release.prerelease
+        if: matrix.os == 'macos-14' && github.event.release.prerelease
         shell: bash -l {0}
         run: |
-          anaconda -v upload build/osx-64/*.tar.bz2 --label dev
+          anaconda -v upload build/osx-arm64/*.tar.bz2 --label dev
       
       # Logout
       - name: Logout from Anaconda

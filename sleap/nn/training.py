@@ -76,8 +76,8 @@ from sleap.nn.losses import OHKMLoss, PartLoss
 
 # Model
 from sleap.nn.model import Model
-from sleap.nn.viz import plot_confmaps, plot_img, plot_pafs, plot_peaks
-from sleap.util import get_package_file
+from sleap.nn.viz import plot_confmaps, plot_peaks
+from sleap.util import get_package_file, plot_img
 
 logger = logging.getLogger(__name__)
 
@@ -508,7 +508,7 @@ def setup_visualization(
     callbacks = []
 
     try:
-        matplotlib.use("Qt5Agg")
+        matplotlib.use("QtAgg")
     except ImportError:
         print(
             "Unable to use Qt backend for matplotlib. "
@@ -946,7 +946,7 @@ class Trainer(ABC):
         if self.config.outputs.save_outputs:
             if (
                 self.config.outputs.save_visualizations
-                and self.config.outputs.delete_viz_images
+                and not self.config.outputs.keep_viz_images
             ):
                 self.cleanup()
 
@@ -997,7 +997,7 @@ class Trainer(ABC):
 
     def package(self):
         """Package model folder into a zip file for portability."""
-        if self.config.outputs.delete_viz_images:
+        if not self.config.outputs.keep_viz_images:
             self.cleanup()
         logger.info(f"Packaging results to: {self.run_path}.zip")
         shutil.make_archive(
@@ -1315,10 +1315,11 @@ class TopdownConfmapsModelTrainer(Trainer):
         # Create an instance peak finding layer.
         find_peaks = FindInstancePeaks(
             keras_model=self.keras_model,
-            input_scale=self.config.data.preprocessing.input_scaling,
+            input_scale=1.0,
             peak_threshold=0.2,
             refinement="local",
             return_confmaps=True,
+            resize_input_image=False,
         )
 
         def visualize_example(example):
@@ -1755,10 +1756,11 @@ class TopDownMultiClassModelTrainer(Trainer):
         # Create an instance peak finding layer.
         find_peaks = FindInstancePeaks(
             keras_model=self.keras_model,
-            input_scale=self.config.data.preprocessing.input_scaling,
+            input_scale=1.0,
             peak_threshold=0.2,
             refinement="local",
             return_confmaps=True,
+            resize_input_image=False,
         )
 
         def visualize_example(example):
@@ -1865,12 +1867,32 @@ def create_trainer_using_cli(args: Optional[List] = None):
         ),
     )
     parser.add_argument(
+        "--keep_viz",
+        action="store_true",
+        help=(
+            "Keep prediction visualization images in the run folder after training when "
+            "--save_viz is enabled."
+        ),
+    )
+    parser.add_argument(
         "--zmq",
         action="store_true",
         help=(
             "Enable ZMQ logging (for GUI) if not already specified in the training "
             "job config."
         ),
+    )
+    parser.add_argument(
+        "--publish_port",
+        type=int,
+        default=9001,
+        help="Port to set up the publish address while using ZMQ, defaults to 9001.",
+    )
+    parser.add_argument(
+        "--controller_port",
+        type=int,
+        default=9000,
+        help="Port to set up the controller address while using ZMQ, defaults to 9000.",
     )
     parser.add_argument(
         "--run_name",
@@ -1926,6 +1948,10 @@ def create_trainer_using_cli(args: Optional[List] = None):
     job_config.outputs.tensorboard.write_logs |= args.tensorboard
     job_config.outputs.zmq.publish_updates |= args.zmq
     job_config.outputs.zmq.subscribe_to_controller |= args.zmq
+    job_config.outputs.zmq.controller_address = "tcp://127.0.0.1:" + str(
+        args.controller_port
+    )
+    job_config.outputs.zmq.publish_address = "tcp://127.0.0.1:" + str(args.publish_port)
     if args.run_name != "":
         job_config.outputs.run_name = args.run_name
     if args.prefix != "":
@@ -1933,6 +1959,7 @@ def create_trainer_using_cli(args: Optional[List] = None):
     if args.suffix != "":
         job_config.outputs.run_name_suffix = args.suffix
     job_config.outputs.save_visualizations |= args.save_viz
+    job_config.outputs.keep_viz_images = args.keep_viz
     if args.labels_path == "":
         args.labels_path = None
     args.video_paths = args.video_paths.split(",")

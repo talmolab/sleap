@@ -9,23 +9,82 @@ from sleap.nn.tracker.components import (
     FrameMatches,
     greedy_matching,
 )
+from sleap.io.dataset import Labels
 
 from sleap.instance import PredictedInstance
 from sleap.skeleton import Skeleton
 
 
+def tracker_by_name(frames=None, **kwargs):
+    t = Tracker.make_tracker_by_name(**kwargs)
+    print(kwargs)
+    print(t.candidate_maker)
+    if frames is None:
+        t.track([])
+        t.final_pass([])
+        return
+
+    for lf in frames:
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances, img=lf.video[lf.frame_idx])
+        t.track(**track_args, img_hw=(1, 1))
+        t.final_pass(frames)
+
+
 @pytest.mark.parametrize(
     "tracker", ["simple", "flow", "simplemaxtracks", "flowmaxtracks"]
 )
-@pytest.mark.parametrize("similarity", ["instance", "iou", "centroid"])
+@pytest.mark.parametrize(
+    "similarity",
+    ["instance", "normalized_instance", "iou", "centroid", "object_keypoint"],
+)
 @pytest.mark.parametrize("match", ["greedy", "hungarian"])
 @pytest.mark.parametrize("count", [0, 2])
-def test_tracker_by_name(tracker, similarity, match, count):
-    t = Tracker.make_tracker_by_name(
-        "flow", "instance", "greedy", clean_instance_count=2
+def test_tracker_by_name(
+    centered_pair_predictions_sorted,
+    tracker,
+    similarity,
+    match,
+    count,
+):
+    # This is slow, so limit to 5 time points
+    frames = centered_pair_predictions_sorted[:5]
+
+    tracker_by_name(
+        frames=frames,
+        tracker=tracker,
+        similarity=similarity,
+        match=match,
+        max_tracks=count,
     )
-    t.track([])
-    t.final_pass([])
+
+
+@pytest.mark.parametrize(
+    "tracker", ["simple", "flow", "simplemaxtracks", "flowmaxtracks"]
+)
+@pytest.mark.parametrize("oks_score_weighting", ["True", "False"])
+@pytest.mark.parametrize("oks_normalization", ["all", "ref", "union"])
+def test_oks_tracker_by_name(
+    centered_pair_predictions_sorted,
+    tracker,
+    oks_score_weighting,
+    oks_normalization,
+):
+    # This is slow, so limit to 5 time points
+    frames = centered_pair_predictions_sorted[:5]
+
+    tracker_by_name(
+        frames=frames,
+        tracker=tracker,
+        similarity="object_keypoint",
+        matching="greedy",
+        oks_score_weighting=oks_score_weighting,
+        oks_normalization=oks_normalization,
+        max_tracks=2,
+    )
 
 
 def test_cull_instances(centered_pair_predictions):
@@ -232,7 +291,7 @@ def test_max_tracking_large_gap_single_track():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -249,7 +308,7 @@ def test_max_tracking_large_gap_single_track():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -296,7 +355,7 @@ def test_max_tracking_small_gap_on_both_tracks():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -313,7 +372,7 @@ def test_max_tracking_small_gap_on_both_tracks():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -365,7 +424,7 @@ def test_max_tracking_extra_detections():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 
@@ -382,7 +441,7 @@ def test_max_tracking_extra_detections():
 
     tracked = []
     for insts in preds:
-        tracked_insts = tracker.track(insts)
+        tracked_insts = tracker.track(insts, img_hw=(1, 1))
         tracked.append(tracked_insts)
     all_tracks = list(set([inst.track for frame in tracked for inst in frame]))
 

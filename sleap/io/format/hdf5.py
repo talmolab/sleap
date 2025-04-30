@@ -28,11 +28,12 @@ from typing import Optional, Callable, List, Text, Union
 
 
 class LabelsV1Adaptor(format.adaptor.Adaptor):
-    FORMAT_ID = 1.2
+    FORMAT_ID = 1.3
 
     # 1.0 points with gridline coordinates, top left corner at (0, 0)
     # 1.1 points with midpixel coordinates, top left corner at (-0.5, -0.5)
-    # 1.2 adds track score to read and write functions
+    # 1.2 adds tracking score for PredictedInstance to read and write functions
+    # 1.3 adds tracking score for Instance to read and write functions
 
     @property
     def handles(self):
@@ -81,7 +82,10 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
         # Extract the Labels JSON metadata and create Labels object with just this
         # metadata.
-        dicts = json_loads(f.require_group("metadata").attrs["json"].tobytes().decode())
+        json = f.require_group("metadata").attrs["json"]
+        if not isinstance(json, str):
+            json = json.tobytes().decode()
+        dicts = json_loads(json)
 
         # These items are stored in separate lists because the metadata group got to be
         # too big.
@@ -151,6 +155,45 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             points_dset[:]["x"] -= 0.5
             points_dset[:]["y"] -= 0.5
 
+        def cast_as_compound(arr, dtype):
+            out = np.empty(shape=(len(arr),), dtype=dtype)
+            if out.size == 0:
+                return out
+            for i, (name, _) in enumerate(dtype):
+                out[name] = arr[:, i]
+            return out
+
+        # cast points, instances, and frames into complex dtype if not already
+        dtype_points = [("x", "<f8"), ("y", "<f8"), ("visible", "?"), ("complete", "?")]
+        if points_dset.dtype.kind != "V":
+            points_dset = cast_as_compound(points_dset, dtype_points)
+        if pred_points_dset.dtype.kind != "V":
+            pred_points_dset = cast_as_compound(pred_points_dset, dtype_points)
+
+        dtype_instances = [
+            ("instance_id", "<i8"),
+            ("instance_type", "u1"),
+            ("frame_id", "<u8"),
+            ("skeleton", "<u4"),
+            ("track", "<i4"),
+            ("from_predicted", "<i8"),
+            ("score", "<f4"),
+            ("point_id_start", "<u8"),
+            ("point_id_end", "<u8"),
+        ]
+        if instances_dset.dtype.kind != "V":
+            instances_dset = cast_as_compound(instances_dset, dtype_instances)
+
+        dtype_frames = [
+            ("frame_id", "<u8"),
+            ("video", "<u4"),
+            ("frame_idx", "<u8"),
+            ("instance_id_start", "<u8"),
+            ("instance_id_end", "<u8"),
+        ]
+        if frames_dset.dtype.kind != "V":
+            frames_dset = cast_as_compound(frames_dset, dtype_frames)
+
         # Rather than instantiate a bunch of Point\PredictedPoint objects, we will use
         # inplace numpy recarrays. This will save a lot of time and memory when reading
         # things in.
@@ -180,6 +223,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     skeleton=skeleton,
                     track=track,
                     points=points[i["point_id_start"] : i["point_id_end"]],
+                    tracking_score=i["tracking_score"]
+                    if (format_id is not None and format_id >= 1.3)
+                    else 0.0,
                 )
             else:  # PredictedInstance
                 instance = PredictedInstance(
@@ -283,9 +329,10 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             if append and "json" in meta_group.attrs:
 
                 # Otherwise, we need to read the JSON and append to the lists
-                old_labels = labels_json.LabelsJsonAdaptor.from_json_data(
-                    meta_group.attrs["json"].tobytes().decode()
-                )
+                json = meta_group.attrs["json"]
+                if not isinstance(json, str):
+                    json = json.tobytes().decode()
+                old_labels = labels_json.LabelsJsonAdaptor.from_json_data(json)
 
                 # A function to join to list but only include new non-dupe entries
                 # from the right hand list.
@@ -438,11 +485,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     if instance_type is PredictedInstance:
                         score = instance.score
                         pid = pred_point_id + pred_point_id_offset
-                        tracking_score = instance.tracking_score
                     else:
                         score = np.nan
                         pid = point_id + point_id_offset
-                        tracking_score = np.nan
 
                         # Keep track of any from_predicted instance links, we will
                         # insert the correct instance_id in the dataset after we are
@@ -450,6 +495,8 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                         if instance.from_predicted:
                             instances_with_from_predicted.append(instance_id)
                             instances_from_predicted.append(instance.from_predicted)
+
+                    tracking_score = instance.tracking_score
 
                     # Copy all the data
                     instances[instance_id] = (
