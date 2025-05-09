@@ -65,7 +65,7 @@ jobs:
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          miniforge-version: latest
+          miniforge-version: 23.11.0-0
           conda-solver: "libmamba"
           environment-file: ${{ matrix.env_file }}
           activate-environment: sleap_ci

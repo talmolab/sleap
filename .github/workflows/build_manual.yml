@@ -38,7 +38,7 @@ jobs:
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3.0.3
         with:
-          miniforge-version: latest
+          miniforge-version: 23.11.0-0
           condarc-file: ${{ matrix.condarc }}
           python-version: ${{ matrix.pyver }}
           environment-file: environment_build.yml
