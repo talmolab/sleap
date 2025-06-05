@@ -51,7 +51,7 @@ jobs:
         if: env.RUN_BUILD_JOB == 'true'
         uses: conda-incubator/setup-miniconda@v3.0.4
         with:
-          miniforge-version: latest
+          miniforge-version: 23.11.0-0
           condarc-file: ${{ matrix.condarc }}
           python-version: ${{ matrix.pyver }}
           environment-file: environment_build.yml
@@ -148,7 +148,7 @@ jobs:
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3.0.4
         with:
-          miniforge-version: latest
+          miniforge-version: 23.11.0-0
           condarc-file: ${{ matrix.condarc }}
           python-version: ${{ matrix.pyver }}
           conda-solver: "libmamba"

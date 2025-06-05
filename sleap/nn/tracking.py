@@ -1,12 +1,17 @@
 """Tracking tools for linking grouped instances over time."""
 
-from collections import deque, defaultdict
 import abc
-import attr
-import numpy as np
-import cv2
 import functools
-from typing import Callable, Deque, Dict, Iterable, List, Optional, Tuple
+import json
+import logging
+from collections import deque
+from time import time
+from typing import Callable, Deque, Dict, Iterable, Iterator, List, Optional, Tuple
+
+import attr
+import cv2
+import numpy as np
+import rich.progress
 
 from sleap import Track, LabeledFrame, Skeleton
 
@@ -26,8 +31,10 @@ from sleap.nn.tracker.components import (
     Match,
 )
 from sleap.nn.tracker.kalman import BareKalmanTracker
-
 from sleap.nn.data.normalization import ensure_int
+from sleap.util import RateColumn
+
+logger = logging.getLogger(__name__)
 
 
 @attr.s(eq=False, slots=True, auto_attribs=True)
@@ -66,7 +73,6 @@ class ShiftedInstance:
         shift_score: float = 0.0,
         with_skeleton: bool = False,
     ):
-
         points_array = new_points_array
         if points_array is None:
             points_array = ref_instance.points_array
@@ -511,14 +517,162 @@ match_policies = dict(
 class BaseTracker(abc.ABC):
     """Abstract base class for tracker."""
 
+    verbosity: str = attr.ib(
+        validator=attr.validators.in_(["none", "rich", "json"]),
+        default="none",
+        kw_only=True,
+    )
+    report_rate: float = attr.ib(default=2.0, kw_only=True)
+
     @property
     def is_valid(self):
         return False
+
+    @property
+    def report_period(self) -> float:
+        """Time between progress reports in seconds."""
+        if self.report_rate <= 0:
+            logger.warning("report_rate must be positive, fallback to 1")
+            return 1.0
+        return 1.0 / self.report_rate
+
+    def run_step(self, lf: LabeledFrame) -> LabeledFrame:
+        # Clear the tracks
+        for inst in lf.instances:
+            inst.track = None
+
+        track_args = dict(untracked_instances=lf.instances, t=lf.frame_idx)
+        if self.uses_image:
+            track_args["img"] = lf.video[lf.frame_idx]
+        else:
+            track_args["img"] = None
+        track_args["img_hw"] = lf.image.shape[-3:-1]
+
+        return LabeledFrame(
+            frame_idx=lf.frame_idx,
+            video=lf.video,
+            instances=self.track(**track_args),
+        )
+
+    def _run_tracker_json(
+        self,
+        frames: List[LabeledFrame],
+        max_length: int = 30,
+    ) -> Iterator[LabeledFrame]:
+        n_total = len(frames)
+        n_processed = 0
+        n_batch = 0
+        n_recent = deque(maxlen=max_length)
+        elapsed_recent = deque(maxlen=max_length)
+        last_report = time()
+        t0_all = time()
+        t0_batch = time()
+
+        for lf in frames:
+            new_lf = self.run_step(lf)
+
+            # Track timing and progress
+            elapsed_all = time() - t0_all
+            n_processed += 1
+            n_batch += 1
+
+            # Report
+            if time() > last_report + self.report_period:
+                elapsed_batch = time() - t0_batch
+                t0_batch = time()
+
+                # Compute recent rate
+                n_recent.append(n_batch)
+                n_batch = 0
+                elapsed_recent.append(elapsed_batch)
+                rate = sum(n_recent) / sum(elapsed_recent)
+                eta = (n_total - n_processed) / rate
+
+                print(
+                    json.dumps(
+                        {
+                            "n_processed": n_processed,
+                            "n_total": n_total,
+                            "elapsed": elapsed_all,
+                            "rate": rate,
+                            "eta": eta,
+                        }
+                    ),
+                    flush=True,
+                )
+                last_report = time()
+
+            yield new_lf
+
+    def _run_tracker_rich(self, frames: List[LabeledFrame]) -> Iterator[LabeledFrame]:
+        with rich.progress.Progress(
+            "{task.description}",
+            rich.progress.BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            "ETA:",
+            rich.progress.TimeRemainingColumn(),
+            RateColumn(),
+            auto_refresh=False,
+            refresh_per_second=self.report_rate,
+            speed_estimate_period=5,
+        ) as progress:
+            task = progress.add_task("Tracking...", total=len(frames))
+            last_report = time()
+            for lf in frames:
+                new_lf = self.run_step(lf)
+
+                progress.update(task, advance=1)
+
+                # Handle refreshing manually to support notebooks.
+                if time() > last_report + self.report_period:
+                    progress.refresh()
+                    last_report = time()
+
+                yield new_lf
+
+    def run_tracker(
+        self,
+        frames: List[LabeledFrame],
+        *,
+        verbosity: Optional[str] = None,
+        final_pass: bool = True,
+    ) -> List[LabeledFrame]:
+        """Run the tracker on a set of labeled frames.
+
+        Args:
+            frames: A list of labeled frames with instances.
+
+        Returns:
+            The input frames with the new tracks assigned. If the frames already had tracks,
+            they will be cleared if the tracker has been re-initialized.
+        """
+        # Return original frames if we aren't retracking
+        if not self.is_valid:
+            return frames
+
+        verbosity = verbosity or self.verbosity
+
+        # Run tracking on every frame
+        if verbosity == "rich":
+            new_lfs = list(self._run_tracker_rich(frames))
+
+        elif verbosity == "json":
+            new_lfs = list(self._run_tracker_json(frames))
+
+        else:
+            new_lfs = list(self.run_step(lf) for lf in frames)
+
+        # Run final_pass
+        if final_pass:
+            self.final_pass(new_lfs)
+
+        return new_lfs
 
     @abc.abstractmethod
     def track(
         self,
         untracked_instances: List[InstanceType],
+        img_hw: Tuple[int],
         img: Optional[np.ndarray] = None,
         t: int = None,
     ):
@@ -564,6 +718,12 @@ class Tracker(BaseTracker):
             use the max similarity (non-robust). For selecting a robust score,
             0.95 is a good value.
         max_tracking: Max tracking is incorporated when this is set to true.
+        verbosity: Mode of inference progress reporting. If `"rich"` (the
+            default), an updating progress bar is displayed in the console or notebook.
+            If `"json"`, a JSON-serialized message is printed out which can be captured
+            for programmatic progress monitoring. If `"none"`, nothing is displayed
+            during tracking -- this is recommended when running on clusters or headless
+            machines where the output is captured to a log file.
     """
 
     max_tracks: int = None
@@ -639,6 +799,28 @@ class Tracker(BaseTracker):
     def uses_image(self):
         return getattr(self.candidate_maker, "uses_image", False)
 
+    def infer_next_timestep(self, t: Optional[int] = None) -> int:
+        """Infer timestep if not provided."""
+        # Timestep was provided
+        if t is not None:
+            return t
+
+        if self.has_max_tracking and len(self.track_matching_queue_dict) > 0:
+            # Default to last timestep + 1 if available.
+            # Here we find the track that has the most instances.
+            track_with_max_instances = max(
+                self.track_matching_queue_dict,
+                key=lambda track: len(self.track_matching_queue_dict[track]),
+            )
+            return 1 + self.track_matching_queue_dict[track_with_max_instances][-1].t
+
+        # Default to last timestep + 1 if available.
+        if not self.has_max_tracking and len(self.track_matching_queue) > 0:
+            return self.track_matching_queue[-1].t + 1
+
+        # Default to 0
+        return 0
+
     def track(
         self,
         untracked_instances: List[InstanceType],
@@ -667,31 +849,7 @@ class Tracker(BaseTracker):
             return untracked_instances
 
         # Infer timestep if not provided.
-        if t is None:
-            if self.has_max_tracking:
-                if len(self.track_matching_queue_dict) > 0:
-
-                    # Default to last timestep + 1 if available.
-                    # Here we find the track that has the most instances.
-                    track_with_max_instances = max(
-                        self.track_matching_queue_dict,
-                        key=lambda track: len(self.track_matching_queue_dict[track]),
-                    )
-                    t = (
-                        self.track_matching_queue_dict[track_with_max_instances][-1].t
-                        + 1
-                    )
-
-                else:
-                    t = 0
-            else:
-                if len(self.track_matching_queue) > 0:
-
-                    # Default to last timestep + 1 if available.
-                    t = self.track_matching_queue[-1].t + 1
-
-                else:
-                    t = 0
+        t = self.infer_next_timestep(t)
 
         # Initialize containers for tracked instances at the current timestep.
         tracked_instances = []
@@ -701,7 +859,6 @@ class Tracker(BaseTracker):
 
         # Process untracked instances.
         if untracked_instances:
-
             if self.pre_cull_function:
                 self.pre_cull_function(untracked_instances)
 
@@ -791,7 +948,6 @@ class Tracker(BaseTracker):
     ) -> List[InstanceType]:
         results = []
         for inst in unmatched_instances:
-
             # Skip if this instance is too small to spawn a new track with.
             if inst.n_visible_points < self.min_new_track_points:
                 continue
@@ -875,6 +1031,8 @@ class Tracker(BaseTracker):
         oks_errors: Optional[list] = None,
         oks_score_weighting: bool = False,
         oks_normalization: str = "all",
+        progress_reporting: str = "rich",
+        report_rate: float = 2.0,
         **kwargs,
     ) -> BaseTracker:
         # Parse max_tracking arguments, only True if max_tracks is not None and > 0
@@ -950,6 +1108,8 @@ class Tracker(BaseTracker):
             max_tracks=max_tracks,
             target_instance_count=target_instance_count,  # TODO: deprecate target_instance_count
             post_connect_single_breaks=post_connect_single_breaks,
+            verbosity=progress_reporting,
+            report_rate=report_rate,
         )
 
         # Kalman filter requires deprecated target_instance_count
@@ -994,7 +1154,6 @@ class Tracker(BaseTracker):
 
     @classmethod
     def get_by_name_factory_options(cls):
-
         options = []
 
         option = dict(name="tracker", default="None")
@@ -1113,7 +1272,8 @@ class Tracker(BaseTracker):
         option["type"] = int
         option["help"] = (
             "If non-zero and tracking.tracker is set to flow, save the shifted "
-            "instances between elapsed frames"
+            "instances between elapsed frames. It uses a bit more of memory but gives "
+            "better instance matches."
         )
         options.append(option)
 
@@ -1127,9 +1287,10 @@ class Tracker(BaseTracker):
 
         option = dict(name="kf_init_frame_count", default="0")
         option["type"] = int
-        option[
-            "help"
-        ] = "For Kalman filter: Number of frames to track with other tracker. 0 means no Kalman filters will be used."
+        option["help"] = (
+            "For Kalman filter: Number of frames to track with other tracker. "
+            "0 means no Kalman filters will be used."
+        )
         options.append(option)
 
         def float_list_func(s):
@@ -1150,9 +1311,10 @@ class Tracker(BaseTracker):
         option = dict(name="oks_score_weighting", default="0")
         option["type"] = int
         option["help"] = (
-            "For Object Keypoint similarity: if 0 (default), only the distance between the reference "
-            "and query keypoint is used to compute the similarity. If 1, each distance is weighted "
-            "by the prediction scores of the reference and query keypoint."
+            "For Object Keypoint similarity: if 0 (default), only the distance "
+            "between the reference and query keypoint is used to compute the "
+            "similarity. If 1, each distance is weighted by the prediction scores "
+            "of the reference and query keypoint."
         )
         options.append(option)
 
@@ -1160,10 +1322,10 @@ class Tracker(BaseTracker):
         option["type"] = str
         option["options"] = ["all", "ref", "union"]
         option["help"] = (
-            "For Object Keypoint similarity: Determine how to normalize similarity score. "
+            "Object Keypoint similarity: Determine how to normalize similarity score. "
             "If 'all', similarity score is normalized by number of reference points. "
-            "If 'ref', similarity score is normalized by number of visible reference points. "
-            "If 'union', similarity score is normalized by number of points both visible "
+            "If 'ref', score is normalized by number of visible reference points. "
+            "If 'union', score is normalized by number of points both visible "
             "in query and reference instance."
         )
         options.append(option)
@@ -1183,11 +1345,21 @@ class Tracker(BaseTracker):
             else:
                 arg_name = arg["name"]
 
-            parser.add_argument(
-                f"--{arg_name}",
-                type=arg["type"],
-                help=help_string,
-            )
+            if arg["name"] == "tracker":
+                # If default is defined for "tracking.tracker", we cannot detect
+                # mal-formed command line.
+                parser.add_argument(
+                    f"--{arg_name}",
+                    type=arg["type"],
+                    help=help_string,
+                )
+            else:
+                parser.add_argument(
+                    f"--{arg_name}",
+                    type=arg["type"],
+                    help=help_string,
+                    default=arg["default"],
+                )
 
 
 @attr.s(auto_attribs=True)
@@ -1263,7 +1435,6 @@ class KalmanInitSet:
         # "usuable" instances—i.e., instances with the nodes that we'll track
         # using Kalman filters.
         elif frame_match.has_only_first_choice_matches:
-
             good_instances = [
                 inst for inst in instances if self.is_usable_instance(inst)
             ]
@@ -1421,6 +1592,7 @@ class KalmanTracker(BaseTracker):
     def track(
         self,
         untracked_instances: List[InstanceType],
+        img_hw: Tuple[int],
         img: Optional[np.ndarray] = None,
         t: int = None,
         **kwargs,
@@ -1482,7 +1654,6 @@ class KalmanTracker(BaseTracker):
         # Check whether we've been getting good results from the Kalman filters.
         # First, has it been a while since the filters were initialized?
         if self.init_done and (t - self.last_init_t) > self.re_init_cooldown:
-
             # If it's been a while, then see if it's also been a while since
             # the filters successfully matched tracks to the instances.
             if self.kalman_tracker.last_frame_with_tracks < t - self.re_init_after:
@@ -1628,8 +1799,7 @@ def retrack():
     print(f"Done loading predictions in {time.time() - t0} seconds.")
 
     print("Starting tracker...")
-    frames = run_tracker(frames=frames, tracker=tracker)
-    tracker.final_pass(frames)
+    frames = tracker.run_tracker(frames=frames)
 
     new_labels = Labels(labeled_frames=frames)
 

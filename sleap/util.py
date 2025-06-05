@@ -16,9 +16,14 @@ import shutil
 from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, Hashable, Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Hashable, Iterable, List, Optional
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
+
+try:
+    from importlib.resources import files  # New in 3.9+
+except ImportError:
+    from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
 
 import attr
 import h5py as h5
@@ -27,16 +32,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 import psutil
 import rapidjson
+import rich.progress
 import seaborn as sns
 import yaml
 from PIL import Image
 
-try:
-    from importlib.resources import files  # New in 3.9+
-except ImportError:
-    from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
-
 import sleap.version as sleap_version
+
+if TYPE_CHECKING:
+    from rich.progress import Task
+
+
+class RateColumn(rich.progress.ProgressColumn):
+    """Renders the progress rate."""
+
+    def render(self, task: Task) -> rich.progress.Text:
+        """Show progress rate."""
+        speed = task.speed
+        if speed is None:
+            return rich.progress.Text("?", style="progress.data.speed")
+        return rich.progress.Text(f"{speed:.1f} FPS", style="progress.data.speed")
 
 
 def json_loads(json_str: str) -> Dict:
