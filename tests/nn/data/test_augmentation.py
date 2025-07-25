@@ -9,6 +9,7 @@ use_cpu_only()  # hide GPUs for test
 from sleap.nn.data import providers
 from sleap.nn.data import augmentation
 from sleap.nn.data.pipelines import Pipeline
+import albumentations as A
 
 
 @pytest.fixture
@@ -300,3 +301,123 @@ def test_random_flipper():
         ex["instances"],
         [[[25, 333], [25, 358], [50, 358]], [[125, 233], [125, 258], [150, 258]]],
     )
+
+
+def test_custom_albumentations_augmenter():
+    """Test custom albumentations functionality with configuration validation."""
+    
+    # Test 1: Valid configuration
+    config = augmentation.AugmentationConfig(
+        custom_albumentation_funcs=[
+            {"function": "MotionBlur", "params": {"blur_limit": [3, 7], "p": 0.5}},
+            {"function": "CLAHE", "params": {"clip_limit": 2.0, "p": 0.3}},
+            {"function": "Blur", "params": {"blur_limit": 3, "p": 0.2}}
+        ]
+    )
+    
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(config)
+    assert len(augmenter.augmenter.transforms) == 3
+    
+    # Test 2: Invalid function name should raise ValueError
+    with pytest.raises(ValueError, match="not a valid albumentation function"):
+        config = augmentation.AugmentationConfig(
+            custom_albumentation_funcs=[
+                {"function": "NonExistentFunction", "params": {"p": 0.5}}
+            ]
+        )
+        augmentation.AlbumentationsAugmenter.from_config(config)
+    
+    # Test 3: Invalid parameter should raise ValueError
+    with pytest.raises(ValueError, match="not valid for albumentations function"):
+        config = augmentation.AugmentationConfig(
+            custom_albumentation_funcs=[
+                {"function": "MotionBlur", "params": {"invalid_param": 5, "p": 0.5}}
+            ]
+        )
+        augmentation.AlbumentationsAugmenter.from_config(config)
+    
+    # Test 4: Empty/None configuration should work
+    config = augmentation.AugmentationConfig(custom_albumentation_funcs=None)
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(config)
+    assert len(augmenter.augmenter.transforms) == 0
+    
+    config = augmentation.AugmentationConfig(custom_albumentation_funcs=[])
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(config)
+    assert len(augmenter.augmenter.transforms) == 0
+
+
+def test_custom_albumentations_with_dummy_data(dummy_image_data, dummy_instances_data_zeros):
+    """Test custom albumentations with dummy data using existing fixtures."""
+    
+    # Create dataset using existing fixtures
+    dataset = tf.data.Dataset.from_tensor_slices(
+        {"image": [dummy_image_data], "instances": [dummy_instances_data_zeros]}
+    )
+    
+    # Test with noise augmentation (deterministic for testing)
+    config = augmentation.AugmentationConfig(
+        custom_albumentation_funcs=[
+            {"function": "GaussNoise", "params": {"var_limit": [10, 10], "p": 1.0}},  # Fixed variance for consistency
+        ]
+    )
+    
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(config)
+    augmented_dataset = augmenter.transform_dataset(dataset)
+    
+    original_example = next(iter(dataset))
+    augmented_example = next(iter(augmented_dataset))
+    
+    # Check shapes are preserved
+    assert augmented_example["image"].shape == original_example["image"].shape
+    assert augmented_example["instances"].shape == original_example["instances"].shape
+    
+    # Check that augmentation was applied (image should be different due to noise)
+    assert not tf.reduce_all(augmented_example["image"] == original_example["image"])
+    
+    # Check that keypoints are preserved (GaussNoise doesn't affect keypoints)
+    np.testing.assert_array_equal(
+        augmented_example["instances"].numpy(), 
+        original_example["instances"].numpy()
+    )
+
+
+def test_custom_albumentations_with_pipeline(min_labels):
+    """Test custom albumentations integration with SLEAP pipeline using min_labels fixture."""
+    
+    # Test with a transform that affects both image and keypoints
+    config = augmentation.AugmentationConfig(
+        custom_albumentation_funcs=[
+            {"function": "Affine", "params": {"scale": 1.1, "p": 1.0}},  # Deterministic scaling
+        ]
+    )
+    
+    labels_reader = providers.LabelsReader.from_user_instances(min_labels)
+    ds = labels_reader.make_dataset()
+    example_preaug = next(iter(ds))
+    
+    augmenter = augmentation.AlbumentationsAugmenter.from_config(config)
+    ds = augmenter.transform_dataset(ds)
+    example = next(iter(ds))
+    
+    # Check that shapes are preserved
+    assert example["image"].shape == example_preaug["image"].shape
+    assert example["instances"].shape == example_preaug["instances"].shape
+    assert example["image"].dtype == example_preaug["image"].dtype
+    assert example["instances"].dtype == example_preaug["instances"].dtype
+    
+    # Check that scaling was applied (keypoints should be different)
+    assert not tf.reduce_all(example["instances"] == example_preaug["instances"])
+    
+    # Test combining with built-in augmentations
+    config_combined = augmentation.AugmentationConfig(
+        rotate=True,
+        rotation_min_angle=0,
+        rotation_max_angle=0,  # No rotation for predictable results
+        custom_albumentation_funcs=[
+            {"function": "CLAHE", "params": {"clip_limit": 2.0, "p": 1.0}},
+        ]
+    )
+    
+    augmenter_combined = augmentation.AlbumentationsAugmenter.from_config(config_combined)
+    # Should have 2 transforms: rotation + CLAHE
+    assert len(augmenter_combined.augmenter.transforms) == 2
