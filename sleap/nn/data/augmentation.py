@@ -192,6 +192,29 @@ class AlbumentationsAugmenter:
                     limit=(config.brightness_min_val, config.brightness_max_val), p=1.0
                 )
             )
+        if config.custom_albumentation_funcs: 
+            for func_config in config.custom_albumentation_funcs:
+                func = func_config["function"]
+                kwargs = func_config["params"]
+                if not hasattr(A, func):
+                    raise ValueError(
+                        f"Custom albumentation function '{func}' is not a valid albumentation function."
+                    )
+                # Check if kwargs are valid for the albumentations function
+                func_cls = getattr(A, func)
+                valid_args = func_cls.__init__.__code__.co_varnames
+                for key in kwargs:
+                    if key not in valid_args:
+                        raise ValueError(
+                            f"Keyword argument '{key}' is not valid for albumentations function '{func}'."
+                        )
+                aug_stack.append(func_cls(**kwargs))
+                print(
+                    f"Added custom albumentation function: \n\tA.{func}("
+                    + (", ".join(f"{k}={v}" for k, v in kwargs.items() if v is not None) if kwargs else "")
+                    + ")"
+                )
+                
 
         return cls(
             augmenter=A.Compose(
