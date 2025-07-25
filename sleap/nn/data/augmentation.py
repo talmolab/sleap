@@ -192,7 +192,7 @@ class AlbumentationsAugmenter:
                     limit=(config.brightness_min_val, config.brightness_max_val), p=1.0
                 )
             )
-        if config.custom_albumentation_funcs: 
+        if config.custom_albumentation_funcs:
             for func_config in config.custom_albumentation_funcs:
                 func = func_config["function"]
                 kwargs = func_config["params"]
@@ -211,10 +211,15 @@ class AlbumentationsAugmenter:
                 aug_stack.append(func_cls(**kwargs))
                 print(
                     f"Added custom albumentation function: \n\tA.{func}("
-                    + (", ".join(f"{k}={v}" for k, v in kwargs.items() if v is not None) if kwargs else "")
+                    + (
+                        ", ".join(
+                            f"{k}={v}" for k, v in kwargs.items() if v is not None
+                        )
+                        if kwargs
+                        else ""
+                    )
                     + ")"
                 )
-                
 
         return cls(
             augmenter=A.Compose(
@@ -250,6 +255,7 @@ class AlbumentationsAugmenter:
             The "scale" key in examples are not modified when scaling augmentation is
             applied.
         """
+
         # Define augmentation function to map over each sample.
         def py_augment(image, instances):
             """Local processing function that will not be autographed."""

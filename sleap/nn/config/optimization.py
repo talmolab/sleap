@@ -57,11 +57,11 @@ class AugmentationConfig:
             symmetric must be marked on the skeleton in order to be swapped correctly.
         flip_horizontal: If `True`, flip images left/right when randomly reflecting
             them. If `False`, flipping is down up/down instead.
-        custom_albumentation_funcs: If provided, a list of dictionaries where each 
-            dictionary contains 'function' (the albumentations function name) and 
-            'params' (keyword arguments for that function). This allows for more complex 
-            augmentations that are not supported by the default augmentation stack. 
-            Will throw an error if provided params are not compatible with the 
+        custom_albumentation_funcs: If provided, a list of dictionaries where each
+            dictionary contains 'function' (the albumentations function name) and
+            'params' (keyword arguments for that function). This allows for more complex
+            augmentations that are not supported by the default augmentation stack.
+            Will throw an error if provided params are not compatible with the
             albumentations library.
             Example Usage: [{"function": "MotionBlur", "params": {"blur_limit": [10, 12], "p": 0.5}}]
     """
