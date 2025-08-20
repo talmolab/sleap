@@ -27,11 +27,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Image Processing",
 ]
 dynamic = ["version", "readme"]
-
-[tool.setuptools.dynamic]
-version = {attr = "sleap.version.__version__"}
-readme = {file = ["README.md"], content-type="text/markdown"}
-
 dependencies = [
     # Core dependencies (no GPU/tensorflow)
     # "attrs>=21.2.0,<=21.4.0",
@@ -90,6 +85,10 @@ dependencies = [
     "requests",
     "matplotlib",
 ]
+
+[tool.setuptools.dynamic]
+version = {attr = "sleap.version.__version__"}
+readme = {file = ["README.md"], content-type="text/markdown"}
 
 [project.optional-dependencies]
 dev = [
