@@ -1,94 +1,104 @@
-# Continuous integration using conda installation
+# Continuous integration
 name: CI
 
-# on:
-#   pull_request:
-#     types: [opened, reopened, synchronize]
-#     paths:
-#       - "sleap/**"
-#       - "tests/**"
-#       - ".github/workflows/ci.yml"
-#       - "environment_no_cuda.yml"
-#       - "requirements.txt"
-#       - "dev_requirements.txt"
-  # push:
-  #   branches:
-  #     - main
-  #     - develop
-  #   paths:
-  #     - "sleap/**"
-  #     - "tests/**"
-  #     - ".github/workflows/ci.yml"
-  #     - "environment_no_cuda.yml"
-  #     - "requirements.txt"
-  #     - "dev_requirements.txt"
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - "sleap/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
+      - "pyproject.toml"
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "sleap/**"
+      - "tests/**"
+      - ".github/workflows/ci.yml"
+      - "pyproject.toml"
 
 jobs:
-  # Lint
+  # Lint with ruff
   lint:
+    # This job runs:
+    #
+    # 1. Linting and formatting checks with ruff
+    #
+    # Note: This uses Google-style docstring convention
+    # Ref: https://google.github.io/styleguide/pyguide.html
     name: Lint
-    runs-on: "ubuntu-22.04"
+    runs-on: "ubuntu-latest"
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.7
-      - name: Install Dependencies
-        run: |
-          pip install click==8.0.4
-          pip install black==21.6b0
-      - name: Run Black
-        run: |
-          black --check sleap tests
 
-  # Tests
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Setup UV
+      uses: astral-sh/setup-uv@v6
+      with:
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: |
+        uv sync --all-extras
+
+    - name: Run ruff checks
+      run: |
+        uv run ruff check sleap tests
+    
+    - name: Run ruff format check
+      run: |
+        uv run ruff format --check sleap tests
+
+  # Tests with pytest
   tests:
-    name: Tests (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-22.04", "windows-2022", "macos-14"]
-        include:
-          # Default values
-          - env_file: environment_no_cuda.yml
-          # Mac specific values
-          - os: macos-14
-            env_file: environment_mac.yml
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        python: ["3.8", "3.13"]
+        exclude:
+          - os: "macos-latest"
+            python: "3.8"
+          - os: "windows-latest"
+            python: "3.8"
 
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Conda
-        uses: conda-incubator/setup-miniconda@v3.0.3
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v6
         with:
-          miniforge-version: 23.11.0-0
-          conda-solver: "libmamba"
-          environment-file: ${{ matrix.env_file }}
-          activate-environment: sleap_ci
-      
-      # Print environment info
-      - name: Print environment info
-        shell: bash -l {0}
-        run: |
-          which python
-          conda info
-          conda list
-          pip freeze
-      
-      # Test environment
-      - name: Test with pytest
-        shell: bash -l {0}
-        run: |
-          pytest --cov=sleap --cov-report=xml --durations=-1 tests/
+          python-version: ${{ matrix.python }}
 
-      # Upload coverage
+      - name: Install dependencies
+        run: |
+          uv sync --all-extras
+
+      - name: Print environment info
+        run: |
+          uv run python --version
+          uv run pip freeze
+
+      - name: Install graphics dependencies on Ubuntu
+        # https://github.com/conda-forge/opencv-feedstock/issues/401
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          sudo apt-get update && sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1 libglx-mesa0
+
+      - name: Test with pytest (with coverage)
+        run: |
+          uv run pytest --cov=sleap --cov-report=xml --durations=-1 tests/
+
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: false
+          token: ${{ secrets.CODECOV_TOKEN }}
