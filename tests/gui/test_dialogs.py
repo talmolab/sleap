@@ -1,6 +1,5 @@
 """Module to test the dialogs of the GUI (contained in sleap/gui/dialogs)."""
 
-
 import pytest
 from qtpy.QtWidgets import QComboBox
 

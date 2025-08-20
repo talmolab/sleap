@@ -125,9 +125,9 @@ def load_predicted_labels_json_old(
             match_score = predicted_instances.loc[
                 predicted_instances["id"] == instance_id
             ]["matching_score"].values[0]
-            predicted_instances.loc[
-                predicted_instances["id"] == instance_id
-            ]["tracking_score"].values[0]
+            predicted_instances.loc[predicted_instances["id"] == instance_id][
+                "tracking_score"
+            ].values[0]
             instance_points = {
                 data["skeleton"]["nodeNames"][n]: PredictedPoint(
                     x, y, visible=v, score=confidence

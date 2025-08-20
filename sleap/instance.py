@@ -390,8 +390,7 @@ class Instance:
         """
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
             raise TypeError(
-                f"Instance.from_predicted type must be PredictedInstance (not "
-                f"{type(from_predicted)})"
+                f"Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})"
             )
 
     @_points.validator
@@ -424,8 +423,7 @@ class Instance:
         elif isinstance(points, PointArray):
             if len(points) != len(self.skeleton.nodes):
                 raise ValueError(
-                    "PointArray does not have the same number of rows as skeleton "
-                    "nodes."
+                    "PointArray does not have the same number of rows as skeleton nodes."
                 )
 
     def __attrs_post_init__(self):
@@ -1352,8 +1350,7 @@ class InstancesList(list):
 
         if not isinstance(instance, (Instance, PredictedInstance)):
             raise ValueError(
-                f"InstancesList can only contain Instance or PredictedInstance objects,"
-                f" but got {type(instance)}."
+                f"InstancesList can only contain Instance or PredictedInstance objects, but got {type(instance)}."
             )
         instance.frame = self.labeled_frame
         super().append(instance)

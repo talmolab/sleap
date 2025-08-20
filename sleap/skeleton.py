@@ -637,14 +637,7 @@ class Skeleton:
         nodes = ", ".join(self.node_names)
         edges = ", ".join([f"{s}->{d}" for (s, d) in self.edge_names])
         symm = ", ".join([f"{s}<->{d}" for (s, d) in self.symmetry_names])
-        return (
-            "Skeleton("
-            f"description={description}, "
-            f"nodes=[{nodes}], "
-            f"edges=[{edges}], "
-            f"symmetries=[{symm}]"
-            ")"
-        )
+        return f"Skeleton(description={description}, nodes=[{nodes}], edges=[{edges}], symmetries=[{symm}])"
 
     def matches(self, other: "Skeleton") -> bool:
         """Compare this `Skeleton` to another, ignoring name and node identities.

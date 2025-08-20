@@ -114,7 +114,6 @@ class VideoWriterImageio(VideoWriter):
         self.crf = crf
         self.preset = preset
 
-
         # Imageio's ffmpeg writer parameters
         # https://imageio.readthedocs.io/en/stable/examples.html#writing-videos-with-ffmpeg-and-vaapi
         # Use `ffmpeg -h encoder=libx264`` to see all options for libx264 output_params
@@ -185,8 +184,7 @@ def augment_background(images: np.ndarray, background: str | None) -> np.ndarray
     fill_values = {"black": 0, "grey": 127, "white": 255}
     if background not in fill_values:
         raise ValueError(
-            f"Invalid background color: {background}. Options include: "
-            f"{', '.join(fill_values.keys())}"
+            f"Invalid background color: {background}. Options include: {', '.join(fill_values.keys())}"
         )
 
     # Fill the images with the specified color.

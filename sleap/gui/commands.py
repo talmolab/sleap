@@ -1617,8 +1617,7 @@ def export_dataset_gui(
         win.setMaximum(n_total)
         win.setValue(n)
         win.setLabelText(
-            "Exporting dataset with frame images...<br>"
-            f"{n}/{n_total} (<b>{(n / n_total) * 100:.1f}%</b>)"
+            f"Exporting dataset with frame images...<br>{n}/{n_total} (<b>{(n / n_total) * 100:.1f}%</b>)"
         )
         QtWidgets.QApplication.instance().processEvents()
         return True
@@ -2122,8 +2121,7 @@ class ToggleGrayscale(EditCommand):
                 video.backend.reset(grayscale=(not grayscale))
             except:
                 print(
-                    f"This video type {type(video.backend)} for video at index {idx} "
-                    f"does not support grayscale yet."
+                    f"This video type {type(video.backend)} for video at index {idx} does not support grayscale yet."
                 )
 
 
@@ -2483,8 +2481,7 @@ class OpenSkeleton(EditCommand):
                     type(e), value=e, tb=e.__traceback__
                 )
                 logger.warning(
-                    f"Recieved the following error while replacing skeleton:\n"
-                    f"{''.join(tb_str)}"
+                    f"Recieved the following error while replacing skeleton:\n{''.join(tb_str)}"
                 )
 
         # Load new skeleton
@@ -2686,10 +2683,7 @@ class InstanceDeleteCommand(EditCommand):
         """
 
         title = "Deleting instances"
-        message = (
-            f"There are {len(lf_inst_list)} instances which "
-            f"would be deleted. Are you sure you want to delete these?"
-        )
+        message = f"There are {len(lf_inst_list)} instances which would be deleted. Are you sure you want to delete these?"
 
         # Confirm that we want to delete
         resp = QtWidgets.QMessageBox.critical(

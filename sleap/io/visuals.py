@@ -513,8 +513,7 @@ def main(args: list = None):
         type=str,
         default="instances",
         help=(
-            "Specify how to color instances. Options include: 'instances', 'edges', "
-            "and 'nodes' (default: 'nodes')"
+            "Specify how to color instances. Options include: 'instances', 'edges', and 'nodes' (default: 'nodes')"
         ),
     )
     parser.add_argument(

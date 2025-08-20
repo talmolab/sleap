@@ -100,7 +100,6 @@ def imports_section():
         label("pyside6 import", False)
 
     try:
-
         label("cv2 import", True)
     except:
         label("cv2 import", False)

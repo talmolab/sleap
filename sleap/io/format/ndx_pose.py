@@ -229,8 +229,7 @@ class NDXPoseAdaptor(Adaptor):
         # Check that this project contains predicted instances
         if len(labels.predicted_instances) == 0:
             raise TypeError(
-                "Only predicted instances are written to the NWB format. "
-                "This project has no predicted instances."
+                "Only predicted instances are written to the NWB format. This project has no predicted instances."
             )
 
         # Set optional kwargs if not specified by user
@@ -266,14 +265,12 @@ class NDXPoseAdaptor(Adaptor):
                     name = f"SLEAP_VIDEO_{video_idx:03}_{video_fn.stem}"
                     nwb_processing_module = nwb_file.create_processing_module(
                         name=name,
-                        description=f"{session_description} for {video_fn.name} with "
-                        f"{skeleton.name} skeleton.",
+                        description=f"{session_description} for {video_fn.name} with {skeleton.name} skeleton.",
                     )
                 except ValueError:
                     # Cannot overwrite or delete processing modules
                     print(
-                        f"Processing module for {video_fn.name} already exists... "
-                        f"Skipping: {name}"
+                        f"Processing module for {video_fn.name} already exists... Skipping: {name}"
                     )
                     continue
 
@@ -317,8 +314,7 @@ class NDXPoseAdaptor(Adaptor):
                         name=f"{name_prefix}{track_idx:03}",
                         pose_estimation_series=pose_estimation_series,
                         description=(
-                            f"Estimated positions of {skeleton.name} in video {video_fn} "
-                            f"using SLEAP."
+                            f"Estimated positions of {skeleton.name} in video {video_fn} using SLEAP."
                         ),
                         original_videos=[f"{video_fn}"],
                         labeled_videos=[f"{video_fn}"],

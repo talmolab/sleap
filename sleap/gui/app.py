@@ -832,8 +832,7 @@ class MainWindow(QMainWindow):
         add_menu_check_item(
             tracksMenu, "propagate track labels", "Propagate Track Labels"
         ).setToolTip(
-            "If enabled, setting a track will also apply to subsequent instances of "
-            "the same track."
+            "If enabled, setting a track will also apply to subsequent instances of the same track."
         )
         add_menu_item(
             tracksMenu,
@@ -1541,8 +1540,7 @@ class MainWindow(QMainWindow):
         if not self.state["filename"] or self.state["has_changes"]:
             QMessageBox(
                 text=(
-                    "You have unsaved changes. Please save before running training or "
-                    "inference."
+                    "You have unsaved changes. Please save before running training or inference."
                 )
             ).exec_()
             return
@@ -1651,8 +1649,7 @@ def create_sleap_label_parser():
     parser.add_argument(
         "--reset",
         help=(
-            "Reset GUI state and preferences. Use this flag if the GUI appears "
-            "incorrectly or fails to open."
+            "Reset GUI state and preferences. Use this flag if the GUI appears incorrectly or fails to open."
         ),
         action="store_const",
         const=True,

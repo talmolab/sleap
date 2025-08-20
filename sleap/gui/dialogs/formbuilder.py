@@ -593,6 +593,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 self.valueChanged.emit()
 
         else:
+
             def select_file():
                 return print(f"no action set for type {item['type']}")
 

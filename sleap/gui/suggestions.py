@@ -69,8 +69,7 @@ class VideoFrameSuggestions(object):
             return method_functions[method](labels=labels, **params)
         else:
             raise ValueError(
-                f"No {'' if method == '_' else method + ' '}method found for "
-                "generating suggestions."
+                f"No {'' if method == '_' else method + ' '}method found for generating suggestions."
             )
 
     # Functions corresponding to "method" param

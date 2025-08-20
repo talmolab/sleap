@@ -1,4 +1,3 @@
-
 from sleap.gui.dataviews import *
 
 
