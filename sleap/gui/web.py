@@ -150,14 +150,12 @@ def get_analytics_data() -> Dict[str, Any]:
     """Gather data to be transmitted to analytics backend."""
     import os
     import sleap
-    import tensorflow as tf
     from pathlib import Path
     import platform
 
     return {
         "sleap_version": sleap.__version__,
         "python_version": platform.python_version(),
-        "tf_version": tf.__version__,
         "conda_env": Path(os.environ.get("CONDA_PREFIX", "")).stem,
         "platform": platform.platform(),
     }

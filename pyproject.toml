@@ -1,0 +1,130 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sleap"
+description = "SLEAP (Social LEAP Estimates Animal Poses) is a deep learning framework for animal pose tracking."
+authors = [
+    {name = "Liezl Maree", email = "lmaree@salk.edu"},
+    {name = "Talmo Pereira", email = "talmo@salk.edu"}
+]
+license = {text = "BSD-3-Clause"}
+requires-python = ">=3.8"
+keywords = ["deep learning", "pose estimation", "tracking", "neuroscience"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+dynamic = ["version", "readme"]
+
+[tool.setuptools.dynamic]
+version = {attr = "sleap.version.__version__"}
+readme = {file = ["README.md"], content-type="text/markdown"}
+
+dependencies = [
+    # Core dependencies (no GPU/tensorflow)
+    # "attrs>=21.2.0,<=21.4.0",
+    "attrs",
+    # "cattrs==1.1.1",
+    "cattrs",
+    "imageio",
+    "imageio-ffmpeg",
+    # "imgaug==0.4.0",
+    # "imgstore<0.3.0",
+    "imgstore",
+    "jsmin",
+    # "jsonpickle==1.2",
+    "jsonpickle",
+    # "ndx-pose<0.2.0",
+    "ndx-pose",
+    "networkx",
+    # "nixio>=1.5.3",
+    "nixio",
+    # "numpy>=1.19.5,<1.23.0",
+    "numpy",
+    # "opencv-python>=4.2.0,<=4.7.0",
+    "opencv-python",
+    "pandas",
+    # "pillow>=8.3.1,<=8.4.0",
+    # "protobuf<3.20",
+    "psutil",
+    # "pykalman==0.9.5",
+    "pykalman",
+    # "pynwb>=2.3.3",
+    "pynwb",
+    # "PySide2>=5.13.2,<=5.14.1; platform_machine != 'arm64'",
+    # "PySide6; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "PySide6",
+    # "python-rapidjson<=1.10; sys_platform == 'win32'",
+    # "python-rapidjson; sys_platform != 'win32'",
+    "python-rapidjson",
+    "pyyaml",
+    "pyzmq",
+    "qimage2ndarray",
+    # "qtpy>=2.0.1",
+    "qtpy",
+    # "rich>=10.16.1",
+    "rich",
+    "scikit-image",
+    # "scikit-learn==1.0.*",
+    "scikit-learn",
+    "scikit-video",
+    # "scipy>=1.4.1,<=1.9.0",
+    "scipy",
+    "seaborn",
+    # "urllib3<2.0",
+    "urllib3",
+    "albumentations",
+    # "qudida",
+    "requests",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "pydocstyle",
+    "toml",
+    "twine",
+    "wheel",
+]
+
+jupyter = [
+    "jupyter",
+    "jupyterlab",
+]
+
+[project.urls]
+Homepage = "https://sleap.ai"
+Documentation = "https://sleap.ai/"
+"Bug Tracker" = "https://github.com/talmolab/sleap/issues"
+"Source Code" = "https://github.com/talmolab/sleap"
+
+[project.scripts]
+sleap-convert = "sleap.io.convert:main"
+sleap-render = "sleap.io.visuals:main"
+sleap-label = "sleap.gui.app:main"
+sleap-inspect = "sleap.info.labels:main"
+sleap-diagnostic = "sleap.diagnostic:main"
+# sleap-train = "sleap.nn.training:main"
+# sleap-track = "sleap.nn.inference:main"
+# sleap-export = "sleap.nn.inference:export_cli"
+
+[tool.setuptools.packages.find]
+exclude = ["tensorflow", "tests", "tests.*", "docs"]
+
+[tool.setuptools.package-data]
+"*" = ["*.ui", "*.txt", "*.md"]

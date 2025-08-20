@@ -109,21 +109,8 @@ def imports_section():
 
 def tensorflow_section():
     header("TENSORFLOW")
-    try:
-        import tensorflow as tf
-
-        label("tensorflow import", True)
-        label("tensorflow version", tf.__version__)
-        label("tensorflow path", tf.__file__)
-        try:
-            label("gpus", tf.config.list_physical_devices("GPU"))
-        except:
-            try:
-                label("gpus", tf.test.is_gpu_available())
-            except:
-                print_("could not determine if there is gpu")
-    except:
-        label("tensorflow import", False)
+    label("tensorflow import", False)
+    label("tensorflow", "Neural network functionality has been removed")
 
 
 def package_section():

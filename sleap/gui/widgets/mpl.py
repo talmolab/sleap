@@ -6,10 +6,20 @@ Currently this is used for plotting metrics graphs in GUI.
 
 from qtpy import QtWidgets
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as Canvas
 import matplotlib
+import os
 
-matplotlib.use("QtAgg")
+# Only set backend if not already set or in headless mode
+if os.environ.get("MPLBACKEND") != "Agg":
+    try:
+        matplotlib.use("QtAgg")
+        from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as Canvas
+    except ImportError:
+        # Fall back to Agg backend if Qt is not available
+        matplotlib.use("Agg")
+        from matplotlib.backends.backend_agg import FigureCanvasAgg as Canvas
+else:
+    from matplotlib.backends.backend_agg import FigureCanvasAgg as Canvas
 
 
 class MplCanvas(Canvas):
