@@ -143,7 +143,6 @@ class LoadImageWorker(QtCore.QObject):
         self.load_queue = []
 
         try:
-
             t0 = time.time()
 
             # Get image data
@@ -1019,7 +1018,6 @@ class GraphicsView(QGraphicsView):
         self._down_pos = event.pos()
         # behavior depends on which button is pressed
         if event.button() == Qt.LeftButton:
-
             if event.modifiers() == Qt.NoModifier:
                 if self.click_mode == "area":
                     self.setDragMode(QGraphicsView.RubberBandDrag)
@@ -1047,7 +1045,6 @@ class GraphicsView(QGraphicsView):
         # check if mouse moved during click
         has_moved = self._down_pos is not None and event.pos() != self._down_pos
         if event.button() == Qt.LeftButton:
-
             if self.in_zoom:
                 self.in_zoom = False
                 zoom_rect = self.scene.selectionArea().boundingRect()
@@ -1080,7 +1077,6 @@ class GraphicsView(QGraphicsView):
             # pass along event
             self.leftMouseButtonReleased.emit(scenePos.x(), scenePos.y())
         elif event.button() == Qt.RightButton:
-
             self.setDragMode(QGraphicsView.NoDrag)
             self.rightMouseButtonReleased.emit(scenePos.x(), scenePos.y())
 
@@ -1156,7 +1152,6 @@ class GraphicsView(QGraphicsView):
         """Custom event handler, clears zoom."""
         scenePos = self.mapToScene(event.pos())
         if event.button() == Qt.LeftButton:
-
             if event.modifiers() == Qt.AltModifier:
                 if self.canZoom:
                     self.clearZoom()
@@ -1496,11 +1491,9 @@ class QtNode(QGraphicsEllipseItem):
         y = self.scenePos().y()
 
         # Ensure node is placed within video boundaries
-        in_bounds = True
         w = self.player.video.width
         h = self.player.video.height
         if (x > w) or (x < 0) or (y > h) or (y < 0):
-            in_bounds = False
             if x > w:
                 x = w
             elif x < 0:
@@ -1705,7 +1698,6 @@ class QtEdge(QGraphicsPolygonItem):
         polygon = QPolygonF()
 
         if self.player.state.get("edge style", default="").lower() == "wedge":
-
             r = self.src.visible_radius / 2.0
 
             norm_a = line.normalVector()
@@ -2489,7 +2481,6 @@ def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
 
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser()

@@ -2,7 +2,6 @@ import pytest
 import os
 import h5py
 import numpy as np
-from sleap.io.dataset import Labels
 
 from sleap.io.video import (
     SingleImageVideo,
@@ -137,7 +136,6 @@ def test_is_missing(small_robot_mp4_path):
 
 @pytest.mark.parametrize("format", ["png", "jpg", "mjpeg/avi"])
 def test_imgstore_video(small_robot_mp4_vid, tmpdir, format):
-
     path = os.path.join(tmpdir, "test_imgstore")
 
     # If format is video, test saving all the frames.
@@ -248,12 +246,11 @@ def test_imgstore_no_frames(small_robot_mp4_vid, tmpdir):
 
 def test_empty_hdf5_video(small_robot_mp4_vid, tmpdir):
     path = os.path.join(tmpdir, "test_to_hdf5")
-    hdf5_vid = small_robot_mp4_vid.to_hdf5(path, "testvid", frame_numbers=[])
+    small_robot_mp4_vid.to_hdf5(path, "testvid", frame_numbers=[])
 
 
 @pytest.mark.parametrize("format", ["", "png", "jpg"])
 def test_hdf5_inline_video(small_robot_mp4_vid, tmpdir, format):
-
     path = os.path.join(tmpdir, f"test_to_hdf5_{format}")
     frame_indices = [0, 1, 5]
 
@@ -443,8 +440,8 @@ def assert_video_params(
         assert video.backend.bgr == bgr
 
     if reset and isinstance(video.backend, MediaVideo):
-        assert video.backend._reader_ == None
-        assert video.backend._test_frame_ == None
+        assert video.backend._reader_ is None
+        assert video.backend._test_frame_ is None
     elif reset and isinstance(video.backend, SingleImageVideo):
         assert video.backend.test_frame_ is None
         assert video.backend.height_ == height
@@ -457,7 +454,6 @@ def assert_video_params(
 
 
 def test_reset_video_mp4(small_robot_mp4_vid: Video):
-
     video = small_robot_mp4_vid
     filename = video.backend.filename
 

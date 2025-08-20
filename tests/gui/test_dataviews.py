@@ -1,11 +1,8 @@
-import pytest
-import pytestqt
 
 from sleap.gui.dataviews import *
 
 
 def test_skeleton_nodes(qtbot, centered_pair_predictions):
-
     table = GenericTableView(
         model=SkeletonNodesTableModel(items=centered_pair_predictions.skeletons[0])
     )

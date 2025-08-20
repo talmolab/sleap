@@ -97,7 +97,6 @@ def test_sleap_format(
         sleap_convert(args)
         assert Path(output_path).exists()
 
-    labels = min_labels_slp
     slp_path = PurePath(min_labels_slp_path)
     tmpdir = PurePath(tmpdir)
 

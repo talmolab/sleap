@@ -3,7 +3,6 @@
 from sleap.io import format
 
 from sleap import Labels, Video
-from typing import Optional, Callable, List, Text, Union
 
 
 class CSVAdaptor(format.adaptor.Adaptor):

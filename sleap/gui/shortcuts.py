@@ -70,7 +70,6 @@ class Shortcuts(object):
 
     def _process_shortcut_dict(self, shortcuts: dict) -> dict:
         for action in shortcuts.keys():
-
             # Ignore shortcuts which aren't in currently supported list
             if action not in self._names:
                 continue

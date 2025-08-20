@@ -6,6 +6,7 @@ you to include image files, in imgstore videos. A better option now is to save
 a single HDF5 file which include both the SLEAP dataset (i.e., `Labels`) and
 also the videos/frames as HDF5 datasets.
 """
+
 import atexit
 import os
 import re
@@ -111,7 +112,6 @@ class LabelsJsonAdaptor(Adaptor):
 
         # Check if the file is a zipfile for not.
         if zipfile.is_zipfile(filename):
-
             # Make a tmpdir, located in the directory that the file exists, to unzip
             # its contents.
             tmp_dir = os.path.join(
@@ -128,7 +128,6 @@ class LabelsJsonAdaptor(Adaptor):
             # tmp_dir = tempfile.mkdtemp(dir=os.path.dirname(filename))
 
             try:
-
                 # Register a cleanup routine that deletes the tmpdir on program exit
                 # if something goes wrong. The True is for ignore_errors
                 atexit.register(shutil.rmtree, tmp_dir, True)
@@ -151,14 +150,13 @@ class LabelsJsonAdaptor(Adaptor):
 
                 filename = json_files[0]
 
-            except Exception as ex:
+            except Exception:
                 # If we had problems, delete the temp directory and reraise the exception.
                 shutil.rmtree(tmp_dir, ignore_errors=True)
                 raise
 
         # Open and parse the JSON in filename
         with open(filename, "r") as file:
-
             # FIXME: Peek into the json to see if there is version string.
             # We do this to tell apart old JSON data from leap_dev vs the
             # newer format for sLEAP.
@@ -167,7 +165,6 @@ class LabelsJsonAdaptor(Adaptor):
 
             # If we have a version number, then it is new sLEAP format
             if "version" in dicts:
-
                 # Cache the working directory.
                 cwd = os.getcwd()
                 # Replace local video paths (for imagestore)
@@ -208,7 +205,6 @@ class LabelsJsonAdaptor(Adaptor):
                     labels = cls.from_json_data(dicts, match_to=match_to)
 
                 except FileNotFoundError:
-
                     # FIXME: We are going to the labels JSON that has references to
                     # video files. Lets change directory to the dirname of the json file
                     # so that relative paths will be from this directory. Maybe
@@ -221,7 +217,7 @@ class LabelsJsonAdaptor(Adaptor):
                     # Try again
                     labels = cls.from_json_data(dicts, match_to=match_to)
 
-                except Exception as ex:
+                except Exception:
                     # Ok, we give up, where the hell are these videos!
                     raise  # Re-raise.
                 finally:
@@ -296,12 +292,10 @@ class LabelsJsonAdaptor(Adaptor):
         # Lets make a temporary directory to store the image frame data or pre-
         # compressed json in case we need it.
         with tempfile.TemporaryDirectory() as tmp_dir:
-
             # If we are saving frame data along with the datasets. We will replace
             # videos with new video object that represent video data from just the
             # labeled frames.
             if save_frame_data:
-
                 # Create a set of new Video objects with imgstore backends. One for each
                 # of the videos. We will only include the labeled frames though. We will
                 # then replace each video with this new video
@@ -338,7 +332,6 @@ class LabelsJsonAdaptor(Adaptor):
             d["format_id"] = cls.FORMAT_ID
 
             if compress or save_frame_data:
-
                 # Ensure that filename ends with .json
                 # shutil will append .zip
                 filename = re.sub(r"(\.json\.zip)$", ".json", filename)
@@ -417,7 +410,7 @@ class LabelsJsonAdaptor(Adaptor):
                     for old_sk in match_to.skeletons:
                         if sk.matches(old_sk):
                             # use nodes from matched skeleton
-                            for (node, match_node) in zip(sk.nodes, old_sk.nodes):
+                            for node, match_node in zip(sk.nodes, old_sk.nodes):
                                 node_idx = nodes.index(node)
                                 nodes[node_idx] = match_node
                             # use skeleton from match
@@ -426,7 +419,7 @@ class LabelsJsonAdaptor(Adaptor):
             elif len(skeletons) == 1 and len(match_to.skeletons) == 1:
                 # Match by node names
                 old_skel = match_to.skeleton
-                new_skel = skeletons[0]
+                skeletons[0]
 
                 old_node_names = old_skel.node_names
                 for i, node in enumerate(nodes):
@@ -440,7 +433,6 @@ class LabelsJsonAdaptor(Adaptor):
             # Match videos
             for idx, vid in enumerate(videos):
                 for old_vid in match_to.videos:
-
                     # Try to match videos using either their current or source filename
                     # if available.
                     old_vid_paths = [old_vid.filename]

@@ -189,7 +189,6 @@ class AlphaTrackerAdaptor(Adaptor):
             __node_num: int = 0  # Acts as node name. Warning: assumes nodes are ordered
 
             for __ann in __frame_ann:
-
                 if __ann["class"] == "Face":
                     # Append a dictionary for the new instance.
                     __instance_num += 1

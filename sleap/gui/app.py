@@ -48,7 +48,6 @@ import os
 import platform
 import random
 import re
-import traceback
 from logging import getLogger
 from pathlib import Path
 from typing import Callable, List, Optional, Tuple
@@ -62,8 +61,6 @@ from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
 import sleap
 from sleap.gui.color import ColorManager
 from sleap.gui.commands import CommandContext, UpdateTopic
-from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.overlays.instance import InstanceOverlay
@@ -261,7 +258,7 @@ class MainWindow(QMainWindow):
         mime_format = 'application/x-qt-windows-mime;value="FileName"'
         if mime_format in event.mimeData().formats():
             # This only returns the first filename if multiple files are dropped:
-            filename = event.mimeData().data(mime_format).data().decode()
+            event.mimeData().data(mime_format).data().decode()
             event.acceptProposedAction()
 
     def dropEvent(self, event):
@@ -1306,17 +1303,19 @@ class MainWindow(QMainWindow):
         if message is None:
             message = ""
             if len(self.labels.videos) > 0 and current_video is not None:
-                message += f"Video {self.labels.videos.index(current_video)+1}/"
+                message += f"Video {self.labels.videos.index(current_video) + 1}/"
                 message += f"{len(self.labels.videos)}"
                 message += spacer
 
             if current_video is not None:
-                message += f"Frame: {frame_idx+1:,}/{len(current_video):,}"
+                message += f"Frame: {frame_idx + 1:,}/{len(current_video):,}"
 
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
                 message += spacer
-                message += f"Selection: {start+1:,}-{end:,} ({end-start+1:,} frames)"
+                message += (
+                    f"Selection: {start + 1:,}-{end:,} ({end - start + 1:,} frames)"
+                )
 
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
@@ -1339,7 +1338,7 @@ class MainWindow(QMainWindow):
                 if pred_frame_count:
                     message += f"{spacer}Predicted Frames: {pred_frame_count:,}"
                     message += (
-                        f" ({pred_frame_count/current_video.num_frames*100:.2f}%)"
+                        f" ({pred_frame_count / current_video.num_frames * 100:.2f}%)"
                     )
                     message += " in video"
 

@@ -134,3 +134,26 @@ exclude = ["tensorflow", "tests", "tests.*", "docs"]
 
 [tool.setuptools.package-data]
 "*" = ["*.ui", "*.txt", "*.md"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E402",  # Module level import not at top of file
+    "E721",  # Use isinstance() for type comparisons
+    "E722",  # Do not use bare except
+    "E731",  # Do not assign a lambda expression
+    "E741",  # Ambiguous variable name
+    "F401",  # Imported but unused
+    "F403",  # Unable to detect undefined names
+    "F405",  # May be undefined, or defined from star imports
+    "F821",  # Undefined name
+    "F841",  # Local variable assigned but never used
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "E402"]
+"tests/*" = ["F403", "F405"]

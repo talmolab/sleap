@@ -289,7 +289,6 @@ class VideoMarkerThread(Thread):
             points_array -= offset
 
         for node_idx, (x, y) in enumerate(points_array):
-
             node = nodes[node_idx]
             node_color_bgr = self.color_manager.get_item_color(node, instance)[::-1]
 
@@ -319,7 +318,6 @@ class VideoMarkerThread(Thread):
 
                 # Make sure that both nodes are present in this instance before drawing edge
                 if not has_nans(src_x, src_y, dst_x, dst_y):
-
                     # Convert to ints for opencv
                     src_x, src_y = int(src_x), int(src_y)
                     dst_x, dst_y = int(dst_x), int(dst_y)

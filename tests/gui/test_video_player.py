@@ -1,7 +1,4 @@
-import numpy as np
-from sleap import Instance, Skeleton
 from sleap.gui.widgets.video import (
-    QtVideoPlayer,
     GraphicsView,
     QtVideoPlayer,
     QtTextWithBackground,

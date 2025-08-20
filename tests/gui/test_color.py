@@ -21,7 +21,6 @@ def test_color_manager():
 
 
 def test_track_color(centered_pair_predictions):
-
     labels = centered_pair_predictions
 
     instances = labels.labeled_frames[-1].instances

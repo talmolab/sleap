@@ -616,7 +616,7 @@ def generate_skeleton_preview_image(
         new_y2 = mid_y + max_dist / 2
 
         assert new_x2 - new_x1 == new_y2 - new_y1, ValueError(
-            f"{new_x2-new_x1} != {new_y2-new_y1}"
+            f"{new_x2 - new_x1} != {new_y2 - new_y1}"
         )
         return (new_x1, new_y1, new_x2, new_y2)
 
@@ -627,7 +627,7 @@ def generate_skeleton_preview_image(
     bb = [x1, y1, x2, y2]
     bb = [coor - 20 if idx < 2 else coor + 20 for idx, coor in enumerate(bb)]
 
-    frame = plot_img(instance.video.get_frame(instance.frame_idx))
+    plot_img(instance.video.get_frame(instance.frame_idx))
 
     # Custom formula for scaling line width and marker size based on bounding box size.
     max_dim = max(abs(y1 - y2), abs(x1 - x2))

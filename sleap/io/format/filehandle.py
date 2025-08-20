@@ -5,6 +5,7 @@ We use this since multiple file adaptors may need to open/read the file while
 dispatch is determining which adaptor to use, and the `FileHandle` allows us
 to keep any results from previous reads.
 """
+
 import os
 from typing import Optional
 
@@ -42,7 +43,7 @@ class FileHandle(object):
             try:
                 self._file = h5py.File(self.filename, "r")
                 self._is_hdf5 = True
-            except OSError as e:
+            except OSError:
                 # We get OSError when trying to read non-HDF5 file with h5py
                 pass
 
@@ -82,7 +83,7 @@ class FileHandle(object):
             try:
                 self.json
                 self._is_json = True
-            except Exception as e:
+            except Exception:
                 self._is_json = False
         return self._is_json
 

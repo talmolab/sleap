@@ -10,6 +10,7 @@ if these cannot be read from the HDF5 (some files have these, some don't).
 To determine whether this adaptor can read a file, we check it's an HDF5 file
 with a `track_occupancy` dataset.
 """
+
 import numpy as np
 
 from typing import Union

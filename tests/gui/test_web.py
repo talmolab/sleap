@@ -1,5 +1,5 @@
 import pandas as pd
-from sleap.gui.web import ReleaseChecker, Release, get_analytics_data, ping_analytics
+from sleap.gui.web import ReleaseChecker, Release, get_analytics_data
 import pytest
 
 

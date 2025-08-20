@@ -3,7 +3,6 @@ Dialog for exporting clip; shows message depending on available encoder.
 """
 
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
-from qtpy import QtWidgets
 
 
 class ExportClipDialog(FormBuilderModalDialog):

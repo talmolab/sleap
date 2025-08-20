@@ -1,12 +1,11 @@
 """
 Overlay for showing instances.
 """
+
 import attr
 
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.state import GuiState
-from sleap.gui.widgets.video import QtVideoPlayer
-from sleap.io.dataset import Labels
 
 
 @attr.s(auto_attribs=True)

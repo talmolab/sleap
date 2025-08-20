@@ -22,7 +22,6 @@ The relationships between objects in this module:
 # an instance of typing._GenericAlias and made our converters fail. The line:
 # https://github.com/python-attrs/cattrs/blob/3a02a04e82ffd93bb06ef7bc476bde797ceefcdf/src/cattr/converters.py#L258-L268)
 
-
 import math
 from copy import copy
 from typing import Dict, List, Optional, Tuple, Union
@@ -60,7 +59,6 @@ class Point(np.record):
         visible: bool = True,
         complete: bool = False,
     ) -> "Point":
-
         # HACK: This is a crazy way to instantiate at new Point but I can't figure
         # out how recarray does it. So I just use it to make matrix of size 1 and
         # index in to get the np.record/Point
@@ -127,7 +125,6 @@ class PredictedPoint(Point):
         complete: bool = False,
         score: float = 0.0,
     ) -> "PredictedPoint":
-
         # HACK: This is a crazy way to instantiate at new Point but I can't figure
         # out how recarray does it. So I just use it to make matrix of size 1 and
         # index in to get the np.record/Point
@@ -187,7 +184,6 @@ class PointArray(np.recarray):
         aligned=False,
         order="C",
     ) -> "PointArray":
-
         dtype = subtype._record_type.dtype
 
         if dtype is not None:
@@ -451,12 +447,10 @@ class Instance:
         # If the user did not pass a points list initialize a point array for future
         # points.
         if self._points is None or len(self._points) == 0:
-
             # Initialize an empty point array that is the size of the skeleton.
             self._points = self._point_array_type.make_default(len(self.skeleton.nodes))
 
         else:
-
             if type(self._points) is dict:
                 parray = self._point_array_type.make_default(len(self.skeleton.nodes))
                 Instance._points_dict_to_array(self._points, parray, self.skeleton)
@@ -1225,7 +1219,6 @@ def make_instance_cattr() -> cattr.Converter:
     converter.register_unstructure_hook(PredictedPointArray, lambda x: None)
 
     def unstructure_instance(x: Instance):
-
         # Unstructure everything but the points array, nodes, and frame attribute
         d = {
             field.name: converter.unstructure(x.__getattribute__(field.name))

@@ -256,7 +256,7 @@ def test_json(skeleton: Skeleton, tmpdir):
     skeleton.description = (
         "Test that description is not saved when given (if is_template is False)."
     )
-    assert skeleton.is_template == False
+    assert not skeleton.is_template
     json_str = skeleton.to_json()
     json_dict = SkeletonDecoder.decode(json_str)
     json_dict_keys = list(json_dict.keys())
@@ -268,7 +268,7 @@ def test_json(skeleton: Skeleton, tmpdir):
     # when has both `description` and `preview_image`
     with pytest.raises(ValueError):
         skeleton.is_template = True
-    assert skeleton.is_template == False
+    assert not skeleton.is_template
 
     skeleton._is_template = True
     json_str = skeleton.to_json()

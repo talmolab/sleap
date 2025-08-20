@@ -43,7 +43,7 @@ from .labels_json import LabelsJsonAdaptor
 from .leap_matlab import LabelsLeapMatlabAdaptor
 from .sleap_analysis import SleapAnalysisAdaptor
 
-from . import adaptor, dispatch, filehandle
+from . import dispatch
 
 from typing import Text, Optional, Union
 
@@ -98,7 +98,6 @@ def read(
     disp = dispatch.Dispatch()
 
     if as_format in all_labels_adaptors:
-
         disp.register(all_labels_adaptors[as_format])
         return disp.read(filename, *args, **kwargs)
 

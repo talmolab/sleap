@@ -125,7 +125,8 @@ class MissingFilesDialog(QtWidgets.QDialog):
         # We'll ask for confirmation for making these changes.
         confirm_callback = None
         if confirm:
-            confirm_callback = lambda: self.confirmAutoReplace(old_prefix, new_prefix)
+            def confirm_callback():
+                return self.confirmAutoReplace(old_prefix, new_prefix)
 
         pathutils.filenames_prefix_change(
             self.filenames, old_prefix, new_prefix, self.missing, confirm_callback

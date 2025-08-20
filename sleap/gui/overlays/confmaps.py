@@ -174,6 +174,5 @@ def demo_confmaps(confmaps, video, scale=None, standalone=False, callback=None):
 
 
 if __name__ == "__main__":
-
     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     show_confmaps_from_h5(data_path, input_format="channels_first", standalone=True)

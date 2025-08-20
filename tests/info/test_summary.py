@@ -42,7 +42,6 @@ def test_frame_statistics(simple_predictions):
 
 
 def test_get_tracking_score_series(min_tracks_2node_predictions):
-
     stats = StatisticSeries(min_tracks_2node_predictions)
     x = stats.get_tracking_score_series(min_tracks_2node_predictions.video, "min")
     assert len(x) == 1500

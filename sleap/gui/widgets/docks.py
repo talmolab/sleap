@@ -350,7 +350,7 @@ class SkeletonDock(DockWidget):
         hb.setAlignment(self.skeleton_preview_image, Qt.AlignLeft)
 
         self.skeleton_description = QLabel(
-            f'<strong>Description:</strong> {main_window.state["skeleton_description"]}'
+            f"<strong>Description:</strong> {main_window.state['skeleton_description']}"
         )
         self.skeleton_description.setWordWrap(True)
         hb.addWidget(self.skeleton_description)
@@ -361,7 +361,6 @@ class SkeletonDock(DockWidget):
         vb.addWidget(hbw)
 
         def updatePreviewImage(preview_image_bytes: bytes):
-
             # Decode the preview image
             preview_image = SkeletonDecoder.decode_preview_image(preview_image_bytes)
 

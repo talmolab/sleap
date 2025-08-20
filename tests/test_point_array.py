@@ -37,20 +37,19 @@ def test_constructor():
     p = Point(x=1.0, y=2.0, visible=False, complete=True)
     assert p.x == 1.0
     assert p.y == 2.0
-    assert p.visible == False
-    assert p.complete == True
+    assert not p.visible
+    assert p.complete
 
     p = PredictedPoint(x=1.0, y=2.0, visible=False, complete=True, score=0.3)
     assert p.x == 1.0
     assert p.y == 2.0
-    assert p.visible == False
-    assert p.complete == True
+    assert not p.visible
+    assert p.complete
     assert p.score == 0.3
 
 
 @pytest.mark.parametrize("parray_cls", [PointArray, PredictedPointArray])
 def test_point_array(parray_cls):
-
     p = parray_cls(5)
 
     # Make sure length works

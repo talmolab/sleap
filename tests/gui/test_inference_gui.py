@@ -3,7 +3,7 @@ from sleap.gui.learning.configs import TrainingConfigsGetter
 from sleap.gui.learning.scopedkeydict import ScopedKeyDict
 
 from sleap import Labels, LabeledFrame, Instance, PredictedInstance, Skeleton
-from sleap.io.video import Video, MediaVideo
+from sleap.io.video import Video
 
 import numpy as np
 import pytest
@@ -173,11 +173,9 @@ def test_inference_merging():
 
 
 def test_inference_movenet_cli(movenet_video):
-
     models = ["movenet-lightning", "movenet-thunder"]
 
     for model in models:
-
         inference_task = runners.InferenceTask(
             trained_job_paths=[model],
             inference_params={"tracking.tracker": None},

@@ -20,7 +20,7 @@ dataset file and save it at `<input path>.slp`.
 Analysis HDF5:
 
 If you want to export an "analysis" h5 file, use `--format analysis`. If no
-output path is specified, the default is 
+output path is specified, the default is
 `<input path>.<video index>_<video filename>.analysis.h5`.
 
 The analysis HDF5 file has these datasets:
@@ -143,7 +143,7 @@ def main(args: list = None):
             else:
                 out_suffix = "h5"
             fn = args.input_path
-            fn = re.sub("(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
+            fn = re.sub(r"(\.json(\.zip)?|\.h5|\.slp)$", "", fn)
             fn = PurePath(fn)
 
             for video in vids[len(outnames) :]:

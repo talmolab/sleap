@@ -176,7 +176,7 @@ def ping_analytics():
 
     def _ping_analytics():
         try:
-            response = requests.post(
+            requests.post(
                 ANALYTICS_ENDPOINT,
                 json=analytics_data,
             )

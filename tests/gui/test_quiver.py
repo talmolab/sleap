@@ -3,7 +3,6 @@ from sleap.gui.overlays.pafs import MultiQuiverPlot
 
 
 def test_gui_quiver(qtbot, hdf5_affinity):
-
     vp = QtVideoPlayer()
     vp.show()
     affinity_fields = MultiQuiverPlot(

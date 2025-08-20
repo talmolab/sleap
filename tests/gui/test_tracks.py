@@ -2,7 +2,6 @@ from sleap.gui.overlays.tracks import TrackTrailOverlay
 
 
 def test_track_trails(centered_pair_predictions):
-
     labels = centered_pair_predictions
     trail_manager = TrackTrailOverlay(
         labels, player=None, trail_length=6, max_node_count=24

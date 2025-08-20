@@ -43,7 +43,6 @@ import os
 from collections.abc import MutableSequence
 from pathlib import Path
 from typing import (
-    Callable,
     List,
     Union,
     Dict,
@@ -59,15 +58,14 @@ from typing import (
 
 import attr
 import cattr
-import h5py as h5
 import numpy as np
 import datetime
 from sklearn.model_selection import train_test_split
 
 try:
-    from typing import ForwardRef
+    pass
 except:
-    from typing import _ForwardRef as ForwardRef
+    pass
 
 from sleap.skeleton import Skeleton, Node
 from sleap.instance import (
@@ -302,17 +300,16 @@ class LabelsDataCache:
             video = None
 
         if filter == "":
-            filter_func = lambda lf: video is None or lf.video == video
+            def filter_func(lf):
+                return video is None or lf.video == video
         elif filter == "user":
-            filter_func = (
-                lambda lf: (video is None or lf.video == video)
-                and lf.has_user_instances
-            )
+            def filter_func(lf):
+                return ((video is None or lf.video == video)
+                            and lf.has_user_instances)
         elif filter == "predicted":
-            filter_func = (
-                lambda lf: (video is None or lf.video == video)
-                and lf.has_predicted_instances
-            )
+            def filter_func(lf):
+                return ((video is None or lf.video == video)
+                            and lf.has_predicted_instances)
         else:
             raise ValueError(f"Invalid filter: {filter}")
 
@@ -2317,7 +2314,7 @@ class Labels(MutableSequence):
             if progress_callback is not None:
                 # Notify update callback.
                 ret = progress_callback(v_idx, total_vids)
-                if ret == False:
+                if not ret:
                     vid.close()
                     return []
 
@@ -2405,7 +2402,7 @@ class Labels(MutableSequence):
             if progress_callback is not None:
                 # Notify update callback.
                 ret = progress_callback(n, n_total)
-                if ret == False:
+                if not ret:
                     vid.close()
                     return []
 
@@ -2472,9 +2469,9 @@ class Labels(MutableSequence):
             if type(video) == int:
                 video = self.videos[video]
             video = cast(Video, video)  # video should now be of type Video
-        except IndexError as e:
+        except IndexError:
             raise IndexError(
-                f"There are no videos in this project. No points matrix to return."
+                "There are no videos in this project. No points matrix to return."
             )
 
         lfs: List[LabeledFrame] = self.find(video=video)
@@ -2706,7 +2703,6 @@ def find_path_using_paths(missing_path: Text, search_paths: List[Text]) -> Text:
 
     # Look for file with that name in each of the search path directories
     for search_path in search_paths:
-
         if os.path.isfile(search_path):
             path_dir = os.path.dirname(search_path)
         else:

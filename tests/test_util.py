@@ -94,7 +94,6 @@ def test_scoped_dict():
 
 
 def test_find_files_by_suffix():
-
     files = find_files_by_suffix("tests/data", ".json")
     assert len(files) == 0
 

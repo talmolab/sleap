@@ -32,7 +32,7 @@ class MultiCheckWidget(QGroupBox):
         title: Optional[str] = "",
         selected: Optional[List] = None,
         default: Optional[bool] = False,
-        **kwargs
+        **kwargs,
     ):
         super(MultiCheckWidget, self).__init__(*args, **kwargs)
 

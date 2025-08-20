@@ -500,7 +500,7 @@ class SuggestionsTableModel(GenericTableModel):
         item_dict["SuggestionFrame"] = item
 
         video_string = (
-            f"{labels.videos.index(item.video)+1}: "
+            f"{labels.videos.index(item.video) + 1}: "
             f"{os.path.basename(item.video.filename)}"
         )
 
@@ -535,7 +535,6 @@ class SuggestionsTableModel(GenericTableModel):
         if prop != "group":
             super(SuggestionsTableModel, self).sort(column_idx, order)
         else:
-
             if not reverse:
                 # Use group_int (int) instead of group (str).
                 self.beginResetModel()

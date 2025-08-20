@@ -127,7 +127,6 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
     def _add_arrows(self, min_length=0.01):
         points = []
         if self.field_x is not None and self.field_y is not None:
-
             raw_delta_yx = np.stack((self.field_y, self.field_x), axis=-1)
 
             dim_0 = self.field_x.shape[0] // self.decimation * self.decimation
@@ -156,7 +155,7 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
             # Determine vector endpoint
             x2 = delta_x * self.decimation + loc_x
             y2 = delta_y * self.decimation + loc_y
-            line_length = (delta_x ** 2 + delta_y ** 2) ** 0.5
+            line_length = (delta_x**2 + delta_y**2) ** 0.5
 
             # Determine points for arrow
             arrow_head_size = line_length / 4
@@ -280,7 +279,6 @@ def demo_pafs(pafs, video, decimation=4, scale=None, standalone=False):
 
 
 if __name__ == "__main__":
-
     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     input_format = "channels_first"
 

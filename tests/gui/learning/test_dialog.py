@@ -1,11 +1,8 @@
 import shutil
 from typing import Optional, List, Callable, Set
 from pathlib import Path
-import traceback
 
 import cattr
-import pytest
-from qtpy import QtWidgets
 
 import sleap
 from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
@@ -21,7 +18,6 @@ from sleap.gui.learning.scopedkeydict import (
 from sleap.gui.app import MainWindow
 from sleap.io.dataset import Labels
 from sleap.nn.config import TrainingJobConfig, UNetConfig
-from sleap.util import get_package_file
 
 
 def test_use_hidden_params_from_loaded_config(
@@ -49,7 +45,7 @@ def test_use_hidden_params_from_loaded_config(
     TrainingJobConfig.save_json(cfg, cfg_path)
 
     # Create a learning dialog
-    app = MainWindow(no_usage_data=True)
+    MainWindow(no_usage_data=True)
     ld = LearningDialog(
         mode="training",
         labels_filename=model_path.parent.absolute(),  # Hack to get correct config
@@ -372,8 +368,7 @@ def test_training_editor_checkbox_states(
 
 
 def test_movenet_selection(qtbot, min_dance_labels):
-
-    app = MainWindow(no_usage_data=True)
+    MainWindow(no_usage_data=True)
 
     # learning dialog expects path to video
     video_path = Path(min_dance_labels.video.backend.filename)
@@ -403,11 +398,10 @@ def test_movenet_selection(qtbot, min_dance_labels):
 def test_immutablilty_of_trained_config_info(
     qtbot, min_labels_slp, min_bottomup_model_path, tmpdir
 ):
-
     model_path = Path(min_bottomup_model_path)
 
     # Create a learning dialog
-    app = MainWindow(no_usage_data=True)
+    MainWindow(no_usage_data=True)
     ld = LearningDialog(
         mode="training",
         labels_filename=model_path.parent.absolute(),  # Hack to get correct config
@@ -433,7 +427,7 @@ def test_immutablilty_of_trained_config_info(
 
 
 def test_validate_id_model(qtbot, min_labels_slp, min_labels_slp_path):
-    app = MainWindow(no_usage_data=True)
+    MainWindow(no_usage_data=True)
     ld = LearningDialog(
         mode="training",
         labels_filename=Path(min_labels_slp_path),

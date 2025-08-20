@@ -26,7 +26,6 @@ def fly_legs_skeleton_dict_json():
 
 @pytest.fixture
 def stickman():
-
     # Make a skeleton with a space in its name to test things.
     stickman = Skeleton("Stick man")
     stickman.add_nodes(
@@ -46,7 +45,6 @@ def stickman():
 
 @pytest.fixture
 def skeleton():
-
     # Create a simple skeleton object
     skeleton = Skeleton("Fly")
     skeleton.add_node("head")

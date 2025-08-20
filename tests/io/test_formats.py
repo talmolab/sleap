@@ -8,7 +8,7 @@ import pytest
 import nixio
 
 from sleap.io.video import Video
-from sleap.instance import Instance, LabeledFrame, PredictedInstance, Track
+from sleap.instance import LabeledFrame, PredictedInstance
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
 from sleap.io.format.adaptor import SleapObjectType
@@ -23,7 +23,6 @@ from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
 
 def test_sleap_analysis_read(small_robot_3_frame_vid, small_robot_3_frame_hdf5):
-
     # Single instance hdf5 analysis file test
     read_labels = SleapAnalysisAdaptor.read(
         file=small_robot_3_frame_hdf5, video=small_robot_3_frame_vid
@@ -129,7 +128,6 @@ def test_hdf5_v1(tmpdir, centered_pair_predictions_hdf5_path):
 
 
 def test_hdf5_v1_filehandle(centered_pair_predictions_hdf5_path):
-
     filename = centered_pair_predictions_hdf5_path
 
     labels = hdf5.LabelsV1Adaptor.read_headers(filehandle.FileHandle(filename))
@@ -353,18 +351,17 @@ def test_sadlc(test_data):
 
 
 def test_alphatracker(qtbot):
-
     # Checks on properties
     at_adaptor = AlphaTrackerAdaptor()
     assert at_adaptor.handles == SleapObjectType.labels
     assert at_adaptor.default_ext == "json"
     assert at_adaptor.name == "AlphaTracker Dataset JSON"
-    assert at_adaptor.can_write_filename("cannot_write_this.txt") == False
-    assert at_adaptor.does_read() == True
-    assert at_adaptor.does_write() == False
+    assert not at_adaptor.can_write_filename("cannot_write_this.txt")
+    assert at_adaptor.does_read()
+    assert not at_adaptor.does_write()
     with pytest.raises(NotImplementedError):
         at_adaptor.write("file_that_will_not_be_written", Labels())
-    assert at_adaptor.formatted_ext_options == f"AlphaTracker Dataset JSON (json)"
+    assert at_adaptor.formatted_ext_options == "AlphaTracker Dataset JSON (json)"
 
     # Begin checks on functionality
 
@@ -407,7 +404,6 @@ def test_alphatracker(qtbot):
 
 
 def test_tracking_scores(tmpdir, centered_pair_predictions_slp_path):
-
     # test reading
     filename = centered_pair_predictions_slp_path
 
@@ -521,8 +517,8 @@ def test_nix_adaptor(
     assert len(na.name) > 0
     assert na.can_write_filename("somefile.nix")
     assert not na.can_write_filename("somefile.slp")
-    assert NixAdaptor.does_read() == False
-    assert NixAdaptor.does_write() == True
+    assert not NixAdaptor.does_read()
+    assert NixAdaptor.does_write()
 
     with pytest.raises(NotImplementedError):
         NixAdaptor.read("some file")

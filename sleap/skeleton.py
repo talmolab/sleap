@@ -1353,7 +1353,6 @@ class Skeleton:
         Returns:
             None
         """
-        existing_nodes = self.nodes
         for old_name, new_name in mapping.items():
             if self.has_node(new_name):
                 raise ValueError("Cannot relabel a node to an existing name.")
@@ -1661,7 +1660,6 @@ class Skeleton:
 
     @classmethod
     def _load_hdf5(cls, file: h5py.File):
-
         skeletons = {}
         for name, json_str in file["skeleton"].attrs.items():
             skeletons[name] = cls.from_json(json_str)

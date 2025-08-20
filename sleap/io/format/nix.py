@@ -80,7 +80,7 @@ class NixAdaptor(Adaptor):
     def __check_video(cls, labels: Labels, video: Optional[Video]):
         if (video is None) and (len(labels.videos) == 0):
             raise ValueError(
-                f"There are no videos in this project. "
+                "There are no videos in this project. "
                 "No analysis file will be be written."
             )
         if video is not None:
@@ -109,7 +109,7 @@ class NixAdaptor(Adaptor):
         cls.__check_video(source_object, video)
 
         def create_file(filename: str, project: Optional[str], video: Video):
-            print(f"Creating nix file...", end="\t")
+            print("Creating nix file...", end="\t")
             nf = nix.File.open(filename, nix.FileMode.Overwrite)
             try:
                 s = nf.create_section("TrackingAnalysis", "nix.tracking.metadata")
@@ -428,7 +428,7 @@ class NixAdaptor(Adaptor):
                 f"\tvideo index = {source_object.videos.index(video)}"
             )
 
-            print(f"Writing to NIX file...")
+            print("Writing to NIX file...")
             chunked_write(
                 instances,
                 frameid_array,
@@ -443,12 +443,12 @@ class NixAdaptor(Adaptor):
                 nodes,
                 skeletons,
             )
-            print(f"done")
+            print("done")
 
-        print(f"\nExporting to NIX analysis file...")
+        print("\nExporting to NIX analysis file...")
         if video is None:
             video = source_object.videos[0]
-            print(f"No video specified, exporting the first one...")
+            print("No video specified, exporting the first one...")
 
         nix_file = None
         try:

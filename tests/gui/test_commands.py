@@ -223,12 +223,11 @@ def test_ExportAnalysisFile(
     context.state["filename"] = None
 
     if csv:
-
         context.state["filename"] = centered_pair_predictions_hdf5_path
 
         params = {"all_videos": True, "csv": csv}
         okay = ExportAnalysisFile_ask(context=context, params=params)
-        assert okay == True
+        assert okay
         ExportAnalysisFile.do_action(context=context, params=params)
         assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
@@ -237,7 +236,7 @@ def test_ExportAnalysisFile(
     # Test with all_videos False (single video)
     params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
@@ -245,7 +244,7 @@ def test_ExportAnalysisFile(
     context.state["filename"] = str(tmpdir.with_name("path.to.labels"))
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
@@ -254,7 +253,7 @@ def test_ExportAnalysisFile(
 
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
@@ -266,7 +265,7 @@ def test_ExportAnalysisFile(
 
     params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
@@ -275,14 +274,14 @@ def test_ExportAnalysisFile(
 
     params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Test with all videos True
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=2, labels_path=context.state["filename"])
 
@@ -300,7 +299,7 @@ def test_ExportAnalysisFile(
 
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=2, labels_path=context.state["filename"])
 
@@ -361,7 +360,7 @@ def test_ReplaceVideo(
     labels = centered_pair_predictions
     context = CommandContext.from_labels(labels)
     videos = labels.videos
-    last_lf_frame = get_last_lf_in_video(labels, videos[0])
+    get_last_lf_in_video(labels, videos[0])
 
     # Replace the video
     new_video_filename = replace_video(small_robot_mp4_vid, videos, context)
@@ -369,7 +368,7 @@ def test_ReplaceVideo(
     # Ensure video backend was replaced
     video = labels.video
     assert len(labels.videos) == 1
-    assert video.backend.grayscale == True
+    assert video.backend.grayscale
     assert video.backend.filename == new_video_filename
 
     # Ensure labels were truncated (Original video was fully labeled)
@@ -529,7 +528,7 @@ def test_OpenSkeleton(
 
     # Run again with template set
     context.app.currentText = "fly32"
-    fly32_json = get_package_file(f"skeletons/fly32.json")
+    fly32_json = get_package_file("skeletons/fly32.json")
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly32_json
     fly32_skeleton = Skeleton.load_json(fly32_json)
@@ -952,7 +951,6 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
 
 
 def test_newInstance(qtbot, centered_pair_predictions: Labels):
-
     # Get the data
     labels = centered_pair_predictions
     lf = labels[0]

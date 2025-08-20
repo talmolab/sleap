@@ -1,4 +1,3 @@
-import os
 import pytest
 
 from sleap.instance import (
@@ -153,7 +152,6 @@ def midpoint_grid_labels():
 
 @pytest.fixture
 def simple_predictions():
-
     video = Video.from_filename("video.mp4")
 
     skeleton = Skeleton()

@@ -104,7 +104,6 @@ def test_suggestions_dock(qtbot):
 def test_instances_dock(qtbot, centered_pair_predictions: Labels):
     """Test the `DockWidget` class."""
     main_window = MainWindow(labels=centered_pair_predictions)
-    labels = main_window.labels
     context = main_window.commands
     lf = context.state["labeled_frame"]
     dock = InstancesDock(main_window)

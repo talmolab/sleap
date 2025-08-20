@@ -1,13 +1,15 @@
 """
 Stub dialog for training/inference - neural network functionality has been removed.
 """
+
 from qtpy import QtWidgets, QtCore
+
 
 class LearningDialog(QtWidgets.QDialog):
     """Stub dialog - neural network functionality has been removed."""
-    
+
     _handle_learning_finished = QtCore.Signal(int)
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.setWindowTitle("Training/Inference Unavailable")
@@ -21,13 +23,15 @@ class LearningDialog(QtWidgets.QDialog):
         button.clicked.connect(self.close)
         layout.addWidget(button)
         self.setLayout(layout)
-    
+
     def run(self):
         """Stub method for compatibility."""
         pass
 
+
 class TrainingEditorWidget(QtWidgets.QWidget):
     """Stub widget for compatibility."""
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         layout = QtWidgets.QVBoxLayout()

@@ -4,7 +4,7 @@ import h5py
 import json
 import numpy as np
 
-from pathlib import PurePath, Path
+from pathlib import Path
 from typing import List
 
 from sleap.info.write_tracking_h5 import (
@@ -18,7 +18,7 @@ from sleap.info.write_tracking_h5 import (
 )
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
-from sleap.instance import Instance, Point, PredictedInstance
+from sleap.instance import Instance, Point
 from sleap.gui.commands import AddUserInstancesFromPredictions
 
 
@@ -74,7 +74,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
 
     # Both lines check edge_names are read correctly, but latter is used in bento plugin
     assert edge_names == centered_pair_predictions.skeleton.edge_names
-    for (src_node, dst_node) in edge_names:
+    for src_node, dst_node in edge_names:
         assert src_node in node_names
         assert dst_node in node_names
 
@@ -282,7 +282,7 @@ def assert_dset_lens(dset_lens: dict, num_tracks: int, num_frames: int, num_node
 
 
 def assert_dset_metadata(dset_metadata: dict, labels: Labels, video: Video):
-    print(f'\nlabels_path = {dset_metadata["labels_path"]}')
+    print(f"\nlabels_path = {dset_metadata['labels_path']}")
     assert dset_metadata["labels_path"] == str(None)  # No labels path given.
     assert dset_metadata["video_path"] == video.backend.filename
     assert dset_metadata["video_ind"] == labels.videos.index(video)
@@ -292,7 +292,6 @@ def assert_dset_metadata(dset_metadata: dict, labels: Labels, video: Video):
 def test_hdf5_video_arg(
     centered_pair_predictions: Labels, small_robot_mp4_vid: Video, tmpdir
 ):
-
     labels = centered_pair_predictions
     labels.add_video(small_robot_mp4_vid)
 
@@ -313,7 +312,7 @@ def test_hdf5_video_arg(
     assert_dset_metadata(dset_metadata, labels, video=labels.videos[0])
 
     # No file should exist for video with no labeled frames
-    assert Path(output_paths[1]).exists() == False
+    assert not Path(output_paths[1]).exists()
 
     # Add labeled frames to second video, repeat process
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
@@ -351,5 +350,5 @@ def test_hdf5_video_arg(
         )
 
     # No files should exist for labels with no videos
-    assert Path(output_paths[0]).exists() == False
-    assert Path(output_paths[1]).exists() == False
+    assert not Path(output_paths[0]).exists()
+    assert not Path(output_paths[1]).exists()

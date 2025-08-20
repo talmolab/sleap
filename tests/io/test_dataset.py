@@ -33,7 +33,6 @@ def _check_labels_match(expected_labels, other_labels, format="png"):
 
     # Check the top level objects
     for x, y in zip(expected_labels.skeletons, other_labels.skeletons):
-
         # Inline the skeleton matches check to see if we can get a better
         # idea of why this test fails non-deterministically. The callstack
         # doesn't go deeper than the method call in pytest for some reason.
@@ -70,7 +69,6 @@ def _check_labels_match(expected_labels, other_labels, format="png"):
 
     # Check that we have the same thing
     for expected_label, label in zip(expected_labels.labels, other_labels.labels):
-
         assert expected_label.frame_idx == label.frame_idx
 
         frame_idx = label.frame_idx
@@ -113,9 +111,9 @@ def test_labels_json(tmpdir, multi_skel_vid_labels):
     _check_labels_match(multi_skel_vid_labels, loaded_labels)
 
     # Check that we don't have the very same objects
-    assert not multi_skel_vid_labels.skeletons[0] is loaded_labels.skeletons[0]
-    assert not multi_skel_vid_labels.nodes[3] in loaded_labels.nodes
-    assert not multi_skel_vid_labels.videos[0] is loaded_labels.videos[0]
+    assert multi_skel_vid_labels.skeletons[0] is not loaded_labels.skeletons[0]
+    assert multi_skel_vid_labels.nodes[3] not in loaded_labels.nodes
+    assert multi_skel_vid_labels.videos[0] is not loaded_labels.videos[0]
 
     # Reload json using objects from original labels
     # We'll also test load_file() here
@@ -686,7 +684,7 @@ def test_duplicate_skeletons_serializing():
     lf_b = LabeledFrame(vid, frame_idx=3, instances=[Instance(skeleton_b)])
 
     new_labels = Labels(labeled_frames=[lf_a, lf_b])
-    new_labels_json = new_labels.to_dict()
+    new_labels.to_dict()
 
 
 def test_distinct_skeletons_serializing():
@@ -702,7 +700,7 @@ def test_distinct_skeletons_serializing():
     new_labels = Labels(labeled_frames=[lf_a, lf_b])
 
     # Make sure we can serialize this
-    new_labels_json = new_labels.to_dict()
+    new_labels.to_dict()
 
 
 def test_unify_skeletons():
@@ -1050,7 +1048,6 @@ def test_labels_append_hdf5(multi_skel_vid_labels, tmpdir):
     # Save each frame of the Labels dataset one by one in append
     # mode
     for label in labels:
-
         # Just do the first 20 to speed things up
         if label.frame_idx > 20:
             break
@@ -1212,7 +1209,6 @@ def test_load_file(tmpdir):
 
 
 def test_local_path_save(tmpdir, monkeypatch):
-
     filename = "test.h5"
 
     # Set current working directory (monkeypatch isolates other tests)
@@ -1443,13 +1439,13 @@ def test_remove_track(centered_pair_predictions):
     labels = centered_pair_predictions
 
     track = labels.tracks[-1]
-    track_insts = [inst for inst in labels.instances() if inst.track == track]
+    [inst for inst in labels.instances() if inst.track == track]
     labels.remove_track(track)
     assert track not in labels.tracks
     assert all(inst.track != track for inst in labels.instances())
 
     track = labels.tracks[0]
-    track_insts = [inst for inst in labels.instances() if inst.track == track]
+    [inst for inst in labels.instances() if inst.track == track]
     labels.remove_track(track)
     assert track not in labels.tracks
     assert all(inst.track != track for inst in labels.instances())

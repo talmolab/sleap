@@ -2,11 +2,9 @@
 Gui for merging two labels files with options to resolve conflicts.
 """
 
-
 import logging
 from typing import Dict, List, Optional
 
-import attr
 from qtpy import QtWidgets, QtCore
 
 from sleap.instance import LabeledFrame

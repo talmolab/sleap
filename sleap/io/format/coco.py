@@ -62,7 +62,6 @@ class LabelsCocoAdaptor(Adaptor):
         *args,
         **kwargs,
     ) -> Labels:
-
         dicts = file.json
 
         # Make skeletons from "categories"
@@ -76,7 +75,7 @@ class LabelsCocoAdaptor(Adaptor):
             try:
                 for src_idx, dst_idx in category["skeleton"]:
                     skeleton.add_edge(node_names[src_idx], node_names[dst_idx])
-            except IndexError as e:
+            except IndexError:
                 # According to the COCO data format specifications[^1], the edges
                 # are supposed to be 1-indexed. But in some of their own
                 # dataset the edges are 1-indexed! So we'll try.

@@ -45,8 +45,8 @@ def test_video_import_detect_grayscale():
     )
     data = importer.get_data()
 
-    assert data[0]["params"]["grayscale"] == True
-    assert data[1]["params"]["grayscale"] == False
+    assert data[0]["params"]["grayscale"]
+    assert not data[1]["params"]["grayscale"]
 
 
 def test_video_import_detect_h5_shape():

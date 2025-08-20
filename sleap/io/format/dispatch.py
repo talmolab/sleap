@@ -14,7 +14,6 @@ from sleap.io.format.filehandle import FileHandle
 
 @attr.s(auto_attribs=True)
 class Dispatch(object):
-
     _adaptors: List[Adaptor] = attr.ib(default=attr.Factory(list))
 
     def register(self, adaptor: Union[Adaptor, type, List[Adaptor]]):

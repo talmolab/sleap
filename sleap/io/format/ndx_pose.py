@@ -1,6 +1,5 @@
 """Adaptor to read and write ndx-pose files."""
 
-import attr
 import datetime
 import re
 import numpy as np
@@ -86,7 +85,6 @@ class NDXPoseAdaptor(Adaptor):
             edge_inds = test_pose_estimation.edges[:]
 
             for processing_module in nwb_file.values():
-
                 # Get track keys
                 track_keys: List[str] = list(
                     processing_module.fields["data_interfaces"]
@@ -111,12 +109,12 @@ class NDXPoseAdaptor(Adaptor):
                     for node_idx, node_name in enumerate(node_names):
                         pose_estimation_series = pose_estimation[node_name]
 
-                        tracks_numpy[
-                            :, track_idx, node_idx, :
-                        ] = pose_estimation_series.data[:]
-                        confidence[
-                            :, track_idx, node_idx
-                        ] = pose_estimation_series.confidence[:]
+                        tracks_numpy[:, track_idx, node_idx, :] = (
+                            pose_estimation_series.data[:]
+                        )
+                        confidence[:, track_idx, node_idx] = (
+                            pose_estimation_series.confidence[:]
+                        )
 
                 video_tracks[str(PurePath(test_pose_estimation.original_videos[0]))] = (
                     tracks_numpy,
@@ -244,14 +242,14 @@ class NDXPoseAdaptor(Adaptor):
             io = None
             if Path(filename).exists() and not overwrite:
                 # Append to file if it exists and we do not want to overwrite
-                print(f"\nOpening existing NWB file...")
+                print("\nOpening existing NWB file...")
                 io = NWBHDF5IO(filename, mode="a", load_namespaces=True)
                 nwb_file = io.read()
             else:
                 # If file does not exist or we want to overwrite, create new file
                 if not overwrite:
                     print(f"\nCould not find the file specified: {filename}")
-                print(f"\nCreating NWB file...")
+                print("\nCreating NWB file...")
                 nwb_file = NWBFile(
                     session_description=session_description,
                     identifier=identifier,
@@ -296,7 +294,6 @@ class NDXPoseAdaptor(Adaptor):
                     pose_estimation_series: List[PoseEstimationSeries] = []
 
                     for node_idx, node in enumerate(skeleton.nodes):
-
                         # Create instance of PoseEstimationSeries for each node
                         data = tracks_numpy[:, track_idx, node_idx, :2]
                         confidence = tracks_numpy[:, track_idx, node_idx, 2]

@@ -44,7 +44,7 @@ class GuiState(object):
         self._callbacks = dict()
 
     def __repr__(self) -> str:
-        message = f"GuiState("
+        message = "GuiState("
         for key in self._state_vars:
             message += f"'{key}'={self.get(key)}, "
         return f"{message[:-2]})"

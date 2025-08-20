@@ -12,7 +12,7 @@ import cattr
 import logging
 import multiprocessing
 
-from typing import Iterable, List, Optional, Tuple, Union, Text
+from typing import Iterable, List, Optional, Tuple, Union
 
 from sleap.util import json_loads, json_dumps
 
@@ -523,7 +523,6 @@ class NumpyVideo:
     filename: Union[str, np.ndarray] = attr.ib()
 
     def __attrs_post_init__(self):
-
         self.__frame_idx = 0
         self.__height_idx = 1
         self.__width_idx = 2
@@ -635,7 +634,6 @@ class ImgStoreVideo:
     _img_ = None
 
     def __attrs_post_init__(self):
-
         # If the filename does not contain metadata.yaml, append it to the filename
         # assuming that this is a directory that contains the imgstore.
         if "metadata.yaml" not in self.filename:
@@ -956,7 +954,7 @@ class SingleImageVideo:
         """Reloads the video."""
         if filename and filenames:
             raise ValueError(
-                f"Cannot specify both filename and filenames for SingleImageVideo."
+                "Cannot specify both filename and filenames for SingleImageVideo."
             )
         elif filename or filenames:
             self.cache_ = dict()
@@ -1438,7 +1436,6 @@ class Video:
         frame_numbers_data = np.array(list(frame_numbers), dtype=int)
 
         with h5.File(path, "a") as f:
-
             if format:
 
                 def encode(img):
@@ -1571,7 +1568,6 @@ class Video:
         # Special case: this is an ImgStore path! We cant use
         # basename because it will strip the directory name off
         elif path.endswith("metadata.yaml"):
-
             # Get the parent dir of the YAML file.
             img_store_dir = os.path.basename(os.path.split(path)[0])
 

@@ -5,14 +5,12 @@ from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance
 
 @pytest.fixture
 def instances(skeleton, centered_pair_vid):
-
     # Generate some instances
     NUM_INSTANCES = 500
 
     video = centered_pair_vid
     instances = []
     for i in range(NUM_INSTANCES):
-
         instance = Instance(skeleton=skeleton)
         instance["head"] = Point(i * 1, i * 2)
         instance["left-wing"] = Point(10 + i * 1, 10 + i * 2)

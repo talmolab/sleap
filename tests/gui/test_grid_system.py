@@ -61,7 +61,6 @@ def test_grid_system_legacy_gui(qtbot, legacy_grid_labels):
     # app.player.view.instances  # List["QtInstance"]
     qt_inst = app.player.view.instances[0]
 
-    node_names = ["(-0.5, -0.5)", "(0, 0)", "(-0.5, 0.5)"]
     # qt_inst.nodes[node_name] # QtNode
     qt_node = qt_inst.nodes["(-0.5, -0.5)"]  # QtNode
     assert qt_node.scenePos().x() == -1

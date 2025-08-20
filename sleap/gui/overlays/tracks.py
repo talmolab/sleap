@@ -8,7 +8,6 @@ from qtpy import QtCore, QtGui
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.widgets.video import QtTextWithBackground
 from sleap.instance import Track
-from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.prefs import prefs
 
@@ -90,7 +89,6 @@ class TrackTrailOverlay(BaseOverlay):
 
                     # loop through all nodes
                     for node_i, node in enumerate(nodes):
-
                         if node in inst.nodes and inst[node].visible:
                             point = (inst[node].x, inst[node].y)
 

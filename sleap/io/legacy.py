@@ -1,6 +1,7 @@
 """
 Module for legacy LEAP dataset.
 """
+
 import json
 import os
 import numpy as np
@@ -65,7 +66,7 @@ def load_predicted_labels_json_old(
     edges = data["skeleton"]["edges"]
     if adjust_matlab_indexing:
         edges = np.array(edges) - 1
-    for (src_idx, dst_idx) in edges:
+    for src_idx, dst_idx in edges:
         skeleton.add_edge(
             data["skeleton"]["nodeNames"][src_idx],
             data["skeleton"]["nodeNames"][dst_idx],
@@ -124,7 +125,7 @@ def load_predicted_labels_json_old(
             match_score = predicted_instances.loc[
                 predicted_instances["id"] == instance_id
             ]["matching_score"].values[0]
-            track_score = predicted_instances.loc[
+            predicted_instances.loc[
                 predicted_instances["id"] == instance_id
             ]["tracking_score"].values[0]
             instance_points = {
@@ -221,7 +222,7 @@ def load_labels_json_old(
     edges = data["skeleton"]["edges"]
     if adjust_matlab_indexing:
         edges = np.array(edges) - 1
-    for (src_idx, dst_idx) in edges:
+    for src_idx, dst_idx in edges:
         skeleton.add_edge(
             data["skeleton"]["nodeNames"][src_idx],
             data["skeleton"]["nodeNames"][dst_idx],

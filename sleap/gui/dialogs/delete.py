@@ -29,7 +29,6 @@ class DeleteDialog(QtWidgets.QDialog):
         *args,
         **kwargs,
     ):
-
         super(DeleteDialog, self).__init__(*args, **kwargs)
 
         self.context = context
@@ -226,7 +225,6 @@ class DeleteDialog(QtWidgets.QDialog):
 
 
 if __name__ == "__main__":
-
     app = QtWidgets.QApplication([])
 
     from sleap import Labels

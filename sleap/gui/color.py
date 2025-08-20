@@ -11,6 +11,7 @@ on the `ColorManager` object:
 Initial color palette (and other settings, like default line width) is read
 from user preferences but can be changed after object is created.
 """
+
 from typing import Any, Iterable, Optional, Union, Text, Tuple
 
 import yaml
@@ -208,7 +209,6 @@ class ColorManager:
                 return self.thick_pen_width
 
             if self.is_predicted(parent_instance):
-
                 is_first_node = item == parent_instance.skeleton.nodes[0]
                 return self.thick_pen_width if is_first_node else self.medium_pen_width
             else:

@@ -1,10 +1,8 @@
 from typing import List
-import pytest
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.instance import LabeledFrame, PredictedInstance, Track, PredictedPoint
-from sleap.io.dataset import Labels
 from sleap.skeleton import Skeleton
 import numpy as np
 
@@ -503,7 +501,7 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
                 temp_suggest = SuggestionFrame(
                     labels.video, pred_instances[0].frame_idx
                 )
-                if not (temp_suggest in sugg):
+                if temp_suggest not in sugg:
                     return False
 
         return True

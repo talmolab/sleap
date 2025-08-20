@@ -30,7 +30,7 @@ def call(command):
             command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True
         )
         print_(result.stdout.decode())
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         print_(f"unable to locate {command[0]}")
     except subprocess.CalledProcessError as e:
         print_(f"call to {command[0]} failed")
@@ -100,7 +100,6 @@ def imports_section():
         label("pyside6 import", False)
 
     try:
-        import cv2
 
         label("cv2 import", True)
     except:

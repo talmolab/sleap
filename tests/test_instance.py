@@ -1,6 +1,5 @@
 import copy
 import math
-import os
 from typing import List
 
 import numpy as np
@@ -97,7 +96,6 @@ def test_instance_point_iter(skeleton):
     """
     Test iteration methods over instances.
     """
-    node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
     instance = Instance(skeleton=skeleton, points=points)
@@ -107,7 +105,7 @@ def test_instance_point_iter(skeleton):
     assert np.allclose([p.y for p in instance.points], [4, 5, 6])
 
     # Make sure we can iterate over tuples
-    for (node, point) in instance.nodes_points:
+    for node, point in instance.nodes_points:
         assert points[node.name] == point
 
 
@@ -138,8 +136,6 @@ def test_skeleton_node_name_change():
 
 
 def test_instance_comparison(skeleton):
-
-    node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
     instance1 = Instance(skeleton=skeleton, points=points)
@@ -162,7 +158,6 @@ def test_instance_comparison(skeleton):
 def test_points_array(skeleton):
     """Test conversion of instances to points array"""
 
-    node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
     instance1 = Instance(skeleton=skeleton, points=points)
@@ -193,7 +188,6 @@ def test_points_array(skeleton):
 
 
 def test_points_array_copying(skeleton):
-    node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
     instance1 = Instance(skeleton=skeleton, points=points)
@@ -243,7 +237,6 @@ def test_predicted_points_array_with_score(skeleton):
 
 
 def test_modifying_skeleton(skeleton):
-    node_names = ["left-wing", "head", "right-wing"]
     points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
 
     instance1 = Instance(skeleton=skeleton, points=points)
@@ -365,7 +358,6 @@ def test_frame_merge_between_predicted_and_user(skeleton, centered_pair_vid):
 
 
 def test_instance_rotation(skeleton):
-
     instance = Instance(skeleton=skeleton)
     instance["head"].x = 20
     instance["head"].y = 50
@@ -525,18 +517,17 @@ def test_instance_structuring_from_predicted(centered_pair_predictions):
 
     # Force a unstructuring -> structuring and check that we can copy without setting
     # the Instance.from_predicted field
-    labels_copy = labels.copy()
+    labels.copy()
 
     # Set from_predicted
     inst.from_predicted = pred_inst
     assert inst.from_predicted == pred_inst
 
     # Unstructure -> structure
-    labels_copy = labels.copy()
+    labels.copy()
 
 
 def test_instances_list(centered_pair_predictions):
-
     labels = centered_pair_predictions
 
     def test_extend(instances: InstancesList, list_of_instances: List[Instance]):

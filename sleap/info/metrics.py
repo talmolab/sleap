@@ -1,6 +1,7 @@
 """
 Module for producing prediction metrics for SLEAP datasets.
 """
+
 from inspect import signature
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -41,7 +42,6 @@ def calculate_pairwise_cost(
     pairwise_cost_matrix = np.full(matrix_size, np.inf)
     for idx_a, inst_a in enumerate(instances_a):
         for idx_b, inst_b in enumerate(instances_b):
-
             # cost_function can either take a single input or two inputs
             # single input: ndarray of distances between corresponding nodes
             # two inputs: the pair of instances
@@ -71,7 +71,6 @@ def match_instance_lists_nodewise(
     best_points_array = []
 
     for inst_a in instances_a:
-
         # Calculate distance from nodes in A to nodes for each B
         dist_array = []
         for inst_b in instances_b:
@@ -81,7 +80,6 @@ def match_instance_lists_nodewise(
         # Construct matrix with closest node from any B
         closest_point_array = np.full((node_count, 2), np.nan)
         for node_idx in range(node_count):
-
             # Make sure there's some prediction for this node
             if any(~np.isnan(dist_array[:, node_idx])):
                 best_idx = np.nanargmin(dist_array[:, node_idx])
@@ -102,7 +100,6 @@ def matched_instance_distances(
     match_lists_function: Callable = match_instance_lists_nodewise,
     frame_range: Optional[range] = None,
 ) -> Tuple[List[int], np.ndarray, np.ndarray, np.ndarray]:
-
     """
     Distances between ground truth and predicted nodes over a set of frames.
 
@@ -201,8 +198,8 @@ def nodeless_point_dist(
     match_a, match_b = linear_sum_assignment(pairwise_distance_matrix)
 
     # Sort points by this match and calculate overall distance
-    sorted_points_a = points_a[match_a, :]
-    sorted_points_b = points_b[match_b, :]
+    points_a[match_a, :]
+    points_b[match_b, :]
     point_dist = np.linalg.norm(points_a - points_b, axis=1)
 
     return point_dist
@@ -223,7 +220,7 @@ def compare_instance_lists(
 
 
 def list_points_array(
-    instances: List[Union[Instance, PredictedInstance]]
+    instances: List[Union[Instance, PredictedInstance]],
 ) -> np.ndarray:
     """Given list of Instances, returns (instances * nodes * 2) matrix."""
     points_arrays = list(map(lambda inst: inst.points_array, instances))

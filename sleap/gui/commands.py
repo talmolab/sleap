@@ -837,7 +837,7 @@ class ImportNWB(AppCommand):
         if len(filename) == 0:
             return False
 
-        file_dir = os.path.dirname(filename)
+        os.path.dirname(filename)
 
         params["filename"] = filename
 
@@ -1618,7 +1618,7 @@ def export_dataset_gui(
         win.setValue(n)
         win.setLabelText(
             "Exporting dataset with frame images...<br>"
-            f"{n}/{n_total} (<b>{(n/n_total)*100:.1f}%</b>)"
+            f"{n}/{n_total} (<b>{(n / n_total) * 100:.1f}%</b>)"
         )
         QtWidgets.QApplication.instance().processEvents()
         return True
@@ -2828,7 +2828,7 @@ class DeleteAreaPredictions(InstanceDeleteCommand):
 
         # Prompt the user to select area
         context.app.updateStatusMessage(
-            f"Please select the area from which to remove instances. This will be applied to all frames."
+            "Please select the area from which to remove instances. This will be applied to all frames."
         )
         context.app.player.onAreaSelection(delete_area_callback)
 
@@ -3176,7 +3176,7 @@ class GenerateSuggestions(EditCommand):
 
         # TODO: Progress bar
         win = MessageDialog(
-            "Generating list of suggested frames... " "This may take a few minutes.",
+            "Generating list of suggested frames... This may take a few minutes.",
             context.app,
         )
 
@@ -3201,7 +3201,7 @@ class GenerateSuggestions(EditCommand):
         except Exception as e:
             win.hide()
             QtWidgets.QMessageBox(
-                text=f"An error occurred while generating suggestions. "
+                text="An error occurred while generating suggestions. "
                 "Your command line terminal may have more information about "
                 "the error."
             ).exec_()

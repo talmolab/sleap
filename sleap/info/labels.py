@@ -1,6 +1,7 @@
 """
 Command line utility which prints data about labels file.
 """
+
 import os
 
 
@@ -13,7 +14,7 @@ def describe_labels(data_path, verbose=False):
     print(f"Labeled frames: {len(labels)}")
     print(f"Tracks: {len(labels.tracks)}")
 
-    print(f"Video files:")
+    print("Video files:")
 
     total_user_frames = 0
 
@@ -59,7 +60,7 @@ def describe_labels(data_path, verbose=False):
 
     if labels.provenance:
         print()
-        print(f"Provenance:")
+        print("Provenance:")
 
         for key, value in labels.provenance.items():
             print(f"  {key}: {value}")
@@ -73,9 +74,10 @@ def describe_model(model_path, verbose=False):
     print("Model:", model_path)
     print("=====")
 
-    rel_path = lambda x: os.path.join(model_path, x)
+    def rel_path(x):
+        return os.path.join(model_path, x)
 
-    initial_cfg = sleap.load_config(rel_path("initial_config.json"))
+    sleap.load_config(rel_path("initial_config.json"))
     cfg = sleap.load_config(rel_path("training_config.json"))
 
     print("=====")

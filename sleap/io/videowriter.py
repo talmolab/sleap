@@ -114,7 +114,6 @@ class VideoWriterImageio(VideoWriter):
         self.crf = crf
         self.preset = preset
 
-        import imageio_ffmpeg as ffmpeg
 
         # Imageio's ffmpeg writer parameters
         # https://imageio.readthedocs.io/en/stable/examples.html#writing-videos-with-ffmpeg-and-vaapi
@@ -229,7 +228,6 @@ def reader(
         logger.info(f"Chunks: {chunk_count}, chunk size: {chunk_size}")
         i = 0
         for chunk_i in range(chunk_count):
-
             # Read the next chunk of frames
             frame_start = chunk_size * chunk_i
             frame_end = min(frame_start + chunk_size, total_count)

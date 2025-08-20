@@ -208,7 +208,6 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
 
         lfs = []
         for i in range(len(data)):
-
             # Figure out the video and frame index to use.
             if full_video:
                 # Use the input provided one.

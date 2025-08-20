@@ -178,7 +178,6 @@ class MetricsTableModel(GenericTableModel):
     show_row_numbers = False
 
     def item_to_data(self, obj, cfg: ConfigFileInfo):
-
         if cfg.training_frame_count:
             n_train_str = (
                 f"{cfg.training_instance_count} ({cfg.training_frame_count} frames)"
