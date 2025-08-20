@@ -1706,15 +1706,16 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     window.showMaximized()
 
     # Disable GPU in GUI process. This does not affect subprocesses.
-    try:
-        sleap.use_cpu_only()
-    except RuntimeError:  # Visible devices cannot be modified after being initialized
-        logger.warning(
-            "Running processes on the GPU. Restarting your GUI should allow switching "
-            "back to CPU-only mode.\n"
-            "Received the following error when trying to switch back to CPU-only mode:"
-        )
-        traceback.print_exc()
+    # Note: use_cpu_only has been removed from sleap module
+    # try:
+    #     sleap.use_cpu_only()
+    # except RuntimeError:  # Visible devices cannot be modified after being initialized
+    #     logger.warning(
+    #         "Running processes on the GPU. Restarting your GUI should allow switching "
+    #         "back to CPU-only mode.\n"
+    #         "Received the following error when trying to switch back to CPU-only mode:"
+    #     )
+    #     traceback.print_exc()
 
     # Print versions.
     print()
