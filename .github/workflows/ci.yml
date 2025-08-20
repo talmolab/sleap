@@ -72,7 +72,7 @@ jobs:
         python: [3.12]
 
     name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runs-on }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
