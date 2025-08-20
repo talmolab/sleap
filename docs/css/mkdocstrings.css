@@ -1,0 +1,55 @@
+/* Adjust the size of headings in the API documentation */
+.doc-heading {
+    font-size: 1.2em;
+}
+
+/* Style for code blocks in API documentation */
+.doc-content pre {
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+/* Style for parameter tables */
+.doc-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.doc-content table th,
+.doc-content table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Style for method signatures */
+.doc-signature {
+    font-family: monospace;
+    background-color: #f9f9f9;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+/* Improve spacing in API documentation */
+.doc-content {
+    line-height: 1.6;
+}
+
+.doc-content h3 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+/* Style for docstring sections */
+.doc-section {
+    margin-bottom: 1em;
+}
+
+/* Style for source code links */
+.source-link {
+    float: right;
+    font-size: 0.9em;
+    color: #666;
+}

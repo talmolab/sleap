@@ -95,10 +95,22 @@ dev = [
     "pytest",
     "pytest-cov",
     "black",
+    "ruff",
     "pydocstyle",
     "toml",
     "twine",
     "wheel",
+]
+
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocs-jupyter",
+    "mkdocstrings[python]",
+    "mkdocs-gen-files",
+    "mkdocs-literate-nav",
+    "mkdocs-section-index",
+    "mike",
 ]
 
 jupyter = [
