@@ -2,16 +2,16 @@
 name: Build PyPI CI (no upload)
 
 # Run when changes to pip wheel
-on:
-  push:
-    paths:
-      - "setup.py"
-      - "requirements.txt"
-      - "dev_requirements.txt"
-      - "jupyter_requirements.txt"
-      - "pypi_requirements.txt"
-      - "environment_build.yml"
-      - ".github/workflows/build_pypi_ci.yml" # Run!
+# on:
+#   push:
+#     paths:
+#       - "setup.py"
+#       - "requirements.txt"
+#       - "dev_requirements.txt"
+#       - "jupyter_requirements.txt"
+#       - "pypi_requirements.txt"
+#       - "environment_build.yml"
+#       - ".github/workflows/build_pypi_ci.yml" # Run!
 
 jobs:
   build:

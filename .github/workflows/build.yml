@@ -1,10 +1,10 @@
 # PyPI and conda package builds on release.
 name: Build
 
-on:
-  release:
-    types:
-      - published
+# on:
+#   release:
+#     types:
+#       - published
 
 jobs:
   build:

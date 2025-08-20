@@ -1,17 +1,17 @@
 name: Reusable Comment Workflow
 
-on:
-  workflow_call:
-    inputs:
-      subject_id:
-        required: true
-        type: string
-      body_prefix:
-        required: true
-        type: string
-      comment_type:
-        required: true
-        type: string
+# on:
+#   workflow_call:
+#     inputs:
+#       subject_id:
+#         required: true
+#         type: string
+#       body_prefix:
+#         required: true
+#         type: string
+#       comment_type:
+#         required: true
+#         type: string
 
 jobs:
   comment:

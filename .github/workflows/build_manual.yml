@@ -3,15 +3,15 @@
 name: Build (manual)
 
 # Uncomment the following lines to trigger a build if the release build failed
-on:
-  push:
-    paths:
-      - '.conda/meta.yaml'
-      - '.conda_mac/meta.yaml'
-      - '.github/workflows/build_manual.yml'
-    branches:
-      # - develop
-      - fakebranch
+# on:
+#   push:
+#     paths:
+#       - '.conda/meta.yaml'
+#       - '.conda_mac/meta.yaml'
+#       - '.github/workflows/build_manual.yml'
+#     branches:
+#       # - develop
+#       - fakebranch
 
 jobs:
   build:

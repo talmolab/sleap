@@ -1,10 +1,10 @@
 name: Comment on New Discussions and Issues
 
-on:
-  discussion:
-    types: [created]
-  issues:
-    types: [opened]
+# on:
+#   discussion:
+#     types: [created]
+#   issues:
+#     types: [opened]
 
 jobs:
   comment_on_discussion:

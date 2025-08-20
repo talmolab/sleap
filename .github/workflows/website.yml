@@ -2,17 +2,17 @@
 
 name: Build website
 
-on:
-  push:
-    branches:
-      # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
-      - main
-      - develop # Run
-      - liezl/bump-to-1.4.1
-    paths:
-      - "docs/**"
-      - "README.rst"
-      - ".github/workflows/website.yml"
+# on:
+#   push:
+#     branches:
+#       # 'main' triggers updates to 'sleap.ai', all others to 'sleap.ai/develop'
+#       - main
+#       - develop # Run
+#       - liezl/bump-to-1.4.1
+#     paths:
+#       - "docs/**"
+#       - "README.rst"
+#       - ".github/workflows/website.yml"
 
 jobs:
   build:
