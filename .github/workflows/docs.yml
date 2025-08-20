@@ -1,19 +1,19 @@
 # Docs build
 name: Docs
 
-on:
-  release:
-    types:
-      - published
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - "sleap/**"
-      - "docs/**"
-      - "mkdocs.yml"
-      - ".github/workflows/docs.yml"
+# on:
+#   release:
+#     types:
+#       - published
+#   push:
+#     branches:
+#       - main
+#       - develop
+#     paths:
+#       - "sleap/**"
+#       - "docs/**"
+#       - "mkdocs.yml"
+#       - ".github/workflows/docs.yml"
 
 jobs:
   docs:
