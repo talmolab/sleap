@@ -432,7 +432,7 @@ class ItemStack(object):
         self.meta.append(meta)
 
         row_count = self.data.shape[0]
-        row_size = np.product(meta["shape"])
+        row_size = np.prod(meta["shape"])
         self.data = np.reshape(self.data, (row_count, row_size))
 
     def brisk_bag_of_features(self, brisk_threshold=40, vocab_size=20):

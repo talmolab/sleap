@@ -545,7 +545,7 @@ def test_merge_with_package(min_labels_robot, tmpdir):
     # Add a suggestion and save with images.
     labels = min_labels_robot
     labels.suggestions.append(
-        sleap.io.dataset.SuggestionFrame(video=labels.video, frame_idx=1)
+        SuggestionFrame(video=labels.video, frame_idx=1)
     )
     pkg_path = os.path.join(tmpdir, "test.pkg.slp")
     assert len(labels.predicted_instances) == 0
