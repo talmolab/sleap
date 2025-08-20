@@ -42,7 +42,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
 
     names = get_tracks_as_np_strings(centered_pair_predictions)
     assert len(names) == 27
-    assert isinstance(names[0], np.string_)
+    assert isinstance(names[0], (bytes, np.bytes_))
 
     # Check that node names and edges are read correctly
     node_names = [

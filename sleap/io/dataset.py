@@ -44,6 +44,7 @@ from collections.abc import MutableSequence
 from glob import glob
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     List,
     Union,
     Dict,
@@ -56,6 +57,9 @@ from typing import (
     Callable,
     cast,
 )
+
+if TYPE_CHECKING:
+    from sleap.gui.suggestions import SuggestionFrame
 
 import attr
 import cattr
@@ -79,7 +83,6 @@ from sleap.instance import (
 
 from sleap.io import pathutils
 from sleap.io.video import Video, ImgStoreVideo, HDF5Video
-from sleap.gui.suggestions import SuggestionFrame
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, json_dumps
@@ -420,7 +423,7 @@ class Labels(MutableSequence):
     skeletons: List[Skeleton] = attr.ib(default=attr.Factory(list))
     nodes: List[Node] = attr.ib(default=attr.Factory(list))
     tracks: List[Track] = attr.ib(default=attr.Factory(list))
-    suggestions: List[SuggestionFrame] = attr.ib(default=attr.Factory(list))
+    suggestions: List["SuggestionFrame"] = attr.ib(default=attr.Factory(list))
     negative_anchors: Dict[Video, list] = attr.ib(default=attr.Factory(dict))
     provenance: Dict[Text, Union[str, int, float, bool]] = attr.ib(
         default=attr.Factory(dict)
@@ -1404,6 +1407,8 @@ class Labels(MutableSequence):
             video: `sleap.Video` instance of the suggestion.
             frame_idx: Index of the frame of the suggestion.
         """
+        from sleap.gui.suggestions import SuggestionFrame
+        
         for suggestion in self.suggestions:
             if suggestion.video == video and suggestion.frame_idx == frame_idx:
                 return
@@ -1446,7 +1451,7 @@ class Labels(MutableSequence):
                 frame_indices.append(fidx)
         return frame_indices
 
-    def get_suggestions(self) -> List[SuggestionFrame]:
+    def get_suggestions(self) -> List["SuggestionFrame"]:
         """Return all suggestions as a list of SuggestionFrame items."""
         return self.suggestions
 
@@ -1511,11 +1516,11 @@ class Labels(MutableSequence):
             )
         return self.find_suggestion(video, frame_suggestion)
 
-    def append_suggestions(self, suggestions: List[SuggestionFrame]):
+    def append_suggestions(self, suggestions: List["SuggestionFrame"]):
         """Append the suggested frames."""
         self.suggestions.extend(suggestions)
 
-    def set_suggestions(self, suggestions: List[SuggestionFrame]):
+    def set_suggestions(self, suggestions: List["SuggestionFrame"]):
         """Set the suggested frames."""
         self.suggestions = suggestions
 
@@ -1528,7 +1533,7 @@ class Labels(MutableSequence):
         self.suggestions = []
 
     @property
-    def unlabeled_suggestions(self) -> List[SuggestionFrame]:
+    def unlabeled_suggestions(self) -> List["SuggestionFrame"]:
         """Return suggestions without user labels."""
         unlabeled_suggestions = []
         for suggestion in self.suggestions:

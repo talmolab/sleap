@@ -38,20 +38,20 @@ from sleap.io.video import Video
 from sleap import PredictedInstance
 
 
-def get_tracks_as_np_strings(labels: Labels) -> List[np.string_]:
-    """Get list of track names as `np.string_`."""
-    return [np.string_(track.name) for track in labels.tracks]
+def get_tracks_as_np_strings(labels: Labels) -> List[bytes]:
+    """Get list of track names as bytes."""
+    return [track.name.encode('utf-8') for track in labels.tracks]
 
 
-def get_nodes_as_np_strings(labels: Labels) -> List[np.string_]:
-    """Get list of node names as `np.string_`."""
-    return [np.string_(node.name) for node in labels.skeletons[0].nodes]
+def get_nodes_as_np_strings(labels: Labels) -> List[bytes]:
+    """Get list of node names as bytes."""
+    return [node.name.encode('utf-8') for node in labels.skeletons[0].nodes]
 
 
-def get_edges_as_np_strings(labels: Labels) -> List[Tuple[np.string_, np.string_]]:
-    """Get list of edge names as `np.string_`."""
+def get_edges_as_np_strings(labels: Labels) -> List[Tuple[bytes, bytes]]:
+    """Get list of edge names as bytes."""
     return [
-        (np.string_(src_name), np.string_(dst_name))
+        (src_name.encode('utf-8'), dst_name.encode('utf-8'))
         for (src_name, dst_name) in labels.skeletons[0].edge_names
     ]
 

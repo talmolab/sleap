@@ -370,7 +370,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                 # group got to be too big.
                 for key in ("videos", "tracks", "suggestions"):
                     # Convert for saving in hdf5 dataset
-                    data = [np.string_(json_dumps(item)) for item in d[key]]
+                    data = [json_dumps(item).encode('utf-8') for item in d[key]]
 
                     hdf5_key = f"{key}_json"
 
@@ -381,7 +381,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     d[key] = []
 
             # Output the dict to JSON
-            meta_group.attrs["json"] = np.string_(json_dumps(d))
+            meta_group.attrs["json"] = json_dumps(d).encode('utf-8')
 
             # FIXME: We can probably construct these from attrs fields
             # We will store Instances and PredcitedInstances in the same
