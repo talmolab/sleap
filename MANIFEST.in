@@ -1,5 +1,0 @@
-include sleap/config/*.yaml
-include sleap/training_profiles/*.json
-
-prune tests/*
-prune docs/*
