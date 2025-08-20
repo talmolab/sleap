@@ -9,6 +9,7 @@ import random
 from typing import Dict, List, Optional, Union
 
 from sleap.io.video import Video
+from sleap.io.dataset import Labels
 from sleap.info.feature_suggestions import (
     FeatureSuggestionPipeline,
     ParallelFeaturePipeline,
@@ -69,7 +70,8 @@ class VideoFrameSuggestions(object):
             return method_functions[method](labels=labels, **params)
         else:
             raise ValueError(
-                f"No {'' if method == '_' else method + ' '}method found for generating suggestions."
+                f"No {'' if method == '_' else method + ' '}method found for "
+                "generating suggestions."
             )
 
     # Functions corresponding to "method" param
@@ -83,7 +85,7 @@ class VideoFrameSuggestions(object):
         sampling_method: str = "random",
         **kwargs,
     ):
-        """Method to generate suggestions randomly or by taking strides through video."""
+        """Generate suggestions randomly or by taking strides through video."""
         suggestions = []
         sugg_idx_dict: Dict[Video, list] = {video: [] for video in labels.videos}
 
@@ -230,7 +232,8 @@ class VideoFrameSuggestions(object):
                 n_qualified_instance >= instance_limit_lower
                 and n_qualified_instance <= instance_limit_upper
             ):
-                # idxs saves qualified frame index at corresponding entry, otherwise the entry is -1
+                # idxs saves qualified frame index at corresponding entry,
+                # otherwise the entry is -1
                 idxs[i] = lf.frame_idx
 
         # Finds non-negative entries in idxs
@@ -360,7 +363,8 @@ class VideoFrameSuggestions(object):
             return proposed_suggestions
 
         for video in videos:
-            # Make sure when targeting all videos the from and to do not exceed frame number
+            # Make sure when targeting all videos the from and to do not exceed
+            # frame number
             if frame_from > video.num_frames:
                 continue
             this_video_frame_to = min(frame_to, video.num_frames)

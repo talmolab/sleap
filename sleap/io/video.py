@@ -228,7 +228,7 @@ class HDF5Video:
         """Close the HDF5 file object (if it's open)."""
         try:
             self.__file_h5.close()
-        except:
+        except Exception:
             pass
         self.__file_h5 = None
 
@@ -239,7 +239,7 @@ class HDF5Video:
     def _try_frame_from_source_video(self, idx) -> np.ndarray:
         try:
             return self.source_video.get_frame(idx)
-        except:
+        except Exception:
             raise IndexError(f"Frame index {idx} not in original index.")
 
     # The properties and methods below complete our contract with the higher level
@@ -1062,12 +1062,15 @@ class Video:
         """Return tuple of (frame count, height, width, channels)."""
         try:
             return (self.frames, self.height, self.width, self.channels)
-        except:
+        except Exception:
             return (None, None, None, None)
 
     def __str__(self) -> str:
         """Informal string representation (for print or format)."""
-        return f"Video(filename={self.filename}, shape={self.shape}, backend={type(self.backend).__name__})"
+        return (
+            f"Video(filename={self.filename}, shape={self.shape}, "
+            f"backend={type(self.backend).__name__})"
+        )
 
     def __len__(self) -> int:
         """Return the length of the video as the number of frames."""

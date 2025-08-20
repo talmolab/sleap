@@ -145,13 +145,15 @@ class LabelsJsonAdaptor(Adaptor):
 
                 if len(json_files) == 0:
                     raise ValueError(
-                        f"No JSON file found inside {filename}. Are you sure this is a valid sLEAP dataset."
+                        f"No JSON file found inside {filename}. "
+                        "Are you sure this is a valid sLEAP dataset."
                     )
 
                 filename = json_files[0]
 
             except Exception:
-                # If we had problems, delete the temp directory and reraise the exception.
+                # If we had problems, delete the temp directory and reraise
+                # the exception.
                 shutil.rmtree(tmp_dir, ignore_errors=True)
                 raise
 
@@ -399,7 +401,7 @@ class LabelsJsonAdaptor(Adaptor):
             # Then try unstructuring dict (older format)
             try:
                 tracks = cattr.structure(dicts["tracks"], List[Track])
-            except:
+            except Exception:
                 raise ValueError("Unable to load tracks as tuple or dict!") from e
 
         # if we're given a Labels object to match, use its objects when they match

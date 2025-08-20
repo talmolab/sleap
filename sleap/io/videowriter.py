@@ -184,7 +184,8 @@ def augment_background(images: np.ndarray, background: str | None) -> np.ndarray
     fill_values = {"black": 0, "grey": 127, "white": 255}
     if background not in fill_values:
         raise ValueError(
-            f"Invalid background color: {background}. Options include: {', '.join(fill_values.keys())}"
+            f"Invalid background color: {background}. "
+            f"Options include: {', '.join(fill_values.keys())}"
         )
 
     # Fill the images with the specified color.
@@ -379,7 +380,8 @@ def progress_feedback(
             progress_win.setValue(frames_complete)
         else:
             print(
-                f"Finished {frames_complete} frames in {elapsed:.1f} s, fps = {round(fps)}, approx {remaining_time:.1f} s remaining"
+                f"Finished {frames_complete} frames in {elapsed:.1f} s, "
+                f"fps = {round(fps)}, approx {remaining_time:.1f} s remaining"
             )
 
 

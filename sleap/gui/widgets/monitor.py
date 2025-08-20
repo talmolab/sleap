@@ -413,7 +413,9 @@ class LossPlot(MplCanvas):
         """Set up the title space.
 
         Returns:
-            The height of the title space as a decimal fraction of the total figure height.
+            The height of the title space as a decimal fraction of the total
+            figure height.
+
         """
 
         # Set a dummy title of the plot
@@ -451,7 +453,8 @@ class LossPlot(MplCanvas):
         self.axes.set_xlim(0, 1)
         self.axes.set_xlabel("Batches", fontweight="bold", fontsize="small")
 
-        # Set the x-label in the center of the axes and some amount above the bottom of the figure
+        # Set the x-label in the center of the axes and some amount above the bottom of
+        # the figure
         blended_transform = mtransforms.blended_transform_factory(
             self.axes.transAxes, self.fig.transFigure
         )
@@ -485,7 +488,9 @@ class LossPlot(MplCanvas):
         """Set up the legend.
 
         Returns:
-            Tuple of the width and height of the legend as a decimal fraction of the total figure width and height.
+            Tuple of the width and height of the legend as a decimal fraction of
+            the total figure width and height.
+
         """
 
         # Move the legend outside the plot on the upper left
@@ -505,7 +510,8 @@ class LossPlot(MplCanvas):
         # Transform the bounding box to figure coordinates
         bbox = bbox.transformed(self.fig.transFigure.inverted())
 
-        # Calculate the width and height of the legend as a percentage of the total figure width and height
+        # Calculate the width and height of the legend as a percentage of the total
+        # figure width and height
         return bbox.width, bbox.height
 
     def _setup_major_gridlines(self):

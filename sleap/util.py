@@ -17,6 +17,9 @@ from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Hashable, Iterable, List, Optional
+
+if TYPE_CHECKING:
+    from sleap.instance import Instance
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
 
@@ -65,7 +68,7 @@ def json_loads(json_str: str) -> Dict:
     """
     try:
         return rapidjson.loads(json_str)
-    except:
+    except Exception:
         return json.loads(json_str)
 
 
@@ -295,20 +298,23 @@ def get_config_file(
 
     desired_path = Path.home() / f".sleap/{sleap_version.__version__}/{shortname}"
 
-    # Make sure there's a ~/.sleap/<version>/ directory to store user version of the config file.
+    # Make sure there's a ~/.sleap/<version>/ directory to store user version of
+    # the config file.
     desired_path.parent.mkdir(parents=True, exist_ok=True)
 
     # If we don't care whether the file exists, just return the path
     if ignore_file_not_found:
         return desired_path
 
-    # If we do care whether the file exists, check the package version of the config file if we can't find the user version.
+    # If we do care whether the file exists, check the package version of the
+    # config file if we can't find the user version.
     if get_defaults or not desired_path.exists():
         package_path = get_package_file(f"config/{shortname}")
         package_path = Path(package_path)
         if not package_path.exists():
             raise FileNotFoundError(
-                f"Cannot locate {shortname} config file at {desired_path} or {package_path}."
+                f"Cannot locate {shortname} config file at {desired_path} or "
+                f"{package_path}."
             )
 
         if get_defaults:
@@ -578,9 +584,12 @@ def generate_skeleton_preview_image(
     """Generate preview image for skeleton based on given instance.
 
     Args:
-        instance: A `sleap.Instance` object for which to generate the preview image from.
-        square_bb: A boolean flag for whether or not the preview image should be a square image
-        thumbnail_size: A tuple of (w,h) for what the size of the thumbnail image should be
+        instance: A `sleap.Instance` object for which to generate the preview
+            image from.
+        square_bb: A boolean flag for whether or not the preview image should be
+            a square image
+        thumbnail_size: A tuple of (w,h) for what the size of the thumbnail image
+            should be
 
     Returns:
         A byte string encoding of the preview image.

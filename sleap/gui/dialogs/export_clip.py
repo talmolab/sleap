@@ -15,9 +15,15 @@ class ExportClipDialog(FormBuilderModalDialog):
         can_use_ffmpeg = VideoWriter.can_use_ffmpeg()
 
         if can_use_ffmpeg:
-            message = "<i><b>MP4</b> file will be encoded using system ffmpeg via imageio (preferred option).</i>"
+            message = (
+                "<i><b>MP4</b> file will be encoded using system ffmpeg "
+                "via imageio (preferred option).</i>"
+            )
         else:
-            message = "<i>Unable to use ffmpeg via imageio. <b>AVI</b> file will be encoding using OpenCV.</i>"
+            message = (
+                "<i>Unable to use ffmpeg via imageio. <b>AVI</b> file will be "
+                "encoding using OpenCV.</i>"
+            )
 
         self.add_message(message)
 

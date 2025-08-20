@@ -18,7 +18,8 @@ from sleap.gui.overlays.base import h5_colors
 
 
 class MultiQuiverPlot(QtWidgets.QGraphicsObject):
-    """QtWidgets.QGraphicsObject to display multiple quiver plots in a QtWidgets.QGraphicsView.
+    """QtWidgets.QGraphicsObject to display multiple quiver plots in a
+    QtWidgets.QGraphicsView.
 
     Args:
         frame (numpy.array): Data for one frame of quiver plot data.
@@ -190,7 +191,8 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
 
     def _decimate(self, image: np.array, box: int):
         height = width = box
-        # Source: https://stackoverflow.com/questions/48482317/slice-an-image-into-tiles-using-numpy
+        # Source: https://stackoverflow.com/questions/48482317/
+        # slice-an-image-into-tiles-using-numpy
         _nrows, _ncols, depth = image.shape
         _size = image.size
         _strides = image.strides
@@ -216,7 +218,8 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
         return np.mean(tiles, axis=(2, 3))
 
     def boundingRect(self) -> QtCore.QRectF:
-        """Method called by Qt in order to determine whether object is in visible frame."""
+        """Method called by Qt in order to determine whether object is in
+        visible frame."""
         return QtCore.QRectF(self.rect)
 
     def paint(self, painter, option, widget=None):

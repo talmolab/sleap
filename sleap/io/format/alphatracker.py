@@ -250,7 +250,7 @@ class AlphaTrackerAdaptor(Adaptor):
                     # FIXME: Will return incorrect index if there are multiple videos.
                     frame_idx = int(img_files[i].split("_")[-2])
                     assert type(frame_idx) == int
-                except:
+                except Exception:
                     raise ValueError(
                         f"Unable to determine frame index for image {img_files[i]}"
                     )

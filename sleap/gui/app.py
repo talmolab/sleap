@@ -832,7 +832,8 @@ class MainWindow(QMainWindow):
         add_menu_check_item(
             tracksMenu, "propagate track labels", "Propagate Track Labels"
         ).setToolTip(
-            "If enabled, setting a track will also apply to subsequent instances of the same track."
+            "If enabled, setting a track will also apply to subsequent "
+            "instances of the same track."
         )
         add_menu_item(
             tracksMenu,
@@ -854,7 +855,8 @@ class MainWindow(QMainWindow):
 
         self.delete_multiple_tracks_menu = tracksMenu.addMenu("Delete Multiple Tracks")
         self.delete_multiple_tracks_menu.setToolTip(
-            "Delete either only 'Unused' tracks or 'All' tracks, and update instances. Instances are not removed."
+            "Delete either only 'Unused' tracks or 'All' tracks, and update "
+            "instances. Instances are not removed."
         )
 
         add_menu_item(
@@ -1423,8 +1425,12 @@ class MainWindow(QMainWindow):
         header_functions = {
             "Point Displacement (sum)": data_obj.get_point_displacement_series,
             "Point Displacement (max)": data_obj.get_point_displacement_series,
-            "Primary Point Displacement (sum)": data_obj.get_primary_point_displacement_series,
-            "Primary Point Displacement (max)": data_obj.get_primary_point_displacement_series,
+            "Primary Point Displacement (sum)": (
+                data_obj.get_primary_point_displacement_series
+            ),
+            "Primary Point Displacement (max)": (
+                data_obj.get_primary_point_displacement_series
+            ),
             "Tracking Score (mean)": data_obj.get_tracking_score_series,
             "Tracking Score (min)": data_obj.get_tracking_score_series,
             "Instance Score (sum)": data_obj.get_instance_score_series,
@@ -1540,7 +1546,8 @@ class MainWindow(QMainWindow):
         if not self.state["filename"] or self.state["has_changes"]:
             QMessageBox(
                 text=(
-                    "You have unsaved changes. Please save before running training or inference."
+                    "You have unsaved changes. Please save before running "
+                    "training or inference."
                 )
             ).exec_()
             return
@@ -1649,7 +1656,8 @@ def create_sleap_label_parser():
     parser.add_argument(
         "--reset",
         help=(
-            "Reset GUI state and preferences. Use this flag if the GUI appears incorrectly or fails to open."
+            "Reset GUI state and preferences. Use this flag if the GUI "
+            "appears incorrectly or fails to open."
         ),
         action="store_const",
         const=True,
@@ -1707,9 +1715,10 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     #     sleap.use_cpu_only()
     # except RuntimeError:  # Visible devices cannot be modified after being initialized
     #     logger.warning(
-    #         "Running processes on the GPU. Restarting your GUI should allow switching "
-    #         "back to CPU-only mode.\n"
-    #         "Received the following error when trying to switch back to CPU-only mode:"
+    #         "Running processes on the GPU. Restarting your GUI should allow "
+    #         "switching back to CPU-only mode.\n"
+    #         "Received the following error when trying to switch back to "
+    #         "CPU-only mode:"
     #     )
     #     traceback.print_exc()
 

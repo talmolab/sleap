@@ -85,7 +85,7 @@ class ReleaseChecker:
 
         try:
             self.releases = [Release.from_json(r) for r in response.json()]
-        except:
+        except Exception:
             return False
 
         return True

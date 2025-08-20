@@ -84,7 +84,7 @@ class Shortcuts(object):
 
             try:
                 shortcuts[action] = eval(key_string)
-            except:
+            except Exception:
                 shortcuts[action] = QKeySequence.fromString(key_string)
         return shortcuts
 

@@ -7,8 +7,9 @@ from typing import Dict, List, Optional
 
 from qtpy import QtWidgets, QtCore
 
-from sleap.instance import LabeledFrame
+from sleap.instance import Instance, LabeledFrame
 from sleap.io.dataset import Labels
+from sleap.io.video import Video
 
 USE_BASE_STRING = "Use base, discard conflicting new instances"
 USE_NEW_STRING = "Use new, discard conflicting base instances"
@@ -328,8 +329,8 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
         result: Get the result of the dialog.
 
     Returns:
-        If accepted, returns a dictionary with the keys being the new node names and the values being the
-        old node names. If rejected, returns None.
+        If accepted, returns a dictionary with the keys being the new node names and
+        the values being the old node names. If rejected, returns None.
     """
 
     def __init__(
@@ -534,8 +535,9 @@ class ReplaceSkeletonTableDialog(QtWidgets.QDialog):
                 # Reordering has failed!
                 log.debug(f"Linked nodes (new: old): {data}")
                 raise ValueError(
-                    f"Cannot rename skeleton node '{first_old_node}' to already existing "
-                    f"node '{first_new_node}'. Please rename existing skeleton node "
+                    f"Cannot rename skeleton node '{first_old_node}' to already "
+                    f"existing node '{first_new_node}'. Please rename existing "
+                    f"skeleton node "
                     f"'{first_new_node}' manually before linking."
                 )
         return data

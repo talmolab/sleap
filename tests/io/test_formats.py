@@ -453,7 +453,7 @@ def assert_read_labels_match(labels, read_labels):
                 read_labels.videos[video_idx].backend,
                 type(labels.videos[video_idx].backend),
             )
-        except:
+        except Exception:
             assert PurePath(read_labels.videos[video_idx].backend.filename) == PurePath(
                 labels.videos[video_idx - 1].backend.filename
             )

@@ -57,7 +57,10 @@ class MissingFilesDialog(QtWidgets.QDialog):
         if replace:
             info_text = "Double-click on a file to replace it..."
         else:
-            info_text = f"{missing_count} file(s) which could not be found. Please double-click on a file to locate it..."
+            info_text = (
+                f"{missing_count} file(s) which could not be found. "
+                "Please double-click on a file to locate it..."
+            )
         info_label = QtWidgets.QLabel(info_text)
         layout.addWidget(info_label)
 
@@ -98,7 +101,8 @@ class MissingFilesDialog(QtWidgets.QDialog):
             # Do not allow same video to be imported more than once.
             QtWidgets.QMessageBox(
                 text=(
-                    f"The file <b>{path_new_filename.name}</b> cannot be added to the project multiple times."
+                    f"The file <b>{path_new_filename.name}</b> cannot be added to "
+                    "the project multiple times."
                 )
             ).exec_()
         elif new_filename:

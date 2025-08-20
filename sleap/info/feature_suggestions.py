@@ -8,7 +8,10 @@ import itertools
 import logging
 import numpy as np
 import random
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+
+if TYPE_CHECKING:
+    from sleap.gui.suggestions import SuggestionFrame
 
 import cv2
 
@@ -646,7 +649,8 @@ class ParallelFeaturePipeline(object):
         )
         self.pipeline.reset()
 
-        # logger.info(f"done with {video_idx} in {time() - t0} s for {len(result)} suggestions")
+        # logger.info(f"done with {video_idx} in {time() - t0} s for "
+        #              f"{len(result)} suggestions")
         return result
 
     @classmethod

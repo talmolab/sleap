@@ -27,6 +27,7 @@ from sleap.gui.commands import CommandContext
 from sleap.gui.state import GuiState
 from sleap.instance import LabeledFrame
 from sleap.skeleton import Skeleton
+from sleap.io.video import Video
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -111,7 +112,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         """
         try:
             return [datum["_original_item"] for datum in self._data]
-        except:
+        except Exception:
             return self._data
 
     def get_item_color(self, item: Any, key: str):
@@ -499,7 +500,9 @@ class SuggestionsTableModel(GenericTableModel):
 
         item_dict["SuggestionFrame"] = item
 
-        video_string = f"{labels.videos.index(item.video) + 1}: {os.path.basename(item.video.filename)}"
+        video_idx = labels.videos.index(item.video) + 1
+        video_name = os.path.basename(item.video.filename)
+        video_string = f"{video_idx}: {video_name}"
 
         item_dict["group"] = str(item.group + 1) if item.group is not None else ""
         item_dict["group_int"] = item.group if item.group is not None else -1

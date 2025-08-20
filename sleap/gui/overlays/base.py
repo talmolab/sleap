@@ -66,7 +66,9 @@ class BaseOverlay(abc.ABC):
             try:
                 self.player.scene.removeItem(item)
 
-            except RuntimeError as e:  # Internal C++ object (PySide2.QtWidgets.QGraphicsPathItem) already deleted.
+            except RuntimeError as e:
+                # Internal C++ object (PySide2.QtWidgets.QGraphicsPathItem) already
+                # deleted.
                 logger.debug(e)
 
         # Stop tracking the items after they been removed from the scene

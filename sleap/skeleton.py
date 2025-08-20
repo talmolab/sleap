@@ -326,7 +326,8 @@ class SkeletonDecoder:
             return_bytes: whether to return the decoded image as bytes
 
         Returns:
-            Either a PIL.Image of the skeleton preview image or the decoded image as bytes
+            Either a PIL.Image of the skeleton preview image or the decoded image
+            as bytes
             (if `return_bytes` is True).
         """
         bytes = base64.b64decode(img_b64)
@@ -394,7 +395,8 @@ class SkeletonEncoder:
             ]
         }`
 
-    Where `name` and `weight` are the attributes of the `Node` class; weight is always 1.0.
+    Where `name` and `weight` are the attributes of the `Node` class; weight is
+    always 1.0.
     `EdgeType` is an enum with values `BODY = 1` and `SYMMETRY = 2`.
 
     See sleap.skeleton.Node and sleap.skeleton.EdgeType.
@@ -637,7 +639,10 @@ class Skeleton:
         nodes = ", ".join(self.node_names)
         edges = ", ".join([f"{s}->{d}" for (s, d) in self.edge_names])
         symm = ", ".join([f"{s}<->{d}" for (s, d) in self.symmetry_names])
-        return f"Skeleton(description={description}, nodes=[{nodes}], edges=[{edges}], symmetries=[{symm}])"
+        return (
+            f"Skeleton(description={description}, nodes=[{nodes}], "
+            f"edges=[{edges}], symmetries=[{symm}])"
+        )
 
     def matches(self, other: "Skeleton") -> bool:
         """Compare this `Skeleton` to another, ignoring name and node identities.

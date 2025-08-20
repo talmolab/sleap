@@ -41,6 +41,7 @@ default extension to use if none is provided in the filename.
 import itertools
 import os
 from collections.abc import MutableSequence
+from glob import glob
 from pathlib import Path
 from typing import (
     List,
@@ -64,7 +65,7 @@ from sklearn.model_selection import train_test_split
 
 try:
     pass
-except:
+except Exception:
     pass
 
 from sleap.skeleton import Skeleton, Node

@@ -228,8 +228,12 @@ def get_template_points_array(instances: List[Instance]) -> np.ndarray:
 
 if __name__ == "__main__":
     # filename = "tests/data/json_format_v2/centered_pair_predictions.json"
-    # filename = "/Volumes/fileset-mmurthy/shruthi/code/sleap_expts/preds/screen_all.5pts_tmp_augment_200122/191210_102108_18159112_rig3_2.preds.h5"
-    filename = "/Volumes/fileset-mmurthy/talmo/wt_gold_labeling/100919.sleap_wt_gold.13pt_init.n=288.junyu.h5"
+    # filename = "/Volumes/fileset-mmurthy/shruthi/code/sleap_expts/preds/"
+    # "screen_all.5pts_tmp_augment_200122/191210_102108_18159112_rig3_2.preds.h5"
+    filename = (
+        "/Volumes/fileset-mmurthy/talmo/wt_gold_labeling/"
+        "100919.sleap_wt_gold.13pt_init.n=288.junyu.h5"
+    )
 
     labels = Labels.load_file(filename)
 

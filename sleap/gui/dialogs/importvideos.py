@@ -67,7 +67,8 @@ class ImportVideos:
         2. Show import parameter dialog with widget for each file.
 
         Args:
-            filenames: List of filenames. If not provided, a file browser GUI will appear.
+            filenames: List of filenames. If not provided, a file browser GUI will
+                appear.
 
         Returns:
             List with dict of the parameters for each file to import.
@@ -407,7 +408,8 @@ class ImportItemWidget(QFrame):
             self.preview_widget.load_video(self.video)
         except Exception as e:
             print(f"Unable to load video with these parameters. Error: {e}")
-            # if we got an error showing video with those settings, clear the video preview
+            # if we got an error showing video with those settings, clear the video
+            # preview
             self.video = None
             self.preview_widget.clear_video()
 

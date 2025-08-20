@@ -13,21 +13,10 @@ Example usage: ::
 
 """
 
-from collections import deque
-
-# FORCE_REQUESTS controls whether we emit a signal to process frame requests
-# if we haven't processed any for a certain amount of time.
-# Usually the processing gets triggered by a timer but if the user is (e.g.)
-# dragging the mouse, the timer doesn't trigger.
-# FORCE_REQUESTS lets us update the frames in real time, assuming the load time
-# is short enough to do that.
-
-FORCE_REQUESTS = True
-
-
 import atexit
 import math
 import time
+from collections import deque
 from typing import Callable, List, Optional, Union
 
 import numpy as np
@@ -75,6 +64,14 @@ from sleap.instance import Instance, Point, PredictedInstance
 from sleap.io.video import Video
 from sleap.prefs import prefs
 from sleap.skeleton import Node
+
+# FORCE_REQUESTS controls whether we emit a signal to process frame requests
+# if we haven't processed any for a certain amount of time.
+# Usually the processing gets triggered by a timer but if the user is (e.g.)
+# dragging the mouse, the timer doesn't trigger.
+# FORCE_REQUESTS lets us update the frames in real time, assuming the load time
+# is short enough to do that.
+FORCE_REQUESTS = True
 
 
 class LoadImageWorker(QtCore.QObject):
@@ -306,7 +303,7 @@ class QtVideoPlayer(QWidget):
         # Get image data
         try:
             frame = self.video.get_frame(frame_idx)
-        except:
+        except Exception:
             frame = None
 
         if frame is not None:
@@ -791,7 +788,8 @@ class GraphicsView(QGraphicsView):
     rightMouseButtonDoubleClicked = QtCore.Signal(float, float)
 
     def __init__(self, state=None, player=None, *args, **kwargs):
-        """https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/master/QtImageViewer.py"""
+        """https://github.com/marcel-goldschen-ohm/PyQtImageViewer/blob/
+        master/QtImageViewer.py"""
         QGraphicsView.__init__(self)
         self.state = state or GuiState()
 
@@ -1455,7 +1453,8 @@ class QtNode(QGraphicsEllipseItem):
             self.pen_default = QPen(line_color, pen_width)
             self.pen_default.setCosmetic(
                 True
-            )  # https://stackoverflow.com/questions/13120486/adjusting-qpen-thickness-when-scaling-qgraphicsview
+            )  # https://stackoverflow.com/questions/13120486/
+            # adjusting-qpen-thickness-when-scaling-qgraphicsview
             self.pen_missing = QPen(line_color, 1)  # thin border
             self.pen_missing.setCosmetic(True)
             self.brush = QBrush(QColor(*self.color, a=128))
@@ -2163,7 +2162,8 @@ class QtInstance(QGraphicsObject):
                     # Set this QtInstance to be movable
                     qt_inst.setFlag(QGraphicsItem.ItemIsMovable)
 
-                    # Optionally grab the mouse and change cursor, so user can immediately drag
+                    # Optionally grab the mouse and change cursor, so user can
+                    # immediately drag
                     qt_inst.setCursor(Qt.ClosedHandCursor)
                     qt_inst.grabMouse()
                     break

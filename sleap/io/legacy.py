@@ -150,7 +150,8 @@ def load_predicted_labels_json_old(
 
         return instances
 
-    # Get the unique labeled frames and construct a list of LabeledFrame objects for them.
+    # Get the unique labeled frames and construct a list of LabeledFrame objects
+    # for them.
     frame_keys = list(
         {
             (videoId, frameIdx)
@@ -273,7 +274,8 @@ def load_labels_json_old(
 
         return instances
 
-    # Get the unique labeled frames and construct a list of LabeledFrame objects for them.
+    # Get the unique labeled frames and construct a list of LabeledFrame objects
+    # for them.
     frame_keys = list(
         {
             (videoId, frameIdx)

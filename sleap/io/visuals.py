@@ -16,6 +16,7 @@ import cv2
 import numpy as np
 
 from sleap.gui.color import ColorManager
+from sleap.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.io.videowriter import _sentinel, write_video
@@ -316,7 +317,8 @@ class VideoMarkerThread(Thread):
                 edge = (nodes[src], nodes[dst])
                 edge_color_bgr = self.color_manager.get_item_color(edge, instance)[::-1]
 
-                # Make sure that both nodes are present in this instance before drawing edge
+                # Make sure that both nodes are present in this instance before
+                # drawing edge
                 if not has_nans(src_x, src_y, dst_x, dst_y):
                     # Convert to ints for opencv
                     src_x, src_y = int(src_x), int(src_y)
@@ -513,7 +515,8 @@ def main(args: list = None):
         type=str,
         default="instances",
         help=(
-            "Specify how to color instances. Options include: 'instances', 'edges', and 'nodes' (default: 'nodes')"
+            "Specify how to color instances. Options include: 'instances', "
+            "'edges', and 'nodes' (default: 'nodes')"
         ),
     )
     parser.add_argument(
@@ -544,7 +547,7 @@ def main(args: list = None):
 
     try:
         crop_size_xy = list(map(int, args.crop.split(",")))
-    except:
+    except Exception:
         crop_size_xy = None
 
     save_labeled_video(

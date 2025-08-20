@@ -118,7 +118,8 @@ def test_video_selection(
         },
     )
     for i in range(len(suggestions)):
-        # Confirming every suggestion is only for the video that is chosen and no other videos
+        # Confirming every suggestion is only for the video that is chosen and no other
+        # videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Testing suggestion generation from Sample
@@ -133,7 +134,8 @@ def test_video_selection(
     )
 
     for i in range(len(suggestions)):
-        # Confirming every suggestion is only for the video that is chosen and no other videos
+        # Confirming every suggestion is only for the video that is chosen and no other
+        # videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Testing suggestion generation from prediction score
@@ -149,7 +151,8 @@ def test_video_selection(
     )
 
     for i in range(len(suggestions)):
-        # Confirming every suggestion is only for the video that is chosen and no other videos
+        # Confirming every suggestion is only for the video that is chosen and no other
+        # videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Testing suggestion generation from velocity
@@ -163,7 +166,8 @@ def test_video_selection(
         },
     )
     for i in range(len(suggestions)):
-        # Confirming every suggestion is only for the video that is chosen and no other videos
+        # Confirming every suggestion is only for the video that is chosen and no other
+        # videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Ensure video target works given suggestions from another video already exist
@@ -178,7 +182,8 @@ def test_video_selection(
         },
     )
 
-    # Testing suggestion generation from frame chunk targeting selected video or all videos
+    # Testing suggestion generation from frame chunk targeting selected video or all
+    # videos
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
@@ -193,7 +198,8 @@ def test_video_selection(
         assert suggestions[i].video == centered_pair_predictions.videos[1]
 
     # Testing suggestion generation from frame chunk targeting all videos
-    # Clear existing suggestions so that generated suggestions will be kept intact at the uniqueness check step
+    # Clear existing suggestions so that generated suggestions will be kept intact at
+    # the uniqueness check step
     centered_pair_predictions.clear_suggestions()
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,

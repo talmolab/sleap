@@ -110,7 +110,7 @@ def test_use_hidden_params_from_loaded_config(
             # 1. Prefers data from widget over loaded config
             try:
                 assert config_info_dict[k] == tab_cfg_key_val_dict[k[7:]]
-            except:
+            except Exception:
                 assert str(config_info_dict[k]) == tab_cfg_key_val_dict[k[7:]]
         elif k not in params_reset:
             # 2. Uses hidden parameters from loaded config

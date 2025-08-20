@@ -80,16 +80,19 @@ class NixAdaptor(Adaptor):
     def __check_video(cls, labels: Labels, video: Optional[Video]):
         if (video is None) and (len(labels.videos) == 0):
             raise ValueError(
-                "There are no videos in this project. No analysis file will be be written."
+                "There are no videos in this project. "
+                "No analysis file will be be written."
             )
         if video is not None:
             if video not in labels.videos:
                 raise ValueError(
-                    f"Specified video {video} is not part of this project. Skipping the analysis file for this video."
+                    f"Specified video {video} is not part of this project. "
+                    "Skipping the analysis file for this video."
                 )
             if len(labels.get(video)) == 0:
                 raise ValueError(
-                    f"No labeled frames in {video.backend.filename}. Skipping the analysis file for this video."
+                    f"No labeled frames in {video.backend.filename}. "
+                    "Skipping the analysis file for this video."
                 )
 
     @classmethod

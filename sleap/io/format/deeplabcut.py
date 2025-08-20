@@ -139,7 +139,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                 video_ind, frame_ind = inds_by_img[filename]
                 video_inds.append(video_ind)
                 frame_inds.append(frame_ind)
-        except:
+        except Exception:
             # If we couldn't group by shape, create a single video for all images.
             videos = [Video.from_image_filenames(filenames)]
             video_inds = [0] * len(filenames)

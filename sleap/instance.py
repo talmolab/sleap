@@ -24,7 +24,11 @@ The relationships between objects in this module:
 
 import math
 from copy import copy
-from typing import Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+
+if TYPE_CHECKING:
+    from sleap.io.dataset import Labels
+    from sleap.io.video import Video
 
 import attr
 import cattr
@@ -86,7 +90,7 @@ class Point(np.record):
         """
         return math.isnan(self.x) or math.isnan(self.y)
 
-    def numpy() -> np.ndarray:
+    def numpy(self) -> np.ndarray:
         """Return the point as a numpy array."""
         return np.array([self.x, self.y])
 
@@ -390,7 +394,8 @@ class Instance:
         """
         if from_predicted is not None and type(from_predicted) != PredictedInstance:
             raise TypeError(
-                f"Instance.from_predicted type must be PredictedInstance (not {type(from_predicted)})"
+                f"Instance.from_predicted type must be PredictedInstance "
+                f"(not {type(from_predicted)})"
             )
 
     @_points.validator
@@ -423,7 +428,8 @@ class Instance:
         elif isinstance(points, PointArray):
             if len(points) != len(self.skeleton.nodes):
                 raise ValueError(
-                    "PointArray does not have the same number of rows as skeleton nodes."
+                    "PointArray does not have the same number of rows as "
+                    "skeleton nodes."
                 )
 
     def __attrs_post_init__(self):
@@ -504,7 +510,7 @@ class Instance:
             try:
                 parray[skeleton.node_to_index(node)] = point
                 # parray[skeleton.node_to_index(node.name)] = point
-            except:
+            except Exception:
                 pass
 
     def _node_to_index(self, node: Union[str, Node]) -> int:
@@ -1350,7 +1356,8 @@ class InstancesList(list):
 
         if not isinstance(instance, (Instance, PredictedInstance)):
             raise ValueError(
-                f"InstancesList can only contain Instance or PredictedInstance objects, but got {type(instance)}."
+                f"InstancesList can only contain Instance or PredictedInstance "
+                f"objects, but got {type(instance)}."
             )
         instance.frame = self.labeled_frame
         super().append(instance)

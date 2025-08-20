@@ -19,6 +19,7 @@ import yaml
 from sleap.util import get_config_file
 from sleap.instance import Instance, Track, Node
 from sleap.io.dataset import Labels
+from sleap.skeleton import Skeleton
 from sleap.prefs import prefs
 
 
@@ -131,7 +132,7 @@ class ColorManager:
             try:
                 result = tuple(map(int, split_string))
                 return result
-            except:
+            except Exception:
                 raise ValueError(f"Color '{color}' is not 'r,g,b' string.")
 
         if len(color) != 3:
@@ -140,7 +141,7 @@ class ColorManager:
         try:
             result = tuple(map(int, color))
             return result
-        except:
+        except Exception:
             raise ValueError(f"Color '{color}' is not (r,g,b) tuple.")
 
     def get_pseudo_track_index(self, instance: "Instance") -> Union[Track, int]:
@@ -237,7 +238,7 @@ class ColorManager:
         self,
         item: Any,
         parent_instance: Optional[Instance] = None,
-        parent_skeleton: Optional["Skeleton"] = None,
+        parent_skeleton: Optional[Skeleton] = None,
     ) -> ColorTupleType:
         """Gets (r, g, b) tuple of color to use for drawing item."""
 

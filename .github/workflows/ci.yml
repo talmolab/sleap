@@ -54,17 +54,22 @@ jobs:
 
   # Tests with pytest
   tests:
-    timeout-minutes: 25
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        python: ["3.8", "3.13"]
-        exclude:
-          - os: "macos-latest"
-            python: "3.8"
-          - os: "windows-latest"
-            python: "3.8"
+        os: ["ubuntu", "windows", "mac"]
+        # os: ["ubuntu", "windows", "mac", "self-hosted-gpu"]
+        include:
+          - os: ubuntu
+            runs-on: ubuntu-latest
+          - os: windows
+            runs-on: windows-latest
+          - os: mac
+            runs-on: macos-latest
+          # - os: self-hosted-gpu
+          #   runs-on: [self-hosted, puma, gpu, 2xgpu]
+        python: [3.12]
 
     name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
     runs-on: ${{ matrix.os }}
@@ -88,6 +93,7 @@ jobs:
 
       - name: Install graphics dependencies on Ubuntu
         # https://github.com/conda-forge/opencv-feedstock/issues/401
+        # TODO(2025-08): Test if this is still needed with the latest versions of the dependencies.
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           sudo apt-get update && sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1 libglx-mesa0

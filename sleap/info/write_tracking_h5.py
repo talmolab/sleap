@@ -158,7 +158,8 @@ def get_occupancy_and_points_matrices(
 
     if warning_flag:
         print(
-            "\nWarning! There are more than one instances per track on a single frame.\n"
+            "\nWarning! There are more than one instances per track on a "
+            "single frame.\n"
         )
 
     for lf, inst in lfs_instances:
@@ -394,7 +395,8 @@ def main(
         ) = get_occupancy_and_points_matrices(labels, all_frames, video)
     except TypeError:
         print(
-            f"No labeled frames in {video.filename}. Skipping the analysis for this video."
+            f"No labeled frames in {video.filename}. Skipping the analysis for "
+            "this video."
         )
         return
 

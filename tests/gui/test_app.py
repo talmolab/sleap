@@ -283,7 +283,8 @@ def test_app_workflow(
         assert lf.frame_idx == prev_idx + frame_delta
         prev_idx = l_suggestion.frame_idx
 
-    # Add video, add frame suggestions, remove the video, verify the frame suggestions are also removed
+    # Add video, add frame suggestions, remove the video, verify the frame suggestions
+    # are also removed
     app.labels.add_video(small_robot_mp4_vid)
     app.on_data_update([UpdateTopic.video])
 
