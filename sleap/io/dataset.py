@@ -1408,7 +1408,7 @@ class Labels(MutableSequence):
             frame_idx: Index of the frame of the suggestion.
         """
         from sleap.gui.suggestions import SuggestionFrame
-        
+
         for suggestion in self.suggestions:
             if suggestion.video == video and suggestion.frame_idx == frame_idx:
                 return

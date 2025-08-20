@@ -40,18 +40,18 @@ from sleap import PredictedInstance
 
 def get_tracks_as_np_strings(labels: Labels) -> List[bytes]:
     """Get list of track names as bytes."""
-    return [track.name.encode('utf-8') for track in labels.tracks]
+    return [track.name.encode("utf-8") for track in labels.tracks]
 
 
 def get_nodes_as_np_strings(labels: Labels) -> List[bytes]:
     """Get list of node names as bytes."""
-    return [node.name.encode('utf-8') for node in labels.skeletons[0].nodes]
+    return [node.name.encode("utf-8") for node in labels.skeletons[0].nodes]
 
 
 def get_edges_as_np_strings(labels: Labels) -> List[Tuple[bytes, bytes]]:
     """Get list of edge names as bytes."""
     return [
-        (src_name.encode('utf-8'), dst_name.encode('utf-8'))
+        (src_name.encode("utf-8"), dst_name.encode("utf-8"))
         for (src_name, dst_name) in labels.skeletons[0].edge_names
     ]
 

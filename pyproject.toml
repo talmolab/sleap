@@ -95,6 +95,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-qt>=4.4.0",
+    "pytest-xvfb",
     "ruff",
 ]
 
