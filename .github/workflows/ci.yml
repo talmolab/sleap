@@ -97,18 +97,27 @@ jobs:
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           sudo apt-get update
-          # sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1 libglx-mesa0 xvfb
           sudo apt-get install -y \
             xvfb \
             libxkbcommon-x11-0 \
+            libxcb1 \
+            libxcb-util1 \
             libxcb-cursor0 \
             libxcb-icccm4 \
             libxcb-image0 \
             libxcb-keysyms1 \
+            libxcb-render0 \
             libxcb-render-util0 \
-            libxcb-xinput0 \
+            libxcb-shm0 \
+            libxcb-xfixes0 \
+            libxcb-randr0 \
+            libxcb-shape0 \
+            libxcb-xinerama0 \
             libx11-xcb1 \
+            libxext6 \
+            libxi6 \
             libxrender1 \
+            libxrandr2 \
             libfontconfig1 \
             libdbus-1-3 \
             libfreetype6 \
@@ -119,8 +128,8 @@ jobs:
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         # env:
         #   PYTHONFAULTHANDLER: "1"
+        #   QT_QPA_PLATFORM: "offscreen"
         run: |
-          # export QT_QPA_PLATFORM=offscreen
           uv run pytest --cov=sleap --cov-report=xml --durations=-1 tests/ -v
 
       - name: Test with pytest (with coverage) on Windows/Mac
