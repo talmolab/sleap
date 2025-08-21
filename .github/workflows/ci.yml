@@ -69,9 +69,8 @@ jobs:
             runs-on: macos-latest
           # - os: self-hosted-gpu
           #   runs-on: [self-hosted, puma, gpu, 2xgpu]
-        python: [3.12]
 
-    name: Tests (${{ matrix.os }}, Python ${{ matrix.python }})
+    name: Tests (${{ matrix.os }})
     runs-on: ${{ matrix.runs-on }}
     steps:
       - name: Checkout repo
@@ -80,7 +79,7 @@ jobs:
       - name: Setup UV
         uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python }}
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
@@ -92,8 +91,6 @@ jobs:
           uv run pip freeze
 
       - name: Install graphics dependencies on Ubuntu
-        # https://github.com/conda-forge/opencv-feedstock/issues/401
-        # TODO(2025-08): Test if this is still needed with the latest versions of the dependencies.
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           sudo apt-get update
@@ -124,18 +121,12 @@ jobs:
             libegl1 \
             libgl1
 
-      - name: Test with pytest (with coverage) on Ubuntu
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      - name: Test with pytest (with coverage)
         # env:
         #   PYTHONFAULTHANDLER: "1"
         #   QT_QPA_PLATFORM: "offscreen"
         run: |
           uv run pytest --cov=sleap --cov-report=xml --durations=-1 tests/ -v
-
-      - name: Test with pytest (with coverage) on Windows/Mac
-        if: ${{ !startsWith(matrix.os, 'ubuntu') }}
-        run: |
-          uv run pytest --cov=sleap --cov-report=xml --durations=-1 tests/
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
