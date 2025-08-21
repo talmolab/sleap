@@ -12,6 +12,7 @@ from sleap.io.dataset import Labels
 from sleap.io.video import Video
 # from sleap.skeleton import Node, Skeleton (sleap.io will be deleted)
 
+
 class NixAdaptor(Adaptor):
     """Adaptor class for export of tracking analysis results to the generic
     [NIX](https://github.com/g-node/nix) format.

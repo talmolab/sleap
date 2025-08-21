@@ -10,5 +10,6 @@ from sleap.version import __version__, versions
 from sleap.io.dataset import Labels, load_file
 from sleap.io.video import load_video
 from sleap.instance import LabeledFrame, Instance, PredictedInstance, Track
+
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton

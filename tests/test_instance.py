@@ -14,8 +14,10 @@ from sleap.instance import (
     PredictedInstance,
     PredictedPoint,
 )
+
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
+
 
 def test_instance_node_get_set_item(skeleton):
     """
