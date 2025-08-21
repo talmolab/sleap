@@ -101,7 +101,8 @@ jobs:
       - name: Test with pytest (with coverage) on Ubuntu
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
-          xvfb-run -a uv run pytest --cov=sleap --cov-report=xml --durations=-1 tests/
+          export QT_QPA_PLATFORM=offscreen
+          uv run pytest --cov=sleap --cov-report=xml --durations=-1 tests/ -v
 
       - name: Test with pytest (with coverage) on Windows/Mac
         if: ${{ !startsWith(matrix.os, 'ubuntu') }}
