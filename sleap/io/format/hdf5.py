@@ -510,9 +510,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     # If these are predicted points, copy them to the predicted point
                     # array otherwise, use the normal point array
                     if type(parray) is PredictedPointArray:
-                        pred_points[
-                            pred_point_id : (pred_point_id + len(parray))
-                        ] = parray
+                        pred_points[pred_point_id : (pred_point_id + len(parray))] = (
+                            parray
+                        )
                         pred_point_id = pred_point_id + len(parray)
                     else:
                         points[point_id : (point_id + len(parray))] = parray

@@ -4,10 +4,10 @@ from pathlib import Path, PurePath
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_array_equal
+from sleap_io import Video
 import pytest
 import nixio
 
-from sleap.io.video import Video
 from sleap.instance import LabeledFrame, PredictedInstance
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle

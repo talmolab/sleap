@@ -11,6 +11,7 @@ from queue import Queue
 from threading import Thread
 from time import perf_counter
 from typing import List, Optional, Tuple
+from sleap_io import Video
 
 import cv2
 import numpy as np
@@ -18,7 +19,6 @@ import numpy as np
 from sleap.gui.color import ColorManager
 from sleap.instance import Instance
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
 from sleap.io.videowriter import _sentinel, write_video
 from sleap.util import usable_cpu_count
 

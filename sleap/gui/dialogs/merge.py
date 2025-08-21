@@ -4,12 +4,12 @@ Gui for merging two labels files with options to resolve conflicts.
 
 import logging
 from typing import Dict, List, Optional
+from sleap_io import Video
 
 from qtpy import QtWidgets, QtCore
 
 from sleap.instance import Instance, LabeledFrame
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
 
 USE_BASE_STRING = "Use base, discard conflicting new instances"
 USE_NEW_STRING = "Use new, discard conflicting base instances"

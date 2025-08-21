@@ -7,6 +7,7 @@ import numpy as np
 from pathlib import PurePath, Path
 from qtpy import QtCore
 from typing import List
+from sleap_io import Video
 
 from sleap import Skeleton, Track, PredictedInstance
 from sleap.gui.app import MainWindow
@@ -31,7 +32,6 @@ from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
-from sleap.io.video import Video
 from sleap.util import get_package_file
 
 # These imports cause trouble when running `pytest.main()` from within the file

@@ -1,6 +1,7 @@
 """
 Dialogs for running training and/or inference in GUI.
 """
+
 import json
 import shutil
 import tempfile
@@ -181,7 +182,7 @@ class LearningDialog(QtWidgets.QDialog):
 
     @staticmethod
     def count_total_frames_for_selection_option(
-        videos_frames: Dict[Video, List[int]]
+        videos_frames: Dict[Video, List[int]],
     ) -> int:
         if not videos_frames:
             return 0
@@ -348,9 +349,9 @@ class LearningDialog(QtWidgets.QDialog):
         if set_anchor:
             updated_data["model.heads.centroid.anchor_part"] = anchor_part
             updated_data["model.heads.centered_instance.anchor_part"] = anchor_part
-            updated_data[
-                "model.heads.multi_class_topdown.confmaps.anchor_part"
-            ] = anchor_part
+            updated_data["model.heads.multi_class_topdown.confmaps.anchor_part"] = (
+                anchor_part
+            )
             updated_data["data.instance_cropping.center_on_part"] = anchor_part
 
     def update_tabs_from_pipeline(self, source_data):
@@ -538,7 +539,6 @@ class LearningDialog(QtWidgets.QDialog):
                 )
 
                 if len(self.labels.tracks) > 0:
-
                     # For multiclass topdown, the class vectors output stride
                     # should be the max stride.
                     backbone_name = scopedkeydict.find_backbone_name_from_key_val_dict(
@@ -558,9 +558,7 @@ class LearningDialog(QtWidgets.QDialog):
                         cfg.model.heads.multi_class_topdown.class_vectors.classes = [
                             t.name for t in self.labels.tracks
                         ]
-                        cfg.model.heads.multi_class_topdown.class_vectors.output_stride = (
-                            max_stride
-                        )
+                        cfg.model.heads.multi_class_topdown.class_vectors.output_stride = max_stride
 
                 cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
 
@@ -887,7 +885,7 @@ class LearningDialog(QtWidgets.QDialog):
         self.accept()
 
         if gui:
-            msgBox = QtWidgets.QMessageBox(text=f"Created training job package.")
+            msgBox = QtWidgets.QMessageBox(text="Created training job package.")
             msgBox.setDetailedText(output_path)
             msgBox.setWindowTitle("Training Job Package")
             okButton = msgBox.addButton(QtWidgets.QMessageBox.Ok)
@@ -1320,9 +1318,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self._cfg_list_widget is None:
             return None
 
-        selected_config_info: Optional[
-            configs.ConfigFileInfo
-        ] = self._cfg_list_widget.getSelectedConfigInfo()
+        selected_config_info: Optional[configs.ConfigFileInfo] = (
+            self._cfg_list_widget.getSelectedConfigInfo()
+        )
         if (selected_config_info is None) or (
             not selected_config_info.has_trained_model
         ):
