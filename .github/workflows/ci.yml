@@ -84,15 +84,16 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync --all-extras
+          # uv pip install PySide6==6.7.3  # exit code 139
           # uv pip install PySide6==6.8.1.1  # exit code 139
           # uv pip install PySide6==6.8.3  # exit code 139
           # uv pip install PySide6==6.9.1  # exit code 139
-          uv pip install PySide6==6.7.3
+          uv pip install matplotlib==3.8.4
 
       - name: Print environment info
         run: |
           uv run python --version
-          uv run pip freeze
+          uv pip freeze
 
       - name: Install graphics dependencies on Ubuntu
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
