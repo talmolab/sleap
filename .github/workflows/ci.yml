@@ -122,9 +122,14 @@ jobs:
             libgl1
 
       - name: Test with pytest (with coverage)
-        # env:
-        #   PYTHONFAULTHANDLER: "1"
-        #   QT_QPA_PLATFORM: "offscreen"
+        env:
+          PYTHONFAULTHANDLER: "1"
+          OMP_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
+          OPENBLAS_NUM_THREADS: "1"
+          NUMEXPR_NUM_THREADS: "1"
+          QT_OPENGL: "software"
+          MPLBACKEND: "Agg"
         run: |
           uv run pytest --cov=sleap --cov-report=xml --durations=-1 tests/ -v
 
