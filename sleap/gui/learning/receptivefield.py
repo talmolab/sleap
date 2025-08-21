@@ -5,10 +5,8 @@ Widget for previewing receptive field on sample image using model hyperparams.
 from typing import Optional, Text
 
 import numpy as np
-from qtpy import QtWidgets, QtGui, QtCore
-from sleap_io import Video
+from qtpy import QtWidgets, QtGui
 
-from sleap import Track, Skeleton
 from sleap.gui.legacy.config import ModelConfig
 from sleap.gui.widgets.video import GraphicsView
 
@@ -131,7 +129,7 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         if size:
             result += f"<p><i>{size} pixels</i></p>"
         else:
-            result += f"<p><i>Unable to determine size</i></p>"
+            result += "<p><i>Unable to determine size</i></p>"
 
         result += f"""
         <p>Receptive field size is a function<br />
