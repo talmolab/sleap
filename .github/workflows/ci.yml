@@ -42,7 +42,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --all-extras --override "PySide6==6.5.3"
+        echo "PySide6==6.8.1.1" > constraints.txt
+        uv pip install --constraint constraints.txt -e ".[dev]"
 
     - name: Run ruff checks
       run: |
@@ -83,7 +84,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --all-extras --override "PySide6==6.5.3"
+          uv sync --all-extras
+          uv pip install PySide6==6.8.1.1
 
       - name: Print environment info
         run: |
