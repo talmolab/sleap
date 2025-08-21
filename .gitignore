@@ -118,4 +118,6 @@ venv.bak/
 
 # OS generated files
 .DS_Store
-*.analysis.h5\n*.analysis.nix
+*.analysis.h5
+*.analysis.nix
+tests/data/slp_hdf5/minimal_instance.000_centered_pair_low_quality.analysis.*
