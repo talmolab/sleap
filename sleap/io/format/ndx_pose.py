@@ -9,13 +9,13 @@ from pathlib import Path, PurePath
 from typing import List, Optional
 from pynwb import NWBFile, NWBHDF5IO, ProcessingModule
 from ndx_pose import PoseEstimationSeries, PoseEstimation
+from sleap_io import Video
 
 import sleap
 from sleap.instance import LabeledFrame, PredictedInstance, Track
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
 from sleap.skeleton import Skeleton
 
 
@@ -109,12 +109,12 @@ class NDXPoseAdaptor(Adaptor):
                     for node_idx, node_name in enumerate(node_names):
                         pose_estimation_series = pose_estimation[node_name]
 
-                        tracks_numpy[
-                            :, track_idx, node_idx, :
-                        ] = pose_estimation_series.data[:]
-                        confidence[
-                            :, track_idx, node_idx
-                        ] = pose_estimation_series.confidence[:]
+                        tracks_numpy[:, track_idx, node_idx, :] = (
+                            pose_estimation_series.data[:]
+                        )
+                        confidence[:, track_idx, node_idx] = (
+                            pose_estimation_series.confidence[:]
+                        )
 
                 video_tracks[str(PurePath(test_pose_estimation.original_videos[0]))] = (
                     tracks_numpy,

@@ -17,10 +17,10 @@ import json
 import copy
 
 from typing import List, Optional
+from sleap_io import Video
 
 from sleap.instance import Point, Instance
 from sleap.io.dataset import Labels, Skeleton, LabeledFrame
-from sleap.io.video import Video
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle
 

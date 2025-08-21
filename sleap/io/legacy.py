@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 
 from typing import List
+from sleap_io import Video
 
 from sleap.util import json_loads
-from sleap.io.video import Video
 
 from sleap.instance import (
     LabeledFrame,

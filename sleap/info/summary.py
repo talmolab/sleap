@@ -7,10 +7,10 @@ import attr
 import numpy as np
 
 from typing import Callable, Dict
+from sleap_io import Video
 
 from sleap.instance import LabeledFrame
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
 
 
 @attr.s(auto_attribs=True)

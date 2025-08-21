@@ -3,12 +3,12 @@ import nixio as nix
 
 from pathlib import Path
 from typing import Dict, List, Optional, cast
+from sleap_io import Video
 from sleap.instance import Track
 
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
 from sleap.skeleton import Node, Skeleton
 
 

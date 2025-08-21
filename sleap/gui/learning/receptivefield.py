@@ -1,12 +1,14 @@
 """
 Widget for previewing receptive field on sample image using model hyperparams.
 """
+
 from typing import Optional, Text
 
 import numpy as np
 from qtpy import QtWidgets, QtGui, QtCore
+from sleap_io import Video
 
-from sleap import Video, Track, Skeleton
+from sleap import Track, Skeleton
 from sleap.gui.legacy.config import ModelConfig
 from sleap.gui.widgets.video import GraphicsView
 

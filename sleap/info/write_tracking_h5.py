@@ -32,9 +32,9 @@ import numpy as np
 import pandas as pd
 
 from typing import Any, Dict, List, Tuple
+from sleap_io import Video
 
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
 from sleap import PredictedInstance
 
 

@@ -17,11 +17,10 @@ import cv2
 
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
+from sleap_io import Video
 
 from skimage.feature import hog
 from skimage.util.shape import view_as_windows
-
-from sleap.io.video import Video
 
 logger = logging.getLogger(__name__)
 
@@ -692,7 +691,7 @@ class ParallelFeaturePipeline(object):
 
 
 def demo_pipeline():
-    from sleap import Video
+    from sleap_io import Video
 
     vids = [
         Video.from_filename("tests/data/videos/centered_pair_small.mp4"),

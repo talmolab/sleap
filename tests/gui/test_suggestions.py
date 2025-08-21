@@ -1,7 +1,7 @@
 from typing import List
+from sleap_io import Video
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
 from sleap.instance import LabeledFrame, PredictedInstance, Track, PredictedPoint
 from sleap.skeleton import Skeleton
 import numpy as np
