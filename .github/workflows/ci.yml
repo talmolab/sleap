@@ -85,8 +85,9 @@ jobs:
         run: |
           uv sync --all-extras
           # uv pip install PySide6==6.8.1.1  # exit code 139
+          # uv pip install PySide6==6.8.3  # exit code 139
           # uv pip install PySide6==6.9.1  # exit code 139
-          uv pip install PySide6==6.8.3  # 
+          uv pip install PySide6==6.7.3
 
       - name: Print environment info
         run: |
