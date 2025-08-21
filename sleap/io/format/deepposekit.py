@@ -4,10 +4,11 @@ Adaptor for reading DeepPoseKit datasets (HDF5).
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
+from sleap_io import Video
 
 from sleap.instance import Instance, LabeledFrame, Point, Track
 
-from sleap import Labels, Video, Skeleton
+from sleap import Labels, Skeleton
 
 import numpy as np
 import pandas as pd

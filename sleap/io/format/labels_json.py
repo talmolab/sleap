@@ -14,13 +14,14 @@ import shutil
 import tempfile
 import zipfile
 from typing import Optional, Union, Dict, List, Callable, Text
+from sleap_io import Video
 
 import cattr
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
-from sleap import Labels, Video
+from sleap import Labels
 from sleap.gui.suggestions import SuggestionFrame
 from sleap.instance import (
     LabeledFrame,

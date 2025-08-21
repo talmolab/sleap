@@ -7,12 +7,13 @@ import shutil
 import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Text, cast
+from sleap_io import Video
 
 import cattr
 from qtpy import QtCore, QtGui, QtWidgets
 
 import sleap
-from sleap import Labels, Video
+from sleap import Labels
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import configs, receptivefield, runners, scopedkeydict
@@ -558,7 +559,9 @@ class LearningDialog(QtWidgets.QDialog):
                         cfg.model.heads.multi_class_topdown.class_vectors.classes = [
                             t.name for t in self.labels.tracks
                         ]
-                        cfg.model.heads.multi_class_topdown.class_vectors.output_stride = max_stride
+                        cfg.model.heads.multi_class_topdown.class_vectors.output_stride = (
+                            max_stride
+                        )
 
                 cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
 
