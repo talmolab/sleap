@@ -10,7 +10,8 @@ from sleap.instance import (
     LabeledFrame,
     Track,
 )
-from sleap.skeleton import Skeleton
+# from sleap.skeleton import Skeleton
+from sleap_io.model.skeleton import Skeleton
 from sleap.io.dataset import Labels
 
 TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"

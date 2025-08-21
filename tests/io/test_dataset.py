@@ -7,7 +7,8 @@ from sleap_io import Video
 
 import sleap
 from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
-from sleap.skeleton import Skeleton
+# from sleap.skeleton import Skeleton
+from sleap_io.model.skeleton import Skeleton
 from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
 from sleap.io.video import MediaVideo
 from sleap.io.dataset import Labels, load_file

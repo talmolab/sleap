@@ -20,7 +20,7 @@ from sleap.instance import (
     Point,
     Instance,
 )
-from sleap.skeleton import Skeleton
+# from sleap.skeleton import Skeleton (sleap.io will be deleted)
 
 
 def load_predicted_labels_json_old(

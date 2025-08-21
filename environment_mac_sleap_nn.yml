@@ -1,0 +1,57 @@
+# Use this file if your computer runs Mac OS X or Apple Silicon.
+
+name: sleap-torch
+
+channels:
+    - conda-forge
+    - anaconda
+
+dependencies:
+    - conda-forge::av
+    - conda-forge::attrs >=21.2.0
+    - conda-forge::importlib-metadata <7.1.0
+    - conda-forge::cattrs ==1.1.1
+    - conda-forge::h5py
+    - conda-forge::imageio-ffmpeg # Required for imageio to read/write videos with ffmpeg
+    - conda-forge::jsmin
+    - conda-forge::jsonpickle ==1.2
+    - conda-forge::kornia
+    - conda-forge::wandb
+    - conda-forge::omegaconf
+    - conda-forge::matplotlib
+    - conda-forge::networkx <3.3
+    - anaconda::numpy
+    - conda-forge::opencv
+    - conda-forge::pandas
+    - conda-forge::pip
+    - conda-forge::pillow
+    - conda-forge::psutil
+    - conda-forge::pykalman
+    - conda-forge::pyside2 >=5.12  # To ensure application works correctly with QtPy.
+    - conda-forge::qtpy<=5
+    - conda-forge::python  ==3.11
+    - conda-forge::python-rapidjson
+    - conda-forge::pyyaml
+    - conda-forge::pynwb
+    - conda-forge::pyzmq
+    - conda-forge::qtpy >=2.0.1
+    - conda-forge::rich
+    - conda-forge::scipy
+    - conda-forge::scikit-image
+    - conda-forge::scikit-learn
+    - conda-forge::scikit-video
+    - conda-forge::simplejson
+    - conda-forge::seaborn
+    - conda-forge::qudida
+    - conda-forge::albumentations
+    - conda-forge::ndx-pose <0.2.0
+    - conda-forge::sleap-io
+    - pip:
+        - torch
+        - torchvision
+        - lightning
+        - "--editable=.[conda_dev]"
+        - loguru
+        - litdata
+        - hydra-core
+        # - git+https://github.com/talmolab/sleap-nn.git

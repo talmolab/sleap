@@ -4,8 +4,10 @@ import pytest
 import json
 
 from networkx.readwrite import json_graph
-from sleap.skeleton import Skeleton, SkeletonDecoder
-from sleap.skeleton import SkeletonEncoder
+# from sleap.skeleton import Skeleton, SkeletonDecoder
+# from sleap.skeleton import SkeletonEncoder
+from sleap_io.model.skeleton import Skeleton
+from sleap_io.io.skeleton import SkeletonEncoder, SkeletonDecoder
 
 
 def test_decoded_encoded_Skeleton_from_load_json(fly_legs_skeleton_json):

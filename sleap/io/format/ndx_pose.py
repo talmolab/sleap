@@ -16,7 +16,8 @@ from sleap.instance import LabeledFrame, PredictedInstance, Track
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.dataset import Labels
-from sleap.skeleton import Skeleton
+from sleap.io.video import Video
+# from sleap.skeleton import Skeleton (sleap.io will be deleted)
 
 
 class NDXPoseAdaptor(Adaptor):
