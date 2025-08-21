@@ -96,9 +96,15 @@ jobs:
         # TODO(2025-08): Test if this is still needed with the latest versions of the dependencies.
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
-          sudo apt-get update && sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1 libglx-mesa0
+          sudo apt-get update && sudo apt-get install libglapi-mesa libegl-mesa0 libegl1 libopengl0 libgl1 libglx-mesa0 xvfb
 
-      - name: Test with pytest (with coverage)
+      - name: Test with pytest (with coverage) on Ubuntu
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          xvfb-run -a uv run pytest --cov=sleap --cov-report=xml --durations=-1 tests/
+
+      - name: Test with pytest (with coverage) on Windows/Mac
+        if: ${{ !startsWith(matrix.os, 'ubuntu') }}
         run: |
           uv run pytest --cov=sleap --cov-report=xml --durations=-1 tests/
 
