@@ -1,7 +1,8 @@
 # Docs build
 name: Docs
 
-# on:
+on:
+  workflow_dispatch
 #   release:
 #     types:
 #       - published
