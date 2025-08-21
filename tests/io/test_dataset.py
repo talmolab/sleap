@@ -1575,7 +1575,7 @@ def test_remove_untracked_instances(min_tracks_2node_labels):
     assert all([len(lf.instances) > 0 for lf in labels.labeled_frames])
 
 
-@pytest.mark.skip(reason="NWB export has OrphanContainerBuildError - needs investigation")
+@pytest.mark.skip(reason="NWB export has OrphanContainerBuildError - needs fix")
 def test_export_nwb(centered_pair_predictions: Labels, tmpdir):
     filename = str(PurePath(tmpdir, "ndx_pose_test.nwb"))
 
