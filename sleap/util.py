@@ -12,6 +12,7 @@ import base64
 import json
 import os
 import re
+import cv2
 import shutil
 from collections import defaultdict
 from io import BytesIO
@@ -204,6 +205,28 @@ def frame_list(frame_str: str) -> Optional[List[int]]:
         return list(range(min_frame, max_frame + 1))
 
     return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
+
+
+def resize_image(img: np.ndarray, scale: float) -> np.ndarray:
+    """Resizes single image with shape (height, width, channels)."""
+    height, width, channels = img.shape
+    new_height, new_width = int(height // (1 / scale)), int(width // (1 / scale))
+
+    # Note that OpenCV takes shape as (width, height).
+
+    if channels == 1:
+        # opencv doesn't want a single channel to have its own dimension
+        img = cv2.resize(img[:, :], (new_width, new_height))[..., None]
+    else:
+        img = cv2.resize(img, (new_width, new_height))
+
+    return img
+
+
+def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
+    if scale == 1.0:
+        return images
+    return np.stack([resize_image(img, scale) for img in images])
 
 
 def uniquify(seq: Iterable[Hashable]) -> List:

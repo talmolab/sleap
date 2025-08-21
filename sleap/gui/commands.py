@@ -75,7 +75,7 @@ from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.video import Video
-from sleap.io.videowriter import write_video
+from sleap_io.io.main import save_video
 from sleap.io.visuals import save_labeled_video
 from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
@@ -83,6 +83,22 @@ from sleap.util import get_package_file
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
+def can_use_ffmpeg():
+    """Check if ffmpeg is available for writing videos."""
+    try:
+        import imageio_ffmpeg as ffmpeg
+    except ImportError:
+        return False
+
+    try:
+        # Try to get the version of the ffmpeg plugin
+        ffmpeg_version = ffmpeg.get_ffmpeg_version()
+        if ffmpeg_version:
+            return True
+    except Exception:
+        return False
+
+    return False
 
 logger = logging.getLogger(__name__)
 
@@ -1383,15 +1399,20 @@ class ExportVideoClip(AppCommand):
             context: The command context.
             params: The parameters for the export.
         """
-        write_video(
+        save_video(
+            frames=[context.video["video"][i] for i in params["frames"]],
             filename=params["video_filename"],
-            video=context.state["video"],
-            frames=list(params["frames"]),
             fps=params["fps"],
-            scale=params["scale"],
-            background=params["background"],
-            gui_progress=params["gui_progress"],
         )
+        # write_video(
+        #     filename=params["video_filename"],
+        #     video=context.state["video"],
+        #     frames=list(params["frames"]),
+        #     fps=params["fps"],
+        #     scale=params["scale"],
+        #     background=params["background"],
+        #     gui_progress=params["gui_progress"],
+        # )
 
     @classmethod
     def get_export_options(cls, context: CommandContext, params: dict) -> dict | None:
@@ -1421,16 +1442,13 @@ class ExportVideoClip(AppCommand):
         if export_options is None:
             return False
 
-        # Use VideoWriter to determine default video type to use
-        from sleap.io.videowriter import VideoWriter
-
         default_out_basename = params.get("filename", context.state["filename"])
 
         # For OpenCV we default to avi since the bundled ffmpeg
         # makes mp4's that most programs can't open (VLC can).
         default_out_filename = default_out_basename + ".avi"
 
-        if VideoWriter.can_use_ffmpeg():
+        if can_use_ffmpeg():
             default_out_filename = default_out_basename + ".mp4"
 
         # Ask where user wants to save video file
