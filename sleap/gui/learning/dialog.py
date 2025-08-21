@@ -559,9 +559,7 @@ class LearningDialog(QtWidgets.QDialog):
                         cfg.model.heads.multi_class_topdown.class_vectors.classes = [
                             t.name for t in self.labels.tracks
                         ]
-                        cfg.model.heads.multi_class_topdown.class_vectors.output_stride = (
-                            max_stride
-                        )
+                        cfg.model.heads.multi_class_topdown.class_vectors.output_stride = max_stride
 
                 cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
 
