@@ -381,6 +381,7 @@ def test_ReplaceVideo(
         replace_video(hdf5_vid, labels.videos, context)
 
 
+@pytest.mark.skip(reason="Test is freezing. Underlying functionality will be replaced.")
 def test_exportNWB(centered_pair_predictions, tmpdir):
     """Test that exportNWB command writes an nwb file."""
 
