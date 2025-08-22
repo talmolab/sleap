@@ -221,12 +221,7 @@ class LoadImageWorker(QtCore.QObject):
         # Re-initialize mutex in worker thread
         self._processing_mutex = QtCore.QMutex()
         
-        # Connect signal to slot with QueuedConnection for thread safety
-        self.frame_requested.connect(
-            self._handle_request,
-            QtCore.Qt.QueuedConnection
-        )
-        
+        # Note: Signal connections are now done in the main thread before moveToThread
         print("[WORKER] Worker initialized successfully without QTimer")
 
     @QtCore.Slot()
@@ -277,9 +272,8 @@ class LoadImageWorker(QtCore.QObject):
             frame = None
             
             try:
-                # TODO: Remove this test code and uncomment the real frame loading
-                # frame = self.current_video.get_frame(frame_idx)
-                frame = np.random.randint(low=0, high=255, size=(384, 384, 1), dtype=np.uint8)
+                # Load the actual frame from the video
+                frame = self.current_video.get_frame(frame_idx)
             except Exception as e:
                 error_msg = f"Frame loading error: {str(e)}"
                 print(f"[ERROR] {error_msg}")
@@ -446,14 +440,20 @@ class QtVideoPlayer(QWidget):
         # Create the worker
         self.load_image_worker = LoadImageWorker()
         
-        # Move the worker to the thread BEFORE any connections
-        self.load_image_worker.moveToThread(self.load_image_worker_thread)
+        # Connect ALL signals BEFORE moving to thread
+        # This ensures connections are made in the main thread
+        self.load_image_worker.frame_requested.connect(
+            self.load_image_worker._handle_request,
+            QtCore.Qt.QueuedConnection
+        )
         
-        # Connect the result signal (this is safe to do before thread starts)
         self.load_image_worker.result.connect(
             lambda qimage: self.view.setImage(qimage),
-            QtCore.Qt.QueuedConnection  # Explicitly specify queued connection
+            QtCore.Qt.QueuedConnection
         )
+        
+        # Move the worker to the thread AFTER connections
+        self.load_image_worker.moveToThread(self.load_image_worker_thread)
         
         # Set up thread startup sequence
         self.load_image_worker_thread.started.connect(
