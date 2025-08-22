@@ -32,9 +32,10 @@ from qtpy.QtWidgets import (
 )
 
 from sleap.gui.widgets.video import GraphicsView
+from sleap_io.io.video_reading import MediaVideo
 from sleap.io.video import (
     Video,
-    MediaVideo,
+    # MediaVideo,
     HDF5Video,
     NumpyVideo,
     ImgStoreVideo,
