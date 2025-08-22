@@ -4,6 +4,7 @@ import pytest
 import json
 
 from networkx.readwrite import json_graph
+
 # from sleap.skeleton import Skeleton, SkeletonDecoder
 # from sleap.skeleton import SkeletonEncoder
 from sleap_io.model.skeleton import Skeleton

@@ -16,10 +16,11 @@ from typing import Any, Callable, Dict, List, Optional, Text, Tuple
 import logging
 from sleap.gui.legacy.config import OutputsConfig
 from sleap.gui.legacy.config import TrainingJobConfig
+from sleap_io import Video
 
 from qtpy import QtWidgets
 
-from sleap import Labels, Video, LabeledFrame
+from sleap import Labels, LabeledFrame
 from sleap.gui.learning.configs import ConfigFileInfo
 
 logger = logging.getLogger(__name__)

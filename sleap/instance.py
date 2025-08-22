@@ -34,7 +34,6 @@ import cattr
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
 
-from sleap.io.video import Video  # Only used for type hinting
 # from sleap.skeleton import Node, Skeleton
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import plot_img, plot_instances
@@ -1694,9 +1693,9 @@ class LabeledFrame:
             if type(inst) == Instance or inst in unused_predictions
         ]
         inst_to_show.sort(
-            key=lambda inst: inst.track.spawned_on
-            if inst.track is not None
-            else math.inf
+            key=lambda inst: (
+                inst.track.spawned_on if inst.track is not None else math.inf
+            )
         )
         return inst_to_show
 

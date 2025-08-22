@@ -7,6 +7,7 @@ format.
 
 from sleap.io import format
 from . import labels_json
+from sleap_io import Video
 
 from sleap.instance import (
     PointArray,
@@ -18,7 +19,7 @@ from sleap.instance import (
     Point,
 )
 from sleap.util import json_loads, json_dumps
-from sleap import Labels, Video
+from sleap import Labels
 
 import h5py
 import numpy as np
@@ -222,9 +223,11 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     skeleton=skeleton,
                     track=track,
                     points=points[i["point_id_start"] : i["point_id_end"]],
-                    tracking_score=i["tracking_score"]
-                    if (format_id is not None and format_id >= 1.3)
-                    else 0.0,
+                    tracking_score=(
+                        i["tracking_score"]
+                        if (format_id is not None and format_id >= 1.3)
+                        else 0.0
+                    ),
                 )
             else:  # PredictedInstance
                 instance = PredictedInstance(
@@ -232,9 +235,11 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                     track=track,
                     points=pred_points[i["point_id_start"] : i["point_id_end"]],
                     score=i["score"],
-                    tracking_score=i["tracking_score"]
-                    if (format_id is not None and format_id >= 1.2)
-                    else 0.0,
+                    tracking_score=(
+                        i["tracking_score"]
+                        if (format_id is not None and format_id >= 1.2)
+                        else 0.0
+                    ),
                 )
             instances.append(instance)
 

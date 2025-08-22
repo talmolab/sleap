@@ -21,8 +21,9 @@ import pandas as pd
 
 from typing import List, Optional, Dict, Tuple
 from pathlib import Path
+from sleap_io import Video
 
-from sleap import Labels, Video, Skeleton
+from sleap import Labels, Skeleton
 from sleap.instance import Instance, LabeledFrame, Point, Track
 from sleap.util import find_files_by_suffix
 
