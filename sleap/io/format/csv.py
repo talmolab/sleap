@@ -1,8 +1,9 @@
 """Adaptor for writing SLEAP analysis as csv."""
 
 from sleap.io import format
+from sleap_io import Video
 
-from sleap import Labels, Video
+from sleap import Labels
 
 
 class CSVAdaptor(format.adaptor.Adaptor):

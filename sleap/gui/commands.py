@@ -77,6 +77,7 @@ from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap_io.io.main import save_video
 from sleap.io.visuals import save_labeled_video
+
 # from sleap.skeleton import Node, Skeleton
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import get_package_file
