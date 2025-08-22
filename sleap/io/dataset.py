@@ -74,6 +74,7 @@ except Exception:
     pass
 
 # from sleap.skeleton import Skeleton, Node (sleap.io will be deleted)
+from sleap_io.model.skeleton import Skeleton, Node
 from sleap.instance import (
     Instance,
     LabeledFrame,
