@@ -21,7 +21,7 @@ from sleap.instance import (
     Instance,
 )
 # from sleap.skeleton import Skeleton (sleap.io will be deleted)
-
+from sleap_io.model.skeleton import Skeleton
 
 def load_predicted_labels_json_old(
     data_path: str,

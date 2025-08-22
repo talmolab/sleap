@@ -18,6 +18,7 @@ from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 # from sleap.skeleton import Skeleton (sleap.io will be deleted)
+from sleap_io.model.skeleton import Skeleton
 
 
 class NDXPoseAdaptor(Adaptor):
