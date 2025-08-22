@@ -141,7 +141,7 @@ class ImportParamDialog(QDialog):
             {
                 "video_type": "hdf5",
                 "match": ",".join(HDF5Video.EXTS),
-                "video_class": Video.from_hdf5,
+                "video_class": Video.from_filename,
                 "params": [
                     {
                         "name": "dataset",
@@ -160,7 +160,7 @@ class ImportParamDialog(QDialog):
             {
                 "video_type": "mp4",
                 "match": ",".join(MediaVideo.EXTS),
-                "video_class": Video.from_media,
+                "video_class": Video.from_filename,
                 "params": [{"name": "grayscale", "type": "check"}],
             },
             {
