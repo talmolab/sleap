@@ -35,14 +35,14 @@ from sleap.gui.widgets.video import GraphicsView
 from sleap_io.io.video_reading import (
     MediaVideo,
     HDF5Video,
-    ImageVideo
+    # ImageVideo
 )
 from sleap.io.video import (
     Video,
     # MediaVideo, (deprecated)
     # HDF5Video, (deprecated)
     NumpyVideo,
-    # ImgStoreVideo, (deprecated)
+    ImgStoreVideo,
     SingleImageVideo,
     available_video_exts,
 )
@@ -85,7 +85,7 @@ class ImportVideos:
             media_video_exts = " ".join(["*." + ext for ext in MediaVideo.EXTS])
             hdf5_video_exts = " ".join(["*." + ext for ext in HDF5Video.EXTS])
             numpy_video_exts = " ".join(["*." + ext for ext in NumpyVideo.EXTS])
-            imgstore_video_exts = " ".join(["*." + ext for ext in ImageVideo.EXTS])
+            imgstore_video_exts = " ".join(["*." + ext for ext in ImgStoreVideo.EXTS])
             siv_video_exts = " ".join(["*." + ext for ext in SingleImageVideo.EXTS])
 
             filenames, filter = FileDialog.openMultiple(
