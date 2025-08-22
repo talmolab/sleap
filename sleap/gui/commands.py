@@ -69,8 +69,9 @@ from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
-from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance
+from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap_io import SuggestionFrame
+from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor

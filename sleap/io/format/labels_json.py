@@ -21,8 +21,8 @@ import cattr
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
-from sleap import Labels
-from sleap.gui.suggestions import SuggestionFrame
+from sleap_io import SuggestionFrame
+
 from sleap.instance import (
     LabeledFrame,
     make_instance_cattr,

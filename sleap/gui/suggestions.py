@@ -7,7 +7,7 @@ import numpy as np
 import random
 
 from typing import Dict, List, Optional, Union
-from sleap_io import Video
+from sleap_io import Video, SuggestionFrame
 
 
 from sleap.io.dataset import Labels
@@ -17,15 +17,6 @@ from sleap.info.feature_suggestions import (
 )
 
 GroupType = int
-
-
-@attr.s(auto_attribs=True, slots=True)
-class SuggestionFrame:
-    """Object for storing a single suggested frame item."""
-
-    video: Video
-    frame_idx: int
-    group: Optional[GroupType] = None
 
 
 class VideoFrameSuggestions(object):
@@ -115,9 +106,7 @@ class VideoFrameSuggestions(object):
                     vid_suggestions = random.sample(unique_idx, frames_num)
 
             group = labels.videos.index(video)
-            suggestions.extend(
-                cls.idx_list_to_frame_list(vid_suggestions, video, group)
-            )
+            suggestions.extend(cls.idx_list_to_frame_list(vid_suggestions, video))
 
         return suggestions
 
@@ -381,10 +370,8 @@ class VideoFrameSuggestions(object):
     # Utility functions
 
     @staticmethod
-    def idx_list_to_frame_list(
-        idx_list, video: "Video", group: Optional[GroupType] = None
-    ) -> List[SuggestionFrame]:
-        return [SuggestionFrame(video, frame_idx, group) for frame_idx in idx_list]
+    def idx_list_to_frame_list(idx_list, video: "Video") -> List[SuggestionFrame]:
+        return [SuggestionFrame(video, frame_idx) for frame_idx in idx_list]
 
     @staticmethod
     def filter_unique_suggestions(

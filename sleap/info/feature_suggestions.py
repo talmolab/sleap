@@ -11,8 +11,7 @@ import random
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 if TYPE_CHECKING:
-    from sleap.gui.suggestions import SuggestionFrame
-
+    from sleap_io import SuggestionFrame
 import cv2
 
 from sklearn.decomposition import PCA
@@ -528,14 +527,11 @@ class ItemStack(object):
         return tuples
 
     def to_suggestion_frames(self, group_offset: int = 0) -> List["SuggestionFrame"]:
-        from sleap.gui.suggestions import SuggestionFrame
+        from sleap_io import SuggestionFrame
 
         suggestions = []
         for frame in self.items:
-            group = self.current_groupset.get_item_group(frame)
-            if group is not None:
-                group += group_offset
-            suggestions.append(SuggestionFrame(frame.video, frame.frame_idx, group))
+            suggestions.append(SuggestionFrame(frame.video, frame.frame_idx))
         return suggestions
 
 
@@ -661,12 +657,12 @@ class ParallelFeaturePipeline(object):
     @classmethod
     def tuples_to_suggestions(cls, tuples, videos):
         """Converts serialized data from processes back into SuggestionFrames."""
-        from sleap.gui.suggestions import SuggestionFrame
+        from sleap_io import SuggestionFrame
 
         suggestions = []
-        for video_idx, frame_idx, group in tuples:
+        for video_idx, frame_idx in tuples:
             video = videos[video_idx]
-            suggestions.append(SuggestionFrame(video, frame_idx, group))
+            suggestions.append(SuggestionFrame(video, frame_idx))
         return suggestions
 
     @classmethod
