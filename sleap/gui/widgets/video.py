@@ -99,17 +99,26 @@ class LoadImageWorker(QtCore.QObject):
     result = QtCore.Signal(QImage)
     process = QtCore.Signal()
 
-    load_queue = []
-    video = None
-    _last_process_time = 0
-    _force_request_wait_time = 1
-    _recent_load_times = None
-
     def __init__(self, *args, **kwargs):
         super(LoadImageWorker, self).__init__(*args, **kwargs)
 
-        self._processing_mutex = QtCore.QMutex()
+        self.load_queue = []
+        self.video = None
+        self._last_process_time = 0
+        self._force_request_wait_time = 1
+        self._recent_load_times = None
+        self._processing_mutex = None
+        self.timer = None
         self._recent_load_times = deque(maxlen=5)
+        self.is_running = False
+
+    def setup_worker(self):
+
+        self.is_running = True
+        self.load_queue = []
+
+        # Create a mutex.
+        self._processing_mutex = QtCore.QMutex()
 
         # Connect signal to processing function so that we can add processing
         # event to event queue from the request handler.
@@ -120,7 +129,19 @@ class LoadImageWorker(QtCore.QObject):
         self.timer.timeout.connect(self.doProcessing)
         self.timer.start(20)
 
+    def stop_worker(self):
+
+        self.is_running = False
+
+        if self.timer is not None:
+            self.timer.stop()
+            self.timer.deleteLater()
+            self.timer = None
+
     def doProcessing(self):
+        if not self.is_running:
+            return
+        
         self._last_process_time = time.time()
 
         if not self.load_queue:
@@ -255,6 +276,7 @@ class QtVideoPlayer(QWidget):
         self._loader_thread = QtCore.QThread()
         self._video_image_loader = LoadImageWorker()
         self._video_image_loader.moveToThread(self._loader_thread)
+        self._video_image_loader.setup_worker()
         self._loader_thread.start()
 
         # Connect signal so that image will be shown after it's loaded
