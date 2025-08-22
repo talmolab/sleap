@@ -3048,7 +3048,7 @@ class AddTrack(EditCommand):
             int(track.name) for track in context.labels.tracks if track.name.isnumeric()
         ]
         next_number = max(track_numbers_used, default=0) + 1
-        new_track = Track(spawned_on=context.state["frame_idx"], name=str(next_number))
+        new_track = Track(name=str(next_number))
 
         context.labels.add_track(context.state["video"], new_track)
 

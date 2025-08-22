@@ -392,12 +392,12 @@ class NixAdaptor(Adaptor):
             tm = block.create_data_frame(
                 "track map",
                 "nix.tracking.track_map",
-                col_names=["name", "spawned_on", "index"],
+                col_names=["name", "index"],
                 col_dtypes=[nix.DataType.String, nix.DataType.Int64, nix.DataType.Int8],
             )
-            table_data = [("none", -1, -1)]  # default for user-labeled instances
+            table_data = [("none", -1)]  # default for user-labeled instances
             for track in tracks.keys():
-                table_data.append((track.name, track.spawned_on, tracks[track]))
+                table_data.append((track.name, track, tracks[track]))
             tm.append_rows(table_data)
 
             # Print shape info
