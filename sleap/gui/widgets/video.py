@@ -15,9 +15,7 @@ Example usage: ::
 
 import atexit
 import math
-import time
-from collections import deque
-from typing import Callable, List, Optional, Union, Final, Tuple
+from typing import Callable, List, Optional, Union, Final
 
 import numpy as np
 import qimage2ndarray
@@ -136,7 +134,9 @@ def ndarray_to_qimage(
             # Simple downshift (keeps top 8 bits).
             arr_u8 = (arr >> 8).astype(np.uint8)
     else:
-        raise ValueError(f"Unsupported dtype {arr.dtype}; use uint8/uint16/float32/float64.")
+        raise ValueError(
+            f"Unsupported dtype {arr.dtype}; use uint8/uint16/float32/float64."
+        )
 
     # Map channels to QImage format
     if c == 1:
@@ -167,7 +167,8 @@ def ndarray_to_qimage(
 
     return qimg
 
-# LoadImageWorker class removed - replaced with cleaner FrameLoaderThread in video_worker.py
+
+# LoadImageWorker removed - replaced with FrameLoaderThread in video_worker.py
 
 
 class QtVideoPlayer(QWidget):
@@ -198,7 +199,7 @@ class QtVideoPlayer(QWidget):
         **kwargs,
     ):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
-        
+
         # Add re-entry guard
         self._is_plotting = False
 
@@ -246,10 +247,9 @@ class QtVideoPlayer(QWidget):
         self.load_image_worker = None
         self.load_image_worker_thread = None
         self.worker_ready = False
-        
+
         # Set up the worker thread
         self._setup_worker_thread()
-
 
         def update_selection_state(a, b):
             self.state.set("frame_range", (a, b + 1))
@@ -280,36 +280,36 @@ class QtVideoPlayer(QWidget):
         """Set up the worker thread using simple QThread.run() approach."""
         # Import here to avoid circular imports
         from sleap.gui.widgets.video_worker import FrameLoaderThread
-        
+
         # Create the worker thread
         self.worker_thread = FrameLoaderThread()
-        
+
         # Connect the result signal to display frames
         # This is the ONLY signal connection we need
         self.worker_thread.frameReady.connect(self._on_frame_ready)
-        
+
         # Start the thread
         self.worker_thread.start()
-        
+
         # Mark as ready
         self.worker_ready = True
-    
+
     def _on_frame_ready(self, frame_idx: int, qimage: QImage):
         """Called when a frame is ready from the worker thread."""
         self.view.setImage(qimage)
-    
+
     def _on_worker_ready(self):
         """Called when worker thread is ready"""
         print("Worker thread is ready")
         self.worker_ready = True
-        
+
         # If we have a video loaded already, trigger a plot
         if self.video is not None:
             self.plot()
 
     def cleanup(self):
         """Clean up the worker thread."""
-        if hasattr(self, 'worker_thread'):
+        if hasattr(self, "worker_thread"):
             self.worker_thread.stop()
 
     def dragEnterEvent(self, event):
@@ -515,11 +515,11 @@ class QtVideoPlayer(QWidget):
         """Do the actual plotting of the video frame."""
         if self.video is None:
             return
-            
+
         # Prevent re-entry to avoid infinite loops
         if self._is_plotting:
             return
-            
+
         # Don't try to plot if worker isn't ready
         if not self.worker_ready:
             return
