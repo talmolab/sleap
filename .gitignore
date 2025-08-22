@@ -1,5 +1,5 @@
-# Claude settings
-.claude/
+# Claude
+.claude/settings.local.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
