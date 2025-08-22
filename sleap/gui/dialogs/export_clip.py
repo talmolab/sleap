@@ -4,17 +4,32 @@ Dialog for exporting clip; shows message depending on available encoder.
 
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 
+def can_use_ffmpeg():
+    """Check if ffmpeg is available for writing videos."""
+    try:
+        import imageio_ffmpeg as ffmpeg
+    except ImportError:
+        return False
+
+    try:
+        # Try to get the version of the ffmpeg plugin
+        ffmpeg_version = ffmpeg.get_ffmpeg_version()
+        if ffmpeg_version:
+            return True
+    except Exception:
+        return False
+
+    return False
 
 class ExportClipDialog(FormBuilderModalDialog):
     def __init__(self, form_name=None):
-        from sleap.io.videowriter import VideoWriter
 
         form_name = form_name or "video_clip_form"
         super().__init__(form_name=form_name)
 
-        can_use_ffmpeg = VideoWriter.can_use_ffmpeg()
+        _can_use_ffmpeg = can_use_ffmpeg()
 
-        if can_use_ffmpeg:
+        if _can_use_ffmpeg:
             message = (
                 "<i><b>MP4</b> file will be encoded using system ffmpeg "
                 "via imageio (preferred option).</i>"
