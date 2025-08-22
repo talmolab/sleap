@@ -204,8 +204,6 @@ class LoadImageWorker(QtCore.QObject):
         # Performance tracking
         self._frame_load_times = deque(maxlen=100)
         self._dropped_frames = 0
-        self._last_request_time = 0
-        self._min_request_interval = 0.016  # ~60 FPS max
         
         # Thread tracking for debugging
         self._worker_thread_id = None
@@ -322,20 +320,9 @@ class LoadImageWorker(QtCore.QObject):
         # Clear old requests and add new one (FILO)
         self.load_queue = [frame_idx]
         
-        # Throttle requests to avoid overwhelming the system
-        current_time = time.time()
-        time_since_last = current_time - self._last_request_time
-        
-        if time_since_last < self._min_request_interval:
-            # Defer processing slightly to batch rapid requests
-            delay_ms = int((self._min_request_interval - time_since_last) * 1000)
-            print(f"[WORKER] Deferring processing by {delay_ms}ms")
-            QtCore.QTimer.singleShot(delay_ms, self._process_frame)
-        else:
-            # Process immediately
-            self._process_frame()
-            
-        self._last_request_time = current_time
+        # Process immediately without any timers
+        # Throttling will be handled by the mutex and _is_processing flag
+        self._process_frame()
 
     def request(self, video, frame_idx):
         """Public method to request a frame - called from main thread."""
