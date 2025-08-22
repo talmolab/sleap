@@ -167,163 +167,7 @@ def ndarray_to_qimage(
 
     return qimg
 
-
-class LoadImageWorker(QtCore.QObject):
-    """
-    Object to load video frames in background thread.
-    
-    This implementation uses pure signal-based processing without QTimer
-    to avoid thread affinity issues that cause "QBasicTimer::start" errors.
-    
-    Requests to load a frame image are sent by calling the `request` method with
-    the frame idx and video object.
-    
-    These requests are handled immediately in the worker thread. Only the most
-    recent request is processed (FILO) to avoid processing stale frames.
-    
-    The actual frame loading is wrapped with a mutex lock so that we only load
-    a single frame at a time.
-    
-    Once the frame loads, the `QImage` is sent via the `result` signal.
-    (Qt handles the cross-thread communication if we use signals.)
-    """
-
-    result = QtCore.Signal(QImage)
-    frame_requested = QtCore.Signal(object, int)  # (video, frame_idx)
-    error_occurred = QtCore.Signal(str)  # Error reporting signal
-
-    def __init__(self, *args, **kwargs):
-        super(LoadImageWorker, self).__init__(*args, **kwargs)
-        
-        self.load_queue = []
-        self.current_video = None
-        self._processing_mutex = QtCore.QMutex()
-        self.is_running = False
-        self._is_processing = False
-        
-        # Performance tracking
-        self._frame_load_times = deque(maxlen=100)
-        self._dropped_frames = 0
-        
-        # Thread tracking for debugging
-        self._worker_thread_id = None
-
-    @QtCore.Slot()
-    def start_work(self):
-        """Initialize worker in the worker thread."""
-        print(f"[WORKER] start_work thread: {QtCore.QThread.currentThread()} id:{id(QtCore.QThread.currentThread())}")
-        self._worker_thread_id = QtCore.QThread.currentThread()
-        
-        self.is_running = True
-        self.load_queue = []
-        self._is_processing = False
-        
-        # Re-initialize mutex in worker thread
-        self._processing_mutex = QtCore.QMutex()
-        
-        # Note: Signal connections are now done in the main thread before moveToThread
-        print("[WORKER] Worker initialized successfully without QTimer")
-
-    @QtCore.Slot()
-    def stop_work(self):
-        """Stop the worker."""
-        print(f"[WORKER] stop_work thread: {QtCore.QThread.currentThread()} id:{id(QtCore.QThread.currentThread())}")
-        self.is_running = False
-        self._is_processing = False
-        
-        # Disconnect signals
-        try:
-            self.frame_requested.disconnect()
-        except:
-            pass
-
-    def _process_frame(self):
-        """Process a frame request in the worker thread."""
-        if not self.is_running:
-            return
-            
-        if self._is_processing:
-            print("[WORKER] Already processing, skipping")
-            return
-            
-        if not self._processing_mutex.tryLock(100):
-            print("[WORKER] Failed to acquire mutex lock")
-            return
-            
-        try:
-            self._is_processing = True
-            print(f"[WORKER] _process_frame thread: {QtCore.QThread.currentThread()} id:{id(QtCore.QThread.currentThread())}")
-            
-            if not self.load_queue or not self.current_video:
-                return
-                
-            # Get the most recent request (FILO)
-            frame_idx = self.load_queue[-1]
-            dropped = len(self.load_queue) - 1
-            if dropped > 0:
-                self._dropped_frames += dropped
-                print(f"[PERF] Dropped {dropped} frames")
-            self.load_queue = []
-            
-            print(f"[WORKER] Processing frame {frame_idx}")
-            
-            # Load frame with timing
-            start_time = time.time()
-            frame = None
-            
-            try:
-                # Load the actual frame from the video
-                frame = self.current_video.get_frame(frame_idx)
-            except Exception as e:
-                error_msg = f"Frame loading error: {str(e)}"
-                print(f"[ERROR] {error_msg}")
-                self.error_occurred.emit(error_msg)
-                return
-            
-            load_time = time.time() - start_time
-            self._frame_load_times.append(load_time)
-            
-            # Log performance stats periodically
-            if len(self._frame_load_times) == 100:
-                avg_time = sum(self._frame_load_times) / 100
-                print(f"[PERF] Avg frame load time: {avg_time:.3f}s, Total dropped: {self._dropped_frames}")
-            
-            if frame is not None:
-                # Convert ndarray to QImage
-                qimage = ndarray_to_qimage(frame, copy=True)
-                # Emit result
-                self.result.emit(qimage)
-                print(f"[WORKER] Frame {frame_idx} processed successfully")
-                
-        finally:
-            self._is_processing = False
-            self._processing_mutex.unlock()
-
-    @QtCore.Slot(object, int)
-    def _handle_request(self, video, frame_idx):
-        """Handle frame request in the worker thread."""
-        if not self.is_running:
-            return
-            
-        print(f"[WORKER] _handle_request thread: {QtCore.QThread.currentThread()} id:{id(QtCore.QThread.currentThread())}")
-        print(f"[WORKER] Handling request for frame {frame_idx}")
-        
-        # Update video reference
-        self.current_video = video
-        
-        # Clear old requests and add new one (FILO)
-        self.load_queue = [frame_idx]
-        
-        # Process immediately without any timers
-        # Throttling will be handled by the mutex and _is_processing flag
-        self._process_frame()
-
-    def request(self, video, frame_idx):
-        """Public method to request a frame - called from main thread."""
-        print(f"[MAIN] LoadImageWorker.request called from thread: {QtCore.QThread.currentThread()} id:{id(QtCore.QThread.currentThread())}")
-        print(f"[MAIN] Requesting frame {frame_idx}")
-        # Emit signal with both video and frame_idx
-        self.frame_requested.emit(video, frame_idx)
+# LoadImageWorker class removed - replaced with cleaner FrameLoaderThread in video_worker.py
 
 
 class QtVideoPlayer(QWidget):
@@ -434,8 +278,6 @@ class QtVideoPlayer(QWidget):
 
     def _setup_worker_thread(self):
         """Set up the worker thread using simple QThread.run() approach."""
-        print("[SETUP] Creating FrameLoaderThread")
-        
         # Import here to avoid circular imports
         from sleap.gui.widgets.video_worker import FrameLoaderThread
         
@@ -451,11 +293,9 @@ class QtVideoPlayer(QWidget):
         
         # Mark as ready
         self.worker_ready = True
-        print("[SETUP] Worker thread started")
     
     def _on_frame_ready(self, frame_idx: int, qimage: QImage):
         """Called when a frame is ready from the worker thread."""
-        print(f"[MAIN] Frame {frame_idx} ready, displaying")
         self.view.setImage(qimage)
     
     def _on_worker_ready(self):
@@ -469,10 +309,8 @@ class QtVideoPlayer(QWidget):
 
     def cleanup(self):
         """Clean up the worker thread."""
-        print("[CLEANUP] Stopping worker thread")
         if hasattr(self, 'worker_thread'):
             self.worker_thread.stop()
-        print("[CLEANUP] Complete")
 
     def dragEnterEvent(self, event):
         if self.parentWidget():
@@ -675,25 +513,20 @@ class QtVideoPlayer(QWidget):
 
     def plot(self, *args):
         """Do the actual plotting of the video frame."""
-        print(f"[MAIN] QtVideoPlayer.plot() called, thread: {QtCore.QThread.currentThread()} id:{id(QtCore.QThread.currentThread())}")
-        
         if self.video is None:
             return
             
         # Prevent re-entry to avoid infinite loops
         if self._is_plotting:
-            print("[MAIN] Already plotting, skipping to prevent re-entry")
             return
             
         # Don't try to plot if worker isn't ready
         if not self.worker_ready:
-            print("[MAIN] Worker not ready, skipping plot")
             return
 
         self._is_plotting = True
         try:
             idx = self.state["frame_idx"] or 0
-            print(f"[MAIN] Plotting frame {idx}")
 
             # Clear exiting objects before drawing instances
             self.view.clear()

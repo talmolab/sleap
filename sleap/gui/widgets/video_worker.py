@@ -37,12 +37,9 @@ class FrameLoaderThread(QThread):
         # Performance tracking
         self._frame_load_times = deque(maxlen=100)
         self._dropped_frames = 0
-        
-        print("[THREAD] FrameLoaderThread initialized")
     
     def run(self):
         """Main thread loop - processes frame requests from the queue."""
-        print(f"[THREAD] Worker thread started: {QtCore.QThread.currentThread()}")
         
         while not self.stop_flag.is_set():
             try:
@@ -54,7 +51,6 @@ class FrameLoaderThread(QThread):
                     try:
                         _, pending_idx = self.request_queue.get_nowait()
                         self._dropped_frames += 1
-                        print(f"[THREAD] Dropped frame {pending_idx}")
                     except queue.Empty:
                         break
                 
@@ -67,12 +63,11 @@ class FrameLoaderThread(QThread):
             except Exception as e:
                 print(f"[THREAD] Error in worker loop: {e}")
         
-        print("[THREAD] Worker thread stopped")
+        pass  # Thread stopped
     
     def _process_frame(self, video, frame_idx: int):
         """Load and emit a frame."""
         try:
-            print(f"[THREAD] Processing frame {frame_idx}")
             start_time = time.time()
             
             # Load the frame
@@ -89,26 +84,22 @@ class FrameLoaderThread(QThread):
                 load_time = time.time() - start_time
                 self._frame_load_times.append(load_time)
                 
-                if len(self._frame_load_times) == 100:
-                    avg_time = sum(self._frame_load_times) / 100
-                    print(f"[PERF] Avg frame load time: {avg_time:.3f}s, Dropped: {self._dropped_frames}")
-                
-                print(f"[THREAD] Frame {frame_idx} processed in {load_time:.3f}s")
+                # Log performance stats periodically (uncomment for debugging)
+                # if len(self._frame_load_times) == 100:
+                #     avg_time = sum(self._frame_load_times) / 100
+                #     print(f"[PERF] Avg frame load time: {avg_time:.3f}s, Dropped: {self._dropped_frames}")
                 
         except Exception as e:
             print(f"[THREAD] Error processing frame {frame_idx}: {e}")
     
     def request_frame(self, video, frame_idx: int):
         """Request a frame to be loaded (called from main thread)."""
-        print(f"[MAIN->THREAD] Requesting frame {frame_idx}")
         self.request_queue.put((video, frame_idx))
     
     def stop(self):
         """Stop the worker thread."""
-        print("[THREAD] Stopping worker")
         self.stop_flag.set()
         self.quit()
         if not self.wait(2000):
-            print("[THREAD] Force terminating")
             self.terminate()
             self.wait()
