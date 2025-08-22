@@ -68,7 +68,8 @@ from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
-from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
+from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap_io import SuggestionFrame
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
@@ -77,6 +78,7 @@ from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.videowriter import write_video
 from sleap.io.visuals import save_labeled_video
+
 # from sleap.skeleton import Node, Skeleton
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import get_package_file

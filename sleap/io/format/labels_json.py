@@ -21,13 +21,14 @@ from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
 from sleap import Labels, Video
-from sleap.gui.suggestions import SuggestionFrame
+from sleap_io import SuggestionFrame
 from sleap.instance import (
     LabeledFrame,
     Track,
     make_instance_cattr,
 )
 from sleap.io.legacy import load_labels_json_old
+
 # from sleap.skeleton import Node, Skeleton (sleap.io will be deleted)
 from sleap.util import json_loads, json_dumps, weak_filename_match
 

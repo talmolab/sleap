@@ -59,7 +59,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from sleap.gui.suggestions import SuggestionFrame
+    from sleap_io import SuggestionFrame
 
 import attr
 import cattr
@@ -1413,7 +1413,7 @@ class Labels(MutableSequence):
             video: `sleap.Video` instance of the suggestion.
             frame_idx: Index of the frame of the suggestion.
         """
-        from sleap.gui.suggestions import SuggestionFrame
+        from sleap_io import SuggestionFrame
 
         for suggestion in self.suggestions:
             if suggestion.video == video and suggestion.frame_idx == frame_idx:
