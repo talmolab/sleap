@@ -37,8 +37,8 @@ from sleap_io.io.video_reading import (
     HDF5Video,
     # ImageVideo
 )
+from sleap_io import Video
 from sleap.io.video import (
-    Video,
     # MediaVideo, (deprecated)
     # HDF5Video, (deprecated)
     NumpyVideo,
@@ -46,7 +46,6 @@ from sleap.io.video import (
     SingleImageVideo,
     available_video_exts,
 )
-from sleap_io import Video
 from sleap.gui.dialogs.filedialog import FileDialog
 
 import h5py
