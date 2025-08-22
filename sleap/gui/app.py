@@ -45,7 +45,6 @@ frame and instances listed in data view table.
 """
 
 import os
-import platform
 import random
 import re
 from logging import getLogger
