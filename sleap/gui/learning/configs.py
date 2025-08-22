@@ -502,8 +502,6 @@ class TrainingConfigsGetter:
                 logging.debug(f"Config file matches head filter: {self.head_filter}")
                 # Try mapping to TrainingJobConfig
                 try:
-                    cfg = mapper(cfg)
-                    logging.debug("Mapped YAML config to TrainingJobConfig.")
                     return ConfigFileInfo(
                         path=path, filename=filename, config=mapper(cfg), head_name=key
                     )

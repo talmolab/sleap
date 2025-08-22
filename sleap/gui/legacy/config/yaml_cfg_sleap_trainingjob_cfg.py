@@ -31,8 +31,7 @@ from sleap.gui.legacy.config.outputs import CheckpointingConfig, ZMQConfig
 
 
 def mapper(config: OmegaConf):
-    import sleap_io as sio
-    from sleap_io.io.skeleton import SkeletonEncoder
+    from sleap_io.io.skeleton import SkeletonEncoder, SkeletonYAMLDecoder
 
     data_cfg = config.data_config
     backbone_cfg = config.model_config.backbone_config
@@ -40,29 +39,21 @@ def mapper(config: OmegaConf):
     trainer_cfg = config.trainer_config
     crop_size = OmegaConf.select(data_cfg, "preprocessing.crop_hw", default=None)
 
-    skeletons = []
-    for skel_cfg in data_cfg.skeletons:
-        skel = sio.Skeleton(
-            nodes=[n["name"] for n in skel_cfg.nodes], name=skel_cfg.name
-        )
-        skel.add_edges(
-            [(e["source"]["name"], e["destination"]["name"]) for e in skel_cfg.edges]
-        )
-        if skel_cfg.symmetries:
-            for n1, n2 in skel_cfg.symmetries:
-                skel.add_symmetry(n1["name"], n2["name"])
-
-        skeletons.append(skel)
+    skeletons = None
+    if data_cfg.skeletons is not None and len(data_cfg.skeletons) > 0:
+        skeletons = []
+        for skel_cfg in data_cfg.skeletons:
+            skeleton = SkeletonYAMLDecoder().decode(dict(skel_cfg))
+            skeleton.name = skel_cfg.name
+            skeletons.append(skeleton)
 
     data = DataConfig(
         labels=LabelsConfig(
-            training_labels=data_cfg.train_labels_path[0],
-            validation_labels=data_cfg.val_labels_path[0]
-            if data_cfg.val_labels_path is not None and len(data_cfg.val_labels_path)
-            else None,
+            training_labels=data_cfg.train_labels_path[0] if data_cfg.train_labels_path is not None and len(data_cfg.train_labels_path) else None,
+            validation_labels=data_cfg.val_labels_path[0] if data_cfg.val_labels_path is not None and len(data_cfg.val_labels_path) else None,
             validation_fraction=data_cfg.validation_fraction,
             test_labels=data_cfg.test_file_path,
-            skeletons=SkeletonEncoder().encode(skeletons),
+            skeletons=SkeletonEncoder().encode(skeletons) if skeletons is not None else None,
         ),
         preprocessing=PreprocessingConfig(
             ensure_rgb=data_cfg.preprocessing.ensure_rgb,

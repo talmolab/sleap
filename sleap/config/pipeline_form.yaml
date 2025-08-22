@@ -267,19 +267,6 @@ training:
   label: Latest Model
   name: outputs.checkpointing.latest_model
   type: bool
-- default: false
-  help: 'If True, the model will be saved at the end of training, whether it was stopped
-    early or finished all epochs. If enabled, the model will be serialized to: "{run_folder}/final_model.h5"'
-  label: Final Model
-  name: outputs.checkpointing.final_model
-  type: bool
-- default: false
-  help: If True, logging data will be written to disk within the run folder. TensorBoard
-    can monitor either the specific run folder, or the parent runs folder that may
-    contain multiple models/runs. Both will be displayed correctly in the dashboard.
-  label: Write Tensorboard Logs
-  name: outputs.tensorboard.write_logs
-  type: bool
 
 - name: _save_viz
   label: Visualize Predictions During Training
@@ -296,10 +283,6 @@ training:
   type: list
   options: current frame,random frames
   default: current frame
-
-- name: _view_datagen
-  label: View Training Image Inputs...
-  type: button
 
 inference:
 
@@ -434,8 +417,8 @@ inference:
     - name: tracking.similarity
       label: Similarity Method
       type: list
-      default: instance
-      options: "instance,normalized_instance,centroid,iou,object keypoint"
+      default: oks
+      options: "oks,iou,centroids"
     - name: tracking.match
       label: Matching Method
       type: list
@@ -455,43 +438,6 @@ inference:
       none_label: Use max (non-robust)
       range: 0,1
       default: 0.95
-    - name: tracking.save_shifted_instances
-      label: Save shifted instances
-      help: 'Save the flow-shifted instances between elapsed frames. It improves
-      instance matching at the cost of using a bit more of memory.'
-      type: bool
-      default: false
-    - type: text
-      text: '<b>Kalman filter-based tracking</b>:<br />
-      Uses the above tracking options to track instances for an initial
-      number of frames, then initializes Kalman filters which are used to track
-      instances on subsequent frames.'
-    - name: tracking.kf_init_frame_count
-      label: Enable Filters after Initial Frames
-      type: optional_int
-      none_label: Don't use filters
-      default_disabled: true
-      default: 10
-    - name: tracking.kf_node_indices
-      label: Nodes to use for Tracking
-      type: string
-      default: 0,1,2
-    - type: text
-      text: '<b>Object keypoint similarity options</b>:<br />
-      Only used if this similarity method is selected.'
-    - name: tracking.oks_errors
-      label: Keypoints errors in pixels
-      help: 'Standard error in pixels of the distance for each keypoint.
-      If the list is empty, defaults to 1. If singleton list, each keypoint has
-      the same error. Otherwise, the length should be the same as the number of
-      keypoints in the skeleton.'
-      type: string
-      default:
-    - name: tracking.oks_score_weighting
-      label: Use prediction score for weighting
-      help: 'Use prediction scores to weight the similarity of each keypoint'
-      type: bool
-      default: false
     - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks
@@ -556,37 +502,6 @@ inference:
       none_label: Use max (non-robust)
       range: 0,1
       default: 0.95
-    - type: text
-      text: '<b>Kalman filter-based tracking</b>:<br />
-        Uses the above tracking options to track instances for an initial
-        number of frames, then initializes Kalman filters which are used to track
-        instances on subsequent frames.'
-    - name: tracking.kf_init_frame_count
-      label: Enable Filters after Initial Frames
-      type: optional_int
-      none_label: Don't use filters
-      default_disabled: true
-      default: 10
-    - name: tracking.kf_node_indices
-      label: Nodes to use for Tracking
-      type: string
-      default: 0,1,2
-    - type: text
-      text: '<b>Object keypoint similarity options</b>:<br />
-      Only used if this similarity method is selected.'
-    - name: tracking.oks_errors
-      label: Keypoints errors in pixels
-      help: 'Standard error in pixels of the distance for each keypoint.
-      If the list is empty, defaults to 1. If singleton list, each keypoint has
-      the same error. Otherwise, the length should be the same as the number of
-      keypoints in the skeleton.'
-      type: string
-      default:
-    - name: tracking.oks_score_weighting
-      label: Use prediction score for weighting
-      help: 'Use prediction scores to weight the similarity of each keypoint'
-      type: bool
-      default: false
     - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks
