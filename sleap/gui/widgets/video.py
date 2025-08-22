@@ -63,6 +63,7 @@ from sleap.gui.state import GuiState
 from sleap.gui.widgets.slider import VideoSlider
 from sleap.instance import Instance, Point, PredictedInstance
 from sleap.prefs import prefs
+
 # from sleap.skeleton import Node
 from sleap_io.model.skeleton import Node
 

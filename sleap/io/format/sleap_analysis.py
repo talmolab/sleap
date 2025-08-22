@@ -15,12 +15,13 @@ import numpy as np
 
 from typing import Union
 
-from sleap import Labels, Video, Skeleton
 from sleap.instance import PredictedInstance, LabeledFrame
 from sleap_io import Track
+from sleap import Labels, Skeleton
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
+from sleap_io import Video
 
 
 class SleapAnalysisAdaptor(Adaptor):

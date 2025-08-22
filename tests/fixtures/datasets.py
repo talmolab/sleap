@@ -10,6 +10,7 @@ from sleap.instance import (
     PredictedPoint,
     LabeledFrame,
 )
+
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
 from sleap.io.dataset import Labels

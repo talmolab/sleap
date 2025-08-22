@@ -45,8 +45,9 @@ import os
 import re
 
 from pathlib import PurePath
+from sleap_io import Video
 
-from sleap import Labels, Video
+from sleap import Labels
 
 
 def create_parser():

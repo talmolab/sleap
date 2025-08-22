@@ -7,8 +7,9 @@ See http://cocodataset.org/#format-data for details about this format.
 import os
 
 import numpy as np
+from sleap_io import Video
 
-from sleap import Labels, Video, Skeleton
+from sleap import Labels, Skeleton
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.instance import Instance, LabeledFrame, Point
 from sleap_io import Track
