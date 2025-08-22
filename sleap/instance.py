@@ -1694,9 +1694,9 @@ class LabeledFrame:
             if type(inst) == Instance or inst in unused_predictions
         ]
         inst_to_show.sort(
-            key=lambda inst: inst.track.spawned_on
-            if inst.track is not None
-            else math.inf
+            key=lambda inst: (
+                inst.track.spawned_on if inst.track is not None else math.inf
+            )
         )
         return inst_to_show
 

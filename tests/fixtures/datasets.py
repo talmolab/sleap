@@ -1,4 +1,5 @@
 import pytest
+from sleap_io import Track
 
 from sleap_io import Video
 
@@ -8,7 +9,6 @@ from sleap.instance import (
     Point,
     PredictedPoint,
     LabeledFrame,
-    Track,
 )
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton

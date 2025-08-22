@@ -67,6 +67,7 @@ import numpy as np
 import datetime
 from sklearn.model_selection import train_test_split
 from sleap_io import Video
+from sleap_io import Track
 
 try:
     pass
@@ -78,7 +79,6 @@ from sleap_io.model.skeleton import Skeleton, Node
 from sleap.instance import (
     Instance,
     LabeledFrame,
-    Track,
     make_instance_cattr,
     PredictedInstance,
 )

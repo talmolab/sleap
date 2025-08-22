@@ -17,7 +17,8 @@ from typing import Any, Iterable, Optional, Union, Text, Tuple
 import yaml
 
 from sleap.util import get_config_file
-from sleap.instance import Instance, Track, Node
+from sleap.instance import Instance, Node
+from sleap_io import Track
 from sleap.io.dataset import Labels
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton

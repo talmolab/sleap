@@ -58,6 +58,7 @@ import attr
 import cv2
 import numpy as np
 from qtpy import QtCore, QtGui, QtWidgets
+from sleap_io import Track
 from sleap_io import Video
 
 from sleap.gui.dialogs.delete import DeleteDialog
@@ -69,7 +70,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
+from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -77,6 +78,7 @@ from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.videowriter import write_video
 from sleap.io.visuals import save_labeled_video
+
 # from sleap.skeleton import Node, Skeleton
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import get_package_file
