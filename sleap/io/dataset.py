@@ -67,6 +67,7 @@ import numpy as np
 import datetime
 from sklearn.model_selection import train_test_split
 from sleap_io import Video
+from sleap_io import Track
 
 try:
     pass
@@ -78,7 +79,6 @@ from sleap_io.model.skeleton import Skeleton, Node
 from sleap.instance import (
     Instance,
     LabeledFrame,
-    Track,
     make_instance_cattr,
     PredictedInstance,
 )
@@ -522,8 +522,8 @@ class Labels(MutableSequence):
             # Get list of other tracks not already in track list
             new_tracks = list(other_tracks - set(self.tracks))
 
-            # Sort the new tracks by spawned on and then name
-            new_tracks.sort(key=lambda t: (t.spawned_on, t.name))
+            # Sort the new tracks by name
+            new_tracks.sort(key=lambda t: (t.name))
 
             self.tracks.extend(new_tracks)
 
@@ -547,7 +547,7 @@ class Labels(MutableSequence):
                 self.tracks.append(instance.track)
 
         # Sort the tracks again
-        self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
+        self.tracks.sort(key=lambda t: (t.name))
 
         # Update cache datastructures
         self._cache.update(new_label)

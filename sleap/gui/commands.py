@@ -58,6 +58,7 @@ import attr
 import cv2
 import numpy as np
 from qtpy import QtCore, QtGui, QtWidgets
+from sleap_io import Track
 from sleap_io import Video
 
 from sleap.gui.dialogs.delete import DeleteDialog
@@ -69,7 +70,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
+from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -3065,7 +3066,7 @@ class AddTrack(EditCommand):
             int(track.name) for track in context.labels.tracks if track.name.isnumeric()
         ]
         next_number = max(track_numbers_used, default=0) + 1
-        new_track = Track(spawned_on=context.state["frame_idx"], name=str(next_number))
+        new_track = Track(name=str(next_number))
 
         context.labels.add_track(context.state["video"], new_track)
 

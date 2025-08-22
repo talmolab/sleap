@@ -23,8 +23,9 @@ from typing import List, Optional, Dict, Tuple
 from pathlib import Path
 from sleap_io import Video
 
+from sleap.instance import Instance, LabeledFrame, Point
+from sleap_io import Track
 from sleap import Labels, Skeleton
-from sleap.instance import Instance, LabeledFrame, Point, Track
 from sleap.util import find_files_by_suffix
 
 from .adaptor import Adaptor, SleapObjectType

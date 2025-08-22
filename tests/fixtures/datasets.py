@@ -1,4 +1,5 @@
 import pytest
+from sleap_io import Track
 
 from sleap_io import Video
 
@@ -8,7 +9,6 @@ from sleap.instance import (
     Point,
     PredictedPoint,
     LabeledFrame,
-    Track,
 )
 
 # from sleap.skeleton import Skeleton
@@ -235,8 +235,8 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
         The Labels object containing all the labeled frames
     """
     labels = []
-    stick_tracks = [Track(spawned_on=0, name=f"Stickman {i}") for i in range(6)]
-    fly_tracks = [Track(spawned_on=0, name=f"Fly {i}") for i in range(6)]
+    stick_tracks = [Track(name=f"Stickman {i}") for i in range(6)]
+    fly_tracks = [Track(name=f"Fly {i}") for i in range(6)]
 
     # Make some tracks None to test that
     fly_tracks[3] = None

@@ -5,6 +5,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import attr
 from qtpy import QtCore, QtGui
 from sleap_io import Video
+from sleap_io import Track
 
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.widgets.video import QtTextWithBackground

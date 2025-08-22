@@ -4,12 +4,11 @@ import nixio as nix
 from pathlib import Path
 from typing import Dict, List, Optional, cast
 from sleap_io import Video
-from sleap.instance import Track
+from sleap_io import Track
 
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.dataset import Labels
-from sleap_io import Video
 
 # from sleap.skeleton import Node, Skeleton (sleap.io will be deleted)
 
@@ -393,12 +392,12 @@ class NixAdaptor(Adaptor):
             tm = block.create_data_frame(
                 "track map",
                 "nix.tracking.track_map",
-                col_names=["name", "spawned_on", "index"],
+                col_names=["name", "index"],
                 col_dtypes=[nix.DataType.String, nix.DataType.Int64, nix.DataType.Int8],
             )
-            table_data = [("none", -1, -1)]  # default for user-labeled instances
+            table_data = [("none", -1)]  # default for user-labeled instances
             for track in tracks.keys():
-                table_data.append((track.name, track.spawned_on, tracks[track]))
+                table_data.append((track.name, track, tracks[track]))
             tm.append_rows(table_data)
 
             # Print shape info
