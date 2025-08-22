@@ -29,7 +29,7 @@ from sleap.instance import LabeledFrame
 
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
-from sleap_io import Video
+from sleap_io.io.video_reading import VideoBackend
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -395,7 +395,7 @@ class VideosTableModel(GenericTableModel):
         "channels",
     )
 
-    def item_to_data(self, obj, item: "Video"):
+    def item_to_data(self, obj, item: "VideoBackend"):
         data = {}
         for property in self.properties:
             if property == "name":

@@ -15,6 +15,7 @@ import tempfile
 import zipfile
 from typing import Optional, Union, Dict, List, Callable, Text
 from sleap_io import Video
+from sleap_io.io.skeleton import SkeletonEncoder
 
 import cattr
 
@@ -22,17 +23,41 @@ from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
 from sleap_io import SuggestionFrame
+from sleap_io.io.skeleton import SkeletonDecoder
 
-from sleap.instance import (
-    LabeledFrame,
-    make_instance_cattr,
-)
+from sleap.instance import LabeledFrame, make_instance_cattr
+from sleap.io.dataset import Labels
 from sleap_io import Track
 from sleap.io.legacy import load_labels_json_old
 
 # from sleap.skeleton import Node, Skeleton (sleap.io will be deleted)
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import json_loads, json_dumps, weak_filename_match
+
+
+def make_cattr(idx_to_node: Dict[int, Node] = None) -> cattr.Converter:
+    """Make cattr.Convert() for `Skeleton`.
+
+    Make a cattr.Converter() that registers structure/unstructure
+    hooks for Skeleton objects to handle serialization of skeletons.
+
+    Args:
+        idx_to_node: A dict that maps node index to Node objects.
+
+    Returns:
+        A cattr.Converter() instance for skeleton serialization
+        and deserialization.
+    """
+    node_to_idx = (
+        {node: idx for idx, node in idx_to_node.items()}
+        if idx_to_node is not None
+        else None
+    )
+
+    _cattr = cattr.Converter()
+    _cattr.register_unstructure_hook(Skeleton, lambda x: SkeletonEncoder().encode(x))
+    _cattr.register_structure_hook(Skeleton, lambda x, cls: SkeletonDecoder().decode(x))
+    return _cattr
 
 
 class LabelsJsonAdaptor(Adaptor):
@@ -389,7 +414,10 @@ class LabelsJsonAdaptor(Adaptor):
         nodes = cattr.structure(dicts["nodes"], List[Node])
 
         idx_to_node = {i: nodes[i] for i in range(len(nodes))}
-        skeletons = Skeleton.make_cattr(idx_to_node).structure(
+        # skeletons = Skeleton.make_cattr(idx_to_node).structure(
+        #     dicts["skeletons"], List[Skeleton]
+        # )
+        skeletons = make_cattr(idx_to_node).structure(
             dicts["skeletons"], List[Skeleton]
         )
         videos = Video.cattr().structure(dicts["videos"], List[Video])
