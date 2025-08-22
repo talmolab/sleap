@@ -433,45 +433,15 @@ class QtVideoPlayer(QWidget):
             self.load_video(video)
 
     def _setup_worker_thread(self):
-        """Set up the worker thread with proper initialization order"""
-        # Create the thread first
-        self.load_image_worker_thread = QtCore.QThread()
+        """Set up SYNCHRONOUS frame loading for testing - NO WORKER THREAD"""
+        print("[DEBUG] Using SYNCHRONOUS frame loading - no worker thread")
         
-        # Create the worker
+        # Create a dummy worker that doesn't actually use threads
         self.load_image_worker = LoadImageWorker()
+        self.load_image_worker_thread = None  # No thread
         
-        # Connect ALL signals BEFORE moving to thread
-        # This ensures connections are made in the main thread
-        self.load_image_worker.frame_requested.connect(
-            self.load_image_worker._handle_request,
-            QtCore.Qt.QueuedConnection
-        )
-        
-        self.load_image_worker.result.connect(
-            lambda qimage: self.view.setImage(qimage),
-            QtCore.Qt.QueuedConnection
-        )
-        
-        # Move the worker to the thread AFTER connections
-        self.load_image_worker.moveToThread(self.load_image_worker_thread)
-        
-        # Set up thread startup sequence
-        self.load_image_worker_thread.started.connect(
-            self.load_image_worker.start_work,
-            QtCore.Qt.DirectConnection  # Direct connection since it's in the worker thread
-        )
-        
-        # Mark worker as ready when it's initialized
-        self.load_image_worker_thread.started.connect(
-            self._on_worker_ready,
-            QtCore.Qt.QueuedConnection  # Queue this to main thread
-        )
-        
-        # Start the thread
-        self.load_image_worker_thread.start()
-        
-        # Wait a moment for thread to initialize (optional, for debugging)
-        QtCore.QThread.msleep(50)
+        # Mark as ready immediately since we're synchronous
+        self.worker_ready = True
     
     def _on_worker_ready(self):
         """Called when worker thread is ready"""
@@ -483,30 +453,8 @@ class QtVideoPlayer(QWidget):
             self.plot()
 
     def cleanup(self):
-        """Properly clean up the worker thread"""
-        print("Starting cleanup")
-        
-        if self.load_image_worker is not None:
-            # Disconnect signals first to prevent any further events
-            try:
-                self.load_image_worker.result.disconnect()
-            except:
-                pass
-            
-            # Stop the worker
-            self.load_image_worker.stop_work()
-        
-        if self.load_image_worker_thread is not None:
-            # Quit the thread
-            self.load_image_worker_thread.quit()
-            
-            # Wait for it to finish (with timeout)
-            if not self.load_image_worker_thread.wait(2000):
-                print("Warning: Worker thread didn't stop cleanly")
-                self.load_image_worker_thread.terminate()
-                self.load_image_worker_thread.wait()
-        
-        print("Cleanup complete")
+        """Cleanup - nothing to do in synchronous mode"""
+        print("Cleanup (synchronous mode - nothing to clean up)")
 
     def dragEnterEvent(self, event):
         if self.parentWidget():
@@ -735,11 +683,16 @@ class QtVideoPlayer(QWidget):
             # Emit signal for the instances to be drawn for this frame
             self.changedPlot.emit(self, idx, self.state["instance"])
 
-            # Request for the image to load and be shown for this frame
-            # (note that we're calling method directly rather than connecting
-            # the method to a signal because Qt was holding onto the signal events
-            # for too long before they were received by the loader).
-            self.load_image_worker.request(self.video, idx)
+            # SYNCHRONOUS frame loading for testing
+            print(f"[SYNC] Loading frame {idx} synchronously")
+            try:
+                frame = self.video.get_frame(idx)
+                if frame is not None:
+                    qimage = ndarray_to_qimage(frame, copy=True)
+                    self.view.setImage(qimage)
+                    print(f"[SYNC] Frame {idx} loaded and displayed")
+            except Exception as e:
+                print(f"[SYNC] Error loading frame {idx}: {e}")
         finally:
             self._is_plotting = False
 
