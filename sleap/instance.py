@@ -28,7 +28,6 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from sleap.io.dataset import Labels
-    from sleap.io.video import Video
 
 import attr
 import cattr
@@ -36,8 +35,10 @@ import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
 
 from sleap.io.video import Video  # Only used for type hinting
-from sleap.skeleton import Node, Skeleton
+# from sleap.skeleton import Node, Skeleton
+from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import plot_img, plot_instances
+from sleap_io import Video
 
 
 class Point(np.record):

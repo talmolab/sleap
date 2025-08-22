@@ -21,8 +21,6 @@ from qtpy import QtWidgets
 
 from sleap import Labels, Video, LabeledFrame
 from sleap.gui.learning.configs import ConfigFileInfo
-from sleap.io.video import SingleImageVideo
-from sleap.gui.legacy.config import TrainingJobConfig
 
 logger = logging.getLogger(__name__)
 
@@ -248,7 +246,6 @@ class InferenceTask:
 
         # Make path where we'll save predictions (if not specified)
         if output_path is None:
-
             if self.labels_filename:
                 # Make a predictions directory next to the labels dataset file
                 predictions_dir = os.path.join(
@@ -284,7 +281,10 @@ class InferenceTask:
         if "batch_size" in self.inference_params:
             cli_args.extend(["--batch_size", str(self.inference_params["batch_size"])])
 
-        if "max_instances" in self.inference_params and self.inference_params["max_instances"] is not None:
+        if (
+            "max_instances" in self.inference_params
+            and self.inference_params["max_instances"] is not None
+        ):
             cli_args.extend(["--max_instances", self.inference_params["max_instances"]])
 
         # add tracking args
@@ -354,10 +354,8 @@ class InferenceTask:
 
         # Run inference CLI capturing output.
         with subprocess.Popen(cli_args, stdout=subprocess.PIPE) as proc:
-
             # Poll until finished.
             while proc.poll() is None:
-
                 # Read line.
                 line = proc.stdout.readline()
                 line = line.decode().rstrip()
@@ -699,7 +697,6 @@ def run_gui_training(
 
     for config_info in config_info_list:
         if config_info.dont_retrain:
-
             if not config_info.has_trained_model:
                 raise ValueError(
                     "Config is set to not retrain but no trained model found: "
@@ -744,7 +741,7 @@ def run_gui_training(
                     plateau_min_delta=plateau_min_delta,
                 )
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
-                win.set_message(f"Preparing to run training...")
+                win.set_message("Preparing to run training...")
                 if save_viz:
                     viz_window = QtImageDirectoryWidget.make_training_vizualizer(
                         job.outputs.run_path
@@ -919,7 +916,6 @@ def train_subprocess(
     success = False
 
     with tempfile.TemporaryDirectory() as temp_dir:
-
         # Write a temporary file of the TrainingJob so that we can respect
         # any changed made to the job attributes after it was loaded.
         temp_filename = datetime.now().strftime("%y%m%d_%H%M%S") + "_training_job.json"
@@ -942,8 +938,12 @@ def train_subprocess(
         cfg.trainer_config.save_ckpt_path = run_path
         cfg.trainer_config.visualize_preds_during_training = save_viz
         cfg.trainer_config.keep_viz = keep_viz
-        cfg.trainer_config.zmq.controller_address = f"tcp://127.0.0.1:{str(inference_params['controller_port'])}"
-        cfg.trainer_config.zmq.publish_address = f"tcp://127.0.0.1:{str(inference_params['publish_port'])}"
+        cfg.trainer_config.zmq.controller_address = (
+            f"tcp://127.0.0.1:{str(inference_params['controller_port'])}"
+        )
+        cfg.trainer_config.zmq.publish_address = (
+            f"tcp://127.0.0.1:{str(inference_params['publish_port'])}"
+        )
 
         OmegaConf.save(cfg, (Path(temp_dir) / f"{cfg_file_name}.yaml").as_posix())
 

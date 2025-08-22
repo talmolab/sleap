@@ -16,13 +16,13 @@ import math
 from time import perf_counter
 from queue import Queue
 from threading import Thread
+from sleap_io import Video
 
 import cv2
 import logging
 import numpy as np
 import imageio.v2 as iio
 
-from sleap.io.video import Video
 from sleap.util import usable_cpu_count
 
 logger = logging.getLogger(__name__)

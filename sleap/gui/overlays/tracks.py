@@ -4,11 +4,11 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 import attr
 from qtpy import QtCore, QtGui
+from sleap_io import Video
 
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.widgets.video import QtTextWithBackground
 from sleap.instance import LabeledFrame, Track
-from sleap.io.video import Video
 from sleap.prefs import prefs
 
 

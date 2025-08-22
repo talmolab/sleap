@@ -42,7 +42,6 @@ def mapper(config: OmegaConf):
 
     skeletons = []
     for skel_cfg in data_cfg.skeletons:
-
         skel = sio.Skeleton(
             nodes=[n["name"] for n in skel_cfg.nodes], name=skel_cfg.name
         )

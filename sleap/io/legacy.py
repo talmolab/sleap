@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 
 from typing import List
+from sleap_io import Video
 
 from sleap.util import json_loads
-from sleap.io.video import Video
 
 from sleap.instance import (
     LabeledFrame,
@@ -20,8 +20,8 @@ from sleap.instance import (
     Point,
     Instance,
 )
-from sleap.skeleton import Skeleton
-
+# from sleap.skeleton import Skeleton (sleap.io will be deleted)
+from sleap_io.model.skeleton import Skeleton
 
 def load_predicted_labels_json_old(
     data_path: str,

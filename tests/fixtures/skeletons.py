@@ -1,6 +1,7 @@
 import pytest
 
-from sleap.skeleton import Skeleton
+# from sleap.skeleton import Skeleton
+from sleap_io.model.skeleton import Skeleton
 
 TEST_FLY_LEGS_SKELETON = "tests/data/skeleton/fly_skeleton_legs.json"
 TEST_FLY_LEGS_SKELETON_DICT = "tests/data/skeleton/fly_skeleton_legs_pystate_dict.json"

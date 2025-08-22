@@ -1,5 +1,7 @@
 import pytest
 
+from sleap_io import Video
+
 from sleap.instance import (
     Instance,
     PredictedInstance,
@@ -8,9 +10,9 @@ from sleap.instance import (
     LabeledFrame,
     Track,
 )
-from sleap.skeleton import Skeleton
+# from sleap.skeleton import Skeleton
+from sleap_io.model.skeleton import Skeleton
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
 
 TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"
 TEST_JSON_PREDICTIONS = "tests/data/json_format_v2/centered_pair_predictions.json"

@@ -66,13 +66,15 @@ import cattr
 import numpy as np
 import datetime
 from sklearn.model_selection import train_test_split
+from sleap_io import Video
 
 try:
     pass
 except Exception:
     pass
 
-from sleap.skeleton import Skeleton, Node
+# from sleap.skeleton import Skeleton, Node (sleap.io will be deleted)
+from sleap_io.model.skeleton import Skeleton, Node
 from sleap.instance import (
     Instance,
     LabeledFrame,
@@ -82,7 +84,9 @@ from sleap.instance import (
 )
 
 from sleap.io import pathutils
-from sleap.io.video import Video, ImgStoreVideo, HDF5Video
+from sleap.io.video import ImgStoreVideo
+from sleap_io.io.video_reading import HDF5Video
+
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, json_dumps
@@ -1229,9 +1233,11 @@ class Labels(MutableSequence):
 
                 template_points = np.stack(
                     [
-                        node_positions[node]
-                        if node in node_positions
-                        else np.random.randint(0, 50, size=2)
+                        (
+                            node_positions[node]
+                            if node in node_positions
+                            else np.random.randint(0, 50, size=2)
+                        )
                         for node in skeleton.nodes
                     ]
                 )
@@ -2500,9 +2506,11 @@ class Labels(MutableSequence):
         # whether they're tracked.
         n_insts = max(
             [
-                lf.n_user_instances
-                if lf.n_user_instances > 0  # take user instances over predicted
-                else lf.n_predicted_instances
+                (
+                    lf.n_user_instances
+                    if lf.n_user_instances > 0  # take user instances over predicted
+                    else lf.n_predicted_instances
+                )
                 for lf in lfs
             ]
         )

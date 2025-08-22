@@ -28,7 +28,8 @@ from sleap.instance import (
     make_instance_cattr,
 )
 from sleap.io.legacy import load_labels_json_old
-from sleap.skeleton import Node, Skeleton
+# from sleap.skeleton import Node, Skeleton (sleap.io will be deleted)
+from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import json_loads, json_dumps, weak_filename_match
 
 

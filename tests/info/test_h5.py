@@ -6,6 +6,7 @@ import numpy as np
 
 from pathlib import Path
 from typing import List
+from sleap_io import Video
 
 from sleap.info.write_tracking_h5 import (
     get_tracks_as_np_strings,
@@ -17,7 +18,6 @@ from sleap.info.write_tracking_h5 import (
     main,
 )
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
 from sleap.instance import Instance, Point
 from sleap.gui.commands import AddUserInstancesFromPredictions
 

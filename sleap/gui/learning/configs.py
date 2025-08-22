@@ -102,14 +102,13 @@ class ConfigFileInfo:
     def skeleton(self):
         # cache skeleton so we only search once
         if self._skeleton is None and not self._tried_finding_skeleton:
-
             # if skeleton was saved in config, great!
             if self.config.data.labels.skeletons:
                 self._skeleton = self.config.data.labels.skeletons[0]
 
             # otherwise try loading it from validation labels (much slower!)
             else:
-                filename = self._get_file_path(f"labels_gt.val.slp")
+                filename = self._get_file_path("labels_gt.val.slp")
                 if filename is not None:
                     val_labels = Labels.load_file(filename)
                     if val_labels.skeletons:
@@ -328,7 +327,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
         )
         logging.debug(f"Selected training config file: {filename}")
         if not filename:
-            logging.debug(f"No file selected for training config.")
+            logging.debug("No file selected for training config.")
             return None
         return self._cfg_getter.try_loading_path(filename)
 
@@ -504,7 +503,7 @@ class TrainingConfigsGetter:
                 # Try mapping to TrainingJobConfig
                 try:
                     cfg = mapper(cfg)
-                    logging.debug(f"Mapped YAML config to TrainingJobConfig.")
+                    logging.debug("Mapped YAML config to TrainingJobConfig.")
                     return ConfigFileInfo(
                         path=path, filename=filename, config=mapper(cfg), head_name=key
                     )
