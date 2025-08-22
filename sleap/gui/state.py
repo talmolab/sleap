@@ -171,10 +171,16 @@ class GuiState(object):
 
         This is analogous to emitting a Qt signal.
         """
+        if key == "frame_idx":
+            print(f"[STATE] emit('frame_idx') with value: {self.get(key)}")
+            print(f"[STATE] callbacks for frame_idx: {len(self._callbacks.get(key, []))}")
+            
         if key in self._state_vars and key in self._callbacks:
             val = self.get(key)
             for i, callback in enumerate(self._callbacks[key]):
                 try:
+                    if key == "frame_idx":
+                        print(f"[STATE] Calling callback {i} for frame_idx")
                     # if callback doesn't take positional args, just call it
                     if not inspect.signature(callback).parameters:
                         callback()

@@ -1266,7 +1266,7 @@ class MainWindow(QMainWindow):
         """Called each time a new frame is drawn."""
 
         # Store the current frame_idx and LabeledFrame (or make new, empty object)
-        self.state["frame_idx"] = frame_idx
+        # self.state["frame_idx"] = frame_idx
         self.state["labeled_frame"] = (
             self.labels.find(self.state["video"], frame_idx, return_new=True)[0]
             if frame_idx is not None
