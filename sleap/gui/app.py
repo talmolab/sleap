@@ -307,11 +307,9 @@ class MainWindow(QMainWindow):
         self._load_overlays()
 
         # Create timer to update state of gui at 20 millisec. intervals
-        # TEMPORARILY DISABLED to debug QBasicTimer threading issue
-        # self.update_gui_timer = QtCore.QTimer()
-        # self.update_gui_timer.timeout.connect(self._update_gui_state)
-        # self.update_gui_timer.start(20)
-        print("[DEBUG] MainWindow.update_gui_timer DISABLED for testing")
+        self.update_gui_timer = QtCore.QTimer()
+        self.update_gui_timer.timeout.connect(self._update_gui_state)
+        self.update_gui_timer.start(20)
 
     def _create_video_player(self):
         """Creates and connects :class:`QtVideoPlayer` for gui."""
