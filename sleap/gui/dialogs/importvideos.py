@@ -32,10 +32,15 @@ from qtpy.QtWidgets import (
 )
 
 from sleap.gui.widgets.video import GraphicsView
-from sleap.io.video import (
-    Video,
+from sleap_io.io.video_reading import (
     MediaVideo,
     HDF5Video,
+    # ImageVideo
+)
+from sleap_io import Video
+from sleap.io.video import (
+    # MediaVideo, (deprecated)
+    # HDF5Video, (deprecated)
     NumpyVideo,
     ImgStoreVideo,
     available_video_exts,
@@ -136,7 +141,7 @@ class ImportParamDialog(QDialog):
             {
                 "video_type": "hdf5",
                 "match": ",".join(HDF5Video.EXTS),
-                "video_class": Video.from_hdf5,
+                "video_class": Video.from_filename,
                 "params": [
                     {
                         "name": "dataset",
@@ -155,7 +160,7 @@ class ImportParamDialog(QDialog):
             {
                 "video_type": "mp4",
                 "match": ",".join(MediaVideo.EXTS),
-                "video_class": Video.from_media,
+                "video_class": Video.from_filename,
                 "params": [{"name": "grayscale", "type": "check"}],
             },
             {

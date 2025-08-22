@@ -26,9 +26,10 @@ from qtpy import QtCore, QtGui, QtWidgets
 from sleap.gui.commands import CommandContext
 from sleap.gui.state import GuiState
 from sleap.instance import LabeledFrame
+
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
-from sleap.io.video import Video
+from sleap_io import Video
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):

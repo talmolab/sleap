@@ -10,6 +10,7 @@ from sleap.instance import (
     LabeledFrame,
     Track,
 )
+
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
 from sleap.io.dataset import Labels
