@@ -20,7 +20,9 @@ from sleap.instance import (
     Point,
     Instance,
 )
+
 # from sleap.skeleton import Skeleton (sleap.io will be deleted)
+from sleap_io.model.skeleton import Skeleton
 
 
 def load_predicted_labels_json_old(
@@ -84,9 +86,9 @@ def load_predicted_labels_json_old(
     video_objects = {}
     for i, row in videos.iterrows():
         if videos.at[i, "format"] == "media":
-            vid = Video.from_media(videos.at[i, "filepath"])
+            vid = Video.from_filename(videos.at[i, "filepath"])
         else:
-            vid = Video.from_hdf5(
+            vid = Video.from_filename(
                 filename=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"]
             )
 
@@ -241,9 +243,9 @@ def load_labels_json_old(
     video_objects = {}
     for i, row in videos.iterrows():
         if videos.at[i, "format"] == "media":
-            vid = Video.from_media(videos.at[i, "filepath"])
+            vid = Video.from_filename(videos.at[i, "filepath"])
         else:
-            vid = Video.from_hdf5(
+            vid = Video.from_filename(
                 filename=videos.at[i, "filepath"], dataset=videos.at[i, "dataset"]
             )
 

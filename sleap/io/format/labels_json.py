@@ -14,14 +14,15 @@ import shutil
 import tempfile
 import zipfile
 from typing import Optional, Union, Dict, List, Callable, Text
+from sleap_io import Video
 
 import cattr
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
-from sleap import Labels, Video
 from sleap_io import SuggestionFrame
+
 from sleap.instance import (
     LabeledFrame,
     Track,
@@ -30,6 +31,7 @@ from sleap.instance import (
 from sleap.io.legacy import load_labels_json_old
 
 # from sleap.skeleton import Node, Skeleton (sleap.io will be deleted)
+from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import json_loads, json_dumps, weak_filename_match
 
 

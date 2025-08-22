@@ -30,6 +30,7 @@ from sleap.gui.dataviews import (
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
+
 # from sleap.skeleton import Skeleton, SkeletonDecoder
 from sleap_io.model.skeleton import Skeleton
 from sleap_io.io.skeleton import SkeletonDecoder

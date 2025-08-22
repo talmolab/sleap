@@ -9,7 +9,7 @@ import os
 
 import scipy.io as sio
 
-from sleap import Labels, Video, Skeleton
+from sleap import Labels, Skeleton
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.instance import (
     Instance,
@@ -18,6 +18,7 @@ from sleap.instance import (
 )
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
+from sleap_io import Video
 
 
 class LabelsLeapMatlabAdaptor(Adaptor):

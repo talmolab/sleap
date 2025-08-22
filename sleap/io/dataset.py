@@ -74,6 +74,7 @@ except Exception:
     pass
 
 # from sleap.skeleton import Skeleton, Node (sleap.io will be deleted)
+from sleap_io.model.skeleton import Skeleton, Node
 from sleap.instance import (
     Instance,
     LabeledFrame,
@@ -83,7 +84,9 @@ from sleap.instance import (
 )
 
 from sleap.io import pathutils
-from sleap.io.video import ImgStoreVideo, HDF5Video
+from sleap.io.video import ImgStoreVideo
+from sleap_io.io.video_reading import HDF5Video
+
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, json_dumps

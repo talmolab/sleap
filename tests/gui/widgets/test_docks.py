@@ -1,10 +1,11 @@
 """Module for testing dock widgets for the `MainWindow`."""
 
 from pathlib import Path
+from sleap_io import Video
 
 import numpy as np
 
-from sleap import Labels, Video
+from sleap import Labels
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import AddInstance, OpenSkeleton
 from sleap.gui.widgets.docks import (
