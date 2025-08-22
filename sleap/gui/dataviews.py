@@ -29,7 +29,7 @@ from sleap.instance import LabeledFrame
 
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
-from sleap.io.video import Video
+from sleap_io import Video
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
