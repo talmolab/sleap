@@ -159,7 +159,11 @@ class ConfigFileInfo:
         cache_key = (dset_name, split_name)
         if cache_key not in self._dset_len_cache:
             n = None
-            filename = self._get_file_path(f"labels_gt.{split_name}.slp")
+            filename = (
+                self._get_file_path(f"labels_gt.{split_name}.slp")
+                if self._get_file_path(f"labels_gt.{split_name}.slp")
+                else self._get_file_path(f"labels_{split_name}_gt_0.slp")
+            )
             if filename is not None:
                 with h5py.File(filename, "r") as f:
                     n = f[dset_name].shape[0]
@@ -169,13 +173,26 @@ class ConfigFileInfo:
         return self._dset_len_cache[cache_key]
 
     def _get_metrics(self, split_name: Text):
-        metrics_path = self._get_file_path(f"metrics.{split_name}.npz")
+        metrics_path_nn = self._get_file_path(f"{split_name}_0_pred_metrics.npz")
 
-        if metrics_path is None:
-            return None
+        if metrics_path_nn is None:
+            metrics_path = self._get_file_path(f"metrics.{split_name}.npz")
+        else:
+            metrics_path = metrics_path_nn
 
         with np.load(metrics_path, allow_pickle=True) as data:
-            return data["metrics"].item()
+            if "metrics" in data:
+                return data["metrics"].item()
+
+            return_dict = {
+                "oks_voc.mAP": data["voc_metrics"].item().get("oks_voc.mAP"),
+                "vis.precision": data["visibility_metrics"].item().get("precision"),
+                "vis.recall": data["visibility_metrics"].item().get("recall"),
+                "dist.p95": data["distance_metrics"].item().get("p95"),
+                "dist.p75": data["distance_metrics"].item().get("p75"),
+                "dist.avg": data["distance_metrics"].item().get("avg"),
+            }
+            return return_dict
 
     @classmethod
     def from_config_file(cls, path: Text) -> "ConfigFileInfo":
