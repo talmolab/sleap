@@ -5,9 +5,9 @@ Drop-in replacement for QSlider with additional features.
 from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtGui import QPen, QBrush, QColor, QKeyEvent, QPolygonF, QPainterPath
 from sleap_io import Video
+from sleap_io import Track
 
 from sleap.gui.color import ColorManager
-from sleap.instance import Track
 from sleap.io.dataset import Labels
 
 import attr

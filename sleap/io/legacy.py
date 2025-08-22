@@ -9,6 +9,7 @@ import pandas as pd
 
 from typing import List
 from sleap_io import Video
+from sleap_io import Track
 
 from sleap.util import json_loads
 
@@ -16,7 +17,6 @@ from sleap.instance import (
     LabeledFrame,
     PredictedPoint,
     PredictedInstance,
-    Track,
     Point,
     Instance,
 )
@@ -104,7 +104,7 @@ def load_predicted_labels_json_old(
         for track_id in unique_track_ids
     }
     tracks = {
-        i: Track(name=str(i), spawned_on=spawned_on[i])
+        i: Track(name=str(i))
         for i in np.unique(predicted_instances["trackId"].values).tolist()
     }
 
