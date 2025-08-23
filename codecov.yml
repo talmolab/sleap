@@ -3,7 +3,8 @@ coverage:
     - "tests"
   status:
     project:  # Measures overall project coverage.
-      default: false
+      default:
+        informational: true
       gui:
         target: auto
         threshold: 0.5%  # Some leeway with GUI code.
@@ -16,7 +17,8 @@ coverage:
           - "sleap/"
           - "!sleap/gui/"
     patch:  #  Only measures lines adjusted in the pull request.
-      default: false
+      default:
+        informational: true
       gui:
         target: auto
         paths:
