@@ -73,7 +73,8 @@ from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap_io import SuggestionFrame
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
 from sleap.io.convert import default_analysis_filename
-from sleap.io.dataset import Labels
+# from sleap.io.dataset import Labels
+from sleap_io.model.labels import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
@@ -750,6 +751,8 @@ class LoadProjectFile(LoadLabelsObject):
             filename = None
             has_loaded = True
         else:
+            # Import and use sleap-io with compatibility layer
+            
             gui_video_callback = Labels.make_gui_video_callback(
                 search_paths=[os.path.dirname(filename)], context=params
             )
@@ -3321,6 +3324,9 @@ class MergeProject(EditCommand):
             return
 
         for filename in filenames:
+            # Import and use sleap-io with compatibility layer
+            from sleap.sleap_io_adaptors.compatibility import patch_sleap_io_classes
+            
             gui_video_callback = Labels.make_gui_video_callback(
                 search_paths=[os.path.dirname(filename)]
             )
