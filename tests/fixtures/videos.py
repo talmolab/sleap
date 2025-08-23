@@ -2,6 +2,7 @@ import pytest
 
 from sleap_io.io.video_reading import VideoBackend
 from sleap.io.format.filehandle import FileHandle
+from sleap_io import Video
 
 TEST_H5_FILE = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 TEST_H5_DSET = "/box"
