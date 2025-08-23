@@ -35,7 +35,7 @@ import cattr
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
 
-
+from sleap.io.video import Video  # Only used for type hinting
 from sleap.skeleton import Node, Skeleton
 from sleap.util import plot_img, plot_instances
 
