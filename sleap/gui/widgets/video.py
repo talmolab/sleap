@@ -77,15 +77,15 @@ def ndarray_to_qimage(
     copy: bool = False,
     normalize: bool = False,
 ) -> QImage:
-    """Convert a NumPy ndarray (HxWxC, C in {1, 3}) to a QImage for PySide6.
+    """Convert a NumPy ndarray (HxWxC, C in {1, 3, 4}) to a QImage for PySide6.
 
     The input is expected to be an image-like array of shape (height, width, channels),
-    where ``channels`` is 1 (grayscale) or 3 (RGB). The array may be of dtype
+    where ``channels`` is 1 (grayscale), 3 (RGB), or 4 (RGBA). The array may be of dtype
     ``uint8`` (preferred), ``float32/float64`` (in [0, 1] if ``normalize=False``),
     or ``uint16``. Non-contiguous arrays are made contiguous.
 
     Args:
-        img: NumPy array of shape (H, W, C) with C ∈ {1, 3}.
+        img: NumPy array of shape (H, W, C) with C ∈ {1, 3, 4}.
         copy: If True, return a deep-copied QImage that owns its pixels.
             If False (default), QImage references the NumPy buffer; you **must**
             keep the NumPy array alive as long as the image is used (e.g., store
@@ -108,8 +108,8 @@ def ndarray_to_qimage(
     if img.ndim != 3:
         raise ValueError(f"Expected (H, W, C), got shape {img.shape}")
     h, w, c = img.shape
-    if c not in (1, 3):
-        raise ValueError(f"Channels must be 1 or 3, got {c}")
+    if c not in (1, 3, 4):
+        raise ValueError(f"Channels must be 1, 3, or 4, got {c}")
 
     # Ensure C-contiguous, positive stride buffer
     arr = np.ascontiguousarray(img)
@@ -145,10 +145,15 @@ def ndarray_to_qimage(
         if arr_u8.shape[2] != 1:
             raise ValueError("Grayscale must have shape (H, W, 1).")
         buf = arr_u8.reshape(h, w)
-    else:
+    elif c == 3:
         qformat = QImage.Format_RGB888
         bytes_per_line = w * 3
         # QImage.Format_RGB888 expects RGB byte order (not BGR).
+        buf = arr_u8
+    else:  # c == 4
+        qformat = QImage.Format_RGBA8888
+        bytes_per_line = w * 4
+        # QImage.Format_RGBA8888 expects RGBA byte order.
         buf = arr_u8
 
     # Create QImage that references the NumPy buffer
