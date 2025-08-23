@@ -45,6 +45,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 
 import h5py
 import cv2
+import numpy as np
 
 from typing import Any, Dict, List, Optional
 from sleap.gui.widgets.video import ndarray_to_qimage
@@ -652,6 +653,10 @@ class VideoPreviewWidget(QWidget):
 
         # Clear existing objects
         self.view.clear()
+
+        # Ensure frame has 3 dimensions for ndarray_to_qimage
+        if frame.ndim == 2:
+            frame = np.expand_dims(frame, axis=-1)
 
         # Convert ndarray to QImage
         image = ndarray_to_qimage(frame)
