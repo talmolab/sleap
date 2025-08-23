@@ -22,13 +22,15 @@ def cleanup_qt_video_players():
     # After test completes, clean up any video players
     try:
         from PySide6.QtWidgets import QApplication
+
         app = QApplication.instance()
         if app:
             # Process any pending events before cleanup
             app.processEvents()
-            
+
             # Find and cleanup any QtVideoPlayer instances
             from sleap.gui.widgets.video import QtVideoPlayer
+
             for widget in app.allWidgets():
                 if isinstance(widget, QtVideoPlayer):
                     try:
@@ -44,11 +46,11 @@ def cleanup_all_threads():
     try:
         from PySide6.QtCore import QThread
         from PySide6.QtWidgets import QApplication
-        
+
         app = QApplication.instance()
         if app:
             app.processEvents()
-            
+
             # Stop any remaining QThreads
             for thread in [obj for obj in app.children() if isinstance(obj, QThread)]:
                 if thread.isRunning():

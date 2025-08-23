@@ -505,26 +505,26 @@ class MediaVideo:
             frame = frame[..., ::-1]
 
         return frame
-    
+
     def close(self):
         """Explicitly close the video and clean up resources."""
         # Close the OpenCV reader
-        if hasattr(self, '_reader_') and self._reader_ is not None:
+        if hasattr(self, "_reader_") and self._reader_ is not None:
             self._reader_.release()
             self._reader_ = None
-        
+
         # Clean up the RLock
         if hasattr(self, "_lock"):
             try:
                 del self._lock
-            except:
+            except Exception:
                 pass
 
     def __del__(self):
         """Clean up resources when the video is destroyed."""
         try:
             self.close()
-        except:
+        except Exception:
             pass
 
 
