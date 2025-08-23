@@ -14,9 +14,9 @@ Example: ::
 from qtpy import QtWidgets, QtCore, QtGui
 
 import numpy as np
-import qimage2ndarray
 
 from sleap.gui.overlays.base import h5_colors
+from sleap.gui.widgets.video import ndarray_to_qimage
 
 
 class ConfMapsPlot(QtWidgets.QGraphicsObject):
@@ -123,7 +123,7 @@ class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
         frame_composite = np.dstack((frame_r, frame_g, frame_b, frame_a))
 
         # Convert ndarray to QImage
-        image = qimage2ndarray.array2qimage(frame_composite)
+        image = ndarray_to_qimage(frame_composite)
 
         return image
 

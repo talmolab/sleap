@@ -45,7 +45,6 @@ frame and instances listed in data view table.
 """
 
 import os
-import platform
 import random
 import re
 from logging import getLogger
@@ -214,6 +213,24 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Close application window, prompting for saving as needed."""
+        # Clean up video player resources BEFORE saving preferences.
+        # This prevents a semaphore leak that occurs when restoreState() is used.
+        # The leak happens because restoreState() interferes with proper cleanup
+        # of the multiprocessing.RLock in MediaVideo.
+        if hasattr(self, "player"):
+            # Explicitly close the video to release its resources
+            if hasattr(self.player, "video") and self.player.video is not None:
+                # Call close() on MediaVideo backend to release the RLock
+                if hasattr(self.player.video, "backend") and hasattr(
+                    self.player.video.backend, "close"
+                ):
+                    self.player.video.backend.close()
+                self.player.video = None
+
+            # Stop the worker thread
+            if hasattr(self.player, "cleanup"):
+                self.player.cleanup()
+
         # Save window state.
         prefs["window state"] = self.saveState()
         prefs["marker size"] = self.state["marker size"]
@@ -1268,7 +1285,7 @@ class MainWindow(QMainWindow):
         """Called each time a new frame is drawn."""
 
         # Store the current frame_idx and LabeledFrame (or make new, empty object)
-        self.state["frame_idx"] = frame_idx
+        # self.state["frame_idx"] = frame_idx
         self.state["labeled_frame"] = (
             self.labels.find(self.state["video"], frame_idx, return_new=True)[0]
             if frame_idx is not None
@@ -1695,12 +1712,6 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
 
-    if platform.system() == "Darwin":
-        # TODO: Remove this workaround when we update to qtpy >= 5.15.
-        # https://bugreports.qt.io/browse/QTBUG-87014
-        # https://stackoverflow.com/q/64818879
-        os.environ["QT_MAC_WANTS_LAYER"] = "1"
-
     app = create_app()
 
     window = MainWindow(
@@ -1710,19 +1721,6 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         no_usage_data=args.no_usage_data,
     )
     window.showMaximized()
-
-    # Disable GPU in GUI process. This does not affect subprocesses.
-    # Note: use_cpu_only has been removed from sleap module
-    # try:
-    #     sleap.use_cpu_only()
-    # except RuntimeError:  # Visible devices cannot be modified after being initialized
-    #     logger.warning(
-    #         "Running processes on the GPU. Restarting your GUI should allow "
-    #         "switching back to CPU-only mode.\n"
-    #         "Received the following error when trying to switch back to "
-    #         "CPU-only mode:"
-    #     )
-    #     traceback.print_exc()
 
     # Print versions.
     print()

@@ -13,10 +13,11 @@ import cattr
 from qtpy import QtCore, QtGui, QtWidgets
 
 import sleap
-from sleap import Labels
+from sleap import Labels, Video, Skeleton
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import configs, receptivefield, runners, scopedkeydict
+from sleap.gui.learning.configs import TrainingConfigsGetter
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -474,12 +475,12 @@ class LearningDialog(QtWidgets.QDialog):
         Args:
             loaded_cfg: A `TrainingJobConfig` that was loaded from a preset or previous
                 training run.
-            tab_cfg_key_val_dict: A dictionary with the values extracted from the training
-                editor GUI tab.
+            tab_cfg_key_val_dict: A dictionary with the values extracted from the
+                training editor GUI tab.
 
         Returns:
-            A `ScopedKeyDict` with the loaded config values overriden by the corresponding
-            ones from the `tab_cfg_key_val_dict`.
+                    A `ScopedKeyDict` with the loaded config values overriden by the
+        corresponding ones from the `tab_cfg_key_val_dict`.
         """
         # Serialize training config
         loaded_cfg_hierarchical: dict = cattr.unstructure(loaded_cfg)
@@ -559,7 +560,9 @@ class LearningDialog(QtWidgets.QDialog):
                         cfg.model.heads.multi_class_topdown.class_vectors.classes = [
                             t.name for t in self.labels.tracks
                         ]
-                        cfg.model.heads.multi_class_topdown.class_vectors.output_stride = max_stride
+                        (
+                            cfg.model.heads.multi_class_topdown.class_vectors.output_stride
+                        ) = max_stride
 
                 cfg_info = configs.ConfigFileInfo(config=cfg, head_name=tab_name)
 
@@ -633,7 +636,6 @@ class LearningDialog(QtWidgets.QDialog):
     def _validate_id_model(self) -> bool:
         """Make sure we have instances with tracks set for ID models."""
         if not self.labels.tracks:
-            message = "Cannot run ID model training without tracks."
             return False
 
         found_tracks = False
@@ -661,6 +663,7 @@ class LearningDialog(QtWidgets.QDialog):
                     "Cannot run inference with untrained models "
                     f"({', '.join(untrained)})."
                 )
+                can_run = False
 
         # Make sure we have instances with tracks set for ID models.
         if self.mode == "training" and self.current_pipeline in (
@@ -889,7 +892,7 @@ class LearningDialog(QtWidgets.QDialog):
             msgBox = QtWidgets.QMessageBox(text="Created training job package.")
             msgBox.setDetailedText(output_path)
             msgBox.setWindowTitle("Training Job Package")
-            okButton = msgBox.addButton(QtWidgets.QMessageBox.Ok)
+            msgBox.addButton(QtWidgets.QMessageBox.Ok)
             openFolderButton = msgBox.addButton(
                 "Open containing folder", QtWidgets.QMessageBox.ActionRole
             )
@@ -1107,7 +1110,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self._cfg_list_widget.onConfigSelection.connect(
                 self.acceptSelectedConfigInfo
             )
-            # self._cfg_list_widget.setDataDict.connect(self.set_fields_from_key_val_dict)
+            # self._cfg_list_widget.setDataDict.connect(
+            # self.set_fields_from_key_val_dict
+            # )
 
             layout.addWidget(self._cfg_list_widget)
 
@@ -1164,7 +1169,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self._use_trained_model.setChecked(self._require_trained)
             self._use_trained_model.setVisible(has_trained_model)
             self._use_trained_model.setEnabled(has_trained_model)
-        # Redundant check (for readability) since this checkbox exists if the above does
+        # Redundant check (for readability) since this checkbox exists if the
+        # above does
         if self._resume_training is not None:
             self._use_trained_model.setChecked(False)
             self._resume_training.setVisible(has_trained_model)
@@ -1210,10 +1216,10 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     #     self._cfg_list_widget.setUserConfigData(cfg_form_data_dict)
 
     def _update_use_trained(self, check_state=0):
-        """Update config GUI based on _use_trained_model and _resume_training checkboxes.
+        """Update config GUI based on _use_trained_model & _resume_training checkboxes.
 
-        This function is called when either _use_trained_model or _resume_training checkbox
-        is checked/unchecked or when _require_trained is changed.
+        This function is called when either _use_trained_model or _resume_training
+        checkbox is checked/unchecked or when _require_trained is changed.
 
         If _require_trained is True, then we'll disable all fields.
         If _use_trained_model is checked, then we'll disable all fields.
@@ -1226,7 +1232,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             None
 
         Side Effects:
-            Disables/Enables fields based on checkbox values (and _required_training).
+            Disables/Enables fields based on checkbox values
+            (and _required_training).
         """
 
         # Check which checkbox changed its value (if any)
@@ -1235,13 +1242,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if sender is None:  # If sender is None, then _required_training is True
             pass
         # Uncheck _resume_training checkbox if _use_trained_model is unchecked
-        elif (sender == self._use_trained_model) and (
-            not self._use_trained_model.isChecked()
+        elif (
+            sender == self._use_trained_model
+            and not self._use_trained_model.isChecked()
         ):
             self._resume_training.setChecked(False)
 
         # Check _use_trained_model checkbox if _resume_training is checked
-        elif (sender == self._resume_training) and self._resume_training.isChecked():
+        elif sender == self._resume_training and self._resume_training.isChecked():
             self._use_trained_model.setChecked(True)
 
         # Update form widgets
@@ -1344,7 +1352,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             trained_config.outputs.run_name_suffix = None
 
         if self.resume_training:
-            # Get the folder path of trained config and set it as the output folder
+            # Get the folder path of trained config and set it as the output
+            # folder
             trained_config_info.config.model.base_checkpoint = str(
                 Path(cast(str, trained_config_info.path)).parent
             )
@@ -1384,7 +1393,9 @@ def demo_training_dialog():
     #     "_heads_name": "centered_instance",
     # })
     #
-    # win.training_editor_widget.form_widgets["model"].set_field_enabled("_heads_name", False)
+    # win.training_editor_widget.form_widgets["model"].set_field_enabled(
+    # "_heads_name", False
+    # )
 
     win.show()
     app.exec_()

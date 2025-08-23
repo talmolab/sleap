@@ -17,11 +17,10 @@ import atexit
 import math
 import time
 from collections import deque
-from typing import Callable, List, Optional, Union
+from typing import Callable, List, Optional, Union, Final
 from sleap_io import Video
 
 import numpy as np
-import qimage2ndarray
 from qtpy import QtCore, QtWidgets
 from qtpy.QtCore import QLineF, QMarginsF, QPointF, QRectF, Qt
 from qtpy.QtGui import (
@@ -76,112 +75,108 @@ from sleap_io.model.skeleton import Node
 FORCE_REQUESTS = True
 
 
-class LoadImageWorker(QtCore.QObject):
+def ndarray_to_qimage(
+    img: np.ndarray,
+    *,
+    copy: bool = False,
+    normalize: bool = False,
+) -> QImage:
+    """Convert a NumPy ndarray (HxWxC, C in {1, 3, 4}) to a QImage for PySide6.
+
+    The input is expected to be an image-like array of shape (height, width, channels),
+    where ``channels`` is 1 (grayscale), 3 (RGB), or 4 (RGBA). The array may be of dtype
+    ``uint8`` (preferred), ``float32/float64`` (in [0, 1] if ``normalize=False``),
+    or ``uint16``. Non-contiguous arrays are made contiguous.
+
+    Args:
+        img: NumPy array of shape (H, W, C) with C ∈ {1, 3, 4}.
+        copy: If True, return a deep-copied QImage that owns its pixels.
+            If False (default), QImage references the NumPy buffer; you **must**
+            keep the NumPy array alive as long as the image is used (e.g., store
+            a reference on the owning widget/object).
+        normalize: If True, floating-point and 16-bit inputs are linearly scaled
+            to 8-bit. If False, floating in [0, 1] is assumed and scaled to 0-255
+            without clipping; uint16 will be right-shifted to 8-bit.
+
+    Returns:
+        A ``QImage`` instance suitable for wrapping with ``QPixmap.fromImage(...)``.
+
+    Raises:
+        ValueError: If shape, dtype, or channel count are unsupported.
+
+    Examples:
+        >>> qimg = ndarray_to_qimage(rgb_array)  # HxWx3 uint8
+        >>> pixmap = QPixmap.fromImage(qimg)
+        >>> item = scene.addPixmap(pixmap)  # QGraphicsScene usage
     """
-    Object to load video frames in background thread.
+    if img.ndim != 3:
+        raise ValueError(f"Expected (H, W, C), got shape {img.shape}")
+    h, w, c = img.shape
+    if c not in (1, 3, 4):
+        raise ValueError(f"Channels must be 1, 3, or 4, got {c}")
 
-    Requests to load a frame image are sent by calling the `request` method with
-    the frame idx; the video attribute should already be set to the correct
-    video.
+    # Ensure C-contiguous, positive stride buffer
+    arr = np.ascontiguousarray(img)
 
-    These requests are added to a FILO queue polled by the `doProcessing`
-    method, called whenever there's time during the Qt event loop.
-    (It's also added to the event queue if it hasn't been called for a while
-    and we get a request, since the timer doesn't seem to emit events if the
-    user has been holding down the mouse for a while.)
+    # Convert/scale to uint8 as needed
+    if arr.dtype == np.uint8:
+        arr_u8 = arr
+    elif arr.dtype in (np.float32, np.float64):
+        if normalize:
+            # Robust scaling: clip to [0,1] then scale.
+            arr_u8 = (np.clip(arr, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8)
+        else:
+            # Assume already in [0,1]; avoid extra clip for speed.
+            arr_u8 = (arr * 255.0 + 0.5).astype(np.uint8)
+    elif arr.dtype == np.uint16:
+        if normalize:
+            # Scale full 16-bit range to 8-bit.
+            # Use float to avoid overflow, then cast.
+            arr_u8 = (arr.astype(np.float32) * (255.0 / 65535.0) + 0.5).astype(np.uint8)
+        else:
+            # Simple downshift (keeps top 8 bits).
+            arr_u8 = (arr >> 8).astype(np.uint8)
+    else:
+        raise ValueError(
+            f"Unsupported dtype {arr.dtype}; use uint8/uint16/float32/float64."
+        )
 
-    The actual frame loading is wrapped with a mutex lock so that we only load
-    a single frame at a time; this helps us not get a bunch of older frame
-    requests running concurrently.
+    # Map channels to QImage format
+    if c == 1:
+        qformat = QImage.Format_Grayscale8
+        bytes_per_line: Final[int] = w * 1
+        # Ensure shape is (H, W) for grayscale
+        if arr_u8.shape[2] != 1:
+            raise ValueError("Grayscale must have shape (H, W, 1).")
+        buf = arr_u8.reshape(h, w)
+    elif c == 3:
+        qformat = QImage.Format_RGB888
+        bytes_per_line = w * 3
+        # QImage.Format_RGB888 expects RGB byte order (not BGR).
+        buf = arr_u8
+    else:  # c == 4
+        qformat = QImage.Format_RGBA8888
+        bytes_per_line = w * 4
+        # QImage.Format_RGBA8888 expects RGBA byte order.
+        buf = arr_u8
 
-    Once the frame loads, the `QImage` is sent via the `result` signal.
-    (Qt handles the cross-thread communication if we use signals.)
-    """
+    # Create QImage that references the NumPy buffer
+    qimg = QImage(
+        buf.data,  # type: ignore[arg-type]
+        w,
+        h,
+        bytes_per_line,
+        qformat,
+    )
 
-    result = QtCore.Signal(QImage)
-    process = QtCore.Signal()
+    # Optionally detach so QImage owns its memory
+    if copy:
+        qimg = qimg.copy()
 
-    load_queue = []
-    video = None
-    _last_process_time = 0
-    _force_request_wait_time = 1
-    _recent_load_times = None
+    return qimg
 
-    def __init__(self, *args, **kwargs):
-        super(LoadImageWorker, self).__init__(*args, **kwargs)
 
-        self._processing_mutex = QtCore.QMutex()
-        self._recent_load_times = deque(maxlen=5)
-
-        # Connect signal to processing function so that we can add processing
-        # event to event queue from the request handler.
-        self.process.connect(self.doProcessing)
-
-        # Start timer which will trigger processing events every 20 ms when we're free
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.doProcessing)
-        self.timer.start(20)
-
-    def doProcessing(self):
-        self._last_process_time = time.time()
-
-        if not self.load_queue:
-            return
-
-        # Use a mutex lock to ensure that we're only loading one frame at a time
-        self._processing_mutex.lock()
-
-        # Maybe we had to wait to acquire the lock, so make sure there are still
-        # frames to load
-        if not self.load_queue:
-            return
-
-        # Get the most recent request and clear all the others, since there's no
-        # reason to load frames for older requests
-        frame_idx = self.load_queue[-1]
-        self.load_queue = []
-
-        try:
-            t0 = time.time()
-
-            # Get image data
-            frame = self.video.get_frame(frame_idx)
-
-            self._recent_load_times.append(time.time() - t0)
-
-            # Set the time to wait before forcing a load request to a little
-            # longer than the average time it recently took to load a frame
-            avg_load_time = sum(self._recent_load_times) / len(self._recent_load_times)
-            self._force_request_wait_time = avg_load_time
-
-        except Exception:
-            frame = None
-
-        # Release the lock so other threads can start processing frame requests
-        self._processing_mutex.unlock()
-
-        if frame is not None:
-            # Convert ndarray to QImage
-            qimage = qimage2ndarray.array2qimage(frame)
-
-            # Emit result
-            self.result.emit(qimage)
-
-    def request(self, frame_idx):
-        # Add request to the queue so that we can just process the most recent.
-        self.load_queue.append(frame_idx)
-
-        # If we haven't processed a request for a certain amount of time,
-        # then trigger a processing event now. This helps when the user has been
-        # continuously changing frames for a while (i.e., dragging on seekbar
-        # or holding down arrow key).
-
-        since_last = time.time() - self._last_process_time
-
-        if FORCE_REQUESTS:
-            if since_last > self._force_request_wait_time:
-                self._last_process_time = time.time()
-                self.process.emit()
+# LoadImageWorker removed - replaced with FrameLoaderThread in video_worker.py
 
 
 class QtVideoPlayer(QWidget):
@@ -212,6 +207,9 @@ class QtVideoPlayer(QWidget):
         **kwargs,
     ):
         super(QtVideoPlayer, self).__init__(*args, **kwargs)
+
+        # Add re-entry guard
+        self._is_plotting = False
 
         self.setAcceptDrops(True)
 
@@ -253,16 +251,13 @@ class QtVideoPlayer(QWidget):
             lambda e: self.state.set("frame_idx", self.seekbar.value())
         )
 
-        # Make worker thread to load images in the background
-        self._loader_thread = QtCore.QThread()
-        self._video_image_loader = LoadImageWorker()
-        self._video_image_loader.moveToThread(self._loader_thread)
-        self._loader_thread.start()
+        # Initialize worker thread components
+        self.load_image_worker = None
+        self.load_image_worker_thread = None
+        self.worker_ready = False
 
-        # Connect signal so that image will be shown after it's loaded
-        self._video_image_loader.result.connect(
-            lambda qimage: self.view.setImage(qimage)
-        )
+        # Set up the worker thread
+        self._setup_worker_thread()
 
         def update_selection_state(a, b):
             self.state.set("frame_range", (a, b + 1))
@@ -289,9 +284,41 @@ class QtVideoPlayer(QWidget):
         if video is not None:
             self.load_video(video)
 
+    def _setup_worker_thread(self):
+        """Set up the worker thread using simple QThread.run() approach."""
+        # Import here to avoid circular imports
+        from sleap.gui.widgets.video_worker import FrameLoaderThread
+
+        # Create the worker thread
+        self.worker_thread = FrameLoaderThread()
+
+        # Connect the result signal to display frames
+        # This is the ONLY signal connection we need
+        self.worker_thread.frameReady.connect(self._on_frame_ready)
+
+        # Start the thread
+        self.worker_thread.start()
+
+        # Mark as ready
+        self.worker_ready = True
+
+    def _on_frame_ready(self, frame_idx: int, qimage: QImage):
+        """Called when a frame is ready from the worker thread."""
+        self.view.setImage(qimage)
+
+    def _on_worker_ready(self):
+        """Called when worker thread is ready"""
+        print("Worker thread is ready")
+        self.worker_ready = True
+
+        # If we have a video loaded already, trigger a plot
+        if self.video is not None:
+            self.plot()
+
     def cleanup(self):
-        self._loader_thread.quit()
-        self._loader_thread.wait()
+        """Clean up the worker thread."""
+        if hasattr(self, "worker_thread"):
+            self.worker_thread.stop()
 
     def dragEnterEvent(self, event):
         if self.parentWidget():
@@ -310,7 +337,7 @@ class QtVideoPlayer(QWidget):
 
         if frame is not None:
             # Convert ndarray to QImage
-            qimage = qimage2ndarray.array2qimage(frame)
+            qimage = ndarray_to_qimage(frame)
 
             # Display image
             self.view.setImage(qimage)
@@ -493,26 +520,32 @@ class QtVideoPlayer(QWidget):
             self.view.updatedViewer.connect(instance.updatePoints)
 
     def plot(self, *args):
-        """
-        Do the actual plotting of the video frame.
-        """
+        """Do the actual plotting of the video frame."""
         if self.video is None:
             return
 
-        idx = self.state["frame_idx"] or 0
+        # Prevent re-entry to avoid infinite loops
+        if self._is_plotting:
+            return
 
-        # Clear exiting objects before drawing instances
-        self.view.clear()
+        # Don't try to plot if worker isn't ready
+        if not self.worker_ready:
+            return
 
-        # Emit signal for the instances to be drawn for this frame
-        self.changedPlot.emit(self, idx, self.state["instance"])
+        self._is_plotting = True
+        try:
+            idx = self.state["frame_idx"] or 0
 
-        # Request for the image to load and be shown for this frame
-        # (note that we're calling method directly rather than connecting
-        # the method to a signal because Qt was holding onto the signal events
-        # for too long before they were received by the loader).
-        self._video_image_loader.video = self.video
-        self._video_image_loader.request(idx)
+            # Clear exiting objects before drawing instances
+            self.view.clear()
+
+            # Emit signal for the instances to be drawn for this frame
+            self.changedPlot.emit(self, idx, self.state["instance"])
+
+            # Request frame from worker thread
+            self.worker_thread.request_frame(self.video, idx)
+        finally:
+            self._is_plotting = False
 
     def update_plot(self):
         idx = self.state["frame_idx"] or 0
@@ -878,7 +911,7 @@ class GraphicsView(QGraphicsView):
         """
         if type(image) is np.ndarray:
             # Convert numpy array of frame image to QImage
-            image = qimage2ndarray.array2qimage(image)
+            image = ndarray_to_qimage(image)
 
         if type(image) is QPixmap:
             pixmap = image

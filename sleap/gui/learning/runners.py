@@ -243,7 +243,8 @@ class InferenceTask:
         ]
         cli_args.extend(
             item_for_inference.cli_args
-        )  # sample inference CLI args:['--data_path', '/Users/divyasesh/Desktop/its_me/slp_datasets_models/wt_13/clips/190719_090330_wt_18159206_rig1.2@15000-17560.slp', '--video_index', '0', '--video_input_format', 'channels_last', '--frames', '0,-2559']
+        )  # sample inference CLI args: ['--data_path', '...', '--video_index', '0',
+        # '--video_input_format', 'channels_last', '--frames', '0,-2559']
 
         # Make path where we'll save predictions (if not specified)
         if output_path is None:
@@ -274,7 +275,8 @@ class InferenceTask:
             ):
                 job_path = str(
                     Path(job_path).parent
-                )  # get the model ckpt folder path from the path of `training_config.yaml`
+                )  # get the model ckpt folder path from the path of
+                # `training_config.yaml`
             cli_args.extend(("--model_paths", job_path))
 
         cli_args.extend(["-o", output_path])
@@ -323,7 +325,7 @@ class InferenceTask:
                     ]
                 )
 
-            if self.inference_params["tracking.similarity"]=="oks":
+            if self.inference_params["tracking.similarity"] == "oks":
                 cli_args.extend(["--features", "keypoints"])
                 cli_args.extend(["--scoring_method", "oks"])
             elif self.inference_params["tracking.similarity"] == "centroids":
@@ -363,7 +365,7 @@ class InferenceTask:
                         # Parse line.
                         line_data = json.loads(line)
                         is_json = True
-                    except:
+                    except (json.JSONDecodeError, ValueError):
                         is_json = False
 
                 if not is_json:
@@ -504,7 +506,14 @@ def write_pipeline_files(
             new_cfg_filenames.append(cfg_info.config.outputs.run_path)
 
             # Add a line to the script for training this model
-            train_script += f"sleap-nn-train --config-name {new_cfg_filename} --config-dir {''} trainer_config.save_ckpt_path={ckpt_path} trainer_config.zmq.controller_address=tcp://127.0.0.1:{str(inference_params['controller_port'])} trainer_config.zmq.publish_address=tcp://127.0.0.1:{str(inference_params['publish_port'])}"
+            train_script += (
+                f"sleap-nn-train --config-name {new_cfg_filename} --config-dir {''} "
+                f"trainer_config.save_ckpt_path={ckpt_path} "
+                f"trainer_config.zmq.controller_address=tcp://127.0.0.1:"
+                f"{str(inference_params['controller_port'])} "
+                f"trainer_config.zmq.publish_address=tcp://127.0.0.1:"
+                f"{str(inference_params['publish_port'])}"
+            )
 
             # Setup job params
             training_jobs.append(
@@ -904,8 +913,6 @@ def train_subprocess(
 ):
     """Runs training inside subprocess."""
     run_path = job_config.outputs.run_path
-
-    success = False
 
     with tempfile.TemporaryDirectory() as temp_dir:
         # Write a temporary file of the TrainingJob so that we can respect

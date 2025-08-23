@@ -51,7 +51,7 @@ def receptive_field_info_from_model_cfg(model_cfg: ModelConfig) -> dict:
     # Currently, this works only for UNet backbones.
     # TODO: Add support for other backbones.
     try:
-        up_blocks = np.log2(
+        _ = np.log2(
             model_cfg.backbone.which_oneof().max_stride
             / model_cfg.backbone.which_oneof().output_stride
         )

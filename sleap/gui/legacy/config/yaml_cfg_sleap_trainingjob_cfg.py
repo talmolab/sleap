@@ -49,11 +49,23 @@ def mapper(config: OmegaConf):
 
     data = DataConfig(
         labels=LabelsConfig(
-            training_labels=data_cfg.train_labels_path[0] if data_cfg.train_labels_path is not None and len(data_cfg.train_labels_path) else None,
-            validation_labels=data_cfg.val_labels_path[0] if data_cfg.val_labels_path is not None and len(data_cfg.val_labels_path) else None,
+            training_labels=(
+                data_cfg.train_labels_path[0]
+                if data_cfg.train_labels_path is not None
+                and len(data_cfg.train_labels_path)
+                else None
+            ),
+            validation_labels=(
+                data_cfg.val_labels_path[0]
+                if data_cfg.val_labels_path is not None
+                and len(data_cfg.val_labels_path)
+                else None
+            ),
             validation_fraction=data_cfg.validation_fraction,
             test_labels=data_cfg.test_file_path,
-            skeletons=SkeletonEncoder().encode(skeletons) if skeletons is not None else None,
+            skeletons=(
+                SkeletonEncoder().encode(skeletons) if skeletons is not None else None
+            ),
         ),
         preprocessing=PreprocessingConfig(
             ensure_rgb=data_cfg.preprocessing.ensure_rgb,

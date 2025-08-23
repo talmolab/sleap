@@ -152,8 +152,8 @@ class OutputsConfig:
             predictions as PNGs to "{run_folder}/viz/{split}.{epoch:04d}.png", where the
             split is one of "train", "validation", "test".
         keep_viz_images: If True, keep the saved visualization images after training
-            completes. This is useful unchecked to reduce the model folder size if you do not need
-            to keep the visualization images.
+            completes. This is useful unchecked to reduce the model folder size
+            if you do not need to keep the visualization images.
         zip_outputs: If True, compress the run folder to a zip file. This will be named
             "{run_folder}.zip".
         log_to_csv: If True, loss and metrics will be saved to a simple CSV after each
