@@ -18,7 +18,6 @@ import math
 from typing import Callable, List, Optional, Union, Final
 
 import numpy as np
-import qimage2ndarray
 from qtpy import QtCore, QtWidgets
 from qtpy.QtCore import QLineF, QMarginsF, QPointF, QRectF, Qt
 from qtpy.QtGui import (
@@ -329,7 +328,7 @@ class QtVideoPlayer(QWidget):
 
         if frame is not None:
             # Convert ndarray to QImage
-            qimage = qimage2ndarray.array2qimage(frame)
+            qimage = ndarray_to_qimage(frame)
 
             # Display image
             self.view.setImage(qimage)
@@ -903,7 +902,7 @@ class GraphicsView(QGraphicsView):
         """
         if type(image) is np.ndarray:
             # Convert numpy array of frame image to QImage
-            image = qimage2ndarray.array2qimage(image)
+            image = ndarray_to_qimage(image)
 
         if type(image) is QPixmap:
             pixmap = image
