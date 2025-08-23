@@ -211,6 +211,22 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Close application window, prompting for saving as needed."""
+        # Clean up video player resources BEFORE saving preferences.
+        # This prevents a semaphore leak that occurs when restoreState() is used.
+        # The leak happens because restoreState() interferes with proper cleanup
+        # of the multiprocessing.RLock in MediaVideo.
+        if hasattr(self, 'player'):
+            # Explicitly close the video to release its resources
+            if hasattr(self.player, 'video') and self.player.video is not None:
+                # Call close() on MediaVideo backend to release the RLock
+                if hasattr(self.player.video, 'backend') and hasattr(self.player.video.backend, 'close'):
+                    self.player.video.backend.close()
+                self.player.video = None
+            
+            # Stop the worker thread
+            if hasattr(self.player, 'cleanup'):
+                self.player.cleanup()
+        
         # Save window state.
         prefs["window state"] = self.saveState()
         prefs["marker size"] = self.state["marker size"]
@@ -251,7 +267,7 @@ class MainWindow(QMainWindow):
                 self.commands.saveProject()
                 # accept event (closes window)
                 event.accept()
-
+        
     def dragEnterEvent(self, event):
         # TODO: Parse filenames and accept only if valid ext (or folder)
         mime_format = 'application/x-qt-windows-mime;value="FileName"'
