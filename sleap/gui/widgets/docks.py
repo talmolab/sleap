@@ -37,7 +37,6 @@ from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
 
 # from sleap.skeleton import Skeleton, SkeletonDecoder
-from sleap_io.model.skeleton import Skeleton
 from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.util import find_files_by_suffix, get_package_file
 
@@ -385,7 +384,7 @@ class SkeletonDock(DockWidget):
             self.skeleton_preview_image.setPixmap(preview_image)
 
         def decode_preview_image(img_b64: bytes, return_bytes: bool = False):
-            """Decode a skeleton preview image byte string representation to a `PIL.Image`
+            """Decode a skeleton preview img byte string representation to PIL.Image
 
             Args:
                 img_b64: a byte string representation of a skeleton preview image
@@ -411,7 +410,8 @@ class SkeletonDock(DockWidget):
             description = "Test"
             main_window.state["skeleton_description"] = (
                 f"<strong>Description:</strong> {description}<br><br>"
-                f"<strong>Nodes ({len(skel)}):</strong> {', '.join(skel.node_names)}"
+                f"<strong>Nodes ({len(skel)}):</strong> "
+                f"{', '.join(skel.node_names)}"
             )
             self.skeleton_description.setText(main_window.state["skeleton_description"])
             updatePreviewImage(

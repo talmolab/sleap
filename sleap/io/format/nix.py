@@ -10,6 +10,8 @@ from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.dataset import Labels
 
+from sleap_io.model.skeleton import Node, Skeleton
+
 # from sleap.skeleton import Node, Skeleton (sleap.io will be deleted)
 
 

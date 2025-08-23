@@ -2,11 +2,10 @@
 Module for generating lists of suggested frames (for labeling or reviewing).
 """
 
-import attr
 import numpy as np
 import random
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 from sleap_io import Video, SuggestionFrame
 
 
@@ -105,7 +104,6 @@ class VideoFrameSuggestions(object):
                 else:
                     vid_suggestions = random.sample(unique_idx, frames_num)
 
-            group = labels.videos.index(video)
             suggestions.extend(cls.idx_list_to_frame_list(vid_suggestions, video))
 
         return suggestions

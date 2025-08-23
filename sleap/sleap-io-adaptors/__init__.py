@@ -12,10 +12,9 @@ from .compatibility import patch_sleap_io_classes
 
 __all__ = [
     "LabelsAdaptor",
-    "VideoAdaptor", 
+    "VideoAdaptor",
     "VideoBackendAdaptor",
-    "patch_sleap_io_classes"
+    "patch_sleap_io_classes",
 ]
 
 # Auto-patch sleap-io classes when this package is imported
-from .compatibility import patch_sleap_io_classes

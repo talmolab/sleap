@@ -4,6 +4,7 @@ Dialog for exporting clip; shows message depending on available encoder.
 
 from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 
+
 def can_use_ffmpeg():
     """Check if ffmpeg is available for writing videos."""
     try:
@@ -21,9 +22,9 @@ def can_use_ffmpeg():
 
     return False
 
+
 class ExportClipDialog(FormBuilderModalDialog):
     def __init__(self, form_name=None):
-
         form_name = form_name or "video_clip_form"
         super().__init__(form_name=form_name)
 

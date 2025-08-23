@@ -58,8 +58,7 @@ import attr
 import cv2
 import numpy as np
 from qtpy import QtCore, QtGui, QtWidgets
-from sleap_io import Track
-from sleap_io import Video
+from sleap_io import Track, Video
 
 from sleap.gui.dialogs.delete import DeleteDialog
 from sleap.gui.dialogs.filedialog import FileDialog
@@ -71,8 +70,9 @@ from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap_io import SuggestionFrame
-from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance, Track
+from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance
 from sleap.io.convert import default_analysis_filename
+
 # from sleap.io.dataset import Labels
 from sleap_io.model.labels import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -88,6 +88,8 @@ from sleap.util import get_package_file
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
+
+
 def can_use_ffmpeg():
     """Check if ffmpeg is available for writing videos."""
     try:
@@ -104,6 +106,7 @@ def can_use_ffmpeg():
         return False
 
     return False
+
 
 logger = logging.getLogger(__name__)
 
@@ -752,7 +755,7 @@ class LoadProjectFile(LoadLabelsObject):
             has_loaded = True
         else:
             # Import and use sleap-io with compatibility layer
-            
+
             gui_video_callback = Labels.make_gui_video_callback(
                 search_paths=[os.path.dirname(filename)], context=params
             )
@@ -3325,8 +3328,7 @@ class MergeProject(EditCommand):
 
         for filename in filenames:
             # Import and use sleap-io with compatibility layer
-            from sleap.sleap_io_adaptors.compatibility import patch_sleap_io_classes
-            
+
             gui_video_callback = Labels.make_gui_video_callback(
                 search_paths=[os.path.dirname(filename)]
             )

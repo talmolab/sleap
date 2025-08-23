@@ -15,8 +15,6 @@ Example usage: ::
 
 import atexit
 import math
-import time
-from collections import deque
 from typing import Callable, List, Optional, Union, Final
 from sleap_io import Video
 

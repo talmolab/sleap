@@ -17,7 +17,7 @@ from typing import Optional, Union, Callable, List, Text
 
 class SleapIOSLPAdaptor(format.adaptor.Adaptor):
     """Adaptor for reading/writing SLEAP datasets using sleap-io backend."""
-    
+
     FORMAT_ID = 2.0  # Higher than the old HDF5 adaptor to take precedence
 
     @property
@@ -78,7 +78,7 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
         """Read SLP file using sleap-io backend."""
         # Convert sleap-io Labels to sleap Labels
         sleap_io_labels = read_labels(file.filename, open_videos=True)
-        
+
         # Convert to sleap Labels format
         return self._convert_sleap_io_to_sleap(sleap_io_labels, match_to)
 
@@ -86,22 +86,30 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
         """Write Labels to SLP file using sleap-io backend."""
         # Convert sleap Labels to sleap-io Labels
         sleap_io_labels = self._convert_sleap_to_sleap_io(source_object)
-        
+
         # Write using sleap-io
         write_labels(filename, sleap_io_labels, embed=False, verbose=True)
 
-    def _convert_sleap_io_to_sleap(self, sleap_io_labels: SleapIOLabels, match_to: Optional[Labels] = None) -> Labels:
+    def _convert_sleap_io_to_sleap(
+        self, sleap_io_labels: SleapIOLabels, match_to: Optional[Labels] = None
+    ) -> Labels:
         """Convert sleap-io Labels to sleap Labels."""
-        from sleap.instance import LabeledFrame, Instance, PredictedInstance, Point, PredictedPoint
+        from sleap.instance import (
+            LabeledFrame,
+            Instance,
+            PredictedInstance,
+            Point,
+            PredictedPoint,
+        )
         from sleap.io.video import Video as SleapVideo
-        from sleap.skeleton import Skeleton as SleapSkeleton, Node as SleapNode
-        
+        from sleap.skeleton import Skeleton as SleapSkeleton
+
         # Convert videos
         videos = []
         for video in sleap_io_labels.videos:
             sleap_video = SleapVideo.from_filename(video.filename)
             videos.append(sleap_video)
-        
+
         # Convert skeletons
         skeletons = []
         for skeleton in sleap_io_labels.skeletons:
@@ -113,14 +121,15 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
             for edge in skeleton.edges:
                 sleap_skeleton.add_edge(edge.source.name, edge.destination.name)
             skeletons.append(sleap_skeleton)
-        
+
         # Convert tracks
         tracks = []
         for track in sleap_io_labels.tracks:
             from sleap.instance import Track as SleapTrack
+
             sleap_track = SleapTrack(track.id, track.name)
             tracks.append(sleap_track)
-        
+
         # Convert labeled frames
         labeled_frames = []
         for lf in sleap_io_labels.labeled_frames:
@@ -130,70 +139,92 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
                 # Convert points
                 points = []
                 for i, point_data in enumerate(instance.points):
-                    if hasattr(instance, 'score'):  # PredictedInstance
+                    if hasattr(instance, "score"):  # PredictedInstance
                         sleap_point = PredictedPoint(
                             x=point_data["xy"][0],
                             y=point_data["xy"][1],
                             visible=point_data["visible"],
                             complete=point_data["complete"],
-                            score=point_data["score"] if "score" in instance.points.dtype.names else 1.0
+                            score=(
+                                point_data["score"]
+                                if "score" in instance.points.dtype.names
+                                else 1.0
+                            ),
                         )
                     else:  # Instance
                         sleap_point = Point(
                             x=point_data["xy"][0],
                             y=point_data["xy"][1],
                             visible=point_data["visible"],
-                            complete=point_data["complete"]
+                            complete=point_data["complete"],
                         )
                     points.append(sleap_point)
-                
-                if hasattr(instance, 'score'):  # PredictedInstance
+
+                if hasattr(instance, "score"):  # PredictedInstance
                     sleap_instance = PredictedInstance(
-                        skeleton=skeletons[0] if skeletons else None,  # Use first skeleton for now
+                        skeleton=skeletons[0] if skeletons else None,
+                        # Use first skeleton
                         points=points,
                         score=instance.score,
-                        tracking_score=getattr(instance, 'tracking_score', 0.0)
+                        tracking_score=getattr(instance, "tracking_score", 0.0),
                     )
                 else:  # Instance
                     sleap_instance = Instance(
-                        skeleton=skeletons[0] if skeletons else None,  # Use first skeleton for now
+                        skeleton=skeletons[0] if skeletons else None,
+                        # Use first skeleton
                         points=points,
-                        track=tracks[instance.track.id] if instance.track and instance.track.id < len(tracks) else None
+                        track=(
+                            tracks[instance.track.id]
+                            if instance.track and instance.track.id < len(tracks)
+                            else None
+                        ),
                     )
                 instances.append(sleap_instance)
-            
+
             sleap_lf = LabeledFrame(
-                video=videos[lf.video.id] if lf.video and lf.video.id < len(videos) else videos[0] if videos else None,
+                video=(
+                    videos[lf.video.id]
+                    if lf.video and lf.video.id < len(videos)
+                    else videos[0]
+                    if videos
+                    else None
+                ),
                 frame_idx=lf.frame_idx,
-                instances=instances
+                instances=instances,
             )
             labeled_frames.append(sleap_lf)
-        
+
         # Create sleap Labels object
         sleap_labels = Labels(
             labeled_frames=labeled_frames,
             videos=videos,
             skeletons=skeletons,
-            tracks=tracks
+            tracks=tracks,
         )
-        
+
         return sleap_labels
 
     def _convert_sleap_to_sleap_io(self, sleap_labels: Labels) -> SleapIOLabels:
         """Convert sleap Labels to sleap-io Labels."""
         from sleap_io.model.labeled_frame import LabeledFrame as SleapIOLabeledFrame
-        from sleap_io.model.instance import Instance as SleapIOInstance, PredictedInstance as SleapIOPredictedInstance
-        from sleap_io.model.skeleton import Skeleton as SleapIOSkeleton, Node as SleapIONode
+        from sleap_io.model.instance import (
+            Instance as SleapIOInstance,
+            PredictedInstance as SleapIOPredictedInstance,
+        )
+        from sleap_io.model.skeleton import (
+            Skeleton as SleapIOSkeleton,
+            Node as SleapIONode,
+        )
         from sleap_io.model.video import Video as SleapIOVideo
         from sleap_io.model.instance import Track as SleapIOTrack
         import numpy as np
-        
+
         # Convert videos
         videos = []
         for video in sleap_labels.videos:
             sleap_io_video = SleapIOVideo.from_filename(video.filename)
             videos.append(sleap_io_video)
-        
+
         # Convert skeletons
         skeletons = []
         for skeleton in sleap_labels.skeletons:
@@ -203,16 +234,18 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
                 source_node = next(n for n in nodes if n.name == edge[0].name)
                 dest_node = next(n for n in nodes if n.name == edge[1].name)
                 edges.append((source_node, dest_node))
-            sleap_io_skeleton = SleapIOSkeleton(nodes=nodes, edges=edges, name=skeleton.name)
+            sleap_io_skeleton = SleapIOSkeleton(
+                nodes=nodes, edges=edges, name=skeleton.name
+            )
             skeletons.append(sleap_io_skeleton)
-        
+
         # Convert tracks
         tracks = []
         for track in sleap_labels.tracks:
             if track:
                 sleap_io_track = SleapIOTrack(track.id, track.name)
                 tracks.append(sleap_io_track)
-        
+
         # Convert labeled frames
         labeled_frames = []
         for lf in sleap_labels.labeled_frames:
@@ -224,46 +257,69 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
                 points_array = np.array([[p.x, p.y] for p in instance.points])
                 visible_array = np.array([p.visible for p in instance.points])
                 complete_array = np.array([p.complete for p in instance.points])
-                
+
                 # Create structured array for sleap-io
-                if hasattr(instance, 'score'):  # PredictedInstance
-                    score_array = np.array([p.score if hasattr(p, 'score') else 1.0 for p in instance.points])
+                if hasattr(instance, "score"):  # PredictedInstance
+                    score_array = np.array(
+                        [
+                            p.score if hasattr(p, "score") else 1.0
+                            for p in instance.points
+                        ]
+                    )
                     from sleap_io.model.instance import PredictedPointsArray
-                    points_data = np.column_stack([points_array, score_array, visible_array, complete_array])
+
+                    points_data = np.column_stack(
+                        [points_array, score_array, visible_array, complete_array]
+                    )
                     points = PredictedPointsArray.from_array(points_data)
-                else:  # Instance  
+                else:  # Instance
                     from sleap_io.model.instance import PointsArray
-                    points_data = np.column_stack([points_array, visible_array, complete_array])
+
+                    points_data = np.column_stack(
+                        [points_array, visible_array, complete_array]
+                    )
                     points = PointsArray.from_array(points_data)
-                
-                if hasattr(instance, 'score'):  # PredictedInstance
+
+                if hasattr(instance, "score"):  # PredictedInstance
                     sleap_io_instance = SleapIOPredictedInstance(
-                        skeleton=skeletons[0] if skeletons else None,  # Use first skeleton for now
+                        skeleton=skeletons[0] if skeletons else None,
+                        # Use first skeleton
                         points=points,
                         score=instance.score,
-                        tracking_score=getattr(instance, 'tracking_score', 0.0)
+                        tracking_score=getattr(instance, "tracking_score", 0.0),
                     )
                 else:  # Instance
                     sleap_io_instance = SleapIOInstance(
-                        skeleton=skeletons[0] if skeletons else None,  # Use first skeleton for now
+                        skeleton=skeletons[0] if skeletons else None,
+                        # Use first skeleton
                         points=points,
-                        track=tracks[instance.track.id] if instance.track and instance.track.id < len(tracks) else None
+                        track=(
+                            tracks[instance.track.id]
+                            if instance.track and instance.track.id < len(tracks)
+                            else None
+                        ),
                     )
                 instances.append(sleap_io_instance)
-            
+
             sleap_io_lf = SleapIOLabeledFrame(
-                video=videos[lf.video.id] if lf.video and lf.video.id < len(videos) else videos[0] if videos else None,
+                video=(
+                    videos[lf.video.id]
+                    if lf.video and lf.video.id < len(videos)
+                    else videos[0]
+                    if videos
+                    else None
+                ),
                 frame_idx=lf.frame_idx,
-                instances=instances
+                instances=instances,
             )
             labeled_frames.append(sleap_io_lf)
-        
+
         # Create sleap-io Labels object
         sleap_io_labels = SleapIOLabels(
             labeled_frames=labeled_frames,
             videos=videos,
             skeletons=skeletons,
-            tracks=tracks
+            tracks=tracks,
         )
-        
+
         return sleap_io_labels

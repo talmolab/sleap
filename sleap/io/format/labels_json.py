@@ -48,12 +48,6 @@ def make_cattr(idx_to_node: Dict[int, Node] = None) -> cattr.Converter:
         A cattr.Converter() instance for skeleton serialization
         and deserialization.
     """
-    node_to_idx = (
-        {node: idx for idx, node in idx_to_node.items()}
-        if idx_to_node is not None
-        else None
-    )
-
     _cattr = cattr.Converter()
     _cattr.register_unstructure_hook(Skeleton, lambda x: SkeletonEncoder().encode(x))
     _cattr.register_structure_hook(Skeleton, lambda x, cls: SkeletonDecoder().decode(x))
