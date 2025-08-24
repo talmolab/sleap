@@ -3,6 +3,7 @@ from qtpy.QtWidgets import QApplication
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
+from sleap.sleap_io_adaptors.utils import get_symmetry_node
 
 
 def test_app_workflow(
@@ -55,9 +56,9 @@ def test_app_workflow(
 
     # Add and remove symmetry
     app.commands.setNodeSymmetry(app.state["skeleton"], "b", "c")
-    assert app.state["skeleton"].get_symmetry_name("c") == "b"
+    assert get_symmetry_node(app.state["skeleton"], "c") == "b"
     app.commands.setNodeSymmetry(app.state["skeleton"], "b", "")
-    assert app.state["skeleton"].get_symmetry("c") is None
+    assert get_symmetry_node(app.state["skeleton"], "c") is None
 
     # Remove an edge
     app.skeleton_dock.edges_table.selectRowItem(dict(source="b", destination="c"))

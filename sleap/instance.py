@@ -38,6 +38,7 @@ from numpy.lib.recfunctions import structured_to_unstructured
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import plot_img, plot_instances
 from sleap_io import Video
+from sleap.sleap_io_adaptors.utils import find_node
 
 
 class Point(np.record):
@@ -492,7 +493,7 @@ class Instance:
         # convert to node indices so we don't break references to skeleton nodes
         # if the node name is relabeled.
         if points and is_string_dict:
-            points = {skeleton.find_node(name): point for name, point in points.items()}
+            points = {find_node(skeleton, name): point for name, point in points.items()}
 
         if not is_string_dict and not is_node_dict:
             raise ValueError(

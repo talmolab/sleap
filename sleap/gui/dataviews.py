@@ -30,6 +30,7 @@ from sleap.instance import LabeledFrame
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
 from sleap_io.io.video_reading import VideoBackend
+from sleap.sleap_io_adaptors.utils import get_symmetry_node
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -417,7 +418,6 @@ class SkeletonNodesTableModel(GenericTableModel):
         return items
 
     def item_to_data(self, obj, item):
-        from sleap.util import get_symmetry_node
         return dict(name=item.name, symmetry=get_symmetry_node(obj, item.name))
 
     def can_set(self, item, key):

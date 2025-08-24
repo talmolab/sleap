@@ -84,7 +84,7 @@ from sleap.io.visuals import save_labeled_video
 # from sleap.skeleton import Node, Skeleton
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import get_package_file
-
+from sleap.sleap_io_adaptors.utils import get_symmetry_node
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -2568,11 +2568,11 @@ class OpenSkeleton(EditCommand):
         if "linked_nodes" in params.keys():
             linked_nodes = params["linked_nodes"]
             for new_name, old_name in linked_nodes.items():
-                try_and_skip_if_error(skeleton.relabel_node, old_name, new_name)
+                try_and_skip_if_error(skeleton.rename_node, old_name, new_name)
 
         # Delete nodes from skeleton that are not in new skeleton
         for node in delete_nodes:
-            try_and_skip_if_error(skeleton.delete_node, node)
+            try_and_skip_if_error(skeleton.remove_node, node)
 
         # Add nodes that only exist in the new skeleton
         for node in add_nodes:
@@ -2580,8 +2580,11 @@ class OpenSkeleton(EditCommand):
 
         # Add edges
         skeleton.clear_edges()
-        for src, dest in new_skeleton.edges:
-            try_and_skip_if_error(skeleton.add_edge, src.name, dest.name)
+        if isinstance(skeleton, Skeleton):
+            skeleton.edges = []
+        elif isinstance(skeleton, List[Skeleton]):
+            for skl in skeleton:
+                skl.edges = []
 
         # Add new symmetry
         for src, dst in new_skeleton.symmetries:
@@ -2640,7 +2643,7 @@ class DeleteNode(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         node = context.state["selected_node"]
-        context.state["skeleton"].delete_node(node)
+        context.state["skeleton"].remove_node(node)
 
 
 class SetNodeName(EditCommand):
@@ -2657,7 +2660,7 @@ class SetNodeName(EditCommand):
             context.labels.merge_nodes(name, node.name)
         else:
             # Simple relabel
-            skeleton.relabel_node(node.name, name)
+            skeleton.rename_node(node.name, name)
 
 
 class SetNodeSymmetry(EditCommand):
@@ -2672,7 +2675,7 @@ class SetNodeSymmetry(EditCommand):
             skeleton.add_symmetry(node, symmetry)
         else:
             # Value was cleared by user, so delete symmetry
-            symmetric_to = skeleton.get_symmetry(node)
+            symmetric_to = get_symmetry_node(skeleton, node)
             if symmetric_to is not None:
                 skeleton.delete_symmetry(node, symmetric_to)
 
