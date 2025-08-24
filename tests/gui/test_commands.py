@@ -11,6 +11,7 @@ from sleap_io import Video
 
 from sleap import Track, PredictedInstance
 from sleap_io.model.skeleton import Skeleton
+from sleap_io import load_skeleton
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
     AddInstance,
@@ -533,7 +534,6 @@ def test_OpenSkeleton(
     fly32_json = get_package_file("skeletons/fly32.json")
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly32_json
-    from sleap_io.io.skeleton import load_skeleton
     fly32_skeleton = load_skeleton(fly32_json)
     OpenSkeleton.do_action(context, params)
     assert_skeletons_match(labels.skeleton, fly32_skeleton)

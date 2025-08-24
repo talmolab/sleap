@@ -2,6 +2,7 @@ import pytest
 
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
+from sleap_io import load_skeleton
 
 TEST_FLY_LEGS_SKELETON = "tests/data/skeleton/fly_skeleton_legs.json"
 TEST_FLY_LEGS_SKELETON_DICT = "tests/data/skeleton/fly_skeleton_legs_pystate_dict.json"
@@ -67,5 +68,4 @@ def skeleton():
 
 @pytest.fixture
 def flies13_skeleton():
-    from sleap_io.io.skeleton import load_skeleton
     return load_skeleton("sleap/skeletons/flies13.json")

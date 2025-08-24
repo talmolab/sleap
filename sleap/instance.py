@@ -421,7 +421,7 @@ class Instance:
             is_string_dict = set(map(type, points)) == {str}
             if is_string_dict:
                 for node_name in points.keys():
-                    if not self.skeleton.has_node(node_name):
+                    if node_name not in self.skeleton.node_names:
                         raise KeyError(
                             f"There is no node named {node_name} in {self.skeleton}"
                         )

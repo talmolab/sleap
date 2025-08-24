@@ -679,7 +679,6 @@ def skeleton_ids_from_label_instances(labels):
 def test_duplicate_skeletons_serializing():
     vid = Video.from_filename("foo.mp4")
 
-    from sleap_io.io.skeleton import load_skeleton
     skeleton_a = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
     skeleton_b = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
 
@@ -693,7 +692,6 @@ def test_duplicate_skeletons_serializing():
 def test_distinct_skeletons_serializing():
     vid = Video.from_filename("foo.mp4")
 
-    from sleap_io.io.skeleton import load_skeleton
     skeleton_a = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
     skeleton_b = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
     skeleton_b.add_node("foo")
@@ -710,7 +708,6 @@ def test_distinct_skeletons_serializing():
 def test_unify_skeletons():
     vid = Video.from_filename("foo.mp4")
 
-    from sleap_io.io.skeleton import load_skeleton
     skeleton_a = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
     skeleton_b = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
 
@@ -733,7 +730,6 @@ def test_unify_skeletons():
 def test_dont_unify_skeletons():
     vid = Video.from_filename("foo.mp4")
 
-    from sleap_io.io.skeleton import load_skeleton
     skeleton_a = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
     skeleton_b = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
 

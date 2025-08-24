@@ -1961,7 +1961,7 @@ class Labels(MutableSequence):
         # Serialize the skeletons, videos, and labels
         dicts = {
             "version": LABELS_JSON_FILE_VERSION,
-            "skeletons": [skeleton_encoder.encode(skel) for skel in self.skeletons],
+            "skeletons": skeleton_encoder.encode_skeletons(self.skeletons)[0],
             "nodes": cattr.unstructure(self.nodes),
             "videos": Video.cattr().unstructure(self.videos),
             "tracks": track_cattr.unstructure(self.tracks),
