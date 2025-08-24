@@ -8,11 +8,30 @@ but are not available in sleap-io Labels.
 import os
 from typing import Callable, Dict, List, Optional
 
-from sleap_io.model.labels import Labels as SleapIOLabels
+from sleap_io.model.labels import Labels
+from sleap_io.model.video import Video
+from sleap_io import Track
+from sleap.rangelist import RangeList
 
 
-class LabelsAdaptor:
+class LabelsAdaptor(Labels):
     """Adaptor class that provides missing functionality for sleap-io Labels."""
+
+    def __init__(self, labels: Labels):
+        super().__init__(labels)
+
+    def get_track_occupancy(self, video: Video, track: Track) -> RangeList:
+        """Access track occupancy cache that adds video/track as needed."""
+        if track not in self.get_video_track_occupancy(video=video):
+            self._track_occupancy[video][track] = RangeList()
+        return self._track_occupancy[video][track]
+
+    def get_video_track_occupancy(self, video: Video) -> Dict[Track, RangeList]:
+        """Return track occupancy information for specified video."""
+        if video not in self._track_occupancy:
+            self._track_occupancy[video] = dict()
+
+        return self._track_occupancy[video]
 
     @staticmethod
     def make_gui_video_callback(
@@ -142,12 +161,13 @@ class LabelsAdaptor:
 
         return video_callback
 
-    @staticmethod
+    @classmethod
     def load_file(
+        cls,
         filename: str,
         video_search: Optional[Callable] = None,
-        match_to: Optional[SleapIOLabels] = None,
-    ) -> SleapIOLabels:
+        match_to: Optional[Labels] = None,
+    ) -> "LabelsAdaptor":
         """Load a file using sleap-io backend.
 
         This provides a compatible interface similar to sleap Labels.load_file()
@@ -204,10 +224,10 @@ class LabelsAdaptor:
                             if lf.video == video:
                                 lf.video = new_video
 
-        return labels
+        return LabelsAdaptor(labels)
 
     @staticmethod
-    def save_file(labels: SleapIOLabels, filename: str, **kwargs) -> None:
+    def save_file(labels: Labels, filename: str, **kwargs) -> None:
         """Save Labels to file using sleap-io backend.
 
         This provides a compatible interface similar to sleap Labels.save_file()
@@ -227,7 +247,7 @@ class LabelsAdaptor:
             raise ValueError(f"Unsupported file format: {filename}")
 
     @staticmethod
-    def from_sleap_labels(sleap_labels) -> SleapIOLabels:
+    def from_sleap_labels(sleap_labels) -> Labels:
         """Convert sleap Labels to sleap-io Labels.
 
         Args:
@@ -243,7 +263,7 @@ class LabelsAdaptor:
         )
 
     @staticmethod
-    def to_sleap_labels(sleap_io_labels: SleapIOLabels):
+    def to_sleap_labels(sleap_io_labels: Labels):
         """Convert sleap-io Labels to sleap Labels.
 
         Args:

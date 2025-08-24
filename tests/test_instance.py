@@ -413,7 +413,7 @@ def test_merge_nodes_data(min_labels):
 
 
 def test_instance_fill_missing():
-    skeleton = Skeleton.from_names_and_edge_inds(["a", "b", "c"], [])
+    skeleton = Skeleton(nodes=["a", "b", "c"])
 
     for _ in range(10):
         inst = Instance.from_numpy(

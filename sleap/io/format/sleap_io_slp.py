@@ -102,7 +102,6 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
             PredictedPoint,
         )
         from sleap.io.video import Video as SleapVideo
-        from sleap.skeleton import Skeleton as SleapSkeleton
 
         # Convert videos
         videos = []
@@ -113,13 +112,8 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
         # Convert skeletons
         skeletons = []
         for skeleton in sleap_io_labels.skeletons:
-            sleap_skeleton = SleapSkeleton(name=skeleton.name)
-            # Add nodes to the skeleton
-            for node in skeleton.nodes:
-                sleap_skeleton.add_node(node.name)
-            # Add edges to the skeleton
-            for edge in skeleton.edges:
-                sleap_skeleton.add_edge(edge.source.name, edge.destination.name)
+            # sleap-io skeletons are already compatible, just use directly
+            sleap_skeleton = skeleton
             skeletons.append(sleap_skeleton)
 
         # Convert tracks

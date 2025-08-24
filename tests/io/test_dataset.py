@@ -17,6 +17,7 @@ from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
 from tests.io.test_formats import assert_read_labels_match
+from sleap_io import load_skeleton
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
@@ -678,8 +679,9 @@ def skeleton_ids_from_label_instances(labels):
 def test_duplicate_skeletons_serializing():
     vid = Video.from_filename("foo.mp4")
 
-    skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
-    skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    from sleap_io.io.skeleton import load_skeleton
+    skeleton_a = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton_b = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
 
     lf_a = LabeledFrame(vid, frame_idx=2, instances=[Instance(skeleton_a)])
     lf_b = LabeledFrame(vid, frame_idx=3, instances=[Instance(skeleton_b)])
@@ -691,8 +693,9 @@ def test_duplicate_skeletons_serializing():
 def test_distinct_skeletons_serializing():
     vid = Video.from_filename("foo.mp4")
 
-    skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
-    skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    from sleap_io.io.skeleton import load_skeleton
+    skeleton_a = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton_b = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
     skeleton_b.add_node("foo")
 
     lf_a = LabeledFrame(vid, frame_idx=2, instances=[Instance(skeleton_a)])
@@ -707,8 +710,9 @@ def test_distinct_skeletons_serializing():
 def test_unify_skeletons():
     vid = Video.from_filename("foo.mp4")
 
-    skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
-    skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    from sleap_io.io.skeleton import load_skeleton
+    skeleton_a = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton_b = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
 
     lf_a = LabeledFrame(vid, frame_idx=2, instances=[Instance(skeleton_a)])
     lf_b = LabeledFrame(vid, frame_idx=3, instances=[Instance(skeleton_b)])
@@ -729,8 +733,9 @@ def test_unify_skeletons():
 def test_dont_unify_skeletons():
     vid = Video.from_filename("foo.mp4")
 
-    skeleton_a = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
-    skeleton_b = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    from sleap_io.io.skeleton import load_skeleton
+    skeleton_a = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton_b = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
 
     lf_a = LabeledFrame(vid, frame_idx=2, instances=[Instance(skeleton_a)])
     lf_b = LabeledFrame(vid, frame_idx=3, instances=[Instance(skeleton_b)])
@@ -1103,7 +1108,7 @@ def test_multivideo_tracks():
     vid_a = Video.from_filename("foo.mp4")
     vid_b = Video.from_filename("bar.mp4")
 
-    skeleton = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
 
     track_a = Track(spawned_on=2, name="A")
     track_b = Track(spawned_on=3, name="B")

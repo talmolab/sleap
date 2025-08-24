@@ -17,7 +17,8 @@ from typing import Union
 
 from sleap.instance import PredictedInstance, LabeledFrame
 from sleap_io import Track
-from sleap import Labels, Skeleton
+from sleap import Labels
+from sleap_io.model.skeleton import Skeleton
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle

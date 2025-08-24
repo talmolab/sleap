@@ -28,18 +28,21 @@ def fly_legs_skeleton_dict_json():
 @pytest.fixture
 def stickman():
     # Make a skeleton with a space in its name to test things.
-    stickman = Skeleton("Stick man")
-    stickman.add_nodes(
-        ["head", "neck", "body", "right-arm", "left-arm", "right-leg", "left-leg"]
-    )
-    stickman.add_edge("neck", "head")
-    stickman.add_edge("body", "neck")
-    stickman.add_edge("body", "right-arm")
-    stickman.add_edge("body", "left-arm")
-    stickman.add_edge("body", "right-leg")
-    stickman.add_edge("body", "left-leg")
-    stickman.add_symmetry(node1="left-arm", node2="right-arm")
-    stickman.add_symmetry(node1="left-leg", node2="right-leg")
+    node_names = ["head", "neck", "body", "right-arm", "left-arm",
+    "right-leg", "left-leg"]
+    stickman = Skeleton(nodes=node_names, name="Stick man")
+
+    edges = [
+        ("neck", "head"),
+        ("body", "neck"),
+        ("body", "right-arm"),
+        ("body", "left-arm"),
+        ("body", "right-leg"),
+        ("body", "left-leg")
+    ]
+    stickman.add_edges(edges)
+    stickman.add_symmetry("left-arm", "right-arm")
+    stickman.add_symmetry("left-leg", "right-leg")
 
     return stickman
 
@@ -47,21 +50,22 @@ def stickman():
 @pytest.fixture
 def skeleton():
     # Create a simple skeleton object
-    skeleton = Skeleton("Fly")
-    skeleton.add_node("head")
-    skeleton.add_node("thorax")
-    skeleton.add_node("abdomen")
-    skeleton.add_node("left-wing")
-    skeleton.add_node("right-wing")
-    skeleton.add_edge(source="head", destination="thorax")
-    skeleton.add_edge(source="thorax", destination="abdomen")
-    skeleton.add_edge(source="thorax", destination="left-wing")
-    skeleton.add_edge(source="thorax", destination="right-wing")
-    skeleton.add_symmetry(node1="left-wing", node2="right-wing")
+    node_names = ["head", "thorax", "abdomen", "left-wing", "right-wing"]
+    skeleton = Skeleton(nodes=node_names, name="Fly")
+
+    edges = [
+        ("head", "thorax"),
+        ("thorax", "abdomen"),
+        ("thorax", "left-wing"),
+        ("thorax", "right-wing")
+    ]
+    skeleton.add_edges(edges)
+    skeleton.add_symmetry("left-wing", "right-wing")
 
     return skeleton
 
 
 @pytest.fixture
 def flies13_skeleton():
-    return Skeleton.load_json("sleap/skeletons/flies13.json")
+    from sleap_io.io.skeleton import load_skeleton
+    return load_skeleton("sleap/skeletons/flies13.json")

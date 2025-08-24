@@ -73,8 +73,8 @@ from sleap_io import SuggestionFrame
 from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance
 from sleap.io.convert import default_analysis_filename
 
-# from sleap.io.dataset import Labels
-from sleap_io.model.labels import Labels
+from sleap.io.dataset import Labels
+# from sleap_io.model.labels import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
@@ -2382,12 +2382,9 @@ class OpenSkeleton(EditCommand):
 
     @staticmethod
     def load_skeleton(filename: str):
-        if filename.endswith(".json"):
-            new_skeleton = Skeleton.load_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            sk_list = Skeleton.load_all_hdf5(filename)
-            new_skeleton = sk_list[0]
-        return new_skeleton
+        from sleap_io import load_skeleton
+        return load_skeleton(filename)[0]
+        # return `sio.Skeleton` object instead of list
 
     @staticmethod
     def compare_skeletons(

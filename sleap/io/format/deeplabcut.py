@@ -25,7 +25,8 @@ from sleap_io import Video
 
 from sleap.instance import Instance, LabeledFrame, Point
 from sleap_io import Track
-from sleap import Labels, Skeleton
+from sleap import Labels
+from sleap_io.model.skeleton import Skeleton
 from sleap.util import find_files_by_suffix
 
 from .adaptor import Adaptor, SleapObjectType
@@ -190,8 +191,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
             node_names = [n[0] for n in list(data)[start_col::2]]
 
         if skeleton is None:
-            skeleton = Skeleton()
-            skeleton.add_nodes(node_names)
+            skeleton = Skeleton(nodes=node_names)
 
         # Get list of all images filenames.
         if is_new_format:
@@ -331,13 +331,15 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
         project_data = yaml.load(file.text, Loader=yaml.SafeLoader)
 
         # Create skeleton which we'll use for each video
-        skeleton = Skeleton()
+        node_names = []
         if project_data.get("multianimalbodyparts", False):
-            skeleton.add_nodes(project_data["multianimalbodyparts"])
+            node_names.extend(project_data["multianimalbodyparts"])
             if "uniquebodyparts" in project_data:
-                skeleton.add_nodes(project_data["uniquebodyparts"])
+                node_names.extend(project_data["uniquebodyparts"])
         else:
-            skeleton.add_nodes(project_data["bodyparts"])
+            node_names.extend(project_data["bodyparts"])
+
+        skeleton = Skeleton(nodes=node_names)
 
         # Get subdirectories of videos and labeled data
         root_dir = os.path.dirname(filename)

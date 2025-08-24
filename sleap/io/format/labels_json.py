@@ -14,16 +14,14 @@ import shutil
 import tempfile
 import zipfile
 from typing import Optional, Union, Dict, List, Callable, Text
-from sleap_io import Video
-from sleap_io.io.skeleton import SkeletonEncoder
-
+from sleap.io.video import Video
 import cattr
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
 from sleap_io import SuggestionFrame
-from sleap_io.io.skeleton import SkeletonDecoder
+from sleap_io.io.skeleton import SkeletonSLPDecoder
 
 from sleap.instance import LabeledFrame, make_instance_cattr
 from sleap.io.dataset import Labels
@@ -35,23 +33,7 @@ from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import json_loads, json_dumps, weak_filename_match
 
 
-def make_cattr(idx_to_node: Dict[int, Node] = None) -> cattr.Converter:
-    """Make cattr.Convert() for `Skeleton`.
-
-    Make a cattr.Converter() that registers structure/unstructure
-    hooks for Skeleton objects to handle serialization of skeletons.
-
-    Args:
-        idx_to_node: A dict that maps node index to Node objects.
-
-    Returns:
-        A cattr.Converter() instance for skeleton serialization
-        and deserialization.
-    """
-    _cattr = cattr.Converter()
-    _cattr.register_unstructure_hook(Skeleton, lambda x: SkeletonEncoder().encode(x))
-    _cattr.register_structure_hook(Skeleton, lambda x, cls: SkeletonDecoder().decode(x))
-    return _cattr
+# Skeleton serialization is now handled by sleap-io directly
 
 
 class LabelsJsonAdaptor(Adaptor):
@@ -407,13 +389,14 @@ class LabelsJsonAdaptor(Adaptor):
         # The labels reference these so we will need them while deserializing.
         nodes = cattr.structure(dicts["nodes"], List[Node])
 
-        idx_to_node = {i: nodes[i] for i in range(len(nodes))}
+        # idx_to_node = {i: nodes[i] for i in range(len(nodes))}
         # skeletons = Skeleton.make_cattr(idx_to_node).structure(
         #     dicts["skeletons"], List[Skeleton]
         # )
-        skeletons = make_cattr(idx_to_node).structure(
-            dicts["skeletons"], List[Skeleton]
-        )
+        # Load skeletons using sleap-io
+        # The skeleton data is in old sleap format, so we need to convert it
+        decoder = SkeletonSLPDecoder()
+        skeletons = decoder.decode(dicts, node_names = [x["name"] for x in dicts["nodes"]])
         videos = Video.cattr().structure(dicts["videos"], List[Video])
 
         try:
@@ -437,10 +420,10 @@ class LabelsJsonAdaptor(Adaptor):
                     for old_sk in match_to.skeletons:
                         if sk.matches(old_sk):
                             # use nodes from matched skeleton
-                            for node, match_node in zip(sk.nodes, old_sk.nodes):
-                                node_idx = nodes.index(node)
-                                nodes[node_idx] = match_node
-                            # use skeleton from match
+                            # for node, match_node in zip(sk.nodes, old_sk.nodes):
+                            #     node_idx = nodes.index(node)
+                            #     nodes[node_idx] = match_node
+                            # # use skeleton from match
                             skeletons[idx] = old_sk
                             break
             elif len(skeletons) == 1 and len(match_to.skeletons) == 1:

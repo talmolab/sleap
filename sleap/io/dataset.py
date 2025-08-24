@@ -1950,10 +1950,9 @@ class Labels(MutableSequence):
             Track, lambda x: str(self.tracks.index(x))
         )
 
-        # Make a converter for the top level skeletons list.
-        idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
-
-        skeleton_cattr = Skeleton.make_cattr(idx_to_node)
+        # Skeletons are now serialized using sleap-io's built-in serialization
+        from sleap_io.io.skeleton import SkeletonSLPEncoder
+        skeleton_encoder = SkeletonSLPEncoder()
 
         # Make attr for tracks so that we save as tuples rather than dicts;
         # this can save a lot of space when there are lots of tracks.
@@ -1962,7 +1961,7 @@ class Labels(MutableSequence):
         # Serialize the skeletons, videos, and labels
         dicts = {
             "version": LABELS_JSON_FILE_VERSION,
-            "skeletons": skeleton_cattr.unstructure(self.skeletons),
+            "skeletons": [skeleton_encoder.encode(skel) for skel in self.skeletons],
             "nodes": cattr.unstructure(self.nodes),
             "videos": Video.cattr().unstructure(self.videos),
             "tracks": track_cattr.unstructure(self.tracks),

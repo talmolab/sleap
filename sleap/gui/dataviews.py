@@ -417,7 +417,8 @@ class SkeletonNodesTableModel(GenericTableModel):
         return items
 
     def item_to_data(self, obj, item):
-        return dict(name=item.name, symmetry=obj.get_symmetry_name(item.name))
+        from sleap.util import get_symmetry_node
+        return dict(name=item.name, symmetry=get_symmetry_node(obj, item.name))
 
     def can_set(self, item, key):
         return True

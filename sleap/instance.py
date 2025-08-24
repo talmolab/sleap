@@ -522,7 +522,9 @@ class Instance:
         Returns:
             The index of the node on skeleton graph.
         """
-        return self.skeleton.node_to_index(node)
+        if isinstance(node, Node):
+            node = node.name
+        return self.skeleton.node_names.index(node)
 
     def __getitem__(
         self,

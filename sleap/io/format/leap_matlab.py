@@ -9,7 +9,8 @@ import os
 
 import scipy.io as sio
 
-from sleap import Labels, Skeleton
+from sleap import Labels
+from sleap_io.model.skeleton import Skeleton
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.instance import (
     Instance,

@@ -14,6 +14,7 @@ import os
 import re
 import cv2
 import shutil
+from sleap_io.model.skeleton import Skeleton
 from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
@@ -686,3 +687,11 @@ def generate_skeleton_preview_image(
     img_bytes = img_stream.getvalue()  # image in binary format
     img_b64 = base64.b64encode(img_bytes)
     return img_b64
+
+def get_symmetry_node(skeleton: Skeleton, node_name: str) -> str:
+    """Get symmetry node name for given node name."""
+    for symmetry in skeleton.symmetries:
+        if node_name in symmetry.nodes:
+            # Return the other node in the symmetry pair
+            return next((n for n in symmetry.nodes if n != node_name), None)
+    return None
