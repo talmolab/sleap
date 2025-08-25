@@ -414,7 +414,7 @@ def test_labels_merge():
 
     # Add 10 instances with different points (so they aren't "redundant")
     for i in range(10):
-        instance = Instance(skeleton=dummy_skeleton, points=dict(node=Point(i, i)))
+        instance = Instance(skeleton=dummy_skeleton, points=dict(node=[i, i]))
         dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[instance])
         dummy_frames.append(dummy_frame)
 
@@ -439,10 +439,10 @@ def test_complex_merge():
 
     dummy_instances_a = []
     dummy_instances_a.append(
-        Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(1, 1)))
+        Instance(skeleton=dummy_skeleton_a, points=dict(node=[1, 1]))
     )
     dummy_instances_a.append(
-        Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(2, 2)))
+        Instance(skeleton=dummy_skeleton_a, points=dict(node=[2, 2]))
     )
 
     labels_a = Labels()
@@ -452,10 +452,10 @@ def test_complex_merge():
 
     dummy_instances_b = []
     dummy_instances_b.append(
-        Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(1, 1)))
+        Instance(skeleton=dummy_skeleton_b, points=dict(node=[1, 1]))
     )
     dummy_instances_b.append(
-        Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(3, 3)))
+        Instance(skeleton=dummy_skeleton_b, points=dict(node=[3, 3]))
     )
 
     labels_b = Labels()
@@ -511,10 +511,10 @@ def test_merge_predictions():
 
     dummy_instances_a = []
     dummy_instances_a.append(
-        Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(1, 1)))
+        Instance(skeleton=dummy_skeleton_a, points=dict(node=[1, 1]))
     )
     dummy_instances_a.append(
-        Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(2, 2)))
+        Instance(skeleton=dummy_skeleton_a, points=dict(node=[2, 2]))
     )
 
     labels_a = Labels()
@@ -524,11 +524,11 @@ def test_merge_predictions():
 
     dummy_instances_b = []
     dummy_instances_b.append(
-        Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(1, 1)))
+        Instance(skeleton=dummy_skeleton_b, points=dict(node=[1, 1]))
     )
     dummy_instances_b.append(
         PredictedInstance(
-            skeleton=dummy_skeleton_b, points=dict(node=Point(3, 3)), score=1
+            skeleton=dummy_skeleton_b, points=dict(node=[3, 3]), score=1
         )
     )
 
@@ -1407,7 +1407,7 @@ def test_labels_numpy(centered_pair_predictions: Labels):
     skeleton = centered_pair_predictions.skeleton
     lf = centered_pair_predictions.labeled_frames[0]
     user_inst = Instance(
-        skeleton=skeleton, points={node: Point(1, 1) for node in skeleton.nodes}
+        skeleton=skeleton, points={node: [1, 1] for node in skeleton.nodes}
     )
     lf.instances.append(user_inst)
     labels_np = centered_pair_predictions.numpy(untracked=True, return_confidence=True)
@@ -1503,11 +1503,11 @@ def test_merge_nodes(min_labels):
     labels.skeleton.add_node("a")
 
     inst = labels[0][0]
-    inst["A"] = Point(x=np.nan, y=np.nan, visible=False)
-    inst["a"] = Point(x=1, y=2, visible=True)
+    inst["A"] = [np.nan, np.nan, False]
+    inst["a"] = [1, 2, True]
     inst = labels[0][1]
-    inst["A"] = Point(x=0, y=1, visible=False)
-    inst["a"] = Point(x=1, y=2, visible=True)
+    inst["A"] = [0, 1, False]
+    inst["a"] = [1, 2, True]
 
     labels.merge_nodes("A", "a")
 

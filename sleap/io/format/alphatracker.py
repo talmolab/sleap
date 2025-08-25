@@ -20,8 +20,8 @@ from typing import List, Optional
 from sleap_io import Video
 
 from sleap.instance import LabeledFrame
-from sleap_io.model.instance import Track, Instance
-from sleap_io.model.skeleton import Node, Skeleton
+from sleap_io.model.instance import Instance
+from sleap_io.model.skeleton import Skeleton
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle

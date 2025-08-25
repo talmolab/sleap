@@ -80,7 +80,6 @@ from sleap.instance import (
     LabeledFrame,
 )
 from sleap_io import Instance, PredictedInstance
-from sleap_io.model.instance import Track
 
 from sleap.io import pathutils
 from sleap.io.video import ImgStoreVideo

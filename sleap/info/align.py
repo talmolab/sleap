@@ -29,7 +29,7 @@ which doesn't yet have all points).
 
 """
 
-from sleap import Labels, Instance
+from sleap import Labels
 from typing import List, Tuple
 import numpy as np
 from sleap_io.model.instance import Instance

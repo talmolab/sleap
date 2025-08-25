@@ -8,10 +8,9 @@ from sleap_io import Video
 
 from sleap.instance import LabeledFrame
 from sleap_io.model.instance import Instance, Track
-from sleap_io.model.skeleton import Node, Skeleton
+from sleap_io.model.skeleton import Skeleton
 
 from sleap import Labels
-from sleap_io.model.skeleton import Skeleton
 
 import numpy as np
 import pandas as pd

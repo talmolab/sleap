@@ -15,8 +15,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.instance import (
     LabeledFrame,
 )
-from sleap_io.model.instance import Instance, Track, PointsArray, PredictedPointsArray
-from sleap_io.model.skeleton import Node
+from sleap_io.model.instance import Instance
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 from sleap_io import Video

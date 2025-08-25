@@ -30,16 +30,12 @@ if TYPE_CHECKING:
     from sleap.io.dataset import Labels
 
 import attr
-import cattr
 import numpy as np
-from numpy.lib.recfunctions import structured_to_unstructured
 
 # from sleap.skeleton import Node, Skeleton
-from sleap_io.model.skeleton import Node, Skeleton
-from sleap_io.model.instance import Instance, PredictedInstance, Track, PointsArray, PredictedPointsArray
+from sleap_io.model.instance import Instance, PredictedInstance, Track
 from sleap.util import plot_img, plot_instances
 from sleap_io import Video
-from sleap.sleap_io_adaptors.utils import find_node
 
 
 # class Point(np.record):

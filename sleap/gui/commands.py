@@ -71,7 +71,7 @@ from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap_io import SuggestionFrame
 from sleap.instance import LabeledFrame
-from sleap_io.model.instance import Instance, Track, PredictedInstance
+from sleap_io.model.instance import Instance, PredictedInstance
 from sleap.io.convert import default_analysis_filename
 
 from sleap.io.dataset import Labels

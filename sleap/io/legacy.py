@@ -14,7 +14,7 @@ from sleap_io import Track
 from sleap.util import json_loads
 
 from sleap.instance import LabeledFrame
-from sleap_io.model.instance import Instance, PredictedInstance, Track, PointsArray, PredictedPointsArray
+from sleap_io.model.instance import Instance, PredictedInstance
 
 # from sleap.skeleton import Skeleton (sleap.io will be deleted)
 from sleap_io.model.skeleton import Skeleton
@@ -117,9 +117,7 @@ def load_predicted_labels_json_old(
                 "tracking_score"
             ].values[0]
             instance_points = {
-                data["skeleton"]["nodeNames"][n]: PredictedPoint(
-                    x, y, visible=v, score=confidence
-                )
+                data["skeleton"]["nodeNames"][n]: [x, y, v, confidence]
                 for x, y, n, v, confidence in zip(
                     *[
                         points[k][is_instance]
@@ -251,7 +249,7 @@ def load_labels_json_old(
         for i, instance_id in enumerate(frame_instance_ids):
             is_instance = is_in_frame & (points["instanceId"] == instance_id)
             instance_points = {
-                data["skeleton"]["nodeNames"][n]: Point(x, y, visible=v)
+                data["skeleton"]["nodeNames"][n]: [x, y, v]
                 for x, y, n, v in zip(
                     *[points[k][is_instance] for k in ["x", "y", "node", "visible"]]
                 )

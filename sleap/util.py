@@ -8,7 +8,6 @@ Try not to put things in here unless they really have no other place.
 
 from __future__ import annotations
 
-import base64
 import json
 import os
 import re

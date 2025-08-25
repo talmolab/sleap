@@ -14,7 +14,6 @@ from sleap_io.model.skeleton import Skeleton
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.instance import LabeledFrame
 from sleap_io.model.instance import Instance, Track
-from sleap_io.model.skeleton import Node
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle

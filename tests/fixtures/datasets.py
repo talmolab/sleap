@@ -3,8 +3,8 @@ from sleap_io import Track
 
 from sleap_io import Video
 
-from sleap.instance import LabeledFrame, InstancesList
-from sleap_io.model.instance import Instance, PredictedInstance, Track, PointsArray, PredictedPointsArray
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, PredictedInstance
 from sleap_io.model.skeleton import Skeleton
 from sleap.io.dataset import Labels
 
