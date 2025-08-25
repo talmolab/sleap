@@ -111,6 +111,22 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict: dict):
         if key_val_dict["model.backbone.resnet.upsampling.skip_connections"] == "":
             key_val_dict["model.backbone.resnet.upsampling.skip_connections"] = None
 
+    if "optimization.trainer_devices" in key_val_dict:
+        # if "optimization.trainer_devices" is not auto and is a string, split into list of int
+        if (
+            isinstance(key_val_dict["optimization.trainer_devices"], str)
+            and key_val_dict["optimization.trainer_devices"] != "auto"
+        ):
+            key_val_dict["optimization.trainer_devices"] = [
+                int(device.strip())
+                for device in key_val_dict["optimization.trainer_devices"].split(",")
+            ]
+        # If it's not a string, ensure it's an int
+        elif isinstance(key_val_dict["optimization.trainer_devices"], int):
+            key_val_dict["optimization.trainer_devices"] = int(
+                key_val_dict["optimization.trainer_devices"]
+            )
+
     # Overwrite backbone strides with stride from head.
     backbone_name = find_backbone_name_from_key_val_dict(key_val_dict)
     if backbone_name is not None:

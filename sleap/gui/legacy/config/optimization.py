@@ -1,5 +1,5 @@
 import attr
-from typing import Optional, Text
+from typing import Optional, Text, Any
 
 
 @attr.s(auto_attribs=True)
@@ -255,4 +255,24 @@ class OptimizationConfig:
     )
     early_stopping: EarlyStoppingConfig = attr.ib(factory=EarlyStoppingConfig)
     num_workers: int = 0
+    trainer_devices: Any = attr.field(
+        default="auto",
+        validator=lambda inst, attr, val: OptimizationConfig.validate_trainer_devices(
+            val
+        ),
+    )
     trainer_accelerator: str = "auto"
+
+    @staticmethod
+    def validate_trainer_devices(value):
+        """Validate the value of trainer_devices."""
+        if isinstance(value, int) and value >= 0:
+            return
+        if isinstance(value, list) and all(
+            isinstance(x, int) and x >= 0 for x in value
+        ):
+            return
+        if isinstance(value, str) and value == "auto":
+            return
+        message = "trainer_devices must be an integer >= 0, a list of integers >= 0, or the string 'auto'."
+        raise ValueError(message)

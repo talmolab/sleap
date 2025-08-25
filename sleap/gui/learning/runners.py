@@ -943,6 +943,9 @@ def train_subprocess(
                 job_config.optimization.trainer_accelerator
             )
 
+        if hasattr(job_config.optimization, "trainer_devices"):
+            cfg.trainer_config.trainer_devices = job_config.optimization.trainer_devices
+
         cfg.trainer_config.save_ckpt_path = run_path
         cfg.trainer_config.visualize_preds_during_training = save_viz
         cfg.trainer_config.keep_viz = keep_viz
