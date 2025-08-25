@@ -284,7 +284,10 @@ class InferenceTask:
         if "batch_size" in self.inference_params:
             cli_args.extend(["--batch_size", str(self.inference_params["batch_size"])])
 
-        if "max_instances" in self.inference_params and self.inference_params["max_instances"] is not None:
+        if (
+            "max_instances" in self.inference_params
+            and self.inference_params["max_instances"] is not None
+        ):
             cli_args.extend(["--max_instances", self.inference_params["max_instances"]])
 
         # add tracking args
@@ -322,7 +325,7 @@ class InferenceTask:
                     ]
                 )
 
-            if self.inference_params["tracking.similarity"]=="oks":
+            if self.inference_params["tracking.similarity"] == "oks":
                 cli_args.extend(["--features", "keypoints"])
                 cli_args.extend(["--scoring_method", "oks"])
             elif self.inference_params["tracking.similarity"] == "centroids":
@@ -930,8 +933,12 @@ def train_subprocess(
         cfg.trainer_config.save_ckpt_path = run_path
         cfg.trainer_config.visualize_preds_during_training = save_viz
         cfg.trainer_config.keep_viz = keep_viz
-        cfg.trainer_config.zmq.controller_address = f"tcp://127.0.0.1:{str(inference_params['controller_port'])}"
-        cfg.trainer_config.zmq.publish_address = f"tcp://127.0.0.1:{str(inference_params['publish_port'])}"
+        cfg.trainer_config.zmq.controller_address = (
+            f"tcp://127.0.0.1:{str(inference_params['controller_port'])}"
+        )
+        cfg.trainer_config.zmq.publish_address = (
+            f"tcp://127.0.0.1:{str(inference_params['publish_port'])}"
+        )
 
         OmegaConf.save(cfg, (Path(temp_dir) / f"{cfg_file_name}.yaml").as_posix())
 

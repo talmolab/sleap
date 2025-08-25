@@ -156,3 +156,4 @@ class DataConfig:
     labels: LabelsConfig = attr.ib(factory=LabelsConfig)
     preprocessing: PreprocessingConfig = attr.ib(factory=PreprocessingConfig)
     instance_cropping: InstanceCroppingConfig = attr.ib(factory=InstanceCroppingConfig)
+    data_pipeline_fw: str = "torch_dataset"

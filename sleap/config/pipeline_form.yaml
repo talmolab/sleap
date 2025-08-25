@@ -211,6 +211,13 @@ training:
   options: ',RGB,grayscale'
   type: list
 
+- name: data.data_pipeline_fw
+  help: Framework to create the data loaders. 
+  label: Data Pipeline Framework
+  type: list
+  default: "torch_dataset"
+  options: "torch_dataset,torch_dataset_cache_img_memory,torch_dataset_cache_img_disk"
+
 - type: text
   text: '<b>ZMQ Options</b>'
 
@@ -225,6 +232,25 @@ training:
   type: int
   default: 9001
   range: 1024,65535
+
+- type: text
+  text: '<b>Trainer Options</b>'
+
+- name: num_workers
+  label: Number of Workers
+  type: int
+  default: 0
+
+- name: trainer_devices
+  label: Trainer Devices
+  type: str
+  default: "auto"
+
+- name: trainer_accelerator
+  label: Trainer Accelerator
+  type: list
+  default: "Auto"
+  options: auto,cpu,gpu,tpu,ipu
 
 - type: text
   text: '<b>Output Options</b>'
@@ -283,6 +309,44 @@ training:
   type: list
   options: current frame,random frames
   default: current frame
+
+- type: text
+  text: '<b>WandB Configuration</b>'
+
+- name: wandb_entity
+  label: Entity
+  type: string
+  default: ''
+
+- name: wandb_project
+  label: Project
+  type: string
+  default: ''
+
+- name: wandb_run_name
+  label: Run Name
+  type: string
+  default: ''
+
+- name: wandb_api_key
+  label: API Key
+  type: string
+  default: ''
+
+- name: wandb_mode
+  label: Mode
+  type: string
+  default: 'None'
+
+- name: wandb_prev_runid
+  label: Previous Run ID
+  type: string
+  default: ''
+
+- name: wandb_group
+  label: Group
+  type: string
+  default: ''
 
 inference:
 

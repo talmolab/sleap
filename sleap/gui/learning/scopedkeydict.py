@@ -3,6 +3,7 @@ Conversion between flat (form data) and hierarchical (config object) dicts.
 """
 
 from typing import Any, Dict, Optional, Text, Tuple, Union
+import re
 
 import attr
 import cattr
@@ -179,7 +180,7 @@ def resolve_strides_from_key_val_dict(
 
 
 def make_training_config_from_key_val_dict(
-    key_val_dict: Union[dict, ScopedKeyDict]
+    key_val_dict: Union[dict, ScopedKeyDict],
 ) -> TrainingJobConfig:
     """
     Make :py:class:`TrainingJobConfig` object from flat dictionary.
