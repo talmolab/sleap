@@ -1101,7 +1101,7 @@ def test_multivideo_tracks():
     vid_a = Video.from_filename("foo.mp4")
     vid_b = Video.from_filename("bar.mp4")
 
-    skeleton = Skeleton.load_json("tests/data/skeleton/fly_skeleton_legs.json")
+    skeleton = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
 
     track_a = Track(spawned_on=2, name="A")
     track_b = Track(spawned_on=3, name="B")

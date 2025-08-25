@@ -23,7 +23,7 @@ from typing import List, Optional, Dict, Tuple
 from pathlib import Path
 
 from sleap import Labels, Video
-from sleap_io import Skeleton
+from sleap_io import Skeleton, Node
 from sleap.instance import Instance, LabeledFrame, Point, Track
 from sleap.util import find_files_by_suffix
 
@@ -189,7 +189,8 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
             node_names = [n[0] for n in list(data)[start_col::2]]
 
         if skeleton is None:
-            skeleton = Skeleton(nodes=node_names)
+            skeleton = Skeleton()
+            skeleton.add_nodes(node_names)
 
         # Get list of all images filenames.
         if is_new_format:
@@ -234,6 +235,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                     # Get points for each node.
                     instance_points = dict()
                     for node in node_names:
+                        # node is a string (node name), not a Node object
                         if (animal_name, node) in data.columns:
                             x, y = (
                                 data[(animal_name, node, "x")][i],
@@ -262,6 +264,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                 any_not_missing = False
                 instance_points = dict()
                 for node in node_names:
+                    # node is a string (node name), not a Node object
                     x, y = data[(node, "x")][i], data[(node, "y")][i]
                     instance_points[node] = Point(x, y)
                     if ~(np.isnan(x) and np.isnan(y)):
@@ -337,7 +340,8 @@ class LabelsDeepLabCutYamlAdaptor(Adaptor):
         else:
             node_names.extend(project_data["bodyparts"])
 
-        skeleton = Skeleton(nodes=node_names)
+        skeleton = Skeleton()
+        skeleton.add_nodes(node_names)
 
         # Get subdirectories of videos and labeled data
         root_dir = os.path.dirname(filename)

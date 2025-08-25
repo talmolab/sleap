@@ -109,7 +109,7 @@ class LabelsLeapMatlabAdaptor(Adaptor):
         sk = Skeleton(name=filename)
         sk.add_nodes(nodes)
         for edge in edges:
-            sk.add_edge(source=nodes[edge[0]], destination=nodes[edge[1]])
+            sk.add_edge(nodes[edge[0]], nodes[edge[1]])
 
         labeled_frames = []
         node_count, _, frame_count = points_.shape

@@ -2676,7 +2676,7 @@ class NewEdge(EditCommand):
             return
 
         # Add edge
-        context.state["skeleton"].add_edge(source=src_node, destination=dst_node)
+        context.state["skeleton"].add_edge(src_node, dst_node)
 
 
 class DeleteEdge(EditCommand):

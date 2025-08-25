@@ -30,7 +30,8 @@ def stickman():
     # Make a skeleton with a space in its name to test things.
     node_names = ["head", "neck", "body", "right-arm", "left-arm",
     "right-leg", "left-leg"]
-    stickman = Skeleton(nodes=node_names, name="Stick man")
+    stickman = Skeleton()
+    stickman.add_nodes(node_names)
 
     edges = [
         ("neck", "head"),

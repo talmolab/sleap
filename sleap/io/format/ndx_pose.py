@@ -128,7 +128,8 @@ class NDXPoseAdaptor(Adaptor):
             io.close()
 
         # Create skeleton
-        skeleton = Skeleton(nodes=node_names)
+        skeleton = Skeleton()
+        skeleton.add_nodes(node_names)
         if edge_inds:
             edges = [(node_names[src], node_names[dst]) for src, dst in edge_inds]
             skeleton.add_edges(edges)
