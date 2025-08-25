@@ -26,12 +26,12 @@ from qtpy import QtCore, QtGui, QtWidgets
 from sleap.gui.commands import CommandContext
 from sleap.gui.state import GuiState
 from sleap.instance import LabeledFrame
-from sleap.sleap_io_adaptors.utils import get_nodes_from_instance
+from sleap.sleap_io_adaptors.instance_utils import get_nodes_from_instance
 
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
 from sleap_io.io.video_reading import VideoBackend
-from sleap.sleap_io_adaptors.utils import get_symmetry_node
+from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):

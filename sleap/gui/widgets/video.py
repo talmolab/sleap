@@ -58,8 +58,9 @@ from sleap.gui.color import ColorManager
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.state import GuiState
 from sleap.gui.widgets.slider import VideoSlider
+from sleap import LabeledFrame
 from sleap.prefs import prefs
-
+from sleap.sleap_io_adaptors.instance_utils import get_nodes_from_instance, fill_missing
 # from sleap.skeleton import Node
 from sleap_io.model.skeleton import Node
 from sleap_io.model.instance import Instance, PredictedInstance, PointsArray
@@ -508,7 +509,7 @@ class QtVideoPlayer(QWidget):
             instance = QtInstance(instance=instance, player=self, **kwargs)
         if type(instance) != QtInstance:
             return
-        if instance.instance.n_visible_points > 0 or not isinstance(
+        if instance.instance.n_visible > 0 or not isinstance(
             instance.instance, PredictedInstance
         ):
             self.view.scene.addItem(instance)
@@ -1426,6 +1427,7 @@ class QtNode(QGraphicsEllipseItem):
         predicted=False,
         show_non_visible=True,
         callbacks=None,
+        frame: LabeledFrame = None,
         *args,
         **kwargs,
     ):
@@ -1436,7 +1438,7 @@ class QtNode(QGraphicsEllipseItem):
         self.radius = radius
         self.color_manager = self.player.color_manager
         self.color = self.color_manager.get_item_color(
-            self.node, self._parent_instance.instance
+            self.node, self._parent_instance.instance, frame
         )
         self.edges = []
         self.name = node.name
@@ -1868,7 +1870,7 @@ class QtInstance(QGraphicsObject):
 
         if not self.predicted:
             # Initialize missing nodes with random points marked as non-visible.
-            self.instance.fill_missing(
+            self.instance = fill_missing(instance=self.instance,
                 max_x=self.player.video.width, max_y=self.player.video.height
             )
 
@@ -1915,7 +1917,7 @@ class QtInstance(QGraphicsObject):
         self.track_label.setHtml(instance_label_text)
 
         # Add nodes
-        for node, point in self.instance.nodes_points:
+        for node, point in get_nodes_from_instance(self.instance):
             if point.visible or self.show_non_visible:
                 node_item = QtNode(
                     parent=self,

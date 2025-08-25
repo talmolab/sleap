@@ -2,9 +2,10 @@ import pytest
 from sleap_io import Track
 
 from sleap_io import Video
+import numpy as np
 
 from sleap.instance import LabeledFrame
-from sleap_io.model.instance import Instance, PredictedInstance
+from sleap_io.model.instance import Instance, PointsArray, PredictedInstance
 from sleap_io.model.skeleton import Skeleton
 from sleap.io.dataset import Labels
 
@@ -241,7 +242,7 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
 
         fly_instances = []
         for i in range(6):
-            fly_instances.append(Instance(skeleton=skeleton, track=fly_tracks[i]))
+            fly_instances.append(Instance(points=PointsArray.from_array(np.array([[i % vid.width, i % vid.height] for x in skeleton.nodes]), skeleton.nodes), skeleton=skeleton, track=fly_tracks[i]))
             for node in skeleton.nodes:
                 fly_instances[i][node] = [i % vid.width, i % vid.height]
 

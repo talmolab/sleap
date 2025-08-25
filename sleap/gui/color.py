@@ -18,6 +18,7 @@ import yaml
 
 from sleap.util import get_config_file
 from sleap_io.model.instance import Instance
+from sleap import LabeledFrame
 from sleap_io.model.skeleton import Node
 from sleap_io import Track
 from sleap.io.dataset import Labels
@@ -25,6 +26,7 @@ from sleap.io.dataset import Labels
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
 from sleap.prefs import prefs
+from sleap.sleap_io_adaptors.skeleton_utils import edge_to_index, node_to_index
 
 
 ColorTupleStringType = Text
@@ -148,7 +150,7 @@ class ColorManager:
         except Exception:
             raise ValueError(f"Color '{color}' is not (r,g,b) tuple.")
 
-    def get_pseudo_track_index(self, instance: "Instance") -> Union[Track, int]:
+    def get_pseudo_track_index(self, instance: "Instance", frame: LabeledFrame) -> Union[Track, int]:
         """
         Returns an index for giving track colors to instances without track.
         """
@@ -157,16 +159,17 @@ class ColorManager:
         # if not instance.frame:
         #     return 0
 
-        untracked_user_instances = [
-            inst for inst in instance.frame.user_instances if inst.track is None
-        ]
-        untracked_predicted_instances = [
-            inst for inst in instance.frame.predicted_instances if inst.track is None
-        ]
+        # untracked_user_instances = [
+        #     inst for inst in frame.user_instances if inst.track is None
+        # ]
+        # untracked_predicted_instances = [
+        #     inst for inst in frame.predicted_instances if inst.track is None
+        # ]
 
-        return len(self.tracks) + (
-            untracked_user_instances + untracked_predicted_instances
-        ).index(instance)
+        # return len(self.tracks) + (
+        #     untracked_user_instances + untracked_predicted_instances
+        # ).index(instance)
+        return len(self.tracks) # TODO
 
     def get_track_color(self, track: Union[Track, int]) -> ColorTupleType:
         """Returns the color to use for a given track.
@@ -243,6 +246,7 @@ class ColorManager:
         item: Any,
         parent_instance: Optional[Instance] = None,
         parent_skeleton: Optional[Skeleton] = None,
+        parent_frame: Optional[LabeledFrame] = None,
     ) -> ColorTupleType:
         """Gets (r, g, b) tuple of color to use for drawing item."""
 
@@ -271,7 +275,7 @@ class ColorManager:
 
             if track is None and parent_instance:
                 # Get an index for items without track
-                track = self.get_pseudo_track_index(parent_instance)
+                track = self.get_pseudo_track_index(parent_instance, parent_frame)
 
             return self.get_track_color(track=track)
 
@@ -284,7 +288,7 @@ class ColorManager:
                 node = item[1]
 
             if node:
-                node_idx = parent_skeleton.node_to_index(node)
+                node_idx = node_to_index(parent_skeleton, node)
                 return self.get_color_by_idx(node_idx)
 
             # return (255, 0, 0)
@@ -292,7 +296,7 @@ class ColorManager:
         if self.distinctly_color == "edges" and parent_skeleton:
             edge_idx = 0
             if self.is_edge(item):
-                edge_idx = parent_skeleton.edge_to_index(*item)
+                edge_idx = edge_to_index(parent_skeleton, *item)
             elif self.is_node(item):
                 for i, (src, dst) in enumerate(parent_skeleton.edges):
                     if dst == item:

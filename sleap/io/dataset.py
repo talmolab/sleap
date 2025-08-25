@@ -97,7 +97,6 @@ LABELS_JSON_FILE_VERSION = "2.0.0"
 # For debugging, we can replace missing video files with a "dummy" video
 USE_DUMMY_FOR_MISSING_VIDEOS = os.getenv("SLEAP_USE_DUMMY_VIDEOS", default="")
 
-
 @attr.s(auto_attribs=True)
 class LabelsDataCache:
     """Class for maintaining cache of data in labels dataset."""
@@ -1937,9 +1936,6 @@ class Labels(MutableSequence):
         # as references to the above constructed lists to limit redundant data in the
         # json
         label_cattr = make_instance_cattr()
-        label_cattr.register_unstructure_hook(
-            Skeleton, lambda x: str(self.skeletons.index(x))
-        )
         label_cattr.register_unstructure_hook(
             Video, lambda x: str(self.videos.index(x))
         )

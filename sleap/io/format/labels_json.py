@@ -29,11 +29,25 @@ from sleap_io.model.instance import Track
 from sleap.io.legacy import load_labels_json_old
 
 # from sleap.skeleton import Node, Skeleton (sleap.io will be deleted)
-from sleap_io.model.skeleton import Node, Skeleton
+from sleap_io.model.skeleton import Node
 from sleap.util import json_loads, json_dumps, weak_filename_match
 
 
-# Skeleton serialization is now handled by sleap-io directly
+def make_cattr(idx_to_node: Dict[int, Node] = None) -> cattr.Converter:
+    """Make cattr.Convert() for `Skeleton`.
+
+    Make a cattr.Converter() that registers structure/unstructure
+    hooks for Skeleton objects to handle serialization of skeletons.
+
+    Args:
+        idx_to_node: A dict that maps node index to Node objects.
+
+    Returns:
+        A cattr.Converter() instance for skeleton serialization
+        and deserialization.
+    """
+    _cattr = cattr.Converter()
+    return _cattr
 
 
 class LabelsJsonAdaptor(Adaptor):
@@ -519,9 +533,6 @@ class LabelsJsonAdaptor(Adaptor):
         # If there is actual labels data, get it.
         if "labels" in dicts:
             label_cattr = make_instance_cattr()
-            label_cattr.register_structure_hook(
-                Skeleton, lambda x, type: skeletons[int(x)]
-            )
             label_cattr.register_structure_hook(Video, lambda x, type: videos[int(x)])
             label_cattr.register_structure_hook(
                 Node, lambda x, type: x if isinstance(x, Node) else nodes[int(x)]

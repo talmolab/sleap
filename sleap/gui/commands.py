@@ -73,7 +73,7 @@ from sleap_io import SuggestionFrame
 from sleap.instance import LabeledFrame
 from sleap_io.model.instance import Instance, PredictedInstance
 from sleap.io.convert import default_analysis_filename
-
+import sleap_io
 from sleap.io.dataset import Labels
 # from sleap_io.model.labels import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -85,7 +85,7 @@ from sleap.io.visuals import save_labeled_video
 # from sleap.skeleton import Node, Skeleton
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import get_package_file
-from sleap.sleap_io_adaptors.utils import get_symmetry_node
+from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node, delete_symmetry
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -2562,8 +2562,8 @@ class OpenSkeleton(EditCommand):
             )
 
         # Delete pre-existing symmetry
-        for src, dst in skeleton.symmetries:
-            skeleton.delete_symmetry(src, dst)
+        for symmetry in skeleton.symmetries:
+            delete_symmetry(skeleton, symmetry.nodes[0].name, symmetry.nodes[1].name)
 
         # Link mismatched nodes
         if "linked_nodes" in params.keys():
@@ -2580,12 +2580,14 @@ class OpenSkeleton(EditCommand):
             try_and_skip_if_error(skeleton.add_node, node)
 
         # Add edges
-        skeleton.clear_edges()
+        # skeleton.clear_edges()
         if isinstance(skeleton, Skeleton):
             skeleton.edges = []
         elif isinstance(skeleton, List[Skeleton]):
             for skl in skeleton:
                 skl.edges = []
+        for src, dest in new_skeleton.edges:
+            try_and_skip_if_error(skeleton.add_edge, src.name, dest.name)
 
         # Add new symmetry
         for src, dst in new_skeleton.symmetries:
@@ -2617,9 +2619,9 @@ class SaveSkeleton(AppCommand):
     def do_action(context: CommandContext, params: dict):
         filename = params["filename"]
         if filename.endswith(".json"):
-            context.state["skeleton"].save_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            context.state["skeleton"].save_hdf5(filename)
+            sleap_io.save_skeleton([context.state["skeleton"]] if isinstance(context.state["skeleton"], Skeleton) else context.state["skeleton"], filename)
+        # elif filename.endswith((".h5", ".hdf5")):
+        #     sleap_io.save_skeleton(context.state["skeleton"], filename)
 
 
 class NewNode(EditCommand):
@@ -2678,7 +2680,7 @@ class SetNodeSymmetry(EditCommand):
             # Value was cleared by user, so delete symmetry
             symmetric_to = get_symmetry_node(skeleton, node)
             if symmetric_to is not None:
-                skeleton.delete_symmetry(node, symmetric_to)
+                delete_symmetry(skeleton, node, symmetric_to)
 
 
 class NewEdge(EditCommand):
@@ -3401,7 +3403,6 @@ class AddInstance(EditCommand):
         new_instance = Instance(
             skeleton=context.state["skeleton"],
             from_predicted=from_predicted,
-            frame=context.state["labeled_frame"],
         )
 
         has_missing_nodes = AddInstance.set_visible_nodes(
