@@ -242,12 +242,12 @@ training:
   default: 0
   help: Number of worker threads to use for data loading and preprocessing. 0 means that the data will be loaded in the main process.
 
-- name: trainer_devices
+- name: optimization.trainer_devices
   label: Trainer Devices
   type: str
   default: "auto"
 
-- name: trainer_accelerator
+- name: optimization.trainer_accelerator
   label: Trainer Accelerator
   type: list
   default: "Auto"

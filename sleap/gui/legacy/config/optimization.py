@@ -231,6 +231,7 @@ class OptimizationConfig:
         early_stopping: Configuration options related to early stopping of training on
             plateau/convergence is detected.
         num_workers: Number of worker threads to use for data loading and preprocessing.
+        trainer_accelerator: The accelerator to use for training (e.g., "auto", "gpu", "tpu").
     """
 
     preload_data: bool = True
@@ -254,3 +255,4 @@ class OptimizationConfig:
     )
     early_stopping: EarlyStoppingConfig = attr.ib(factory=EarlyStoppingConfig)
     num_workers: int = 0
+    trainer_accelerator: str = "auto"
