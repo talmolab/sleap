@@ -69,7 +69,8 @@ class LabelsCocoAdaptor(Adaptor):
         skeleton_map = dict()
         for category in dicts["categories"]:
             node_names = category["keypoints"]
-            skeleton = Skeleton(nodes=node_names, name=category["name"])
+            skeleton = Skeleton(name=category["name"])
+            skeleton.add_nodes(node_names)
             skeleton_id = category["id"]
 
             # Build edges list
