@@ -10,7 +10,8 @@ from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
-from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, Track, PredictedInstance
 from sleap.io.video import MediaVideo
 from sleap.io.dataset import Labels, load_file
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
@@ -565,14 +566,14 @@ def test_merge_with_package(min_labels_robot, tmpdir):
     # Add prediction.
     inst = labels_pkg.user_instances[0]
     pts = inst.numpy()
-    inst_pr = sleap.PredictedInstance.from_pointsarray(
+    inst_pr = PredictedInstance.from_numpy(
         pts,
         skeleton=labels_pkg.skeleton,
         point_confidences=np.zeros(len(pts)),
         instance_score=1.0,
     )
     labels_pkg.append(
-        sleap.LabeledFrame(
+        LabeledFrame(
             video=labels_pkg.suggestions[0].video,
             frame_idx=labels_pkg.suggestions[0].frame_idx,
             instances=[inst_pr],
@@ -1546,7 +1547,7 @@ def test_split(centered_pair_predictions):
     assert labels_a[0] == labels_b[0]
 
 
-def test_remove_untracked_instances(min_tracks_2node_labels):
+def test_remove_untracked_instances(min_tracks_2node_labels: Labels):
     """Test removal of untracked instances and empty frames.
 
     Args:

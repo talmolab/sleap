@@ -3,9 +3,8 @@ from sleap_io import Video
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap_io import SuggestionFrame
 from sleap.io.dataset import Labels
-from sleap.instance import LabeledFrame, PredictedInstance, Track, PredictedPoint
-
-# from sleap.skeleton import Skeleton
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import PredictedInstance, Track
 from sleap_io.model.skeleton import Skeleton
 import numpy as np
 

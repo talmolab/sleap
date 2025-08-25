@@ -23,10 +23,10 @@ from typing import List, Optional, Dict, Tuple
 from pathlib import Path
 from sleap_io import Video
 
-from sleap.instance import Instance, LabeledFrame, Point
-from sleap_io import Track
-from sleap import Labels
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, Track
 from sleap_io.model.skeleton import Skeleton
+from sleap import Labels
 from sleap.util import find_files_by_suffix
 
 from .adaptor import Adaptor, SleapObjectType
@@ -243,7 +243,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                             )
                         else:
                             x, y = np.nan, np.nan
-                        instance_points[node] = Point(x, y)
+                        instance_points[node] = [x, y]
                         if ~(np.isnan(x) and np.isnan(y)):
                             any_not_missing = True
 
@@ -252,10 +252,12 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                         if tracks[animal_name] is None:
                             tracks[animal_name] = Track(spawned_on=i, name=animal_name)
                         # Create instance with points.
+                        # Convert points dict to numpy array for sleap_io
+                        points_array = np.array([[instance_points[node][0], instance_points[node][1]] if not np.isnan(instance_points[node][0]) else [np.nan, np.nan] for node in skeleton.node_names])
                         instances.append(
-                            Instance(
+                            Instance.from_numpy(
+                                points_data=points_array,
                                 skeleton=skeleton,
-                                points=instance_points,
                                 track=tracks[animal_name],
                             )
                         )
@@ -265,15 +267,20 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                 instance_points = dict()
                 for node in node_names:
                     x, y = data[(node, "x")][i], data[(node, "y")][i]
-                    instance_points[node] = Point(x, y)
+                    instance_points[node] = [x, y]
                     if ~(np.isnan(x) and np.isnan(y)):
                         any_not_missing = True
 
                 if any_not_missing:
                     # Create instance with points assuming there's a single instance per
                     # frame.
+                    # Convert points dict to numpy array for sleap_io
+                    points_array = np.array([[instance_points[node][0], instance_points[node][1]] if not np.isnan(instance_points[node][0]) else [np.nan, np.nan] for node in skeleton.node_names])
                     instances.append(
-                        Instance(skeleton=skeleton, points=instance_points)
+                        Instance.from_numpy(
+                            points_data=points_array,
+                            skeleton=skeleton,
+                        )
                     )
 
             if len(instances) > 0:

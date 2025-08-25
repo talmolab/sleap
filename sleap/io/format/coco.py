@@ -12,8 +12,9 @@ from sleap_io import Video
 from sleap import Labels
 from sleap_io.model.skeleton import Skeleton
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
-from sleap.instance import Instance, LabeledFrame, Point
-from sleap_io import Track
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, Track
+from sleap_io.model.skeleton import Node
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
@@ -184,12 +185,12 @@ class LabelsCocoAdaptor(Adaptor):
                     # node not labeled for this instance
                     if (x, y) != (0, 0):
                         # If labeled but invisible, place the node at the coord
-                        points[node] = Point(x, y, False)
+                        points[node] = [x, y, False]
                     continue
 
                 is_visible = flag == 2
                 any_visible = any_visible or is_visible
-                points[node] = Point(x, y, is_visible)
+                points[node] = [x, y, is_visible]
 
             if points:
                 # If none of the points had 2 has the "visible" flag, we'll
@@ -198,7 +199,13 @@ class LabelsCocoAdaptor(Adaptor):
                     for point in points.values():
                         point.visible = True
 
-                inst = Instance(skeleton=skeleton, points=points, track=track)
+                # Convert points dict to numpy array for sleap_io
+                points_array = np.array([[points[node][0], points[node][1]] if node in points else [np.nan, np.nan] for node in skeleton.node_names])
+                inst = Instance.from_numpy(
+                    points_data=points_array,
+                    skeleton=skeleton,
+                    track=track,
+                )
 
                 if image_id not in lf_map:
                     lf_map[image_id] = LabeledFrame(video, frame_idx)

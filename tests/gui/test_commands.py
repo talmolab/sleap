@@ -28,7 +28,8 @@ from sleap.gui.commands import (
     DeleteFrameLimitPredictions,
     get_new_version_filename,
 )
-from sleap.instance import Instance, LabeledFrame
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor

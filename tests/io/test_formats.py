@@ -8,7 +8,8 @@ from sleap_io import Video
 import pytest
 import nixio
 
-from sleap.instance import LabeledFrame, PredictedInstance
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import PredictedInstance
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
 from sleap.io.format.adaptor import SleapObjectType

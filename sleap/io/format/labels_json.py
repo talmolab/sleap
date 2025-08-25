@@ -23,9 +23,9 @@ from .filehandle import FileHandle
 from sleap_io import SuggestionFrame
 from sleap_io.io.skeleton import SkeletonSLPDecoder
 
-from sleap.instance import LabeledFrame, make_instance_cattr
+from sleap.instance import LabeledFrame
 from sleap.io.dataset import Labels
-from sleap_io import Track
+from sleap_io.model.instance import Instance, PredictedInstance, Track
 from sleap.io.legacy import load_labels_json_old
 
 # from sleap.skeleton import Node, Skeleton (sleap.io will be deleted)

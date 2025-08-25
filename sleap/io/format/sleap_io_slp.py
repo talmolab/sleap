@@ -11,6 +11,7 @@ from sleap.io.format.filehandle import FileHandle
 from sleap.io.dataset import Labels
 from sleap_io.io.slp import read_labels, write_labels
 from sleap_io.model.labels import Labels as SleapIOLabels
+from sleap_io.model.instance import Instance, PredictedInstance, Track as SleapTrack
 
 from typing import Optional, Union, Callable, List, Text
 
@@ -119,8 +120,6 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
         # Convert tracks
         tracks = []
         for track in sleap_io_labels.tracks:
-            from sleap.instance import Track as SleapTrack
-
             sleap_track = SleapTrack(track.id, track.name)
             tracks.append(sleap_track)
 
@@ -134,24 +133,20 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
                 points = []
                 for i, point_data in enumerate(instance.points):
                     if hasattr(instance, "score"):  # PredictedInstance
-                        sleap_point = PredictedPoint(
-                            x=point_data["xy"][0],
-                            y=point_data["xy"][1],
-                            visible=point_data["visible"],
-                            complete=point_data["complete"],
-                            score=(
-                                point_data["score"]
-                                if "score" in instance.points.dtype.names
-                                else 1.0
-                            ),
-                        )
+                        sleap_point = [
+                            point_data["xy"][0],
+                            point_data["xy"][1],
+                            point_data["visible"],
+                            point_data["complete"],
+                            point_data["score"] if "score" in instance.points.dtype.names else 1.0,
+                        ]
                     else:  # Instance
-                        sleap_point = Point(
-                            x=point_data["xy"][0],
-                            y=point_data["xy"][1],
-                            visible=point_data["visible"],
-                            complete=point_data["complete"],
-                        )
+                        sleap_point = [
+                            point_data["xy"][0],
+                            point_data["xy"][1],
+                            point_data["visible"],
+                            point_data["complete"],
+                        ]
                     points.append(sleap_point)
 
                 if hasattr(instance, "score"):  # PredictedInstance

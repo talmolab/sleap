@@ -17,7 +17,8 @@ from typing import Any, Iterable, Optional, Union, Text, Tuple
 import yaml
 
 from sleap.util import get_config_file
-from sleap.instance import Instance, Node
+from sleap_io.model.instance import Instance
+from sleap_io.model.skeleton import Node
 from sleap_io import Track
 from sleap.io.dataset import Labels
 
@@ -153,8 +154,8 @@ class ColorManager:
         """
         if instance.track:
             return instance.track
-        if not instance.frame:
-            return 0
+        # if not instance.frame:
+        #     return 0
 
         untracked_user_instances = [
             inst for inst in instance.frame.user_instances if inst.track is None

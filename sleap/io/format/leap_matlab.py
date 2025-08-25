@@ -13,10 +13,10 @@ from sleap import Labels
 from sleap_io.model.skeleton import Skeleton
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.instance import (
-    Instance,
     LabeledFrame,
-    Point,
 )
+from sleap_io.model.instance import Instance, Track, PointsArray, PredictedPointsArray
+from sleap_io.model.skeleton import Node
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 from sleap_io import Video
@@ -120,7 +120,7 @@ class LabelsLeapMatlabAdaptor(Adaptor):
             for node_idx, node in enumerate(nodes):
                 x = points_[node_idx][0][i]
                 y = points_[node_idx][1][i]
-                new_inst[node] = Point(x, y)
+                new_inst[node] = [x, y]
             if len(new_inst.points):
                 new_frame = LabeledFrame(video=vid, frame_idx=i)
                 new_frame.instances = (new_inst,)

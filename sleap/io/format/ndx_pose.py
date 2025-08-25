@@ -13,7 +13,8 @@ from sleap_io import Track
 from sleap_io import Video
 
 import sleap
-from sleap.instance import LabeledFrame, PredictedInstance
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import PredictedInstance
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.dataset import Labels

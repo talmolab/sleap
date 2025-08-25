@@ -10,14 +10,10 @@ from . import labels_json
 from sleap_io import Video
 
 from sleap.instance import (
-    PointArray,
-    PredictedPointArray,
-    Instance,
-    PredictedInstance,
-    LabeledFrame,
-    PredictedPoint,
-    Point,
+    LabeledFrame
 )
+from sleap_io import Instance, PredictedInstance
+from sleap_io.model.instance import PointsArray, PredictedPointsArray
 from sleap.util import json_loads, json_dumps
 from sleap import Labels
 
@@ -197,11 +193,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         # Rather than instantiate a bunch of Point\PredictedPoint objects, we will use
         # inplace numpy recarrays. This will save a lot of time and memory when reading
         # things in.
-        points = PointArray(buf=points_dset, shape=len(points_dset))
+        points = points_dset
 
-        pred_points = PredictedPointArray(
-            buf=pred_points_dset, shape=len(pred_points_dset)
-        )
+        pred_points = pred_points_dset
 
         # Extend the tracks list with a None track. We will signify this with a -1 in
         # the data which will map to last element of tracks
@@ -420,9 +414,9 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
             max_skeleton_size = max([len(s.nodes) for s in labels.skeletons], default=0)
 
             # Initialize data arrays for serialization
-            points = np.zeros(num_instances * max_skeleton_size, dtype=Point.dtype)
+            points = np.zeros(num_instances * max_skeleton_size, dtype=PointsArray._get_dtype())
             pred_points = np.zeros(
-                num_instances * max_skeleton_size, dtype=PredictedPoint.dtype
+                num_instances * max_skeleton_size, dtype=PredictedPointsArray._get_dtype()
             )
             instances = np.zeros(num_instances, dtype=instance_dtype)
             frames = np.zeros(len(labels), dtype=frame_dtype)
@@ -514,7 +508,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
 
                     # If these are predicted points, copy them to the predicted point
                     # array otherwise, use the normal point array
-                    if type(parray) is PredictedPointArray:
+                    if type(parray) is PredictedPointsArray:
                         pred_points[pred_point_id : (pred_point_id + len(parray))] = (
                             parray
                         )
@@ -563,13 +557,13 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
                 f["frames"][-frames.shape[0] :] = frames
             else:
                 f.create_dataset(
-                    "points", data=points, maxshape=(None,), dtype=Point.dtype
+                    "points", data=points, maxshape=(None,), dtype=PointsArray._get_dtype()
                 )
                 f.create_dataset(
                     "pred_points",
                     data=pred_points,
                     maxshape=(None,),
-                    dtype=PredictedPoint.dtype,
+                    dtype=PredictedPointsArray._get_dtype(),
                 )
                 f.create_dataset(
                     "instances", data=instances, maxshape=(None,), dtype=instance_dtype

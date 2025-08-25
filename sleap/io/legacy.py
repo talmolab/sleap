@@ -13,13 +13,8 @@ from sleap_io import Track
 
 from sleap.util import json_loads
 
-from sleap.instance import (
-    LabeledFrame,
-    PredictedPoint,
-    PredictedInstance,
-    Point,
-    Instance,
-)
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, PredictedInstance, Track, PointsArray, PredictedPointsArray
 
 # from sleap.skeleton import Skeleton (sleap.io will be deleted)
 from sleap_io.model.skeleton import Skeleton

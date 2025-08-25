@@ -1,6 +1,7 @@
 import pytest
 
-from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, PredictedInstance
 
 
 @pytest.fixture
@@ -12,9 +13,9 @@ def instances(skeleton, centered_pair_vid):
     instances = []
     for i in range(NUM_INSTANCES):
         instance = Instance(skeleton=skeleton)
-        instance["head"] = Point(i * 1, i * 2)
-        instance["left-wing"] = Point(10 + i * 1, 10 + i * 2)
-        instance["right-wing"] = Point(20 + i * 1, 20 + i * 2)
+        instance["head"] = [i * 1, i * 2, True, True]
+        instance["left-wing"] = [10 + i * 1, 10 + i * 2, True, True]
+        instance["right-wing"] = [20 + i * 1, 20 + i * 2, True, True]
 
         # Lets make an NaN entry to test skip_nan as well
         instance["thorax"]

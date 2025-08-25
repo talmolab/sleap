@@ -77,11 +77,10 @@ except Exception:
 # from sleap.skeleton import Skeleton, Node (sleap.io will be deleted)
 from sleap_io.model.skeleton import Skeleton, Node
 from sleap.instance import (
-    Instance,
     LabeledFrame,
-    make_instance_cattr,
-    PredictedInstance,
 )
+from sleap_io import Instance, PredictedInstance
+from sleap_io.model.instance import Track
 
 from sleap.io import pathutils
 from sleap.io.video import ImgStoreVideo

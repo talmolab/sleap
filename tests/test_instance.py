@@ -6,14 +6,8 @@ import numpy as np
 import pytest
 
 from sleap import Labels
-from sleap.instance import (
-    Instance,
-    InstancesList,
-    LabeledFrame,
-    Point,
-    PredictedInstance,
-    PredictedPoint,
-)
+from sleap.instance import LabeledFrame, InstancesList
+from sleap_io.model.instance import Instance, PredictedInstance, Track, PointsArray, PredictedPointsArray
 
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
@@ -27,12 +21,15 @@ def test_instance_node_get_set_item(skeleton):
     instance["head"].x = 20
     instance["head"].y = 50
 
-    instance["left-wing"] = Point(x=30, y=40, visible=False)
+    instance["left-wing"] = [30, 40, False]
 
     assert instance["head"].x == 20
     assert instance["head"].y == 50
 
-    assert instance["left-wing"] == Point(x=30, y=40, visible=False)
+    # Note: sleap_io instances don't have Point objects, so we check the values directly
+    assert instance["left-wing"]["xy"][0] == 30
+    assert instance["left-wing"]["xy"][1] == 40
+    assert instance["left-wing"]["visible"] == False
 
     thorax_point = instance["thorax"]
     assert math.isnan(thorax_point.x) and math.isnan(thorax_point.y)
@@ -51,14 +48,14 @@ def test_instance_node_multi_get_set_item(skeleton):
     Test basic get item and set item functionality of instances.
     """
     node_names = ["head", "left-wing", "right-wing"]
-    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
+    points = {"head": [1, 4], "left-wing": [2, 5], "right-wing": [3, 6]}
 
     instance1 = Instance(skeleton=skeleton, points=points)
 
     instance1[node_names] = list(points.values())
 
-    x_values = [p.x for p in instance1[node_names]]
-    y_values = [p.y for p in instance1[node_names]]
+    x_values = [p["xy"][0] for p in instance1[node_names]]
+    y_values = [p["xy"][1] for p in instance1[node_names]]
 
     assert np.allclose(x_values, [1, 2, 3])
     assert np.allclose(y_values, [4, 5, 6])
@@ -75,10 +72,10 @@ def test_instance_node_multi_get_set_item(skeleton):
 
     instance1[["left-wing", "right-wing"]] = [[-4, -3], [-2, -1]]
     np.testing.assert_array_equal(instance1[np.array([3, 4])], [[-4, -3], [-2, -1]])
-    assert instance1["left-wing"].x == -4
-    assert instance1["left-wing"].y == -3
-    assert instance1["right-wing"].x == -2
-    assert instance1["right-wing"].y == -1
+    assert instance1["left-wing"]["xy"][0] == -4
+    assert instance1["left-wing"]["xy"][1] == -3
+    assert instance1["right-wing"]["xy"][0] == -2
+    assert instance1["right-wing"]["xy"][1] == -1
 
 
 def test_non_exist_node(skeleton):
@@ -91,20 +88,20 @@ def test_non_exist_node(skeleton):
         instance["non-existent-node"].x = 1
 
     with pytest.raises(KeyError):
-        instance = Instance(skeleton=skeleton, points={"non-exist": Point()})
+        instance = Instance(skeleton=skeleton, points={"non-exist": [np.nan, np.nan]})
 
 
 def test_instance_point_iter(skeleton):
     """
     Test iteration methods over instances.
     """
-    points = {"head": Point(1, 4), "left-wing": Point(2, 5), "right-wing": Point(3, 6)}
+    points = {"head": [1, 4], "left-wing": [2, 5], "right-wing": [3, 6]}
 
     instance = Instance(skeleton=skeleton, points=points)
 
     assert [node.name for node in instance.nodes] == ["head", "left-wing", "right-wing"]
-    assert np.allclose([p.x for p in instance.points], [1, 2, 3])
-    assert np.allclose([p.y for p in instance.points], [4, 5, 6])
+    assert np.allclose([p["xy"][0] for p in instance.points], [1, 2, 3])
+    assert np.allclose([p["xy"][1] for p in instance.points], [4, 5, 6])
 
     # Make sure we can iterate over tuples
     for node, point in instance.nodes_points:
@@ -122,8 +119,8 @@ def test_skeleton_node_name_change():
     s.add_edge("a", "b")
 
     instance = Instance(s)
-    instance["a"] = Point(1, 2)
-    instance["b"] = Point(3, 4)
+    instance["a"] = [1, 2]
+    instance["b"] = [3, 4]
 
     # Rename the node
     s.relabel_nodes({"a": "A"})

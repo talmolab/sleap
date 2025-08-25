@@ -26,6 +26,7 @@ from qtpy import QtCore, QtGui, QtWidgets
 from sleap.gui.commands import CommandContext
 from sleap.gui.state import GuiState
 from sleap.instance import LabeledFrame
+from sleap.sleap_io_adaptors.utils import get_nodes_from_instance
 
 # from sleap.skeleton import Skeleton
 from sleap_io.model.skeleton import Skeleton
@@ -466,7 +467,7 @@ class LabeledFrameTableModel(GenericTableModel):
     def item_to_data(self, obj, item):
         instance = item
 
-        points = f"{len(instance.nodes)}/{len(instance.skeleton.nodes)}"
+        points = f"{len(get_nodes_from_instance(instance))}/{len(instance.skeleton.nodes)}"
         track_name = instance.track.name if instance.track else ""
         score = ""
         if hasattr(instance, "score"):

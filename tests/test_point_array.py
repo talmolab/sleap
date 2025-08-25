@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from sleap.instance import Point, PredictedPoint, PointArray, PredictedPointArray
+from sleap_io.model.instance import PointsArray, PredictedPointsArray
 
 
 @pytest.mark.parametrize(

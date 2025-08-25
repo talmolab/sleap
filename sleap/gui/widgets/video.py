@@ -58,12 +58,11 @@ from sleap.gui.color import ColorManager
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.state import GuiState
 from sleap.gui.widgets.slider import VideoSlider
-from sleap.instance import Instance, Point, PredictedInstance
 from sleap.prefs import prefs
 
 # from sleap.skeleton import Node
 from sleap_io.model.skeleton import Node
-
+from sleap_io.model.instance import Instance, PredictedInstance, PointsArray
 # FORCE_REQUESTS controls whether we emit a signal to process frame requests
 # if we haven't processed any for a certain amount of time.
 # Usually the processing gets triggered by a timer but if the user is (e.g.)
@@ -1422,7 +1421,7 @@ class QtNode(QGraphicsEllipseItem):
         parent: QGraphicsObject,
         player: QtVideoPlayer,
         node: Node,
-        point: Point,
+        point: PointsArray, #TODO: should this be list?
         radius: float,
         predicted=False,
         show_non_visible=True,

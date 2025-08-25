@@ -15,7 +15,8 @@ import numpy as np
 
 from typing import Union
 
-from sleap.instance import PredictedInstance, LabeledFrame
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import PredictedInstance
 from sleap_io import Track
 from sleap import Labels
 from sleap_io.model.skeleton import Skeleton

@@ -10,6 +10,7 @@ from sleap_io import Track
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.widgets.video import QtTextWithBackground
 from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Track
 from sleap.prefs import prefs
 
 

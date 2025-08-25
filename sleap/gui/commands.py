@@ -70,7 +70,8 @@ from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap_io import SuggestionFrame
-from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, Track, PredictedInstance
 from sleap.io.convert import default_analysis_filename
 
 from sleap.io.dataset import Labels
@@ -3572,12 +3573,7 @@ class AddInstance(EditCommand):
                     y_new = y_new_offset
 
                 # Update the new instance with the new x, y, and visibility.
-                new_instance[node] = Point(
-                    x=x_new,
-                    y=y_new,
-                    visible=visible,
-                    complete=mark_complete,
-                )
+                new_instance[node] = [x_new, y_new, visible, mark_complete]
             else:
                 has_missing_nodes = True
 
@@ -3759,7 +3755,7 @@ class AddMissingInstanceNodes(EditCommand):
                 # pick random points within currently zoomed view
                 x, y = cls.get_xy_in_rect(in_view_rect)
                 # set point for node
-                instance[node] = Point(x=x, y=y, visible=visible)
+                instance[node] = [x, y, visible]
 
     @staticmethod
     def get_xy_in_rect(rect: QtCore.QRectF):
@@ -3805,7 +3801,7 @@ class AddMissingInstanceNodes(EditCommand):
         for i, node in enumerate(instance.skeleton.nodes):
             if node not in instance:
                 x, y = aligned_template[i]
-                instance[node] = Point(x=x, y=y, visible=visible)
+                instance[node] = [x, y, visible]
 
     @classmethod
     def add_force_directed_nodes(
@@ -3821,7 +3817,7 @@ class AddMissingInstanceNodes(EditCommand):
         )
 
         for node, pos in node_positions.items():
-            instance[node] = Point(x=pos[0], y=pos[1], visible=visible)
+            instance[node] = [pos[0], pos[1], visible]
 
 
 class AddUserInstancesFromPredictions(EditCommand):
@@ -3844,12 +3840,12 @@ class AddUserInstancesFromPredictions(EditCommand):
             if node in copy_instance and not copy_instance[node].isnan():
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
-                new_instance[node] = Point(
-                    x=copy_instance[node].x,
-                    y=copy_instance[node].y,
-                    visible=copy_instance[node].visible,
-                    complete=False,
-                )
+                new_instance[node] = [
+                    copy_instance[node]["xy"][0],
+                    copy_instance[node]["xy"][1],
+                    copy_instance[node]["visible"],
+                    False,
+                ]
 
         # copy the track
         new_instance.track = copy_instance.track

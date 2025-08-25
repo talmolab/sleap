@@ -76,7 +76,7 @@ from sleap.gui.widgets.docks import (
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.info.summary import StatisticSeries
-from sleap.instance import Instance
+from sleap_io.model.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.io.video import available_video_exts
 from sleap.prefs import prefs

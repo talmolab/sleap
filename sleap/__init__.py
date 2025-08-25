@@ -9,6 +9,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 from sleap.version import __version__, versions
 from sleap.io.dataset import Labels, load_file
 from sleap_io import load_video
-from sleap.instance import LabeledFrame, Instance, PredictedInstance, Track
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, PredictedInstance, Track
 
 from sleap_io.model.skeleton import Skeleton

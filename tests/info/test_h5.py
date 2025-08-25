@@ -18,7 +18,7 @@ from sleap.info.write_tracking_h5 import (
     main,
 )
 from sleap.io.dataset import Labels
-from sleap.instance import Instance, Point
+from sleap_io.model.instance import Instance
 from sleap.gui.commands import AddUserInstancesFromPredictions
 
 
@@ -158,12 +158,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     )
     # Make a minor modification to the user-instance to differentiate
     node_idx = 0
-    user_instance[node_idx] = Point(
-        x=1,
-        y=1,
-        visible=True,
-        complete=True,
-    )
+    user_instance[node_idx] = [1, 1, True, True]
     centered_pair_predictions.add_instance(lf, user_instance)
 
     # Add another predicted instance (same track) incase ordering matters

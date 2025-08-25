@@ -6,8 +6,9 @@ from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 from sleap_io import Video
 
-from sleap.instance import Instance, LabeledFrame, Point
-from sleap_io import Track
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, Track
+from sleap_io.model.skeleton import Node, Skeleton
 
 from sleap import Labels
 from sleap_io.model.skeleton import Skeleton
@@ -87,7 +88,7 @@ class LabelsDeepPoseKitAdaptor(Adaptor):
                 points = dict()
                 for p in range(len(points_array)):
                     x, y, score = points_array[p]
-                    points[nodes[p]] = Point(x, y)  # TODO: score
+                    points[nodes[p]] = [x, y]
 
                 inst = Instance(
                     skeleton=skeleton, track=tracks[track_idx], points=points
