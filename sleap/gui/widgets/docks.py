@@ -406,12 +406,11 @@ class SkeletonDock(DockWidget):
         def update_skeleton_preview(idx: int):
             with open(skeletons_json_files[idx], "r") as f:
                 skeleton_data = json.load(f)
-            skel = SkeletonDecoder().decode(data=skeleton_data)
+            skel = SkeletonDecoder().decode(data=skeleton_data["nx_graph"])
             description = "Test"
             main_window.state["skeleton_description"] = (
-                f"<strong>Description:</strong> {description}<br><br>"
-                f"<strong>Nodes ({len(skel)}):</strong> "
-                f"{', '.join(skel.node_names)}"
+                f"<strong>Skeleton name:</strong> {description}<br><br>"
+                f"<strong>Nodes ({len(skel.node_names)}):</strong> {', '.join(skel.node_names)}"
             )
             self.skeleton_description.setText(main_window.state["skeleton_description"])
             updatePreviewImage(

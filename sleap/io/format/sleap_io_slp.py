@@ -97,10 +97,6 @@ class SleapIOSLPAdaptor(format.adaptor.Adaptor):
         """Convert sleap-io Labels to sleap Labels."""
         from sleap.instance import (
             LabeledFrame,
-            Instance,
-            PredictedInstance,
-            Point,
-            PredictedPoint,
         )
         from sleap.io.video import Video as SleapVideo
 
