@@ -3,7 +3,7 @@
 import pytest
 from qtpy.QtWidgets import QComboBox
 
-from sleap.skeleton import Skeleton
+from sleap_io import Skeleton
 from sleap.io.dataset import Labels
 from sleap.gui.commands import OpenSkeleton
 from sleap.gui.dialogs.merge import ReplaceSkeletonTableDialog

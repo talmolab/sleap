@@ -60,7 +60,7 @@ from sleap.gui.widgets.slider import VideoSlider
 from sleap.instance import Instance, Point, PredictedInstance
 from sleap.io.video import Video
 from sleap.prefs import prefs
-from sleap.skeleton import Node
+from sleap_io import Node
 
 # FORCE_REQUESTS controls whether we emit a signal to process frame requests
 # if we haven't processed any for a certain amount of time.

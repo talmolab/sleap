@@ -8,18 +8,17 @@ Try not to put things in here unless they really have no other place.
 
 from __future__ import annotations
 
-import base64
 import json
 import os
 import re
 import shutil
 from collections import defaultdict
-from io import BytesIO
+import cv2
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Hashable, Iterable, List, Optional
 
 if TYPE_CHECKING:
-    from sleap.instance import Instance
+    pass
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
 
@@ -38,7 +37,6 @@ import rapidjson
 import rich.progress
 import seaborn as sns
 import yaml
-from PIL import Image
 
 import sleap.version as sleap_version
 
@@ -205,6 +203,26 @@ def frame_list(frame_str: str) -> Optional[List[int]]:
 
     return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
 
+def resize_image(img: np.ndarray, scale: float) -> np.ndarray:
+    """Resizes single image with shape (height, width, channels)."""
+    height, width, channels = img.shape
+    new_height, new_width = int(height // (1 / scale)), int(width // (1 / scale))
+
+    # Note that OpenCV takes shape as (width, height).
+
+    if channels == 1:
+        # opencv doesn't want a single channel to have its own dimension
+        img = cv2.resize(img[:, :], (new_width, new_height))[..., None]
+    else:
+        img = cv2.resize(img, (new_width, new_height))
+
+    return img
+
+
+def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
+    if scale == 1.0:
+        return images
+    return np.stack([resize_image(img, scale) for img in images])
 
 def uniquify(seq: Iterable[Hashable]) -> List:
     """Returns unique elements from list, preserving order.
@@ -577,89 +595,3 @@ def plot_instances(
 
     return h_lines
 
-
-def generate_skeleton_preview_image(
-    instance: "Instance", square_bb: bool = True, thumbnail_size=(128, 128)
-) -> bytes:
-    """Generate preview image for skeleton based on given instance.
-
-    Args:
-        instance: A `sleap.Instance` object for which to generate the preview
-            image from.
-        square_bb: A boolean flag for whether or not the preview image should be
-            a square image
-        thumbnail_size: A tuple of (w,h) for what the size of the thumbnail image
-            should be
-
-    Returns:
-        A byte string encoding of the preview image.
-    """
-
-    def get_square_bounding_box(bb):
-        """Convert rectangular bounding box to square bounding box.
-
-        Args:
-            bb: A tuple representing a bounding box in `sleap.Instance.bounding_box`
-                with the format [y1, x1, y2, x2]
-
-        Returns:
-            A square bounding box in `PIL.Image.crop()` with the format [x1, y1, x2, y2]
-        """
-
-        y1, x1, y2, x2 = bb
-
-        # Get side lengths
-        dist_x = x2 - x1
-        dist_y = y2 - y1
-
-        mid_x = x1 + dist_x / 2
-        mid_y = y1 + dist_y / 2
-
-        # Get max side length to use as square side length
-        max_dist = max(dist_x, dist_y)
-
-        # Get new coordinates
-        new_x1 = mid_x - max_dist / 2
-        new_x2 = mid_x + max_dist / 2
-        new_y1 = mid_y - max_dist / 2
-        new_y2 = mid_y + max_dist / 2
-
-        assert new_x2 - new_x1 == new_y2 - new_y1, ValueError(
-            f"{new_x2 - new_x1} != {new_y2 - new_y1}"
-        )
-        return (new_x1, new_y1, new_x2, new_y2)
-
-    if square_bb:
-        x1, y1, x2, y2 = get_square_bounding_box(instance.bounding_box)
-    else:
-        y1, x1, y2, x2 = instance.bounding_box
-    bb = [x1, y1, x2, y2]
-    bb = [coor - 20 if idx < 2 else coor + 20 for idx, coor in enumerate(bb)]
-
-    plot_img(instance.video.get_frame(instance.frame_idx))
-
-    # Custom formula for scaling line width and marker size based on bounding box size.
-    max_dim = max(abs(y1 - y2), abs(x1 - x2))
-    ms = int(max_dim / 7)
-    lw = int(max_dim / 30)
-    skeleton = plot_instance(
-        instance, skeleton=instance.skeleton, lw=lw, ms=ms, color_by_node=False
-    )
-
-    fig = skeleton[0][0].figure
-    ax = fig.gca()
-    ax.get_yaxis().set_visible(False)
-    ax.get_xaxis().set_visible(False)
-    fig.set(facecolor="white", frameon=False)
-
-    img_buf = BytesIO()
-    plt.savefig(img_buf, format="png", facecolor="white")
-    im = Image.open(img_buf)
-    im = im.crop(bb)
-    im.thumbnail(thumbnail_size)
-
-    img_stream = BytesIO()
-    im.save(img_stream, format="png")
-    img_bytes = img_stream.getvalue()  # image in binary format
-    img_b64 = base64.b64encode(img_bytes)
-    return img_b64

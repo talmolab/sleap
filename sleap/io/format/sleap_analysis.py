@@ -15,7 +15,8 @@ import numpy as np
 
 from typing import Union
 
-from sleap import Labels, Video, Skeleton
+from sleap import Labels, Video
+from sleap_io import Skeleton
 from sleap.instance import PredictedInstance, LabeledFrame, Track
 
 from .adaptor import Adaptor, SleapObjectType

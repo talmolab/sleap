@@ -14,7 +14,8 @@ from qtpy import QtCore, QtWidgets
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Text
 
-from sleap import Labels, Skeleton
+from sleap import Labels
+from sleap_io import Skeleton
 from sleap import util as sleap_utils
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FieldComboWidget

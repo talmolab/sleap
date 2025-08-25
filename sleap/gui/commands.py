@@ -77,9 +77,10 @@ from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.video import Video
 from sleap.io.videowriter import write_video
 from sleap.io.visuals import save_labeled_video
-from sleap.skeleton import Node, Skeleton
 from sleap.util import get_package_file
-
+from sleap_io.model.skeleton import Node, Skeleton
+from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node, delete_symmetry
+from sleap_io import save_skeleton
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -2354,12 +2355,9 @@ class OpenSkeleton(EditCommand):
 
     @staticmethod
     def load_skeleton(filename: str):
-        if filename.endswith(".json"):
-            new_skeleton = Skeleton.load_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            sk_list = Skeleton.load_all_hdf5(filename)
-            new_skeleton = sk_list[0]
-        return new_skeleton
+        from sleap_io import load_skeleton
+        return load_skeleton(filename)[0]
+        # return `sio.Skeleton` object instead of list
 
     @staticmethod
     def compare_skeletons(
@@ -2536,25 +2534,30 @@ class OpenSkeleton(EditCommand):
             )
 
         # Delete pre-existing symmetry
-        for src, dst in skeleton.symmetries:
-            skeleton.delete_symmetry(src, dst)
+        for symmetry in skeleton.symmetries:
+            delete_symmetry(skeleton, symmetry.nodes[0].name, symmetry.nodes[1].name)
 
         # Link mismatched nodes
         if "linked_nodes" in params.keys():
             linked_nodes = params["linked_nodes"]
             for new_name, old_name in linked_nodes.items():
-                try_and_skip_if_error(skeleton.relabel_node, old_name, new_name)
+                try_and_skip_if_error(skeleton.rename_node, old_name, new_name)
 
         # Delete nodes from skeleton that are not in new skeleton
         for node in delete_nodes:
-            try_and_skip_if_error(skeleton.delete_node, node)
+            try_and_skip_if_error(skeleton.remove_node, node)
 
         # Add nodes that only exist in the new skeleton
         for node in add_nodes:
             try_and_skip_if_error(skeleton.add_node, node)
 
         # Add edges
-        skeleton.clear_edges()
+        # skeleton.clear_edges()
+        if isinstance(skeleton, Skeleton):
+            skeleton.edges = []
+        elif isinstance(skeleton, List[Skeleton]):
+            for skl in skeleton:
+                skl.edges = []
         for src, dest in new_skeleton.edges:
             try_and_skip_if_error(skeleton.add_edge, src.name, dest.name)
 
@@ -2588,9 +2591,14 @@ class SaveSkeleton(AppCommand):
     def do_action(context: CommandContext, params: dict):
         filename = params["filename"]
         if filename.endswith(".json"):
-            context.state["skeleton"].save_json(filename)
-        elif filename.endswith((".h5", ".hdf5")):
-            context.state["skeleton"].save_hdf5(filename)
+            save_skeleton(
+                [context.state["skeleton"]]
+                if isinstance(context.state["skeleton"], Skeleton)
+                else context.state["skeleton"],
+                filename,
+            )
+        # elif filename.endswith((".h5", ".hdf5")):
+        #     sleap_io.save_skeleton(context.state["skeleton"], filename)
 
 
 class NewNode(EditCommand):
@@ -2615,7 +2623,7 @@ class DeleteNode(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         node = context.state["selected_node"]
-        context.state["skeleton"].delete_node(node)
+        context.state["skeleton"].remove_node(node)
 
 
 class SetNodeName(EditCommand):
@@ -2632,7 +2640,7 @@ class SetNodeName(EditCommand):
             context.labels.merge_nodes(name, node.name)
         else:
             # Simple relabel
-            skeleton.relabel_node(node.name, name)
+            skeleton.rename_node(node.name, name)
 
 
 class SetNodeSymmetry(EditCommand):
@@ -2647,9 +2655,9 @@ class SetNodeSymmetry(EditCommand):
             skeleton.add_symmetry(node, symmetry)
         else:
             # Value was cleared by user, so delete symmetry
-            symmetric_to = skeleton.get_symmetry(node)
+            symmetric_to = get_symmetry_node(skeleton, node)
             if symmetric_to is not None:
-                skeleton.delete_symmetry(node, symmetric_to)
+                delete_symmetry(skeleton, node, symmetric_to)
 
 
 class NewEdge(EditCommand):

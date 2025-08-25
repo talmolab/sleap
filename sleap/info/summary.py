@@ -11,6 +11,8 @@ from typing import Callable, Dict
 from sleap.instance import LabeledFrame
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
+from sleap.sleap_io_adaptors.skeleton_utils import node_to_index
+
 
 
 @attr.s(auto_attribs=True)
@@ -139,7 +141,7 @@ class StatisticSeries:
         track_count = self.labels.get_track_count(video)
 
         try:
-            primary_node_idx = self.labels.skeletons[0].node_to_index(primary_node)
+            primary_node_idx = node_to_index(self.labels.skeletons[0], primary_node)
         except ValueError:
             print(f"Unable to locate node {primary_node} so using node 0")
             primary_node_idx = 0

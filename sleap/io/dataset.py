@@ -72,7 +72,8 @@ try:
 except Exception:
     pass
 
-from sleap.skeleton import Skeleton, Node
+# from sleap.skeleton import Skeleton, Node (sleap.io will be deleted)
+from sleap_io.model.skeleton import Skeleton, Node
 from sleap.instance import (
     Instance,
     LabeledFrame,
@@ -1933,9 +1934,9 @@ class Labels(MutableSequence):
         # as references to the above constructed lists to limit redundant data in the
         # json
         label_cattr = make_instance_cattr()
-        label_cattr.register_unstructure_hook(
-            Skeleton, lambda x: str(self.skeletons.index(x))
-        )
+        # label_cattr.register_unstructure_hook(
+        #     Skeleton, lambda x: str(self.skeletons.index(x))
+        # )
         label_cattr.register_unstructure_hook(
             Video, lambda x: str(self.videos.index(x))
         )
@@ -1945,9 +1946,12 @@ class Labels(MutableSequence):
         )
 
         # Make a converter for the top level skeletons list.
-        idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
+        # idx_to_node = {i: self.nodes[i] for i in range(len(self.nodes))}
 
-        skeleton_cattr = Skeleton.make_cattr(idx_to_node)
+        # skeleton_cattr = Skeleton.make_cattr(idx_to_node)
+        # Skeletons are now serialized using sleap-io's built-in serialization
+        from sleap_io.io.skeleton import SkeletonSLPEncoder
+        skeleton_encoder = SkeletonSLPEncoder()
 
         # Make attr for tracks so that we save as tuples rather than dicts;
         # this can save a lot of space when there are lots of tracks.
@@ -1956,7 +1960,7 @@ class Labels(MutableSequence):
         # Serialize the skeletons, videos, and labels
         dicts = {
             "version": LABELS_JSON_FILE_VERSION,
-            "skeletons": skeleton_cattr.unstructure(self.skeletons),
+            "skeletons": skeleton_encoder.encode_skeletons(self.skeletons)[0],
             "nodes": cattr.unstructure(self.nodes),
             "videos": Video.cattr().unstructure(self.videos),
             "tracks": track_cattr.unstructure(self.tracks),

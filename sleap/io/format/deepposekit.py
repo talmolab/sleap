@@ -6,8 +6,8 @@ from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
 from sleap.instance import Instance, LabeledFrame, Point, Track
-
-from sleap import Labels, Video, Skeleton
+from sleap import Labels, Video
+from sleap_io import Skeleton
 
 import numpy as np
 import pandas as pd

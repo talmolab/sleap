@@ -59,6 +59,7 @@ dependencies = [
     "albumentations",
     "requests",
     "matplotlib",
+    "sleap-io>=0.5.0",
 ]
 
 [tool.setuptools.dynamic]

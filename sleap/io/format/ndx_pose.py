@@ -16,7 +16,7 @@ from sleap.io.format.filehandle import FileHandle
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
-from sleap.skeleton import Skeleton
+from sleap_io import Skeleton
 
 
 class NDXPoseAdaptor(Adaptor):
@@ -128,10 +128,10 @@ class NDXPoseAdaptor(Adaptor):
             io.close()
 
         # Create skeleton
-        skeleton = Skeleton.from_names_and_edge_inds(
-            node_names=node_names,
-            edge_inds=edge_inds,
-        )
+        skeleton = Skeleton(nodes=node_names)
+        if edge_inds:
+            edges = [(node_names[src], node_names[dst]) for src, dst in edge_inds]
+            skeleton.add_edges(edges)
         labels.skeletons = [skeleton]
 
         # Add instances to labeled frames

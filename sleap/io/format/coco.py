@@ -8,7 +8,8 @@ import os
 
 import numpy as np
 
-from sleap import Labels, Video, Skeleton
+from sleap import Labels, Video
+from sleap_io import Skeleton
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.instance import Instance, LabeledFrame, Point, Track
 
@@ -67,14 +68,16 @@ class LabelsCocoAdaptor(Adaptor):
         # Make skeletons from "categories"
         skeleton_map = dict()
         for category in dicts["categories"]:
-            skeleton = Skeleton(name=category["name"])
-            skeleton_id = category["id"]
             node_names = category["keypoints"]
-            skeleton.add_nodes(node_names)
+            skeleton = Skeleton(nodes=node_names, name=category["name"])
+            skeleton_id = category["id"]
+
+            # Build edges list
+            edges = []
 
             try:
                 for src_idx, dst_idx in category["skeleton"]:
-                    skeleton.add_edge(node_names[src_idx], node_names[dst_idx])
+                    edges.append((node_names[src_idx], node_names[dst_idx]))
             except IndexError:
                 # According to the COCO data format specifications[^1], the edges
                 # are supposed to be 1-indexed. But in some of their own
@@ -85,9 +88,12 @@ class LabelsCocoAdaptor(Adaptor):
                 skeleton.clear_edges()
 
                 # Add edges
+                edges = []
                 for src_idx, dst_idx in category["skeleton"]:
-                    skeleton.add_edge(node_names[src_idx - 1], node_names[dst_idx - 1])
+                    edges.append((node_names[src_idx - 1], node_names[dst_idx - 1]))
 
+            if edges:
+                skeleton.add_edges(edges)
             skeleton_map[skeleton_id] = skeleton
 
         # Make videos from "images"

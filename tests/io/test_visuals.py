@@ -8,7 +8,7 @@ from sleap.io.visuals import (
     VideoMarkerThread,
     main as sleap_render,
 )
-from sleap.io.videowriter import resize_images
+from sleap.util import resize_images
 
 
 def test_serial_pipeline(centered_pair_predictions, tmpdir):

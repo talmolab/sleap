@@ -80,7 +80,7 @@ from sleap.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.io.video import available_video_exts
 from sleap.prefs import prefs
-from sleap.skeleton import Skeleton
+from sleap_io.model.skeleton import Skeleton
 from sleap.util import parse_uri_path, get_config_file
 
 

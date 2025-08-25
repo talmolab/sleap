@@ -28,8 +28,9 @@ from sleap.instance import (
     make_instance_cattr,
 )
 from sleap.io.legacy import load_labels_json_old
-from sleap.skeleton import Node, Skeleton
+from sleap_io import Node
 from sleap.util import json_loads, json_dumps, weak_filename_match
+from sleap_io.io.skeleton import SkeletonSLPDecoder
 
 
 class LabelsJsonAdaptor(Adaptor):
@@ -385,9 +386,15 @@ class LabelsJsonAdaptor(Adaptor):
         # The labels reference these so we will need them while deserializing.
         nodes = cattr.structure(dicts["nodes"], List[Node])
 
-        idx_to_node = {i: nodes[i] for i in range(len(nodes))}
-        skeletons = Skeleton.make_cattr(idx_to_node).structure(
-            dicts["skeletons"], List[Skeleton]
+        # idx_to_node = {i: nodes[i] for i in range(len(nodes))}
+        # skeletons = Skeleton.make_cattr(idx_to_node).structure(
+        #     dicts["skeletons"], List[Skeleton]
+        # )
+        decoder = SkeletonSLPDecoder()
+        skeletons = decoder.decode(
+            dicts,
+            node_names=[x["name"] for x in dicts["nodes"]],
+            edge_inds=[x["edges"] for x in dicts["skeletons"]],
         )
         videos = Video.cattr().structure(dicts["videos"], List[Video])
 
@@ -411,11 +418,6 @@ class LabelsJsonAdaptor(Adaptor):
                 for idx, sk in enumerate(skeletons):
                     for old_sk in match_to.skeletons:
                         if sk.matches(old_sk):
-                            # use nodes from matched skeleton
-                            for node, match_node in zip(sk.nodes, old_sk.nodes):
-                                node_idx = nodes.index(node)
-                                nodes[node_idx] = match_node
-                            # use skeleton from match
                             skeletons[idx] = old_sk
                             break
             elif len(skeletons) == 1 and len(match_to.skeletons) == 1:
@@ -511,9 +513,9 @@ class LabelsJsonAdaptor(Adaptor):
         # If there is actual labels data, get it.
         if "labels" in dicts:
             label_cattr = make_instance_cattr()
-            label_cattr.register_structure_hook(
-                Skeleton, lambda x, type: skeletons[int(x)]
-            )
+            # label_cattr.register_structure_hook(
+            #     Skeleton, lambda x, type: skeletons[int(x)]
+            # )
             label_cattr.register_structure_hook(Video, lambda x, type: videos[int(x)])
             label_cattr.register_structure_hook(
                 Node, lambda x, type: x if isinstance(x, Node) else nodes[int(x)]

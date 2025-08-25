@@ -36,8 +36,9 @@ import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured
 
 from sleap.io.video import Video  # Only used for type hinting
-from sleap.skeleton import Node, Skeleton
+from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import plot_img, plot_instances
+from sleap.sleap_io_adaptors.skeleton_utils import find_node, node_to_index
 
 
 class Point(np.record):
@@ -421,7 +422,7 @@ class Instance:
             is_string_dict = set(map(type, points)) == {str}
             if is_string_dict:
                 for node_name in points.keys():
-                    if not self.skeleton.has_node(node_name):
+                    if node_name not in self.skeleton.node_names:
                         raise KeyError(
                             f"There is no node named {node_name} in {self.skeleton}"
                         )
@@ -492,7 +493,9 @@ class Instance:
         # convert to node indices so we don't break references to skeleton nodes
         # if the node name is relabeled.
         if points and is_string_dict:
-            points = {skeleton.find_node(name): point for name, point in points.items()}
+            points = {
+                find_node(skeleton, name): point for name, point in points.items()
+            }
 
         if not is_string_dict and not is_node_dict:
             raise ValueError(
@@ -508,7 +511,7 @@ class Instance:
                     x=point.x, y=point.y, visible=point.visible, complete=point.complete
                 )
             try:
-                parray[skeleton.node_to_index(node)] = point
+                parray[node_to_index(skeleton, node)] = point
                 # parray[skeleton.node_to_index(node.name)] = point
             except Exception:
                 pass
@@ -522,7 +525,7 @@ class Instance:
         Returns:
             The index of the node on skeleton graph.
         """
-        return self.skeleton.node_to_index(node)
+        return node_to_index(self.skeleton, node)
 
     def __getitem__(
         self,

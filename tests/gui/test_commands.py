@@ -8,7 +8,8 @@ from pathlib import PurePath, Path
 from qtpy import QtCore
 from typing import List
 
-from sleap import Skeleton, Track, PredictedInstance
+from sleap import Track, PredictedInstance
+from sleap_io import Skeleton
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
     AddInstance,
@@ -25,6 +26,7 @@ from sleap.gui.commands import (
     DeleteFrameLimitPredictions,
     get_new_version_filename,
 )
+from sleap_io import load_skeleton
 from sleap.instance import Instance, LabeledFrame
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
@@ -532,7 +534,7 @@ def test_OpenSkeleton(
     fly32_json = get_package_file("skeletons/fly32.json")
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly32_json
-    fly32_skeleton = Skeleton.load_json(fly32_json)
+    fly32_skeleton = load_skeleton(fly32_json)
     OpenSkeleton.do_action(context, params)
     assert_skeletons_match(labels.skeleton, fly32_skeleton)
 

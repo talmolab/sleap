@@ -20,7 +20,7 @@ from sleap.instance import (
     Point,
     Instance,
 )
-from sleap.skeleton import Skeleton
+from sleap_io import Skeleton
 
 
 def load_predicted_labels_json_old(

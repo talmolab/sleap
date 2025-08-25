@@ -12,7 +12,8 @@ import cattr
 from qtpy import QtCore, QtGui, QtWidgets
 
 import sleap
-from sleap import Labels, Video, Skeleton
+from sleap import Labels, Video
+from sleap_io import Skeleton
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import configs, receptivefield, runners, scopedkeydict
