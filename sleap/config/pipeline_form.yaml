@@ -314,37 +314,42 @@ training:
 - type: text
   text: '<b>WandB Configuration</b>'
 
-- name: wandb_entity
+- name: outputs.use_wandb
+  label: Use WandB
+  type: bool
+  default: false
+
+- name: outputs.wandb.entity
   label: Entity
   type: string
   default: ''
 
-- name: wandb_project
+- name: outputs.wandb.project
   label: Project
   type: string
   default: ''
 
-- name: wandb_run_name
+- name: outputs.wandb.name
   label: Run Name
   type: string
   default: ''
 
-- name: wandb_api_key
+- name: outputs.wandb.api_key
   label: API Key
   type: string
   default: ''
 
-- name: wandb_mode
+- name: outputs.wandb.wandb_mode
   label: Mode
   type: string
   default: 'None'
 
-- name: wandb_prev_runid
+- name: outputs.wandb.prv_runid
   label: Previous Run ID
   type: string
   default: ''
 
-- name: wandb_group
+- name: outputs.wandb.group
   label: Group
   type: string
   default: ''

@@ -70,6 +70,33 @@ class TensorBoardConfig:
 
 
 @attr.s(auto_attribs=True)
+class WandBConfig:
+    """Configuration for WandB.
+
+    Only if use_wandb is True, else skip this
+
+    Attributes:
+        entity: (str) Entity of wandb project. *Default*: `None`.
+        project: (str) Project name for the wandb project. *Default*: `None`.
+        name: (str) Name of the current run. *Default*: `None`.
+        api_key: (str) API key. The API key is masked when saved to config files. *Default*: `None`.
+        wandb_mode: (str) "offline" if only local logging is required. *Default*: `"None"`.
+        prv_runid: (str) Previous run ID if training should be resumed from a previous ckpt. *Default*: `None`.
+        group: (str) Group for wandb logging. *Default*: `None`.
+        current_run_id: (str) Run ID for the current model training. (stored once the training starts). *Default*: `None`.
+    """
+
+    entity: Optional[str] = None
+    project: Optional[str] = None
+    name: Optional[str] = None
+    api_key: Optional[str] = None
+    wandb_mode: Optional[str] = None
+    prv_runid: Optional[str] = None
+    group: Optional[str] = None
+    current_run_id: Optional[str] = None
+
+
+@attr.s(auto_attribs=True)
 class ZMQConfig:
     """Configuration of ZeroMQ-based monitoring of the training.
 
@@ -160,6 +187,8 @@ class OutputsConfig:
             epoch to "{run_folder}/training_log.csv"
         checkpointing: Configuration options related to model checkpointing.
         tensorboard: Configuration options related to TensorBoard logging.
+        use_wandb: Flag for using Weights & Biases (WandB) logging.
+        wandb: Configuration options related to Weights & Biases (WandB) logging.
         zmq: Configuration options related to ZeroMQ-based control and monitoring.
     """
 
@@ -175,6 +204,8 @@ class OutputsConfig:
     log_to_csv: bool = True
     checkpointing: CheckpointingConfig = attr.ib(factory=CheckpointingConfig)
     tensorboard: TensorBoardConfig = attr.ib(factory=TensorBoardConfig)
+    use_wandb: bool = False
+    wandb: WandBConfig = attr.ib(factory=WandBConfig)
     zmq: ZMQConfig = attr.ib(factory=ZMQConfig)
 
     @property

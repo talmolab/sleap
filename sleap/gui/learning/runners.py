@@ -946,6 +946,20 @@ def train_subprocess(
         if hasattr(job_config.optimization, "trainer_devices"):
             cfg.trainer_config.trainer_devices = job_config.optimization.trainer_devices
 
+        if hasattr(job_config.outputs, "use_wandb"):
+            cfg.trainer_config.use_wandb = job_config.outputs.use_wandb
+
+            if job_config.outputs.use_wandb:
+                cfg.trainer_config.wandb.entity = job_config.outputs.wandb.entity
+                cfg.trainer_config.wandb.project = job_config.outputs.wandb.project
+                cfg.trainer_config.wandb.name = job_config.outputs.wandb.name
+                cfg.trainer_config.wandb.api_key = job_config.outputs.wandb.api_key
+                cfg.trainer_config.wandb.wandb_mode = (
+                    job_config.outputs.wandb.wandb_mode
+                )
+                cfg.trainer_config.wandb.prv_runid = job_config.outputs.wandb.prv_runid
+                cfg.trainer_config.wandb.group = job_config.outputs.wandb.group
+
         cfg.trainer_config.save_ckpt_path = run_path
         cfg.trainer_config.visualize_preds_during_training = save_viz
         cfg.trainer_config.keep_viz = keep_viz

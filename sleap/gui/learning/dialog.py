@@ -940,6 +940,12 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         self.pipeline_field = self.form_widget.form_layout.find_field("_pipeline")[0]
         self.pipeline_field.valueChanged.connect(self.emitPipeline)
 
+        # Connect to wandb field changes
+        wandb_field = self.form_widget.form_layout.find_field("outputs.use_wandb")
+        if wandb_field:
+            wandb_field[0].stateChanged.connect(self.update_wandb_fields)
+            self.update_wandb_fields()
+
         self.form_widget.form_layout.valueChanged.connect(self.valueChanged)
 
         self.setLayout(self.form_widget.form_layout)
@@ -1001,6 +1007,31 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
         self.pipeline_field.setValue(val)
         self.emitPipeline()
+
+    def update_wandb_fields(self):
+        """Enable/disable wandb fields based on use_wandb checkbox"""
+        use_wandb_field = self.form_widget.form_layout.find_field("outputs.use_wandb")
+        if not use_wandb_field:
+            return
+
+        use_wandb = use_wandb_field[0].isChecked()
+
+        wandb_fields = [
+            "outputs.wandb.entity",
+            "outputs.wandb.project",
+            "outputs.wandb.name",
+            "outputs.wandb.api_key",
+            "outputs.wandb.wandb_mode",
+            "outputs.wandb.prev_runid",
+            "outputs.wandb.group",
+        ]
+
+        for field_name in wandb_fields:
+            field = self.form_widget.form_layout.find_field(field_name)
+            if field:
+                field[0].setEnabled(use_wandb)
+                if not use_wandb:
+                    field[0].clear()
 
 
 class TrainingEditorWidget(QtWidgets.QWidget):
