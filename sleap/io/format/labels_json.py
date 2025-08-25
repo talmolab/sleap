@@ -394,7 +394,6 @@ class LabelsJsonAdaptor(Adaptor):
         skeletons = decoder.decode(
             dicts,
             node_names=[x["name"] for x in dicts["nodes"]],
-            edge_inds=[x["edges"] for x in dicts["skeletons"]],
         )
         videos = Video.cattr().structure(dicts["videos"], List[Video])
 
