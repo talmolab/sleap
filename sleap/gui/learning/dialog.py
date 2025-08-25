@@ -18,6 +18,12 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import configs, receptivefield, runners, scopedkeydict
 from sleap.gui.learning.configs import TrainingConfigsGetter
+from sleap.sleap_io_adaptors.skeleton_utils import (
+    cycles,
+    is_arborescence,
+    root_nodes,
+    in_degree_over_one,
+)
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -678,15 +684,15 @@ class LearningDialog(QtWidgets.QDialog):
         if self.mode == "training" and self.current_pipeline == "bottom-up":
             skeleton = self.labels.skeletons[0]
 
-            if not skeleton.is_arborescence:
+            if not is_arborescence(skeleton):
                 message += (
                     "Cannot run bottom-up pipeline when skeleton is not an "
                     "arborescence."
                 )
 
-                root_names = [n.name for n in skeleton.root_nodes]
-                over_max_in_degree = [n.name for n in skeleton.in_degree_over_one]
-                cycles = skeleton.cycles
+                root_names = [n.name for n in root_nodes(skeleton)]
+                over_max_in_degree = [n.name for n in in_degree_over_one(skeleton)]
+                cycles_var = cycles(skeleton)
 
                 if len(root_names) > 1:
                     message += (
@@ -701,9 +707,9 @@ class LearningDialog(QtWidgets.QDialog):
                         "1).</li>"
                     )
 
-                if cycles:
+                if cycles_var:
                     cycle_strings = []
-                    for cycle in cycles:
+                    for cycle in cycles_var:
                         cycle_strings.append(
                             " &ndash;&gt; ".join((node.name for node in cycle))
                         )
