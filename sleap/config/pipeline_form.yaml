@@ -236,10 +236,11 @@ training:
 - type: text
   text: '<b>Trainer Options</b>'
 
-- name: num_workers
+- name: optimization.num_workers
   label: Number of Workers
   type: int
   default: 0
+  help: Number of worker threads to use for data loading and preprocessing. 0 means that the data will be loaded in the main process.
 
 - name: trainer_devices
   label: Trainer Devices

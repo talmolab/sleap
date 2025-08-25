@@ -230,6 +230,7 @@ class OptimizationConfig:
             mining.
         early_stopping: Configuration options related to early stopping of training on
             plateau/convergence is detected.
+        num_workers: Number of worker threads to use for data loading and preprocessing.
     """
 
     preload_data: bool = True
@@ -252,3 +253,4 @@ class OptimizationConfig:
         factory=HardKeypointMiningConfig
     )
     early_stopping: EarlyStoppingConfig = attr.ib(factory=EarlyStoppingConfig)
+    num_workers: int = 0
