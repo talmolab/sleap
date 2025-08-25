@@ -3,7 +3,7 @@ from qtpy.QtWidgets import QApplication
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
-from sleap.sleap_io_adaptors.utils import get_symmetry_node
+from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
 
 
 def test_app_workflow(
