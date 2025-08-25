@@ -930,6 +930,9 @@ def train_subprocess(
         cfg = snn_TrainingJobConfig.load_sleap_config(training_job_path)
         cfg.data_config.train_labels_path = [labels_filename]
 
+        if hasattr(job_config.data, "data_pipeline_fw"):
+            cfg.data_config.data_pipeline_fw = job_config.data.data_pipeline_fw
+
         cfg.trainer_config.save_ckpt_path = run_path
         cfg.trainer_config.visualize_preds_during_training = save_viz
         cfg.trainer_config.keep_viz = keep_viz
