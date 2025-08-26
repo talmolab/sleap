@@ -139,7 +139,6 @@ def get_nodes_from_instance(instance: Instance) -> Tuple[Node, ...]:
 def bounding_box(instance: Instance):
     """Return bounding box containing all points in `[y1, x1, y2, x2]` format."""
     points = instance.points["xy"]
-    print(points)
     if np.isnan(points).all():
         return np.array([[np.nan, np.nan], [np.nan, np.nan]])
     bbox = np.concatenate(
