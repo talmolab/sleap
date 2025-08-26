@@ -1,9 +1,16 @@
 """Helper functions for `sleap_io.Instance` objects."""
+
 from typing import TYPE_CHECKING, Tuple, Optional, List, Union, Dict
 import numpy as np
 
 from sleap_io.model.skeleton import Node, Skeleton
-from sleap_io.model.instance import Instance, PredictedInstance, PointsArray, PredictedPointsArray, Track
+from sleap_io.model.instance import (
+    Instance,
+    PredictedInstance,
+    PointsArray,
+    PredictedPointsArray,
+    Track,
+)
 import attr
 import cattr
 
@@ -102,16 +109,14 @@ def node_points(instance) -> List[Tuple[Node, np.ndarray]]:
     # Create mapping of node names to points
     node_points = []
 
-
-
     # Create mapping
     for node_idx, node in enumerate(skeleton_nodes):
-            # Find the point data for this node
-            point_data = points_data[node_idx]
+        # Find the point data for this node
+        point_data = points_data[node_idx]
 
-            # Convert to [x, y, visible, complete] format
+        # Convert to [x, y, visible, complete] format
 
-            node_points.append((node, point_data))
+        node_points.append((node, point_data))
 
     return node_points
 
@@ -131,7 +136,21 @@ def get_nodes_from_instance(instance: Instance) -> Tuple[Node, ...]:
     return tuple(labeled_nodes)
 
 
-def fill_missing(instance: Instance, max_x: Optional[float] = None, max_y: Optional[float] = None):
+def bounding_box(instance: Instance):
+    """Return bounding box containing all points in `[y1, x1, y2, x2]` format."""
+    points = instance.points["xy"]
+    print(points)
+    if np.isnan(points).all():
+        return np.array([[np.nan, np.nan], [np.nan, np.nan]])
+    bbox = np.concatenate(
+        [[np.nanmin(points, axis=0)[::-1]], [np.nanmax(points, axis=0)[::-1]]]
+    )
+    return bbox
+
+
+def fill_missing(
+    instance: Instance, max_x: Optional[float] = None, max_y: Optional[float] = None
+):
     """Add points for skeleton nodes that are missing in the instance.
 
     This is useful when modifying the skeleton so the nodes appear in the GUI.
@@ -145,7 +164,7 @@ def fill_missing(instance: Instance, max_x: Optional[float] = None, max_y: Optio
         Modified instance with missing points filled
     """
     # Get current bounding box
-    bbox = instance.bounding_box() # [[min_x, min_y], [max_x, max_y]]
+    bbox = bounding_box(instance)  # [[min_x, min_y], [max_x, max_y]]
     x1, y1 = bbox[0]
     x2, y2 = bbox[1]
     y1, x1 = np.nanmax([y1, 0]), np.nanmax([x1, 0])
@@ -194,14 +213,14 @@ def fill_missing(instance: Instance, max_x: Optional[float] = None, max_y: Optio
     combined_points = np.append(instance.points, new_points)
 
     # Create new instance with filled points
-    if hasattr(instance, 'score'):  # PredictedInstance
+    if hasattr(instance, "score"):  # PredictedInstance
         new_instance = PredictedInstance(
             points=combined_points,
             skeleton=instance.skeleton,
             track=instance.track,
             score=instance.score,
             tracking_score=instance.tracking_score,
-            from_predicted=instance.from_predicted
+            from_predicted=instance.from_predicted,
         )
     else:  # Instance
         new_instance = Instance(
@@ -209,7 +228,7 @@ def fill_missing(instance: Instance, max_x: Optional[float] = None, max_y: Optio
             skeleton=instance.skeleton,
             track=instance.track,
             tracking_score=instance.tracking_score,
-            from_predicted=instance.from_predicted
+            from_predicted=instance.from_predicted,
         )
 
     return new_instance
