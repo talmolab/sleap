@@ -114,7 +114,7 @@ class ConfigFileInfo:
             else:
                 filename = self._get_file_path("labels_gt.val.slp")
                 if filename is not None:
-                    val_labels = Labels.load_file(filename)
+                    val_labels = Labelsload_file(filename)
                     if val_labels.skeletons:
                         self._skeleton = val_labels.skeletons[0]
 
