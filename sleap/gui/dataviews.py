@@ -396,8 +396,11 @@ class VideosTableModel(GenericTableModel):
         "channels",
     )
 
-    def item_to_data(self, obj, item: "VideoBackend"):
+    def item_to_data(self, obj, item: "Video"):
         data = {}
+        if isinstance(item, Video):
+            item = item.backend
+
         for property in self.properties:
             if property == "name":
                 data[property] = Path(item.filename).name

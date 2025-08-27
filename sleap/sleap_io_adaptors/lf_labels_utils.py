@@ -61,14 +61,12 @@ def get_track_occupancy(labels, video):
     # Build track occupancy dictionary
     for lf in labeled_frames:
         for instance in lf.instances:
-            track = instance.track.name
+            track = instance.track.name if instance.track is not None else None
             if track not in track_occupancy:
                 track_occupancy[track] = []
             
             # Add this frame to the track's occupancy
             track_occupancy[track].append(lf.frame_idx)
-
-    print(f"track_occupancy: {track_occupancy}")
 
     # Convert frame lists to sorted ranges
     for track in track_occupancy:
@@ -90,9 +88,6 @@ def get_track_occupancy(labels, video):
             
             # Add final range
             ranges.append((start, prev + 1))
-            print(f"start: {start}, prev: {prev + 1}, ranges: {ranges}")
-            print(f"len(ranges): {len(ranges)}")
-            print(f"is empty: {SimpleRange(ranges).is_empty()}")
             
             track_occupancy[track] = SimpleRange(ranges)
     
