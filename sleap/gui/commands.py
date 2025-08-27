@@ -101,6 +101,7 @@ from sleap_io import save_skeleton
 import json
 from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
+from sleap.sleap_io_adaptors.lf_labels_utils import frames, get_template_instance_points, add_instance
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -2187,7 +2188,9 @@ class AddVideo(EditCommand):
         video = None
         for video in new_videos:
             # Add to labels
-            context.labels.add_video(video)
+            if video not in context.labels.videos:
+                context.labels.videos.append(video)
+                context.labels.update()
             context.changestack_push("add video")
 
         # Load if no video currently loaded
@@ -3697,8 +3700,10 @@ class AddInstance(EditCommand):
     @staticmethod
     def get_previous_frame_index(context: CommandContext) -> Optional[int]:
         """Returns index of previous frame."""
+        from sleap.sleap_io_adaptors.lf_labels_utils import frames
 
-        frames = context.labels.frames(
+        frames = frames(
+            context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
             reverse=True,
@@ -3855,10 +3860,9 @@ class AddMissingInstanceNodes(EditCommand):
         visible: bool = False,
         center_point: QtCore.QPoint = None,
     ):
-        from sleap.info import align
-
         # Get the "template" instance
-        template_points = context.labels.get_template_instance_points(
+        template_points = get_template_instance_points(
+            context.labels,
             skeleton=instance.skeleton
         )
 
