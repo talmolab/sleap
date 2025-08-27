@@ -88,6 +88,7 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
     delete_edge,
 )
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
+from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 from sleap.sleap_io_adaptors.skeleton_utils import (
     get_symmetry_node,
     delete_symmetry,
@@ -2233,8 +2234,7 @@ class ReplaceVideo(EditCommand):
             video_util_reset(video, **import_params)
 
             # Remove frames in video past last frame index
-            # last_vid_frame = video.last_frame_idx
-            last_vid_frame = video.backend.num_frames - 1
+            last_vid_frame = get_last_frame_idx(video)
             lfs: List[LabeledFrame] = list(context.labels.get(video))
             if lfs is not None:
                 lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
