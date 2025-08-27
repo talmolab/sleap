@@ -404,17 +404,13 @@ class LabelsJsonAdaptor(Adaptor):
             videos.append(video)
 
         try:
-            # First try unstructuring tuple (newer format)
-            track_cattr = cattr.Converter(
-                unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE
-            )
-            tracks = track_cattr.structure(dicts["tracks"], List[Track])
+            tracks = []
+            for track in dicts["tracks"]:
+                # track: (0, '<track_name')
+                tracks.append(Track(name=track[1]))
         except Exception as e:
-            # Then try unstructuring dict (older format)
-            try:
-                tracks = cattr.structure(dicts["tracks"], List[Track])
-            except Exception:
-                raise ValueError("Unable to load tracks as tuple or dict!") from e
+            print(f"Error while loading tracks: {e}")
+            tracks = []
 
         # if we're given a Labels object to match, use its objects when they match
         if match_to is not None:

@@ -263,7 +263,7 @@ class NixAdaptor(Adaptor):
             for frame in source.frames(video=video):
                 for instance in frame.instances:
                     instance_frame_pairs.append((instance, frame))
-            
+
             instances = [pair[0] for pair in instance_frame_pairs]
             frames = [pair[1] for pair in instance_frame_pairs]
             nodes = node_map(source)
@@ -401,7 +401,8 @@ class NixAdaptor(Adaptor):
             )
             table_data = [("none", -1, -1)]  # default for user-labeled instances
             for track in tracks.keys():
-                table_data.append((track.name, track.spawned_on, tracks[track]))
+                # table_data.append((track.name, track.spawned_on, tracks[track]))
+                table_data.append((track.name, -1, tracks[track]))
             tm.append_rows(table_data)
 
             # Print shape info

@@ -23,7 +23,7 @@ from typing import List, Optional, Dict, Tuple
 from pathlib import Path
 
 from sleap import Labels, Video
-from sleap_io import Skeleton, Node
+from sleap_io import Skeleton
 from sleap.instance import LabeledFrame
 from sleap_io.model.instance import Instance, Track
 from sleap.util import find_files_by_suffix
@@ -246,7 +246,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                             x, y = np.nan, np.nan
                         # Create the input array first, then use PointsArray.from_array()
                         from sleap_io.model.instance import PointsArray
-                        input_array = np.array([([x, y], True, False, node)], 
+                        input_array = np.array([([x, y], True, False, node)],
                               dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
                         instance_points[node] = PointsArray.from_array(input_array)[0]
                         if ~(np.isnan(x) and np.isnan(y)):
@@ -273,7 +273,7 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                     x, y = data[(node, "x")][i], data[(node, "y")][i]
                     # Create the input array first, then use PointsArray.from_array()
                     from sleap_io.model.instance import PointsArray
-                    input_array = np.array([([x, y], True, False, node)], 
+                    input_array = np.array([([x, y], True, False, node)],
                               dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
                     instance_points[node] = PointsArray.from_array(input_array)[0]
                     if ~(np.isnan(x) and np.isnan(y)):

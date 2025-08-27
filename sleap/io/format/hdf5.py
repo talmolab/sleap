@@ -203,7 +203,7 @@ class LabelsV1Adaptor(format.adaptor.Adaptor):
         # Extend the tracks list with a None track. We will signify this with a -1 in
         # the data which will map to last element of tracks
         tracks = labels.tracks.copy()
-        
+
         tracks.extend([None])
 
         # A dict to keep track of instances that have a from_predicted link. The key is

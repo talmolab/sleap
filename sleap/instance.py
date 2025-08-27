@@ -22,7 +22,6 @@ The relationships between objects in this module:
 # an instance of typing._GenericAlias and made our converters fail. The line:
 # https://github.com/python-attrs/cattrs/blob/3a02a04e82ffd93bb06ef7bc476bde797ceefcdf/src/cattr/converters.py#L258-L268)
 
-import math
 from copy import copy
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
@@ -31,7 +30,6 @@ if TYPE_CHECKING:
 
 import attr
 import numpy as np
-from numpy.lib.recfunctions import structured_to_unstructured
 
 from sleap_io import Video  # Only used for type hinting
 from sleap_io.model.skeleton import Node, Skeleton
@@ -1690,11 +1688,11 @@ class LabeledFrame:
             for inst in self._instances
             if type(inst) == Instance or inst in unused_predictions
         ]
-        inst_to_show.sort(
-            key=lambda inst: inst.track.spawned_on
-            if inst.track is not None
-            else math.inf
-        )
+        # inst_to_show.sort(
+        #     key=lambda inst: inst.track #.spawned_on
+        #     if inst.track is not None
+        #     else math.inf
+        # )
         return inst_to_show
 
     @staticmethod

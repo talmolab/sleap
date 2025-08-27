@@ -191,7 +191,7 @@ class LabelsCocoAdaptor(Adaptor):
                         # If labeled but invisible, place the node at the coord
                         # Create the input array first, then use PointsArray.from_array()
                         from sleap_io.model.instance import PointsArray
-                        input_array = np.array([([x, y], False, False, node.name)], 
+                        input_array = np.array([([x, y], False, False, node.name)],
                               dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
                         points[node] = PointsArray.from_array(input_array)[0]
                     continue
@@ -200,7 +200,7 @@ class LabelsCocoAdaptor(Adaptor):
                 any_visible = any_visible or is_visible
                 # Create the input array first, then use PointsArray.from_array()
                 from sleap_io.model.instance import PointsArray
-                input_array = np.array([([x, y], is_visible, False, node.name)], 
+                input_array = np.array([([x, y], is_visible, False, node.name)],
                               dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
                 points[node] = PointsArray.from_array(input_array)[0]
 

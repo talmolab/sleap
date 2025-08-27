@@ -92,15 +92,15 @@ def load_predicted_labels_json_old(
 
         video_objects[videos.at[i, "id"]] = vid
 
-    track_ids = predicted_instances["trackId"].values
-    unique_track_ids = np.unique(track_ids)
+    # track_ids = predicted_instances["trackId"].values
+    # unique_track_ids = np.unique(track_ids)
 
-    spawned_on = {
-        track_id: predicted_instances.loc[predicted_instances["trackId"] == track_id][
-            "frameIdx"
-        ].values[0]
-        for track_id in unique_track_ids
-    }
+    # spawned_on = {
+    #     track_id: predicted_instances.loc[predicted_instances["trackId"] == track_id][
+    #         "frameIdx"
+    #     ].values[0]
+    #     for track_id in unique_track_ids
+    # }
     tracks = {
         i: Track(name=str(i))
         for i in np.unique(predicted_instances["trackId"].values).tolist()
@@ -131,7 +131,7 @@ def load_predicted_labels_json_old(
             # Create the input array first, then use PredictedPointsArray.from_array()
             from sleap_io.model.instance import PredictedPointsArray
             instance_points = {
-                data["skeleton"]["nodeNames"][n]: PredictedPointsArray.from_array(np.array([([x, y], confidence, v, False, data["skeleton"]["nodeNames"][n])], 
+                data["skeleton"]["nodeNames"][n]: PredictedPointsArray.from_array(np.array([([x, y], confidence, v, False, data["skeleton"]["nodeNames"][n])],
                               dtype=[('xy', '<f8', (2,)), ('score', 'f4'), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')]))[0]  # [(x, y), score, visible, complete, name]
                 for x, y, n, v, confidence in zip(
                     *[
@@ -266,7 +266,7 @@ def load_labels_json_old(
             # Create the input array first, then use PointsArray.from_array()
             from sleap_io.model.instance import PointsArray
             instance_points = {
-                data["skeleton"]["nodeNames"][n]: PointsArray.from_array(np.array([([x, y], v, False, data["skeleton"]["nodeNames"][n])], 
+                data["skeleton"]["nodeNames"][n]: PointsArray.from_array(np.array([([x, y], v, False, data["skeleton"]["nodeNames"][n])],
                               dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')]))[0]  # [(x, y), visible, complete, name]
                 for x, y, n, v in zip(
                     *[points[k][is_instance] for k in ["x", "y", "node", "visible"]]

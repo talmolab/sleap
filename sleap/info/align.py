@@ -174,28 +174,51 @@ def make_mean_instance(
         if not np.isnan(p[0][0]) and not np.isnan(p[0][1]):
             # Create the input array first, then use PointsArray.from_array()
             from sleap_io.model.instance import PointsArray
-            input_array = np.array([([p[0][0] + OFFSET, p[0][1] + OFFSET], True, False, skeleton.node_names[i])], 
-                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
-            pt = PointsArray.from_array(input_array)[0]  # [(x, y), visible, complete, name]
+
+            input_array = np.array(
+                [
+                    (
+                        [p[0][0] + OFFSET, p[0][1] + OFFSET],
+                        True,
+                        False,
+                        skeleton.node_names[i],
+                    )
+                ],
+                dtype=[
+                    ("xy", "<f8", (2,)),
+                    ("visible", "bool"),
+                    ("complete", "bool"),
+                    ("name", "O"),
+                ],
+            )
+            pt = PointsArray.from_array(input_array)[
+                0
+            ]  # [(x, y), visible, complete, name]
             points.append(pt)  # [x, y, visible, complete]
         else:
             # Create the input array first, then use PointsArray.from_array()
-            input_array = np.array([([np.nan, np.nan], False, False, skeleton.node_names[i])], 
-                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
-            pt = PointsArray.from_array(input_array)[0]  # [(x, y), visible, complete, name]
+            input_array = np.array(
+                [([np.nan, np.nan], False, False, skeleton.node_names[i])],
+                dtype=[
+                    ("xy", "<f8", (2,)),
+                    ("visible", "bool"),
+                    ("complete", "bool"),
+                    ("name", "O"),
+                ],
+            )
+            pt = PointsArray.from_array(input_array)[
+                0
+            ]  # [(x, y), visible, complete, name]
             points.append(pt)  # [x, y, visible, complete]
 
-    new_instance = Instance(
-        skeleton=skeleton,
-        points=points
-    )
+    new_instance = Instance(skeleton=skeleton, points=points)
     return new_instance
 
 
 def align_instance_points(source_points_array, target_points_array):
     """Transforms source for best fit on to target."""
     # Convert lists of tuples to numpy arrays and extract x, y coordinates
-    target_points_array = np.array([p[0] for p in target_points_array])
+    target_points_array = np.array([p for p in target_points_array])
 
     # Find (furthest) pair of points in target to use for alignment
     pairwise_distances = np.linalg.norm(
@@ -235,9 +258,11 @@ def get_instances_points(instances: List[Instance]) -> np.ndarray:
     points_list = []
     for inst in instances:
         # Extract xy coordinates from the list of (x, y, visible, ...) tuples
-        xy_coords = np.array([p[0] for p in inst.points])  # Extract x, y from each tuple
+        xy_coords = np.array(
+            [p[0] for p in inst.points]
+        )  # Extract x, y from each tuple
         points_list.append(xy_coords)
-    
+
     return np.stack(points_list)
 
 

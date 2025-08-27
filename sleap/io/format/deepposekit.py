@@ -87,7 +87,7 @@ class LabelsDeepPoseKitAdaptor(Adaptor):
                     x, y, score = points_array[p]
                     # Create the input array first, then use PointsArray.from_array()
                     from sleap_io.model.instance import PointsArray
-                    input_array = np.array([([x, y], True, False, nodes[p].name)], 
+                    input_array = np.array([([x, y], True, False, nodes[p].name)],
                               dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
                     points[p] = PointsArray.from_array(input_array)[0]
 

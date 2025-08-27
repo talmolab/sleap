@@ -524,7 +524,7 @@ class Labels(MutableSequence):
             new_tracks = list(other_tracks - set(self.tracks))
 
             # Sort the new tracks by spawned on and then name
-            new_tracks.sort(key=lambda t: (t.spawned_on, t.name))
+            # new_tracks.sort(key=lambda t: (t.spawned_on, t.name))
 
             self.tracks.extend(new_tracks)
 
@@ -548,8 +548,8 @@ class Labels(MutableSequence):
                 self.tracks.append(instance.track)
 
         # Sort the tracks again
-        self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
-
+        # self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
+        self.tracks.sort(key=lambda t: (t.name))
         # Update cache datastructures
         self._cache.update(new_label)
 

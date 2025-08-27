@@ -202,7 +202,7 @@ class AlphaTrackerAdaptor(Adaptor):
                     __node_num += 1
                     __instance_points[__instance_num]["instance_points"][
                         str(__node_num)
-                    ] = PointsArray.from_array(np.array([([__ann["x"], __ann["y"]], True, False, skeleton.node_names[__node_num])], 
+                    ] = PointsArray.from_array(np.array([([__ann["x"], __ann["y"]], True, False, skeleton.node_names[__node_num])],
                               dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')]))[0]  # [(x, y), visible, complete, name]
 
                     if not skeleton.has_node(str(__node_num)):
