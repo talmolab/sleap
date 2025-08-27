@@ -19,7 +19,7 @@ from sleap.gui.legacy.config import TrainingJobConfig
 
 from qtpy import QtWidgets
 
-from sleap import Labels, Video, LabeledFrame
+from sleap_io import Labels, Video, LabeledFrame
 from sleap.gui.learning.configs import ConfigFileInfo
 
 logger = logging.getLogger(__name__)

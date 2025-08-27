@@ -7,10 +7,10 @@ from pathlib import Path, PurePath
 import sleap
 from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 from sleap_io import Skeleton
-from sleap.instance import LabeledFrame
+from sleap_io import LabeledFrame
 from sleap_io import Video
 from sleap_io.io.video_reading import MediaVideo
-from sleap.io.dataset import Labels, load_file
+from sleap_io import Labels, load_file
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame

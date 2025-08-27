@@ -7,9 +7,7 @@ from typing import Dict, List, Optional
 
 from qtpy import QtWidgets, QtCore
 
-from sleap.instance import LabeledFrame
-from sleap_io.model.instance import Instance
-from sleap.io.dataset import Labels
+from sleap_io import LabeledFrame, Instance, Labels
 from sleap_io import Video
 
 USE_BASE_STRING = "Use base, discard conflicting new instances"

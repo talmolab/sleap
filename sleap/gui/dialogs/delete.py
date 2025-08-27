@@ -2,8 +2,8 @@
 Dialog for deleting various subsets of instances in dataset.
 """
 
-from sleap import LabeledFrame, Instance
 from sleap.gui.dialogs import formbuilder
+from sleap_io import LabeledFrame, Instance
 
 from qtpy import QtCore, QtWidgets
 
