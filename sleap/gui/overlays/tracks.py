@@ -7,7 +7,8 @@ from qtpy import QtCore, QtGui
 
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.widgets.video import QtTextWithBackground
-from sleap.instance import LabeledFrame, Track
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Track
 from sleap.io.video import Video
 from sleap.prefs import prefs
 

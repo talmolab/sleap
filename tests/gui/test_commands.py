@@ -27,7 +27,8 @@ from sleap.gui.commands import (
     get_new_version_filename,
 )
 from sleap_io import load_skeleton
-from sleap.instance import Instance, LabeledFrame
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -589,7 +590,7 @@ def test_DeleteMultipleTracks(min_tracks_2node_labels: Labels):
     """Test that deleting multiple tracks works as expected."""
     labels = min_tracks_2node_labels
     tracks = labels.tracks
-    tracks.append(Track(name="unused", spawned_on=0))
+    tracks.append(Track(name="unused"))
     assert len(tracks) == 3
 
     # Set-up command context
@@ -601,7 +602,7 @@ def test_DeleteMultipleTracks(min_tracks_2node_labels: Labels):
     assert len(labels.tracks) == 2
 
     # Add back an unused track and delete all tracks
-    tracks.append(Track(name="unused", spawned_on=0))
+    tracks.append(Track(name="unused"))
     assert len(tracks) == 3
     context.deleteMultipleTracks(delete_all=True)
     assert len(labels.tracks) == 0

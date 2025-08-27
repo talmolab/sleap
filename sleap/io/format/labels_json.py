@@ -24,9 +24,11 @@ from sleap import Labels, Video
 from sleap.gui.suggestions import SuggestionFrame
 from sleap.instance import (
     LabeledFrame,
-    Track,
-    make_instance_cattr,
 )
+from sleap_io.model.instance import (
+    Track,
+)
+from sleap.sleap_io_adaptors.instance_utils import make_instance_cattr
 from sleap.io.legacy import load_labels_json_old
 from sleap_io import Node
 from sleap.util import json_loads, json_dumps, weak_filename_match
@@ -398,17 +400,13 @@ class LabelsJsonAdaptor(Adaptor):
         videos = Video.cattr().structure(dicts["videos"], List[Video])
 
         try:
-            # First try unstructuring tuple (newer format)
-            track_cattr = cattr.Converter(
-                unstruct_strat=cattr.UnstructureStrategy.AS_TUPLE
-            )
-            tracks = track_cattr.structure(dicts["tracks"], List[Track])
+            tracks = []
+            for track in dicts["tracks"]:
+                # track: (0, '<track_name')
+                tracks.append(Track(name=track[1]))
         except Exception as e:
-            # Then try unstructuring dict (older format)
-            try:
-                tracks = cattr.structure(dicts["tracks"], List[Track])
-            except Exception:
-                raise ValueError("Unable to load tracks as tuple or dict!") from e
+            print(f"Error while loading tracks: {e}")
+            tracks = []
 
         # if we're given a Labels object to match, use its objects when they match
         if match_to is not None:

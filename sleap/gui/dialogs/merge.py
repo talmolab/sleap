@@ -7,7 +7,8 @@ from typing import Dict, List, Optional
 
 from qtpy import QtWidgets, QtCore
 
-from sleap.instance import Instance, LabeledFrame
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 

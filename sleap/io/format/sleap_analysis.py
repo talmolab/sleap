@@ -17,7 +17,8 @@ from typing import Union
 
 from sleap import Labels, Video
 from sleap_io import Skeleton
-from sleap.instance import PredictedInstance, LabeledFrame, Track
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import PredictedInstance, Track
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
@@ -82,9 +83,9 @@ class SleapAnalysisAdaptor(Adaptor):
 
         if "track_names" in f and len(f["track_names"]):
             track_names_list = f["track_names"][:].T
-            tracks = [Track(0, track_name.decode()) for track_name in track_names_list]
+            tracks = [Track(name=track_name.decode()) for track_name in track_names_list]
         else:
-            tracks = [Track(0, f"track_{i}") for i in range(track_count)]
+            tracks = [Track(name=f"track_{i}") for i in range(track_count)]
 
         if "node_names" in f:
             node_names_dset = f["node_names"][:].T

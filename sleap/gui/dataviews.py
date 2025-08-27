@@ -29,6 +29,7 @@ from sleap.instance import LabeledFrame
 from sleap_io.model.skeleton import Skeleton
 from sleap.io.video import Video
 from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
+from sleap.sleap_io_adaptors.instance_utils import get_nodes_from_instance
 
 class GenericTableModel(QtCore.QAbstractTableModel):
     """
@@ -463,7 +464,7 @@ class LabeledFrameTableModel(GenericTableModel):
     def item_to_data(self, obj, item):
         instance = item
 
-        points = f"{len(instance.nodes)}/{len(instance.skeleton.nodes)}"
+        points = f"{len(get_nodes_from_instance(instance))}/{len(instance.skeleton.nodes)}"
         track_name = instance.track.name if instance.track else ""
         score = ""
         if hasattr(instance, "score"):

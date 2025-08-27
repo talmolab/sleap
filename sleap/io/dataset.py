@@ -75,18 +75,21 @@ except Exception:
 # from sleap.skeleton import Skeleton, Node (sleap.io will be deleted)
 from sleap_io.model.skeleton import Skeleton, Node
 from sleap.instance import (
-    Instance,
     LabeledFrame,
+)
+from sleap_io.model.instance import (
+    Instance,
     Track,
-    make_instance_cattr,
     PredictedInstance,
 )
+from sleap.sleap_io_adaptors.instance_utils import make_instance_cattr
 
 from sleap.io import pathutils
 from sleap.io.video import Video, ImgStoreVideo, HDF5Video
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, json_dumps
+from sleap.sleap_io_adaptors.skeleton_utils import to_graph
 
 """
 The version number to put in the Labels JSON format.
@@ -520,7 +523,7 @@ class Labels(MutableSequence):
             new_tracks = list(other_tracks - set(self.tracks))
 
             # Sort the new tracks by spawned on and then name
-            new_tracks.sort(key=lambda t: (t.spawned_on, t.name))
+            # new_tracks.sort(key=lambda t: (t.spawned_on, t.name))
 
             self.tracks.extend(new_tracks)
 
@@ -544,8 +547,8 @@ class Labels(MutableSequence):
                 self.tracks.append(instance.track)
 
         # Sort the tracks again
-        self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
-
+        # self.tracks.sort(key=lambda t: (t.spawned_on, t.name))
+        self.tracks.sort(key=lambda t: (t.name))
         # Update cache datastructures
         self._cache.update(new_label)
 
@@ -1226,7 +1229,7 @@ class Labels(MutableSequence):
                 # No labeled frames so use force-directed graph layout
                 import networkx as nx
 
-                node_positions = nx.spring_layout(G=skeleton.graph, scale=50)
+                node_positions = nx.spring_layout(G=to_graph(skeleton), scale=50)
 
                 template_points = np.stack(
                     [

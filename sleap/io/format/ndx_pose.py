@@ -11,7 +11,8 @@ from pynwb import NWBFile, NWBHDF5IO, ProcessingModule
 from ndx_pose import PoseEstimationSeries, PoseEstimation
 
 import sleap
-from sleap.instance import LabeledFrame, PredictedInstance, Track
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import PredictedInstance, Track
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.dataset import Labels

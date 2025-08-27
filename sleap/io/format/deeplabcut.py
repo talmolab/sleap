@@ -23,8 +23,9 @@ from typing import List, Optional, Dict, Tuple
 from pathlib import Path
 
 from sleap import Labels, Video
-from sleap_io import Skeleton, Node
-from sleap.instance import Instance, LabeledFrame, Point, Track
+from sleap_io import Skeleton
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, Track
 from sleap.util import find_files_by_suffix
 
 from .adaptor import Adaptor, SleapObjectType
@@ -243,14 +244,18 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                             )
                         else:
                             x, y = np.nan, np.nan
-                        instance_points[node] = Point(x, y)
+                        # Create the input array first, then use PointsArray.from_array()
+                        from sleap_io.model.instance import PointsArray
+                        input_array = np.array([([x, y], True, False, node)],
+                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
+                        instance_points[node] = PointsArray.from_array(input_array)[0]
                         if ~(np.isnan(x) and np.isnan(y)):
                             any_not_missing = True
 
                     if any_not_missing:
                         # Create track
                         if tracks[animal_name] is None:
-                            tracks[animal_name] = Track(spawned_on=i, name=animal_name)
+                            tracks[animal_name] = Track(name=animal_name)
                         # Create instance with points.
                         instances.append(
                             Instance(
@@ -266,7 +271,11 @@ class LabelsDeepLabCutCsvAdaptor(Adaptor):
                 for node in node_names:
                     # node is a string (node name), not a Node object
                     x, y = data[(node, "x")][i], data[(node, "y")][i]
-                    instance_points[node] = Point(x, y)
+                    # Create the input array first, then use PointsArray.from_array()
+                    from sleap_io.model.instance import PointsArray
+                    input_array = np.array([([x, y], True, False, node)],
+                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
+                    instance_points[node] = PointsArray.from_array(input_array)[0]
                     if ~(np.isnan(x) and np.isnan(y)):
                         any_not_missing = True
 

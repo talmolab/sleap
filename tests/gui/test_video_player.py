@@ -49,7 +49,7 @@ def test_gui_video_instances(qtbot, small_robot_mp4_vid, centered_pair_labels):
 
     # Check that node is marked as complete
     nodes = [item for item in vp.instances[0].childItems() if hasattr(item, "point")]
-    assert all((node.point.complete for node in nodes))
+    assert all((node.point[3] for node in nodes))  # point[3] = complete
 
     # Check that selection via keyboard works
     assert vp.view.getSelectionIndex() is None

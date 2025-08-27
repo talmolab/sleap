@@ -17,7 +17,8 @@ from typing import Any, Iterable, Optional, Union, Text, Tuple
 import yaml
 
 from sleap.util import get_config_file
-from sleap.instance import Instance, Track, Node
+from sleap_io.model.instance import Instance, Track
+from sleap_io.model.skeleton import Node
 from sleap.io.dataset import Labels
 from sleap_io.model.skeleton import Skeleton
 from sleap.prefs import prefs
@@ -144,20 +145,20 @@ class ColorManager:
         except Exception:
             raise ValueError(f"Color '{color}' is not (r,g,b) tuple.")
 
-    def get_pseudo_track_index(self, instance: "Instance") -> Union[Track, int]:
+    def get_pseudo_track_index(self, instance: "Instance", frame=None) -> Union[Track, int]:
         """
         Returns an index for giving track colors to instances without track.
         """
         if instance.track:
             return instance.track
-        if not instance.frame:
+        if not frame:
             return 0
 
         untracked_user_instances = [
-            inst for inst in instance.frame.user_instances if inst.track is None
+            inst for inst in frame.user_instances if inst.track is None
         ]
         untracked_predicted_instances = [
-            inst for inst in instance.frame.predicted_instances if inst.track is None
+            inst for inst in frame.predicted_instances if inst.track is None
         ]
 
         return len(self.tracks) + (

@@ -16,7 +16,7 @@ import cv2
 import numpy as np
 
 from sleap.gui.color import ColorManager
-from sleap.instance import Instance
+from sleap_io.model.instance import Instance
 from sleap.io.dataset import Labels
 from sleap.io.video import Video
 from sleap.io.videowriter import _sentinel, write_video

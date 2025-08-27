@@ -8,14 +8,16 @@ This attempts to find videos. If they cannot automatically be found and the
 import os
 
 import scipy.io as sio
+import numpy as np
 
 from sleap import Labels, Video
 from sleap_io import Skeleton
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.instance import (
-    Instance,
     LabeledFrame,
-    Point,
+)
+from sleap_io.model.instance import (
+    Instance,
 )
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
@@ -119,7 +121,11 @@ class LabelsLeapMatlabAdaptor(Adaptor):
             for node_idx, node in enumerate(nodes):
                 x = points_[node_idx][0][i]
                 y = points_[node_idx][1][i]
-                new_inst[node] = Point(x, y)
+                # Create the input array first, then use PointsArray.from_array()
+                from sleap_io.model.instance import PointsArray
+                input_array = np.array([([x, y], True, False, node.name)],
+                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
+                new_inst[node_idx] = PointsArray.from_array(input_array)[0]
             if len(new_inst.points):
                 new_frame = LabeledFrame(video=vid, frame_idx=i)
                 new_frame.instances = (new_inst,)

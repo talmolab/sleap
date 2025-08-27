@@ -7,7 +7,7 @@ from pathlib import Path, PurePath
 import sleap
 from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 from sleap_io import Skeleton
-from sleap.instance import Instance, Point, LabeledFrame, PredictedInstance, Track
+from sleap.instance import LabeledFrame
 from sleap.io.video import Video, MediaVideo
 from sleap.io.dataset import Labels, load_file
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
@@ -15,6 +15,7 @@ from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
 from tests.io.test_formats import assert_read_labels_match
 from sleap_io import load_skeleton
+from sleap_io.model.instance import Instance, PredictedInstance, Track, PointsArray, PredictedPointsArray
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
@@ -410,7 +411,14 @@ def test_labels_merge():
 
     # Add 10 instances with different points (so they aren't "redundant")
     for i in range(10):
-        instance = Instance(skeleton=dummy_skeleton, points=dict(node=Point(i, i)))
+        # Create points in the new PointsArray format
+        from sleap_io.model.instance import PointsArray, Instance
+        points = PointsArray.empty(1)
+        points[0]['xy'] = [i, i]
+        points[0]['visible'] = True
+        points[0]['complete'] = False
+        points[0]['name'] = 'node'
+        instance = Instance(skeleton=dummy_skeleton, points=points)
         dummy_frame = LabeledFrame(dummy_video, frame_idx=0, instances=[instance])
         dummy_frames.append(dummy_frame)
 
@@ -434,11 +442,26 @@ def test_complex_merge():
     dummy_skeleton_b.add_node("node")
 
     dummy_instances_a = []
+    # Create points in the new PointsArray format
+    from sleap_io.model.instance import PointsArray
+
+    points1 = PointsArray.empty(1)
+    points1[0]['xy'] = [1, 1]
+    points1[0]['visible'] = True
+    points1[0]['complete'] = False
+    points1[0]['name'] = 'node'
+
+    points2 = PointsArray.empty(1)
+    points2[0]['xy'] = [2, 2]
+    points2[0]['visible'] = True
+    points2[0]['complete'] = False
+    points2[0]['name'] = 'node'
+
     dummy_instances_a.append(
-        Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(1, 1)))
+        Instance(skeleton=dummy_skeleton_a, points=points1)
     )
     dummy_instances_a.append(
-        Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(2, 2)))
+        Instance(skeleton=dummy_skeleton_a, points=points2)
     )
 
     labels_a = Labels()
@@ -447,11 +470,24 @@ def test_complex_merge():
     )
 
     dummy_instances_b = []
+    # Create points in the new PointsArray format
+    points3 = PointsArray.empty(1)
+    points3[0]['xy'] = [1, 1]
+    points3[0]['visible'] = True
+    points3[0]['complete'] = False
+    points3[0]['name'] = 'node'
+
+    points4 = PointsArray.empty(1)
+    points4[0]['xy'] = [3, 3]
+    points4[0]['visible'] = True
+    points4[0]['complete'] = False
+    points4[0]['name'] = 'node'
+
     dummy_instances_b.append(
-        Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(1, 1)))
+        Instance(skeleton=dummy_skeleton_b, points=points3)
     )
     dummy_instances_b.append(
-        Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(3, 3)))
+        Instance(skeleton=dummy_skeleton_b, points=points4)
     )
 
     labels_b = Labels()
@@ -506,11 +542,24 @@ def test_merge_predictions():
     dummy_skeleton_b.add_node("node")
 
     dummy_instances_a = []
+    # Create points in the new PointsArray format
+    points5 = PointsArray.empty(1)
+    points5[0]['xy'] = [1, 1]
+    points5[0]['visible'] = True
+    points5[0]['complete'] = False
+    points5[0]['name'] = 'node'
+
+    points6 = PointsArray.empty(1)
+    points6[0]['xy'] = [2, 2]
+    points6[0]['visible'] = True
+    points6[0]['complete'] = False
+    points6[0]['name'] = 'node'
+
     dummy_instances_a.append(
-        Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(1, 1)))
+        Instance(skeleton=dummy_skeleton_a, points=points5)
     )
     dummy_instances_a.append(
-        Instance(skeleton=dummy_skeleton_a, points=dict(node=Point(2, 2)))
+        Instance(skeleton=dummy_skeleton_a, points=points6)
     )
 
     labels_a = Labels()
@@ -519,12 +568,27 @@ def test_merge_predictions():
     )
 
     dummy_instances_b = []
+    # Create points in the new PointsArray format
+
+    points9 = PointsArray.empty(1)
+    points9[0]['xy'] = [1, 1]
+    points9[0]['visible'] = True
+    points9[0]['complete'] = False
+    points9[0]['name'] = 'node'
+
+    pred_points = PredictedPointsArray.empty(1)
+    pred_points[0]['xy'] = [3, 3]
+    pred_points[0]['visible'] = True
+    pred_points[0]['complete'] = False
+    pred_points[0]['score'] = 1.0
+    pred_points[0]['name'] = 'node'
+
     dummy_instances_b.append(
-        Instance(skeleton=dummy_skeleton_b, points=dict(node=Point(1, 1)))
+        Instance(skeleton=dummy_skeleton_b, points=points9)
     )
     dummy_instances_b.append(
         PredictedInstance(
-            skeleton=dummy_skeleton_b, points=dict(node=Point(3, 3)), score=1
+            skeleton=dummy_skeleton_b, points=pred_points, score=1
         )
     )
 
@@ -638,7 +702,14 @@ def test_merge_with_skeleton_conflict(min_labels, tmpdir):
     labels[0].frame_idx = 1
     labels.skeleton.add_node("C")
     inst = labels[0][0]
-    inst["C"] = sleap.instance.Point(x=1, y=2, visible=True)
+    # Create point in the new PointsArray format
+    from sleap_io.model.instance import PointsArray
+    point = PointsArray.empty(1)
+    point[0]['xy'] = [1, 2]
+    point[0]['visible'] = True
+    point[0]['complete'] = False
+    point[0]['name'] = 'C'
+    inst["C"] = point[0]
     labels.save(f"{tmpdir}/labels.new_node.slp")
 
     labels = base_labels.copy()
@@ -1103,8 +1174,8 @@ def test_multivideo_tracks():
 
     skeleton = load_skeleton("tests/data/skeleton/fly_skeleton_legs.json")
 
-    track_a = Track(spawned_on=2, name="A")
-    track_b = Track(spawned_on=3, name="B")
+    track_a = Track(name="A")
+    track_b = Track(name="B")
 
     inst_a = Instance(track=track_a, skeleton=skeleton)
     inst_b = Instance(track=track_b, skeleton=skeleton)
@@ -1124,7 +1195,7 @@ def test_many_tracks_hdf5(tmpdir):
     labels = Labels()
     filename = os.path.join(tmpdir, "test.h5")
 
-    labels.tracks = [Track(spawned_on=i, name=f"track {i}") for i in range(4000)]
+    labels.tracks = [Track(name=f"track {i}") for i in range(4000)]
 
     Labels.save_hdf5(filename=filename, labels=labels)
 
@@ -1402,8 +1473,18 @@ def test_labels_numpy(centered_pair_predictions: Labels):
     # Test labels.numpy prefers user instances
     skeleton = centered_pair_predictions.skeleton
     lf = centered_pair_predictions.labeled_frames[0]
+    # Create points in the new PointsArray format
+    points_dict = {}
+    for node in skeleton.nodes:
+        point = PointsArray.empty(1)
+        point[0]['xy'] = [1, 1]
+        point[0]['visible'] = True
+        point[0]['complete'] = False
+        point[0]['name'] = node
+        points_dict[node] = point[0]
+
     user_inst = Instance(
-        skeleton=skeleton, points={node: Point(1, 1) for node in skeleton.nodes}
+        skeleton=skeleton, points=points_dict
     )
     lf.instances.append(user_inst)
     labels_np = centered_pair_predictions.numpy(untracked=True, return_confidence=True)
@@ -1499,21 +1580,48 @@ def test_merge_nodes(min_labels):
     labels.skeleton.add_node("a")
 
     inst = labels[0][0]
-    inst["A"] = Point(x=np.nan, y=np.nan, visible=False)
-    inst["a"] = Point(x=1, y=2, visible=True)
+    # Create points in the new PointsArray format
+
+    point_a = PointsArray.empty(1)
+    point_a[0]['xy'] = [np.nan, np.nan]
+    point_a[0]['visible'] = False
+    point_a[0]['complete'] = False
+    point_a[0]['name'] = 'A'
+
+    point_small_a = PointsArray.empty(1)
+    point_small_a[0]['xy'] = [1, 2]
+    point_small_a[0]['visible'] = True
+    point_small_a[0]['complete'] = False
+    point_small_a[0]['name'] = 'a'
+
+    inst["A"] = point_a[0]
+    inst["a"] = point_small_a[0]
     inst = labels[0][1]
-    inst["A"] = Point(x=0, y=1, visible=False)
-    inst["a"] = Point(x=1, y=2, visible=True)
+    # Create points in the new PointsArray format
+    point_a2 = PointsArray.empty(1)
+    point_a2[0]['xy'] = [0, 1]
+    point_a2[0]['visible'] = False
+    point_a2[0]['complete'] = False
+    point_a2[0]['name'] = 'A'
+
+    point_small_a2 = PointsArray.empty(1)
+    point_small_a2[0]['xy'] = [1, 2]
+    point_small_a2[0]['visible'] = True
+    point_small_a2[0]['complete'] = False
+    point_small_a2[0]['name'] = 'a'
+
+    inst["A"] = point_a2[0]
+    inst["a"] = point_small_a2[0]
 
     labels.merge_nodes("A", "a")
 
     assert labels.skeleton.node_names == ["A", "B"]
 
     inst = labels[0][0]
-    assert inst["A"].x == 1 and inst["A"].y == 2
+    assert inst["A"]['xy'][0] == 1 and inst["A"]['xy'][1] == 2
     assert len(inst.nodes) == 2
     inst = labels[0][1]
-    assert inst["A"].x == 1 and inst["A"].y == 2
+    assert inst["A"]['xy'][0] == 1 and inst["A"]['xy'][1] == 2
     assert len(inst.nodes) == 2
 
 

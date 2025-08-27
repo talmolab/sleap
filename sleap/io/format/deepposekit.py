@@ -5,7 +5,8 @@ Adaptor for reading DeepPoseKit datasets (HDF5).
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
 
-from sleap.instance import Instance, LabeledFrame, Point, Track
+from sleap.instance import LabeledFrame
+from sleap_io.model.instance import Instance, Track
 from sleap import Labels, Video
 from sleap_io import Skeleton
 
@@ -76,7 +77,7 @@ class LabelsDeepPoseKitAdaptor(Adaptor):
 
         track_count, frame_count, node_count, _ = pose_matrix.shape
 
-        tracks = [Track(0, f"Track {i}") for i in range(track_count)]
+        tracks = [Track(name=f"Track {i}") for i in range(track_count)]
         for frame_idx in range(frame_count):
             lf_instances = []
             for track_idx in range(track_count):
@@ -84,7 +85,11 @@ class LabelsDeepPoseKitAdaptor(Adaptor):
                 points = dict()
                 for p in range(len(points_array)):
                     x, y, score = points_array[p]
-                    points[nodes[p]] = Point(x, y)  # TODO: score
+                    # Create the input array first, then use PointsArray.from_array()
+                    from sleap_io.model.instance import PointsArray
+                    input_array = np.array([([x, y], True, False, nodes[p].name)],
+                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
+                    points[p] = PointsArray.from_array(input_array)[0]
 
                 inst = Instance(
                     skeleton=skeleton, track=tracks[track_idx], points=points
