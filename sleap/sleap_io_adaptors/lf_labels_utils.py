@@ -431,3 +431,158 @@ def load_and_match(filename: str, match_to: Labels):
                     break
 
     return labels
+
+
+def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
+    """Return an iterator over all labeled frames in a video with optional start position and order control.
+    
+    This function recreates the functionality of Labels.frames() from the original SLEAP codebase.
+    
+    Args:
+        labels: A Labels object containing labeled frames
+        video: A Video object that is associated with the project
+        from_frame_idx: The frame index from which to start (default: -1 for beginning)
+        reverse: Whether to iterate over frames in reverse order (default: False)
+        
+    Yields:
+        LabeledFrame objects for the specified video
+    """
+    # Get all labeled frames for this video
+    labeled_frames = labels.find(video) if hasattr(labels, 'find') else []
+    
+    if not labeled_frames:
+        return
+    
+    # Extract frame indices and sort them
+    frame_idxs = sorted([lf.frame_idx for lf in labeled_frames if hasattr(lf, 'frame_idx')])
+    
+    if not frame_idxs:
+        return
+    
+    # Handle the case where from_frame_idx is -1 (start from beginning)
+    if from_frame_idx == -1:
+        if reverse:
+            frame_idxs = frame_idxs[::-1]  # Reverse the list
+        # Use the frame_idxs as is for forward direction
+    
+    else:
+        # Find the next frame index after/before the specified frame
+        if not reverse:
+            # Forward direction: find next frame after from_frame_idx
+            next_frame_idx = None
+            for idx in frame_idxs:
+                if idx > from_frame_idx:
+                    next_frame_idx = idx
+                    break
+            if next_frame_idx is None:
+                next_frame_idx = frame_idxs[0]  # Wrap to beginning
+        else:
+            # Reverse direction: find previous frame before from_frame_idx
+            next_frame_idx = None
+            for idx in reversed(frame_idxs):
+                if idx < from_frame_idx:
+                    next_frame_idx = idx
+                    break
+            if next_frame_idx is None:
+                next_frame_idx = frame_idxs[-1]  # Wrap to end
+        
+        # Find the position of the next frame in the list
+        try:
+            cut_list_idx = frame_idxs.index(next_frame_idx)
+        except ValueError:
+            # If not found, use original order
+            if reverse:
+                frame_idxs = frame_idxs[::-1]
+            return
+        
+        # Reorder the list to start from the specified position
+        if reverse:
+            # For reverse, we need to handle the reordering differently
+            reordered = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
+            frame_idxs = reordered[::-1]  # Reverse the reordered list
+        else:
+            # For forward, just reorder normally
+            frame_idxs = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
+    
+    # Create a mapping from frame_idx to LabeledFrame for quick lookup
+    frame_map = {lf.frame_idx: lf for lf in labeled_frames if hasattr(lf, 'frame_idx')}
+    
+    # Yield the frames in the order specified by frame_idxs
+    for idx in frame_idxs:
+        if idx in frame_map:
+            yield frame_map[idx]
+
+
+def get_template_instance_points(labels, skeleton):
+    """Get template instance points for a skeleton.
+    
+    This function recreates the functionality of labels.get_template_instance_points(skeleton)
+    from the original SLEAP codebase.
+    
+    Args:
+        labels: A Labels object containing labeled frames and instances
+        skeleton: A Skeleton object to get template points for
+        
+    Returns:
+        numpy array of template points for the skeleton
+    """
+    import itertools
+    import numpy as np
+    
+    # Check if labels has labeled_frames attribute
+    if not hasattr(labels, 'labeled_frames'):
+        return None
+    
+    # Check if there are any labeled frames
+    if not labels.labeled_frames:
+        # No labeled frames so use force-directed graph layout
+        try:
+            import networkx as nx
+            from sleap.util import to_graph
+            
+            # Create graph from skeleton and get spring layout
+            G = to_graph(skeleton)
+            node_positions = nx.spring_layout(G=G, scale=50)
+            
+            # Create template points from node positions
+            template_points = np.stack([
+                node_positions[node] if node in node_positions else np.random.randint(0, 50, size=2)
+                for node in skeleton.nodes
+            ])
+            
+            return template_points
+            
+        except ImportError:
+            # Fallback if networkx is not available
+            template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
+            return template_points
+    
+    # Check if there are any instances
+    if not hasattr(labels, 'instances') or not labels.instances():
+        # No instances, use fallback
+        template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
+        return template_points
+    
+    # Get first 1000 instances for this skeleton
+    try:
+        from sleap.info import align
+        
+        # Get instances for this skeleton
+        skeleton_instances = []
+        for instance in itertools.islice(labels.instances(skeleton=skeleton), 1000):
+            if hasattr(instance, 'points') and instance.points is not None:
+                skeleton_instances.append(instance)
+        
+        if skeleton_instances:
+            # Get template points from aligned instances
+            template_points = align.get_template_points_array(skeleton_instances)
+            return template_points
+        else:
+            # No valid instances, use fallback
+            template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
+            return template_points
+            
+    except ImportError:
+        # Fallback if sleap.info.align is not available
+        template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
+        return template_points
