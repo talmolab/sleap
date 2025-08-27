@@ -68,7 +68,7 @@ class FrameLoaderThread(QThread):
             start_time = time.time()
 
             # Load the frame
-            frame = video.get_frame(frame_idx)
+            frame = video.backend.get_frame(frame_idx)
 
             if frame is not None:
                 # Convert to QImage

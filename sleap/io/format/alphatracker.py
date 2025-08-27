@@ -21,7 +21,7 @@ from typing import List, Optional
 from sleap_io.model.instance import Instance, PointsArray
 from sleap.io.dataset import Labels, LabeledFrame
 from sleap_io import Skeleton
-from sleap.io.video import Video
+from sleap_io import Video
 import numpy as np
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle

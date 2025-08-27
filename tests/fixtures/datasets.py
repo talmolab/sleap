@@ -6,7 +6,7 @@ from sleap.instance import (
 from sleap_io.model.instance import Instance, PredictedInstance, Track
 from sleap_io import Skeleton
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
+from sleap_io import Video
 
 TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"
 TEST_JSON_PREDICTIONS = "tests/data/json_format_v2/centered_pair_predictions.json"

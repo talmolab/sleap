@@ -8,7 +8,7 @@ from sleap_io.model.instance import Track
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
+from sleap_io import Video
 from sleap_io import Node, Skeleton
 
 
@@ -131,7 +131,7 @@ class NixAdaptor(Adaptor):
                 sec["filename"] = video.backend.filename
                 sec["fps"] = getattr(video.backend, "fps", 0.0)
                 sec.props["fps"].unit = "Hz"
-                sec["frames"] = video.num_frames
+                sec["frames"] = video.backend.num_frames
                 sec["grayscale"] = getattr(video.backend, "grayscale", None)
                 sec["height"] = video.backend.height
                 sec["width"] = video.backend.width

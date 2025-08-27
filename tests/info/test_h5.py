@@ -17,7 +17,7 @@ from sleap.info.write_tracking_h5 import (
     main,
 )
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
+from sleap_io import Video
 from sleap_io.model.instance import Instance
 from sleap.gui.commands import AddUserInstancesFromPredictions
 

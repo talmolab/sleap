@@ -397,7 +397,11 @@ class LabelsJsonAdaptor(Adaptor):
             dicts,
             node_names=[x["name"] for x in dicts["nodes"]],
         )
-        videos = Video.cattr().structure(dicts["videos"], List[Video])
+        from sleap_io.io.slp import make_video
+        videos = []
+        for metadata in dicts["videos"]:
+            video = make_video(labels_path="", video_json=metadata)
+            videos.append(video)
 
         try:
             tracks = []

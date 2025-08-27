@@ -12,7 +12,7 @@ import numpy as np
 import itertools
 import math
 
-from sleap.io.video import HDF5Video
+from sleap_io.io.video_reading import HDF5Video
 
 from sleap.gui.overlays.base import h5_colors
 

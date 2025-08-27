@@ -8,7 +8,8 @@ import sleap
 from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 from sleap_io import Skeleton
 from sleap.instance import LabeledFrame
-from sleap.io.video import Video, MediaVideo
+from sleap_io import Video
+from sleap_io.io.video_reading import MediaVideo
 from sleap.io.dataset import Labels, load_file
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format import filehandle
@@ -75,8 +76,8 @@ def _check_labels_match(expected_labels, other_labels, format="png"):
 
         frame_idx = label.frame_idx
 
-        frame_data = label.video.get_frame(frame_idx)[0:15, 0:15, :]
-        expected_frame_data = expected_label.video.get_frame(frame_idx)[0:15, 0:15, :]
+        frame_data = label.video.backend.get_frame(frame_idx)[0:15, 0:15, :]
+        expected_frame_data = expected_label.video.backend.get_frame(frame_idx)[0:15, 0:15, :]
 
         # Compare the first frames of the videos, do it on a small sub-region to
         # make the test reasonable in time.
@@ -164,7 +165,7 @@ def test_load_labels_json_old(tmpdir):
 
         # Make sure we only create one video object and it works
         assert len({label.video for label in labels}) == 1
-        assert labels[0].video.get_frame(0).shape == (384, 384, 1)
+        assert labels[0].video.backend.get_frame(0).shape == (384, 384, 1)
 
         # Check some frame objects.
         assert labels[0].frame_idx == 0
@@ -257,7 +258,7 @@ def test_label_accessors(centered_pair_labels: Labels, min_tracks_2node_labels: 
     labels = min_tracks_2node_labels
     video = labels.video
     num_samples = 5
-    frame_delta = video.num_frames // num_samples
+    frame_delta = video.backend.num_frames // num_samples
 
     labels.suggestions = VideoFrameSuggestions.suggest(
         labels=labels,

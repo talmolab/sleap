@@ -32,15 +32,14 @@ from qtpy.QtWidgets import (
 )
 
 from sleap.gui.widgets.video import GraphicsView
-from sleap.io.video import (
-    Video,
+from sleap_io import Video
+from sleap_io.io.video_reading import (
     MediaVideo,
     HDF5Video,
-    NumpyVideo,
-    ImgStoreVideo,
-    SingleImageVideo,
-    available_video_exts,
+    ImageVideo,
+    TiffVideo,
 )
+from sleap.sleap_io_adaptors.video_utils import available_video_exts
 from sleap.gui.dialogs.filedialog import FileDialog
 
 import h5py
@@ -80,9 +79,8 @@ class ImportVideos:
             any_video_exts = " ".join(["*." + ext for ext in available_video_exts()])
             media_video_exts = " ".join(["*." + ext for ext in MediaVideo.EXTS])
             hdf5_video_exts = " ".join(["*." + ext for ext in HDF5Video.EXTS])
-            numpy_video_exts = " ".join(["*." + ext for ext in NumpyVideo.EXTS])
-            imgstore_video_exts = " ".join(["*." + ext for ext in ImgStoreVideo.EXTS])
-            siv_video_exts = " ".join(["*." + ext for ext in SingleImageVideo.EXTS])
+            image_video_exts = " ".join(["*." + ext for ext in ImageVideo.EXTS])
+            tiff_video_exts = " ".join(["*." + ext for ext in TiffVideo.EXTS])
 
             filenames, filter = FileDialog.openMultiple(
                 None,
@@ -91,9 +89,8 @@ class ImportVideos:
                 f"Any Video ({any_video_exts});;"
                 f"Media ({media_video_exts});;"
                 f"HDF5 ({hdf5_video_exts});;"
-                f"Numpy ({numpy_video_exts});;"
-                f"ImgStore ({imgstore_video_exts});;"
-                f"Single image ({siv_video_exts});;"
+                f"Image ({image_video_exts});;"
+                f"TIFF ({tiff_video_exts});;"
                 "Any File (*.*)",
             )
 
@@ -137,7 +134,7 @@ class ImportParamDialog(QDialog):
             {
                 "video_type": "hdf5",
                 "match": ",".join(HDF5Video.EXTS),
-                "video_class": Video.from_hdf5,
+                "video_class": Video.from_filename,
                 "params": [
                     {
                         "name": "dataset",
@@ -156,18 +153,18 @@ class ImportParamDialog(QDialog):
             {
                 "video_type": "mp4",
                 "match": ",".join(MediaVideo.EXTS),
-                "video_class": Video.from_media,
+                "video_class": Video.from_filename,
                 "params": [{"name": "grayscale", "type": "check"}],
             },
             {
-                "video_type": "imgstore",
-                "match": ",".join(ImgStoreVideo.EXTS),
+                "video_type": "image",
+                "match": ",".join(ImageVideo.EXTS),
                 "video_class": Video.from_filename,
                 "params": [],
             },
             {
-                "video_type": "single_image",
-                "match": ",".join(SingleImageVideo.EXTS),
+                "video_type": "tiff",
+                "match": ",".join(TiffVideo.EXTS),
                 "video_class": Video.from_filename,
                 "params": [{"name": "grayscale", "type": "check"}],
             },
@@ -626,11 +623,12 @@ class VideoPreviewWidget(QWidget):
         """Load the video preview and display label text."""
         self.video = video
         self.frame_idx = initial_frame
+        h, w, c = self.video.backend.img_shape[:3]
         label = "(%d, %d), %d f, %d c" % (
-            self.video.width,
-            self.video.height,
-            self.video.frames,
-            self.video.channels,
+            w,
+            h,
+            self.video.backend.num_frames,
+            c,
         )
         self.video_label.setText(label)
         if plot:
@@ -642,7 +640,7 @@ class VideoPreviewWidget(QWidget):
             return
 
         # Get image data
-        frame = self.video.get_frame(idx)
+        frame = self.video.backend.get_frame(idx)
 
         # Re-size the preview image
         height, width = frame.shape[:2]
@@ -658,8 +656,12 @@ class VideoPreviewWidget(QWidget):
         if frame.ndim == 2:
             frame = np.expand_dims(frame, axis=-1)
 
-        # Convert ndarray to QImage
-        image = ndarray_to_qimage(frame)
+        # Convert BGR to RGB if image has 3 channels
+        if frame.shape[-1] == 3:
+            frame = frame[..., ::-1]
+            image = ndarray_to_qimage(frame)
+        else:
+            image = ndarray_to_qimage(frame)
 
         # Display image
         self.view.setImage(image)

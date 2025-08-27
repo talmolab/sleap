@@ -158,7 +158,7 @@ class LabelsCocoAdaptor(Adaptor):
                 frame_idx = 0
             else:
                 video = vid_id_video_map[vid_id]
-                frame_idx = video.num_frames
+                frame_idx = video.backend.num_frames
                 video.backend.filenames.append(image_filename)
 
             image_video_map[image_id] = (video, frame_idx)

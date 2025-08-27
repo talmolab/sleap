@@ -27,7 +27,8 @@ from sleap.gui.commands import CommandContext
 from sleap.gui.state import GuiState
 from sleap.instance import LabeledFrame
 from sleap_io.model.skeleton import Skeleton
-from sleap.io.video import Video
+from sleap_io import Video
+from sleap_io.io.video_reading import VideoBackend
 from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
 from sleap.sleap_io_adaptors.instance_utils import get_nodes_from_instance
 
@@ -394,13 +395,19 @@ class VideosTableModel(GenericTableModel):
         "channels",
     )
 
-    def item_to_data(self, obj, item: "Video"):
+    def item_to_data(self, obj, item: "VideoBackend"):
         data = {}
         for property in self.properties:
             if property == "name":
                 data[property] = Path(item.filename).name
             elif property == "filepath":
                 data[property] = str(Path(item.filename).parent)
+            elif property == "height":
+                data[property] = item.img_shape[0]
+            elif property == "width":
+                data[property] = item.img_shape[1]
+            elif property == "channels":
+                data[property] = item.img_shape[2]
             else:
                 data[property] = getattr(item, property)
         return data

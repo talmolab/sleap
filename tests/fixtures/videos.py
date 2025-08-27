@@ -1,6 +1,6 @@
 import pytest
 
-from sleap.io.video import Video
+from sleap_io import Video
 from sleap.io.format.filehandle import FileHandle
 
 TEST_H5_FILE = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"

@@ -81,19 +81,23 @@ from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.format.csv import CSVAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.io.video import Video
-from sleap.io.videowriter import write_video
+from sleap_io import Video
+from sleap_io import save_video
 from sleap.io.visuals import save_labeled_video
 from sleap.util import get_package_file
 from sleap_io.model.skeleton import Node, Skeleton
+from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node, delete_symmetry, delete_edge
+from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.skeleton_utils import (
     get_symmetry_node,
     delete_symmetry,
     delete_edge,
 )
+
 from sleap_io import save_skeleton
 import json
 from sleap_io.io.skeleton import SkeletonDecoder
+from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -1397,14 +1401,19 @@ class ExportVideoClip(AppCommand):
             context: The command context.
             params: The parameters for the export.
         """
-        write_video(
+        # write_video(
+        #     filename=params["video_filename"],
+        #     video=context.state["video"],
+        #     frames=list(params["frames"]),
+        #     fps=params["fps"],
+        #     scale=params["scale"],
+        #     background=params["background"],
+        #     gui_progress=params["gui_progress"],
+        # )
+        save_video(
+            frames=[context.state["video"].backend.get_frame(i) for i in params["frames"]],
             filename=params["video_filename"],
-            video=context.state["video"],
-            frames=list(params["frames"]),
             fps=params["fps"],
-            scale=params["scale"],
-            background=params["background"],
-            gui_progress=params["gui_progress"],
         )
 
     @classmethod
@@ -1435,16 +1444,13 @@ class ExportVideoClip(AppCommand):
         if export_options is None:
             return False
 
-        # Use VideoWriter to determine default video type to use
-        from sleap.io.videowriter import VideoWriter
-
         default_out_basename = params.get("filename", context.state["filename"])
 
         # For OpenCV we default to avi since the bundled ffmpeg
         # makes mp4's that most programs can't open (VLC can).
         default_out_filename = default_out_basename + ".avi"
 
-        if VideoWriter.can_use_ffmpeg():
+        if can_use_ffmpeg():
             default_out_filename = default_out_basename + ".mp4"
 
         # Ask where user wants to save video file
@@ -1532,8 +1538,9 @@ class ExportVideoClip(AppCommand):
         # Determine crop size relative to original size and scale
         # (crop size should be *final* output size, thus already scaled).
         video = context.state["video"]
-        w = int(video.width * params["scale"])
-        h = int(video.height * params["scale"])
+        img_h, img_w = video.backend.img_shape[:2]
+        w = int(img_w * params["scale"])
+        h = int(img_h * params["scale"])
         if export_options_crop == "Half":
             params["crop"] = (w // 2, h // 2)
         elif export_options_crop == "Quarter":
@@ -2148,7 +2155,8 @@ class ToggleGrayscale(EditCommand):
 
         for idx, video in enumerate(context.labels.videos):
             try:
-                video.backend.reset(grayscale=(not grayscale))
+                # video.backend.reset(grayscale=(not grayscale))
+                video_util_reset(video, grayscale=(not grayscale))
             except Exception:
                 print(
                     f"This video type {type(video.backend)} for video at index {idx} "
@@ -2219,10 +2227,12 @@ class ReplaceVideo(EditCommand):
                 raise TypeError(
                     "Importing videos with different extensions is not supported."
                 )
-            video.backend.reset(**import_params)
+            # video.backend.reset(**import_params) potential breaking change
+            video_util_reset(video, **import_params)
 
             # Remove frames in video past last frame index
-            last_vid_frame = video.last_frame_idx
+            # last_vid_frame = video.last_frame_idx
+            last_vid_frame = video.backend.num_frames - 1
             lfs: List[LabeledFrame] = list(context.labels.get(video))
             if lfs is not None:
                 lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
