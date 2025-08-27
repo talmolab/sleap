@@ -362,8 +362,8 @@ class MainWindow(QMainWindow):
             frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
             frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
             if video is not None:
-                frame_to_spinbox.setMaximum(video.backend.num_frames)
-                frame_from_spinbox.setMaximum(video.backend.num_frames)
+                frame_to_spinbox.setMaximum(video.backend.frames)
+                frame_from_spinbox.setMaximum(video.backend.frames)
 
         self.state.connect(
             "video",
@@ -1224,7 +1224,7 @@ class MainWindow(QMainWindow):
             self._update_track_menu()
 
         if _has_topic([UpdateTopic.video]):
-            self.videos_dock.table.model().items = [x.backend for x in self.labels.videos]
+            self.videos_dock.table.model().items = [x for x in self.labels.videos]
 
         if _has_topic([UpdateTopic.skeleton]):
             self.skeleton_dock.nodes_table.model().items = self.state["skeleton"]
@@ -1323,14 +1323,14 @@ class MainWindow(QMainWindow):
             message = ""
             if len(self.labels.videos) > 0 and current_video is not None:
                 for i, video in enumerate(self.labels.videos):
-                    if video.backend.filename == current_video.filename:
+                    if video.backend.filename == current_video.backend.filename:
                         index = i
                 message += f"Video {index + 1}/"
                 message += f"{len(self.labels.videos)}"
                 message += spacer
 
             if current_video is not None:
-                message += f"Frame: {frame_idx + 1:,}/{len(current_video):,}"
+                message += f"Frame: {frame_idx + 1:,}/{current_video.backend.num_frames:,}"
 
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
