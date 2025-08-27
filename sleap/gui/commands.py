@@ -69,7 +69,13 @@ from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.instance import LabeledFrame
-from sleap_io.model.instance import Instance, PredictedInstance, Track, PointsArray, PredictedPointsArray
+from sleap_io.model.instance import (
+    Instance,
+    PredictedInstance,
+    Track,
+    PointsArray,
+    PredictedPointsArray,
+)
 from sleap.io.convert import default_analysis_filename
 from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
@@ -80,7 +86,11 @@ from sleap.io.videowriter import write_video
 from sleap.io.visuals import save_labeled_video
 from sleap.util import get_package_file
 from sleap_io.model.skeleton import Node, Skeleton
-from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node, delete_symmetry, delete_edge
+from sleap.sleap_io_adaptors.skeleton_utils import (
+    get_symmetry_node,
+    delete_symmetry,
+    delete_edge,
+)
 from sleap_io import save_skeleton
 import json
 from sleap_io.io.skeleton import SkeletonDecoder
@@ -2596,9 +2606,11 @@ class SaveSkeleton(AppCommand):
         filename = params["filename"]
         if filename.endswith(".json"):
             save_skeleton(
-                [context.state["skeleton"]]
-                if isinstance(context.state["skeleton"], Skeleton)
-                else context.state["skeleton"],
+                (
+                    [context.state["skeleton"]]
+                    if isinstance(context.state["skeleton"], Skeleton)
+                    else context.state["skeleton"]
+                ),
                 filename,
             )
         # elif filename.endswith((".h5", ".hdf5")):
@@ -2695,7 +2707,9 @@ class DeleteEdge(EditCommand):
     def do_action(context: CommandContext, params: dict):
         edge = params["edge"]
         # Delete edge
-        context.state["skeleton"] = delete_edge(context.state["skeleton"], edge['source'], edge['destination'])
+        context.state["skeleton"] = delete_edge(
+            context.state["skeleton"], edge["source"], edge["destination"]
+        )
 
 
 class InstanceDeleteCommand(EditCommand):
@@ -3508,9 +3522,10 @@ class AddInstance(EditCommand):
         # Using right click and context menu with option "best"
         if (init_method == "best") and (location is not None):
             reference_node = next(
-                (node for node in copy_instance if not np.any(np.isnan(node['xy']))), None
+                (node for node in copy_instance if not np.any(np.isnan(node["xy"]))),
+                None,
             )
-            reference_x, reference_y = reference_node['xy']
+            reference_x, reference_y = reference_node["xy"]
             offset_x = location.x() - (reference_x * scale_width)
             offset_y = location.y() - (reference_y * scale_height)
 
@@ -3518,11 +3533,13 @@ class AddInstance(EditCommand):
         for node in context.state["skeleton"].node_names:
             # If we're copying from a skeleton that has this node.
             node_idx = context.state["skeleton"].node_names.index(node)
-            if node in copy_instance.skeleton.node_names and not np.any(np.isnan(copy_instance.points[node_idx]['xy'])):
+            if node in copy_instance.skeleton.node_names and not np.any(
+                np.isnan(copy_instance.points[node_idx]["xy"])
+            ):
                 # Ensure x, y inside current frame, then copy x, y, and visible.
                 # We don't want to copy a PredictedPoint or score attribute.
                 point_data = copy_instance[node_idx]
-                x_old, y_old = point_data['xy']
+                x_old, y_old = point_data["xy"]
 
                 # Copy the instance without scale or offset if predicted
                 if isinstance(copy_instance, PredictedInstance):
@@ -3537,7 +3554,7 @@ class AddInstance(EditCommand):
                 y_new_offset = y_new + offset_y
 
                 # Default visibility is same as copied instance.
-                visible = point_data['visible']
+                visible = point_data["visible"]
 
                 # If the node is offset to outside the frame, mark as not visible.
                 if x_new_offset < 0:
@@ -3561,7 +3578,16 @@ class AddInstance(EditCommand):
                 node_idx = new_instance.skeleton.node_names.index(node)
                 # Create the input array first, then use PointsArray.from_array()
                 from sleap_io.model.instance import PointsArray
-                input_array = np.array([(np.array([x_new, y_new]), visible, mark_complete, node)], dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
+
+                input_array = np.array(
+                    [(np.array([x_new, y_new]), visible, mark_complete, node)],
+                    dtype=[
+                        ("xy", "<f8", (2,)),
+                        ("visible", "bool"),
+                        ("complete", "bool"),
+                        ("name", "O"),
+                    ],
+                )
                 new_instance.points[node_idx] = PointsArray.from_array(input_array)[0]
             else:
                 has_missing_nodes = True
@@ -3686,7 +3712,7 @@ class SetInstancePointLocations(EditCommand):
             if node in instance:
                 node_idx = instance.skeleton.node_names.index(node)
                 point_data = list(instance.points[node_idx])
-                point_data['xy'] = np.array([x, y])
+                point_data["xy"] = np.array([x, y])
                 instance.points[node_idx] = point_data
 
 
@@ -3714,9 +3740,25 @@ class SetInstancePointVisibility(EditCommand):
         # instance[node] returns [(x, y), visible, complete, name] or [(x, y), score, visible, complete, name]
         node_idx = instance.skeleton.node_names.index(node)
         point_data = list(instance.points[node_idx])
-        point_data['visible'] = visible        # Create the input array first, then use PointsArray.from_array()
-        input_array = np.array([(point_data[0], point_data[1], point_data[2], node if isinstance(node, str) else node.name)], 
-                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
+        point_data["visible"] = (
+            visible  # Create the input array first, then use PointsArray.from_array()
+        )
+        input_array = np.array(
+            [
+                (
+                    point_data[0],
+                    point_data[1],
+                    point_data[2],
+                    node if isinstance(node, str) else node.name,
+                )
+            ],
+            dtype=[
+                ("xy", "<f8", (2,)),
+                ("visible", "bool"),
+                ("complete", "bool"),
+                ("name", "O"),
+            ],
+        )
         instance.points[node_idx] = PointsArray.from_array(input_array)[0]
 
 
@@ -3749,14 +3791,24 @@ class AddMissingInstanceNodes(EditCommand):
 
         for node_name in context.state["skeleton"].node_names:
             node_idx = context.state["skeleton"].node_names.index(node_name)
-            if node_name not in instance.skeleton.node_names or np.any(np.isnan(instance.points[node_idx][0])):
+            if node_name not in instance.skeleton.node_names or np.any(
+                np.isnan(instance.points[node_idx][0])
+            ):
                 # pick random points within currently zoomed view
                 x, y = cls.get_xy_in_rect(in_view_rect)
                 # set point for node
                 # Create the input array first, then use PointsArray.from_array()
                 from sleap_io.model.instance import PointsArray
-                input_array = np.array([([x, y], visible, False, node_name)], 
-                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
+
+                input_array = np.array(
+                    [([x, y], visible, False, node_name)],
+                    dtype=[
+                        ("xy", "<f8", (2,)),
+                        ("visible", "bool"),
+                        ("complete", "bool"),
+                        ("name", "O"),
+                    ],
+                )
                 instance.points[node_idx] = PointsArray.from_array(input_array)[0]
 
     @staticmethod
@@ -3786,10 +3838,12 @@ class AddMissingInstanceNodes(EditCommand):
         )
 
         # Align the template on to the current instance with missing points
-        if not np.all(np.isnan(instance.points["xy"])):
+        if not np.all(np.isnan(instance.points["xy"])) and not np.allclose(
+            instance.points["xy"], 0.0, equal_nan=True
+        ):
             aligned_template = align.align_instance_points(
                 source_points_array=template_points,
-                target_points_array=instance.points,
+                target_points_array=instance.points["xy"],
             )
         else:
             template_mean = np.nanmean(template_points, axis=0)
@@ -3797,7 +3851,7 @@ class AddMissingInstanceNodes(EditCommand):
             center_point = center_point or context.app.player.getVisibleRect().center()
             center = np.array([center_point.x(), center_point.y()])
 
-            aligned_template = template_points + (center - template_mean)
+            aligned_template = (template_points - template_mean) + center
 
         # Make missing points from the aligned template
         for i, node in enumerate(instance.skeleton.nodes):
@@ -3805,8 +3859,16 @@ class AddMissingInstanceNodes(EditCommand):
                 x, y = aligned_template[i]
                 # Create the input array first, then use PointsArray.from_array()
                 from sleap_io.model.instance import PointsArray
-                input_array = np.array([([x, y], visible, False, node.name)], 
-                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
+
+                input_array = np.array(
+                    [([x, y], visible, False, node.name)],
+                    dtype=[
+                        ("xy", "<f8", (2,)),
+                        ("visible", "bool"),
+                        ("complete", "bool"),
+                        ("name", "O"),
+                    ],
+                )
                 node_idx = instance.skeleton.node_names.index(node.name)
                 instance.points[node_idx] = PointsArray.from_array(input_array)
 
@@ -3824,12 +3886,27 @@ class AddMissingInstanceNodes(EditCommand):
         )
 
         for node, pos in node_positions.items():
-                            # Create the input array first, then use PointsArray.from_array()
-                            from sleap_io.model.instance import PointsArray
-                            input_array = np.array([([pos[0], pos[1]], visible, False, node if isinstance(node, str) else node.name)], 
-                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
-                            node_idx = instance.skeleton.node_names.index(node)
-                            instance.points[node_idx] = PointsArray.from_array(input_array)[0]
+            # Create the input array first, then use PointsArray.from_array()
+            from sleap_io.model.instance import PointsArray
+
+            input_array = np.array(
+                [
+                    (
+                        [pos[0], pos[1]],
+                        visible,
+                        False,
+                        node if isinstance(node, str) else node.name,
+                    )
+                ],
+                dtype=[
+                    ("xy", "<f8", (2,)),
+                    ("visible", "bool"),
+                    ("complete", "bool"),
+                    ("name", "O"),
+                ],
+            )
+            node_idx = instance.skeleton.node_names.index(node)
+            instance.points[node_idx] = PointsArray.from_array(input_array)[0]
 
 
 class AddUserInstancesFromPredictions(EditCommand):
@@ -3849,16 +3926,36 @@ class AddUserInstancesFromPredictions(EditCommand):
         for node in new_instance.skeleton.node_names:
             # if we're copying from a skeleton that has this node
             node_idx = new_instance.skeleton.node_names.index(node)
-            if node in copy_instance and not copy_instance.points[node_idx]['xy'].isnan():
+            if (
+                node in copy_instance
+                and not copy_instance.points[node_idx]["xy"].isnan()
+            ):
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
                 point_data = copy_instance.points[node_idx]
-                if 'score' in point_data.dtype.names:
+                if "score" in point_data.dtype.names:
                     # Create the input array first, then use PointsArray.from_array()
                     from sleap_io.model.instance import PointsArray
-                    input_array = np.array([([point_data[0][0], point_data[0][1]], point_data['visible'], False, node)], 
-                              dtype=[('xy', '<f8', (2,)), ('visible', 'bool'), ('complete', 'bool'), ('name', 'O')])
-                    new_instance.points[node_idx] = PointsArray.from_array(input_array)[0]
+
+                    input_array = np.array(
+                        [
+                            (
+                                [point_data[0][0], point_data[0][1]],
+                                point_data["visible"],
+                                False,
+                                node,
+                            )
+                        ],
+                        dtype=[
+                            ("xy", "<f8", (2,)),
+                            ("visible", "bool"),
+                            ("complete", "bool"),
+                            ("name", "O"),
+                        ],
+                    )
+                    new_instance.points[node_idx] = PointsArray.from_array(input_array)[
+                        0
+                    ]
 
         # copy the track
         new_instance.track = copy_instance.track
