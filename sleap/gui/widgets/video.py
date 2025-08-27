@@ -59,6 +59,7 @@ from sleap.gui.state import GuiState
 from sleap.gui.widgets.slider import VideoSlider
 from sleap_io.model.instance import Instance, PredictedInstance
 from sleap.sleap_io_adaptors.instance_utils import fill_missing, node_points
+from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 from sleap_io import Video
 from sleap.prefs import prefs
 from sleap_io import Node
@@ -454,8 +455,7 @@ class QtVideoPlayer(QWidget):
             self.view.scene.setSceneRect(0, 0, w, h)
 
             self.seekbar.setMinimum(0)
-            # self.seekbar.setMaximum(self.video.last_frame_idx)
-            self.seekbar.setMaximum(self.video.backend.num_frames - 1)
+            self.seekbar.setMaximum(get_last_frame_idx(self.video))
             self.seekbar.setEnabled(True)
             self.seekbar.resizeEvent()
 

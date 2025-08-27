@@ -21,6 +21,7 @@ from qtpy import QtWidgets
 
 from sleap_io import Labels, Video, LabeledFrame
 from sleap.gui.learning.configs import ConfigFileInfo
+from sleap.sleap_io_adaptors.lf_labels_utils import load_and_match
 
 logger = logging.getLogger(__name__)
 
@@ -388,7 +389,7 @@ class InferenceTask:
 
         if success and append_results:
             # Load frames from inference into results list
-            new_inference_labels = Labels.load_file(output_path, match_to=self.labels)
+            new_inference_labels = load_and_match(output_path, match_to=self.labels)
             self.results.extend(new_inference_labels.labeled_frames)
 
         # Return "success" or return code if failed.
