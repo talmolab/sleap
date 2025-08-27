@@ -397,7 +397,7 @@ class VideosTableModel(GenericTableModel):
         "channels",
     )
 
-    def item_to_data(self, obj, item: "Video"):
+    def item_to_data(self, obj, item: "VideoBackend"):
         data = {}
         if isinstance(item, Video):
             item = item.backend
