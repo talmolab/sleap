@@ -16,7 +16,7 @@ from sleap_io.model.instance import PredictedInstance, Track
 from sleap.io.format.filehandle import FileHandle
 from sleap.io.format.adaptor import Adaptor, SleapObjectType
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
+from sleap_io import Video
 from sleap_io import Skeleton
 
 

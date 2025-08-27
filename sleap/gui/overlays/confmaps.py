@@ -130,7 +130,7 @@ class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
 
 def show_confmaps_from_h5(filename, input_format="channels_last", standalone=False):
     """Demo function."""
-    from sleap.io.video import HDF5Video
+    from sleap_io.io.video_reading import HDF5Video
 
     video = HDF5Video(filename, "/box", input_format=input_format)
     conf_data = HDF5Video(

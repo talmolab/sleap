@@ -10,7 +10,7 @@ from qtpy import QtWidgets, QtCore
 from sleap.instance import LabeledFrame
 from sleap_io.model.instance import Instance
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
+from sleap_io import Video
 
 USE_BASE_STRING = "Use base, discard conflicting new instances"
 USE_NEW_STRING = "Use new, discard conflicting base instances"

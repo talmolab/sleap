@@ -7,12 +7,12 @@ from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 
 class ExportClipDialog(FormBuilderModalDialog):
     def __init__(self, form_name=None):
-        from sleap.io.videowriter import VideoWriter
+        from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
 
         form_name = form_name or "video_clip_form"
         super().__init__(form_name=form_name)
 
-        can_use_ffmpeg = VideoWriter.can_use_ffmpeg()
+        can_use_ffmpeg = can_use_ffmpeg()
 
         if can_use_ffmpeg:
             message = (

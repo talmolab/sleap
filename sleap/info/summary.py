@@ -10,7 +10,7 @@ from typing import Callable, Dict
 
 from sleap.instance import LabeledFrame
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
+from sleap_io import Video
 from sleap.sleap_io_adaptors.skeleton_utils import node_to_index
 
 
@@ -146,7 +146,7 @@ class StatisticSeries:
             print(f"Unable to locate node {primary_node} so using node 0")
             primary_node_idx = 0
 
-        last_frame_idx = video.num_frames - 1
+        last_frame_idx = video.backend.num_frames - 1
         location_matrix = np.full(
             (last_frame_idx + 1, track_count, 2), np.nan, dtype=float
         )

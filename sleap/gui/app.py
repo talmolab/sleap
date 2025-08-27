@@ -78,7 +78,7 @@ from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.info.summary import StatisticSeries
 from sleap_io.model.instance import Instance
 from sleap.io.dataset import Labels
-from sleap.io.video import available_video_exts
+from sleap.sleap_io_adaptors.video_utils import available_video_exts
 from sleap.prefs import prefs
 from sleap_io.model.skeleton import Skeleton
 from sleap.util import parse_uri_path, get_config_file
@@ -222,7 +222,7 @@ class MainWindow(QMainWindow):
                 if hasattr(self.player.video, "backend") and hasattr(
                     self.player.video.backend, "close"
                 ):
-                    self.player.video.backend.close()
+                    self.player.video.close()
                 self.player.video = None
 
             # Stop the worker thread
@@ -361,8 +361,8 @@ class MainWindow(QMainWindow):
             frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
             frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
             if video is not None:
-                frame_to_spinbox.setMaximum(video.num_frames)
-                frame_from_spinbox.setMaximum(video.num_frames)
+                frame_to_spinbox.setMaximum(video.backend.num_frames)
+                frame_from_spinbox.setMaximum(video.backend.num_frames)
 
         self.state.connect(
             "video",
@@ -1223,7 +1223,7 @@ class MainWindow(QMainWindow):
             self._update_track_menu()
 
         if _has_topic([UpdateTopic.video]):
-            self.videos_dock.table.model().items = self.labels.videos
+            self.videos_dock.table.model().items = [x.backend for x in self.labels.videos]
 
         if _has_topic([UpdateTopic.skeleton]):
             self.skeleton_dock.nodes_table.model().items = self.state["skeleton"]
@@ -1356,7 +1356,7 @@ class MainWindow(QMainWindow):
                 if pred_frame_count:
                     message += f"{spacer}Predicted Frames: {pred_frame_count:,}"
                     message += (
-                        f" ({pred_frame_count / current_video.num_frames * 100:.2f}%)"
+                        f" ({pred_frame_count / current_video.backend.num_frames * 100:.2f}%)"
                     )
                     message += " in video"
 
@@ -1504,9 +1504,9 @@ class MainWindow(QMainWindow):
         clip_range = self.state.get("frame_range", default=(0, 0))
 
         selection["clip"] = {current_video: encode_range(*clip_range)}
-        selection["video"] = {current_video: encode_range(0, current_video.num_frames)}
+        selection["video"] = {current_video: encode_range(0, current_video.backend.num_frames)}
         selection["all_videos"] = {
-            video: encode_range(0, video.num_frames) for video in self.labels.videos
+            video: encode_range(0, video.backend.num_frames) for video in self.labels.videos
         }
 
         selection["suggestions"] = {

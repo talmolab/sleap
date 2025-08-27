@@ -93,7 +93,8 @@ class QtImageDirectoryWidget(QtVideoPlayer):
             if self.video is None:
                 was_on_last_image = True
                 self.show()
-            elif self.state["frame_idx"] == self.video.last_frame_idx:
+            # elif self.state["frame_idx"] == self.video.last_frame_idx:
+            elif self.state["frame_idx"] == self.video.backend.num_frames - 1:
                 was_on_last_image = True
 
             self.files = files
@@ -101,10 +102,14 @@ class QtImageDirectoryWidget(QtVideoPlayer):
             self.load_video(video=self.video)
 
             if was_on_last_image:
-                self.state["frame_idx"] = self.video.last_frame_idx
+                # self.state["frame_idx"] = self.video.last_frame_idx
+                self.state["frame_idx"] = self.video.backend.num_frames - 1
             elif self.state["frame_idx"]:
+                # self.state["frame_idx"] = min(
+                #     self.state["frame_idx"], self.video.last_frame_idx 
+                # )
                 self.state["frame_idx"] = min(
-                    self.state["frame_idx"], self.video.last_frame_idx
+                    self.state["frame_idx"], self.video.backend.num_frames - 1
                 )
 
     @classmethod

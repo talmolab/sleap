@@ -27,12 +27,12 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
 if TYPE_CHECKING:
     from sleap.io.dataset import Labels
-    from sleap.io.video import Video
 
 import attr
 import numpy as np
 
-from sleap.io.video import Video  # Only used for type hinting
+from sleap_io import Video  # Only used for type hinting
+from sleap_io.model.skeleton import Node, Skeleton
 from sleap.util import plot_img, plot_instances
 from sleap_io.model.instance import Instance, PredictedInstance, Track
 
@@ -1893,7 +1893,7 @@ class LabeledFrame:
     @property
     def image(self) -> np.ndarray:
         """Return the image for this frame of shape (height, width, channels)."""
-        return self.video.get_frame(self.frame_idx)
+        return self.video.backend.get_frame(self.frame_idx)
 
     def numpy(self) -> np.ndarray:
         """Return the instances as an array of shape (instances, nodes, 2)."""

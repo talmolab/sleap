@@ -1,7 +1,7 @@
 from typing import List
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
 from sleap.io.dataset import Labels
-from sleap.io.video import Video
+from sleap_io import Video
 from sleap.instance import LabeledFrame
 from sleap_io.model.instance import PredictedInstance, Track
 from sleap_io import Skeleton
@@ -41,7 +41,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     # Testing videos that have less frames than desired Samples per Video (stride)
     # Expected result is there should be n suggestions where n is equal to the frames
     # in the video.
-    vid_frames = centered_pair_predictions.video.num_frames
+    vid_frames = centered_pair_predictions.video.backend.num_frames
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={

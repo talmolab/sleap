@@ -85,7 +85,8 @@ from sleap_io.model.instance import (
 from sleap.sleap_io_adaptors.instance_utils import make_instance_cattr
 
 from sleap.io import pathutils
-from sleap.io.video import Video, ImgStoreVideo, HDF5Video
+from sleap_io import Video
+from sleap_io.io.video_reading import ImageVideo, HDF5Video
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
 from sleap.util import uniquify, json_dumps
@@ -2275,7 +2276,7 @@ class Labels(MutableSequence):
         all_labeled: bool = False,
         suggested: bool = False,
         progress_callback: Optional[Callable[[int, int], None]] = None,
-    ) -> List[ImgStoreVideo]:
+    ) -> List[ImageVideo]:
         """Write images for labeled frames from all videos to imgstore datasets.
 
         This only writes frames that have been labeled. Videos without
