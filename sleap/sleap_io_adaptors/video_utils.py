@@ -37,3 +37,25 @@ def available_video_exts() -> Tuple[str]:
         + TiffVideo.EXTS
     )
 
+def video_util_reset(video: Video, filename: str = None, grayscale: bool = None):
+    """Reloads the video.
+    
+    Returns:
+        None
+    """
+    if filename is not None:
+        video.replace_filename(filename, open=False)
+        # No apparent 'test frame'.
+
+    # If none, auto-detects based on first frame load.
+    video.grayscale = grayscale
+
+    # no apparent 'bgr' attribute (removed in sleap-io?)
+
+    # potential breaking change
+    if (filename is not None) or (grayscale is not None):
+        video.keep_open = False # Reader depends on both filename and grayscale
+
+    
+    
+

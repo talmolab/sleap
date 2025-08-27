@@ -81,11 +81,15 @@ from sleap_io import save_video
 from sleap.io.visuals import save_labeled_video
 from sleap.util import get_package_file
 from sleap_io.model.skeleton import Node, Skeleton
+
+from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node, delete_symmetry, delete_edge
+from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.skeleton_utils import (
     get_symmetry_node,
     delete_symmetry,
     delete_edge,
 )
+
 from sleap_io import save_skeleton
 import json
 from sleap_io.io.skeleton import SkeletonDecoder
@@ -2147,7 +2151,8 @@ class ToggleGrayscale(EditCommand):
 
         for idx, video in enumerate(context.labels.videos):
             try:
-                video.backend.reset(grayscale=(not grayscale))
+                # video.backend.reset(grayscale=(not grayscale))
+                video_util_reset(video, grayscale=(not grayscale))
             except Exception:
                 print(
                     f"This video type {type(video.backend)} for video at index {idx} "
@@ -2218,7 +2223,8 @@ class ReplaceVideo(EditCommand):
                 raise TypeError(
                     "Importing videos with different extensions is not supported."
                 )
-            video.backend.reset(**import_params)
+            # video.backend.reset(**import_params) potential breaking change
+            video_util_reset(video, **import_params)
 
             # Remove frames in video past last frame index
             # last_vid_frame = video.last_frame_idx
