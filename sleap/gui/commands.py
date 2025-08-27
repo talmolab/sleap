@@ -84,6 +84,7 @@ from sleap_io.model.skeleton import Node, Skeleton
 
 from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node, delete_symmetry, delete_edge
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
+from sleap.sleap_io_adaptors.lf_labels_utils import make_video_callback
 from sleap.sleap_io_adaptors.skeleton_utils import (
     get_symmetry_node,
     delete_symmetry,
@@ -747,6 +748,13 @@ class LoadProjectFile(LoadLabelsObject):
             # gui_video_callback = Labels.make_gui_video_callback(
             #     search_paths=[os.path.dirname(filename)], context=params
             # ) #TODO: fix this
+
+            gui_video_callback = make_video_callback(
+                search_paths=[os.path.dirname(filename)],
+                use_gui=True,
+                context=params
+            )
+
             try:
                 labels = load_file(filename)
                 has_loaded = True
@@ -3333,8 +3341,12 @@ class MergeProject(EditCommand):
             return
 
         for filename in filenames:
-            gui_video_callback = Labels.make_gui_video_callback(
-                search_paths=[os.path.dirname(filename)]
+            # gui_video_callback = Labels.make_gui_video_callback(
+            #     search_paths=[os.path.dirname(filename)]
+            # )
+            gui_video_callback = make_video_callback(
+                search_paths=[os.path.dirname(filename)],
+                use_gui=True
             )
 
             new_labels = Labels.load_file(filename, video_search=gui_video_callback)
