@@ -1284,8 +1284,9 @@ def set_slider_marks_from_labels(
 
     # Add marks with track
     track_occupancy = get_track_occupancy(labels, video)
-    for track in labels.tracks:
-        if track in track_occupancy and not track_occupancy[track].is_empty:
+    for tr in labels.tracks:
+        track = tr.name
+        if track in track_occupancy and not track_occupancy[track].is_empty():
             if track_row > 0 and slider._is_track_in_new_column(track_row):
                 slider_marks.append(
                     SliderMark("tick_column", val=track_occupancy[track].start)
@@ -1302,7 +1303,7 @@ def set_slider_marks_from_labels(
                             val=occupancy_range[0],
                             end_val=occupancy_range[1],
                             row=track_row,
-                            color=color_manager.get_track_color(track),
+                            color=color_manager.get_track_color(tr),
                         )
                     )
                 track_row += 1

@@ -8,6 +8,15 @@ import cattr
 
 from sleap_io import Video
 
+# Create a simple range object with start, end, and list properties
+class SimpleRange:
+    def __init__(self, ranges_list):
+        self.list = ranges_list
+        self.start = ranges_list[0][0] if ranges_list else None
+        self.end = ranges_list[-1][1] if ranges_list else None
+        
+    def is_empty(self):
+        return len(self.list) == 0
 
 def find_path_using_paths(filename: str, search_paths: List[str]) -> str:
     """Find a file in the given search paths.
@@ -52,13 +61,15 @@ def get_track_occupancy(labels, video):
     # Build track occupancy dictionary
     for lf in labeled_frames:
         for instance in lf.instances:
-            track = instance.track
+            track = instance.track.name
             if track not in track_occupancy:
                 track_occupancy[track] = []
             
             # Add this frame to the track's occupancy
             track_occupancy[track].append(lf.frame_idx)
-    
+
+    print(f"track_occupancy: {track_occupancy}")
+
     # Convert frame lists to sorted ranges
     for track in track_occupancy:
         if track_occupancy[track]:
@@ -79,16 +90,9 @@ def get_track_occupancy(labels, video):
             
             # Add final range
             ranges.append((start, prev + 1))
-            
-            # Create a simple range object with start, end, and list properties
-            class SimpleRange:
-                def __init__(self, ranges_list):
-                    self.list = ranges_list
-                    self.start = ranges_list[0][0] if ranges_list else None
-                    self.end = ranges_list[-1][1] if ranges_list else None
-                    
-                def is_empty(self):
-                    return len(self.list) == 0
+            print(f"start: {start}, prev: {prev + 1}, ranges: {ranges}")
+            print(f"len(ranges): {len(ranges)}")
+            print(f"is empty: {SimpleRange(ranges).is_empty()}")
             
             track_occupancy[track] = SimpleRange(ranges)
     
