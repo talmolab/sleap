@@ -301,7 +301,6 @@ def get_labeled_frame_count(labels, video=None, filter: str = "") -> int:
 
     return 0
 
-
 def find_first(labels, video, frame_idx=None, use_cache: bool = False):
     """Find the first occurrence of a matching labeled frame.
 

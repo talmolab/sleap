@@ -1324,7 +1324,14 @@ class MainWindow(QMainWindow):
             if len(self.labels.videos) > 0 and current_video is not None:
                 for i, video in enumerate(self.labels.videos):
                     if video.backend.filename == current_video.backend.filename:
-                        index = i
+                        same_dataset = (
+                            (video.backend.dataset == current_video.backend.dataset)
+                            if hasattr(video.backend, "dataset")
+                            else True
+                        )  # `dataset` attr exists only for hdf5 backend not for mediavideo
+                        if same_dataset:
+                            index = i
+                            break
                 message += f"Video {index + 1}/"
                 message += f"{len(self.labels.videos)}"
                 message += spacer

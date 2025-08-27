@@ -17,6 +17,7 @@ from qtpy import QtWidgets
 import glob
 import os
 from typing import List, Optional, Text, Tuple
+from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 
 class QtImageDirectoryWidget(QtVideoPlayer):
@@ -93,8 +94,7 @@ class QtImageDirectoryWidget(QtVideoPlayer):
             if self.video is None:
                 was_on_last_image = True
                 self.show()
-            # elif self.state["frame_idx"] == self.video.last_frame_idx:
-            elif self.state["frame_idx"] == self.video.backend.num_frames - 1:
+            elif self.state["frame_idx"] == get_last_frame_idx(self.video):
                 was_on_last_image = True
 
             self.files = files
@@ -102,14 +102,10 @@ class QtImageDirectoryWidget(QtVideoPlayer):
             self.load_video(video=self.video)
 
             if was_on_last_image:
-                # self.state["frame_idx"] = self.video.last_frame_idx
-                self.state["frame_idx"] = self.video.backend.num_frames - 1
+                self.state["frame_idx"] = get_last_frame_idx(self.video)
             elif self.state["frame_idx"]:
-                # self.state["frame_idx"] = min(
-                #     self.state["frame_idx"], self.video.last_frame_idx 
-                # )
                 self.state["frame_idx"] = min(
-                    self.state["frame_idx"], self.video.backend.num_frames - 1
+                    self.state["frame_idx"], get_last_frame_idx(self.video)
                 )
 
     @classmethod
