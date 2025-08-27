@@ -81,7 +81,12 @@ from sleap_io import save_video
 from sleap.io.visuals import save_labeled_video
 from sleap.util import get_package_file
 from sleap_io.model.skeleton import Node, Skeleton
-from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node, delete_symmetry, delete_edge
+
+from sleap.sleap_io_adaptors.skeleton_utils import (
+    get_symmetry_node,
+    delete_symmetry,
+    delete_edge,
+)
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.skeleton_utils import (
     get_symmetry_node,
@@ -1048,7 +1053,7 @@ class ImportDeepLabCutFolder(AppCommand):
     def import_labels_from_dlc_files(csv_files: List[str]) -> Labels:
         merged_labels = None
         for csv_file in csv_files:
-            labels = Labels.load_file(csv_file, as_format="deeplabcut")
+            labels = load_file(csv_file, as_format="deeplabcut")
             if merged_labels is None:
                 merged_labels = labels
             else:
@@ -1406,7 +1411,9 @@ class ExportVideoClip(AppCommand):
         #     gui_progress=params["gui_progress"],
         # )
         save_video(
-            frames=[context.state["video"].backend.get_frame(i) for i in params["frames"]],
+            frames=[
+                context.state["video"].backend.get_frame(i) for i in params["frames"]
+            ],
             filename=params["video_filename"],
             fps=params["fps"],
         )
