@@ -74,7 +74,7 @@ except Exception:
 
 # from sleap.skeleton import Skeleton, Node (sleap.io will be deleted)
 from sleap_io.model.skeleton import Skeleton, Node
-from sleap_io import LabeledFrame, Labels
+from sleap_io import LabeledFrame, Labels, load_file
 from sleap_io.model.instance import (
     Instance,
     Track,
@@ -2773,6 +2773,6 @@ def load_file(
     if detect_videos:
         if search_paths is None:
             search_paths = os.path.dirname(filename)
-        return Labels.load_file(filename, search_paths, match_to=match_to)
+        return load_file(filename, search_paths, match_to=match_to)
     else:
-        return Labels.load_file(filename, match_to=match_to)
+        return load_file(filename, match_to=match_to)
