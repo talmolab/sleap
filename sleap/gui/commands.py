@@ -68,19 +68,14 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap.instance import LabeledFrame
+from sleap_io import LabeledFrame, Labels, load_file
 from sleap_io.model.instance import (
     Instance,
     PredictedInstance,
     Track,
     PointsArray,
-    PredictedPointsArray,
 )
 from sleap.io.convert import default_analysis_filename
-from sleap.io.dataset import Labels
-from sleap.io.format.adaptor import Adaptor
-from sleap.io.format.csv import CSVAdaptor
-from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap_io import Video
 from sleap_io import save_video
 from sleap.io.visuals import save_labeled_video
@@ -745,11 +740,11 @@ class LoadProjectFile(LoadLabelsObject):
             filename = None
             has_loaded = True
         else:
-            gui_video_callback = Labels.make_gui_video_callback(
-                search_paths=[os.path.dirname(filename)], context=params
-            )
+            # gui_video_callback = Labels.make_gui_video_callback(
+            #     search_paths=[os.path.dirname(filename)], context=params
+            # ) #TODO: fix this
             try:
-                labels = Labels.load_file(filename, video_search=gui_video_callback)
+                labels = load_file(filename)
                 has_loaded = True
             except ValueError as e:
                 print(e)

@@ -15,6 +15,7 @@ import itertools
 import numpy as np
 from enum import Enum
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+from sleap.sleap_io_adaptors.lf_labels_utils import get_track_occupancy, get_video_suggestions
 
 
 # for debug, we can filter out short tracks from slider
@@ -1282,7 +1283,7 @@ def set_slider_marks_from_labels(
     track_row = 0
 
     # Add marks with track
-    track_occupancy = labels.get_track_occupancy(video)
+    track_occupancy = get_track_occupancy(labels, video)
     for track in labels.tracks:
         if track in track_occupancy and not track_occupancy[track].is_empty:
             if track_row > 0 and slider._is_track_in_new_column(track_row):
@@ -1314,7 +1315,7 @@ def set_slider_marks_from_labels(
 
     labeled_marks = {lf.frame_idx for lf in lfs}
     user_labeled = {lf.frame_idx for lf in lfs if len(lf.user_instances)}
-    suggested_frames = set(labels.get_video_suggestions(video))
+    suggested_frames = set(get_video_suggestions(labels, video))
 
     all_simple_frames = set()
     all_simple_frames.update(untracked_frames)
