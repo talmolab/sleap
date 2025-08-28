@@ -8,7 +8,15 @@ import cattr
 import os
 
 from sleap import util
-from sleap_io import Video, load_file, Labels, Track, Instance, LabeledFrame, SuggestionFrame
+from sleap_io import (
+    Video,
+    load_file,
+    Labels,
+    Track,
+    Instance,
+    LabeledFrame,
+    SuggestionFrame,
+)
 from sleap_io.model.matching import SkeletonMatcher
 from sleap.util import weak_filename_match
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
@@ -91,9 +99,13 @@ def remove_frames(labels: Labels, frames: List[LabeledFrame]):
     """Remove a list of frames from the labels dataset."""
     for lf in frames:
         for lf_idx, lab_fr in enumerate(labels):
-            if lab_fr.video.matches_content(lf.video) and lab_fr.frame_idx == lf.frame_idx:
+            if (
+                lab_fr.video.matches_content(lf.video)
+                and lab_fr.frame_idx == lf.frame_idx
+            ):
                 labels.pop(lf_idx)
     labels.update()
+
 
 def remove_instance(labels: Labels, instance: Instance, lf: LabeledFrame):
     """Remove an instance from a labeled frame and update all related instances."""
@@ -544,13 +556,15 @@ def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
         LabeledFrame objects for the specified video
     """
     # Get all labeled frames for this video
-    labeled_frames = labels.find(video) if hasattr(labels, 'find') else []
+    labeled_frames = labels.find(video) if hasattr(labels, "find") else []
 
     if not labeled_frames:
         return
 
     # Extract frame indices and sort them
-    frame_idxs = sorted([lf.frame_idx for lf in labeled_frames if hasattr(lf, 'frame_idx')])
+    frame_idxs = sorted(
+        [lf.frame_idx for lf in labeled_frames if hasattr(lf, "frame_idx")]
+    )
 
     if not frame_idxs:
         return
@@ -601,7 +615,7 @@ def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
             frame_idxs = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
 
     # Create a mapping from frame_idx to LabeledFrame for quick lookup
-    frame_map = {lf.frame_idx: lf for lf in labeled_frames if hasattr(lf, 'frame_idx')}
+    frame_map = {lf.frame_idx: lf for lf in labeled_frames if hasattr(lf, "frame_idx")}
 
     # Yield the frames in the order specified by frame_idxs
     for idx in frame_idxs:
@@ -626,7 +640,7 @@ def get_template_instance_points(labels, skeleton):
     import numpy as np
 
     # Check if labels has labeled_frames attribute
-    if not hasattr(labels, 'labeled_frames'):
+    if not hasattr(labels, "labeled_frames"):
         return None
 
     # Check if there are any labeled frames
@@ -641,10 +655,16 @@ def get_template_instance_points(labels, skeleton):
             node_positions = nx.spring_layout(G=G, scale=50)
 
             # Create template points from node positions
-            template_points = np.stack([
-                node_positions[node] if node in node_positions else np.random.randint(0, 50, size=2)
-                for node in skeleton.nodes
-            ])
+            template_points = np.stack(
+                [
+                    (
+                        node_positions[node]
+                        if node in node_positions
+                        else np.random.randint(0, 50, size=2)
+                    )
+                    for node in skeleton.nodes
+                ]
+            )
 
             return template_points
 
@@ -654,7 +674,7 @@ def get_template_instance_points(labels, skeleton):
             return template_points
 
     # Check if there are any instances
-    if not hasattr(labels, 'instances') or not labels.instances():
+    if not hasattr(labels, "instances") or not labels.instances():
         # No instances, use fallback
         template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
         return template_points
@@ -666,7 +686,7 @@ def get_template_instance_points(labels, skeleton):
         # Get instances for this skeleton
         skeleton_instances = []
         for instance in itertools.islice(labels.instances(skeleton=skeleton), 1000):
-            if hasattr(instance, 'points') and instance.points is not None:
+            if hasattr(instance, "points") and instance.points is not None:
                 skeleton_instances.append(instance)
 
         if skeleton_instances:
@@ -682,7 +702,7 @@ def get_template_instance_points(labels, skeleton):
         # Fallback if sleap.info.align is not available
         template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
         return template_points
-    
+
 
 def fix_paths_with_saved_prefix(
     filenames,
@@ -713,7 +733,7 @@ def fix_paths_with_saved_prefix(
                     filenames[i] = try_filename
                     if missing is not None:
                         missing[i]
-                    continue 
+                    continue
 
 
 def make_video_callback(
@@ -722,11 +742,11 @@ def make_video_callback(
     context: Optional[Dict[str, bool]] = None,
 ):
     """Adapter function for callback function to finding missing video.
-    
+
     The callback can be used while loading a saved project and
     allows the user to find videos which have been moved (or have
     paths from a different system).
-    
+
     The callback function returns True to signal "abort".
     Args:
         search_paths: If specified, this is a list of paths where we'll
@@ -735,7 +755,7 @@ def make_video_callback(
             value. Used externally to determine if any filenames were updated.
     Returns:
         The callback function.
-            
+
     """
     search_paths = search_paths or []
     context = context or {}
@@ -825,3 +845,71 @@ def make_video_callback(
                 item["backend"] = cattr.unstructure(vid)
 
     return video_callback
+
+
+def find_suggestion(labels: Labels, video, frame_idx):
+    """Return the suggestion for the given (video, frame_idx) or None."""
+    match = [
+        item
+        for item in labels.suggestions
+        if item.video == video and item.frame_idx == frame_idx
+    ]
+    if match:
+        return match[0]
+
+    return None
+
+
+def get_next_suggestion(labels: Labels, video, frame_idx, seek_direction=1):
+    """Return a (video, frame_idx) tuple seeking from given frame."""
+    # make sure we have valid seek_direction
+    if seek_direction not in (-1, 1):
+        raise ValueError("Invalid seek_direction. Use -1 or 1.")
+
+    # make sure the video belongs to the labels object
+    if video not in labels.videos:
+        return None
+
+    all_suggestions = labels.suggestions
+
+    # If we are currently on a suggestion, then follow order of list
+    match = find_suggestion(labels, video, frame_idx)
+    if match is not None:
+        suggestion_idx = all_suggestions.index(match)
+        new_idx = (suggestion_idx + seek_direction) % len(all_suggestions)
+        return all_suggestions[new_idx]
+
+    # Otherwise, find the prev/next suggestion sorted by frame order...
+
+    # Look for next (or previous) suggestion in current video.
+    if seek_direction == 1:
+        frame_suggestion = min(
+            (i for i in get_video_suggestions(labels, video) if i > frame_idx),
+            default=None,
+        )
+    else:
+        frame_suggestion = max(
+            (i for i in get_video_suggestions(labels, video) if i < frame_idx),
+            default=None,
+        )
+        if frame_suggestion is not None:
+            return (video, frame_suggestion)
+
+    if frame_suggestion is not None:
+        return find_suggestion(labels, video, frame_suggestion)
+
+    # If we did not find suggestion in current video, then we want earliest frame in next
+    # video with suggestions
+
+    next_video_idx = (labels.videos.index(video) + seek_direction) % len(labels.videos)
+    video = labels.videos[next_video_idx]
+    if seek_direction == 1:
+        frame_suggestion = min(
+            (i for i in get_video_suggestions(labels, video)), default=None
+        )
+    else:
+        frame_suggestion = max(
+            (i for i in get_video_suggestions(labels, video)), default=None
+        )
+
+    return find_suggestion(labels, video, frame_suggestion)
