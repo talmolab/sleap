@@ -94,7 +94,7 @@ class VideoFrameSuggestions(object):
 
         for video in videos:
             # Get unique sample space
-            vid_idx = list(range(video.frames))
+            vid_idx = list(range(video.backend.num_frames))
             vid_sugg_idx = sugg_idx_dict[video]
             unique_idx = list(set(vid_idx) - set(vid_sugg_idx))
             n_frames = len(unique_idx)

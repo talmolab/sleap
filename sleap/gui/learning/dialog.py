@@ -25,6 +25,8 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
     in_degree_over_one,
 )
 
+from sleap_io import load_file
+
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
     "data.instance_cropping.center_on_part",
@@ -68,7 +70,7 @@ class LearningDialog(QtWidgets.QDialog):
         super(LearningDialog, self).__init__()
 
         if labels is None:
-            labels = Labels.load_file(labels_filename)
+            labels = load_file(labels_filename)
 
         if skeleton is None and labels.skeletons:
             skeleton = labels.skeletons[0]
@@ -1390,7 +1392,7 @@ def demo_training_dialog():
     app = QtWidgets.QApplication([])
 
     filename = "tests/data/json_format_v1/centered_pair.json"
-    labels = Labels.load_file(filename)
+    labels = load_file(filename)
     win = LearningDialog("inference", labels_filename=filename, labels=labels)
 
     win.frame_selection = {"clip": {labels.videos[0]: (1, 2, 3, 4)}}

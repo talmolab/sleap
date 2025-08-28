@@ -21,6 +21,7 @@ from sleap.io.dataset import Labels
 from sleap_io import Video
 from sleap.sleap_io_adaptors.video_utils import _sentinel
 from sleap_io import save_video
+from sleap_io import load_file
 from sleap.util import usable_cpu_count
 
 logger = logging.getLogger(__name__)
@@ -535,9 +536,9 @@ def main(args: list = None):
         ),
     )
     args = parser.parse_args(args=args)
-    labels = Labels.load_file(
+    labels = load_file(
         args.data_path, video_search=[os.path.dirname(args.data_path)]
-    )
+    ) #TODO: video_search?
 
     if args.video_index >= len(labels.videos):
         raise IndexError(f"There is no video with index {args.video_index}.")

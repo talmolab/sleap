@@ -25,12 +25,14 @@ from qtpy import QtCore, QtGui, QtWidgets
 
 from sleap.gui.commands import CommandContext
 from sleap.gui.state import GuiState
-from sleap.instance import LabeledFrame
 from sleap_io.model.skeleton import Skeleton
 from sleap_io import Video
+from sleap_io import LabeledFrame
 from sleap_io.io.video_reading import VideoBackend
 from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
 from sleap.sleap_io_adaptors.instance_utils import get_nodes_from_instance
+from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
+
 
 class GenericTableModel(QtCore.QAbstractTableModel):
     """
@@ -397,11 +399,22 @@ class VideosTableModel(GenericTableModel):
 
     def item_to_data(self, obj, item: "VideoBackend"):
         data = {}
+        if isinstance(item, Video):
+            item = item.backend
+
         for property in self.properties:
             if property == "name":
-                data[property] = Path(item.filename).name
+                data[property] = (
+                    Path(item.filename).name
+                    if isinstance(item.filename, str)
+                    else item.filename[0]
+                )
             elif property == "filepath":
-                data[property] = str(Path(item.filename).parent)
+                data[property] = (
+                    str(Path(item.filename).parent)
+                    if isinstance(item.filename, str)
+                    else item.filename[0]
+                )
             elif property == "height":
                 data[property] = item.img_shape[0]
             elif property == "width":
@@ -466,12 +479,14 @@ class LabeledFrameTableModel(GenericTableModel):
     def object_to_items(self, labeled_frame: LabeledFrame):
         if not labeled_frame:
             return []
-        return labeled_frame.instances_to_show
+        return get_instances_to_show(labeled_frame)
 
     def item_to_data(self, obj, item):
         instance = item
 
-        points = f"{len(get_nodes_from_instance(instance))}/{len(instance.skeleton.nodes)}"
+        points = (
+            f"{len(get_nodes_from_instance(instance))}/{len(instance.skeleton.nodes)}"
+        )
         track_name = instance.track.name if instance.track else ""
         score = ""
         if hasattr(instance, "score"):
@@ -579,7 +594,7 @@ class SuggestionsTableModel(GenericTableModel):
         # Update order in project (so order can be saved and affects what we
         # consider previous/next suggestion for navigation).
         resorted_suggestions = [item["SuggestionFrame"] for item in self._data]
-        self.context.labels.set_suggestions(resorted_suggestions)
+        self.context.labels.suggestions = resorted_suggestions
 
 
 class SkeletonNodeModel(QtCore.QStringListModel):
