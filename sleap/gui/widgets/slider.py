@@ -14,7 +14,10 @@ import itertools
 import numpy as np
 from enum import Enum
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
-from sleap.sleap_io_adaptors.lf_labels_utils import get_track_occupancy, get_video_suggestions
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    get_track_occupancy,
+    get_video_suggestions,
+)
 
 
 # for debug, we can filter out short tracks from slider

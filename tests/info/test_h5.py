@@ -126,7 +126,8 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     track = centered_pair_predictions.tracks[13]
     instances = find_track_occupancy(centered_pair_predictions, vid, track)
     for instance in instances:
-        # Find the frame that contains this instance since instances don't have frame attribute
+        # Find the frame that contains this instance
+        # since instances don't have frame attribute
         for frame in centered_pair_predictions.frames(video=vid):
             if instance in frame.instances:
                 centered_pair_predictions.remove_instance(frame, instance)

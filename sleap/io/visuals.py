@@ -404,22 +404,22 @@ def save_labeled_video(
         None.
     """
     # Create marker thread and queues.
-    q1 = Queue(maxsize=10)
-    q2 = Queue(maxsize=10)
-    thread_mark = VideoMarkerThread(
-        in_q=q1,
-        out_q=q2,
-        labels=labels,
-        video_idx=labels.videos.index(video),
-        scale=scale,
-        show_edges=show_edges,
-        edge_is_wedge=edge_is_wedge,
-        marker_size=marker_size,
-        crop_size_xy=crop_size_xy,
-        color_manager=color_manager,
-        palette=palette,
-        distinctly_color=distinctly_color,
-    )
+    # q1 = Queue(maxsize=10)
+    # q2 = Queue(maxsize=10)
+    # thread_mark = VideoMarkerThread(
+    #     in_q=q1,
+    #     out_q=q2,
+    #     labels=labels,
+    #     video_idx=labels.videos.index(video),
+    #     scale=scale,
+    #     show_edges=show_edges,
+    #     edge_is_wedge=edge_is_wedge,
+    #     marker_size=marker_size,
+    #     crop_size_xy=crop_size_xy,
+    #     color_manager=color_manager,
+    #     palette=palette,
+    #     distinctly_color=distinctly_color,
+    # )
 
     # Pass marker thread in as intrmediate thread to write_video (and write video).
     # intermediate_threads = [thread_mark]

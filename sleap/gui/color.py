@@ -145,7 +145,9 @@ class ColorManager:
         except Exception:
             raise ValueError(f"Color '{color}' is not (r,g,b) tuple.")
 
-    def get_pseudo_track_index(self, instance: "Instance", frame=None) -> Union[Track, int]:
+    def get_pseudo_track_index(
+        self, instance: "Instance", frame=None
+    ) -> Union[Track, int]:
         """
         Returns an index for giving track colors to instances without track.
         """

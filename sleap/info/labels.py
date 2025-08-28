@@ -10,7 +10,8 @@ from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count
 def describe_labels(data_path, verbose=False):
     from sleap_io import load_file
 
-    # video_callback = Labels.make_video_callback([os.path.dirname(data_path)]) #TODO use gui callback
+    # video_callback = Labels.make_video_callback([os.path.dirname(data_path)])
+    #TODO use gui callback
     labels = load_file(data_path)
 
     print(f"Labeled frames: {len(labels)}")

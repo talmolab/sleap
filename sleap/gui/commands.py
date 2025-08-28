@@ -87,7 +87,6 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
 )
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.lf_labels_utils import (
-    make_video_callback,
     get_next_suggestion,
     track_swap,
     find_track_occupancy,
@@ -391,7 +390,9 @@ class CommandContext:
 
     def exportNWB(self):
         """Show gui for exporting nwb file."""
-        self.execute(SaveProjectAs, adaptor=NDXPoseAdaptor())
+        pass
+        # TODO: add this back in
+        # self.execute(SaveProjectAs, adaptor=NDXPoseAdaptor())
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -769,9 +770,9 @@ class LoadProjectFile(LoadLabelsObject):
             #     search_paths=[os.path.dirname(filename)], context=params
             # ) #TODO:
 
-            gui_video_callback = make_video_callback(
-                search_paths=[os.path.dirname(filename)], use_gui=True, context=params
-            )
+            # gui_video_callback = make_video_callback(
+            #     search_paths=[os.path.dirname(filename)], use_gui=True, context=params
+            # ) # TODO:
 
             try:
                 # labels = load_file(filename, video_search=gui_video_callback)
@@ -878,7 +879,7 @@ class ImportNWB(AppCommand):
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
-        adaptor = NDXPoseAdaptor()
+        adaptor = Adaptor()  # TODO: NWB adaptor
         filters = [f"(*.{ext})" for ext in adaptor.all_exts]
         filters[0] = f"{adaptor.name} {filters[0]}"
 
@@ -1214,12 +1215,11 @@ class ExportAnalysisFile(AppCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        from sleap.io.format.nix import NixAdaptor
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
         for output_path, video in params["analysis_videos"]:
             if params["csv"]:
-                adaptor = CSVAdaptor
+                adaptor = CSVAdaptor() # TODO: csv adaptor
             elif Path(output_path).suffix[1:] == "nix":
                 adaptor = NixAdaptor
             else:

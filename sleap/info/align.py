@@ -296,7 +296,9 @@ if __name__ == "__main__":
     # t0 = time.time()
     # labels.add_instance(
     #     frame=labels.find_first(video=labels.videos[0]),
-    #     instance=make_mean_instance(align_instances(points, 12, 0), labels.skeletons[0])
+    #     instance=make_mean_instance(
+    #         align_instances(points, 12, 0), labels.skeletons[0]
+    #     )
     # )
     # print(labels.find_first(video=labels.videos[0]))
     # print("time", time.time() - t0)

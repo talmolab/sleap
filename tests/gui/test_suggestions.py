@@ -273,8 +273,10 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
                     skeleton=stickman,
                     score=0.1,
                     points=dict(
-                        head=([1, 2], 0.5, True, False),  # (xy, score, visible, complete)
-                        neck=([2, 3], 0.5, True, False),  # (xy, score, visible, complete)
+                        head=([1, 2], 0.5, True, False),
+                        # (xy, score, visible, complete)
+                        neck=([2, 3], 0.5, True, False),
+                        # (xy, score, visible, complete)
                     ),
                     track=track_a,
                 ),
@@ -282,8 +284,10 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
                     skeleton=stickman,
                     score=0.5,
                     points=dict(
-                        head=([11, 12], 0.5, True, False),  # (xy, score, visible, complete)
-                        neck=([12, 13], 0.5, True, False),  # (xy, score, visible, complete)
+                        head=([11, 12], 0.5, True, False),
+                        # (xy, score, visible, complete)
+                        neck=([12, 13], 0.5, True, False),
+                        # (xy, score, visible, complete)
                     ),
                     track=track_b,
                 ),
@@ -297,8 +301,10 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
                     skeleton=stickman,
                     score=0.1,
                     points=dict(
-                        head=([2, 1], 0.5, True, False),  # (xy, score, visible, complete)
-                        neck=([3, 2], 0.5, True, False),  # (xy, score, visible, complete)
+                        head=([2, 1], 0.5, True, False),
+                        # (xy, score, visible, complete)
+                        neck=([3, 2], 0.5, True, False),
+                        # (xy, score, visible, complete)
                     ),
                     track=track_a,
                 ),
@@ -306,8 +312,10 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
                     skeleton=stickman,
                     score=0.5,
                     points=dict(
-                        head=([2, 1], 0.5, True, False),  # (xy, score, visible, complete)
-                        neck=([3, 2], 0.5, True, False),  # (xy, score, visible, complete)
+                        head=([2, 1], 0.5, True, False),
+                        # (xy, score, visible, complete)
+                        neck=([3, 2], 0.5, True, False),
+                        # (xy, score, visible, complete)
                     ),
                     track=track_b,
                 ),
@@ -321,8 +329,10 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
                     skeleton=stickman,
                     score=0.5,
                     points=dict(
-                        head=([11, 12], 0.5, True, False),  # (xy, score, visible, complete)
-                        neck=([12, 13], 0.5, True, False),  # (xy, score, visible, complete)
+                        head=([11, 12], 0.5, True, False),
+                        #(xy, score, visible, complete)
+                        neck=([12, 13], 0.5, True, False),
+                        #(xy, score, visible, complete)
                     ),
                     track=track_a,
                 ),
@@ -330,8 +340,10 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
                     skeleton=stickman,
                     score=0.5,
                     points=dict(
-                        head=([1, 2], 0.5, True, False),  # (xy, score, visible, complete)
-                        neck=([2, 3], 0.5, True, False),  # (xy, score, visible, complete)
+                        head=([1, 2], 0.5, True, False),
+                        #(xy, score, visible, complete)
+                        neck=([2, 3], 0.5, True, False),
+                        #(xy, score, visible, complete)
                     ),
                     track=track_b,
                 ),
