@@ -410,18 +410,8 @@ class InferenceTask:
         )
         new_labels = Labels(self.results)
 
-        # Remove potentially conflicting predictions from the base dataset.
-        self.labels.remove_predictions(new_labels=new_labels)
-
-        # Merge predictions into current labels dataset.
-        _, _, new_conflicts = Labels.complex_merge_between(
-            self.labels,
-            new_labels=new_labels,
-            unify=False,  # since we used match_to when loading predictions file
-        )
-
-        # new predictions should replace old ones
-        Labels.finish_complex_merge(self.labels, new_conflicts)
+        # Merge pred results into base labels
+        self.labels.merge(new_labels)
 
 
 def write_pipeline_files(
