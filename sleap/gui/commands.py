@@ -89,6 +89,8 @@ from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     make_video_callback,
     get_next_suggestion,
+    track_swap,
+    find_track_occupancy,
 )
 from sleap.sleap_io_adaptors.skeleton_utils import (
     get_symmetry_node,
@@ -3027,8 +3029,12 @@ class TransposeInstances(EditCommand):
                     context.state["frame_idx"],
                     context.state["frame_idx"] + 1,
                 )
-            context.labels.track_swap(
-                context.state["video"], new_track, old_track, frame_range
+            track_swap(
+                context.labels,
+                context.state["video"],
+                new_track,
+                old_track,
+                frame_range,
             )
 
     @classmethod
@@ -3145,7 +3151,8 @@ class SetSelectedInstanceTrack(EditCommand):
             or not context.state["propagate track labels"]
         ):
             # Move anything already in the new track out of it
-            new_track_instances = context.labels.find_track_occupancy(
+            new_track_instances = find_track_occupancy(
+                context.labels,
                 video=context.state["video"],
                 track=new_track,
                 frame_range=(
@@ -3180,8 +3187,12 @@ class SetSelectedInstanceTrack(EditCommand):
                 )
 
             # Do the swap
-            context.labels.track_swap(
-                context.state["video"], new_track, old_track, frame_range
+            track_swap(
+                context.labels,
+                context.state["video"],
+                new_track,
+                old_track,
+                frame_range,
             )
 
         # Make sure the originally selected instance is still selected
@@ -3323,7 +3334,10 @@ class RemoveSuggestion(EditCommand):
         selected_frame = context.app.suggestions_dock.table.getSelectedRowItem()
         if selected_frame is not None:
             for sug_idx, suggestion in enumerate(context.labels.suggestions):
-                if suggestion.video.match_content(selected_frame.video) and suggestion.frame_idx == selected_frame.frame_idx:
+                if (
+                    suggestion.video.match_content(selected_frame.video)
+                    and suggestion.frame_idx == selected_frame.frame_idx
+                ):
                     context.labels.suggestions.pop(sug_idx)
                     break
         context.labels.update()

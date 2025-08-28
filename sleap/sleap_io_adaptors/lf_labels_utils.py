@@ -2,7 +2,7 @@
 Standalone utility functions for working with Labels and LabeledFrame objects.
 """
 
-from typing import List, Dict, Optional, Callable, Text
+from typing import Iterable, List, Dict, Optional, Callable, Text, Union
 from pathlib import Path
 import cattr
 import os
@@ -913,3 +913,110 @@ def get_next_suggestion(labels: Labels, video, frame_idx, seek_direction=1):
         )
 
     return find_suggestion(labels, video, frame_suggestion)
+
+
+def find_labeled_frames(
+    self,
+    video: Video,
+    frame_idx: Optional[Union[int, Iterable[int]]] = None,
+    return_new: bool = False,
+) -> List[LabeledFrame]:
+    """Search for labeled frames given video and/or frame index.
+
+    Args:
+        video: A :class:`Video` that is associated with the project.
+        frame_idx: The frame index (or indices) which we want to
+            find in the video. If a range is specified, we'll return
+            all frames with indices in that range. If not specific,
+            then we'll return all labeled frames for video.
+        return_new: Whether to return singleton of new and empty
+            :class:`LabeledFrame` if none is found in project.
+    Returns:
+        List of `LabeledFrame` objects that match the criteria.
+        Empty if no matches found, unless return_new is True,
+        in which case it contains a new `LabeledFrame` with
+        `video` and `frame_index` set.
+    """
+    null_result = [LabeledFrame(video=video, frame_idx=frame_idx)] if return_new else []
+    result = self._cache.find_frames(video, frame_idx)
+    return null_result if result is None else result
+
+
+def find_track_occupancy(
+    labels: Labels, video: Video, track: Union[Track, int], frame_range=None
+) -> List[Instance]:
+    """Get instances for a given video, track, and range of frames.
+
+    Args:
+        video: the `Video`
+        track: the `Track` or int ("pseudo-track" index to instance list)
+        frame_range (optional):
+            If specified, only return instances on frames in range.
+            If None, return all instances for given track.
+
+    Returns:
+        List of :class:`Instance` objects.
+    """
+    frame_range = range(*frame_range) if type(frame_range) == tuple else frame_range
+
+    def does_track_match(inst, tr, labeled_frame):
+        match = False
+        if type(tr) == Track and inst.track is tr:
+            match = True
+        elif (
+            type(tr) == int
+            and labeled_frame.instances.index(inst) == tr
+            and inst.track is None
+        ):
+            match = True
+        return match
+
+    track_frame_inst = [
+        instance
+        for lf in find_labeled_frames(labels, video)
+        for instance in lf.instances
+        if does_track_match(instance, track, lf)
+        and (frame_range is None or lf.frame_idx in frame_range)
+    ]
+
+    return track_frame_inst
+
+
+def track_swap(
+    labels: Labels,
+    video: Video,
+    new_track: Track,
+    old_track: Optional[Track],
+    frame_range: tuple,
+):
+    """Swap track assignment for instances in two tracks.
+
+    If you need to change the track to or from None, you'll need
+    to use :meth:`track_set_instance` for each specific
+    instance you want to modify.
+
+    Args:
+        video: The :class:`Video` for which we want to swap tracks.
+        new_track: A :class:`Track` for which we want to swap
+            instances with another track.
+        old_track: The other :class:`Track` for swapping.
+        frame_range: Tuple of (start, end) frame indexes.
+            If you want to swap tracks on a single frame, use
+            (frame index, frame index + 1).
+    """
+    # labels._cache.track_swap(video, old_track, new_track, frame_range)
+
+    # Get all instances in old/new tracks
+    old_track_instances = find_track_occupancy(labels, video, old_track, frame_range)
+    new_track_instances = find_track_occupancy(labels, video, new_track, frame_range)
+
+    # Swap instances between old and new tracks
+    for instance in old_track_instances:
+        instance.track = new_track
+    # old_track can be `Track` or int
+    # If int, it's index in instance list which we'll use as a psudo-track,
+    # but we won't set instance currently on new_track to old_track
+    if type(old_track) == Track:
+        # Only clear old track if it's a real track
+        for instance in new_track_instances:
+            instance.track = old_track

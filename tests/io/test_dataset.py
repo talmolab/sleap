@@ -23,7 +23,12 @@ from sleap_io.model.instance import (
     PointsArray,
     PredictedPointsArray,
 )
-from sleap.sleap_io_adaptors.lf_labels_utils import load_and_match, get_video_suggestions, frames
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    load_and_match,
+    get_video_suggestions,
+    frames,
+    track_swap,
+)
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
@@ -1182,7 +1187,7 @@ def test_multivideo_tracks():
     labels = Labels(labeled_frames=[lf_a, lf_b])
 
     # Try setting video B instance to track used in video A
-    labels.track_swap(vid_b, new_track=track_a, old_track=track_b, frame_range=(3, 4))
+    track_swap(labels, vid_b, new_track=track_a, old_track=track_b, frame_range=(3, 4))
 
     assert inst_b.track == track_a
 
