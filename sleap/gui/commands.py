@@ -92,12 +92,6 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     track_swap,
     find_track_occupancy,
 )
-from sleap.sleap_io_adaptors.skeleton_utils import (
-    get_symmetry_node,
-    delete_symmetry,
-    delete_edge,
-)
-from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 from sleap_io import save_skeleton
