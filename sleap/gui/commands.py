@@ -91,6 +91,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     get_next_suggestion,
     track_swap,
     find_track_occupancy,
+    track_set_instance,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
@@ -3160,8 +3161,11 @@ class SetSelectedInstanceTrack(EditCommand):
             for instance in new_track_instances:
                 instance.track = None
             # Move selected instance into new track
-            context.labels.track_set_instance(
-                context.state["labeled_frame"], selected_instance, new_track
+            track_set_instance(
+                context.labels,
+                context.state["labeled_frame"],
+                selected_instance,
+                new_track,
             )
             # Add linked predicted instance to new track
             if selected_instance.from_predicted is not None:
