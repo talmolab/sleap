@@ -1,8 +1,6 @@
 import pytest
 
-from sleap.instance import (
-    LabeledFrame
-)
+from sleap_io import LabeledFrame
 from sleap_io.model.instance import Instance, PredictedInstance, Track
 from sleap_io import Skeleton
 from sleap.io.dataset import Labels
@@ -167,7 +165,8 @@ def simple_predictions():
             score=2,
             track=track_a,
             points=dict(
-                a=([1, 1], 0.5, True, False), b=([1, 1], 0.5, True, False)  # (xy, score, visible, complete)
+                a=([1, 1], 0.5, True, False),
+                b=([1, 1], 0.5, True, False),  # (xy, score, visible, complete)
             ),
         )
     )
@@ -177,7 +176,8 @@ def simple_predictions():
             score=5,
             track=track_b,
             points=dict(
-                a=([1, 1], 0.7, True, False), b=([1, 1], 0.7, True, False)  # (xy, score, visible, complete)
+                a=([1, 1], 0.7, True, False),
+                b=([1, 1], 0.7, True, False),  # (xy, score, visible, complete)
             ),
         )
     )
@@ -192,7 +192,8 @@ def simple_predictions():
             score=3,
             track=track_a,
             points=dict(
-                a=([4, 5], 1.5, True, False), b=([1, 1], 1.0, True, False)  # (xy, score, visible, complete)
+                a=([4, 5], 1.5, True, False),
+                b=([1, 1], 1.0, True, False),  # (xy, score, visible, complete)
             ),
         )
     )
@@ -202,7 +203,8 @@ def simple_predictions():
             score=6,
             track=track_b,
             points=dict(
-                a=([6, 13], 1.7, True, False), b=([1, 1], 1.0, True, False)  # (xy, score, visible, complete)
+                a=([6, 13], 1.7, True, False),
+                b=([1, 1], 1.0, True, False),  # (xy, score, visible, complete)
             ),
         )
     )
@@ -243,7 +245,11 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
         for i in range(6):
             fly_instances.append(Instance(skeleton=skeleton, track=fly_tracks[i]))
             for node in skeleton.nodes:
-                fly_instances[i][node] = ([i % vid.width, i % vid.height], True, False)  # (xy, visible, complete)
+                fly_instances[i][node] = (
+                    [i % vid.width, i % vid.height],
+                    True,
+                    False,
+                )  # (xy, visible, complete)
 
         stickman_instances = []
         for i in range(6):
@@ -251,7 +257,11 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
                 Instance(skeleton=stickman, track=stick_tracks[i])
             )
             for node in stickman.nodes:
-                stickman_instances[i][node] = ([i % vid.width, i % vid.height], True, False)  # (xy, visible, complete)
+                stickman_instances[i][node] = (
+                    [i % vid.width, i % vid.height],
+                    True,
+                    False,
+                )  # (xy, visible, complete)
 
         label.instances = stickman_instances + fly_instances
         labels.append(label)
