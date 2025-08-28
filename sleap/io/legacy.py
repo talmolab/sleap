@@ -92,15 +92,6 @@ def load_predicted_labels_json_old(
 
         video_objects[videos.at[i, "id"]] = vid
 
-    # track_ids = predicted_instances["trackId"].values
-    # unique_track_ids = np.unique(track_ids)
-
-    # spawned_on = {
-    #     track_id: predicted_instances.loc[predicted_instances["trackId"] == track_id][
-    #         "frameIdx"
-    #     ].values[0]
-    #     for track_id in unique_track_ids
-    # }
     tracks = {
         i: Track(name=str(i))
         for i in np.unique(predicted_instances["trackId"].values).tolist()
