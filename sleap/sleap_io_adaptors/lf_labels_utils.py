@@ -2,14 +2,19 @@
 Standalone utility functions for working with Labels and LabeledFrame objects.
 """
 
-from typing import List, Dict, Optional, Callable
+from typing import List, Dict, Optional, Callable, Text
 from pathlib import Path
 import cattr
+import os
 
+from sleap import util
 from sleap_io import Video, load_file, Labels
 from sleap_io.model.matching import SkeletonMatcher
-
 from sleap.util import weak_filename_match
+from sleap.gui.dialogs.missingfiles import MissingFilesDialog
+
+# For debugging, we can replace missing video files with a "dummy" video
+USE_DUMMY_FOR_MISSING_VIDEOS = os.getenv("SLEAP_USE_DUMMY_VIDEOS", default="")
 
 
 # Create a simple range object with start, end, and list properties
@@ -586,3 +591,146 @@ def get_template_instance_points(labels, skeleton):
         # Fallback if sleap.info.align is not available
         template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
         return template_points
+    
+
+def fix_paths_with_saved_prefix(
+    filenames,
+    missing: Optional[List[bool]] = None,
+    path_prefix_conversions: Optional[List[Dict[Text, Text]]] = None,
+):
+    if path_prefix_conversions is None:
+        path_prefix_conversions = util.get_config_yaml("path_prefixes.yaml")
+
+    if path_prefix_conversions is None:
+        return
+
+    for i, filename in enumerate(filenames):
+        if missing is not None:
+            if not missing[i]:
+                continue
+        elif os.path.exists(filename):
+            continue
+
+        for old_prefix, new_prefix in path_prefix_conversions.items():
+            if filename.startswith(old_prefix):
+                try_filename = filename.replace(old_prefix, new_prefix)
+
+                # Equivalent to fix_path_separator(try_filename)
+                try_filename = try_filename.replace("\\", "/")
+
+                if os.path.exists(try_filename):
+                    filenames[i] = try_filename
+                    if missing is not None:
+                        missing[i]
+                    continue 
+
+
+def make_video_callback(
+    search_paths: Optional[List] = None,
+    use_gui: bool = False,
+    context: Optional[Dict[str, bool]] = None,
+):
+    """Adapter function for callback function to finding missing video.
+    
+    The callback can be used while loading a saved project and
+    allows the user to find videos which have been moved (or have
+    paths from a different system).
+    
+    The callback function returns True to signal "abort".
+    Args:
+        search_paths: If specified, this is a list of paths where we'll
+            automatically try to find the missing videos.
+        context: A dictionary containing a "changed_on_load" key with a boolean
+            value. Used externally to determine if any filenames were updated.
+    Returns:
+        The callback function.
+            
+    """
+    search_paths = search_paths or []
+    context = context or {}
+
+    def video_callback(
+        video_list: List[dict],
+        new_paths: List[str] = search_paths,
+        context: Optional[Dict] = context,
+    ):
+        """Callback to find videos which have been moved (or moved across systems).
+        Args:
+            video_list: A list of serialized `Video` objects stored as nested
+                dictionaries.
+            new_paths: If specified, this is a list of paths where we'll
+                automatically try to find the missing videos.
+            context: A dictionary containing a "changed_on_load" key with a boolean
+                value. Used externally to determine if any filenames were updated.
+        """
+        filenames = [item["backend"]["filename"] for item in video_list]
+        context = context or {"changed_on_load": False}
+
+        # Equivalent to pathutils.list_file_missing(filenames)
+        missing = [not os.path.exists(filename) for filename in filenames]
+
+        # Try changing the prefix using saved patterns
+        if sum(missing):
+            fix_paths_with_saved_prefix(filenames, missing)
+
+        # Check for file in search_path dirctories
+        if sum(missing) and new_paths:
+            for i, filename in enumerate(filename):
+                fixed_path = find_path_using_paths(filename, new_paths)
+                if fixed_path != filename:
+                    filenames[i] = fixed_path
+                    missing[i] = False
+                    context["changed_on_load"] = True
+
+        if use_gui:
+            # If there are still missing paths, prompt user
+            if sum(missing):
+                # If we are using dummy for any video not found by user
+                # then don't require user to find everything.
+                allow_incomplete = USE_DUMMY_FOR_MISSING_VIDEOS
+
+                okay = MissingFilesDialog(
+                    filenames, missing, allow_incomplete=allow_incomplete
+                ).exec_()
+
+                if not okay:
+                    return True  # True for stop
+
+                context["changed_on_load"] = True
+
+        if not use_gui and sum(missing):
+            # If we got the same number of paths as there are videos
+            if len(filenames) == len(new_paths):
+                # and the file extensions match
+                exts_match = all(
+                    (
+                        old.split(".")[-1] == new.split(".")[-1]
+                        for old, new in zip(filenames, new_paths)
+                    )
+                )
+
+                if exts_match:
+                    # then the search paths should be a list of all the
+                    # video paths, so we can get the new path for the missing
+                    # old path.
+                    for i, filename in enumerate(filenames):
+                        if missing[i]:
+                            filenames[i] = new_paths[i]
+                            missing[i] = False
+
+                    # Solely for testing since only gui will have a `CommandContext`
+                    context["changed_on_load"] = True
+
+        # Replace the video filenames with changes by user
+        for i, item in enumerate(video_list):
+            item["backend"]["filename"] = filenames[i]
+
+        if USE_DUMMY_FOR_MISSING_VIDEOS and sum(missing):
+            # Replace any video still missing with "dummy" video
+            for is_missing, item in zip(missing, video_list):
+                from sleap.io.video import DummyVideo
+
+                vid = DummyVideo(filename=item["backend"]["filename"])
+                item["backend"] = cattr.unstructure(vid)
+
+    return video_callback
