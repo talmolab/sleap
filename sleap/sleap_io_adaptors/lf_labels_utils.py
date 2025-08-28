@@ -413,10 +413,27 @@ def fix_paths_with_saved_prefix(
             
 
 def make_video_callback(
-    search_paths: Optional[List[str]] = None,
+    search_paths: Optional[List] = None,
     use_gui: bool = False,
-    context: Optional[Dict] = None,
-):
+    context: Optional[Dict[str, bool]] = None,
+):  
+    """Adapter function for callback function to finding missing video.
+    
+    The callback can be used while loading a saved project and
+    allows the user to find videos which have been moved (or have
+    paths from a different system).
+    
+    The callback function returns True to signal "abort".
+
+    Args:
+        search_paths: If specified, this is a list of paths where we'll
+            automatically try to find the missing videos.
+        context: A dictionary containing a "changed_on_load" key with a boolean
+            value. Used externally to determine if any filenames were updated.
+    Returns:
+        The callback function.
+            
+    """
     search_paths = search_paths or []
     context = context or {}
 
@@ -425,6 +442,16 @@ def make_video_callback(
         new_paths: List[str] = search_paths,
         context: Optional[Dict] = context,
     ):
+        """Callback to find videos which have been moved (or moved across systems).
+
+        Args:
+            video_list: A list of serialized `Video` objects stored as nested
+                dictionaries.
+            new_paths: If specified, this is a list of paths where we'll
+                automatically try to find the missing videos.
+            context: A dictionary containing a "changed_on_load" key with a boolean
+                value. Used externally to determine if any filenames were updated.
+        """
         filenames = [item["backend"]["filename"] for item in video_list]
         context = context or {"changed_on_load": False}
 
