@@ -22,19 +22,19 @@ The relationships between objects in this module:
 # an instance of typing._GenericAlias and made our converters fail. The line:
 # https://github.com/python-attrs/cattrs/blob/3a02a04e82ffd93bb06ef7bc476bde797ceefcdf/src/cattr/converters.py#L258-L268)
 
-from copy import copy
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
+# from copy import copy
+# from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
-if TYPE_CHECKING:
-    from sleap.io.dataset import Labels
+# if TYPE_CHECKING:
+#     from sleap.io.dataset import Labels
 
-import attr
-import numpy as np
+# import attr
+# import numpy as np
 
-from sleap_io import Video  # Only used for type hinting
-from sleap_io.model.skeleton import Node, Skeleton
-from sleap.util import plot_img, plot_instances
-from sleap_io.model.instance import Instance, PredictedInstance, Track
+# from sleap_io import Video  # Only used for type hinting
+# from sleap_io.model.skeleton import Node, Skeleton
+# from sleap.util import plot_img, plot_instances
+# from sleap_io.model.instance import Instance, PredictedInstance, Track
 
 # class Point(np.record):
 #     """
@@ -1425,495 +1425,495 @@ from sleap_io.model.instance import Instance, PredictedInstance, Track
 #         return list(self)
 
 
-@attr.s(auto_attribs=True, eq=False, repr=False, str=False)
-class LabeledFrame:
-    """Holds labeled data for a single frame of a video.
-
-    Args:
-        video: The :class:`Video` associated with this frame.
-        frame_idx: The index of frame in video.
-        instances: List of instances associated with the frame.
-    """
-
-    video: Video = attr.ib()
-    frame_idx: int = attr.ib(converter=int)
-    _instances: List[Instance] = attr.ib(default=attr.Factory(list))
-
-    def __attrs_post_init__(self):
-        """Called by attrs.
-
-        Updates :attribute:`Instance.frame` for each instance associated
-        with this :class:`LabeledFrame`.
-        """
-
-        # Make sure all instances have a reference to this frame
-        self.instances = self._instances
-
-    def __len__(self) -> int:
-        """Return number of instances associated with frame."""
-        return len(self.instances)
-
-    def __getitem__(self, index) -> Union[Instance, PredictedInstance]:
-        """Return instance (retrieved by index)."""
-        return self.instances.__getitem__(index)
-
-    def index(self, value: Instance) -> int:
-        """Return index of given :class:`Instance`."""
-        return self.instances.index(value)
-
-    def __delitem__(self, index):
-        """Remove instance (by index) from frame."""
-        self.instances.__delitem__(index)
-
-    def __repr__(self) -> str:
-        """Return a readable representation of the LabeledFrame."""
-        return (
-            f"LabeledFrame(video={type(self.video.backend).__name__}"
-            f"('{self.video.filename}'), "
-            f"frame_idx={self.frame_idx}, "
-            f"instances={len(self.instances)})"
-        )
-
-    def insert(self, index: int, value: Instance):
-        """Add instance to frame.
-
-        Args:
-            index: The index in list of frame instances where we should
-                insert the new instance.
-            value: The instance to associate with frame.
-
-        Returns:
-            None.
-        """
-        self.instances.insert(index, value)
-
-    def __setitem__(self, index, value: Instance):
-        """Set nth instance in frame to the given instance.
-
-        Args:
-            index: The index of instance to replace with new instance.
-            value: The new instance to associate with frame.
-
-        Returns:
-            None.
-        """
-        self.instances.__setitem__(index, value)
-
-    def find(
-        self, track: Optional[Union[Track, int]] = -1, user: bool = False
-    ) -> List[Instance]:
-        """Retrieve instances (if any) matching specifications.
-
-        Args:
-            track: The :class:`Track` to match. Note that None will only
-                match instances where :attribute:`Instance.track` is
-                None. If track is -1, then we'll match any track.
-            user: Whether to only match user (non-predicted) instances.
-
-        Returns:
-            List of instances.
-        """
-        instances = self.instances
-        if user:
-            instances = list(filter(lambda inst: type(inst) == Instance, instances))
-        if track != -1:  # use -1 since we want to accept None as possible value
-            instances = list(filter(lambda inst: inst.track == track, instances))
-        return instances
-
-    @property
-    def instances(self) -> List[Instance]:
-        """Return list of all instances associated with this frame."""
-        return self._instances
-
-    @instances.setter
-    def instances(self, instances: List[Instance]):
-        """Set the list of instances associated with this frame.
-
-        Updates the `frame` attribute on each instance to the
-        :class:`LabeledFrame` which will contain the instance.
-        The list of instances replaces instances that were previously
-        associated with frame.
-
-        Args:
-            instances: A list of instances associated with this frame.
-
-        Returns:
-            None
-        """
-
-        # Make sure to set the LabeledFrame for each instance to this frame
-        # for instance in instances:
-        #     instance.frame = self
-
-        self._instances = instances
-
-    @property
-    def user_instances(self) -> List[Instance]:
-        """Return list of user instances associated with this frame."""
-        return [inst for inst in self._instances if type(inst) == Instance]
-
-    @property
-    def training_instances(self) -> List[Instance]:
-        """Return list of user instances with points for training."""
-        return [
-            inst
-            for inst in self._instances
-            if not isinstance(inst, PredictedInstance) and inst.n_visible_points
-        ]
-
-    @property
-    def predicted_instances(self) -> List[PredictedInstance]:
-        """Return list of predicted instances associated with frame."""
-        return [inst for inst in self._instances if type(inst) == PredictedInstance]
-
-    @property
-    def tracked_instances(self) -> List[PredictedInstance]:
-        """Return list of predicted instances with tracks associated with frame."""
-        return [
-            inst
-            for inst in self._instances
-            if type(inst) == PredictedInstance and inst.track is not None
-        ]
-
-    def remove_untracked(self):
-        """Removes any instances without a track assignment."""
-        self.instances = [inst for inst in self.instances if inst.track is not None]
-
-    @property
-    def has_user_instances(self) -> bool:
-        """Return whether the frame contains any user instances."""
-        for inst in self._instances:
-            if type(inst) == Instance:
-                return True
-        return False
-
-    @property
-    def has_predicted_instances(self) -> bool:
-        """Return whether the frame contains any predicted instances."""
-        for inst in self._instances:
-            if type(inst) == PredictedInstance:
-                return True
-        return False
-
-    @property
-    def has_tracked_instances(self) -> bool:
-        """Return whether the frame contains any predicted instances with tracks."""
-        for inst in self._instances:
-            if type(inst) == PredictedInstance and inst.track is not None:
-                return True
-        return False
-
-    @property
-    def n_user_instances(self) -> int:
-        """Return the number of user instances in the frame."""
-        n = 0
-        for inst in self._instances:
-            if type(inst) == Instance:
-                n += 1
-        return n
-
-    @property
-    def n_predicted_instances(self) -> int:
-        """Return the number of predicted instances in the frame."""
-        n = 0
-        for inst in self._instances:
-            if type(inst) == PredictedInstance:
-                n += 1
-        return n
-
-    @property
-    def n_tracked_instances(self) -> int:
-        """Return the number of predicted instances with tracks in the frame."""
-        n = 0
-        for inst in self._instances:
-            if type(inst) == PredictedInstance and inst.track is not None:
-                n += 1
-        return n
-
-    def remove_empty_instances(self):
-        """Remove instances with no visible nodes from the labeled frame."""
-        self.instances = [inst for inst in self.instances if inst.n_visible_points > 0]
-
-    @property
-    def unused_predictions(self) -> List[Instance]:
-        """Return a list of "unused" :class:`PredictedInstance` objects in frame.
-
-        This is all the :class:`PredictedInstance` objects which do not have
-        a corresponding :class:`Instance` in the same track in frame.
-        """
-        unused_predictions = []
-        any_tracks = [inst.track for inst in self._instances if inst.track is not None]
-        if len(any_tracks):
-            # use tracks to determine which predicted instances have been used
-            used_tracks = [
-                inst.track
-                for inst in self._instances
-                if type(inst) == Instance and inst.track is not None
-            ]
-            unused_predictions = [
-                inst
-                for inst in self._instances
-                if inst.track not in used_tracks and type(inst) == PredictedInstance
-            ]
-
-        else:
-            # use from_predicted to determine which predicted instances have been used
-            # TODO: should we always do this instead of using tracks?
-            used_instances = [
-                inst.from_predicted
-                for inst in self._instances
-                if inst.from_predicted is not None
-            ]
-            unused_predictions = [
-                inst
-                for inst in self._instances
-                if type(inst) == PredictedInstance and inst not in used_instances
-            ]
-
-        return unused_predictions
-
-    @property
-    def instances_to_show(self) -> List[Instance]:
-        """Return a list of instances to show in GUI for this frame.
-
-        This list will not include any predicted instances for which
-        there's a corresponding regular instance.
-
-        Returns:
-            List of instances to show in GUI.
-        """
-        unused_predictions = self.unused_predictions
-        inst_to_show = [
-            inst
-            for inst in self._instances
-            if type(inst) == Instance or inst in unused_predictions
-        ]
-        # inst_to_show.sort(
-        #     key=lambda inst: inst.track #.spawned_on
-        #     if inst.track is not None
-        #     else math.inf
-        # )
-        return inst_to_show
-
-    @staticmethod
-    def merge_frames(
-        labeled_frames: List["LabeledFrame"], video: "Video", remove_redundant=True
-    ) -> List["LabeledFrame"]:
-        """Return merged LabeledFrames for same video and frame index.
-
-        Args:
-            labeled_frames: List of :class:`LabeledFrame` objects to merge.
-            video: The :class:`Video` for which to merge.
-                This is specified so we don't have to check all frames when we
-                already know which video has new labeled frames.
-            remove_redundant: Whether to drop instances in the merged frames
-                where there's a perfect match.
-
-        Returns:
-            The merged list of :class:`LabeledFrame`s.
-        """
-        redundant_count = 0
-        frames_found = dict()
-        # move instances into first frame with matching frame_idx
-        for idx, lf in enumerate(labeled_frames):
-            if lf.video == video:
-                if lf.frame_idx in frames_found.keys():
-                    # move instances
-                    dst_idx = frames_found[lf.frame_idx]
-                    if remove_redundant:
-                        for new_inst in lf.instances:
-                            redundant = False
-                            for old_inst in labeled_frames[dst_idx].instances:
-                                if new_inst.matches(old_inst):
-                                    redundant = True
-                                    if not hasattr(new_inst, "score"):
-                                        redundant_count += 1
-                                    break
-                            if not redundant:
-                                labeled_frames[dst_idx].instances.append(new_inst)
-                    else:
-                        labeled_frames[dst_idx].instances.extend(lf.instances)
-                    lf.instances = []
-                else:
-                    # note first lf with this frame_idx
-                    frames_found[lf.frame_idx] = idx
-        # remove labeled frames with no instances
-        labeled_frames = list(filter(lambda lf: len(lf.instances), labeled_frames))
-        if redundant_count:
-            print(f"skipped {redundant_count} redundant instances")
-        return labeled_frames
-
-    @classmethod
-    def complex_merge_between(
-        cls, base_labels: "Labels", new_frames: List["LabeledFrame"]
-    ) -> Tuple[Dict[Video, Dict[int, List[Instance]]], List[Instance], List[Instance]]:
-        """Merge data from new frames into a :class:`Labels` object.
-
-        Everything that can be merged cleanly is merged, any conflicts
-        are returned.
-
-        Args:
-            base_labels: The :class:`Labels` into which we are merging.
-            new_frames: The list of :class:`LabeledFrame` objects from
-                which we are merging.
-        Returns:
-            tuple of three items:
-            * Dictionary, keys are :class:`Video`, values are
-                dictionary in which keys are frame index (int)
-                and value is list of :class:`Instance`s
-            * list of conflicting :class:`Instance` objects from base
-            * list of conflicting :class:`Instance` objects from new frames
-        """
-        merged = dict()
-        extra_base = []
-        extra_new = []
-
-        for new_frame in new_frames:
-            base_lfs = base_labels.find(new_frame.video, new_frame.frame_idx)
-            merged_instances = None
-
-            # If the base doesn't have a frame corresponding this new
-            # frame, then it can be merged cleanly.
-            if not base_lfs:
-                base_labels.labeled_frames.append(new_frame)
-                merged_instances = new_frame.instances
-            else:
-                # There's a corresponding frame in the base labels,
-                # so try merging the data.
-                (
-                    merged_instances,
-                    extra_base_frame,
-                    extra_new_frame,
-                ) = cls.complex_frame_merge(base_lfs[0], new_frame)
-                if extra_base_frame:
-                    extra_base.append(extra_base_frame)
-                if extra_new_frame:
-                    extra_new.append(extra_new_frame)
-
-            if merged_instances:
-                if new_frame.video not in merged:
-                    merged[new_frame.video] = dict()
-                merged[new_frame.video][new_frame.frame_idx] = merged_instances
-        return merged, extra_base, extra_new
-
-    @classmethod
-    def complex_frame_merge(
-        cls, base_frame: "LabeledFrame", new_frame: "LabeledFrame"
-    ) -> Tuple[List[Instance], List[Instance], List[Instance]]:
-        """Merge two frames, return conflicts if any.
-
-        A conflict occurs when
-        * each frame has Instances which don't perfectly match those
-          in the other frame, or
-        * each frame has PredictedInstances which don't perfectly match
-          those in the other frame.
-
-        Args:
-            base_frame: The `LabeledFrame` into which we want to merge.
-            new_frame: The `LabeledFrame` from which we want to merge.
-
-        Returns:
-            tuple of three items:
-            * list of instances that were merged
-            * list of conflicting instances from base
-            * list of conflicting instances from new
-        """
-        merged_instances: List[Instance] = []  # Only used for informing user
-        redundant_instances: List[Instance] = []
-        extra_base_instances: List[Instance] = list(base_frame.instances)
-        extra_new_instances: List[Instance] = []
-
-        for new_inst in new_frame:
-            redundant = False
-            for base_inst in base_frame.instances:
-                if new_inst.matches(base_inst):
-                    extra_base_instances.remove(base_inst)
-                    redundant_instances.append(base_inst)
-                    redundant = True
-                    continue
-            if not redundant:
-                extra_new_instances.append(new_inst)
-
-        conflict = False
-        if extra_base_instances and extra_new_instances:
-            base_predictions = list(
-                filter(lambda inst: hasattr(inst, "score"), extra_base_instances)
-            )
-            new_predictions = list(
-                filter(lambda inst: hasattr(inst, "score"), extra_new_instances)
-            )
-
-            base_has_nonpred = len(extra_base_instances) - len(base_predictions)
-            new_has_nonpred = len(extra_new_instances) - len(new_predictions)
-
-            # If they both have some predictions or they both have some
-            # non-predictions, then there is a conflict.
-            # (Otherwise it's not a conflict since we can cleanly merge
-            # all the predicted instances with all the non-predicted.)
-            if base_predictions and new_predictions:
-                conflict = True
-            elif base_has_nonpred and new_has_nonpred:
-                conflict = True
-
-        if conflict:
-            # Conflict, so update base to just include non-conflicting
-            # instances (perfect matches)
-            base_frame.instances.clear()
-            base_frame.instances.extend(redundant_instances)
-        else:
-            # No conflict, so include all instances in base
-            base_frame.instances.extend(extra_new_instances)
-            merged_instances: List[Instance] = copy(extra_new_instances)
-            extra_base_instances = []
-            extra_new_instances = []
-
-        # Construct frames to hold any conflicting instances
-        extra_base = (
-            cls(
-                video=base_frame.video,
-                frame_idx=base_frame.frame_idx,
-                instances=extra_base_instances,
-            )
-            if extra_base_instances
-            else None
-        )
-
-        extra_new = (
-            cls(
-                video=new_frame.video,
-                frame_idx=new_frame.frame_idx,
-                instances=extra_new_instances,
-            )
-            if extra_new_instances
-            else None
-        )
-
-        return merged_instances, extra_base, extra_new
-
-    @property
-    def image(self) -> np.ndarray:
-        """Return the image for this frame of shape (height, width, channels)."""
-        return self.video.backend.get_frame(self.frame_idx)
-
-    def numpy(self) -> np.ndarray:
-        """Return the instances as an array of shape (instances, nodes, 2)."""
-        if len(self.instances) > 0:
-            return np.stack([inst.numpy() for inst in self.instances], axis=0)
-        else:
-            return np.full((0, 0, 2), np.nan)
-
-    def plot(self, image: bool = True, scale: float = 1.0):
-        """Plot the frame with all instances.
-
-        Args:
-            image: If False, only the instances will be plotted without loading the
-                original image.
-            scale: Relative scaling for the figure.
-
-        Notes:
-            See `sleap.util.plot_img` and `sleap.util.plot_instances` for more
-            plotting options.
-        """
-        if image:
-            plot_img(self.image, scale=scale)
-        plot_instances(self.instances)
+# @attr.s(auto_attribs=True, eq=False, repr=False, str=False)
+# class LabeledFrame:
+#     """Holds labeled data for a single frame of a video.
+
+#     Args:
+#         video: The :class:`Video` associated with this frame.
+#         frame_idx: The index of frame in video.
+#         instances: List of instances associated with the frame.
+#     """
+
+#     video: Video = attr.ib()
+#     frame_idx: int = attr.ib(converter=int)
+#     _instances: List[Instance] = attr.ib(default=attr.Factory(list))
+
+#     def __attrs_post_init__(self):
+#         """Called by attrs.
+
+#         Updates :attribute:`Instance.frame` for each instance associated
+#         with this :class:`LabeledFrame`.
+#         """
+
+#         # Make sure all instances have a reference to this frame
+#         self.instances = self._instances
+
+#     def __len__(self) -> int:
+#         """Return number of instances associated with frame."""
+#         return len(self.instances)
+
+#     def __getitem__(self, index) -> Union[Instance, PredictedInstance]:
+#         """Return instance (retrieved by index)."""
+#         return self.instances.__getitem__(index)
+
+#     def index(self, value: Instance) -> int:
+#         """Return index of given :class:`Instance`."""
+#         return self.instances.index(value)
+
+#     def __delitem__(self, index):
+#         """Remove instance (by index) from frame."""
+#         self.instances.__delitem__(index)
+
+#     def __repr__(self) -> str:
+#         """Return a readable representation of the LabeledFrame."""
+#         return (
+#             f"LabeledFrame(video={type(self.video.backend).__name__}"
+#             f"('{self.video.filename}'), "
+#             f"frame_idx={self.frame_idx}, "
+#             f"instances={len(self.instances)})"
+#         )
+
+#     def insert(self, index: int, value: Instance):
+#         """Add instance to frame.
+
+#         Args:
+#             index: The index in list of frame instances where we should
+#                 insert the new instance.
+#             value: The instance to associate with frame.
+
+#         Returns:
+#             None.
+#         """
+#         self.instances.insert(index, value)
+
+#     def __setitem__(self, index, value: Instance):
+#         """Set nth instance in frame to the given instance.
+
+#         Args:
+#             index: The index of instance to replace with new instance.
+#             value: The new instance to associate with frame.
+
+#         Returns:
+#             None.
+#         """
+#         self.instances.__setitem__(index, value)
+
+#     def find(
+#         self, track: Optional[Union[Track, int]] = -1, user: bool = False
+#     ) -> List[Instance]:
+#         """Retrieve instances (if any) matching specifications.
+
+#         Args:
+#             track: The :class:`Track` to match. Note that None will only
+#                 match instances where :attribute:`Instance.track` is
+#                 None. If track is -1, then we'll match any track.
+#             user: Whether to only match user (non-predicted) instances.
+
+#         Returns:
+#             List of instances.
+#         """
+#         instances = self.instances
+#         if user:
+#             instances = list(filter(lambda inst: type(inst) == Instance, instances))
+#         if track != -1:  # use -1 since we want to accept None as possible value
+#             instances = list(filter(lambda inst: inst.track == track, instances))
+#         return instances
+
+#     @property
+#     def instances(self) -> List[Instance]:
+#         """Return list of all instances associated with this frame."""
+#         return self._instances
+
+#     @instances.setter
+#     def instances(self, instances: List[Instance]):
+#         """Set the list of instances associated with this frame.
+
+#         Updates the `frame` attribute on each instance to the
+#         :class:`LabeledFrame` which will contain the instance.
+#         The list of instances replaces instances that were previously
+#         associated with frame.
+
+#         Args:
+#             instances: A list of instances associated with this frame.
+
+#         Returns:
+#             None
+#         """
+
+#         # Make sure to set the LabeledFrame for each instance to this frame
+#         # for instance in instances:
+#         #     instance.frame = self
+
+#         self._instances = instances
+
+#     @property
+#     def user_instances(self) -> List[Instance]:
+#         """Return list of user instances associated with this frame."""
+#         return [inst for inst in self._instances if type(inst) == Instance]
+
+#     @property
+#     def training_instances(self) -> List[Instance]:
+#         """Return list of user instances with points for training."""
+#         return [
+#             inst
+#             for inst in self._instances
+#             if not isinstance(inst, PredictedInstance) and inst.n_visible_points
+#         ]
+
+#     @property
+#     def predicted_instances(self) -> List[PredictedInstance]:
+#         """Return list of predicted instances associated with frame."""
+#         return [inst for inst in self._instances if type(inst) == PredictedInstance]
+
+#     @property
+#     def tracked_instances(self) -> List[PredictedInstance]:
+#         """Return list of predicted instances with tracks associated with frame."""
+#         return [
+#             inst
+#             for inst in self._instances
+#             if type(inst) == PredictedInstance and inst.track is not None
+#         ]
+
+#     def remove_untracked(self):
+#         """Removes any instances without a track assignment."""
+#         self.instances = [inst for inst in self.instances if inst.track is not None]
+
+#     @property
+#     def has_user_instances(self) -> bool:
+#         """Return whether the frame contains any user instances."""
+#         for inst in self._instances:
+#             if type(inst) == Instance:
+#                 return True
+#         return False
+
+#     @property
+#     def has_predicted_instances(self) -> bool:
+#         """Return whether the frame contains any predicted instances."""
+#         for inst in self._instances:
+#             if type(inst) == PredictedInstance:
+#                 return True
+#         return False
+
+#     @property
+#     def has_tracked_instances(self) -> bool:
+#         """Return whether the frame contains any predicted instances with tracks."""
+#         for inst in self._instances:
+#             if type(inst) == PredictedInstance and inst.track is not None:
+#                 return True
+#         return False
+
+#     @property
+#     def n_user_instances(self) -> int:
+#         """Return the number of user instances in the frame."""
+#         n = 0
+#         for inst in self._instances:
+#             if type(inst) == Instance:
+#                 n += 1
+#         return n
+
+#     @property
+#     def n_predicted_instances(self) -> int:
+#         """Return the number of predicted instances in the frame."""
+#         n = 0
+#         for inst in self._instances:
+#             if type(inst) == PredictedInstance:
+#                 n += 1
+#         return n
+
+#     @property
+#     def n_tracked_instances(self) -> int:
+#         """Return the number of predicted instances with tracks in the frame."""
+#         n = 0
+#         for inst in self._instances:
+#             if type(inst) == PredictedInstance and inst.track is not None:
+#                 n += 1
+#         return n
+
+#     def remove_empty_instances(self):
+#         """Remove instances with no visible nodes from the labeled frame."""
+#         self.instances = [inst for inst in self.instances if inst.n_visible_points > 0]
+
+#     @property
+#     def unused_predictions(self) -> List[Instance]:
+#         """Return a list of "unused" :class:`PredictedInstance` objects in frame.
+
+#         This is all the :class:`PredictedInstance` objects which do not have
+#         a corresponding :class:`Instance` in the same track in frame.
+#         """
+#         unused_predictions = []
+#         any_tracks = [inst.track for inst in self._instances if inst.track is not None]
+#         if len(any_tracks):
+#             # use tracks to determine which predicted instances have been used
+#             used_tracks = [
+#                 inst.track
+#                 for inst in self._instances
+#                 if type(inst) == Instance and inst.track is not None
+#             ]
+#             unused_predictions = [
+#                 inst
+#                 for inst in self._instances
+#                 if inst.track not in used_tracks and type(inst) == PredictedInstance
+#             ]
+
+#         else:
+#             # use from_predicted to determine which predicted instances have been used
+#             # TODO: should we always do this instead of using tracks?
+#             used_instances = [
+#                 inst.from_predicted
+#                 for inst in self._instances
+#                 if inst.from_predicted is not None
+#             ]
+#             unused_predictions = [
+#                 inst
+#                 for inst in self._instances
+#                 if type(inst) == PredictedInstance and inst not in used_instances
+#             ]
+
+#         return unused_predictions
+
+#     @property
+#     def instances_to_show(self) -> List[Instance]:
+#         """Return a list of instances to show in GUI for this frame.
+
+#         This list will not include any predicted instances for which
+#         there's a corresponding regular instance.
+
+#         Returns:
+#             List of instances to show in GUI.
+#         """
+#         unused_predictions = self.unused_predictions
+#         inst_to_show = [
+#             inst
+#             for inst in self._instances
+#             if type(inst) == Instance or inst in unused_predictions
+#         ]
+#         # inst_to_show.sort(
+#         #     key=lambda inst: inst.track #.spawned_on
+#         #     if inst.track is not None
+#         #     else math.inf
+#         # )
+#         return inst_to_show
+
+#     @staticmethod
+#     def merge_frames(
+#         labeled_frames: List["LabeledFrame"], video: "Video", remove_redundant=True
+#     ) -> List["LabeledFrame"]:
+#         """Return merged LabeledFrames for same video and frame index.
+
+#         Args:
+#             labeled_frames: List of :class:`LabeledFrame` objects to merge.
+#             video: The :class:`Video` for which to merge.
+#                 This is specified so we don't have to check all frames when we
+#                 already know which video has new labeled frames.
+#             remove_redundant: Whether to drop instances in the merged frames
+#                 where there's a perfect match.
+
+#         Returns:
+#             The merged list of :class:`LabeledFrame`s.
+#         """
+#         redundant_count = 0
+#         frames_found = dict()
+#         # move instances into first frame with matching frame_idx
+#         for idx, lf in enumerate(labeled_frames):
+#             if lf.video == video:
+#                 if lf.frame_idx in frames_found.keys():
+#                     # move instances
+#                     dst_idx = frames_found[lf.frame_idx]
+#                     if remove_redundant:
+#                         for new_inst in lf.instances:
+#                             redundant = False
+#                             for old_inst in labeled_frames[dst_idx].instances:
+#                                 if new_inst.matches(old_inst):
+#                                     redundant = True
+#                                     if not hasattr(new_inst, "score"):
+#                                         redundant_count += 1
+#                                     break
+#                             if not redundant:
+#                                 labeled_frames[dst_idx].instances.append(new_inst)
+#                     else:
+#                         labeled_frames[dst_idx].instances.extend(lf.instances)
+#                     lf.instances = []
+#                 else:
+#                     # note first lf with this frame_idx
+#                     frames_found[lf.frame_idx] = idx
+#         # remove labeled frames with no instances
+#         labeled_frames = list(filter(lambda lf: len(lf.instances), labeled_frames))
+#         if redundant_count:
+#             print(f"skipped {redundant_count} redundant instances")
+#         return labeled_frames
+
+#     @classmethod
+#     def complex_merge_between(
+#         cls, base_labels: "Labels", new_frames: List["LabeledFrame"]
+#     ) -> Tuple[Dict[Video, Dict[int, List[Instance]]], List[Instance], List[Instance]]:
+#         """Merge data from new frames into a :class:`Labels` object.
+
+#         Everything that can be merged cleanly is merged, any conflicts
+#         are returned.
+
+#         Args:
+#             base_labels: The :class:`Labels` into which we are merging.
+#             new_frames: The list of :class:`LabeledFrame` objects from
+#                 which we are merging.
+#         Returns:
+#             tuple of three items:
+#             * Dictionary, keys are :class:`Video`, values are
+#                 dictionary in which keys are frame index (int)
+#                 and value is list of :class:`Instance`s
+#             * list of conflicting :class:`Instance` objects from base
+#             * list of conflicting :class:`Instance` objects from new frames
+#         """
+#         merged = dict()
+#         extra_base = []
+#         extra_new = []
+
+#         for new_frame in new_frames:
+#             base_lfs = base_labels.find(new_frame.video, new_frame.frame_idx)
+#             merged_instances = None
+
+#             # If the base doesn't have a frame corresponding this new
+#             # frame, then it can be merged cleanly.
+#             if not base_lfs:
+#                 base_labels.labeled_frames.append(new_frame)
+#                 merged_instances = new_frame.instances
+#             else:
+#                 # There's a corresponding frame in the base labels,
+#                 # so try merging the data.
+#                 (
+#                     merged_instances,
+#                     extra_base_frame,
+#                     extra_new_frame,
+#                 ) = cls.complex_frame_merge(base_lfs[0], new_frame)
+#                 if extra_base_frame:
+#                     extra_base.append(extra_base_frame)
+#                 if extra_new_frame:
+#                     extra_new.append(extra_new_frame)
+
+#             if merged_instances:
+#                 if new_frame.video not in merged:
+#                     merged[new_frame.video] = dict()
+#                 merged[new_frame.video][new_frame.frame_idx] = merged_instances
+#         return merged, extra_base, extra_new
+
+#     @classmethod
+#     def complex_frame_merge(
+#         cls, base_frame: "LabeledFrame", new_frame: "LabeledFrame"
+#     ) -> Tuple[List[Instance], List[Instance], List[Instance]]:
+#         """Merge two frames, return conflicts if any.
+
+#         A conflict occurs when
+#         * each frame has Instances which don't perfectly match those
+#           in the other frame, or
+#         * each frame has PredictedInstances which don't perfectly match
+#           those in the other frame.
+
+#         Args:
+#             base_frame: The `LabeledFrame` into which we want to merge.
+#             new_frame: The `LabeledFrame` from which we want to merge.
+
+#         Returns:
+#             tuple of three items:
+#             * list of instances that were merged
+#             * list of conflicting instances from base
+#             * list of conflicting instances from new
+#         """
+#         merged_instances: List[Instance] = []  # Only used for informing user
+#         redundant_instances: List[Instance] = []
+#         extra_base_instances: List[Instance] = list(base_frame.instances)
+#         extra_new_instances: List[Instance] = []
+
+#         for new_inst in new_frame:
+#             redundant = False
+#             for base_inst in base_frame.instances:
+#                 if new_inst.matches(base_inst):
+#                     extra_base_instances.remove(base_inst)
+#                     redundant_instances.append(base_inst)
+#                     redundant = True
+#                     continue
+#             if not redundant:
+#                 extra_new_instances.append(new_inst)
+
+#         conflict = False
+#         if extra_base_instances and extra_new_instances:
+#             base_predictions = list(
+#                 filter(lambda inst: hasattr(inst, "score"), extra_base_instances)
+#             )
+#             new_predictions = list(
+#                 filter(lambda inst: hasattr(inst, "score"), extra_new_instances)
+#             )
+
+#             base_has_nonpred = len(extra_base_instances) - len(base_predictions)
+#             new_has_nonpred = len(extra_new_instances) - len(new_predictions)
+
+#             # If they both have some predictions or they both have some
+#             # non-predictions, then there is a conflict.
+#             # (Otherwise it's not a conflict since we can cleanly merge
+#             # all the predicted instances with all the non-predicted.)
+#             if base_predictions and new_predictions:
+#                 conflict = True
+#             elif base_has_nonpred and new_has_nonpred:
+#                 conflict = True
+
+#         if conflict:
+#             # Conflict, so update base to just include non-conflicting
+#             # instances (perfect matches)
+#             base_frame.instances.clear()
+#             base_frame.instances.extend(redundant_instances)
+#         else:
+#             # No conflict, so include all instances in base
+#             base_frame.instances.extend(extra_new_instances)
+#             merged_instances: List[Instance] = copy(extra_new_instances)
+#             extra_base_instances = []
+#             extra_new_instances = []
+
+#         # Construct frames to hold any conflicting instances
+#         extra_base = (
+#             cls(
+#                 video=base_frame.video,
+#                 frame_idx=base_frame.frame_idx,
+#                 instances=extra_base_instances,
+#             )
+#             if extra_base_instances
+#             else None
+#         )
+
+#         extra_new = (
+#             cls(
+#                 video=new_frame.video,
+#                 frame_idx=new_frame.frame_idx,
+#                 instances=extra_new_instances,
+#             )
+#             if extra_new_instances
+#             else None
+#         )
+
+#         return merged_instances, extra_base, extra_new
+
+#     @property
+#     def image(self) -> np.ndarray:
+#         """Return the image for this frame of shape (height, width, channels)."""
+#         return self.video.backend.get_frame(self.frame_idx)
+
+#     def numpy(self) -> np.ndarray:
+#         """Return the instances as an array of shape (instances, nodes, 2)."""
+#         if len(self.instances) > 0:
+#             return np.stack([inst.numpy() for inst in self.instances], axis=0)
+#         else:
+#             return np.full((0, 0, 2), np.nan)
+
+#     def plot(self, image: bool = True, scale: float = 1.0):
+#         """Plot the frame with all instances.
+
+#         Args:
+#             image: If False, only the instances will be plotted without loading the
+#                 original image.
+#             scale: Relative scaling for the figure.
+
+#         Notes:
+#             See `sleap.util.plot_img` and `sleap.util.plot_instances` for more
+#             plotting options.
+#         """
+#         if image:
+#             plot_img(self.image, scale=scale)
+#         plot_instances(self.instances)

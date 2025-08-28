@@ -59,6 +59,7 @@ from sleap.gui.state import GuiState
 from sleap.gui.widgets.slider import VideoSlider
 from sleap_io.model.instance import Instance, PredictedInstance
 from sleap.sleap_io_adaptors.instance_utils import fill_missing, node_points
+from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 from sleap_io import Video
 from sleap.prefs import prefs
 from sleap_io import Node
@@ -345,8 +346,9 @@ class QtVideoPlayer(QWidget):
         def frame_step(step, enable_shift_selection):
             if self.video:
                 before_frame_idx = self.state["frame_idx"]
-                self.state.increment("frame_idx",step=step,
-                                    mod=self.video.backend.num_frames)
+                self.state.increment(
+                    "frame_idx", step=step, mod=self.video.backend.num_frames
+                )
                 # only use shift for selection if not part of shortcut
                 if enable_shift_selection and self._shift_key_down:
                     self._select_on_possible_frame_movement(before_frame_idx)
@@ -454,8 +456,7 @@ class QtVideoPlayer(QWidget):
             self.view.scene.setSceneRect(0, 0, w, h)
 
             self.seekbar.setMinimum(0)
-            # self.seekbar.setMaximum(self.video.last_frame_idx)
-            self.seekbar.setMaximum(self.video.backend.num_frames - 1)
+            self.seekbar.setMaximum(get_last_frame_idx(self.video))
             self.seekbar.setEnabled(True)
             self.seekbar.resizeEvent()
 
@@ -1353,13 +1354,13 @@ class QtNodeLabel(QGraphicsTextItem):
             self._base_font.setItalic(False)
             self.setFont(self._base_font)
             self.setDefaultTextColor(QColor(128, 128, 128))
-        elif not self.node.point['visible']:  # point['visible'] = visible
+        elif not self.node.point["visible"]:  # point['visible'] = visible
             self._base_font.setBold(True)
             self._base_font.setItalic(True)
             self.setFont(self._base_font)
             self.setPlainText(self.node.name)
             self.setDefaultTextColor(self.missing_color)
-        elif self.node.point['complete']:  # point['complete'] = complete
+        elif self.node.point["complete"]:  # point['complete'] = complete
             self._base_font.setBold(True)
             self._base_font.setItalic(False)
             self.setPlainText(self.node.name)
@@ -1376,7 +1377,7 @@ class QtNodeLabel(QGraphicsTextItem):
 
     def paint(self, painter, option, widget):
         """Paint overload."""
-        if not self.node.point['visible']:  # point['visible'] = visible
+        if not self.node.point["visible"]:  # point['visible'] = visible
             if self.show_non_visible:
                 # Add background box for missing nodes
                 painter.fillRect(option.rect, self.missing_bg_color)
@@ -1460,8 +1461,8 @@ class QtNode(QGraphicsEllipseItem):
 
         if self.name is not None:
             # Check if point has score (predicted point format: [(x, y), score, visible, complete])
-            if 'score' in self.point.dtype.names:
-                tt_text = f"{self.name}\n(score: {self.point['score'][0]:.2f})"
+            if "score" in self.point.dtype.names:
+                tt_text = f"{self.name}\n(score: {self.point['score']:.2f})"
             else:
                 tt_text = self.name
             self.setToolTip(tt_text)
@@ -1496,7 +1497,7 @@ class QtNode(QGraphicsEllipseItem):
             self.brush = QBrush(QColor(*self.color, a=128))
             self.brush_missing = QBrush(QColor(*self.color, a=0))  # no fill
 
-        self.setPos(self.point['xy'][0], self.point['xy'][1])
+        self.setPos(self.point["xy"][0], self.point["xy"][1])
         self.updatePoint(user_change=False)
 
     def __repr__(self):
@@ -1511,7 +1512,7 @@ class QtNode(QGraphicsEllipseItem):
     @property
     def visible_radius(self):
         # point format: [(x, y), visible, complete, name] or [(x, y), score, visible, complete, name]
-        visible = self.point['visible']
+        visible = self.point["visible"]
         if visible:
             return self.radius / self.player.view.zoomFactor
         else:
@@ -1548,7 +1549,7 @@ class QtNode(QGraphicsEllipseItem):
             )
         self.show()
 
-        if self.point['visible']:  # point['visible'] = visible
+        if self.point["visible"]:  # point['visible'] = visible
             radius = self.radius
             self.setPen(self.pen_default)
             self.setBrush(self.brush)
@@ -1571,13 +1572,13 @@ class QtNode(QGraphicsEllipseItem):
 
     def toggleVisibility(self):
         context = self._parent_instance.player.context
-        visible = not self.point['visible']  # point['visible'] = visible
+        visible = not self.point["visible"]  # point['visible'] = visible
         if context:
             context.setInstancePointVisibility(
                 self._parent_instance.instance, self.node, visible
             )
         else:
-            self.point['visible'] = visible  # point['visible'] = visible
+            self.point["visible"] = visible  # point['visible'] = visible
 
     def mousePressEvent(self, event):
         """Custom event handler for mouse press."""
@@ -1609,7 +1610,9 @@ class QtNode(QGraphicsEllipseItem):
                 super(QtNode, self).mousePressEvent(event)
                 self.updatePoint()
 
-            self.point['complete'] = True  # point['complete'] = complete, FIXME: move to command
+            self.point["complete"] = (
+                True  # point['complete'] = complete, FIXME: move to command
+            )
         elif event.button() == Qt.RightButton:
             # Select instance this nodes belong to.
             self.parentObject().player.state["instance"] = self.parentObject().instance
@@ -1619,7 +1622,9 @@ class QtNode(QGraphicsEllipseItem):
             # Disable contextual menu for right clicks on node
             self.player.is_menu_enabled = False
 
-            self.point['complete'] = True  # point['complete'] = complete, FIXME: move to command
+            self.point["complete"] = (
+                True  # point['complete'] = complete, FIXME: move to command
+            )
             self.updatePoint(user_change=True)
         elif event.button() == Qt.MidButton:
             pass
@@ -1796,7 +1801,9 @@ class QtEdge(QGraphicsPolygonItem):
         Returns:
             None.
         """
-        if self.src.point['visible'] and self.dst.point['visible']:  # point['visible'] = visible
+        if (
+            self.src.point["visible"] and self.dst.point["visible"]
+        ):  # point['visible'] = visible
             self.full_opacity = 1
         else:
             self.full_opacity = 0.5 if self.show_non_visible else 0
@@ -1874,8 +1881,10 @@ class QtInstance(QGraphicsObject):
 
         if not self.predicted:
             # Initialize missing nodes with random points marked as non-visible.
-            fill_missing(self.instance,
-                max_x=self.player.video.backend.img_shape[1], max_y=self.player.video.backend.img_shape[0]
+            fill_missing(
+                self.instance,
+                max_x=self.player.video.backend.img_shape[1],
+                max_y=self.player.video.backend.img_shape[0],
             )
 
         # Add box to go around instance for selection
@@ -1922,7 +1931,7 @@ class QtInstance(QGraphicsObject):
 
         # Add nodes
         for node, point in node_points(self.instance):
-            if point['visible'] or self.show_non_visible:
+            if point["visible"] or self.show_non_visible:
                 node_item = QtNode(
                     parent=self,
                     player=player,
@@ -1954,7 +1963,7 @@ class QtInstance(QGraphicsObject):
         # We do this after adding edges so that we can position labels to avoid overlap
         if not self.predicted:
             for node in self.nodes.values():
-                if node.point['visible'] or self.show_non_visible:
+                if node.point["visible"] or self.show_non_visible:
                     node_label = QtNodeLabel(
                         node,
                         predicted=self.predicted,
@@ -2003,10 +2012,12 @@ class QtInstance(QGraphicsObject):
             context.setPointLocations(self.instance, new_data)
 
         for node_item in self.nodes.values():
-            node_item.setPos(node_item.point['xy'][0], node_item.point['xy'][1])  # point[0] = (x, y)
+            node_item.setPos(
+                node_item.point["xy"][0], node_item.point["xy"][1]
+            )  # point[0] = (x, y)
             if complete:
                 # FIXME: move to command
-                node_item.point['complete'] = True  # point[-2] = complete
+                node_item.point["complete"] = True  # point[-2] = complete
         # Wait to run callbacks until all nodes are updated
         # Otherwise the label positions aren't correct since
         # they depend on the edge vectors to old node positions.
@@ -2409,10 +2420,12 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
 
             for node_key, node_value in self.parent.nodes.items():
                 new_x = (
-                    scale_x * (node_value.point['xy'][0] - self.origin.x()) + self.origin.x()
+                    scale_x * (node_value.point["xy"][0] - self.origin.x())
+                    + self.origin.x()
                 )
                 new_y = (
-                    scale_y * (node_value.point['xy'][1] - self.origin.y()) + self.origin.y()
+                    scale_y * (node_value.point["xy"][1] - self.origin.y())
+                    + self.origin.y()
                 )
                 self.parent.nodes[node_key].setPos(new_x, new_y)
 

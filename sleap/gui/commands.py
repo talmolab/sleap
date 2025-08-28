@@ -68,19 +68,14 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap.instance import LabeledFrame
+from sleap_io import LabeledFrame, Labels, load_file
 from sleap_io.model.instance import (
     Instance,
     PredictedInstance,
     Track,
     PointsArray,
-    PredictedPointsArray,
 )
 from sleap.io.convert import default_analysis_filename
-from sleap.io.dataset import Labels
-from sleap.io.format.adaptor import Adaptor
-from sleap.io.format.csv import CSVAdaptor
-from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap_io import Video
 from sleap_io import save_video
 from sleap.io.visuals import save_labeled_video
@@ -93,11 +88,19 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
     delete_symmetry,
     delete_edge,
 )
+from sleap.sleap_io_adaptors.video_utils import video_util_reset
+from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
+from sleap.sleap_io_adaptors.skeleton_utils import (
+    get_symmetry_node,
+    delete_symmetry,
+    delete_edge,
+)
 
 from sleap_io import save_skeleton
 import json
 from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
+from sleap.sleap_io_adaptors.lf_labels_utils import frames, get_template_instance_points, add_instance
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
@@ -748,11 +751,11 @@ class LoadProjectFile(LoadLabelsObject):
             filename = None
             has_loaded = True
         else:
-            gui_video_callback = Labels.make_gui_video_callback(
-                search_paths=[os.path.dirname(filename)], context=params
-            )
+            # gui_video_callback = Labels.make_gui_video_callback(
+            #     search_paths=[os.path.dirname(filename)], context=params
+            # ) #TODO: fix this
             try:
-                labels = Labels.load_file(filename, video_search=gui_video_callback)
+                labels = load_file(filename)
                 has_loaded = True
             except ValueError as e:
                 print(e)
@@ -1053,7 +1056,7 @@ class ImportDeepLabCutFolder(AppCommand):
     def import_labels_from_dlc_files(csv_files: List[str]) -> Labels:
         merged_labels = None
         for csv_file in csv_files:
-            labels = Labels.load_file(csv_file, as_format="deeplabcut")
+            labels = load_file(csv_file, as_format="deeplabcut")
             if merged_labels is None:
                 merged_labels = labels
             else:
@@ -1411,7 +1414,9 @@ class ExportVideoClip(AppCommand):
         #     gui_progress=params["gui_progress"],
         # )
         save_video(
-            frames=[context.state["video"].backend.get_frame(i) for i in params["frames"]],
+            frames=[
+                context.state["video"].backend.get_frame(i) for i in params["frames"]
+            ],
             filename=params["video_filename"],
             fps=params["fps"],
         )
@@ -2175,7 +2180,9 @@ class AddVideo(EditCommand):
         video = None
         for video in new_videos:
             # Add to labels
-            context.labels.add_video(video)
+            if video not in context.labels.videos:
+                context.labels.videos.append(video)
+                context.labels.update()
             context.changestack_push("add video")
 
         # Load if no video currently loaded
@@ -2231,8 +2238,7 @@ class ReplaceVideo(EditCommand):
             video_util_reset(video, **import_params)
 
             # Remove frames in video past last frame index
-            # last_vid_frame = video.last_frame_idx
-            last_vid_frame = video.backend.num_frames - 1
+            last_vid_frame = get_last_frame_idx(video)
             lfs: List[LabeledFrame] = list(context.labels.get(video))
             if lfs is not None:
                 lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
@@ -3682,8 +3688,10 @@ class AddInstance(EditCommand):
     @staticmethod
     def get_previous_frame_index(context: CommandContext) -> Optional[int]:
         """Returns index of previous frame."""
+        from sleap.sleap_io_adaptors.lf_labels_utils import frames
 
-        frames = context.labels.frames(
+        frames = frames(
+            context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
             reverse=True,
@@ -3840,10 +3848,9 @@ class AddMissingInstanceNodes(EditCommand):
         visible: bool = False,
         center_point: QtCore.QPoint = None,
     ):
-        from sleap.info import align
-
         # Get the "template" instance
-        template_points = context.labels.get_template_instance_points(
+        template_points = get_template_instance_points(
+            context.labels,
             skeleton=instance.skeleton
         )
 

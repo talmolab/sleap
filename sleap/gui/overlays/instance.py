@@ -6,6 +6,7 @@ import attr
 
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.state import GuiState
+from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 
 @attr.s(auto_attribs=True)
@@ -36,7 +37,7 @@ class InstanceOverlay(BaseOverlay):
 
         lf = self.labels.find(video, frame_idx, return_new=True)[0]
 
-        instances = lf.instances_to_show
+        instances = get_instances_to_show(lf)
 
         has_predicted = any((True for inst in instances if hasattr(inst, "score")))
         has_user = any((True for inst in instances if not hasattr(inst, "score")))

@@ -1,0 +1,588 @@
+"""
+Standalone utility functions for working with Labels and LabeledFrame objects.
+"""
+
+from typing import List, Dict, Optional, Callable
+from pathlib import Path
+import cattr
+
+from sleap_io import Video, load_file, Labels
+from sleap_io.model.matching import SkeletonMatcher
+
+from sleap.util import weak_filename_match
+
+
+# Create a simple range object with start, end, and list properties
+class SimpleRange:
+    def __init__(self, ranges_list):
+        self.list = ranges_list
+        self.start = ranges_list[0][0] if ranges_list else None
+        self.end = ranges_list[-1][1] if ranges_list else None
+
+    def is_empty(self):
+        return len(self.list) == 0
+
+
+def find_path_using_paths(filename: str, search_paths: List[str]) -> str:
+    """Find a file in the given search paths.
+
+    Args:
+        filename: The filename to search for.
+        search_paths: List of directories to search in.
+
+    Returns:
+        The found path or the original filename if not found.
+    """
+    filename_path = Path(filename)
+
+    for search_path in search_paths:
+        search_path_obj = Path(search_path)
+        if search_path_obj.is_dir():
+            potential_path = search_path_obj / filename_path.name
+            if potential_path.exists():
+                return str(potential_path)
+
+    return filename
+
+
+def get_track_occupancy(labels, video):
+    """Get track occupancy information for a specific video.
+
+    This function recreates the functionality of labels.get_track_occupancy(video)
+    from the original SLEAP codebase.
+
+    Args:
+        labels: A Labels object containing labeled frames and tracks
+        video: A Video object to get track occupancy for
+
+    Returns:
+        Dict mapping Track objects to their occupancy information (frame ranges)
+    """
+    track_occupancy = {}
+
+    # Get all labeled frames for this video
+    labeled_frames = labels.find(video) if hasattr(labels, "find") else []
+
+    # Build track occupancy dictionary
+    for lf in labeled_frames:
+        for instance in lf.instances:
+            track = instance.track.name if instance.track is not None else None
+            if track not in track_occupancy:
+                track_occupancy[track] = []
+
+            # Add this frame to the track's occupancy
+            track_occupancy[track].append(lf.frame_idx)
+
+    # Convert frame lists to sorted ranges
+    for track in track_occupancy:
+        if track_occupancy[track]:
+            # Sort frame indices
+            frames = sorted(track_occupancy[track])
+
+            # Create ranges (consecutive frames)
+            ranges = []
+            start = frames[0]
+            prev = frames[0]
+
+            for frame in frames[1:]:
+                if frame != prev + 1:
+                    # Gap found, end current range
+                    ranges.append((start, prev + 1))
+                    start = frame
+                prev = frame
+
+            # Add final range
+            ranges.append((start, prev + 1))
+            print(f"start: {start}, prev: {prev + 1}, ranges: {ranges}")
+            print(f"len(ranges): {len(ranges)}")
+            print(f"is empty: {SimpleRange(ranges).is_empty()}")
+
+            track_occupancy[track] = SimpleRange(ranges)
+
+    return track_occupancy
+
+
+def get_video_suggestions(labels, video, user_labeled: bool = True) -> List[int]:
+    """Get suggested frame indices for a specific video.
+
+    This function recreates the functionality of labels.get_video_suggestions(video)
+    from the original SLEAP codebase.
+
+    Args:
+        labels: A Labels object containing labeled frames and suggestions
+        video: A Video object to get suggestions for
+        user_labeled: If True (the default), return frame indices for suggestions
+            that already have user labels. If False, only suggestions with no user
+            labeled instances will be returned.
+
+    Returns:
+        List of frame indices that are suggested for the specified video.
+    """
+    frame_indices = []
+
+    # Check if labels has a suggestions attribute
+    if not hasattr(labels, "suggestions"):
+        return frame_indices
+
+    # Get suggestions for this video
+    for suggestion in labels.suggestions:
+        if suggestion.video == video:
+            fidx = suggestion.frame_idx
+
+            # If user_labeled is False, skip suggestions that already have user labels
+            if not user_labeled:
+                lf = labels.get((video, fidx)) if hasattr(labels, "get") else None
+                if (
+                    lf is not None
+                    and hasattr(lf, "has_user_instances")
+                    and lf.has_user_instances
+                ):
+                    continue
+
+            frame_indices.append(fidx)
+
+    return frame_indices
+
+
+def get_unused_predictions(labeled_frame) -> List:
+    """Return a list of "unused" PredictedInstance objects in frame.
+
+    This function recreates the functionality of labeled_frame.unused_predictions
+    from the original SLEAP codebase.
+
+    This is all the PredictedInstance objects which do not have
+    a corresponding Instance in the same track in frame.
+
+    Args:
+        labeled_frame: A LabeledFrame object containing instances
+
+    Returns:
+        List of unused PredictedInstance objects
+    """
+    unused_predictions = []
+
+    # Check if labeled_frame has instances attribute
+    if not hasattr(labeled_frame, "instances"):
+        return unused_predictions
+
+    # Get all instances from the frame
+    instances = labeled_frame.instances if hasattr(labeled_frame, "instances") else []
+
+    any_tracks = [
+        inst.track
+        for inst in instances
+        if hasattr(inst, "track") and inst.track is not None
+    ]
+
+    if len(any_tracks):
+        # Use tracks to determine which predicted instances have been used
+        used_tracks = [
+            inst.track
+            for inst in instances
+            if hasattr(inst, "track")
+            and inst.track is not None
+            and not hasattr(inst, "from_predicted")
+        ]
+        unused_predictions = [
+            inst
+            for inst in instances
+            if hasattr(inst, "track")
+            and inst.track not in used_tracks
+            and hasattr(inst, "from_predicted")
+        ]
+    else:
+        # Use from_predicted to determine which predicted instances have been used
+        used_instances = [
+            inst.from_predicted
+            for inst in instances
+            if hasattr(inst, "from_predicted") and inst.from_predicted is not None
+        ]
+        unused_predictions = [
+            inst
+            for inst in instances
+            if hasattr(inst, "from_predicted") and inst not in used_instances
+        ]
+
+    return unused_predictions
+
+
+def get_instances_to_show(labeled_frame) -> List:
+    """Return a list of instances to show in GUI for this frame.
+
+    This function recreates the functionality of labeled_frame.instances_to_show
+    from the original SLEAP codebase.
+
+    This list will not include any predicted instances for which
+    there's a corresponding regular instance.
+
+    Args:
+        labeled_frame: A LabeledFrame object containing instances
+
+    Returns:
+        List of instances to show in GUI.
+    """
+    unused_predictions = get_unused_predictions(labeled_frame)
+
+    # Check if labeled_frame has instances attribute
+    if not hasattr(labeled_frame, "instances"):
+        return []
+
+    instances = labeled_frame.instances if hasattr(labeled_frame, "instances") else []
+
+    inst_to_show = [
+        inst
+        for inst in instances
+        if not hasattr(inst, "from_predicted") or inst in unused_predictions
+    ]
+
+    return inst_to_show
+
+
+def get_labeled_frame_count(labels, video=None, filter: str = "") -> int:
+    """Return count of frames matching video/filter.
+
+    This function recreates the functionality of labels.get_labeled_frame_count(video, filter)
+    from the original SLEAP codebase.
+
+    Args:
+        labels: A Labels object containing labeled frames
+        video: Optional Video object to filter by. If None, counts all videos
+        filter: Filter string. Must be one of: "", "user", "predicted"
+            - "": All labeled frames
+            - "user": Only frames with user-labeled instances
+            - "predicted": Only frames with predicted instances
+
+    Returns:
+        Count of frames matching the criteria
+
+    Raises:
+        ValueError: If filter is not one of the valid options
+    """
+    if filter not in ("", "user", "predicted"):
+        raise ValueError(f"get_labeled_frame_count() invalid filter: {filter}")
+
+    # Get all labeled frames
+    if hasattr(labels, "labeled_frames"):
+        all_frames = labels.labeled_frames
+    elif hasattr(labels, "__iter__"):
+        # If labels is iterable, use it directly
+        all_frames = list(labels)
+    else:
+        return 0
+
+    # Apply video filter
+    if video is not None:
+        frames = [lf for lf in all_frames if hasattr(lf, "video") and lf.video == video]
+    else:
+        frames = all_frames
+
+    # Apply type filter
+    if filter == "":
+        # All labeled frames
+        return len(frames)
+    elif filter == "user":
+        # Only frames with user instances
+        return len(
+            [
+                lf
+                for lf in frames
+                if hasattr(lf, "has_user_instances") and lf.has_user_instances
+            ]
+        )
+    elif filter == "predicted":
+        # Only frames with predicted instances
+        return len(
+            [
+                lf
+                for lf in frames
+                if hasattr(lf, "has_predicted_instances") and lf.has_predicted_instances
+            ]
+        )
+
+    return 0
+
+def find_first(labels, video, frame_idx=None, use_cache: bool = False):
+    """Find the first occurrence of a matching labeled frame.
+
+    This function recreates the functionality of labels.find_first(video, frame_idx, use_cache)
+    from the original SLEAP codebase.
+
+    Matches on frames for the given video and/or frame index.
+
+    Args:
+        labels: A Labels object containing labeled frames
+        video: A Video instance that is associated with the labeled frames
+        frame_idx: An integer specifying the frame index within the video (optional)
+        use_cache: Boolean that determines whether to use cache. If True, use the labels
+            data cache, else loop through all labels to search.
+
+    Returns:
+        First LabeledFrame that matches the criteria or None if none were found.
+    """
+    if use_cache and hasattr(labels, "find"):
+        # Use cache if available
+        label = labels.find(video=video, frame_idx=frame_idx)
+        return None if len(label) == 0 else label[0]
+    else:
+        # Check if video is in labels
+        if hasattr(labels, "videos") and video in labels.videos:
+            # Loop through all labels
+            for label in labels:
+                if (
+                    hasattr(label, "video")
+                    and label.video == video
+                    and (
+                        frame_idx is None
+                        or (
+                            hasattr(label, "frame_idx") and label.frame_idx == frame_idx
+                        )
+                    )
+                ):
+                    return label
+        return None
+
+
+def find_last(labels, video, frame_idx=None):
+    """Find the last occurrence of a matching labeled frame.
+
+    This function recreates the functionality of labels.find_last(video, frame_idx)
+    from the original SLEAP codebase.
+
+    Matches on frames for the given video and/or frame index.
+
+    Args:
+        labels: A Labels object containing labeled frames
+        video: A Video instance that is associated with the labeled frames
+        frame_idx: An integer specifying the frame index within the video (optional)
+
+    Returns:
+        Last LabeledFrame that matches the criteria or None if none were found.
+    """
+    # Check if video is in labels
+    if hasattr(labels, "videos") and video in labels.videos:
+        # Loop through all labels in reverse order
+        for label in reversed(list(labels)):
+            if (
+                hasattr(label, "video")
+                and label.video == video
+                and (
+                    frame_idx is None
+                    or (hasattr(label, "frame_idx") and label.frame_idx == frame_idx)
+                )
+            ):
+                return label
+    return None
+
+
+def load_and_match(filename: str, match_to: Labels):
+    # Load the Labels file
+    labels: Labels = load_file(filename)
+
+    # if we're given a Labels object to match, use its objects when they match
+    if match_to is not None:
+        if len(labels.skeletons) > 1 or len(match_to.skeletons) > 1:
+            # Match skeletons by name
+            nodes = labels.skeleton.nodes
+            for idx, sk in enumerate(labels.skeletons):
+                for old_sk in match_to.skeletons:
+                    if SkeletonMatcher.match(sk, old_sk):
+                        # use nodes from matched skeleton
+                        for node, match_node in zip(sk.nodes, old_sk.nodes):
+                            node_idx = nodes.index(node)
+                            nodes[node_idx] = match_node
+                        # use skeleton from matched skeleton
+                        labels.skeletons[idx] = old_sk
+                        break
+        elif len(labels.skeletons) == 1 and len(match_to.skeletons) == 1:
+            # Match by node names
+            old_skel = match_to.skeleton
+            old_node_names = old_skel.node_names
+            nodes = labels.skeleton.nodes
+            for i, node in enumerate(nodes):
+                if node.name in old_node_names:
+                    node[i] = old_skel.nodes[old_node_names.index(node.name)]
+            labels.skeletons[0] = old_skel
+
+        # Match Videos
+        for idx, vid in enumerate(labels.videos):
+            for old_vid in match_to.videos:
+                # Try to match videos using either their current or source filename
+                # if available.
+                old_vid_paths = [old_vid.filename]
+                if getattr(old_vid.backend, "has_embedded_images", False):
+                    old_vid_paths.append(old_vid.backend.filename)
+
+                new_vid_paths = [vid.filename]
+                if getattr(vid.backend, "has_embedded_images", False):
+                    new_vid_paths.append(vid.backend.filename)
+
+                is_match = False
+                for old_vid_path in old_vid_paths:
+                    for new_vid_path in new_vid_paths:
+                        if old_vid_path == new_vid_path or weak_filename_match(
+                            old_vid_path, new_vid_path
+                        ):
+                            is_match = True
+                            labels.videos[idx] = old_vid
+                            break
+                    if is_match:
+                        break
+                if is_match:
+                    break
+
+    return labels
+
+
+def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
+    """Return an iterator over all labeled frames in a video with optional start position and order control.
+    
+    This function recreates the functionality of Labels.frames() from the original SLEAP codebase.
+    
+    Args:
+        labels: A Labels object containing labeled frames
+        video: A Video object that is associated with the project
+        from_frame_idx: The frame index from which to start (default: -1 for beginning)
+        reverse: Whether to iterate over frames in reverse order (default: False)
+        
+    Yields:
+        LabeledFrame objects for the specified video
+    """
+    # Get all labeled frames for this video
+    labeled_frames = labels.find(video) if hasattr(labels, 'find') else []
+    
+    if not labeled_frames:
+        return
+    
+    # Extract frame indices and sort them
+    frame_idxs = sorted([lf.frame_idx for lf in labeled_frames if hasattr(lf, 'frame_idx')])
+    
+    if not frame_idxs:
+        return
+    
+    # Handle the case where from_frame_idx is -1 (start from beginning)
+    if from_frame_idx == -1:
+        if reverse:
+            frame_idxs = frame_idxs[::-1]  # Reverse the list
+        # Use the frame_idxs as is for forward direction
+    
+    else:
+        # Find the next frame index after/before the specified frame
+        if not reverse:
+            # Forward direction: find next frame after from_frame_idx
+            next_frame_idx = None
+            for idx in frame_idxs:
+                if idx > from_frame_idx:
+                    next_frame_idx = idx
+                    break
+            if next_frame_idx is None:
+                next_frame_idx = frame_idxs[0]  # Wrap to beginning
+        else:
+            # Reverse direction: find previous frame before from_frame_idx
+            next_frame_idx = None
+            for idx in reversed(frame_idxs):
+                if idx < from_frame_idx:
+                    next_frame_idx = idx
+                    break
+            if next_frame_idx is None:
+                next_frame_idx = frame_idxs[-1]  # Wrap to end
+        
+        # Find the position of the next frame in the list
+        try:
+            cut_list_idx = frame_idxs.index(next_frame_idx)
+        except ValueError:
+            # If not found, use original order
+            if reverse:
+                frame_idxs = frame_idxs[::-1]
+            return
+        
+        # Reorder the list to start from the specified position
+        if reverse:
+            # For reverse, we need to handle the reordering differently
+            reordered = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
+            frame_idxs = reordered[::-1]  # Reverse the reordered list
+        else:
+            # For forward, just reorder normally
+            frame_idxs = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
+    
+    # Create a mapping from frame_idx to LabeledFrame for quick lookup
+    frame_map = {lf.frame_idx: lf for lf in labeled_frames if hasattr(lf, 'frame_idx')}
+    
+    # Yield the frames in the order specified by frame_idxs
+    for idx in frame_idxs:
+        if idx in frame_map:
+            yield frame_map[idx]
+
+
+def get_template_instance_points(labels, skeleton):
+    """Get template instance points for a skeleton.
+    
+    This function recreates the functionality of labels.get_template_instance_points(skeleton)
+    from the original SLEAP codebase.
+    
+    Args:
+        labels: A Labels object containing labeled frames and instances
+        skeleton: A Skeleton object to get template points for
+        
+    Returns:
+        numpy array of template points for the skeleton
+    """
+    import itertools
+    import numpy as np
+    
+    # Check if labels has labeled_frames attribute
+    if not hasattr(labels, 'labeled_frames'):
+        return None
+    
+    # Check if there are any labeled frames
+    if not labels.labeled_frames:
+        # No labeled frames so use force-directed graph layout
+        try:
+            import networkx as nx
+            from sleap.util import to_graph
+            
+            # Create graph from skeleton and get spring layout
+            G = to_graph(skeleton)
+            node_positions = nx.spring_layout(G=G, scale=50)
+            
+            # Create template points from node positions
+            template_points = np.stack([
+                node_positions[node] if node in node_positions else np.random.randint(0, 50, size=2)
+                for node in skeleton.nodes
+            ])
+            
+            return template_points
+            
+        except ImportError:
+            # Fallback if networkx is not available
+            template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
+            return template_points
+    
+    # Check if there are any instances
+    if not hasattr(labels, 'instances') or not labels.instances():
+        # No instances, use fallback
+        template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
+        return template_points
+    
+    # Get first 1000 instances for this skeleton
+    try:
+        from sleap.info import align
+        
+        # Get instances for this skeleton
+        skeleton_instances = []
+        for instance in itertools.islice(labels.instances(skeleton=skeleton), 1000):
+            if hasattr(instance, 'points') and instance.points is not None:
+                skeleton_instances.append(instance)
+        
+        if skeleton_instances:
+            # Get template points from aligned instances
+            template_points = align.get_template_points_array(skeleton_instances)
+            return template_points
+        else:
+            # No valid instances, use fallback
+            template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
+            return template_points
+            
+    except ImportError:
+        # Fallback if sleap.info.align is not available
+        template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
+        return template_points

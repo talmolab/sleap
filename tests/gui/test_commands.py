@@ -42,6 +42,7 @@ from sleap.util import get_package_file
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
 from tests.io.test_formats import read_nix_meta
+from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -377,8 +378,7 @@ def test_ReplaceVideo(
     # Ensure labels were truncated (Original video was fully labeled)
     new_last_lf_frame = get_last_lf_in_video(labels, video)
     # Original video was fully labeled
-    # assert new_last_lf_frame == labels.video.last_frame_idx
-    assert new_last_lf_frame == labels.video.backend.num_frames - 1
+    assert new_last_lf_frame == get_last_frame_idx(labels.video)
 
     # Attempt to replace an mp4 with an hdf5 video
     with pytest.raises(TypeError):

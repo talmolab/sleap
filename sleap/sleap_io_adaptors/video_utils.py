@@ -56,6 +56,19 @@ def video_util_reset(video: Video, filename: str = None, grayscale: bool = None)
     if (filename is not None) or (grayscale is not None):
         video.keep_open = False # Reader depends on both filename and grayscale
 
+def get_last_frame_idx(video=None):
+    """Get the last frame index for a specific video.
+    
+    This function recreates the functionality of labels.get_last_frame_idx(video)
+    from the original SLEAP codebase.
+    """
+    if video is None:
+        return None
+    if hasattr(video.backend, 'source_inds'):
+        source_inds = video.backend.source_inds
+        return max(source_inds)
+    else:
+        return video.backend.frames - 1
     
     
 
