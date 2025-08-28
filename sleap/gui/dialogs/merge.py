@@ -101,7 +101,11 @@ class MergeDialog(QtWidgets.QDialog):
         self.merge_result = merge_result
 
         # Count merged frames
-        self.frames_merged = len(merge_result.frames_merged) if hasattr(merge_result, 'frames_merged') else 0
+        self.frames_merged = (
+            len(merge_result.frames_merged)
+            if hasattr(merge_result, "frames_merged")
+            else 0
+        )
 
         # Check for conflicts (frames that couldn't be merged)
         self.conflicts = self._detect_conflicts()
@@ -112,7 +116,10 @@ class MergeDialog(QtWidgets.QDialog):
 
         for new_frame in self.new_labels.labeled_frames:
             # Check if frame exists in base
-            existing_frames = self.base_labels.find(new_frame.video, new_frame.frame_idx)
+            existing_frames = self.base_labels.find(
+                new_frame.video,
+                new_frame.frame_idx,
+            )
 
             if existing_frames:
                 existing_frame = existing_frames[0]
@@ -133,7 +140,10 @@ class MergeDialog(QtWidgets.QDialog):
         # there might be conflicts
         if len(base_frame.instances) > 0 and len(new_frame.instances) > 0:
             # Check if instances are compatible (same skeleton, etc.)
-            return not self._are_instances_compatible(base_frame.instances, new_frame.instances)
+            return not self._are_instances_compatible(
+                base_frame.instances,
+                new_frame.instances,
+            )
         return False
 
     def _are_instances_compatible(self, base_instances, new_instances):
@@ -359,9 +369,13 @@ class MergeTableModel(QtCore.QAbstractTableModel):
             # Extract data from merge result object
             for frame_info in self.merge_result.frames_merged:
                 data_table.append({
-                    'filename': frame_info.video.filename if hasattr(frame_info, 'video') else 'Unknown',
-                    'frame_idx': frame_info.frame_idx if hasattr(frame_info, 'frame_idx') else 0,
-                    'instances': frame_info.instances if hasattr(frame_info, 'instances') else []
+                    'filename': (frame_info.video.filename
+                            if hasattr(frame_info, 'video') else 'Unknown'),
+                    'frame_idx': (frame_info.frame_idx
+                            if hasattr(frame_info, 'frame_idx') else 0),
+                    'instances': (frame_info.instances
+                            if hasattr(frame_info, 'instances') else []
+                    ),
                 })
         else:
             # Fallback for different merge result formats

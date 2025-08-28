@@ -211,7 +211,7 @@ def test_ExportAnalysisFile(
             output_paths.append(output_path)
 
             if labels_path is not None and not params["csv"]:
-                meta_reader = extract_meta_hdf5 if out_suffix == "h5"
+                meta_reader = extract_meta_hdf5
                 labels_key = "labels_path" if out_suffix == "h5" else "project"
                 read_meta = meta_reader(output_path, dset_names_in=["labels_path"])
                 assert read_meta[labels_key] == labels_path

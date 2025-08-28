@@ -217,7 +217,10 @@ class DeleteDialog(QtWidgets.QDialog):
             remove_instance(self.context.labels, instance=inst, lf=lf)
             if not lf.instances:
                 for lf_idx, lab_fr in enumerate(self.context.labels):
-                    if lab_fr.video.matches_content(lf.video) and lab_fr.frame_idx == lf.frame_idx:
+                    if (
+                        lab_fr.video.matches_content(lf.video)
+                        and lab_fr.frame_idx == lf.frame_idx
+                    ):
                         self.context.labels.pop(lf_idx)
         self.context.labels.update()
 

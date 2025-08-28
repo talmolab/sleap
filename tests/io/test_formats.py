@@ -1,20 +1,16 @@
 import os
-from pathlib import Path, PurePath
+from pathlib import PurePath
 
 import numpy as np
 import pandas as pd
 from numpy.testing import assert_array_equal
 import pytest
-import nixio
 
 from sleap_io import Video
 from sleap.instance import LabeledFrame, PredictedInstance
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
-from sleap.io.format.adaptor import SleapObjectType
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.gui.app import MainWindow
-from sleap.gui.state import GuiState
 from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 

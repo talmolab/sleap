@@ -410,7 +410,8 @@ class SkeletonDock(DockWidget):
             description = f"{skel.name}"
             main_window.state["skeleton_description"] = (
                 f"<strong>Skeleton name:</strong> {description}<br><br>"
-                f"<strong>Nodes({len(skel.node_names)}):</strong> {', '.join(skel.node_names)}"
+                f"<strong>Nodes({len(skel.node_names)}):</strong>"
+                f"{', '.join(skel.node_names)}"
             )
             self.skeleton_description.setText(main_window.state["skeleton_description"])
             updatePreviewImage(
