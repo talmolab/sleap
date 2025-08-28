@@ -109,7 +109,8 @@
 
 #     video_callback = Labels.make_video_callback([os.path.dirname(args.input_path)])
 #     try:
-#         labels: Labels = Labels.load_file(args.input_path, video_search=video_callback)
+#         labels: Labels = Labels.load_file(args.input_path,
+# video_search=video_callback)
 #     except TypeError:
 #         print("Input file isn't SLEAP dataset so attempting other importers...")
 #         from sleap.io.format import read

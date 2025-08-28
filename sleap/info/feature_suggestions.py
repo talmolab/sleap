@@ -488,7 +488,13 @@ class ItemStack(object):
             if samples_per_video >= video.backend.num_frames:
                 idxs = list(range(video.backend.num_frames))
             elif sample_method == "stride":
-                idxs = list(range(0, video.backend.num_frames, video.backend.num_frames // samples_per_video))
+                idxs = list(
+                    range(
+                        0,
+                        video.backend.num_frames,
+                        video.backend.num_frames // samples_per_video,
+                    )
+                )
                 idxs = idxs[:samples_per_video]
             elif sample_method == "random":
                 idxs = random.sample(range(video.backend.frames), samples_per_video)

@@ -129,7 +129,8 @@ class MergeDialog(QtWidgets.QDialog):
 
     def _has_instance_conflicts(self, base_frame, new_frame):
         """Check if there are conflicts between instances in two frames."""
-        # Simple conflict detection: if both frames have instances, there might be conflicts
+        # Simple conflict detection: if both frames have instances,
+        # there might be conflicts
         if len(base_frame.instances) > 0 and len(new_frame.instances) > 0:
             # Check if instances are compatible (same skeleton, etc.)
             return not self._are_instances_compatible(base_frame.instances, new_frame.instances)

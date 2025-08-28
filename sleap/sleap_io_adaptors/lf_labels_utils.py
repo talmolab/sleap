@@ -348,7 +348,7 @@ def get_instances_to_show(labeled_frame) -> List:
 def get_labeled_frame_count(labels, video=None, filter: str = "") -> int:
     """Return count of frames matching video/filter.
 
-    This function recreates the functionality of labels.get_labeled_frame_count(video, filter)
+    This function recreates labels.get_labeled_frame_count(video, filter)
     from the original SLEAP codebase.
 
     Args:
@@ -412,7 +412,7 @@ def get_labeled_frame_count(labels, video=None, filter: str = "") -> int:
 def find_first(labels, video, frame_idx=None, use_cache: bool = False):
     """Find the first occurrence of a matching labeled frame.
 
-    This function recreates the functionality of labels.find_first(video, frame_idx, use_cache)
+    This function recreates labels.find_first(video, frame_idx, use_cache)
     from the original SLEAP codebase.
 
     Matches on frames for the given video and/or frame index.
@@ -542,9 +542,9 @@ def load_and_match(filename: str, match_to: Labels):
 
 
 def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
-    """Return an iterator over all labeled frames in a video with optional start position and order control.
+    """Return an iterator over lfs in a video with start pos (opt) and order control.
 
-    This function recreates the functionality of Labels.frames() from the original SLEAP codebase.
+    This function recreates Labels.frames() from the original SLEAP codebase.
 
     Args:
         labels: A Labels object containing labeled frames
@@ -626,7 +626,7 @@ def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
 def get_template_instance_points(labels, skeleton):
     """Get template instance points for a skeleton.
 
-    This function recreates the functionality of labels.get_template_instance_points(skeleton)
+    This function recreates labels.get_template_instance_points(skeleton)
     from the original SLEAP codebase.
 
     Args:
@@ -786,7 +786,7 @@ def make_video_callback(
 
         # Check for file in search_path dirctories
         if sum(missing) and new_paths:
-            for i, filename in enumerate(filename):
+            for i, filename in enumerate(filenames):
                 fixed_path = find_path_using_paths(filename, new_paths)
                 if fixed_path != filename:
                     filenames[i] = fixed_path
@@ -898,8 +898,8 @@ def get_next_suggestion(labels: Labels, video, frame_idx, seek_direction=1):
     if frame_suggestion is not None:
         return find_suggestion(labels, video, frame_suggestion)
 
-    # If we did not find suggestion in current video, then we want earliest frame in next
-    # video with suggestions
+    # If we did not find suggestion in current video,
+    # then we want earliest frame in next video with suggestions
 
     next_video_idx = (labels.videos.index(video) + seek_direction) % len(labels.videos)
     video = labels.videos[next_video_idx]

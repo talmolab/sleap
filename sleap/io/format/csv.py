@@ -54,8 +54,8 @@
 #             source_path: Path for the labels object
 #             video: The :py:class:`Video` from which toget data from. If no `video` is
 #                 specified, then the first video in `source_object` videos list will be
-#                 used. If there are no :py:class:`Labeled Frame`s in the `video`, then no
-#                 analysis file will be written.
+#                 used. If there are no :py:class:`Labeled Frame`s in the `video`,
+#                 then no analysis file will be written.
 #         """
 #         from sleap.info.write_tracking_h5 import main as write_analysis
 

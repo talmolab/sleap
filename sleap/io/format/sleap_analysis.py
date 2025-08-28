@@ -83,7 +83,9 @@
 
 #         if "track_names" in f and len(f["track_names"]):
 #             track_names_list = f["track_names"][:].T
-#             tracks = [Track(name=track_name.decode()) for track_name in track_names_list]
+#             tracks = [Track(name=track_name.decode())
+# for track_name in track_names_list
+#             ]
 #         else:
 #             tracks = [Track(name=f"track_{i}") for i in range(track_count)]
 
@@ -121,7 +123,9 @@
 #                     )
 #             if instances:
 #                 frames.append(
-#                     LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+#                     LabeledFrame(
+#                         video=video, frame_idx=frame_idx, instances=instances
+#                     )
 #                 )
 
 #         return Labels(labeled_frames=frames)
@@ -141,8 +145,8 @@
 #             source_object: The :py:class:`Labels` from which to get data from.
 #             video: The :py:class:`Video` from which toget data from. If no `video` is
 #                 specified, then the first video in `source_object` videos list will be
-#                 used. If there are no :py:class:`Labeled Frame`s in the `video`, then no
-#                 analysis file will be written.
+#                 used. If there are no :py:class:`Labeled Frame`s in the `video`,
+#                 then no analysis file will be written.
 #         """
 #         from sleap.info.write_tracking_h5 import main as write_analysis
 
