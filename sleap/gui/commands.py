@@ -88,6 +88,7 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     get_next_suggestion,
+    merge_nodes,
     track_swap,
     find_track_occupancy,
     track_set_instance,
@@ -2566,7 +2567,8 @@ class SetNodeName(EditCommand):
 
         if name in skeleton.node_names:
             # Merge
-            context.labels.merge_nodes(name, node.name)
+            # context.labels.merge_nodes(name, node.name)
+            merge_nodes(name, node.name, context.labels, skeleton)
         else:
             # Simple relabel
             skeleton.rename_node(node.name, name)
