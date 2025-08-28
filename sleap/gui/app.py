@@ -457,27 +457,9 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
-            "import_dpk",
-            "DeepPoseKit dataset...",
-            self.commands.importDPK,
-        )
-        add_menu_item(
-            import_types_menu,
-            "import_at",
-            "AlphaTracker dataset...",
-            self.commands.importAT,
-        )
-        add_menu_item(
-            import_types_menu,
             "import_nwb",
             "NWB dataset...",
             self.commands.importNWB,
-        )
-        add_menu_item(
-            import_types_menu,
-            "import_leap",
-            "LEAP Matlab dataset...",
-            self.commands.importLEAP,
         )
         add_menu_item(
             import_types_menu,

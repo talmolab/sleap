@@ -340,17 +340,9 @@ class CommandContext:
         """
         self.execute(OpenProject, filename=filename, first_open=first_open)
 
-    def importAT(self):
-        """Imports AlphaTracker datasets."""
-        self.execute(ImportAlphaTracker)
-
     def importNWB(self):
         """Imports NWB datasets."""
         self.execute(ImportNWB)
-
-    def importDPK(self):
-        """Imports DeepPoseKit datasets."""
-        self.execute(ImportDeepPoseKit)
 
     def importCoco(self):
         """Imports COCO datasets."""
@@ -363,10 +355,6 @@ class CommandContext:
     def importDLCFolder(self):
         """Imports multiple DeepLabCut datasets."""
         self.execute(ImportDeepLabCutFolder)
-
-    def importLEAP(self):
-        """Imports LEAP matlab datasets."""
-        self.execute(ImportLEAP)
 
     def importAnalysisFile(self):
         """Imports SLEAP analysis hdf5 files."""
@@ -828,46 +816,6 @@ class OpenProject(AppCommand):
             params["filename"] = filename
         return True
 
-
-class ImportAlphaTracker(AppCommand):
-    @staticmethod
-    def do_action(context: "CommandContext", params: dict):
-        video_path = params["video_path"] if "video_path" in params else None
-
-        labels = Labels.load_alphatracker(
-            filename=params["filename"],
-            full_video=video_path,
-        )
-
-        new_window = context.app.__class__()
-        new_window.showMaximized()
-        new_window.commands.loadLabelsObject(labels=labels)
-
-    @staticmethod
-    def ask(context: "CommandContext", params: dict) -> bool:
-        filters = ["JSON (*.json)"]
-
-        filename, selected_filter = FileDialog.open(
-            context.app,
-            dir=None,
-            caption="Import AlphaTracker dataset...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return False
-
-        file_dir = os.path.dirname(filename)
-        video_path = os.path.join(file_dir, "video.mp4")
-
-        if os.path.exists(video_path):
-            params["video_path"] = video_path
-
-        params["filename"] = filename
-
-        return True
-
-
 class ImportNWB(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
@@ -894,84 +842,6 @@ class ImportNWB(AppCommand):
             return False
 
         os.path.dirname(filename)
-
-        params["filename"] = filename
-
-        return True
-
-
-class ImportDeepPoseKit(AppCommand):
-    @staticmethod
-    def do_action(context: "CommandContext", params: dict):
-        labels = Labels.from_deepposekit(
-            filename=params["filename"],
-            video_path=params["video_path"],
-            skeleton_path=params["skeleton_path"],
-        )
-
-        new_window = context.app.__class__()
-        new_window.showMaximized()
-        new_window.commands.loadLabelsObject(labels=labels)
-
-    @staticmethod
-    def ask(context: "CommandContext", params: dict) -> bool:
-        filters = ["HDF5 (*.h5 *.hdf5)"]
-
-        filename, selected_filter = FileDialog.open(
-            context.app,
-            dir=None,
-            caption="Import DeepPoseKit dataset...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return False
-
-        file_dir = os.path.dirname(filename)
-        paths = [
-            os.path.join(file_dir, "video.mp4"),
-            os.path.join(file_dir, "skeleton.csv"),
-        ]
-
-        missing = [not os.path.exists(path) for path in paths]
-
-        if sum(missing):
-            okay = MissingFilesDialog(filenames=paths, missing=missing).exec_()
-
-            if not okay or sum(missing):
-                return False
-
-        params["filename"] = filename
-        params["video_path"] = paths[0]
-        params["skeleton_path"] = paths[1]
-
-        return True
-
-
-class ImportLEAP(AppCommand):
-    @staticmethod
-    def do_action(context: "CommandContext", params: dict):
-        labels = Labels.load_leap_matlab(
-            filename=params["filename"],
-        )
-
-        new_window = context.app.__class__()
-        new_window.showMaximized()
-        new_window.commands.loadLabelsObject(labels=labels)
-
-    @staticmethod
-    def ask(context: "CommandContext", params: dict) -> bool:
-        filters = ["Matlab (*.mat)"]
-
-        filename, selected_filter = FileDialog.open(
-            context.app,
-            dir=None,
-            caption="Import LEAP Matlab dataset...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return False
 
         params["filename"] = filename
 
@@ -1204,7 +1074,6 @@ class SaveProjectAs(AppCommand):
 class ExportAnalysisFile(AppCommand):
     export_formats = {
         "SLEAP Analysis HDF5 (*.h5)": "h5",
-        "NIX for Tracking data (*.nix)": "nix",
     }
     export_filter = ";;".join(export_formats.keys())
 
@@ -1220,8 +1089,6 @@ class ExportAnalysisFile(AppCommand):
         for output_path, video in params["analysis_videos"]:
             if params["csv"]:
                 adaptor = CSVAdaptor() # TODO: csv adaptor
-            elif Path(output_path).suffix[1:] == "nix":
-                adaptor = NixAdaptor
             else:
                 adaptor = SleapAnalysisAdaptor
             adaptor.write(

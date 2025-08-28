@@ -12,10 +12,7 @@ from sleap.instance import LabeledFrame, PredictedInstance
 from sleap.io.dataset import Labels
 from sleap.io.format import read, dispatch, adaptor, text, genericjson, hdf5, filehandle
 from sleap.io.format.adaptor import SleapObjectType
-from sleap.io.format.alphatracker import AlphaTrackerAdaptor
 from sleap.io.format.ndx_pose import NDXPoseAdaptor
-from sleap.io.format.nix import NixAdaptor
-from sleap.gui.commands import ImportAlphaTracker
 from sleap.gui.app import MainWindow
 from sleap.gui.state import GuiState
 from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
@@ -350,59 +347,6 @@ def test_sadlc(test_data):
     assert labels[2].frame_idx == 3
 
 
-def test_alphatracker(qtbot):
-    # Checks on properties
-    at_adaptor = AlphaTrackerAdaptor()
-    assert at_adaptor.handles == SleapObjectType.labels
-    assert at_adaptor.default_ext == "json"
-    assert at_adaptor.name == "AlphaTracker Dataset JSON"
-    assert not at_adaptor.can_write_filename("cannot_write_this.txt")
-    assert at_adaptor.does_read()
-    assert not at_adaptor.does_write()
-    with pytest.raises(NotImplementedError):
-        at_adaptor.write("file_that_will_not_be_written", Labels())
-    assert at_adaptor.formatted_ext_options == "AlphaTracker Dataset JSON (json)"
-
-    # Begin checks on functionality
-
-    filename = "tests/data/alphatracker/at_testdata.json"
-    disp = dispatch.Dispatch()
-    disp.register(AlphaTrackerAdaptor)
-
-    # Ensure reading works
-    labels: Labels = disp.read(filename)
-    lfs = labels.labeled_frames
-
-    # Ensure video and frames are read correctly
-    assert len(lfs) == 4
-    for file_idx, file in enumerate(labels.video.backend.filenames):
-        f = Path(file)
-        assert f.stem == f"img00{file_idx}"
-
-    # Ensure nodes are read correctly
-    nodes = labels.skeleton.node_names
-    assert nodes[0] == "1"
-    assert nodes[1] == "2"
-    assert nodes[2] == "3"
-
-    # Ensure points are read correctly
-    for lf_idx, lf in enumerate(lfs):
-        assert len(lf.instances) == 2
-        for inst_idx, inst in enumerate(lf.instances):
-            for point_idx, point in enumerate(inst.points):
-                assert point[0] == ((lf_idx + 1) * (inst_idx + 1))
-                assert point[1] == (point_idx + 2)
-
-    # Run through GUI display
-
-    app = MainWindow(no_usage_data=True)
-    app.state = GuiState()
-    app.state["filename"] = filename
-
-    # Only test do_action because ask method opens FileDialog
-    ImportAlphaTracker().do_action(context=app.commands, params=app.state)
-
-
 def test_tracking_scores(tmpdir, centered_pair_predictions_slp_path):
     # test reading
     filename = centered_pair_predictions_slp_path
@@ -505,84 +449,3 @@ def test_nwb(
     with pytest.raises(TypeError):
         NDXPoseAdaptor.write(NDXPoseAdaptor, filename, labels)
 
-
-def test_nix_adaptor(
-    centered_pair_predictions: Labels,
-    small_robot_mp4_vid: Video,
-    tmpdir,
-):
-    # general tests
-    na = NixAdaptor()
-    assert na.default_ext == "nix"
-    assert "nix" in na.all_exts
-    assert len(na.name) > 0
-    assert na.can_write_filename("somefile.nix")
-    assert not na.can_write_filename("somefile.slp")
-    assert not NixAdaptor.does_read()
-    assert NixAdaptor.does_write()
-
-    with pytest.raises(NotImplementedError):
-        NixAdaptor.read("some file")
-
-    print("writing test predictions to nix file...")
-    filename = str(PurePath(tmpdir, "ndx_pose_test.nix"))
-    with pytest.raises(ValueError):
-        NixAdaptor.write(filename, centered_pair_predictions, video=small_robot_mp4_vid)
-    NixAdaptor.write(filename, centered_pair_predictions)
-    NixAdaptor.write(
-        filename, centered_pair_predictions, video=centered_pair_predictions.videos[0]
-    )
-
-    # basic read tests using the generic nix library
-    import nixio
-
-    file = nixio.File.open(filename, nixio.FileMode.ReadOnly)
-    try:
-        file_meta = file.sections[0]
-        assert file_meta["format"] == "nix.tracking"
-        assert "sleap" in file_meta["writer"].lower()
-
-        assert len([b for b in file.blocks if b.type == "nix.tracking_results"]) > 0
-        b = file.blocks[0]
-        assert (
-            len(
-                [
-                    da
-                    for da in b.data_arrays
-                    if da.type == "nix.tracking.instance_position"
-                ]
-            )
-            == 1
-        )
-        assert (
-            len(
-                [
-                    da
-                    for da in b.data_arrays
-                    if da.type == "nix.tracking.instance_frameidx"
-                ]
-            )
-            == 1
-        )
-
-        inst_positions = b.data_arrays["position"]
-        assert len(inst_positions.shape) == 3
-        assert len(inst_positions.shape) == len(inst_positions.dimensions)
-        assert inst_positions.shape[2] == len(centered_pair_predictions.nodes)
-
-        frame_indices = b.data_arrays["frame"]
-        assert len(frame_indices.shape) == 1
-        assert frame_indices.shape[0] == inst_positions.shape[0]
-    except Exception as e:
-        file.close()
-        raise e
-
-
-def read_nix_meta(filename, *args, **kwargs):
-    file = nixio.File.open(filename, nixio.FileMode.ReadOnly)
-    try:
-        file_meta = file_meta = file.sections[0]
-    except Exception:
-        file.close()
-
-    return file_meta
