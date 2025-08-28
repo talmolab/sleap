@@ -2,6 +2,7 @@
 Standalone utility functions for working with Labels and LabeledFrame objects.
 """
 
+import math
 from typing import List, Dict, Optional, Callable, Text
 from pathlib import Path
 import cattr
@@ -16,8 +17,11 @@ from sleap_io import (
     Instance,
     LabeledFrame,
     SuggestionFrame,
+    Skeleton,
+    PredictedInstance,
 )
 from sleap_io.model.matching import SkeletonMatcher
+from sleap_io.model.instance import PointsArray
 from sleap.util import weak_filename_match
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 
@@ -913,3 +917,79 @@ def get_next_suggestion(labels: Labels, video, frame_idx, seek_direction=1):
         )
 
     return find_suggestion(labels, video, frame_suggestion)
+
+
+def instances(
+    labels: Optional[Labels], video: Optional[Video] = None, skeleton: Optional[Skeleton] = None
+):
+    for labeled_frame in labels.labeled_frames:
+        if labeled_frame.video is not None or labeled_frame.video == video:
+            for instance in labeled_frame.instances:
+                if skeleton is None or instance.skeleton == skeleton:
+                    yield instance
+
+
+def merge_nodes_data(predicted_instance: PredictedInstance, points_array: PointsArray, base_node: str, merge_node: str):
+    """Copy point data from one node to another.
+
+    Args:
+        base_node: Name of node that will be merged into.
+        merge_node: Name of node that will be removed after merge.
+
+    Notes:
+        This is used when merging skeleton nodes and should not be called directly.
+    """
+
+    base_pt = points_array.__getitem__(base_node) if points_array is not None else None
+    merge_pt = points_array.__getitem__(merge_node) if points_array is not None else None
+
+    # check x coordinate not NaN
+    if math.isnan(merge_pt['xy'][0]):
+        return
+    
+    # check y coordinate not NaN
+    if math.isnan(merge_pt['xy'][1]) or not base_pt['visible']:
+        base_pt['xy'][0] = merge_pt['xy'][0]
+        base_pt['xy'][1] = merge_pt['xy'][1]
+        base_pt['visible'] = merge_pt['visible']
+        base_pt['complete'] = merge_pt['complete']
+        # if hasattr(base_instance.from_predicted, 'score'):
+        predicted_points_array = predicted_instance.points
+        if hasattr(predicted_instance, 'score'):
+            predicted_points_array.get('base_node')['score'] = predicted_points_array.get('merge_node')['score']
+
+
+def merge_nodes(base_node: str, merge_node: str, labels: Optional[Labels], skeleton: Optional[Skeleton]):
+    """Merge two nodes and update data accordingly.
+
+    Args:
+        base_node: Name of skeleton node that will remain after merging.
+        merge_node: Name of skeleton node that will be merged into the base node.
+
+    Notes:
+        This method can be used to merge two nodes that might have been named
+        differently but that should be associated with the same node.
+
+        This is useful, for example, when merging a different set of labels where
+        a node was named differently. an
+
+        If the `base_node` is visible and has data, it will not be updated.
+        Otherwise, it will be updated with the data from the `merge_node` on the
+        same instance.
+    """
+    # Update data on all instances. (Labels.instances() is a generator function) 
+    # Labels <- List<LabeledFrame> <- List<Instance> hierarchy
+    for inst in instances(labels, skeleton):
+        # inst._merge_nodes_data(base_node, merge_node)
+        points_array = inst.points
+        predicted_inst = inst.from_predicted
+        merge_nodes_data(predicted_inst, points_array, base_node, merge_node)
+
+    # Remove merge node from skeleton.
+    # skeleton.delete_node(merge_node)
+    skeleton.remove_node(merge_node)
+
+    # No cache -> cannot implement this
+    # # Fix instances.
+    # for inst in instances(labels, skeleton):
+    #     inst._fix_array()
