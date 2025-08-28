@@ -208,13 +208,13 @@ def fill_missing(
         new_points[i]["complete"] = False
         new_points[i]["name"] = node.name
 
-    # Combine existing and new points
-    combined_points = np.append(instance.points, new_points)
+        node_idx = instance.skeleton.node_names.index(node.name)
+        instance.points[node_idx] = new_points[i]
 
     # Create new instance with filled points
     if hasattr(instance, "score"):  # PredictedInstance
         new_instance = PredictedInstance(
-            points=combined_points,
+            points=instance.points,
             skeleton=instance.skeleton,
             track=instance.track,
             score=instance.score,
@@ -223,7 +223,7 @@ def fill_missing(
         )
     else:  # Instance
         new_instance = Instance(
-            points=combined_points,
+            points=instance.points,
             skeleton=instance.skeleton,
             track=instance.track,
             tracking_score=instance.tracking_score,

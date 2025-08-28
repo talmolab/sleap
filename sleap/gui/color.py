@@ -19,7 +19,7 @@ import yaml
 from sleap.util import get_config_file
 from sleap_io.model.instance import Instance, Track
 from sleap_io.model.skeleton import Node
-from sleap.io.dataset import Labels
+from sleap_io import Labels
 from sleap_io.model.skeleton import Skeleton
 from sleap.prefs import prefs
 

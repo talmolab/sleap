@@ -8,23 +8,13 @@ import random
 
 from typing import Dict, List, Optional, Union
 
-from sleap_io import Video
-from sleap.io.dataset import Labels
+from sleap_io import Video, Labels, SuggestionFrame
 from sleap.info.feature_suggestions import (
     FeatureSuggestionPipeline,
     ParallelFeaturePipeline,
 )
 
 GroupType = int
-
-
-@attr.s(auto_attribs=True, slots=True)
-class SuggestionFrame:
-    """Object for storing a single suggested frame item."""
-
-    video: Video
-    frame_idx: int
-    group: Optional[GroupType] = None
 
 
 class VideoFrameSuggestions(object):

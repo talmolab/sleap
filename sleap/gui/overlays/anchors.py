@@ -7,7 +7,7 @@ import attr
 from qtpy import QtGui
 
 from sleap.gui.overlays.base import BaseOverlay
-from sleap.io.dataset import Labels
+from sleap_io import Labels
 
 
 @attr.s(auto_attribs=True)

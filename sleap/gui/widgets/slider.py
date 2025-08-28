@@ -7,8 +7,7 @@ from qtpy.QtGui import QPen, QBrush, QColor, QKeyEvent, QPolygonF, QPainterPath
 
 from sleap.gui.color import ColorManager
 from sleap_io.model.instance import Track
-from sleap.io.dataset import Labels
-from sleap_io import Video
+from sleap_io import Labels, Video
 
 import attr
 import itertools
