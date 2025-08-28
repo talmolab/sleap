@@ -33,10 +33,8 @@ import pandas as pd
 
 from typing import Any, Dict, List, Tuple
 
-from sleap_io import Labels, load_file
+from sleap_io import Labels, load_file, PredictedInstance
 from sleap_io import Video
-from sleap import PredictedInstance
-
 
 def get_tracks_as_np_strings(labels: Labels) -> List[bytes]:
     """Get list of track names as bytes."""

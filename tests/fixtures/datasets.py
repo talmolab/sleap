@@ -3,7 +3,7 @@ import pytest
 from sleap_io import LabeledFrame
 from sleap_io.model.instance import Instance, PredictedInstance, Track
 from sleap_io import Skeleton
-from sleap.io.dataset import Labels
+from sleap_io import Labels
 from sleap_io import Video
 
 TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"

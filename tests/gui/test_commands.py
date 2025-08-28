@@ -8,8 +8,7 @@ from pathlib import PurePath, Path
 from qtpy import QtCore
 from typing import List
 
-from sleap import Track, PredictedInstance
-from sleap_io import Skeleton
+from sleap_io import Skeleton, Track, PredictedInstance, Labels, LabeledFrame, Instance
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
     AddInstance,
@@ -27,12 +26,8 @@ from sleap.gui.commands import (
     get_new_version_filename,
 )
 from sleap_io import load_skeleton
-from sleap.instance import LabeledFrame
-from sleap_io.model.instance import Instance
 from sleap.io.convert import default_analysis_filename
-from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
-from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
 from sleap_io import Video
 from sleap.util import get_package_file
@@ -40,7 +35,6 @@ from sleap.util import get_package_file
 # These imports cause trouble when running `pytest.main()` from within the file
 # Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
-from tests.io.test_video import assert_video_params
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 

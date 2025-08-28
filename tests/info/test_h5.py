@@ -16,8 +16,7 @@ from sleap.info.write_tracking_h5 import (
     get_edges_as_np_strings,
     main,
 )
-from sleap.io.dataset import Labels
-from sleap_io import Video
+from sleap_io import Video, Labels
 from sleap_io.model.instance import Instance
 from sleap.gui.commands import AddUserInstancesFromPredictions
 from sleap.sleap_io_adaptors.lf_labels_utils import find_track_occupancy

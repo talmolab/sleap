@@ -11,7 +11,6 @@ from sleap_io import LabeledFrame
 from sleap_io import Video
 from sleap_io.io.video_reading import MediaVideo
 from sleap_io import Labels, load_file
-from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.format import filehandle
 from sleap.gui.suggestions import VideoFrameSuggestions, SuggestionFrame
 from tests.io.test_formats import assert_read_labels_match

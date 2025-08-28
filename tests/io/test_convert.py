@@ -1,6 +1,5 @@
 from sleap.io.convert import default_analysis_filename, main as sleap_convert
-from sleap.io.dataset import Labels
-from sleap_io import Video
+from sleap_io import Video, Labels
 from sleap_io.model.instance import Instance
 from pathlib import PurePath, Path
 import re

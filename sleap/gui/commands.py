@@ -1088,6 +1088,7 @@ class ExportAnalysisFile(AppCommand):
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+        from sleap.io.format.csv import CSVAdaptor
 
         for output_path, video in params["analysis_videos"]:
             if params["csv"]:
