@@ -757,7 +757,8 @@ class LoadProjectFile(LoadLabelsObject):
             )
 
             try:
-                labels = load_file(filename, video_search=gui_video_callback)
+                # labels = load_file(filename, video_search=gui_video_callback)
+                labels = load_file(filename)
                 has_loaded = True
             except ValueError as e:
                 print(e)
