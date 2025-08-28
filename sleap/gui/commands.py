@@ -84,6 +84,7 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
     get_symmetry_node,
     delete_symmetry,
     delete_edge,
+    to_graph,
 )
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.lf_labels_utils import (
@@ -817,6 +818,7 @@ class OpenProject(AppCommand):
             params["filename"] = filename
         return True
 
+
 class ImportNWB(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
@@ -1089,7 +1091,7 @@ class ExportAnalysisFile(AppCommand):
 
         for output_path, video in params["analysis_videos"]:
             if params["csv"]:
-                adaptor = CSVAdaptor() # TODO: csv adaptor
+                adaptor = CSVAdaptor()  # TODO: csv adaptor
             else:
                 adaptor = SleapAnalysisAdaptor
             adaptor.write(
@@ -3829,7 +3831,7 @@ class AddMissingInstanceNodes(EditCommand):
         center_tuple = (center_point.x(), center_point.y())
 
         node_positions = nx.spring_layout(
-            G=context.state["skeleton"].graph, center=center_tuple, scale=50
+            G=to_graph(context.state["skeleton"]), center=center_tuple, scale=50
         )
 
         for node, pos in node_positions.items():
