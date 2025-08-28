@@ -68,14 +68,13 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap_io import LabeledFrame, Labels, load_file
+from sleap_io import LabeledFrame, Labels, load_file, save_file
 from sleap_io.model.instance import (
     Instance,
     PredictedInstance,
     Track,
     PointsArray,
 )
-from sleap.io.convert import default_analysis_filename
 from sleap_io import Video
 from sleap_io import save_video
 from sleap.io.visuals import save_labeled_video
@@ -91,18 +90,13 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
 )
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
-from sleap.sleap_io_adaptors.skeleton_utils import (
-    get_symmetry_node,
-    delete_symmetry,
-    delete_edge,
-)
 
 from sleap_io import save_skeleton
 import json
 from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
-from sleap.sleap_io_adaptors.lf_labels_utils import frames, get_template_instance_points, add_instance
-
+from sleap.sleap_io_adaptors.lf_labels_utils import remove_unused_tracks, remove_instance, remove_frames, add_suggestion
+from sleap.sleap_io_adaptors.lf_labels_utils import frames, get_template_instance_points, get_track_occupancy, remove_track, remove_video, remove_all_tracks
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
 
@@ -1068,7 +1062,7 @@ class ImportDeepLabCutFolder(AppCommand):
             if merged_labels is None:
                 merged_labels = labels
             else:
-                merged_labels.extend_from(labels, unify=True)
+                merged_labels.merge(labels)
         return merged_labels
 
 
@@ -1137,7 +1131,7 @@ class SaveProjectAs(AppCommand):
         try:
             extension = (PurePath(filename).suffix)[1:]
             extension = None if (extension == "slp") else extension
-            Labels.save_file(labels=labels, filename=filename, as_format=extension)
+            save_file(labels=labels, filename=filename, format=extension)
             success = True
             # Mark savepoint in change stack
             context.changestack_savepoint()
@@ -1249,7 +1243,7 @@ class ExportAnalysisFile(AppCommand):
             all_videos = [context.state["video"] or context.labels.videos[0]]
 
         # Only use videos with labeled frames
-        videos = [video for video in all_videos if len(labels.get(video)) != 0]
+        videos = [video for video in all_videos if len(labels.find(video)) != 0]
         if len(videos) == 0:
             raise ValueError("No labeled frames in video(s). Nothing to export.")
 
@@ -1671,10 +1665,10 @@ def export_dataset_gui(
         QtWidgets.QApplication.instance().processEvents()
         return True
 
-    Labels.save_file(
+    save_file(
         labels,
         filename,
-        default_suffix="slp",
+        format="slp",
         save_frame_data=as_package,
         all_labeled=all_labeled,
         suggested=suggested,
@@ -1991,7 +1985,8 @@ class GoIteratorCommand(AppCommand):
 class GoPreviousLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        return context.labels.frames(
+        return frames(
+            context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
             reverse=True,
@@ -2001,16 +1996,17 @@ class GoPreviousLabeledFrame(GoIteratorCommand):
 class GoNextLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        return context.labels.frames(
-            context.state["video"], from_frame_idx=context.state["frame_idx"]
+        return frames(
+            context.labels, context.state["video"], from_frame_idx=context.state["frame_idx"]
         )
 
 
 class GoNextUserLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        frames = context.labels.frames(
-            context.state["video"], from_frame_idx=context.state["frame_idx"]
+        from sleap.sleap_io_adaptors.lf_labels_utils import frames
+        frames = frames(
+            context.labels, context.state["video"], from_frame_idx=context.state["frame_idx"]
         )
         # Filter to frames with user instances
         frames = filter(lambda lf: lf.has_user_instances, frames)
@@ -2048,7 +2044,7 @@ class GoNextSuggestedFrame(NavCommand):
             cls.go_to(
                 context, next_suggestion_frame.frame_idx, next_suggestion_frame.video
             )
-            selection_idx = context.labels.get_suggestions().index(
+            selection_idx = context.labels.suggestions.index(
                 next_suggestion_frame
             )
             context.state["suggestion_idx"] = selection_idx
@@ -2063,7 +2059,7 @@ class GoNextTrackFrame(NavCommand):
     def do_action(cls, context: CommandContext, params: dict):
         video = context.state["video"]
         cur_idx = context.state["frame_idx"]
-        track_ranges = context.labels.get_track_occupancy(video)
+        track_ranges = get_track_occupancy(context.labels, video)
 
         later_tracks = [
             (track_range.start, track)
@@ -2216,7 +2212,8 @@ class ShowImportVideos(EditCommand):
         video = None
         for video in new_videos:
             # Add to labels
-            context.labels.add_video(video)
+            if video not in context.labels.videos:
+                context.labels.videos.append(video)
             context.changestack_push("add video")
 
         # Load if no video currently loaded
@@ -2247,10 +2244,10 @@ class ReplaceVideo(EditCommand):
 
             # Remove frames in video past last frame index
             last_vid_frame = get_last_frame_idx(video)
-            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            lfs: List[LabeledFrame] = list(context.labels.find(video))
             if lfs is not None:
                 lfs = [lf for lf in lfs if lf.frame_idx > last_vid_frame]
-                context.labels.remove_frames(lfs)
+                remove_frames(context.labels, lfs)
 
             # Update seekbar and video length through callbacks
             context.state.emit("video")
@@ -2262,7 +2259,7 @@ class ReplaceVideo(EditCommand):
         def _get_truncation_message(truncation_messages, path, video):
             reader = cv2.VideoCapture(path)
             last_vid_frame = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
-            lfs: List[LabeledFrame] = list(context.labels.get(video))
+            lfs: List[LabeledFrame] = list(context.labels.find(video))
             if lfs is not None:
                 lfs.sort(key=lambda lf: lf.frame_idx)
                 last_lf_frame = lfs[-1].frame_idx
@@ -2339,7 +2336,7 @@ class RemoveVideo(EditCommand):
 
         # Remove selected videos in the project
         for video in videos_to_be_removed:
-            context.labels.remove_video(video)
+            remove_video(context.labels, video)
 
         # Update the view if state has the removed video
         if context.state["video"] in videos_to_be_removed:
@@ -2776,16 +2773,16 @@ class InstanceDeleteCommand(EditCommand):
         # Delete the instances
         lfs_to_remove = []
         for lf, inst in lf_inst_list:
-            context.labels.remove_instance(lf, inst, in_transaction=True)
+            remove_instance(context.labels, instance=inst, lf=lf)
             if context.state["instance"] == inst:
                 context.state["instance"] = None
             if len(lf.instances) == 0:
                 lfs_to_remove.append(lf)
 
-        context.labels.remove_frames(lfs_to_remove)
+        remove_frames(context.labels, lfs_to_remove)
 
-        # Update caches since we skipped doing this after each deletion
-        context.labels.update_cache()
+        # # Update caches since we skipped doing this after each deletion
+        # context.labels.update_cache()
 
         # Update visuals
         context.changestack_push("delete instances")
@@ -3046,7 +3043,7 @@ class DeleteSelectedInstance(EditCommand):
         if selected_inst is None:
             return
 
-        context.labels.remove_instance(context.state["labeled_frame"], selected_inst)
+        remove_instance(context.labels, instance=selected_inst, lf=context.state["labeled_frame"])
         context.state["instance"] = None
 
 
@@ -3064,7 +3061,7 @@ class DeleteSelectedInstanceTrack(EditCommand):
             return
 
         track = selected_inst.track
-        context.labels.remove_instance(context.state["labeled_frame"], selected_inst)
+        remove_instance(context.labels, instance=selected_inst, lf=context.state["labeled_frame"])
         context.state["instance"] = None
 
         if track is not None:
@@ -3072,7 +3069,7 @@ class DeleteSelectedInstanceTrack(EditCommand):
             for lf in context.labels.find(context.state["video"]):
                 track_instances = filter(lambda inst: inst.track == track, lf.instances)
                 for inst in track_instances:
-                    context.labels.remove_instance(lf, inst)
+                    remove_instance(context.labels, instance=inst, lf=lf)
 
 
 class DeleteDialogCommand(EditCommand):
@@ -3168,7 +3165,7 @@ class DeleteTrack(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         track = params["track"]
-        context.labels.remove_track(track)
+        remove_track(context.labels, track)
 
 
 class DeleteMultipleTracks(EditCommand):
@@ -3186,9 +3183,9 @@ class DeleteMultipleTracks(EditCommand):
         """
         delete_all: bool = params["delete_all"]
         if delete_all:
-            context.labels.remove_all_tracks()
+            remove_all_tracks(context.labels)
         else:
-            context.labels.remove_unused_tracks()
+            remove_unused_tracks(context.labels)
 
 
 class CopyInstanceTrack(EditCommand):
@@ -3266,7 +3263,7 @@ class GenerateSuggestions(EditCommand):
                 labels=context.labels, params=params
             )
 
-            context.labels.append_suggestions(new_suggestions)
+            context.labels.suggestions.extend(new_suggestions)
         except Exception as e:
             win.hide()
             QtWidgets.QMessageBox(
@@ -3284,8 +3281,8 @@ class AddSuggestion(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        context.labels.add_suggestion(
-            context.state["video"], context.state["frame_idx"]
+        add_suggestion(
+            context.labels, context.state["video"], context.state["frame_idx"]
         )
 
 
@@ -3351,15 +3348,10 @@ class MergeProject(EditCommand):
             return
 
         for filename in filenames:
-            # gui_video_callback = Labels.make_gui_video_callback(
-            #     search_paths=[os.path.dirname(filename)]
-            # )
-            gui_video_callback = make_video_callback(
-                search_paths=[os.path.dirname(filename)],
-                use_gui=True
-            )
+            #  # TODO
 
-            new_labels = Labels.load_file(filename, video_search=gui_video_callback)
+            # new_labels = Labels.load_file(filename, video_search=gui_video_callback) #TODO use gui callback
+            new_labels = load_file(filename)
 
             # Merging data is handled by MergeDialog
             MergeDialog(base_labels=context.labels, new_labels=new_labels).exec_()
@@ -3403,11 +3395,18 @@ class AddInstance(EditCommand):
             offset=offset,
         )
 
-        # Add the instance
-        context.labels.add_instance(context.state["labeled_frame"], new_instance)
+        # add new instance
+        if new_instance not in context.state["labeled_frame"].instances:
+            context.state["labeled_frame"].instances.append(new_instance)
 
-        if context.state["labeled_frame"] not in context.labels.labels:
+        existing_tracks = [track.name for track in context.labels.tracks]
+        if new_instance.track is not None and new_instance.track.name not in existing_tracks:
+            context.labels.tracks.append(new_instance.track)
+
+        if context.state["labeled_frame"] not in context.labels:
             context.labels.append(context.state["labeled_frame"])
+
+        context.labels.update()
 
     @staticmethod
     def create_new_instance(
@@ -4005,7 +4004,17 @@ class AddUserInstancesFromPredictions(EditCommand):
 
         # Add the instances
         for new_instance in new_instances:
-            context.labels.add_instance(context.state["labeled_frame"], new_instance)
+            if new_instance not in context.state["labeled_frame"].instances:
+                context.state["labeled_frame"].instances.append(new_instance)
+
+            existing_tracks = [track.name for track in context.labels.tracks]
+            if new_instance.track is not None and new_instance.track.name not in existing_tracks:
+                context.labels.tracks.append(new_instance.track)
+
+            if context.state["labeled_frame"] not in context.labels:
+                context.labels.append(context.state["labeled_frame"])
+
+            context.labels.update()
 
 
 class CopyInstance(EditCommand):
@@ -4041,12 +4050,17 @@ class PasteInstance(EditCommand):
             new_instance.track = base_instance.track
 
         # Add to the current frame.
-        context.labels.add_instance(current_frame, new_instance)
+        if new_instance not in current_frame.instances:
+            current_frame.instances.append(new_instance)
 
-        if current_frame not in context.labels.labels:
-            # Add current frame to labels if it wasn't already there. This happens when
-            # adding an instance to an empty labeled frame that isn't in the labels.
+        existing_tracks = [track.name for track in context.labels.tracks]
+        if new_instance.track is not None and new_instance.track.name not in existing_tracks:
+            context.labels.tracks.append(new_instance.track)
+
+        if current_frame not in context.labels:
             context.labels.append(current_frame)
+
+        context.labels.update()
 
 
 def open_website(url: str):

@@ -23,7 +23,7 @@ from sleap_io.model.instance import (
     PointsArray,
     PredictedPointsArray,
 )
-from sleap.sleap_io_adaptors.lf_labels_utils import load_and_match
+from sleap.sleap_io_adaptors.lf_labels_utils import load_and_match, get_video_suggestions, frames
 
 TEST_H5_DATASET = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
 
@@ -201,14 +201,14 @@ def test_label_accessors(centered_pair_labels: Labels, min_tracks_2node_labels: 
     assert len(labels.find(video)) == 70
     assert labels[video] == labels.find(video)
 
-    f = labels.frames(video, from_frame_idx=1)
+    f = frames(labels, video, from_frame_idx=1)
     assert next(f).frame_idx == 15
     assert next(f).frame_idx == 31
 
-    f = labels.frames(video, from_frame_idx=31, reverse=True)
+    f = frames(labels, video, from_frame_idx=31, reverse=True)
     assert next(f).frame_idx == 15
 
-    f = labels.frames(video, from_frame_idx=0, reverse=True)
+    f = frames(labels, video, from_frame_idx=0, reverse=True)
     assert next(f).frame_idx == 1092
     next(f)
     next(f)
@@ -888,7 +888,7 @@ def test_basic_suggestions(small_robot_mp4_vid):
     )
     labels.set_suggestions(suggestions)
 
-    assert len(labels.get_video_suggestions(dummy_video)) == 13
+    assert len(get_video_suggestions(labels, dummy_video)) == 13
 
 
 def test_deserialize_suggestions(small_robot_mp4_vid, tmpdir):

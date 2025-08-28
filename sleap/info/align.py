@@ -29,7 +29,6 @@ which doesn't yet have all points).
 
 """
 
-from sleap import Labels
 from sleap_io.model.instance import Instance
 from typing import List, Tuple
 import numpy as np
@@ -281,12 +280,13 @@ if __name__ == "__main__":
     # filename = "tests/data/json_format_v2/centered_pair_predictions.json"
     # filename = "/Volumes/fileset-mmurthy/shruthi/code/sleap_expts/preds/"
     # "screen_all.5pts_tmp_augment_200122/191210_102108_18159112_rig3_2.preds.h5"
+    from sleap_io import load_file
     filename = (
         "/Volumes/fileset-mmurthy/talmo/wt_gold_labeling/"
         "100919.sleap_wt_gold.13pt_init.n=288.junyu.h5"
     )
 
-    labels = Labels.load_file(filename)
+    labels = load_file(filename)
 
     points = get_instances_points(labels.instances())
     get_stable_node_pairs(points, np.array(labels.skeletons[0].node_names))

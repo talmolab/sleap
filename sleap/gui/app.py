@@ -82,7 +82,7 @@ from sleap.sleap_io_adaptors.video_utils import available_video_exts
 from sleap.prefs import prefs
 from sleap_io.model.skeleton import Skeleton
 from sleap.util import parse_uri_path, get_config_file
-from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count, get_instances_to_show, find_last
+from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count, get_instances_to_show, find_last, get_video_suggestions
 
 
 logger = getLogger(__name__)
@@ -1523,7 +1523,7 @@ class MainWindow(QMainWindow):
         }
 
         selection["suggestions"] = {
-            video: remove_user_labeled(video, self.labels.get_video_suggestions(video))
+            video: remove_user_labeled(video, get_video_suggestions(self.labels, video))
             for video in self.labels.videos
         }
 
