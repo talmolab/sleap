@@ -89,6 +89,7 @@ from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     make_video_callback,
     get_next_suggestion,
+    merge_nodes,
 )
 from sleap.sleap_io_adaptors.skeleton_utils import (
     get_symmetry_node,
@@ -2699,7 +2700,8 @@ class SetNodeName(EditCommand):
 
         if name in skeleton.node_names:
             # Merge
-            context.labels.merge_nodes(name, node.name)
+            # context.labels.merge_nodes(name, node.name)
+            merge_nodes(name, node.name, context.labels, skeleton)
         else:
             # Simple relabel
             skeleton.rename_node(node.name, name)
