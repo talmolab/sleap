@@ -2,7 +2,7 @@
 Standalone utility functions for working with Labels and LabeledFrame objects.
 """
 
-from typing import Iterable, List, Dict, Optional, Callable, Text, Union
+from typing import Iterable, List, Dict, Optional, Text, Union
 from pathlib import Path
 import cattr
 import os

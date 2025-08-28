@@ -98,6 +98,8 @@ from sleap_io import save_skeleton
 import json
 from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
+from sleap.info import align
+from sleap.io.format.adaptor import Adaptor
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     remove_unused_tracks,
     remove_instance,
@@ -1303,12 +1305,13 @@ class ExportAnalysisFile(AppCommand):
         analysis_videos = []
         for video in videos:
             # Create the filename
-            default_name = default_analysis_filename(
-                labels=labels,
-                video=video,
-                output_path=dirname,
-                output_prefix=str(fn.stem),
-                format_suffix=file_extension,
+            video_idx = labels.videos.index(video)
+            vn = Path(video.backend.filename)
+            default_name = str(
+                Path(
+                    dirname,
+                    f"{fn.stem}.{video_idx:03}_{vn.stem}.analysis.{file_extension}",
+                )
             )
 
             filename = (
@@ -3389,7 +3392,8 @@ class MergeProject(EditCommand):
         for filename in filenames:
             #  # TODO
 
-            # new_labels = Labels.load_file(filename, video_search=gui_video_callback) #TODO use gui callback
+            # new_labels = Labels.load_file(filename, video_search=gui_video_callback)
+            # TODO: use gui callback
             new_labels = load_file(filename)
 
             # Merging data is handled by MergeDialog
@@ -3808,7 +3812,8 @@ class SetInstancePointVisibility(EditCommand):
         node = params["node"]
         visible = params["visible"]
 
-        # instance[node] returns [(x, y), visible, complete, name] or [(x, y), score, visible, complete, name]
+        # instance[node] returns [(x, y), visible, complete, name] or
+        # [(x, y), score, visible, complete, name]
         node_idx = instance.skeleton.node_names.index(node)
         point_data = list(instance.points[node_idx])
         point_data["visible"] = (
