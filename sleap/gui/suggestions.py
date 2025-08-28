@@ -2,7 +2,6 @@
 Module for generating lists of suggested frames (for labeling or reviewing).
 """
 
-import attr
 import numpy as np
 import random
 

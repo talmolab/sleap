@@ -5,7 +5,6 @@
 # * SLEAP "analysis" file in .h5 format
 # * LEAP dataset in .mat file
 # * DeepLabCut dataset in .yaml or .csv file
-# * DeepPoseKit dataset in .h5 file
 # * COCO keypoints dataset in .json file
 
 # Writes:
@@ -69,7 +68,6 @@
 #         default="slp",
 #         help="Output format. Default ('slp') is SLEAP dataset; "
 #         "'analysis' results in analysis.h5 file; "
-#         "'analysis.nix' results in an analysis nix file;"
 #         "'analysis.csv' results in an analysis csv file;"
 #         "'h5' or 'json' results in SLEAP dataset "
 #         "with specified file format.",
@@ -109,7 +107,8 @@
 
 #     video_callback = Labels.make_video_callback([os.path.dirname(args.input_path)])
 #     try:
-#         labels: Labels = Labels.load_file(args.input_path, video_search=video_callback)
+#         labels: Labels = Labels.load_file(args.input_path,
+# video_search=video_callback)
 #     except TypeError:
 #         print("Input file isn't SLEAP dataset so attempting other importers...")
 #         from sleap.io.format import read
@@ -136,9 +135,7 @@
 #         outnames = [path for path in args.outputs]
 #         if len(outnames) < len(vids):
 #             # if there are less outnames provided than videos to convert...
-#             if "nix" in args.format:
-#                 out_suffix = "nix"
-#             elif "csv" in args.format:
+#             if "csv" in args.format:
 #                 out_suffix = "csv"
 #             else:
 #                 out_suffix = "h5"
@@ -156,16 +153,8 @@
 #                 )
 #                 outnames.append(dflt_name)
 
-#         if "nix" in args.format:
-#             from sleap.io.format.nix import NixAdaptor
 
-#             for video, outname in zip(vids, outnames):
-#                 try:
-#                     NixAdaptor.write(outname, labels, args.input_path, video)
-#                 except ValueError as e:
-#                     print(e.args[0])
-
-#         elif "csv" in args.format:
+#         if "csv" in args.format:
 #             from sleap.info.write_tracking_h5 import main as write_analysis
 
 #             for video, output_path in zip(vids, outnames):

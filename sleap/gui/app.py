@@ -82,7 +82,12 @@ from sleap.sleap_io_adaptors.video_utils import available_video_exts
 from sleap.prefs import prefs
 from sleap_io.model.skeleton import Skeleton
 from sleap.util import parse_uri_path, get_config_file
-from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count, get_instances_to_show, find_last, get_video_suggestions
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    get_labeled_frame_count,
+    get_instances_to_show,
+    find_last,
+    get_video_suggestions,
+)
 
 
 logger = getLogger(__name__)
@@ -452,27 +457,9 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
-            "import_dpk",
-            "DeepPoseKit dataset...",
-            self.commands.importDPK,
-        )
-        add_menu_item(
-            import_types_menu,
-            "import_at",
-            "AlphaTracker dataset...",
-            self.commands.importAT,
-        )
-        add_menu_item(
-            import_types_menu,
             "import_nwb",
             "NWB dataset...",
             self.commands.importNWB,
-        )
-        add_menu_item(
-            import_types_menu,
-            "import_leap",
-            "LEAP Matlab dataset...",
-            self.commands.importLEAP,
         )
         add_menu_item(
             import_types_menu,
@@ -1328,7 +1315,8 @@ class MainWindow(QMainWindow):
                             (video.backend.dataset == current_video.backend.dataset)
                             if hasattr(video.backend, "dataset")
                             else True
-                        )  # `dataset` attr exists only for hdf5 backend not for mediavideo
+                        )  # `dataset` attr exists only for hdf5 backend
+                        # not for mediavideo
                         if same_dataset:
                             index = i
                             break
@@ -1337,7 +1325,10 @@ class MainWindow(QMainWindow):
                 message += spacer
 
             if current_video is not None:
-                message += f"Frame: {frame_idx + 1:,}/{current_video.backend.num_frames:,}"
+                message += (
+                    f"Frame: {frame_idx + 1:,}/"
+                    f"{current_video.backend.num_frames:,}"
+                )
 
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
@@ -1368,9 +1359,10 @@ class MainWindow(QMainWindow):
                 )
                 if pred_frame_count:
                     message += f"{spacer}Predicted Frames: {pred_frame_count:,}"
-                    message += (
-                        f" ({pred_frame_count / current_video.backend.num_frames * 100:.2f}%)"
+                    percentage = (
+                        pred_frame_count / current_video.backend.num_frames * 100
                     )
+                    message += f" ({percentage:.2f}%)"
                     message += " in video"
 
             lf = self.state["labeled_frame"]
@@ -1517,9 +1509,12 @@ class MainWindow(QMainWindow):
         clip_range = self.state.get("frame_range", default=(0, 0))
 
         selection["clip"] = {current_video: encode_range(*clip_range)}
-        selection["video"] = {current_video: encode_range(0, current_video.backend.num_frames)}
+        selection["video"] = {
+            current_video: encode_range(0, current_video.backend.num_frames)
+        }
         selection["all_videos"] = {
-            video: encode_range(0, video.backend.num_frames) for video in self.labels.videos
+            video: encode_range(0, video.backend.num_frames)
+            for video in self.labels.videos
         }
 
         selection["suggestions"] = {

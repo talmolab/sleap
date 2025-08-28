@@ -1460,7 +1460,8 @@ class QtNode(QGraphicsEllipseItem):
         )
 
         if self.name is not None:
-            # Check if point has score (predicted point format: [(x, y), score, visible, complete])
+            # Check if point has score
+            # (predicted point format: [(x, y), score, visible, complete])
             if "score" in self.point.dtype.names:
                 tt_text = f"{self.name}\n(score: {self.point['score']:.2f})"
             else:
@@ -1511,7 +1512,6 @@ class QtNode(QGraphicsEllipseItem):
 
     @property
     def visible_radius(self):
-        # point format: [(x, y), visible, complete, name] or [(x, y), score, visible, complete, name]
         visible = self.point["visible"]
         if visible:
             return self.radius / self.player.view.zoomFactor

@@ -87,22 +87,20 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
 )
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.lf_labels_utils import (
-    make_video_callback,
     get_next_suggestion,
     merge_nodes,
+    track_swap,
+    find_track_occupancy,
+    track_set_instance,
 )
-from sleap.sleap_io_adaptors.skeleton_utils import (
-    get_symmetry_node,
-    delete_symmetry,
-    delete_edge,
-)
-from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 from sleap_io import save_skeleton
 import json
 from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
+from sleap.info import align
+from sleap.io.format.adaptor import Adaptor
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     remove_unused_tracks,
     remove_instance,
@@ -343,17 +341,9 @@ class CommandContext:
         """
         self.execute(OpenProject, filename=filename, first_open=first_open)
 
-    def importAT(self):
-        """Imports AlphaTracker datasets."""
-        self.execute(ImportAlphaTracker)
-
     def importNWB(self):
         """Imports NWB datasets."""
         self.execute(ImportNWB)
-
-    def importDPK(self):
-        """Imports DeepPoseKit datasets."""
-        self.execute(ImportDeepPoseKit)
 
     def importCoco(self):
         """Imports COCO datasets."""
@@ -366,10 +356,6 @@ class CommandContext:
     def importDLCFolder(self):
         """Imports multiple DeepLabCut datasets."""
         self.execute(ImportDeepLabCutFolder)
-
-    def importLEAP(self):
-        """Imports LEAP matlab datasets."""
-        self.execute(ImportLEAP)
 
     def importAnalysisFile(self):
         """Imports SLEAP analysis hdf5 files."""
@@ -393,7 +379,9 @@ class CommandContext:
 
     def exportNWB(self):
         """Show gui for exporting nwb file."""
-        self.execute(SaveProjectAs, adaptor=NDXPoseAdaptor())
+        pass
+        # TODO: add this back in
+        # self.execute(SaveProjectAs, adaptor=NDXPoseAdaptor())
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -771,9 +759,9 @@ class LoadProjectFile(LoadLabelsObject):
             #     search_paths=[os.path.dirname(filename)], context=params
             # ) #TODO:
 
-            gui_video_callback = make_video_callback(
-                search_paths=[os.path.dirname(filename)], use_gui=True, context=params
-            )
+            # gui_video_callback = make_video_callback(
+            #     search_paths=[os.path.dirname(filename)], use_gui=True, context=params
+            # ) # TODO:
 
             try:
                 # labels = load_file(filename, video_search=gui_video_callback)
@@ -829,46 +817,6 @@ class OpenProject(AppCommand):
             params["filename"] = filename
         return True
 
-
-class ImportAlphaTracker(AppCommand):
-    @staticmethod
-    def do_action(context: "CommandContext", params: dict):
-        video_path = params["video_path"] if "video_path" in params else None
-
-        labels = Labels.load_alphatracker(
-            filename=params["filename"],
-            full_video=video_path,
-        )
-
-        new_window = context.app.__class__()
-        new_window.showMaximized()
-        new_window.commands.loadLabelsObject(labels=labels)
-
-    @staticmethod
-    def ask(context: "CommandContext", params: dict) -> bool:
-        filters = ["JSON (*.json)"]
-
-        filename, selected_filter = FileDialog.open(
-            context.app,
-            dir=None,
-            caption="Import AlphaTracker dataset...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return False
-
-        file_dir = os.path.dirname(filename)
-        video_path = os.path.join(file_dir, "video.mp4")
-
-        if os.path.exists(video_path):
-            params["video_path"] = video_path
-
-        params["filename"] = filename
-
-        return True
-
-
 class ImportNWB(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
@@ -880,7 +828,7 @@ class ImportNWB(AppCommand):
 
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
-        adaptor = NDXPoseAdaptor()
+        adaptor = Adaptor()  # TODO: NWB adaptor
         filters = [f"(*.{ext})" for ext in adaptor.all_exts]
         filters[0] = f"{adaptor.name} {filters[0]}"
 
@@ -895,84 +843,6 @@ class ImportNWB(AppCommand):
             return False
 
         os.path.dirname(filename)
-
-        params["filename"] = filename
-
-        return True
-
-
-class ImportDeepPoseKit(AppCommand):
-    @staticmethod
-    def do_action(context: "CommandContext", params: dict):
-        labels = Labels.from_deepposekit(
-            filename=params["filename"],
-            video_path=params["video_path"],
-            skeleton_path=params["skeleton_path"],
-        )
-
-        new_window = context.app.__class__()
-        new_window.showMaximized()
-        new_window.commands.loadLabelsObject(labels=labels)
-
-    @staticmethod
-    def ask(context: "CommandContext", params: dict) -> bool:
-        filters = ["HDF5 (*.h5 *.hdf5)"]
-
-        filename, selected_filter = FileDialog.open(
-            context.app,
-            dir=None,
-            caption="Import DeepPoseKit dataset...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return False
-
-        file_dir = os.path.dirname(filename)
-        paths = [
-            os.path.join(file_dir, "video.mp4"),
-            os.path.join(file_dir, "skeleton.csv"),
-        ]
-
-        missing = [not os.path.exists(path) for path in paths]
-
-        if sum(missing):
-            okay = MissingFilesDialog(filenames=paths, missing=missing).exec_()
-
-            if not okay or sum(missing):
-                return False
-
-        params["filename"] = filename
-        params["video_path"] = paths[0]
-        params["skeleton_path"] = paths[1]
-
-        return True
-
-
-class ImportLEAP(AppCommand):
-    @staticmethod
-    def do_action(context: "CommandContext", params: dict):
-        labels = Labels.load_leap_matlab(
-            filename=params["filename"],
-        )
-
-        new_window = context.app.__class__()
-        new_window.showMaximized()
-        new_window.commands.loadLabelsObject(labels=labels)
-
-    @staticmethod
-    def ask(context: "CommandContext", params: dict) -> bool:
-        filters = ["Matlab (*.mat)"]
-
-        filename, selected_filter = FileDialog.open(
-            context.app,
-            dir=None,
-            caption="Import LEAP Matlab dataset...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return False
 
         params["filename"] = filename
 
@@ -1205,7 +1075,6 @@ class SaveProjectAs(AppCommand):
 class ExportAnalysisFile(AppCommand):
     export_formats = {
         "SLEAP Analysis HDF5 (*.h5)": "h5",
-        "NIX for Tracking data (*.nix)": "nix",
     }
     export_filter = ";;".join(export_formats.keys())
 
@@ -1216,14 +1085,11 @@ class ExportAnalysisFile(AppCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        from sleap.io.format.nix import NixAdaptor
         from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
 
         for output_path, video in params["analysis_videos"]:
             if params["csv"]:
-                adaptor = CSVAdaptor
-            elif Path(output_path).suffix[1:] == "nix":
-                adaptor = NixAdaptor
+                adaptor = CSVAdaptor() # TODO: csv adaptor
             else:
                 adaptor = SleapAnalysisAdaptor
             adaptor.write(
@@ -1308,12 +1174,13 @@ class ExportAnalysisFile(AppCommand):
         analysis_videos = []
         for video in videos:
             # Create the filename
-            default_name = default_analysis_filename(
-                labels=labels,
-                video=video,
-                output_path=dirname,
-                output_prefix=str(fn.stem),
-                format_suffix=file_extension,
+            video_idx = labels.videos.index(video)
+            vn = Path(video.backend.filename)
+            default_name = str(
+                Path(
+                    dirname,
+                    f"{fn.stem}.{video_idx:03}_{vn.stem}.analysis.{file_extension}",
+                )
             )
 
             filename = (
@@ -3029,8 +2896,12 @@ class TransposeInstances(EditCommand):
                     context.state["frame_idx"],
                     context.state["frame_idx"] + 1,
                 )
-            context.labels.track_swap(
-                context.state["video"], new_track, old_track, frame_range
+            track_swap(
+                context.labels,
+                context.state["video"],
+                new_track,
+                old_track,
+                frame_range,
             )
 
     @classmethod
@@ -3147,7 +3018,8 @@ class SetSelectedInstanceTrack(EditCommand):
             or not context.state["propagate track labels"]
         ):
             # Move anything already in the new track out of it
-            new_track_instances = context.labels.find_track_occupancy(
+            new_track_instances = find_track_occupancy(
+                context.labels,
                 video=context.state["video"],
                 track=new_track,
                 frame_range=(
@@ -3158,8 +3030,11 @@ class SetSelectedInstanceTrack(EditCommand):
             for instance in new_track_instances:
                 instance.track = None
             # Move selected instance into new track
-            context.labels.track_set_instance(
-                context.state["labeled_frame"], selected_instance, new_track
+            track_set_instance(
+                context.labels,
+                context.state["labeled_frame"],
+                selected_instance,
+                new_track,
             )
             # Add linked predicted instance to new track
             if selected_instance.from_predicted is not None:
@@ -3182,8 +3057,12 @@ class SetSelectedInstanceTrack(EditCommand):
                 )
 
             # Do the swap
-            context.labels.track_swap(
-                context.state["video"], new_track, old_track, frame_range
+            track_swap(
+                context.labels,
+                context.state["video"],
+                new_track,
+                old_track,
+                frame_range,
             )
 
         # Make sure the originally selected instance is still selected
@@ -3324,9 +3203,14 @@ class RemoveSuggestion(EditCommand):
     def do_action(cls, context: CommandContext, params: dict):
         selected_frame = context.app.suggestions_dock.table.getSelectedRowItem()
         if selected_frame is not None:
-            context.labels.remove_suggestion(
-                selected_frame.video, selected_frame.frame_idx
-            )
+            for sug_idx, suggestion in enumerate(context.labels.suggestions):
+                if (
+                    suggestion.video.match_content(selected_frame.video)
+                    and suggestion.frame_idx == selected_frame.frame_idx
+                ):
+                    context.labels.suggestions.pop(sug_idx)
+                    break
+        context.labels.update()
 
 
 class ClearSuggestions(EditCommand):
@@ -3381,7 +3265,8 @@ class MergeProject(EditCommand):
         for filename in filenames:
             #  # TODO
 
-            # new_labels = Labels.load_file(filename, video_search=gui_video_callback) #TODO use gui callback
+            # new_labels = Labels.load_file(filename, video_search=gui_video_callback)
+            # TODO: use gui callback
             new_labels = load_file(filename)
 
             # Merging data is handled by MergeDialog
@@ -3800,7 +3685,8 @@ class SetInstancePointVisibility(EditCommand):
         node = params["node"]
         visible = params["visible"]
 
-        # instance[node] returns [(x, y), visible, complete, name] or [(x, y), score, visible, complete, name]
+        # instance[node] returns [(x, y), visible, complete, name] or
+        # [(x, y), score, visible, complete, name]
         node_idx = instance.skeleton.node_names.index(node)
         point_data = list(instance.points[node_idx])
         point_data["visible"] = (

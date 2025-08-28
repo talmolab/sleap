@@ -14,7 +14,7 @@ from qtpy import QtCore, QtWidgets
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Text
 
-from sleap_io import Skeleton
+from sleap_io import Skeleton, load_file
 from sleap import util as sleap_utils
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FieldComboWidget
@@ -113,7 +113,7 @@ class ConfigFileInfo:
             else:
                 filename = self._get_file_path("labels_gt.val.slp")
                 if filename is not None:
-                    val_labels = Labelsload_file(filename)
+                    val_labels = load_file(filename)
                     if val_labels.skeletons:
                         self._skeleton = val_labels.skeletons[0]
 

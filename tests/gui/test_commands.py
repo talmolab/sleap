@@ -41,7 +41,6 @@ from sleap.util import get_package_file
 # Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
 from tests.io.test_video import assert_video_params
-from tests.io.test_formats import read_nix_meta
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 
@@ -133,7 +132,7 @@ def test_RemoveVideo(
     assert context.state["video"] not in videos_to_remove
 
 
-@pytest.mark.parametrize("out_suffix", ["h5", "nix", "csv"])
+@pytest.mark.parametrize("out_suffix", ["h5", "csv"])
 def test_ExportAnalysisFile(
     centered_pair_predictions: Labels,
     centered_pair_predictions_hdf5_path: str,
@@ -212,7 +211,7 @@ def test_ExportAnalysisFile(
             output_paths.append(output_path)
 
             if labels_path is not None and not params["csv"]:
-                meta_reader = extract_meta_hdf5 if out_suffix == "h5" else read_nix_meta
+                meta_reader = extract_meta_hdf5 if out_suffix == "h5"
                 labels_key = "labels_path" if out_suffix == "h5" else "project"
                 read_meta = meta_reader(output_path, dset_names_in=["labels_path"])
                 assert read_meta[labels_key] == labels_path
