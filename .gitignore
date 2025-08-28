@@ -128,3 +128,6 @@ tests/data/slp_hdf5/minimal_instance.000_centered_pair_low_quality.analysis.*
 
 # Test artifacts in root
 test*.avi
+
+# Output files
+outputs/
