@@ -20,6 +20,7 @@ from sleap.io.dataset import Labels
 from sleap_io import Video
 from sleap_io.model.instance import Instance
 from sleap.gui.commands import AddUserInstancesFromPredictions
+from sleap.sleap_io_adaptors.lf_labels_utils import find_track_occupancy
 
 
 def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: Labels):
@@ -123,7 +124,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     # Remove all instances from track 13
     vid = centered_pair_predictions.videos[0]
     track = centered_pair_predictions.tracks[13]
-    instances = centered_pair_predictions.find_track_occupancy(vid, track)
+    instances = find_track_occupancy(centered_pair_predictions, vid, track)
     for instance in instances:
         # Find the frame that contains this instance since instances don't have frame attribute
         for frame in centered_pair_predictions.frames(video=vid):
