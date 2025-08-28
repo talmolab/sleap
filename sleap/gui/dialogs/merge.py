@@ -7,8 +7,7 @@ from typing import Dict, List, Optional
 
 from qtpy import QtWidgets, QtCore
 
-from sleap_io import LabeledFrame, Instance, Labels
-from sleap_io import Video
+from sleap_io import Instance, Labels
 
 USE_BASE_STRING = "Use base, discard conflicting new instances"
 USE_NEW_STRING = "Use new, discard conflicting base instances"
@@ -52,7 +51,7 @@ class MergeDialog(QtWidgets.QDialog):
 
         # Attempt merge and analyze results
         self._perform_merge_analysis()
-        
+
         # Build UI based on merge results
         self._build_merge_ui(layout)
 
@@ -64,7 +63,7 @@ class MergeDialog(QtWidgets.QDialog):
         merge_nodes = self.new_labels.skeleton.node_names
         missing_nodes = [node for node in base_nodes if node not in merge_nodes]
         new_nodes = [node for node in merge_nodes if node not in base_nodes]
-        
+
         warning_text = (
             "<p><strong>Warning:</strong> Skeletons do not match. "
             "The following nodes will be added to all instances:<p>"
@@ -73,7 +72,7 @@ class MergeDialog(QtWidgets.QDialog):
             "<p>Nodes can be deleted or merged from the skeleton editor after "
             "merging labels.</p><br>"
         )
-        
+
         layout.addWidget(QtWidgets.QLabel(warning_text))
 
     def _perform_merge_analysis(self):
@@ -81,16 +80,16 @@ class MergeDialog(QtWidgets.QDialog):
         try:
             # Create a copy for analysis
             base_copy = self.base_labels.copy()
-            
+
             # Attempt merge with frame strategy
             merge_result = base_copy.merge(
                 self.new_labels,
                 frame_strategy="keep_both"  # Use sleap-io frame strategy
             )
-            
+
             # Analyze what was merged vs conflicts
             self._analyze_merge_result(merge_result)
-            
+
         except Exception as e:
             log.error(f"Error during merge analysis: {e}")
             # Fallback to manual conflict detection
@@ -100,21 +99,21 @@ class MergeDialog(QtWidgets.QDialog):
         """Analyze the result of the merge operation."""
         # Extract information about what was merged
         self.merge_result = merge_result
-        
+
         # Count merged frames
         self.frames_merged = len(merge_result.frames_merged) if hasattr(merge_result, 'frames_merged') else 0
-        
+
         # Check for conflicts (frames that couldn't be merged)
         self.conflicts = self._detect_conflicts()
 
     def _detect_conflicts(self):
         """Detect conflicts between base and new labels."""
         conflicts = []
-        
+
         for new_frame in self.new_labels.labeled_frames:
             # Check if frame exists in base
             existing_frames = self.base_labels.find(new_frame.video, new_frame.frame_idx)
-            
+
             if existing_frames:
                 existing_frame = existing_frames[0]
                 # Check for instance conflicts
@@ -125,7 +124,7 @@ class MergeDialog(QtWidgets.QDialog):
                         'base_instances': existing_frame.instances,
                         'new_instances': new_frame.instances
                     })
-        
+
         return conflicts
 
     def _has_instance_conflicts(self, base_frame, new_frame):
@@ -141,14 +140,14 @@ class MergeDialog(QtWidgets.QDialog):
         # Basic compatibility check - can be enhanced
         if not base_instances or not new_instances:
             return True
-        
+
         # Check if skeletons are compatible
         base_skeleton = base_instances[0].skeleton if base_instances else None
         new_skeleton = new_instances[0].skeleton if new_instances else None
-        
+
         if base_skeleton and new_skeleton:
             return base_skeleton.node_names == new_skeleton.node_names
-        
+
         return True
 
     def _fallback_conflict_detection(self):
@@ -163,7 +162,7 @@ class MergeDialog(QtWidgets.QDialog):
             merged_text = f"Successfully merged {self.frames_merged} frames."
             merged_label = QtWidgets.QLabel(merged_text)
             layout.addWidget(merged_label)
-            
+
             # Show merge details table
             merge_table = MergeTable(self.merge_result)
             layout.addWidget(merge_table)
@@ -176,7 +175,7 @@ class MergeDialog(QtWidgets.QDialog):
             conflict_text = f"Found {len(self.conflicts)} merge conflicts:"
             conflict_label = QtWidgets.QLabel(conflict_text)
             layout.addWidget(conflict_label)
-            
+
             conflict_table = ConflictTable(self.conflicts)
             layout.addWidget(conflict_table)
         else:
@@ -205,7 +204,7 @@ class MergeDialog(QtWidgets.QDialog):
         Finishes merge process using sleap-io merge functionality.
         """
         merge_method = self.merge_method.currentText()
-        
+
         try:
             if merge_method == USE_NEW_STRING:
                 # Use new labels, discard conflicting base instances
@@ -221,14 +220,14 @@ class MergeDialog(QtWidgets.QDialog):
                 self._perform_final_merge()
             else:
                 raise ValueError("No valid merge method selected.")
-                
+
             self.accept()
-            
+
         except Exception as e:
             log.error(f"Error during final merge: {e}")
             QtWidgets.QMessageBox.critical(
-                self, 
-                "Merge Error", 
+                self,
+                "Merge Error",
                 f"An error occurred during the merge: {str(e)}"
             )
 
@@ -254,13 +253,13 @@ class MergeDialog(QtWidgets.QDialog):
         for conflict in self.conflicts:
             video = conflict['video']
             frame_idx = conflict['frame_idx']
-            
+
             # Find and remove conflicting frames
             frames_to_remove = []
             for frame in labels.labeled_frames:
                 if frame.video == video and frame.frame_idx == frame_idx:
                     frames_to_remove.append(frame)
-            
+
             for frame in frames_to_remove:
                 remove_frames(labels, [frame])
 
@@ -354,7 +353,7 @@ class MergeTableModel(QtCore.QAbstractTableModel):
     def _extract_merge_data(self):
         """Extract merge data from merge result."""
         data_table = []
-        
+
         if hasattr(self.merge_result, 'frames_merged'):
             # Extract data from merge result object
             for frame_info in self.merge_result.frames_merged:
@@ -366,7 +365,7 @@ class MergeTableModel(QtCore.QAbstractTableModel):
         else:
             # Fallback for different merge result formats
             data_table = [{'filename': 'Unknown', 'frame_idx': 0, 'instances': []}]
-        
+
         return data_table
 
     def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
