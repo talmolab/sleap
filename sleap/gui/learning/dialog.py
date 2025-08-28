@@ -12,8 +12,7 @@ import cattr
 from qtpy import QtCore, QtGui, QtWidgets
 
 import sleap
-from sleap import Labels, Video
-from sleap_io import Skeleton
+from sleap_io import Labels, Video, Skeleton, load_file
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import configs, receptivefield, runners, scopedkeydict
@@ -24,8 +23,6 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
     root_nodes,
     in_degree_over_one,
 )
-
-from sleap_io import load_file
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -420,7 +417,11 @@ class LearningDialog(QtWidgets.QDialog):
             self.pipeline_form_widget.current_pipeline = recent_pipeline_name
         else:
             # Set default based on detection of single- vs multi-animal project.
-            if self.labels.max_user_instances == 1:
+            max_user_instance = 0
+            for lf in self.labels:
+                max_user_instance = max(max_user_instance, len(lf.user_instances))
+
+            if max_user_instance == 1:
                 self.pipeline_form_widget.current_pipeline = "single"
             else:
                 self.pipeline_form_widget.current_pipeline = "top-down"
@@ -874,10 +875,8 @@ class LearningDialog(QtWidgets.QDialog):
                 return
         else:
             self.labels.save(
-                tmp_dir.name + "/" + labels_pkg_filename,
-                with_images=True,
-                embed_all_labeled=False,
-                embed_suggested=include_suggestions,
+                filename=tmp_dir.name + "/" + labels_pkg_filename,
+                embed=True,
             )
 
         # Save config and scripts.

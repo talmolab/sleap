@@ -38,11 +38,7 @@ the file will be saved in the corresponding format. You can also specify the
 default extension to use if none is provided in the filename.
 """
 
-import itertools
 import os
-from collections.abc import MutableSequence
-from glob import glob
-from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     List,
@@ -52,20 +48,13 @@ from typing import (
     Tuple,
     Text,
     Iterable,
-    Any,
     Set,
-    Callable,
-    cast,
 )
 
 if TYPE_CHECKING:
-    from sleap.gui.suggestions import SuggestionFrame
+    pass
 
 import attr
-import cattr
-import numpy as np
-import datetime
-from sklearn.model_selection import train_test_split
 
 try:
     pass
@@ -73,22 +62,14 @@ except Exception:
     pass
 
 # from sleap.skeleton import Skeleton, Node (sleap.io will be deleted)
-from sleap_io.model.skeleton import Skeleton, Node
 from sleap_io import LabeledFrame, Labels, load_file
 from sleap_io.model.instance import (
     Instance,
     Track,
-    PredictedInstance,
 )
-from sleap.sleap_io_adaptors.instance_utils import make_instance_cattr
 
-from sleap.io import pathutils
 from sleap_io import Video
-from sleap_io.io.video_reading import ImageVideo, HDF5Video
-from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.rangelist import RangeList
-from sleap.util import uniquify, json_dumps
-from sleap.sleap_io_adaptors.skeleton_utils import to_graph
 
 """
 The version number to put in the Labels JSON format.

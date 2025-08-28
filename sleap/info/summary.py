@@ -8,6 +8,7 @@ import numpy as np
 
 from typing import Callable, Dict
 
+from sleap.sleap_io_adaptors.lf_labels_utils import get_track_occupancy
 from sleap_io import LabeledFrame
 from sleap_io import Labels
 from sleap_io import Video
@@ -137,8 +138,7 @@ class StatisticSeries:
             The series dictionary (see class docs for details)
         """
         reduce_funct = dict(sum=np.sum, mean=np.nanmean, max=np.max)[reduction]
-
-        track_count = self.labels.get_track_count(video)
+        track_count = len(get_track_occupancy(self.labels, video))
 
         try:
             primary_node_idx = node_to_index(self.labels.skeletons[0], primary_node)

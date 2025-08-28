@@ -3,13 +3,15 @@ Command line utility which prints data about labels file.
 """
 
 import os
+from sleap.sleap_io_adaptors.instance_utils import bounding_box
+from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count
 
 
 def describe_labels(data_path, verbose=False):
-    from sleap.io.dataset import Labels
+    from sleap_io import load_file
 
-    video_callback = Labels.make_video_callback([os.path.dirname(data_path)])
-    labels = Labels.load_file(data_path, video_search=video_callback)
+    # video_callback = Labels.make_video_callback([os.path.dirname(data_path)]) #TODO use gui callback
+    labels = load_file(data_path)
 
     print(f"Labeled frames: {len(labels)}")
     print(f"Tracks: {len(labels.tracks)}")
@@ -33,7 +35,7 @@ def describe_labels(data_path, verbose=False):
 
         tracks = {inst.track for lf in lfs for inst in lf}
         concurrent_count = max((len(lf.instances) for lf in lfs))
-        user_frames = labels.get_labeled_frame_count(vid, "user")
+        user_frames = get_labeled_frame_count(labels, vid, "user")
 
         total_user_frames += user_frames
 
@@ -47,7 +49,7 @@ def describe_labels(data_path, verbose=False):
             print("    labeled frames:              bounding box top left (x, y)")
             for lf in lfs:
                 bb_cords = [
-                    f"({inst.bounding_box[0]:.2f}, {inst.bounding_box[1]:.2f})"
+                    f"({bounding_box(inst)[0]:.2f}, {bounding_box(inst)[1]:.2f})"
                     f"{'^' if hasattr(inst, 'score') else ''}"
                     for inst in lf.instances
                 ]

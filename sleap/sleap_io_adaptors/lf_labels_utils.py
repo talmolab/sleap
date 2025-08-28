@@ -8,7 +8,7 @@ import cattr
 import os
 
 from sleap import util
-from sleap_io import Video, load_file, Labels
+from sleap_io import Video, load_file, Labels, Track, Instance, LabeledFrame, SuggestionFrame
 from sleap_io.model.matching import SkeletonMatcher
 from sleap.util import weak_filename_match
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
@@ -48,6 +48,94 @@ def find_path_using_paths(filename: str, search_paths: List[str]) -> str:
                 return str(potential_path)
 
     return filename
+
+
+def remove_track(labels: Labels, track: Track):
+    """Remove a track from the labels dataset and update all related instances.
+
+    This function removes the specified track from the labels dataset by:
+    1. Setting the track to None for all instances that were using this track
+    2. Removing the track from the labels.tracks list
+
+    Args:
+        labels: The Labels object containing the dataset to modify
+        track: The Track object to remove from the dataset
+
+    Returns:
+        Labels: The modified labels object (same object, modified in-place)
+    """
+    for lf in labels:
+        for instance in lf.instances:
+            if track.matches(instance.track):
+                instance.track = None
+
+    tracks = []
+    for t in labels.tracks:
+        if not track.matches(t):
+            tracks.append(t)
+
+    labels.tracks = tracks
+    return labels
+
+
+def remove_all_tracks(labels: Labels):
+    """Remove all tracks from the labels dataset and update all related instances."""
+    for lf in labels:
+        for instance in lf.instances:
+            instance.track = None
+    labels.tracks = []
+    return labels
+
+
+def remove_frames(labels: Labels, frames: List[LabeledFrame]):
+    """Remove a list of frames from the labels dataset."""
+    for lf in frames:
+        for lf_idx, lab_fr in enumerate(labels):
+            if lab_fr.video.matches_content(lf.video) and lab_fr.frame_idx == lf.frame_idx:
+                labels.pop(lf_idx)
+    labels.update()
+
+def remove_instance(labels: Labels, instance: Instance, lf: LabeledFrame):
+    """Remove an instance from a labeled frame and update all related instances."""
+    lf_inst_to_remove = labels.find(video=lf.video, frame_idx=lf.frame_idx)
+    if lf_inst_to_remove:
+        for inst_idx, inst in enumerate(lf_inst_to_remove.instances):
+            if inst.same_pose_as(instance):
+                if inst.track is not None and inst.track.matches(instance.track):
+                    lf_inst_to_remove.instances.pop(inst_idx)
+                elif inst.track is None:
+                    lf_inst_to_remove.instances.pop(inst_idx)
+
+
+def remove_unused_tracks(labels: Labels):
+    """Remove all tracks from the labels dataset that are not used by any instances."""
+    if len(labels.tracks) == 0:
+        return
+
+    # Check which tracks are used by instances
+    all_tracks = set([track.name for track in labels.tracks])
+    used_tracks = set()
+    for lf in labels:
+        for inst in lf.instances:
+            used_tracks.add(inst.track.name)
+
+    # Remove set difference from tracks in Labels
+    tracks_to_remove = all_tracks - used_tracks
+    for track in tracks_to_remove:
+        for t_idx, t in enumerate(labels.tracks):
+            if t.name == track:
+                labels.tracks.pop(t_idx)
+
+
+def remove_video(labels: Labels, video: Video):
+    """Remove a video from the labels dataset and update all related instances."""
+    for lf_idx, lf in enumerate(labels):
+        if lf.video.matches_content(video):
+            labels.pop(lf_idx)
+
+    for vid_idx, vid in enumerate(labels.videos):
+        if video.matches_content(vid):
+            labels.videos.pop(vid_idx)
 
 
 def get_track_occupancy(labels, video):
@@ -98,13 +186,15 @@ def get_track_occupancy(labels, video):
 
             # Add final range
             ranges.append((start, prev + 1))
-            print(f"start: {start}, prev: {prev + 1}, ranges: {ranges}")
-            print(f"len(ranges): {len(ranges)}")
-            print(f"is empty: {SimpleRange(ranges).is_empty()}")
 
             track_occupancy[track] = SimpleRange(ranges)
 
     return track_occupancy
+
+
+def add_suggestion(labels, video, frame_idx):
+    """Add a suggestion to the labels dataset."""
+    labels.suggestions.append(SuggestionFrame(video=video, frame_idx=frame_idx))
 
 
 def get_video_suggestions(labels, video, user_labeled: bool = True) -> List[int]:
@@ -136,7 +226,7 @@ def get_video_suggestions(labels, video, user_labeled: bool = True) -> List[int]
 
             # If user_labeled is False, skip suggestions that already have user labels
             if not user_labeled:
-                lf = labels.get((video, fidx)) if hasattr(labels, "get") else None
+                lf = labels.find((video, fidx))
                 if (
                     lf is not None
                     and hasattr(lf, "has_user_instances")
@@ -306,6 +396,7 @@ def get_labeled_frame_count(labels, video=None, filter: str = "") -> int:
 
     return 0
 
+
 def find_first(labels, video, frame_idx=None, use_cache: bool = False):
     """Find the first occurrence of a matching labeled frame.
 
@@ -440,36 +531,36 @@ def load_and_match(filename: str, match_to: Labels):
 
 def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
     """Return an iterator over all labeled frames in a video with optional start position and order control.
-    
+
     This function recreates the functionality of Labels.frames() from the original SLEAP codebase.
-    
+
     Args:
         labels: A Labels object containing labeled frames
         video: A Video object that is associated with the project
         from_frame_idx: The frame index from which to start (default: -1 for beginning)
         reverse: Whether to iterate over frames in reverse order (default: False)
-        
+
     Yields:
         LabeledFrame objects for the specified video
     """
     # Get all labeled frames for this video
     labeled_frames = labels.find(video) if hasattr(labels, 'find') else []
-    
+
     if not labeled_frames:
         return
-    
+
     # Extract frame indices and sort them
     frame_idxs = sorted([lf.frame_idx for lf in labeled_frames if hasattr(lf, 'frame_idx')])
-    
+
     if not frame_idxs:
         return
-    
+
     # Handle the case where from_frame_idx is -1 (start from beginning)
     if from_frame_idx == -1:
         if reverse:
             frame_idxs = frame_idxs[::-1]  # Reverse the list
         # Use the frame_idxs as is for forward direction
-    
+
     else:
         # Find the next frame index after/before the specified frame
         if not reverse:
@@ -490,7 +581,7 @@ def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
                     break
             if next_frame_idx is None:
                 next_frame_idx = frame_idxs[-1]  # Wrap to end
-        
+
         # Find the position of the next frame in the list
         try:
             cut_list_idx = frame_idxs.index(next_frame_idx)
@@ -499,7 +590,7 @@ def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
             if reverse:
                 frame_idxs = frame_idxs[::-1]
             return
-        
+
         # Reorder the list to start from the specified position
         if reverse:
             # For reverse, we need to handle the reordering differently
@@ -508,10 +599,10 @@ def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
         else:
             # For forward, just reorder normally
             frame_idxs = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
-    
+
     # Create a mapping from frame_idx to LabeledFrame for quick lookup
     frame_map = {lf.frame_idx: lf for lf in labeled_frames if hasattr(lf, 'frame_idx')}
-    
+
     # Yield the frames in the order specified by frame_idxs
     for idx in frame_idxs:
         if idx in frame_map:
@@ -520,64 +611,64 @@ def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
 
 def get_template_instance_points(labels, skeleton):
     """Get template instance points for a skeleton.
-    
+
     This function recreates the functionality of labels.get_template_instance_points(skeleton)
     from the original SLEAP codebase.
-    
+
     Args:
         labels: A Labels object containing labeled frames and instances
         skeleton: A Skeleton object to get template points for
-        
+
     Returns:
         numpy array of template points for the skeleton
     """
     import itertools
     import numpy as np
-    
+
     # Check if labels has labeled_frames attribute
     if not hasattr(labels, 'labeled_frames'):
         return None
-    
+
     # Check if there are any labeled frames
     if not labels.labeled_frames:
         # No labeled frames so use force-directed graph layout
         try:
             import networkx as nx
             from sleap.util import to_graph
-            
+
             # Create graph from skeleton and get spring layout
             G = to_graph(skeleton)
             node_positions = nx.spring_layout(G=G, scale=50)
-            
+
             # Create template points from node positions
             template_points = np.stack([
                 node_positions[node] if node in node_positions else np.random.randint(0, 50, size=2)
                 for node in skeleton.nodes
             ])
-            
+
             return template_points
-            
+
         except ImportError:
             # Fallback if networkx is not available
             template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
             return template_points
-    
+
     # Check if there are any instances
     if not hasattr(labels, 'instances') or not labels.instances():
         # No instances, use fallback
         template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
         return template_points
-    
+
     # Get first 1000 instances for this skeleton
     try:
         from sleap.info import align
-        
+
         # Get instances for this skeleton
         skeleton_instances = []
         for instance in itertools.islice(labels.instances(skeleton=skeleton), 1000):
             if hasattr(instance, 'points') and instance.points is not None:
                 skeleton_instances.append(instance)
-        
+
         if skeleton_instances:
             # Get template points from aligned instances
             template_points = align.get_template_points_array(skeleton_instances)
@@ -586,7 +677,7 @@ def get_template_instance_points(labels, skeleton):
             # No valid instances, use fallback
             template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
             return template_points
-            
+
     except ImportError:
         # Fallback if sleap.info.align is not available
         template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))

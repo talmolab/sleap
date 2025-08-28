@@ -105,7 +105,7 @@ class QtImageDirectoryWidget(QtVideoPlayer):
                 self.state["frame_idx"] = get_last_frame_idx(self.video)
             elif self.state["frame_idx"]:
                 # self.state["frame_idx"] = min(
-                #     self.state["frame_idx"], self.video.last_frame_idx 
+                #     self.state["frame_idx"], self.video.last_frame_idx
                 # )
                 self.state["frame_idx"] = min(
                     self.state["frame_idx"], get_last_frame_idx(self.video)

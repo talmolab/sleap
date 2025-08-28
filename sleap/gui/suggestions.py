@@ -322,7 +322,7 @@ class VideoFrameSuggestions(object):
         cls, video: Video, labels: "Labels", displacement_threshold: float
     ):
         # Get numpy of shape (frames, tracks, nodes, x, y)
-        labels_numpy = labels.numpy(video=video, all_frames=True, untracked=False)
+        labels_numpy = labels.numpy(video=video, untracked=False)
 
         # Return empty list if not enough frames
         n_frames, n_tracks, n_nodes, _ = labels_numpy.shape
@@ -408,10 +408,10 @@ class VideoFrameSuggestions(object):
 
 def demo_gui():
     from sleap.gui.dialogs.formbuilder import YamlFormWidget
-    from sleap import Labels
+    from sleap_io import load_file
     from qtpy.QtWidgets import QApplication
 
-    labels = Labels.load_file(
+    labels = load_file(
         "tests/data/json_format_v2/centered_pair_predictions.json"
     )
 

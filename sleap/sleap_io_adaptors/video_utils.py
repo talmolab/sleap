@@ -39,7 +39,7 @@ def available_video_exts() -> Tuple[str]:
 
 def video_util_reset(video: Video, filename: str = None, grayscale: bool = None):
     """Reloads the video.
-    
+
     Returns:
         None
     """
@@ -58,7 +58,6 @@ def video_util_reset(video: Video, filename: str = None, grayscale: bool = None)
 
 def get_last_frame_idx(video=None):
     """Get the last frame index for a specific video.
-    
     This function recreates the functionality of labels.get_last_frame_idx(video)
     from the original SLEAP codebase.
     """
@@ -69,6 +68,4 @@ def get_last_frame_idx(video=None):
         return max(source_inds)
     else:
         return video.backend.frames - 1
-    
-    
 

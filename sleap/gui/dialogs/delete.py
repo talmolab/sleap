@@ -8,6 +8,7 @@ from sleap_io import LabeledFrame, Instance
 from qtpy import QtCore, QtWidgets
 
 from typing import List, Text, Tuple
+from sleap.sleap_io_adaptors.lf_labels_utils import remove_instance
 
 
 class DeleteDialog(QtWidgets.QDialog):
@@ -213,12 +214,15 @@ class DeleteDialog(QtWidgets.QDialog):
     def _delete(self, lf_inst_list: List[Tuple[LabeledFrame, Instance]]):
         # Delete the instances
         for lf, inst in lf_inst_list:
-            self.context.labels.remove_instance(lf, inst, in_transaction=True)
+            remove_instance(self.context.labels, instance=inst, lf=lf)
             if not lf.instances:
-                self.context.labels.remove(lf)
+                for lf_idx, lab_fr in enumerate(self.context.labels):
+                    if lab_fr.video.matches_content(lf.video) and lab_fr.frame_idx == lf.frame_idx:
+                        self.context.labels.pop(lf_idx)
+        self.context.labels.update()
 
-        # Update caches since we skipped doing this after each deletion
-        self.context.labels.update_cache()
+        # # Update caches since we skipped doing this after each deletion
+        # self.context.labels.update_cache()
 
         # Log update
         self.context.changestack_push("delete instances")
@@ -227,10 +231,10 @@ class DeleteDialog(QtWidgets.QDialog):
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
 
-    from sleap import Labels
+    from sleap_io import load_file
     from sleap.gui.commands import CommandContext
 
-    labels = Labels.load_file(
+    labels = load_file(
         "tests/data/json_format_v2/centered_pair_predictions.json"
     )
     context = CommandContext.from_labels(labels)
