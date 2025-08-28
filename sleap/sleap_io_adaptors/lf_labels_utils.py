@@ -1020,3 +1020,17 @@ def track_swap(
         # Only clear old track if it's a real track
         for instance in new_track_instances:
             instance.track = old_track
+
+
+def track_set_instance(
+    labels: Labels, frame: LabeledFrame, instance: Instance, new_track: Track
+):
+    """Set track on given instance, updating occupancy."""
+    track_swap(
+        labels,
+        frame.video,
+        new_track,
+        instance.track,
+        (frame.frame_idx, frame.frame_idx + 1),
+    )
+    instance.track = new_track
