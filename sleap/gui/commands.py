@@ -3322,9 +3322,11 @@ class RemoveSuggestion(EditCommand):
     def do_action(cls, context: CommandContext, params: dict):
         selected_frame = context.app.suggestions_dock.table.getSelectedRowItem()
         if selected_frame is not None:
-            context.labels.remove_suggestion(
-                selected_frame.video, selected_frame.frame_idx
-            )
+            for sug_idx, suggestion in enumerate(context.labels.suggestions):
+                if suggestion.video.match_content(selected_frame.video) and suggestion.frame_idx == selected_frame.frame_idx:
+                    context.labels.suggestions.pop(sug_idx)
+                    break
+        context.labels.update()
 
 
 class ClearSuggestions(EditCommand):
