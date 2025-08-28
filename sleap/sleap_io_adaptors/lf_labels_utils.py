@@ -114,7 +114,7 @@ def remove_frames(labels: Labels, frames: List[LabeledFrame]):
 
 def remove_instance(labels: Labels, instance: Instance, lf: LabeledFrame):
     """Remove an instance from a labeled frame and update all related instances."""
-    lf_inst_to_remove = labels.find(video=lf.video, frame_idx=lf.frame_idx)
+    lf_inst_to_remove = labels.find(video=lf.video, frame_idx=lf.frame_idx)[0]
     if lf_inst_to_remove:
         for inst_idx, inst in enumerate(lf_inst_to_remove.instances):
             if inst.same_pose_as(instance):
@@ -920,9 +920,10 @@ def get_next_suggestion(labels: Labels, video, frame_idx, seek_direction=1):
     return find_suggestion(labels, video, frame_suggestion)
 
 
-
 def instances(
-    labels: Optional[Labels], video: Optional[Video] = None, skeleton: Optional[Skeleton] = None
+    labels: Optional[Labels],
+    video: Optional[Video] = None,
+    skeleton: Optional[Skeleton] = None,
 ):
     for labeled_frame in labels.labeled_frames:
         if labeled_frame.video is not None or labeled_frame.video == video:
@@ -931,7 +932,12 @@ def instances(
                     yield instance
 
 
-def merge_nodes_data(predicted_instance: PredictedInstance, points_array: PointsArray, base_node: str, merge_node: str):
+def merge_nodes_data(
+    predicted_instance: PredictedInstance,
+    points_array: PointsArray,
+    base_node: str,
+    merge_node: str,
+):
     """Copy point data from one node to another.
 
     Args:
@@ -943,25 +949,34 @@ def merge_nodes_data(predicted_instance: PredictedInstance, points_array: Points
     """
 
     base_pt = points_array.__getitem__(base_node) if points_array is not None else None
-    merge_pt = points_array.__getitem__(merge_node) if points_array is not None else None
+    merge_pt = (
+        points_array.__getitem__(merge_node) if points_array is not None else None
+    )
 
     # check x coordinate not NaN
-    if math.isnan(merge_pt['xy'][0]):
+    if math.isnan(merge_pt["xy"][0]):
         return
-    
+
     # check y coordinate not NaN
-    if math.isnan(merge_pt['xy'][1]) or not base_pt['visible']:
-        base_pt['xy'][0] = merge_pt['xy'][0]
-        base_pt['xy'][1] = merge_pt['xy'][1]
-        base_pt['visible'] = merge_pt['visible']
-        base_pt['complete'] = merge_pt['complete']
+    if math.isnan(merge_pt["xy"][1]) or not base_pt["visible"]:
+        base_pt["xy"][0] = merge_pt["xy"][0]
+        base_pt["xy"][1] = merge_pt["xy"][1]
+        base_pt["visible"] = merge_pt["visible"]
+        base_pt["complete"] = merge_pt["complete"]
         # if hasattr(base_instance.from_predicted, 'score'):
         predicted_points_array = predicted_instance.points
-        if hasattr(predicted_instance, 'score'):
-            predicted_points_array.get('base_node')['score'] = predicted_points_array.get('merge_node')['score']
+        if hasattr(predicted_instance, "score"):
+            predicted_points_array.get("base_node")["score"] = (
+                predicted_points_array.get("merge_node")["score"]
+            )
 
 
-def merge_nodes(base_node: str, merge_node: str, labels: Optional[Labels], skeleton: Optional[Skeleton]):
+def merge_nodes(
+    base_node: str,
+    merge_node: str,
+    labels: Optional[Labels],
+    skeleton: Optional[Skeleton],
+):
     """Merge two nodes and update data accordingly.
 
     Args:
@@ -979,7 +994,7 @@ def merge_nodes(base_node: str, merge_node: str, labels: Optional[Labels], skele
         Otherwise, it will be updated with the data from the `merge_node` on the
         same instance.
     """
-    # Update data on all instances. (Labels.instances() is a generator function) 
+    # Update data on all instances. (Labels.instances() is a generator function)
     # Labels <- List<LabeledFrame> <- List<Instance> hierarchy
     for inst in instances(labels, skeleton):
         # inst._merge_nodes_data(base_node, merge_node)
@@ -995,6 +1010,7 @@ def merge_nodes(base_node: str, merge_node: str, labels: Optional[Labels], skele
     # # Fix instances.
     # for inst in instances(labels, skeleton):
     #     inst._fix_array()
+
 
 def find_labeled_frames(
     self,
@@ -1115,4 +1131,3 @@ def track_set_instance(
         (frame.frame_idx, frame.frame_idx + 1),
     )
     instance.track = new_track
-
