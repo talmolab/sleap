@@ -80,9 +80,16 @@ from sleap_io import save_video
 from sleap.io.visuals import save_labeled_video
 from sleap.util import get_package_file
 from sleap_io.model.skeleton import Node, Skeleton
-from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node, delete_symmetry, delete_edge
+from sleap.sleap_io_adaptors.skeleton_utils import (
+    get_symmetry_node,
+    delete_symmetry,
+    delete_edge,
+)
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
-from sleap.sleap_io_adaptors.lf_labels_utils import make_video_callback
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    make_video_callback,
+    get_next_suggestion,
+)
 from sleap.sleap_io_adaptors.skeleton_utils import (
     get_symmetry_node,
     delete_symmetry,
@@ -95,8 +102,21 @@ from sleap_io import save_skeleton
 import json
 from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
-from sleap.sleap_io_adaptors.lf_labels_utils import remove_unused_tracks, remove_instance, remove_frames, add_suggestion
-from sleap.sleap_io_adaptors.lf_labels_utils import frames, get_template_instance_points, get_track_occupancy, remove_track, remove_video, remove_all_tracks
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    remove_unused_tracks,
+    remove_instance,
+    remove_frames,
+    add_suggestion,
+)
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    frames,
+    get_template_instance_points,
+    get_track_occupancy,
+    remove_track,
+    remove_video,
+    remove_all_tracks,
+)
+
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
 OPEN_IN_NEW = True
 
@@ -751,9 +771,7 @@ class LoadProjectFile(LoadLabelsObject):
             # ) #TODO:
 
             gui_video_callback = make_video_callback(
-                search_paths=[os.path.dirname(filename)],
-                use_gui=True,
-                context=params
+                search_paths=[os.path.dirname(filename)], use_gui=True, context=params
             )
 
             try:
@@ -1998,7 +2016,9 @@ class GoNextLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
         return frames(
-            context.labels, context.state["video"], from_frame_idx=context.state["frame_idx"]
+            context.labels,
+            context.state["video"],
+            from_frame_idx=context.state["frame_idx"],
         )
 
 
@@ -2006,8 +2026,11 @@ class GoNextUserLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
         from sleap.sleap_io_adaptors.lf_labels_utils import frames
+
         frames = frames(
-            context.labels, context.state["video"], from_frame_idx=context.state["frame_idx"]
+            context.labels,
+            context.state["video"],
+            from_frame_idx=context.state["frame_idx"],
         )
         # Filter to frames with user instances
         frames = filter(lambda lf: lf.has_user_instances, frames)
@@ -2038,16 +2061,17 @@ class GoNextSuggestedFrame(NavCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        next_suggestion_frame = context.labels.get_next_suggestion(
-            context.state["video"], context.state["frame_idx"], cls.seek_direction
+        next_suggestion_frame = get_next_suggestion(
+            context.labels,
+            context.state["video"],
+            context.state["frame_idx"],
+            cls.seek_direction,
         )
         if next_suggestion_frame is not None:
             cls.go_to(
                 context, next_suggestion_frame.frame_idx, next_suggestion_frame.video
             )
-            selection_idx = context.labels.suggestions.index(
-                next_suggestion_frame
-            )
+            selection_idx = context.labels.suggestions.index(next_suggestion_frame)
             context.state["suggestion_idx"] = selection_idx
 
 
@@ -3044,7 +3068,9 @@ class DeleteSelectedInstance(EditCommand):
         if selected_inst is None:
             return
 
-        remove_instance(context.labels, instance=selected_inst, lf=context.state["labeled_frame"])
+        remove_instance(
+            context.labels, instance=selected_inst, lf=context.state["labeled_frame"]
+        )
         context.state["instance"] = None
 
 
@@ -3062,7 +3088,9 @@ class DeleteSelectedInstanceTrack(EditCommand):
             return
 
         track = selected_inst.track
-        remove_instance(context.labels, instance=selected_inst, lf=context.state["labeled_frame"])
+        remove_instance(
+            context.labels, instance=selected_inst, lf=context.state["labeled_frame"]
+        )
         context.state["instance"] = None
 
         if track is not None:
@@ -3401,7 +3429,10 @@ class AddInstance(EditCommand):
             context.state["labeled_frame"].instances.append(new_instance)
 
         existing_tracks = [track.name for track in context.labels.tracks]
-        if new_instance.track is not None and new_instance.track.name not in existing_tracks:
+        if (
+            new_instance.track is not None
+            and new_instance.track.name not in existing_tracks
+        ):
             context.labels.tracks.append(new_instance.track)
 
         if context.state["labeled_frame"] not in context.labels:
@@ -3862,8 +3893,7 @@ class AddMissingInstanceNodes(EditCommand):
     ):
         # Get the "template" instance
         template_points = get_template_instance_points(
-            context.labels,
-            skeleton=instance.skeleton
+            context.labels, skeleton=instance.skeleton
         )
 
         # Align the template on to the current instance with missing points
@@ -4009,7 +4039,10 @@ class AddUserInstancesFromPredictions(EditCommand):
                 context.state["labeled_frame"].instances.append(new_instance)
 
             existing_tracks = [track.name for track in context.labels.tracks]
-            if new_instance.track is not None and new_instance.track.name not in existing_tracks:
+            if (
+                new_instance.track is not None
+                and new_instance.track.name not in existing_tracks
+            ):
                 context.labels.tracks.append(new_instance.track)
 
             if context.state["labeled_frame"] not in context.labels:
@@ -4055,7 +4088,10 @@ class PasteInstance(EditCommand):
             current_frame.instances.append(new_instance)
 
         existing_tracks = [track.name for track in context.labels.tracks]
-        if new_instance.track is not None and new_instance.track.name not in existing_tracks:
+        if (
+            new_instance.track is not None
+            and new_instance.track.name not in existing_tracks
+        ):
             context.labels.tracks.append(new_instance.track)
 
         if current_frame not in context.labels:
