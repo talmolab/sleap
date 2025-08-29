@@ -7,7 +7,7 @@ import numpy as np
 from pathlib import PurePath, Path
 from qtpy import QtCore
 from typing import List
-from sleap_io.io.video_reading import SingleImageVideo, MediaVideo
+from sleap_io.io.video_reading import MediaVideo
 
 from sleap_io import Skeleton, Track, PredictedInstance, Labels, LabeledFrame, Instance
 from sleap.gui.app import MainWindow
@@ -336,11 +336,6 @@ def assert_video_params(
     if reset and isinstance(video.backend, MediaVideo):
         assert video.backend._reader_ is None
         assert video.backend._test_frame_ is None
-    elif reset and isinstance(video.backend, SingleImageVideo):
-        assert video.backend.test_frame_ is None
-        assert video.backend.height_ == height
-        assert video.backend.width_ == width
-        assert video.backend.channels_ == channels
 
     # Getting the channels will assert some of the above are not None
     if grayscale is not None:
