@@ -16,7 +16,7 @@ import logging
 import attr
 from qtpy.QtWidgets import QGraphicsItem
 
-from sleap import Labels, Video
+from sleap_io import Labels, Video
 from sleap.gui.widgets.video import QtVideoPlayer
 
 logger = logging.getLogger(__name__)
