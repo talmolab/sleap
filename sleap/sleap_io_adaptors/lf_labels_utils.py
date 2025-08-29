@@ -523,11 +523,11 @@ def load_and_match(filename: str, match_to: Labels):
                 # if available.
                 old_vid_paths = [old_vid.filename]
                 if getattr(old_vid.backend, "has_embedded_images", False):
-                    old_vid_paths.append(old_vid.backend.filename)
+                    old_vid_paths.append(old_vid.filename)
 
                 new_vid_paths = [vid.filename]
                 if getattr(vid.backend, "has_embedded_images", False):
-                    new_vid_paths.append(vid.backend.filename)
+                    new_vid_paths.append(vid.filename)
 
                 is_match = False
                 for old_vid_path in old_vid_paths:
@@ -546,7 +546,7 @@ def load_and_match(filename: str, match_to: Labels):
     return labels
 
 
-def frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
+def iterate_labeled_frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
     """Return an iterator over lfs in a video with start pos (opt) and order control.
 
     This function recreates Labels.frames() from the original SLEAP codebase.

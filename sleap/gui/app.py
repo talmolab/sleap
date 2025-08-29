@@ -224,11 +224,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "player"):
             # Explicitly close the video to release its resources
             if hasattr(self.player, "video") and self.player.video is not None:
-                # Call close() on MediaVideo backend to release the RLock
-                if hasattr(self.player.video, "backend") and hasattr(
-                    self.player.video.backend, "close"
-                ):
-                    self.player.video.close()
+                self.player.video.close()
                 self.player.video = None
 
             # Stop the worker thread
@@ -367,8 +363,8 @@ class MainWindow(QMainWindow):
             frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
             frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
             if video is not None:
-                frame_to_spinbox.setMaximum(video.backend.frames)
-                frame_from_spinbox.setMaximum(video.backend.frames)
+                frame_to_spinbox.setMaximum(len(video))
+                frame_from_spinbox.setMaximum(len(video))
 
         self.state.connect(
             "video",
@@ -1311,7 +1307,7 @@ class MainWindow(QMainWindow):
             message = ""
             if len(self.labels.videos) > 0 and current_video is not None:
                 for i, video in enumerate(self.labels.videos):
-                    if video.backend.filename == current_video.backend.filename:
+                    if video.filename == current_video.filename:
                         same_dataset = (
                             (video.backend.dataset == current_video.backend.dataset)
                             if hasattr(video.backend, "dataset")
@@ -1327,7 +1323,7 @@ class MainWindow(QMainWindow):
 
             if current_video is not None:
                 message += (
-                    f"Frame: {frame_idx + 1:,}/{current_video.backend.num_frames:,}"
+                    f"Frame: {frame_idx + 1:,}/{len(current_video):,}"
                 )
 
             if self.player.seekbar.hasSelection():
@@ -1358,7 +1354,7 @@ class MainWindow(QMainWindow):
                 if pred_frame_count:
                     message += f"{spacer}Predicted Frames: {pred_frame_count:,}"
                     percentage = (
-                        pred_frame_count / current_video.backend.num_frames * 100
+                        pred_frame_count / len(current_video) * 100
                     )
                     message += f" ({percentage:.2f}%)"
                     message += " in video"
@@ -1508,10 +1504,10 @@ class MainWindow(QMainWindow):
 
         selection["clip"] = {current_video: encode_range(*clip_range)}
         selection["video"] = {
-            current_video: encode_range(0, current_video.backend.num_frames)
+            current_video: encode_range(0, len(current_video))
         }
         selection["all_videos"] = {
-            video: encode_range(0, video.backend.num_frames)
+            video: encode_range(0, len(video))
             for video in self.labels.videos
         }
 

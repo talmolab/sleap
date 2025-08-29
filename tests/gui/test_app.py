@@ -79,8 +79,8 @@ def test_app_workflow(
     def assert_frame_chunk_suggestion_ui_updated(
         app, frame_to_spinbox, frame_from_spinbox
     ):
-        assert frame_to_spinbox.maximum() == app.state["video"].num_frames
-        assert frame_from_spinbox.maximum() == app.state["video"].num_frames
+        assert frame_to_spinbox.maximum() == len(app.state["video"])
+        assert frame_from_spinbox.maximum() == len(app.state["video"])
 
     method_layout = app.suggestions_dock.suggestions_form_widget.form_layout.fields[
         "method"
@@ -248,7 +248,7 @@ def test_app_workflow(
     app.state["video"] = video_clip
     app.on_data_update([UpdateTopic.all])
     num_samples = 5
-    frame_delta = video_clip.num_frames // num_samples
+    frame_delta = len(video_clip) // num_samples
 
     # Add suggestions
     app.labels.suggestions = VideoFrameSuggestions.suggest(

@@ -623,12 +623,12 @@ class VideoPreviewWidget(QWidget):
         """Load the video preview and display label text."""
         self.video = video
         self.frame_idx = initial_frame
-        h, w, c = self.video.backend.img_shape[:3]
+        n_frames, height, width, channels = self.video.shape
         label = "(%d, %d), %d f, %d c" % (
-            w,
-            h,
-            self.video.backend.num_frames,
-            c,
+            width,
+            height,
+            n_frames,
+            channels,
         )
         self.video_label.setText(label)
         if plot:
@@ -640,7 +640,7 @@ class VideoPreviewWidget(QWidget):
             return
 
         # Get image data
-        frame = self.video.backend.get_frame(idx)
+        frame = self.video[idx]
 
         # Re-size the preview image
         height, width = frame.shape[:2]
@@ -656,12 +656,11 @@ class VideoPreviewWidget(QWidget):
         if frame.ndim == 2:
             frame = np.expand_dims(frame, axis=-1)
 
+        # TODO: Look into this -- BGR to RGB should be handled by the video backend
         # Convert BGR to RGB if image has 3 channels
-        if frame.shape[-1] == 3:
-            frame = frame[..., ::-1]
-            image = ndarray_to_qimage(frame)
-        else:
-            image = ndarray_to_qimage(frame)
+        # if frame.shape[-1] == 3:
+        #     frame = frame[..., ::-1]
+        image = ndarray_to_qimage(frame)
 
         # Display image
         self.view.setImage(image)

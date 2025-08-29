@@ -85,7 +85,7 @@ def default_analysis_filename(
     format_suffix: str = "h5",
 ) -> str:
     video_idx = labels.videos.index(video)
-    vn = PurePath(video.backend.filename)
+    vn = PurePath(video.filename)
     filename = str(
         PurePath(
             output_path,
@@ -127,7 +127,7 @@ def main(args: list = None):
         vids = []
         if len(args.video) > 0:  # if a video is specified
             for v in labels.videos:  # check if it is among the videos in the project
-                if args.video in v.backend.filename:
+                if args.video in v.filename:
                     vids.append(v)
                     break
         else:

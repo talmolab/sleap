@@ -423,7 +423,7 @@ def save_labeled_video(
     # Pass marker thread in as intrmediate thread to write_video (and write video).
     # intermediate_threads = [thread_mark]
     save_video(
-        frames=[video.backend.get_frame(i) for i in frames],
+        frames=[video[i] for i in frames],
         filename=filename,
         fps=fps,
     )  # TODO: add other parameters

@@ -17,15 +17,15 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
     scale = 0.25
 
     video = centered_pair_predictions.videos[video_idx]
-    frame_images = video.backend.get_frames(frames)
+    frame_images = video[frames]
 
     # Make sure we can resize
     small_images = resize_images(frame_images, scale=scale)
 
     _, height, width, _ = small_images.shape
 
-    assert height == video.backend.img_shape[0] // (1 / scale)
-    assert width == video.backend.img_shape[1] // (1 / scale)
+    assert height == video.shape[1] // (1 / scale)
+    assert width == video.shape[2] // (1 / scale)
 
     marker_thread = VideoMarkerThread(
         in_q=None,
@@ -108,8 +108,8 @@ def test_write_visuals(tmpdir, centered_pair_predictions: Labels, crop: str):
 
     # Determine crop size relative to original size and scale
     crop_size_xy = None
-    w = int(video.backend.width)
-    h = int(video.backend.height)
+    w = int(video.shape[2])
+    h = int(video.shape[1])
     if crop == "Half":
         crop_size_xy = (w // 2, h // 2)
     elif crop == "Quarter":

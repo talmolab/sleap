@@ -40,7 +40,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     # Testing videos that have less frames than desired Samples per Video (stride)
     # Expected result is there should be n suggestions where n is equal to the frames
     # in the video.
-    vid_frames = centered_pair_predictions.video.backend.num_frames
+    vid_frames = len(centered_pair_predictions.video)
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={

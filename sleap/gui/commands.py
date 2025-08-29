@@ -109,7 +109,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     add_suggestion,
 )
 from sleap.sleap_io_adaptors.lf_labels_utils import (
-    frames,
+    iterate_labeled_frames,
     get_template_instance_points,
     get_track_occupancy,
     remove_track,
@@ -1190,7 +1190,7 @@ class ExportAnalysisFile(AppCommand):
         for video in videos:
             # Create the filename
             video_idx = labels.videos.index(video)
-            vn = Path(video.backend.filename)
+            vn = Path(video.filename)
             default_name = str(
                 Path(
                     dirname,
@@ -1319,7 +1319,7 @@ class ExportVideoClip(AppCommand):
         # )
         save_video(
             frames=[
-                context.state["video"].backend.get_frame(i) for i in params["frames"]
+                context.state["video"][frame_idx] for frame_idx in params["frames"]
             ],
             filename=params["video_filename"],
             fps=params["fps"],
@@ -1414,7 +1414,7 @@ class ExportVideoClip(AppCommand):
         if context.state["has_frame_range"]:
             params["frames"] = range(*context.state["frame_range"])
         else:
-            params["frames"] = range(context.state["video"].frames)
+            params["frames"] = range(len(context.state["video"]))
 
         return params
 
@@ -1447,7 +1447,7 @@ class ExportVideoClip(AppCommand):
         # Determine crop size relative to original size and scale
         # (crop size should be *final* output size, thus already scaled).
         video = context.state["video"]
-        img_h, img_w = video.backend.img_shape[:2]
+        img_h, img_w = video.shape[1:3]
         w = int(img_w * params["scale"])
         h = int(img_h * params["scale"])
         if export_options_crop == "Half":
@@ -1730,8 +1730,7 @@ class ExportLabelsSubset(ExportFullPackage):
         frames = params["frames"]
         end_frame_idx = frames[-1]  # 0-indexed
         video: Video = context.state["video"]
-        n_frames = video.frames
-
+        n_frames = len(video)
         # Initialize video subset.
         video_subset = video
 
@@ -1887,7 +1886,7 @@ class GoIteratorCommand(AppCommand):
 class GoPreviousLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        return frames(
+        return iterate_labeled_frames(
             context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
@@ -1898,7 +1897,7 @@ class GoPreviousLabeledFrame(GoIteratorCommand):
 class GoNextLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        return frames(
+        return iterate_labeled_frames(
             context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
@@ -1908,16 +1907,16 @@ class GoNextLabeledFrame(GoIteratorCommand):
 class GoNextUserLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        from sleap.sleap_io_adaptors.lf_labels_utils import frames
+        from sleap.sleap_io_adaptors.lf_labels_utils import iterate_labeled_frames
 
-        frames = frames(
+        iterate_labeled_frames = iterate_labeled_frames(
             context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
         )
         # Filter to frames with user instances
-        frames = filter(lambda lf: lf.has_user_instances, frames)
-        return frames
+        iterate_labeled_frames = filter(lambda lf: lf.has_user_instances, iterate_labeled_frames)
+        return iterate_labeled_frames
 
 
 class NavCommand(AppCommand):
@@ -2051,7 +2050,7 @@ class ToggleGrayscale(EditCommand):
 
         def try_to_read_grayscale(video: Video):
             try:
-                return video.backend.grayscale
+                return video.grayscale
             except Exception:
                 return None
 
@@ -2141,7 +2140,7 @@ class ReplaceVideo(EditCommand):
 
             # TODO: Will need to create a new backend if import has different extension.
             if (
-                Path(video.backend.filename).suffix
+                Path(video.filename).suffix
                 != Path(import_params["filename"]).suffix
             ):
                 raise TypeError(
@@ -2196,7 +2195,7 @@ class ReplaceVideo(EditCommand):
             return False
 
         # Select the videos we want to swap
-        old_paths = [video.backend.filename for video in context.labels.videos]
+        old_paths = [video.filename for video in context.labels.videos]
         paths = list(old_paths)
         okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
         if not okay:
@@ -2904,7 +2903,7 @@ class TransposeInstances(EditCommand):
             if context.state["propagate track labels"]:
                 frame_range = (
                     context.state["frame_idx"],
-                    context.state["video"].frames,
+                    len(context.state["video"]),
                 )
             else:
                 frame_range = (
@@ -3068,7 +3067,7 @@ class SetSelectedInstanceTrack(EditCommand):
                 # Otherwise, range is current to last frame
                 frame_range = (
                     context.state["frame_idx"],
-                    context.state["video"].frames,
+                    len(context.state["video"]),
                 )
 
             # Do the swap
@@ -3633,9 +3632,9 @@ class AddInstance(EditCommand):
     @staticmethod
     def get_previous_frame_index(context: CommandContext) -> Optional[int]:
         """Returns index of previous frame."""
-        from sleap.sleap_io_adaptors.lf_labels_utils import frames
+        from sleap.sleap_io_adaptors.lf_labels_utils import iterate_labeled_frames
 
-        frames = frames(
+        frames_iter = iterate_labeled_frames(
             context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
@@ -3643,7 +3642,7 @@ class AddInstance(EditCommand):
         )
 
         try:
-            next_idx = next(frames).frame_idx
+            next_idx = next(frames_iter).frame_idx
         except Exception:
             return
 

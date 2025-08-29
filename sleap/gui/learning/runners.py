@@ -122,8 +122,8 @@ class VideoItemForInference(ItemForInference):
         if self.labels_path is not None:
             return self.labels_path
         if self.use_absolute_path:
-            return os.path.abspath(self.video.backend.filename)
-        return self.video.backend.filename
+            return os.path.abspath(self.video.filename)
+        return self.video.filename
 
     @property
     def cli_args(self):
@@ -133,11 +133,16 @@ class VideoItemForInference(ItemForInference):
             arg_list.extend(["--video_index", str(self.video_idx)])
 
         # TODO: better support for video params
-        if hasattr(self.video.backend, "dataset") and self.video.backend.dataset:
+        if (
+            self.video.backend
+            and hasattr(self.video.backend, "dataset")
+            and self.video.backend.dataset
+        ):
             arg_list.extend(("--video_dataset", self.video.backend.dataset))
 
         if (
-            hasattr(self.video.backend, "input_format")
+            self.video.backend
+            and hasattr(self.video.backend, "input_format")
             and self.video.backend.input_format
         ):
             arg_list.extend(("--video_input_format", self.video.backend.input_format))

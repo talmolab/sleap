@@ -426,7 +426,7 @@ def main(
         instance_scores=instance_scores,
         tracking_scores=tracking_scores,
         labels_path=str(labels_path),  # NoneType cannot be written to hdf5.
-        video_path=video.backend.filename,
+        video_path=video.filename,
         video_ind=labels.videos.index(video),
         provenance=json.dumps(labels.provenance),  # dict cannot be written to hdf5.
     )
