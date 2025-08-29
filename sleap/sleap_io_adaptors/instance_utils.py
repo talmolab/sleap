@@ -7,6 +7,7 @@ from sleap_io.model.skeleton import Node
 from sleap_io.model.instance import (
     Instance,
     PredictedInstance,
+    PointsArray,
 )
 
 
@@ -96,41 +97,53 @@ def fill_missing(
 
     w, h = y2 - y1, x2 - x1
 
-    # Get current node names from points
-    current_node_names = set(instance.points["name"])
+    # Build a new full points array aligned to the skeleton order.
+    skeleton_nodes = list(instance.skeleton.nodes)
+    current_names = list(instance.points["name"]) if len(instance.points) else []
 
-    # Find missing nodes
-    missing_nodes = []
-    for node in instance.skeleton.nodes:
-        if node.name not in current_node_names or _is_node_nan(instance, node.name):
-            missing_nodes.append(node)
+    # Prepare a raw input array for all nodes, then convert to PointsArray
+    input_array = np.empty(
+        len(skeleton_nodes),
+        dtype=[
+            ("xy", "<f8", (2,)),
+            ("visible", "bool"),
+            ("complete", "bool"),
+            ("name", "O"),
+        ],
+    )
 
-    if not missing_nodes:
-        return instance
-
-    # Create new points array with missing nodes
-    new_points = np.empty(len(missing_nodes), dtype=instance.points.dtype)
-
-    for i, node in enumerate(missing_nodes):
-        # Generate random position within bounding box
+    # Helper to generate a bounded random point inside bbox
+    def _rand_point():
         off = np.array([w, h]) * np.random.rand(2)
         x, y = off + np.array([x1, y1])
-
-        # Clamp to bounds
         y, x = max(y, 0), max(x, 0)
         if max_x is not None:
             x = min(x, max_x)
         if max_y is not None:
             y = min(y, max_y)
+        return np.array([x, y], dtype=np.float64)
 
-        # Set point data
-        new_points[i]["xy"] = [x, y]
-        new_points[i]["visible"] = False
-        new_points[i]["complete"] = False
-        new_points[i]["name"] = node.name
+    for i, node in enumerate(skeleton_nodes):
+        name = node.name
+        if name in current_names:
+            # Copy existing if present and not NaN; otherwise generate new
+            existing_idx = current_names.index(name)
+            pt = instance.points[existing_idx]
+            xy = pt["xy"]
+            if not (np.isnan(xy[0]) or np.isnan(xy[1])):
+                input_array[i] = (
+                    np.array(xy, dtype=np.float64),
+                    pt["visible"],
+                    pt["complete"],
+                    name,
+                )
+            else:
+                input_array[i] = (_rand_point(), False, False, name)
+        else:
+            input_array[i] = (_rand_point(), False, False, name)
 
-        node_idx = instance.skeleton.node_names.index(node.name)
-        instance.points[node_idx] = new_points[i]
+    # Replace points with an array sized to the skeleton
+    instance.points = PointsArray.from_array(input_array)
 
     # Create new instance with filled points
     if hasattr(instance, "score"):  # PredictedInstance
