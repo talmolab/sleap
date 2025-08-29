@@ -679,7 +679,7 @@ def get_template_instance_points(labels, skeleton):
             return template_points
 
     # Check if there are any instances
-    if not hasattr(labels, "instances") or not labels.instances():
+    if not hasattr(labels, "instances") or not instances(labels):
         # No instances, use fallback
         template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
         return template_points
@@ -690,7 +690,9 @@ def get_template_instance_points(labels, skeleton):
 
         # Get instances for this skeleton
         skeleton_instances = []
-        for instance in itertools.islice(labels.instances(skeleton=skeleton), 1000):
+        for instance in itertools.islice(
+            instances(labels=labels, skeleton=skeleton), 1000
+        ):
             if hasattr(instance, "points") and instance.points is not None:
                 skeleton_instances.append(instance)
 
@@ -994,7 +996,6 @@ def merge_nodes(
         Otherwise, it will be updated with the data from the `merge_node` on the
         same instance.
     """
-    # Update data on all instances. (Labels.instances() is a generator function)
     # Labels <- List<LabeledFrame> <- List<Instance> hierarchy
     for inst in instances(labels, skeleton):
         # inst._merge_nodes_data(base_node, merge_node)

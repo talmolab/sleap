@@ -32,6 +32,7 @@ which doesn't yet have all points).
 from sleap_io.model.instance import Instance
 from typing import List, Tuple
 import numpy as np
+from sleap.sleap_io_adaptors.lf_labels_utils import instances
 
 
 def get_stable_node_pairs(
@@ -289,7 +290,7 @@ if __name__ == "__main__":
 
     labels = load_file(filename)
 
-    points = get_instances_points(labels.instances())
+    points = get_instances_points(instances(labels=labels))
     get_stable_node_pairs(points, np.array(labels.skeletons[0].node_names))
 
     # import time

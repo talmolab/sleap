@@ -23,6 +23,7 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
     root_nodes,
     in_degree_over_one,
 )
+from sleap.sleap_io_adaptors.lf_labels_utils import instances
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -648,7 +649,7 @@ class LearningDialog(QtWidgets.QDialog):
             return False
 
         found_tracks = False
-        for inst in self.labels.instances():
+        for inst in instances(labels=self.labels):
             if type(inst) == sleap.Instance and inst.track is not None:
                 found_tracks = True
                 break
