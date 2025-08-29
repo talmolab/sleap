@@ -4,6 +4,7 @@ from qtpy.QtWidgets import QApplication
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
 from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
+from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 
 def test_app_workflow(
@@ -427,7 +428,7 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
 
     # Read colors for each instance in view
     # TODO: revisit with LabeledFrame.unused_predictions() & instances_to_show()
-    visible_instances = window.state["labeled_frame"].instances_to_show
+    visible_instances = get_instances_to_show(window.state["labeled_frame"])
     color_of_instances = {}
     for inst in visible_instances:
         item_color = window.color_manager.get_item_color(inst)
