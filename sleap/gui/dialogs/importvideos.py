@@ -67,7 +67,7 @@ class ImportVideos:
         2. Show import parameter dialog with widget for each file.
 
         Args:
-            filenames: List of filenames. If not provided, a file browser GUI will
+            filenames: List of the filenames. If not provided, a file browser GUI will
                 appear.
 
         Returns:
