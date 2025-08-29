@@ -10,6 +10,7 @@ from queue import Queue
 from threading import Thread
 from time import perf_counter
 from typing import List, Optional, Tuple
+import os
 
 import cv2
 import numpy as np
@@ -18,8 +19,8 @@ from sleap.gui.color import ColorManager
 from sleap_io.model.instance import Instance
 from sleap_io import Video, Labels
 from sleap.sleap_io_adaptors.video_utils import _sentinel
+from sleap.sleap_io_adaptors.lf_labels_utils import load_labels_video_search
 from sleap_io import save_video
-from sleap_io import load_file
 from sleap.util import usable_cpu_count
 
 logger = logging.getLogger(__name__)
@@ -534,10 +535,9 @@ def main(args: list = None):
         ),
     )
     args = parser.parse_args(args=args)
-    labels = load_file(
-        args.data_path
-    )  # , video_search=[os.path.dirname(args.data_path)]
-    # TODO: video_search?
+    labels = load_labels_video_search(
+        args.data_path, video_search=[os.path.dirname(args.data_path)]
+    )
 
     if args.video_index >= len(labels.videos):
         raise IndexError(f"There is no video with index {args.video_index}.")
