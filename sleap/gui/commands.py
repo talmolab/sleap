@@ -1567,14 +1567,13 @@ def export_dataset_gui(
         QtWidgets.QApplication.instance().processEvents()
         return True
 
+    embed_option = "all" if all_labeled else "user+suggestions" if suggested else "user"
     save_file(
         labels,
         filename,
         format="slp",
-        embed=as_package,
-        all_labeled=all_labeled,
-        suggested=suggested,
-        progress_callback=update_progress if verbose else None,
+        embed=embed_option,
+        # progress_callback=update_progress if verbose else None, #TODO
     )
 
     if verbose:

@@ -183,7 +183,7 @@ def main(args: list = None):
         print(f"Output SLEAP dataset: {args.outputs[0]}")
         save_file(labels, args.outputs[0])
 
-    elif args.format in ("slp", "h5", "json"):
+    elif args.format in ("slp", "json"):
         output_path = f"{args.input_path}.{args.format}"
         print(f"Output SLEAP dataset: {output_path}")
         save_file(labels, output_path)
