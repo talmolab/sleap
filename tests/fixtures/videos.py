@@ -59,8 +59,8 @@ def small_robot_mp4_path():
 
 
 @pytest.fixture
-def small_robot_mp4_vid():
-    return Video.from_media(TEST_SMALL_ROBOT_MP4_FILE)
+def small_robot_mp4_vid() -> Video:
+    return Video.from_filename(TEST_SMALL_ROBOT_MP4_FILE)
 
 
 @pytest.fixture
@@ -69,8 +69,8 @@ def centered_pair_vid_path():
 
 
 @pytest.fixture
-def centered_pair_vid():
-    return Video.from_media(TEST_SMALL_CENTERED_PAIR_VID)
+def centered_pair_vid() -> Video:
+    return Video.from_filename(TEST_SMALL_CENTERED_PAIR_VID)
 
 
 TEST_SMALL_ROBOT_SIV_FILE0 = "tests/data/videos/robot0.jpg"
