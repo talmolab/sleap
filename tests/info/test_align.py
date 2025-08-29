@@ -1,9 +1,10 @@
 from sleap.info import align
 import numpy as np
+from sleap.sleap_io_adaptors.lf_labels_utils import instances
 
 
 def test_get_instances_points(centered_pair_labels):
-    x = align.get_instances_points(centered_pair_labels.instances())
+    x = align.get_instances_points(instances(centered_pair_labels))
 
     instance_count = len(centered_pair_labels.labels) * 2
     node_count = len(centered_pair_labels.skeletons[0].nodes)
