@@ -93,6 +93,8 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     track_swap,
     find_track_occupancy,
     track_set_instance,
+    make_video_callback,
+    load_labels_video_search,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
@@ -754,17 +756,14 @@ class LoadProjectFile(LoadLabelsObject):
             filename = None
             has_loaded = True
         else:
-            # gui_video_callback = Labels.make_gui_video_callback(
-            #     search_paths=[os.path.dirname(filename)], context=params
-            # ) #TODO:
-
-            # gui_video_callback = make_video_callback(
-            #     search_paths=[os.path.dirname(filename)], use_gui=True, context=params
-            # ) # TODO:
+            gui_video_callback = make_video_callback(
+                search_paths=[os.path.dirname(filename)], context=params, use_gui=True
+            )
 
             try:
-                # labels = load_file(filename, video_search=gui_video_callback)
-                labels = load_file(filename)
+                labels = load_labels_video_search(
+                    filename, video_search=gui_video_callback
+                )
                 has_loaded = True
             except ValueError as e:
                 print(e)

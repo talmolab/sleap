@@ -770,7 +770,7 @@ def make_video_callback(
     context = context or {}
 
     def video_callback(
-        video_list: List[dict],
+        video_list: List[Video],
         new_paths: List[str] = search_paths,
         context: Optional[Dict] = context,
     ):
@@ -783,7 +783,7 @@ def make_video_callback(
             context: A dictionary containing a "changed_on_load" key with a boolean
                 value. Used externally to determine if any filenames were updated.
         """
-        filenames = [item["backend"]["filename"] for item in video_list]
+        filenames = [item.filename for item in video_list]
         context = context or {"changed_on_load": False}
 
         # Equivalent to pathutils.list_file_missing(filenames)
@@ -843,17 +843,44 @@ def make_video_callback(
 
         # Replace the video filenames with changes by user
         for i, item in enumerate(video_list):
-            item["backend"]["filename"] = filenames[i]
+            item.filename = filenames[i]
 
         if USE_DUMMY_FOR_MISSING_VIDEOS and sum(missing):
             # Replace any video still missing with "dummy" video
             for is_missing, item in zip(missing, video_list):
                 from sleap.io.video import DummyVideo
 
-                vid = DummyVideo(filename=item["backend"]["filename"])
+                vid = DummyVideo(filename=item.filename)
                 item["backend"] = cattr.unstructure(vid)
 
     return video_callback
+
+
+def load_labels_video_search(filename, video_search):
+    labels = load_file(filename)
+
+    if isinstance(video_search, str):
+        video_search = [video_search]
+
+    if hasattr(video_search, "__iter__"):
+        # If the callback is an iterable, then we'll expect it to be a
+        # list of strings and build a non-gui callback with those as
+        # the search paths.
+        # When path is to a file, use the path of parent directory.
+        search_paths = [
+            os.path.dirname(path) if os.path.isfile(path) else path
+            for path in video_search
+        ]
+
+        # Make the search function from list of paths
+        video_search = make_video_callback(search_paths)
+
+    if callable(video_search):
+        abort = video_search(labels.videos)
+        if abort:
+            raise FileNotFoundError
+
+    return labels
 
 
 def find_suggestion(labels: Labels, video, frame_idx):
