@@ -7,7 +7,7 @@ from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
 
 
 def test_app_workflow(
-    qtbot, centered_pair_vid, small_robot_mp4_vid, min_tracks_2node_labels: Labels
+    qtbot, centered_pair_vid: Video, small_robot_mp4_vid: Video, min_tracks_2node_labels: Labels
 ):
     app = MainWindow(no_usage_data=True)
 
@@ -323,7 +323,7 @@ def test_app_workflow(
         assert sugg.video == video_clip
 
 
-def test_app_new_window(qtbot):
+def test_app_new_window(qtbot, min_labels_slp_path, centered_pair_predictions_slp_path):
     app = QApplication.instance()
     app.closeAllWindows()
     win = MainWindow(no_usage_data=True)
@@ -337,7 +337,7 @@ def test_app_new_window(qtbot):
 
     # there's no loaded project, so this should load into same window
     OpenProject.do_action(
-        win.commands, dict(filename="tests/data/json_format_v1/centered_pair.json")
+        win.commands, dict(filename=centered_pair_predictions_slp_path)
     )
 
     assert win.state["project_loaded"]
@@ -348,10 +348,10 @@ def test_app_new_window(qtbot):
 
     # this time it will open in new window, so current window shouldn't change
     OpenProject.do_action(
-        win.commands, dict(filename="tests/data/slp_hdf5/minimal_instance.slp")
+        win.commands, dict(filename=min_labels_slp_path)
     )
 
-    assert win.state["filename"] == "tests/data/json_format_v1/centered_pair.json"
+    assert win.state["filename"] == centered_pair_predictions_slp_path
 
     wins = sum(
         (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
@@ -370,7 +370,7 @@ def test_app_new_window(qtbot):
 
     # should open in new window
     OpenProject.do_action(
-        win.commands, dict(filename="tests/data/json_format_v1/centered_pair.json")
+        win.commands, dict(filename=centered_pair_predictions_slp_path)
     )
 
     wins = sum(
