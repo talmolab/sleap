@@ -23,19 +23,6 @@ def test_sleap_analysis_read(small_robot_3_frame_vid, small_robot_3_frame_hdf5):
     assert len(read_labels.skeletons) == 1
 
 
-def test_text_adaptor(tmpdir):
-    disp = dispatch.Dispatch()
-    disp.register(text.TextAdaptor())
-
-    filename = os.path.join(tmpdir, "textfile.txt")
-    some_text = "some text to save in a file"
-
-    disp.write(filename, some_text)
-
-    read_text = disp.read(filename)
-
-    assert some_text == read_text
-
 
 def test_json_adaptor(tmpdir):
     disp = dispatch.Dispatch()

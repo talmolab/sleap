@@ -112,7 +112,7 @@ for track_name in track_names_list
                     # make everything a PredictedInstance since the usual use
                     # case is to export predictions for analysis
                     instances.append(
-                        PredictedInstance.from_arrays(
+                        PredictedInstance.from_numpy(
                             points=points,
                             point_confidences=point_scores,
                             skeleton=skeleton,
@@ -127,7 +127,9 @@ for track_name in track_names_list
                     )
                 )
 
-        return Labels(labeled_frames=frames)
+        labels = Labels(labeled_frames=frames)
+        labels.update()
+        return labels
 
     @classmethod
     def write(
