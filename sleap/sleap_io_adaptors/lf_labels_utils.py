@@ -843,7 +843,7 @@ def make_video_callback(
 
         # Replace the video filenames with changes by user
         for i, item in enumerate(video_list):
-            item.filename = filenames[i]
+            item.replace_filename(filenames[i])
 
         if USE_DUMMY_FOR_MISSING_VIDEOS and sum(missing):
             # Replace any video still missing with "dummy" video
@@ -877,6 +877,7 @@ def load_labels_video_search(filename, video_search):
 
     if callable(video_search):
         abort = video_search(labels.videos)
+
         if abort:
             raise FileNotFoundError
 
