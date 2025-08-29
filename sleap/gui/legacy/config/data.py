@@ -2,6 +2,7 @@ import attr
 from typing import Optional, Text, List
 from sleap_io import Skeleton
 
+
 @attr.s(auto_attribs=True)
 class LabelsConfig:
     """Labels configuration.
