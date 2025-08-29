@@ -3275,11 +3275,13 @@ class MergeProject(EditCommand):
             return
 
         for filename in filenames:
-            #  # TODO
+            gui_video_callback = make_video_callback(
+                search_paths=[os.path.dirname(filename)], use_gui=True
+            )
 
-            # new_labels = Labels.load_file(filename, video_search=gui_video_callback)
-            # TODO: use gui callback
-            new_labels = load_file(filename)
+            new_labels = load_labels_video_search(
+                filename, video_search=gui_video_callback
+            )
 
             # Merging data is handled by MergeDialog
             MergeDialog(base_labels=context.labels, new_labels=new_labels).exec_()
