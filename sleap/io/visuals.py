@@ -5,7 +5,6 @@ Module for generating videos with visual annotation overlays.
 from __future__ import annotations
 
 import logging
-import os
 from collections import deque
 from queue import Queue
 from threading import Thread

@@ -1,6 +1,6 @@
 """Helper functions for `sleap_io.Instance` objects."""
 
-from typing import Tuple, Optional, List, Union
+from typing import Tuple, Optional, List
 import numpy as np
 
 from sleap_io.model.skeleton import Node

@@ -7,6 +7,7 @@ import numpy as np
 from pathlib import PurePath, Path
 from qtpy import QtCore
 from typing import List
+from sleap_io.io.video_reading import SingleImageVideo, MediaVideo
 
 from sleap_io import Skeleton, Track, PredictedInstance, Labels, LabeledFrame, Instance
 from sleap.gui.app import MainWindow
@@ -309,6 +310,41 @@ def test_ExportAnalysisFile(
     with pytest.raises(ValueError):
         okay = ExportAnalysisFile_ask(context=context, params=params)
 
+def assert_video_params(
+    video: Video,
+    filename: str = None,
+    filenames: List[str] = None,
+    grayscale: bool = None,
+    bgr: bool = None,
+    height: int = None,
+    width: int = None,
+    channels: int = None,
+    reset: bool = False,
+):
+    if filename is not None:
+        assert video.backend.filename == filename
+
+    if grayscale is not None:
+        assert video.backend.grayscale == grayscale
+    else:
+        assert video.backend._detect_grayscale == bool(grayscale is None)
+
+    if bgr is not None:
+        assert video.backend.bgr == bgr
+
+    if reset and isinstance(video.backend, MediaVideo):
+        assert video.backend._reader_ is None
+        assert video.backend._test_frame_ is None
+    elif reset and isinstance(video.backend, SingleImageVideo):
+        assert video.backend.test_frame_ is None
+        assert video.backend.height_ == height
+        assert video.backend.width_ == width
+        assert video.backend.channels_ == channels
+
+    # Getting the channels will assert some of the above are not None
+    if grayscale is not None:
+        assert video.backend.channels == 3 ** (not grayscale)
+
 
 def test_ToggleGrayscale(centered_pair_predictions: Labels):
     """Test functionality for ToggleGrayscale on mp4/avi video"""
@@ -416,7 +452,7 @@ def test_exportNWB(centered_pair_predictions, tmpdir):
     context.state["labels"] = labels
 
     # Ensure ".nwb" extension is appended to filename
-    params = {"adaptor": NDXPoseAdaptor()}
+    params = {"adaptor": "nwb"}
     SaveProjectAs_ask(context, params=params)
     assert PurePath(params["filename"]).suffix == ".nwb"
 
