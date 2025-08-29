@@ -68,7 +68,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap_io import LabeledFrame, Labels, load_file, save_file
+from sleap_io import LabeledFrame, Labels, save_file
 from sleap_io.model.instance import (
     Instance,
     PredictedInstance,

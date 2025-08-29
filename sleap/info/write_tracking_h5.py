@@ -33,7 +33,7 @@ import pandas as pd
 
 from typing import Any, Dict, List, Tuple
 
-from sleap_io import Labels, load_file, PredictedInstance
+from sleap_io import Labels, PredictedInstance
 from sleap_io import Video
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     make_video_callback,
