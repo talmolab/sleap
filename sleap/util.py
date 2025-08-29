@@ -17,8 +17,6 @@ import cv2
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Hashable, Iterable, List, Optional
 
-if TYPE_CHECKING:
-    pass
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
 

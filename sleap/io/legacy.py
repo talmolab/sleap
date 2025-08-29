@@ -10,17 +10,12 @@ import pandas as pd
 from typing import List
 
 from sleap.util import json_loads
-from sleap_io import Video
-
-from sleap.instance import (
-    LabeledFrame,
-)
+from sleap_io import Video, LabeledFrame, Skeleton
 from sleap_io.model.instance import (
     PredictedInstance,
     Track,
     Instance,
 )
-from sleap_io import Skeleton
 
 
 def load_predicted_labels_json_old(

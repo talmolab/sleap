@@ -380,9 +380,7 @@ class CommandContext:
 
     def exportNWB(self):
         """Show gui for exporting nwb file."""
-        pass
-        # TODO: add this back in
-        # self.execute(SaveProjectAs, adaptor=NDXPoseAdaptor())
+        self.execute(SaveProjectAs, adaptor="nwb")
 
     def exportLabeledClip(self):
         """Shows gui for exporting clip with visual annotations."""
@@ -822,7 +820,8 @@ class OpenProject(AppCommand):
 class ImportNWB(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-        labels = Labels.load_nwb(filename=params["filename"])
+        from sleap_io.io.nwb import read_nwb
+        labels = read_nwb(filename=params["filename"])
 
         new_window = context.app.__class__()
         new_window.showMaximized()
@@ -854,8 +853,11 @@ class ImportNWB(AppCommand):
 class ImportCoco(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-        labels = Labels.load_coco(
-            filename=params["filename"], img_dir=params["img_dir"], use_missing_gui=True
+        from sleap_io.io.coco import read_labels
+
+        labels = read_labels(
+            json_path=params["filename"],
+            dataset_root=params["img_dir"],
         )
 
         new_window = context.app.__class__()
@@ -885,7 +887,8 @@ class ImportCoco(AppCommand):
 class ImportDeepLabCut(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-        labels = Labels.load_deeplabcut(filename=params["filename"])
+        from sleap_io.io.dlc import load_dlc
+        labels = load_dlc(filename=params["filename"])
 
         new_window = context.app.__class__()
         new_window.showMaximized()
@@ -948,9 +951,11 @@ class ImportDeepLabCutFolder(AppCommand):
 
     @staticmethod
     def import_labels_from_dlc_files(csv_files: List[str]) -> Labels:
+        from sleap_io.io.dlc import load_dlc
+
         merged_labels = None
         for csv_file in csv_files:
-            labels = load_file(csv_file, as_format="deeplabcut")
+            labels = load_dlc(filename=csv_file)
             if merged_labels is None:
                 merged_labels = labels
             else:
@@ -961,12 +966,11 @@ class ImportDeepLabCutFolder(AppCommand):
 class ImportAnalysisFile(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
-        from sleap.io.format import read
+        from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+        from sleap.io.format.filehandle import FileHandle
 
-        labels = read(
-            params["filename"],
-            for_object="labels",
-            as_format="analysis",
+        labels = SleapAnalysisAdaptor.read(
+            file=FileHandle(filename=params["filename"]),
             video=params["video"],
         )
 
@@ -1019,11 +1023,15 @@ class SaveProjectAs(AppCommand):
     @staticmethod
     def _try_save(context, labels: Labels, filename: str):
         """Helper function which attempts save and handles errors."""
+        from sleap_io.io.nwb import write_nwb
         success = False
         try:
             extension = (PurePath(filename).suffix)[1:]
             extension = None if (extension == "slp") else extension
-            save_file(labels=labels, filename=filename, format=extension)
+            if extension == "nwb":
+                write_nwb(labels=labels, nwbfile_path=filename)
+            else:
+                save_file(labels=labels, filename=filename, format=extension)
             success = True
             # Mark savepoint in change stack
             context.changestack_savepoint()
@@ -1052,9 +1060,10 @@ class SaveProjectAs(AppCommand):
         default_name = context.state["filename"] or "labels.v000.slp"
         if "adaptor" in params:
             adaptor: Adaptor = params["adaptor"]
-            default_name += f".{adaptor.default_ext}"
-            filters = [f"(*.{ext})" for ext in adaptor.all_exts]
-            filters[0] = f"{adaptor.name} {filters[0]}"
+            if adaptor == "nwb":
+                default_name += ".nwb"
+                filters = ["(*.nwb)"]
+                filters[0] = f"NWB {filters[0]}"
         else:
             filters = ["SLEAP labels dataset (*.slp)"]
             if default_name:
@@ -1092,7 +1101,7 @@ class ExportAnalysisFile(AppCommand):
 
         for output_path, video in params["analysis_videos"]:
             if params["csv"]:
-                adaptor = CSVAdaptor()  # TODO: csv adaptor
+                adaptor = CSVAdaptor
             else:
                 adaptor = SleapAnalysisAdaptor
             adaptor.write(
@@ -1559,7 +1568,7 @@ def export_dataset_gui(
         labels,
         filename,
         format="slp",
-        save_frame_data=as_package,
+        embed=as_package,
         all_labeled=all_labeled,
         suggested=suggested,
         progress_callback=update_progress if verbose else None,

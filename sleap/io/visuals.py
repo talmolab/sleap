@@ -427,7 +427,7 @@ def save_labeled_video(
             frames=[video.backend.get_frame(i) for i in frames],
             filename=filename,
             fps=fps,
-        )
+        ) # TODO: add other parameters
     # write_video(
     #     filename=filename,
     #     video=video,
@@ -536,8 +536,8 @@ def main(args: list = None):
     )
     args = parser.parse_args(args=args)
     labels = load_file(
-        args.data_path, video_search=[os.path.dirname(args.data_path)]
-    ) #TODO: video_search?
+        args.data_path) #, video_search=[os.path.dirname(args.data_path)]
+    #TODO: video_search?
 
     if args.video_index >= len(labels.videos):
         raise IndexError(f"There is no video with index {args.video_index}.")
