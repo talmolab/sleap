@@ -201,6 +201,7 @@ def frame_list(frame_str: str) -> Optional[List[int]]:
 
     return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
 
+
 def resize_image(img: np.ndarray, scale: float) -> np.ndarray:
     """Resizes single image with shape (height, width, channels)."""
     height, width, channels = img.shape
@@ -221,6 +222,7 @@ def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
     if scale == 1.0:
         return images
     return np.stack([resize_image(img, scale) for img in images])
+
 
 def uniquify(seq: Iterable[Hashable]) -> List:
     """Returns unique elements from list, preserving order.
@@ -592,4 +594,3 @@ def plot_instances(
         h_lines.append(h_lines_i)
 
     return h_lines
-

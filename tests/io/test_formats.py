@@ -19,7 +19,6 @@ def test_sleap_analysis_read(small_robot_3_frame_vid, small_robot_3_frame_hdf5):
     assert len(read_labels.skeletons) == 1
 
 
-
 def test_csv(tmpdir, min_labels_slp, minimal_instance_predictions_csv_path):
     from sleap.info.write_tracking_h5 import main as write_analysis
 
@@ -54,7 +53,6 @@ def test_analysis_hdf5(tmpdir, centered_pair_predictions):
     assert len(labels) == len(centered_pair_predictions)
     assert len(labels.tracks) == len(centered_pair_predictions.tracks)
     assert len(labels.all_instances) == len(centered_pair_predictions.all_instances)
-
 
 
 def test_matching_adaptor(centered_pair_predictions_hdf5_path):

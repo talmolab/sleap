@@ -281,6 +281,7 @@ if __name__ == "__main__":
     # filename = "/Volumes/fileset-mmurthy/shruthi/code/sleap_expts/preds/"
     # "screen_all.5pts_tmp_augment_200122/191210_102108_18159112_rig3_2.preds.h5"
     from sleap_io import load_file
+
     filename = (
         "/Volumes/fileset-mmurthy/talmo/wt_gold_labeling/"
         "100919.sleap_wt_gold.13pt_init.n=288.junyu.h5"

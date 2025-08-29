@@ -7,6 +7,7 @@ from typing import Tuple
 # Object that signals shutdown
 _sentinel = object()
 
+
 def can_use_ffmpeg():
     """Check if ffmpeg is available for writing videos."""
     try:
@@ -24,18 +25,15 @@ def can_use_ffmpeg():
 
     return False
 
+
 def available_video_exts() -> Tuple[str]:
     """Return tuple of supported video extensions.
 
     Returns:
         Tuple of supported video extensions.
     """
-    return (
-        MediaVideo.EXTS
-        + HDF5Video.EXTS
-        + ImageVideo.EXTS
-        + TiffVideo.EXTS
-    )
+    return MediaVideo.EXTS + HDF5Video.EXTS + ImageVideo.EXTS + TiffVideo.EXTS
+
 
 def video_util_reset(video: Video, filename: str = None, grayscale: bool = None):
     """Reloads the video.
@@ -54,7 +52,8 @@ def video_util_reset(video: Video, filename: str = None, grayscale: bool = None)
 
     # potential breaking change
     if (filename is not None) or (grayscale is not None):
-        video.keep_open = False # Reader depends on both filename and grayscale
+        video.keep_open = False  # Reader depends on both filename and grayscale
+
 
 def get_last_frame_idx(video=None):
     """Get the last frame index for a specific video.
@@ -63,9 +62,8 @@ def get_last_frame_idx(video=None):
     """
     if video is None:
         return None
-    if hasattr(video.backend, 'source_inds'):
+    if hasattr(video.backend, "source_inds"):
         source_inds = video.backend.source_inds
         return max(source_inds)
     else:
         return video.backend.frames - 1
-

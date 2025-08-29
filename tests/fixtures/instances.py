@@ -11,7 +11,7 @@ def instances(skeleton, centered_pair_vid):
     instances = []
     for i in range(NUM_INSTANCES):
         instance = Instance(skeleton=skeleton)
-        instance["head"] = ([i * 1, i * 2], True, False)# (xy, visible, complete)
+        instance["head"] = ([i * 1, i * 2], True, False)  # (xy, visible, complete)
         instance["left-wing"] = ([10 + i * 1, 10 + i * 2], True, False)
         instance["right-wing"] = ([20 + i * 1, 20 + i * 2], True, False)
 

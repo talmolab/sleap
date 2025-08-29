@@ -84,7 +84,7 @@ class MergeDialog(QtWidgets.QDialog):
             # Attempt merge with frame strategy
             merge_result = base_copy.merge(
                 self.new_labels,
-                frame_strategy="keep_both"  # Use sleap-io frame strategy
+                frame_strategy="keep_both",  # Use sleap-io frame strategy
             )
 
             # Analyze what was merged vs conflicts
@@ -125,12 +125,14 @@ class MergeDialog(QtWidgets.QDialog):
                 existing_frame = existing_frames[0]
                 # Check for instance conflicts
                 if self._has_instance_conflicts(existing_frame, new_frame):
-                    conflicts.append({
-                        'video': new_frame.video,
-                        'frame_idx': new_frame.frame_idx,
-                        'base_instances': existing_frame.instances,
-                        'new_instances': new_frame.instances
-                    })
+                    conflicts.append(
+                        {
+                            "video": new_frame.video,
+                            "frame_idx": new_frame.frame_idx,
+                            "base_instances": existing_frame.instances,
+                            "new_instances": new_frame.instances,
+                        }
+                    )
 
         return conflicts
 
@@ -237,9 +239,7 @@ class MergeDialog(QtWidgets.QDialog):
         except Exception as e:
             log.error(f"Error during final merge: {e}")
             QtWidgets.QMessageBox.critical(
-                self,
-                "Merge Error",
-                f"An error occurred during the merge: {str(e)}"
+                self, "Merge Error", f"An error occurred during the merge: {str(e)}"
             )
 
     def _merge_with_strategy(self, strategy):
@@ -261,9 +261,10 @@ class MergeDialog(QtWidgets.QDialog):
     def _remove_conflicting_instances(self, labels):
         """Remove instances that would cause conflicts."""
         from sleap.sleap_io_adaptors.lf_labels_utils import remove_frames
+
         for conflict in self.conflicts:
-            video = conflict['video']
-            frame_idx = conflict['frame_idx']
+            video = conflict["video"]
+            frame_idx = conflict["frame_idx"]
 
             # Find and remove conflicting frames
             frames_to_remove = []
@@ -279,7 +280,7 @@ class MergeDialog(QtWidgets.QDialog):
         # Use sleap-io merge with appropriate frame strategy
         self.base_labels.merge(
             self.new_labels,
-            frame_strategy="keep_both"  # Adjust based on user preference
+            frame_strategy="keep_both",  # Adjust based on user preference
         )
 
 
@@ -311,13 +312,13 @@ class ConflictTableModel(QtCore.QAbstractTableModel):
             if idx < self.rowCount():
                 conflict = self.conflicts[idx]
                 if prop == "video":
-                    return conflict['video'].filename
+                    return conflict["video"].filename
                 elif prop == "frame":
-                    return conflict['frame_idx']
+                    return conflict["frame_idx"]
                 elif prop == "base instances":
-                    return show_instance_type_counts(conflict['base_instances'])
+                    return show_instance_type_counts(conflict["base_instances"])
                 elif prop == "new instances":
-                    return show_instance_type_counts(conflict['new_instances'])
+                    return show_instance_type_counts(conflict["new_instances"])
 
         return None
 
@@ -365,21 +366,31 @@ class MergeTableModel(QtCore.QAbstractTableModel):
         """Extract merge data from merge result."""
         data_table = []
 
-        if hasattr(self.merge_result, 'frames_merged'):
+        if hasattr(self.merge_result, "frames_merged"):
             # Extract data from merge result object
             for frame_info in self.merge_result.frames_merged:
-                data_table.append({
-                    'filename': (frame_info.video.filename
-                            if hasattr(frame_info, 'video') else 'Unknown'),
-                    'frame_idx': (frame_info.frame_idx
-                            if hasattr(frame_info, 'frame_idx') else 0),
-                    'instances': (frame_info.instances
-                            if hasattr(frame_info, 'instances') else []
-                    ),
-                })
+                data_table.append(
+                    {
+                        "filename": (
+                            frame_info.video.filename
+                            if hasattr(frame_info, "video")
+                            else "Unknown"
+                        ),
+                        "frame_idx": (
+                            frame_info.frame_idx
+                            if hasattr(frame_info, "frame_idx")
+                            else 0
+                        ),
+                        "instances": (
+                            frame_info.instances
+                            if hasattr(frame_info, "instances")
+                            else []
+                        ),
+                    }
+                )
         else:
             # Fallback for different merge result formats
-            data_table = [{'filename': 'Unknown', 'frame_idx': 0, 'instances': []}]
+            data_table = [{"filename": "Unknown", "frame_idx": 0, "instances": []}]
 
         return data_table
 

@@ -1242,7 +1242,8 @@ class MainWindow(QMainWindow):
                 labeled_count = 0
                 for suggestion in suggestion_list:
                     lf = self.labels.find(
-                        suggestion.video, suggestion.frame_idx #), use_cache=True
+                        suggestion.video,
+                        suggestion.frame_idx,  # ), use_cache=True
                     )
                     if lf is not None and lf.has_user_instances:
                         labeled_count += 1
@@ -1326,8 +1327,7 @@ class MainWindow(QMainWindow):
 
             if current_video is not None:
                 message += (
-                    f"Frame: {frame_idx + 1:,}/"
-                    f"{current_video.backend.num_frames:,}"
+                    f"Frame: {frame_idx + 1:,}/{current_video.backend.num_frames:,}"
                 )
 
             if self.player.seekbar.hasSelection():
@@ -1347,15 +1347,13 @@ class MainWindow(QMainWindow):
                     message += " in video, "
             if len(self.labels.videos) > 1:
                 project_user_frame_count = get_labeled_frame_count(
-                    self.labels,
-                    filter="user"
+                    self.labels, filter="user"
                 )
                 message += f"{project_user_frame_count} in project"
 
             if current_video is not None:
                 pred_frame_count = get_labeled_frame_count(
-                    self.labels,
-                    current_video, "predicted"
+                    self.labels, current_video, "predicted"
                 )
                 if pred_frame_count:
                     message += f"{spacer}Predicted Frames: {pred_frame_count:,}"

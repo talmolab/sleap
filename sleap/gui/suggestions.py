@@ -400,9 +400,7 @@ def demo_gui():
     from sleap_io import load_file
     from qtpy.QtWidgets import QApplication
 
-    labels = load_file(
-        "tests/data/json_format_v2/centered_pair_predictions.json"
-    )
+    labels = load_file("tests/data/json_format_v2/centered_pair_predictions.json")
 
     options_lists = dict(node=labels.skeletons[0].node_names)
 

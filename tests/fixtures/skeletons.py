@@ -28,8 +28,15 @@ def fly_legs_skeleton_dict_json():
 @pytest.fixture
 def stickman():
     # Make a skeleton with a space in its name to test things.
-    node_names = ["head", "neck", "body", "right-arm", "left-arm",
-    "right-leg", "left-leg"]
+    node_names = [
+        "head",
+        "neck",
+        "body",
+        "right-arm",
+        "left-arm",
+        "right-leg",
+        "left-leg",
+    ]
     stickman = Skeleton()
     stickman.add_nodes(node_names)
 
@@ -39,7 +46,7 @@ def stickman():
         ("body", "right-arm"),
         ("body", "left-arm"),
         ("body", "right-leg"),
-        ("body", "left-leg")
+        ("body", "left-leg"),
     ]
     stickman.add_edges(edges)
     stickman.add_symmetry("left-arm", "right-arm")
@@ -58,7 +65,7 @@ def skeleton():
         ("head", "thorax"),
         ("thorax", "abdomen"),
         ("thorax", "left-wing"),
-        ("thorax", "right-wing")
+        ("thorax", "right-wing"),
     ]
     skeleton.add_edges(edges)
     skeleton.add_symmetry("left-wing", "right-wing")

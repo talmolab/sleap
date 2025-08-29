@@ -310,6 +310,7 @@ def test_ExportAnalysisFile(
     with pytest.raises(ValueError):
         okay = ExportAnalysisFile_ask(context=context, params=params)
 
+
 def assert_video_params(
     video: Video,
     filename: str = None,

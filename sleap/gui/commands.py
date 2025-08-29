@@ -821,6 +821,7 @@ class ImportNWB(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
         from sleap_io.io.nwb import read_nwb
+
         labels = read_nwb(filename=params["filename"])
 
         new_window = context.app.__class__()
@@ -888,6 +889,7 @@ class ImportDeepLabCut(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
         from sleap_io.io.dlc import load_dlc
+
         labels = load_dlc(filename=params["filename"])
 
         new_window = context.app.__class__()
@@ -1024,6 +1026,7 @@ class SaveProjectAs(AppCommand):
     def _try_save(context, labels: Labels, filename: str):
         """Helper function which attempts save and handles errors."""
         from sleap_io.io.nwb import write_nwb
+
         success = False
         try:
             extension = (PurePath(filename).suffix)[1:]

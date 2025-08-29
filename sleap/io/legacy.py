@@ -116,6 +116,7 @@ def load_predicted_labels_json_old(
             ].values[0]
             # Create the input array first, then use PredictedPointsArray.from_array()
             from sleap_io.model.instance import PredictedPointsArray
+
             instance_points = {
                 data["skeleton"]["nodeNames"][n]: PredictedPointsArray.from_array(
                     np.array(
@@ -269,12 +270,11 @@ def load_labels_json_old(
             is_instance = is_in_frame & (points["instanceId"] == instance_id)
             # Create the input array first, then use PointsArray.from_array()
             from sleap_io.model.instance import PointsArray
+
             instance_points = {
                 data["skeleton"]["nodeNames"][n]: PointsArray.from_array(
                     np.array(
-                        [
-                            ([x, y], v, False, data["skeleton"]["nodeNames"][n])
-                        ],
+                        [([x, y], v, False, data["skeleton"]["nodeNames"][n])],
                         dtype=[
                             ("xy", "<f8", (2,)),
                             ("visible", "bool"),

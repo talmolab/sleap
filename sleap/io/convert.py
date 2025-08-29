@@ -103,13 +103,14 @@ def main(args: list = None):
     """
     # from sleap.sleap_io_adaptors.video import make_video_callback
     from sleap_io import load_file
+
     parser = create_parser()
     args = parser.parse_args(args=args)
 
     # video_callback = make_video_callback([os.path.dirname(args.input_path)])
     try:
-#         labels: Labels = Labels.load_file(args.input_path,
-# video_search=video_callback) TODO: need to add this back
+        #         labels: Labels = Labels.load_file(args.input_path,
+        # video_search=video_callback) TODO: need to add this back
         labels = load_file(args.input_path, format="*")
     except TypeError:
         print("Input file isn't SLEAP dataset so attempting other importers...")
@@ -152,7 +153,6 @@ def main(args: list = None):
                     format_suffix=out_suffix,
                 )
                 outnames.append(dflt_name)
-
 
         if "csv" in args.format:
             from sleap.info.write_tracking_h5 import main as write_analysis

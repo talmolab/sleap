@@ -82,8 +82,8 @@ class SleapAnalysisAdaptor(Adaptor):
 
         if "track_names" in f and len(f["track_names"]):
             track_names_list = f["track_names"][:].T
-            tracks = [Track(name=track_name.decode())
-for track_name in track_names_list
+            tracks = [
+                Track(name=track_name.decode()) for track_name in track_names_list
             ]
         else:
             tracks = [Track(name=f"track_{i}") for i in range(track_count)]
@@ -122,9 +122,7 @@ for track_name in track_names_list
                     )
             if instances:
                 frames.append(
-                    LabeledFrame(
-                        video=video, frame_idx=frame_idx, instances=instances
-                    )
+                    LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
                 )
 
         labels = Labels(labeled_frames=frames)

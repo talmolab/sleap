@@ -36,6 +36,7 @@ from typing import Any, Dict, List, Tuple
 from sleap_io import Labels, load_file, PredictedInstance
 from sleap_io import Video
 
+
 def get_tracks_as_np_strings(labels: Labels) -> List[bytes]:
     """Get list of track names as bytes."""
     return [track.name.encode("utf-8") for track in labels.tracks]

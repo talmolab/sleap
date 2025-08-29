@@ -8,8 +8,4 @@ from . import instance_utils
 
 from . import skeleton_utils
 
-__all__ = [
-    "instance_utils",
-
-    "skeleton_utils"
-]
+__all__ = ["instance_utils", "skeleton_utils"]
