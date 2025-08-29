@@ -1322,9 +1322,7 @@ class MainWindow(QMainWindow):
                 message += spacer
 
             if current_video is not None:
-                message += (
-                    f"Frame: {frame_idx + 1:,}/{len(current_video):,}"
-                )
+                message += f"Frame: {frame_idx + 1:,}/{len(current_video):,}"
 
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
@@ -1353,9 +1351,7 @@ class MainWindow(QMainWindow):
                 )
                 if pred_frame_count:
                     message += f"{spacer}Predicted Frames: {pred_frame_count:,}"
-                    percentage = (
-                        pred_frame_count / len(current_video) * 100
-                    )
+                    percentage = pred_frame_count / len(current_video) * 100
                     message += f" ({percentage:.2f}%)"
                     message += " in video"
 
@@ -1503,12 +1499,9 @@ class MainWindow(QMainWindow):
         clip_range = self.state.get("frame_range", default=(0, 0))
 
         selection["clip"] = {current_video: encode_range(*clip_range)}
-        selection["video"] = {
-            current_video: encode_range(0, len(current_video))
-        }
+        selection["video"] = {current_video: encode_range(0, len(current_video))}
         selection["all_videos"] = {
-            video: encode_range(0, len(video))
-            for video in self.labels.videos
+            video: encode_range(0, len(video)) for video in self.labels.videos
         }
 
         selection["suggestions"] = {

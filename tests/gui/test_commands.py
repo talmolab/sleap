@@ -7,7 +7,6 @@ import numpy as np
 from pathlib import PurePath, Path
 from qtpy import QtCore
 from typing import List
-from sleap_io.io.video_reading import MediaVideo
 
 from sleap_io import Skeleton, Track, PredictedInstance, Labels, LabeledFrame, Instance
 from sleap.gui.app import MainWindow

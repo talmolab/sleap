@@ -332,9 +332,7 @@ class QtVideoPlayer(QWidget):
         def frame_step(step, enable_shift_selection):
             if self.video:
                 before_frame_idx = self.state["frame_idx"]
-                self.state.increment(
-                    "frame_idx", step=step, mod=len(self.video)
-                )
+                self.state.increment("frame_idx", step=step, mod=len(self.video))
                 # only use shift for selection if not part of shortcut
                 if enable_shift_selection and self._shift_key_down:
                     self._select_on_possible_frame_movement(before_frame_idx)

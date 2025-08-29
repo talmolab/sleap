@@ -59,4 +59,3 @@ def test_video_import_detect_h5_shape():
 
     assert importer.import_widgets[0].video is not None
     assert importer.import_widgets[0].video.shape == (42, 512, 512, 1)
-    

@@ -1915,7 +1915,9 @@ class GoNextUserLabeledFrame(GoIteratorCommand):
             from_frame_idx=context.state["frame_idx"],
         )
         # Filter to frames with user instances
-        iterate_labeled_frames = filter(lambda lf: lf.has_user_instances, iterate_labeled_frames)
+        iterate_labeled_frames = filter(
+            lambda lf: lf.has_user_instances, iterate_labeled_frames
+        )
         return iterate_labeled_frames
 
 
@@ -2139,10 +2141,7 @@ class ReplaceVideo(EditCommand):
             import_params = import_item["params"]
 
             # TODO: Will need to create a new backend if import has different extension.
-            if (
-                Path(video.filename).suffix
-                != Path(import_params["filename"]).suffix
-            ):
+            if Path(video.filename).suffix != Path(import_params["filename"]).suffix:
                 raise TypeError(
                     "Importing videos with different extensions is not supported."
                 )

@@ -546,7 +546,9 @@ def load_and_match(filename: str, match_to: Labels):
     return labels
 
 
-def iterate_labeled_frames(labels, video, from_frame_idx: int = -1, reverse: bool = False):
+def iterate_labeled_frames(
+    labels, video, from_frame_idx: int = -1, reverse: bool = False
+):
     """Return an iterator over lfs in a video with start pos (opt) and order control.
 
     This function recreates Labels.frames() from the original SLEAP codebase.
