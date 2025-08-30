@@ -3007,7 +3007,7 @@ class AddTrack(EditCommand):
         next_number = max(track_numbers_used, default=0) + 1
         new_track = Track(name=str(next_number))
 
-        context.labels.add_track(context.state["video"], new_track)
+        context.labels.tracks.append(new_track)
 
         context.execute(SetSelectedInstanceTrack, new_track=new_track)
 
@@ -3759,8 +3759,6 @@ class AddMissingInstanceNodes(EditCommand):
         visible: bool = False,
         center_point: QtCore.QPoint = None,
     ):
-        from sleap_io.model.instance import PointsArray
-
         # Get the "template" instance
         template_points = get_template_instance_points(
             context.labels, skeleton=instance.skeleton

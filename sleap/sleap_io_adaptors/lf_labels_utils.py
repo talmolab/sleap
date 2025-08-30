@@ -3,7 +3,7 @@ Standalone utility functions for working with Labels and LabeledFrame objects.
 """
 
 import math
-from typing import Iterable, List, Dict, Optional, Text, Union
+from typing import List, Dict, Optional, Text, Union
 
 from pathlib import Path
 import cattr
@@ -1043,33 +1043,6 @@ def merge_nodes(
     #     inst._fix_array()
 
 
-def find_labeled_frames(
-    self,
-    video: Video,
-    frame_idx: Optional[Union[int, Iterable[int]]] = None,
-    return_new: bool = False,
-) -> List[LabeledFrame]:
-    """Search for labeled frames given video and/or frame index.
-
-    Args:
-        video: A :class:`Video` that is associated with the project.
-        frame_idx: The frame index (or indices) which we want to
-            find in the video. If a range is specified, we'll return
-            all frames with indices in that range. If not specific,
-            then we'll return all labeled frames for video.
-        return_new: Whether to return singleton of new and empty
-            :class:`LabeledFrame` if none is found in project.
-    Returns:
-        List of `LabeledFrame` objects that match the criteria.
-        Empty if no matches found, unless return_new is True,
-        in which case it contains a new `LabeledFrame` with
-        `video` and `frame_index` set.
-    """
-    null_result = [LabeledFrame(video=video, frame_idx=frame_idx)] if return_new else []
-    result = self._cache.find_frames(video, frame_idx)
-    return null_result if result is None else result
-
-
 def find_track_occupancy(
     labels: Labels, video: Video, track: Union[Track, int], frame_range=None
 ) -> List[Instance]:
@@ -1101,7 +1074,7 @@ def find_track_occupancy(
 
     track_frame_inst = [
         instance
-        for lf in find_labeled_frames(labels, video)
+        for lf in labels.find(video)
         for instance in lf.instances
         if does_track_match(instance, track, lf)
         and (frame_range is None or lf.frame_idx in frame_range)

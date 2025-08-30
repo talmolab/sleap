@@ -95,8 +95,6 @@ def fill_missing(
     if max_y is not None:
         y2 = np.nanmin([y2, max_y])
 
-    w, h = y2 - y1, x2 - x1
-
     # Build a new full points array aligned to the skeleton order.
     skeleton_nodes = list(instance.skeleton.nodes)
     current_names = list(instance.points["name"]) if len(instance.points) else []
@@ -111,17 +109,6 @@ def fill_missing(
             ("name", "O"),
         ],
     )
-
-    # Helper to generate a bounded random point inside bbox
-    def _rand_point():
-        off = np.array([w, h]) * np.random.rand(2)
-        x, y = off + np.array([x1, y1])
-        y, x = max(y, 0), max(x, 0)
-        if max_x is not None:
-            x = min(x, max_x)
-        if max_y is not None:
-            y = min(y, max_y)
-        return np.array([x, y], dtype=np.float64)
 
     for i, node in enumerate(skeleton_nodes):
         name = node.name
@@ -165,13 +152,3 @@ def fill_missing(
         )
 
     return new_instance
-
-
-def _is_node_nan(instance, node_name: str) -> bool:
-    """Check if a node has NaN coordinates."""
-    try:
-        node_idx = list(instance.points["name"]).index(node_name)
-        point_data = instance.points[node_idx]
-        return np.isnan(point_data["xy"][0]) or np.isnan(point_data["xy"][1])
-    except ValueError:
-        return True  # Node not found

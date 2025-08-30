@@ -29,7 +29,7 @@ which doesn't yet have all points).
 
 """
 
-from sleap_io.model.instance import Instance
+from sleap_io.model.instance import Instance, PointsArray
 from typing import List, Tuple
 import numpy as np
 from sleap.sleap_io_adaptors.lf_labels_utils import instances
@@ -158,15 +158,11 @@ def get_mean_and_std_for_points(
 def make_mean_instance(
     aligned_points_arrays: List[np.ndarray], skeleton, std_thresh: int = 0
 ) -> Instance:
-    from sleap_io.model.instance import PointsArray
-
     mean, stdev = get_mean_and_std_for_points(aligned_points_arrays)
 
     # Remove points with standard deviation higher than threshold
     if std_thresh:
         mean[stdev > std_thresh] = np.nan
-
-    from sleap_io.model.instance import Instance
 
     OFFSET = 0  # FIXME
 
