@@ -158,6 +158,8 @@ def get_mean_and_std_for_points(
 def make_mean_instance(
     aligned_points_arrays: List[np.ndarray], skeleton, std_thresh: int = 0
 ) -> Instance:
+    from sleap_io.model.instance import PointsArray
+
     mean, stdev = get_mean_and_std_for_points(aligned_points_arrays)
 
     # Remove points with standard deviation higher than threshold
@@ -173,7 +175,6 @@ def make_mean_instance(
     for i, p in enumerate(mean):
         if not np.isnan(p[0][0]) and not np.isnan(p[0][1]):
             # Create the input array first, then use PointsArray.from_array()
-            from sleap_io.model.instance import PointsArray
 
             input_array = np.array(
                 [
@@ -191,10 +192,7 @@ def make_mean_instance(
                     ("name", "O"),
                 ],
             )
-            pt = PointsArray.from_array(input_array)[
-                0
-            ]  # [(x, y), visible, complete, name]
-            points.append(pt)  # [x, y, visible, complete]
+            points.append(input_array)  # [x, y, visible, complete]
         else:
             # Create the input array first, then use PointsArray.from_array()
             input_array = np.array(
@@ -206,12 +204,9 @@ def make_mean_instance(
                     ("name", "O"),
                 ],
             )
-            pt = PointsArray.from_array(input_array)[
-                0
-            ]  # [(x, y), visible, complete, name]
-            points.append(pt)  # [x, y, visible, complete]
+            points.append(input_array)  # [x, y, visible, complete]
 
-    new_instance = Instance(skeleton=skeleton, points=points)
+    new_instance = Instance(skeleton=skeleton, points=PointsArray.from_array(points))
     return new_instance
 
 

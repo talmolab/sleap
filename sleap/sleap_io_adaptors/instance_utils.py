@@ -138,9 +138,9 @@ def fill_missing(
                     name,
                 )
             else:
-                input_array[i] = (_rand_point(), False, False, name)
+                input_array[i] = instance.points[i]
         else:
-            input_array[i] = (_rand_point(), False, False, name)
+            input_array[i] = instance.points[i]
 
     # Replace points with an array sized to the skeleton
     instance.points = PointsArray.from_array(input_array)
