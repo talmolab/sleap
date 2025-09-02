@@ -372,7 +372,7 @@ class VideoFrameSuggestions(object):
     def idx_list_to_frame_list(
         idx_list, video: "Video", group: Optional[GroupType] = None
     ) -> List[SuggestionFrame]:
-        return [SuggestionFrame(video, frame_idx, group) for frame_idx in idx_list]
+        return [SuggestionFrame(video, frame_idx) for frame_idx in idx_list]
 
     @staticmethod
     def filter_unique_suggestions(
