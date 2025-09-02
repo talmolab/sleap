@@ -11,6 +11,7 @@ from sleap_io import LabeledFrame
 from sleap_io.model.instance import Track
 from sleap_io import Video
 from sleap.prefs import prefs
+from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 
 @attr.s(auto_attribs=True)
@@ -83,7 +84,7 @@ class TrackTrailOverlay(BaseOverlay):
 
         for frame in frame_selection:
             # Prefer user instances over predicted instances
-            for inst in frame.instances_to_show:
+            for inst in get_instances_to_show(frame):
                 if inst.track is not None:
                     if inst.track not in all_track_trails:
                         all_track_trails[inst.track] = [[] for _ in range(len(nodes))]
