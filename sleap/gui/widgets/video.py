@@ -2223,8 +2223,7 @@ class QtInstance(QGraphicsObject):
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
             self.updatePoints(user_change=True)
             self.updateBox()
-            # removed ungrabMouse since Qt grab method automatically releases on mouse release
-            # self.ungrabMouse() 
+            # self.ungrabMouse()
             super().mouseReleaseEvent(event)
 
 
