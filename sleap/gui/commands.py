@@ -95,6 +95,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     track_set_instance,
     make_video_callback,
     load_labels_video_search,
+    clear_suggestion,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
@@ -3216,7 +3217,7 @@ class RemoveSuggestion(EditCommand):
         if selected_frame is not None:
             for sug_idx, suggestion in enumerate(context.labels.suggestions):
                 if (
-                    suggestion.video.match_content(selected_frame.video)
+                    suggestion.video.matches_content(selected_frame.video)
                     and suggestion.frame_idx == selected_frame.frame_idx
                 ):
                     context.labels.suggestions.pop(sug_idx)
@@ -3248,7 +3249,7 @@ class ClearSuggestions(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        context.labels.clear_suggestions()
+        clear_suggestion(context.labels)
 
 
 class MergeProject(EditCommand):

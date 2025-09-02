@@ -1135,3 +1135,8 @@ def track_set_instance(
         (frame.frame_idx, frame.frame_idx + 1),
     )
     instance.track = new_track
+
+
+def clear_suggestion(labels: Labels):
+    """Delete all suggestions."""
+    labels.suggestions.clear()
