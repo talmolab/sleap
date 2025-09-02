@@ -85,7 +85,7 @@ def default_analysis_filename(
     format_suffix: str = "h5",
 ) -> str:
     video_idx = labels.videos.index(video)
-    vn = PurePath(video.backend.filename)
+    vn = PurePath(video.filename)
     filename = str(
         PurePath(
             output_path,
@@ -127,7 +127,7 @@ def main(args: list = None):
         vids = []
         if len(args.video) > 0:  # if a video is specified
             for v in labels.videos:  # check if it is among the videos in the project
-                if args.video in v.backend.filename:
+                if args.video in v.filename:
                     vids.append(v)
                     break
         else:
@@ -183,7 +183,7 @@ def main(args: list = None):
         print(f"Output SLEAP dataset: {args.outputs[0]}")
         save_file(labels, args.outputs[0])
 
-    elif args.format in ("slp", "h5", "json"):
+    elif args.format in ("slp", "json"):
         output_path = f"{args.input_path}.{args.format}"
         print(f"Output SLEAP dataset: {output_path}")
         save_file(labels, output_path)

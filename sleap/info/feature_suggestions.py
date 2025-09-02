@@ -485,19 +485,19 @@ class ItemStack(object):
         groupset.groupset_data = dict(samples_per_video=samples_per_video)
 
         for i, video in enumerate(videos):
-            if samples_per_video >= video.backend.num_frames:
-                idxs = list(range(video.backend.num_frames))
+            if samples_per_video >= len(video):
+                idxs = list(range(len(video)))
             elif sample_method == "stride":
                 idxs = list(
                     range(
                         0,
-                        video.backend.num_frames,
-                        video.backend.num_frames // samples_per_video,
+                        len(video),
+                        len(video) // samples_per_video,
                     )
                 )
                 idxs = idxs[:samples_per_video]
             elif sample_method == "random":
-                idxs = random.sample(range(video.backend.frames), samples_per_video)
+                idxs = random.sample(range(len(video)), samples_per_video)
             else:
                 raise ValueError(f"Invalid sampling method: {sample_method}")
 

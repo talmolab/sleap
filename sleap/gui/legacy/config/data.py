@@ -1,6 +1,6 @@
 import attr
 from typing import Optional, Text, List
-import sleap
+from sleap_io import Skeleton
 
 
 @attr.s(auto_attribs=True)
@@ -54,7 +54,7 @@ class LabelsConfig:
     validation_inds: Optional[List[int]] = None
     test_inds: Optional[List[int]] = None
     search_path_hints: List[Text] = attr.ib(factory=list)
-    skeletons: List[sleap.Skeleton] = attr.ib(factory=list)
+    skeletons: List[Skeleton] = attr.ib(factory=list)
 
 
 @attr.s(auto_attribs=True)

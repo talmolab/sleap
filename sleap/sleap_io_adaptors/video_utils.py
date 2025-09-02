@@ -66,4 +66,4 @@ def get_last_frame_idx(video=None):
         source_inds = video.backend.source_inds
         return max(source_inds)
     else:
-        return video.backend.frames - 1
+        return len(video) - 1

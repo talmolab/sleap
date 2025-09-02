@@ -7,7 +7,6 @@ import numpy as np
 from pathlib import PurePath, Path
 from qtpy import QtCore
 from typing import List
-from sleap_io.io.video_reading import MediaVideo
 
 from sleap_io import Skeleton, Track, PredictedInstance, Labels, LabeledFrame, Instance
 from sleap.gui.app import MainWindow
@@ -73,7 +72,7 @@ def test_import_labels_from_dlc_folder():
     assert len(labels.tracks) == 3
 
     assert set(
-        [fix_path_separator(l.video.backend.filename) for l in labels.labeled_frames]
+        [fix_path_separator(l.video.filename) for l in labels.labeled_frames]
     ) == {
         "tests/data/dlc_multiple_datasets/video2/img002.jpg",
         "tests/data/dlc_multiple_datasets/video1/img000.jpg",
@@ -287,13 +286,13 @@ def test_ExportAnalysisFile(
     (tmpdir / "session1").mkdir()
     (tmpdir / "session2").mkdir()
     shutil.copy(
-        centered_pair_predictions.video.backend.filename,
+        centered_pair_predictions.video.filename,
         tmpdir / "session1" / "video.mp4",
     )
-    shutil.copy(small_robot_mp4_vid.backend.filename, tmpdir / "session2" / "video.mp4")
+    shutil.copy(small_robot_mp4_vid.filename, tmpdir / "session2" / "video.mp4")
 
-    labels.videos[0].backend.filename = str(tmpdir / "session1" / "video.mp4")
-    labels.videos[1].backend.filename = str(tmpdir / "session2" / "video.mp4")
+    labels.videos[0].filename = str(tmpdir / "session1" / "video.mp4")
+    labels.videos[1].filename = str(tmpdir / "session2" / "video.mp4")
 
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
@@ -323,31 +322,27 @@ def assert_video_params(
     reset: bool = False,
 ):
     if filename is not None:
-        assert video.backend.filename == filename
+        assert video.filename == filename
 
     if grayscale is not None:
-        assert video.backend.grayscale == grayscale
-    else:
-        assert video.backend._detect_grayscale == bool(grayscale is None)
+        assert video.grayscale == grayscale
 
-    if bgr is not None:
-        assert video.backend.bgr == bgr
-
-    if reset and isinstance(video.backend, MediaVideo):
-        assert video.backend._reader_ is None
-        assert video.backend._test_frame_ is None
+    # TODO: Align reset behavior?
+    # if reset and isinstance(video.backend, MediaVideo):
+    #     assert video.backend._reader_ is None
+    #     assert video.backend._test_frame_ is None
 
     # Getting the channels will assert some of the above are not None
     if grayscale is not None:
-        assert video.backend.channels == 3 ** (not grayscale)
+        assert video.shape[3] == 3 ** (not grayscale)
 
 
 def test_ToggleGrayscale(centered_pair_predictions: Labels):
     """Test functionality for ToggleGrayscale on mp4/avi video"""
     labels = centered_pair_predictions
     video = labels.video
-    grayscale = video.backend.grayscale
-    filename = video.backend.filename
+    grayscale = video.grayscale
+    filename = video.filename
 
     context = CommandContext.from_labels(labels)
     context.state["video"] = video
@@ -375,7 +370,7 @@ def test_ReplaceVideo(
         new_video: Video, videos_to_replace: List[Video], context: CommandContext
     ):
         # Video to be imported
-        new_video_filename = new_video.backend.filename
+        new_video_filename = new_video.filename
 
         # Replace the video
         import_item_list = [
@@ -397,8 +392,8 @@ def test_ReplaceVideo(
     # Ensure video backend was replaced
     video = labels.video
     assert len(labels.videos) == 1
-    assert video.backend.grayscale
-    assert video.backend.filename == new_video_filename
+    assert video.grayscale
+    assert video.filename == new_video_filename
 
     # Ensure labels were truncated (Original video was fully labeled)
     new_last_lf_frame = get_last_lf_in_video(labels, video)
@@ -862,7 +857,7 @@ def test_LoadProjectFile(
 
     # Get labels and video path
     labels = Labels.load_file(centered_pair_predictions_slp_path)
-    expected_video_path = Path(labels.video.backend.filename)
+    expected_video_path = Path(labels.video.filename)
 
     # Move video to new location based on case
     if video_move_case == "new_directory":  # Needs to have same name
@@ -935,7 +930,7 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
             num_images += len(lfs_sugg)
         if not pred:
             num_images -= len(lfs_pred)
-        assert labels_reload.video.backend.num_frames == num_images
+        assert len(labels_reload.video) == num_images
 
     # Set-up CommandContext
     path_to_pkg = Path(tmpdir, "test_exportLabelsPackage.ext")

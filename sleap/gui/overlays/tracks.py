@@ -90,7 +90,10 @@ class TrackTrailOverlay(BaseOverlay):
 
                     # loop through all nodes
                     for node_i, node in enumerate(nodes):
-                        if node in inst.nodes and inst[node].visible:
+                        if (
+                            node in inst.points["name"]
+                            and inst.points["visible"][node_i]
+                        ):
                             point = (inst[node].x, inst[node].y)
 
                         # Add last location of node so that we can easily

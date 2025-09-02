@@ -326,29 +326,13 @@ class QtVideoPlayer(QWidget):
         if self.parentWidget():
             self.parentWidget().dropEvent(event)
 
-    def _load_and_show_requested_image(self, frame_idx):
-        # Get image data
-        try:
-            frame = self.video.backend.get_frame(frame_idx)
-        except Exception:
-            frame = None
-
-        if frame is not None:
-            # Convert ndarray to QImage
-            qimage = ndarray_to_qimage(frame)
-
-            # Display image
-            self.view.setImage(qimage)
-
     def _register_shortcuts(self):
         self._shortcut_triggers = dict()
 
         def frame_step(step, enable_shift_selection):
             if self.video:
                 before_frame_idx = self.state["frame_idx"]
-                self.state.increment(
-                    "frame_idx", step=step, mod=self.video.backend.num_frames
-                )
+                self.state.increment("frame_idx", step=step, mod=len(self.video))
                 # only use shift for selection if not part of shortcut
                 if enable_shift_selection and self._shift_key_down:
                     self._select_on_possible_frame_movement(before_frame_idx)
@@ -452,7 +436,7 @@ class QtVideoPlayer(QWidget):
             self.reset()
         else:
             # Is this necessary?
-            h, w, c = video.backend.img_shape[:3]
+            h, w = video.shape[1:3]
             self.view.scene.setSceneRect(0, 0, w, h)
 
             self.seekbar.setMinimum(0)
@@ -1529,8 +1513,7 @@ class QtNode(QGraphicsEllipseItem):
         y = self.scenePos().y()
 
         # Ensure node is placed within video boundaries
-        w = self.player.video.backend.img_shape[1]
-        h = self.player.video.backend.img_shape[0]
+        h, w = self.player.video.shape[1:3]
         if (x > w) or (x < 0) or (y > h) or (y < 0):
             if x > w:
                 x = w
@@ -1883,8 +1866,8 @@ class QtInstance(QGraphicsObject):
             # Initialize missing nodes with random points marked as non-visible.
             fill_missing(
                 self.instance,
-                max_x=self.player.video.backend.img_shape[1],
-                max_y=self.player.video.backend.img_shape[0],
+                max_x=self.player.video.shape[2],
+                max_y=self.player.video.shape[1],
             )
 
         # Add box to go around instance for selection
@@ -2347,7 +2330,7 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
             x1, y1, x2, y2 = self.rect().getCoords()
             new_x = event.pos().x()
             new_y = event.pos().y()
-            h, w, c = self.parent.player.video.backend.img_shape[:3]
+            h, w = self.parent.player.video.shape[1:3]
 
             if self.resizing == "top_left":
                 # Check to see if outside the range of the original bounding box

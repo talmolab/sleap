@@ -68,7 +68,7 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap_io import LabeledFrame, Labels, load_file, save_file
+from sleap_io import LabeledFrame, Labels, save_file
 from sleap_io.model.instance import (
     Instance,
     PredictedInstance,
@@ -93,6 +93,8 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     track_swap,
     find_track_occupancy,
     track_set_instance,
+    make_video_callback,
+    load_labels_video_search,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
@@ -109,7 +111,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     add_suggestion,
 )
 from sleap.sleap_io_adaptors.lf_labels_utils import (
-    frames,
+    iterate_labeled_frames,
     get_template_instance_points,
     get_track_occupancy,
     remove_track,
@@ -754,17 +756,14 @@ class LoadProjectFile(LoadLabelsObject):
             filename = None
             has_loaded = True
         else:
-            # gui_video_callback = Labels.make_gui_video_callback(
-            #     search_paths=[os.path.dirname(filename)], context=params
-            # ) #TODO:
-
-            # gui_video_callback = make_video_callback(
-            #     search_paths=[os.path.dirname(filename)], use_gui=True, context=params
-            # ) # TODO:
+            gui_video_callback = make_video_callback(
+                search_paths=[os.path.dirname(filename)], context=params, use_gui=True
+            )
 
             try:
-                # labels = load_file(filename, video_search=gui_video_callback)
-                labels = load_file(filename)
+                labels = load_labels_video_search(
+                    filename, video_search=gui_video_callback
+                )
                 has_loaded = True
             except ValueError as e:
                 print(e)
@@ -1190,7 +1189,7 @@ class ExportAnalysisFile(AppCommand):
         for video in videos:
             # Create the filename
             video_idx = labels.videos.index(video)
-            vn = Path(video.backend.filename)
+            vn = Path(video.filename)
             default_name = str(
                 Path(
                     dirname,
@@ -1319,7 +1318,7 @@ class ExportVideoClip(AppCommand):
         # )
         save_video(
             frames=[
-                context.state["video"].backend.get_frame(i) for i in params["frames"]
+                context.state["video"][frame_idx] for frame_idx in params["frames"]
             ],
             filename=params["video_filename"],
             fps=params["fps"],
@@ -1414,7 +1413,7 @@ class ExportVideoClip(AppCommand):
         if context.state["has_frame_range"]:
             params["frames"] = range(*context.state["frame_range"])
         else:
-            params["frames"] = range(context.state["video"].frames)
+            params["frames"] = range(len(context.state["video"]))
 
         return params
 
@@ -1447,7 +1446,7 @@ class ExportVideoClip(AppCommand):
         # Determine crop size relative to original size and scale
         # (crop size should be *final* output size, thus already scaled).
         video = context.state["video"]
-        img_h, img_w = video.backend.img_shape[:2]
+        img_h, img_w = video.shape[1:3]
         w = int(img_w * params["scale"])
         h = int(img_h * params["scale"])
         if export_options_crop == "Half":
@@ -1567,14 +1566,13 @@ def export_dataset_gui(
         QtWidgets.QApplication.instance().processEvents()
         return True
 
+    embed_option = "all" if all_labeled else "user+suggestions" if suggested else "user"
     save_file(
         labels,
         filename,
         format="slp",
-        embed=as_package,
-        all_labeled=all_labeled,
-        suggested=suggested,
-        progress_callback=update_progress if verbose else None,
+        embed=embed_option,
+        # progress_callback=update_progress if verbose else None, #TODO
     )
 
     if verbose:
@@ -1730,8 +1728,7 @@ class ExportLabelsSubset(ExportFullPackage):
         frames = params["frames"]
         end_frame_idx = frames[-1]  # 0-indexed
         video: Video = context.state["video"]
-        n_frames = video.frames
-
+        n_frames = len(video)
         # Initialize video subset.
         video_subset = video
 
@@ -1887,7 +1884,7 @@ class GoIteratorCommand(AppCommand):
 class GoPreviousLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        return frames(
+        return iterate_labeled_frames(
             context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
@@ -1898,7 +1895,7 @@ class GoPreviousLabeledFrame(GoIteratorCommand):
 class GoNextLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        return frames(
+        return iterate_labeled_frames(
             context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
@@ -1908,16 +1905,18 @@ class GoNextLabeledFrame(GoIteratorCommand):
 class GoNextUserLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        from sleap.sleap_io_adaptors.lf_labels_utils import frames
+        from sleap.sleap_io_adaptors.lf_labels_utils import iterate_labeled_frames
 
-        frames = frames(
+        iterate_labeled_frames = iterate_labeled_frames(
             context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
         )
         # Filter to frames with user instances
-        frames = filter(lambda lf: lf.has_user_instances, frames)
-        return frames
+        iterate_labeled_frames = filter(
+            lambda lf: lf.has_user_instances, iterate_labeled_frames
+        )
+        return iterate_labeled_frames
 
 
 class NavCommand(AppCommand):
@@ -2051,7 +2050,7 @@ class ToggleGrayscale(EditCommand):
 
         def try_to_read_grayscale(video: Video):
             try:
-                return video.backend.grayscale
+                return video.grayscale
             except Exception:
                 return None
 
@@ -2140,10 +2139,7 @@ class ReplaceVideo(EditCommand):
             import_params = import_item["params"]
 
             # TODO: Will need to create a new backend if import has different extension.
-            if (
-                Path(video.backend.filename).suffix
-                != Path(import_params["filename"]).suffix
-            ):
+            if Path(video.filename).suffix != Path(import_params["filename"]).suffix:
                 raise TypeError(
                     "Importing videos with different extensions is not supported."
                 )
@@ -2196,7 +2192,7 @@ class ReplaceVideo(EditCommand):
             return False
 
         # Select the videos we want to swap
-        old_paths = [video.backend.filename for video in context.labels.videos]
+        old_paths = [video.filename for video in context.labels.videos]
         paths = list(old_paths)
         okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
         if not okay:
@@ -2904,7 +2900,7 @@ class TransposeInstances(EditCommand):
             if context.state["propagate track labels"]:
                 frame_range = (
                     context.state["frame_idx"],
-                    context.state["video"].frames,
+                    len(context.state["video"]),
                 )
             else:
                 frame_range = (
@@ -3011,7 +3007,7 @@ class AddTrack(EditCommand):
         next_number = max(track_numbers_used, default=0) + 1
         new_track = Track(name=str(next_number))
 
-        context.labels.add_track(context.state["video"], new_track)
+        context.labels.tracks.append(new_track)
 
         context.execute(SetSelectedInstanceTrack, new_track=new_track)
 
@@ -3068,7 +3064,7 @@ class SetSelectedInstanceTrack(EditCommand):
                 # Otherwise, range is current to last frame
                 frame_range = (
                     context.state["frame_idx"],
-                    context.state["video"].frames,
+                    len(context.state["video"]),
                 )
 
             # Do the swap
@@ -3278,11 +3274,13 @@ class MergeProject(EditCommand):
             return
 
         for filename in filenames:
-            #  # TODO
+            gui_video_callback = make_video_callback(
+                search_paths=[os.path.dirname(filename)], use_gui=True
+            )
 
-            # new_labels = Labels.load_file(filename, video_search=gui_video_callback)
-            # TODO: use gui callback
-            new_labels = load_file(filename)
+            new_labels = load_labels_video_search(
+                filename, video_search=gui_video_callback
+            )
 
             # Merging data is handled by MergeDialog
             MergeDialog(base_labels=context.labels, new_labels=new_labels).exec_()
@@ -3494,8 +3492,8 @@ class AddInstance(EditCommand):
         for node in context.state["skeleton"].node_names:
             # If we're copying from a skeleton that has this node.
             node_idx = context.state["skeleton"].node_names.index(node)
-            if node_idx < len(copy_instance.points) and not np.any(
-                np.isnan(copy_instance.points[node_idx]["xy"])
+            if node in copy_instance.skeleton.node_names and not np.any(
+                np.isnan(copy_instance.numpy()[node_idx])
             ):
                 # Ensure x, y inside current frame, then copy x, y, and visible.
                 # We don't want to copy a PredictedPoint or score attribute.
@@ -3535,21 +3533,10 @@ class AddInstance(EditCommand):
                 else:
                     y_new = y_new_offset
 
-                # Update the new instance with the new x, y, and visibility.
-                node_idx = new_instance.skeleton.node_names.index(node)
-                # Create the input array first, then use PointsArray.from_array()
-                from sleap_io.model.instance import PointsArray
-
-                input_array = np.array(
-                    [(np.array([x_new, y_new]), visible, mark_complete, node)],
-                    dtype=[
-                        ("xy", "<f8", (2,)),
-                        ("visible", "bool"),
-                        ("complete", "bool"),
-                        ("name", "O"),
-                    ],
-                )
-                new_instance.points[node_idx] = PointsArray.from_array(input_array)[0]
+                new_instance[node]["xy"] = np.array([x_new, y_new])
+                new_instance[node]["visible"] = visible
+                new_instance[node]["complete"] = mark_complete
+                new_instance[node]["name"] = node
             else:
                 has_missing_nodes = True
 
@@ -3633,9 +3620,9 @@ class AddInstance(EditCommand):
     @staticmethod
     def get_previous_frame_index(context: CommandContext) -> Optional[int]:
         """Returns index of previous frame."""
-        from sleap.sleap_io_adaptors.lf_labels_utils import frames
+        from sleap.sleap_io_adaptors.lf_labels_utils import iterate_labeled_frames
 
-        frames = frames(
+        frames_iter = iterate_labeled_frames(
             context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
@@ -3643,7 +3630,7 @@ class AddInstance(EditCommand):
         )
 
         try:
-            next_idx = next(frames).frame_idx
+            next_idx = next(frames_iter).frame_idx
         except Exception:
             return
 
@@ -3672,11 +3659,8 @@ class SetInstancePointLocations(EditCommand):
         nodes_locations = params["nodes_locations"]
 
         for node, (x, y) in nodes_locations.items():
-            if node in instance:
-                node_idx = instance.skeleton.node_names.index(node)
-                point_data = list(instance.points[node_idx])
-                point_data["xy"] = np.array([x, y])
-                instance.points[node_idx] = point_data
+            if node in instance.skeleton.node_names:
+                instance[node]["xy"] = np.array([x, y])
 
 
 class SetInstancePointVisibility(EditCommand):
@@ -3700,30 +3684,8 @@ class SetInstancePointVisibility(EditCommand):
         node = params["node"]
         visible = params["visible"]
 
-        # instance[node] returns [(x, y), visible, complete, name] or
-        # [(x, y), score, visible, complete, name]
-        node_idx = instance.skeleton.node_names.index(node)
-        point_data = list(instance.points[node_idx])
-        point_data["visible"] = (
-            visible  # Create the input array first, then use PointsArray.from_array()
-        )
-        input_array = np.array(
-            [
-                (
-                    point_data[0],
-                    point_data[1],
-                    point_data[2],
-                    node if isinstance(node, str) else node.name,
-                )
-            ],
-            dtype=[
-                ("xy", "<f8", (2,)),
-                ("visible", "bool"),
-                ("complete", "bool"),
-                ("name", "O"),
-            ],
-        )
-        instance.points[node_idx] = PointsArray.from_array(input_array)[0]
+        node_name = node if isinstance(node, str) else node.name
+        instance[node_name]["visible"] = visible
 
 
 class AddMissingInstanceNodes(EditCommand):
@@ -3753,19 +3715,19 @@ class AddMissingInstanceNodes(EditCommand):
         # the rect that's currently visible in the window view
         in_view_rect = context.app.player.getVisibleRect()
 
+        input_arrays = instance.points
+
         for node_name in context.state["skeleton"].node_names:
             node_idx = context.state["skeleton"].node_names.index(node_name)
-            if node_idx >= len(instance.points) or np.any(
-                np.isnan(instance.points[node_idx][0])
+            if node_name in instance.points["name"] or np.any(
+                np.isnan(instance.numpy()[node_idx])
             ):
                 # pick random points within currently zoomed view
                 x, y = cls.get_xy_in_rect(in_view_rect)
                 # set point for node
-                # Create the input array first, then use PointsArray.from_array()
-                from sleap_io.model.instance import PointsArray
 
                 input_array = np.array(
-                    [([x, y], visible, False, node_name)],
+                    (np.array([x, y]), visible, False, node_name),
                     dtype=[
                         ("xy", "<f8", (2,)),
                         ("visible", "bool"),
@@ -3773,7 +3735,10 @@ class AddMissingInstanceNodes(EditCommand):
                         ("name", "O"),
                     ],
                 )
-                instance.points[node_idx] = PointsArray.from_array(input_array)[0]
+                input_arrays[node_idx] = input_array
+            else:
+                input_arrays[node_idx] = instance.numpy()[node_idx]
+        instance.points = PointsArray.from_array(input_arrays)
 
     @staticmethod
     def get_xy_in_rect(rect: QtCore.QRectF):
@@ -3800,7 +3765,7 @@ class AddMissingInstanceNodes(EditCommand):
         )
 
         # Align the template on to the current instance with missing points
-        if not np.all(np.isnan(instance.points["xy"])) and not np.allclose(
+        if not np.all(np.isnan(instance.numpy())) and not np.allclose(
             instance.points["xy"], 0.0, equal_nan=True
         ):
             aligned_template = align.align_instance_points(
@@ -3815,13 +3780,11 @@ class AddMissingInstanceNodes(EditCommand):
 
             aligned_template = (template_points - template_mean) + center
 
+        input_arrays = PointsArray.empty(len(instance.skeleton.nodes))
         # Make missing points from the aligned template
         for i, node in enumerate(instance.skeleton.nodes):
-            if node not in instance:
+            if node.name not in instance.points["name"]:
                 x, y = aligned_template[i]
-                # Create the input array first, then use PointsArray.from_array()
-                from sleap_io.model.instance import PointsArray
-
                 input_array = np.array(
                     [([x, y], visible, False, node.name)],
                     dtype=[
@@ -3831,8 +3794,10 @@ class AddMissingInstanceNodes(EditCommand):
                         ("name", "O"),
                     ],
                 )
-                node_idx = instance.skeleton.node_names.index(node.name)
-                instance.points[node_idx] = PointsArray.from_array(input_array)
+                input_arrays[i] = input_array
+            else:
+                input_arrays[i] = instance.points[i]
+        instance.points = PointsArray.from_array(input_arrays)
 
     @classmethod
     def add_force_directed_nodes(
@@ -3849,26 +3814,11 @@ class AddMissingInstanceNodes(EditCommand):
 
         for node, pos in node_positions.items():
             # Create the input array first, then use PointsArray.from_array()
-            from sleap_io.model.instance import PointsArray
-
-            input_array = np.array(
-                [
-                    (
-                        [pos[0], pos[1]],
-                        visible,
-                        False,
-                        node if isinstance(node, str) else node.name,
-                    )
-                ],
-                dtype=[
-                    ("xy", "<f8", (2,)),
-                    ("visible", "bool"),
-                    ("complete", "bool"),
-                    ("name", "O"),
-                ],
-            )
-            node_idx = instance.skeleton.node_names.index(node)
-            instance.points[node_idx] = PointsArray.from_array(input_array)[0]
+            node_name = node if isinstance(node, str) else node.name
+            instance[node_name]["xy"] = np.array([pos[0], pos[1]])
+            instance[node_name]["visible"] = visible
+            instance[node_name]["complete"] = False
+            instance[node_name]["name"] = node_name
 
 
 class AddUserInstancesFromPredictions(EditCommand):
@@ -3889,35 +3839,17 @@ class AddUserInstancesFromPredictions(EditCommand):
             # if we're copying from a skeleton that has this node
             node_idx = new_instance.skeleton.node_names.index(node)
             if (
-                node in copy_instance
-                and not copy_instance.points[node_idx]["xy"].isnan()
+                node in copy_instance.points["name"]
+                and not copy_instance.numpy()[node_idx].isnan()
             ):
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute
                 point_data = copy_instance.points[node_idx]
                 if "score" in point_data.dtype.names:
-                    # Create the input array first, then use PointsArray.from_array()
-                    from sleap_io.model.instance import PointsArray
-
-                    input_array = np.array(
-                        [
-                            (
-                                [point_data[0][0], point_data[0][1]],
-                                point_data["visible"],
-                                False,
-                                node,
-                            )
-                        ],
-                        dtype=[
-                            ("xy", "<f8", (2,)),
-                            ("visible", "bool"),
-                            ("complete", "bool"),
-                            ("name", "O"),
-                        ],
-                    )
-                    new_instance.points[node_idx] = PointsArray.from_array(input_array)[
-                        0
-                    ]
+                    new_instance[node]["xy"] = point_data["xy"]
+                    new_instance[node]["visible"] = point_data["visible"]
+                    new_instance[node]["complete"] = False
+                    new_instance[node]["name"] = node
 
         # copy the track
         new_instance.track = copy_instance.track

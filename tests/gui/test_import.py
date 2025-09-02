@@ -58,7 +58,4 @@ def test_video_import_detect_h5_shape():
     assert data[0]["params"]["input_format"] == "channels_first"
 
     assert importer.import_widgets[0].video is not None
-    assert importer.import_widgets[0].video.backend.num_frames == 42
-    assert importer.import_widgets[0].video.backend.img_shape[0] == 512
-    assert importer.import_widgets[0].video.backend.img_shape[1] == 512
-    assert importer.import_widgets[0].video.backend.img_shape[2] == 1
+    assert importer.import_widgets[0].video.shape == (42, 512, 512, 1)

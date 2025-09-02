@@ -29,9 +29,10 @@ which doesn't yet have all points).
 
 """
 
-from sleap_io.model.instance import Instance
+from sleap_io.model.instance import Instance, PointsArray
 from typing import List, Tuple
 import numpy as np
+from sleap.sleap_io_adaptors.lf_labels_utils import instances
 
 
 def get_stable_node_pairs(
@@ -163,8 +164,6 @@ def make_mean_instance(
     if std_thresh:
         mean[stdev > std_thresh] = np.nan
 
-    from sleap_io.model.instance import Instance
-
     OFFSET = 0  # FIXME
 
     # Create points list with the new format: list of ((x, y), visible, complete) tuples
@@ -172,7 +171,6 @@ def make_mean_instance(
     for i, p in enumerate(mean):
         if not np.isnan(p[0][0]) and not np.isnan(p[0][1]):
             # Create the input array first, then use PointsArray.from_array()
-            from sleap_io.model.instance import PointsArray
 
             input_array = np.array(
                 [
@@ -190,10 +188,7 @@ def make_mean_instance(
                     ("name", "O"),
                 ],
             )
-            pt = PointsArray.from_array(input_array)[
-                0
-            ]  # [(x, y), visible, complete, name]
-            points.append(pt)  # [x, y, visible, complete]
+            points.append(input_array)  # [x, y, visible, complete]
         else:
             # Create the input array first, then use PointsArray.from_array()
             input_array = np.array(
@@ -205,12 +200,9 @@ def make_mean_instance(
                     ("name", "O"),
                 ],
             )
-            pt = PointsArray.from_array(input_array)[
-                0
-            ]  # [(x, y), visible, complete, name]
-            points.append(pt)  # [x, y, visible, complete]
+            points.append(input_array)  # [x, y, visible, complete]
 
-    new_instance = Instance(skeleton=skeleton, points=points)
+    new_instance = Instance(skeleton=skeleton, points=PointsArray.from_array(points))
     return new_instance
 
 
@@ -289,7 +281,7 @@ if __name__ == "__main__":
 
     labels = load_file(filename)
 
-    points = get_instances_points(labels.instances())
+    points = get_instances_points(instances(labels=labels))
     get_stable_node_pairs(points, np.array(labels.skeletons[0].node_names))
 
     # import time

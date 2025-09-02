@@ -13,6 +13,8 @@ from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QImage
 
 from sleap.gui.widgets.video import ndarray_to_qimage
+from copy import deepcopy
+import sleap_io as sio
 
 
 class FrameLoaderThread(QThread):
@@ -30,6 +32,7 @@ class FrameLoaderThread(QThread):
         self.request_queue = queue.Queue()
         self.stop_flag = threading.Event()
         self.current_video = None
+        self.local_video_copy = None
 
         # Performance tracking
         self._frame_load_times = deque(maxlen=100)
@@ -68,7 +71,7 @@ class FrameLoaderThread(QThread):
             start_time = time.time()
 
             # Load the frame
-            frame = video.backend.get_frame(frame_idx)
+            frame = video[frame_idx]
 
             if frame is not None:
                 # Convert to QImage
@@ -90,9 +93,33 @@ class FrameLoaderThread(QThread):
         except Exception as e:
             print(f"[THREAD] Error processing frame {frame_idx}: {e}")
 
-    def request_frame(self, video, frame_idx: int):
+    def request_frame(self, video: sio.Video, frame_idx: int):
         """Request a frame to be loaded (called from main thread)."""
-        self.request_queue.put((video, frame_idx))
+        # Update the current video if a new one was provided
+        if self.current_video is not video:
+            # Retain original state
+            reopen = video.is_open
+            open_backend = video.open_backend
+
+            # Close the backend
+            video.close()
+            video.open_backend = False
+
+            # Update the reference
+            self.current_video = video
+
+            # Make a thread-local copy
+            self.local_video_copy = deepcopy(video)
+
+            # Set it to open the backend on first read
+            self.local_video_copy.open_backend = True
+
+            # Restore the original state in the incoming video
+            self.current_video.open_backend = open_backend
+            if reopen:
+                self.current_video.open()
+
+        self.request_queue.put((self.local_video_copy, frame_idx))
 
     def stop(self):
         """Stop the worker thread."""
