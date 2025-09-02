@@ -527,13 +527,14 @@ class SuggestionsTableModel(GenericTableModel):
         video_name = os.path.basename(item.video.filename)
         video_string = f"{video_idx}: {video_name}"
 
-        item_dict["group"] = str(item.group + 1) if item.group is not None else ""
-        item_dict["group_int"] = item.group if item.group is not None else -1
+        item_dict["group"] = "0"
+        item_dict["group_int"] = 0
         item_dict["video"] = video_string
         item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0
 
         # show how many labeled instances are in this frame
         lf = labels.find(item.video, item.frame_idx)
+        lf = lf[0] if lf else None
         val = 0 if lf is None else len(lf.user_instances)
         val = str(val) if val > 0 else ""
         item_dict["labeled"] = val
