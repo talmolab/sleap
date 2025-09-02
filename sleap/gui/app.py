@@ -1512,7 +1512,7 @@ class MainWindow(QMainWindow):
 
         selection["random"] = {
             video: remove_user_labeled(
-                video, random.sample(range(video.frames), min(20, video.frames))
+                video, random.sample(range(video.shape[0]), min(20, video.shape[0]))
             )
             for video in self.labels.videos
         }
@@ -1522,7 +1522,7 @@ class MainWindow(QMainWindow):
                 current_video: remove_user_labeled(
                     current_video,
                     random.sample(
-                        range(current_video.frames), min(20, current_video.frames)
+                        range(current_video.shape[0]), min(20, current_video.shape[0])
                     ),
                 )
             }

@@ -2003,7 +2003,7 @@ class GoFrameGui(NavCommand):
             "Frame Number:",
             context.state["frame_idx"] + 1,
             1,
-            context.state["video"].frames,
+            context.state["video"].shape[0],
         )
         params["frame_idx"] = frame_number - 1
 
@@ -2025,7 +2025,7 @@ class SelectToFrameGui(NavCommand):
             "Frame Number:",
             context.state["frame_idx"] + 1,
             1,
-            context.state["video"].frames,
+            context.state["video"].shape[0],
         )
         params["from_frame_idx"] = context.state["frame_idx"]
         params["to_frame_idx"] = frame_number - 1
