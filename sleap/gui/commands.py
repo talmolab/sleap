@@ -96,6 +96,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     make_video_callback,
     load_labels_video_search,
     clear_suggestion,
+    get_instances_to_show,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
@@ -1984,7 +1985,7 @@ class GoNextTrackFrame(NavCommand):
             # Select the instance in the new track
             lf = context.labels.find(video, next_idx, return_new=True)[0]
             track_instances = [
-                inst for inst in lf.instances_to_show if inst.track == next_track
+                inst for inst in get_instances_to_show(lf) if inst.track == next_track
             ]
             if track_instances:
                 context.state["instance"] = track_instances[0]

@@ -598,7 +598,7 @@ class MainWindow(QMainWindow):
             "select next",
             "Select Next Instance",
             lambda: self.state.increment_in_list(
-                "instance", self.state["labeled_frame"].instances_to_show
+                "instance", get_instances_to_show(self.state["labeled_frame"])
             ),
         )
         add_menu_item(
