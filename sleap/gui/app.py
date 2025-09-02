@@ -1241,6 +1241,7 @@ class MainWindow(QMainWindow):
                         suggestion.video,
                         suggestion.frame_idx,  # ), use_cache=True
                     )
+                    lf = lf[0] if lf else None
                     if lf is not None and lf.has_user_instances:
                         labeled_count += 1
                 prc = (labeled_count / len(suggestion_list)) * 100
