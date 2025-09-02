@@ -98,6 +98,17 @@ def fill_missing(
     # Build a new full points array aligned to the skeleton order.
     skeleton_nodes = list(instance.skeleton.nodes)
     current_names = list(instance.points["name"]) if len(instance.points) else []
+    w, h = y2 - y1, x2 - x1
+
+    def _rand_point():
+        off = np.array([w, h]) * np.random.rand(2)
+        x, y = off + np.array([x1, y1])
+        y, x = max(y, 0), max(x, 0)
+        if max_x is not None:
+            x = min(x, max_x)
+        if max_y is not None:
+            y = min(y, max_y)
+        return x, y
 
     # Prepare a raw input array for all nodes, then convert to PointsArray
     input_array = np.empty(
@@ -125,9 +136,9 @@ def fill_missing(
                     name,
                 )
             else:
-                input_array[i] = instance.points[i]
+                input_array[i] = (_rand_point(), False, False, name)
         else:
-            input_array[i] = instance.points[i]
+            input_array[i] = (_rand_point(), False, False, name)
 
     # Replace points with an array sized to the skeleton
     instance.points = PointsArray.from_array(input_array)
