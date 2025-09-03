@@ -1,7 +1,7 @@
 from sleap.io.convert import default_analysis_filename, main as sleap_convert
 from sleap_io import Video, Labels
 from sleap_io.model.instance import Instance
-from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video, labels_get
 from pathlib import PurePath, Path
 import re
 import pytest
@@ -45,7 +45,7 @@ def test_analysis_format(
         output_paths = generate_filenames(output_paths, format)
         for video, path in zip(labels.videos, output_paths):
             video_exists = Path(path).exists()
-            if len(labels.get(video)) == 0:
+            if len(labels_get(labels, video)) == 0:
                 assert not video_exists
             else:
                 assert video_exists

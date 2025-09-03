@@ -36,6 +36,7 @@ from sleap.util import get_package_file
 # Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
+from sleap.sleap_io_adaptors.lf_labels_utils import add_suggestion, remove_video, labels_add_instance, remove_instance
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -279,8 +280,11 @@ def test_ExportAnalysisFile(
 
     # Add labels and test with all_videos False
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
-    instance = Instance(skeleton=labels.skeleton, frame=labeled_frame)
-    labels.add_instance(frame=labeled_frame, instance=instance)
+    instance = Instance(
+        points=Instance.empty(labels.skeleton).points,
+        skeleton=labels.skeleton
+    )
+    labels_add_instance(labels, labeled_frame, instance)
     labels.append(labeled_frame)
 
     params = {"all_videos": False, "csv": csv}
@@ -326,7 +330,7 @@ def test_ExportAnalysisFile(
     # Remove all videos and test
     all_videos = list(labels.videos)
     for video in all_videos:
-        labels.remove_video(labels.videos[-1])
+        remove_video(labels, labels.videos[-1])
 
     params = {"all_videos": True, "csv": csv}
     with pytest.raises(ValueError):
@@ -992,14 +996,18 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
 
     # Add suggestions
     for lf in lfs_sugg:
-        centered_pair_labels.add_suggestion(centered_pair_labels.video, lf.frame_idx)
+        add_suggestion(centered_pair_labels, centered_pair_labels.video, lf.frame_idx)
 
     # Add predictions and remove user instances from those frames
     for lf in lfs_pred:
-        predicted_inst = PredictedInstance.from_instance(lf.instances[0], score=0.5)
-        centered_pair_labels.add_instance(lf, predicted_inst)
+        predicted_inst = PredictedInstance.from_numpy(
+            lf.instances[0].points["xy"],
+            skeleton=lf.instances[0].skeleton,
+            score=0.5
+        )
+        labels_add_instance(centered_pair_labels, lf, predicted_inst)
         for inst in lf.user_instances:
-            centered_pair_labels.remove_instance(lf, inst)
+            remove_instance(centered_pair_labels, inst, lf)
     context = CommandContext.from_labels(centered_pair_labels)
 
     # Case 1: Export user-labeled frames with image data into a single SLP file.
@@ -1131,16 +1139,16 @@ def test_ExportLabelsSubset(
     upper_bound = int(n_frames / 4 + 2)
 
     # Alter data.
-    labels.add_suggestion(video, lower_bound)  # Should be included.
-    labels.add_suggestion(video, 1)  # Should be excluded since outside video clip.
-    labels.add_suggestion(video, upper_bound + 1)  # Should be excluded.
+    add_suggestion(labels, video, lower_bound)  # Should be included.
+    add_suggestion(labels, video, 1)  # Should be excluded since outside video clip.
+    add_suggestion(labels, video, upper_bound + 1)  # Should be excluded.
     video_extra = small_robot_mp4_vid
     from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
 
     labels_add_video(
         labels, video_extra
     )  # Should be excluded since outside video clip.
-    labels.add_suggestion(video_extra, 0)  # Should be excluded since outside video clip
+    add_suggestion(labels, video_extra, 0)  # Should be excluded since outside video clip
     n_suggestions_original = len(labels.suggestions)
     n_videos_original = len(labels.videos)
 

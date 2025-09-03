@@ -4,6 +4,7 @@ from sleap_io import Video
 from sleap_io import LabeledFrame, Labels
 from sleap_io.model.instance import PredictedInstance, Track
 from sleap_io import Skeleton
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_get
 import numpy as np
 
 
@@ -510,7 +511,7 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
 
     # Confirming every suggested frame meets criteria
     for sugg in suggestions:
-        lf = labels.get((sugg.video, sugg.frame_idx))
+        lf = labels_get(labels, (sugg.video, sugg.frame_idx))
         pred_instances = [
             inst for inst in lf.instances_to_show if isinstance(inst, PredictedInstance)
         ]

@@ -19,7 +19,7 @@ from sleap.info.write_tracking_h5 import (
 from sleap_io import Video, Labels
 from sleap_io.model.instance import Instance
 from sleap.gui.commands import AddUserInstancesFromPredictions
-from sleap.sleap_io_adaptors.lf_labels_utils import find_track_occupancy
+from sleap.sleap_io_adaptors.lf_labels_utils import find_track_occupancy, remove_video, labels_add_instance
 
 
 def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: Labels):
@@ -345,7 +345,7 @@ def test_hdf5_video_arg(
     # Remove all videos from project and repeat process
     all_videos = list(labels.videos)
     for video in all_videos:
-        labels.remove_video(labels.videos[-1])
+        remove_video(labels, labels.videos[-1])
 
     assert get_occupancy_and_points_matrices(labels=labels, all_frames=True) is None
 
