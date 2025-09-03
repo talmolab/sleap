@@ -156,7 +156,7 @@ def remove_video(labels: Labels, video: Video):
     # Remove video from videos list (iterate backwards to avoid index issues)
     for vid_idx in reversed(range(len(labels.videos))):
         vid = labels.videos[vid_idx]
-        if video.matches_content(vid):
+        if video == vid:
             labels.videos.pop(vid_idx)
 
         # Remove any suggestions for this video
