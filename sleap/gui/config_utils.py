@@ -106,3 +106,6 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         )
         key_val_dict[f"model_config.backbone_config.{backbone_name}.output_stride"] = output_stride
         key_val_dict[f"model_config.backbone_config.{backbone_name}.max_stride"] = max_stride
+
+    # batch size for val
+    key_val_dict["trainer_config.val_data_loader.batch_size"] = key_val_dict["trainer_config.train_data_loader.batch_size"]

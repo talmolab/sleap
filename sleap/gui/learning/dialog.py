@@ -29,12 +29,10 @@ from sleap.sleap_io_adaptors.lf_labels_utils import instances
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
-    "model_config.head_configs.centered_instance.anchor_part",
-    "model_config.head_configs.centroid.anchor_part",
-    "model_config.head_configs.multi_class_topdown.confmaps.anchor_part",
+    "model.model_config.head_configs.centered_instance.confmaps.anchor_part",
+    "model.model_config.head_configs.centroid.confmaps.anchor_part",
+    "model.model_config.head_configs.multi_class_topdown.confmaps.anchor_part",
 ]
-
-
 class LearningDialog(QtWidgets.QDialog):
     """
     Dialog for running training and/or inference.
@@ -933,7 +931,7 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
                 self.form_widget.set_field_options(
-                    field_name,
+                    ".".join(field_name.split(".")[1:]),
                     skeleton.node_names,
                 )
 
@@ -1061,7 +1059,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             for field_name in NODE_LIST_FIELDS:
                 form_name = field_name.split(".")[0]
                 self.form_widgets[form_name].set_field_options(
-                    field_name,
+                    ".".join(field_name.split(".")[1:]),
                     skeleton.node_names,
                 )
 
