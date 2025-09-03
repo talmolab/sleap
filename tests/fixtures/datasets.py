@@ -72,7 +72,6 @@ def min_labels_robot():
 @pytest.fixture
 def siv_robot():
     """Created before grayscale attribute was added to SingleImageVideo backend."""
-    # return sio.load_file(TEST_SLP_SIV_ROBOT, video_search="tests/data/videos/")
     return sio.load_file(TEST_SLP_SIV_ROBOT)
 
 
@@ -87,15 +86,11 @@ def siv_robot_caching():
     release), this is a fixture to test that datasets created while `caching` was added
     into the serialization are read in correctly.
     """
-    # return sio.load_file(TEST_SLP_SIV_ROBOT_CACHING, video_search="tests/data/videos/")
     return sio.load_file(TEST_SLP_SIV_ROBOT_CACHING)
 
 
 @pytest.fixture
 def min_tracks_2node_labels():
-    # return Labels.load_file(
-    #     TEST_MIN_TRACKS_2NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"]
-    # )
     return sio.load_file(TEST_MIN_TRACKS_2NODE_LABELS)
 
 
@@ -108,20 +103,17 @@ def min_tracks_2node_predictions():
         "tests/data/tracks/clip.mp4"
     ```
     """
-    # return Labels.load_file("tests/data/tracks/clip.predictions.slp", video_search=["tests/data/tracks/clip.mp4"])
     return sio.load_file("tests/data/tracks/clip.predictions.slp")
 
 
 @pytest.fixture
 def min_tracks_13node_labels():
-    # return Labels.load_file(TEST_MIN_TRACKS_13NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"])
     return sio.load_file(TEST_MIN_TRACKS_13NODE_LABELS)
 
 
-# @pytest.fixture
-# def mat_labels():
-#     # TODO: Support .mat files (https://github.com/talmolab/sleap-io/issues/221)
-#     return Labels.load_leap_matlab(TEST_MAT_LABELS, gui=False)
+@pytest.fixture
+def mat_labels():
+    return sio.load_leap(TEST_MAT_LABELS)
 
 
 TEST_LEGACY_GRID_LABELS = "tests/data/test_grid/test_grid_labels.legacy.h5"
@@ -135,7 +127,6 @@ def legacy_grid_labels_path():
 
 @pytest.fixture
 def legacy_grid_labels():
-    # return Labels.load_file(TEST_LEGACY_GRID_LABELS, video_search=TEST_LEGACY_GRID_LABELS)
     return sio.load_file(TEST_LEGACY_GRID_LABELS)
 
 
@@ -146,7 +137,6 @@ def midpoint_grid_labels_path():
 
 @pytest.fixture
 def midpoint_grid_labels():
-    # return Labels.load_file(TEST_MIDPOINT_GRID_LABELS, video_search=TEST_MIDPOINT_GRID_LABELS)
     return sio.load_file(TEST_MIDPOINT_GRID_LABELS)
 
 
@@ -293,7 +283,6 @@ def centered_pair_predictions_slp_path():
 
 @pytest.fixture
 def min_dance_labels():
-    # return Labels.load_file(TEST_MIN_DANCE_LABELS, video_search=["tests/data/videos/dance.mp4"])
     return sio.load_file(TEST_MIN_DANCE_LABELS)
 
 

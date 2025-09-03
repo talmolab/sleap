@@ -25,14 +25,12 @@ def hdf5_file_path():
 
 @pytest.fixture
 def hdf5_vid():
-    return Video.from_hdf5(
-        filename=TEST_H5_FILE, dataset=TEST_H5_DSET, input_format=TEST_H5_INPUT_FORMAT
-    )
+    return Video.from_filename(filename=TEST_H5_FILE, dataset=TEST_H5_DSET)
 
 
 @pytest.fixture
 def hdf5_confmaps():
-    return Video.from_hdf5(
+    return Video.from_filename(
         filename=TEST_H5_FILE,
         dataset=TEST_H5_CONFMAPS,
         input_format=TEST_H5_INPUT_FORMAT,
@@ -41,11 +39,10 @@ def hdf5_confmaps():
 
 @pytest.fixture
 def hdf5_affinity():
-    return Video.from_hdf5(
-        filename=TEST_H5_FILE,
+    return Video.from_filename(
+        TEST_H5_FILE,
         dataset=TEST_H5_AFFINITY,
         input_format=TEST_H5_INPUT_FORMAT,
-        convert_range=False,
     )
 
 
@@ -86,10 +83,9 @@ def small_robot_single_image_vid():
         TEST_SMALL_ROBOT_SIV_FILE1,
         TEST_SMALL_ROBOT_SIV_FILE2,
     ]
-    return Video.from_image_filenames(filenames)
+    return Video.from_filename(filenames)
 
 
 @pytest.fixture
 def small_robot_3_frame_vid():
-    filename = TEST_SMALL_ROBOT_VID
-    return Video.from_filename(filename)
+    return Video.from_filename(TEST_SMALL_ROBOT_VID)
