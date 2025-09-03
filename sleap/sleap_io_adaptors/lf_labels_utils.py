@@ -641,7 +641,7 @@ def iterate_labeled_frames(
             yield frame_map[idx]
 
 
-def get_template_instance_points(labels, skeleton):
+def get_template_instance_points(labels: Labels, skeleton: Skeleton):
     """Get template instance points for a skeleton.
 
     This function recreates labels.get_template_instance_points(skeleton)
@@ -659,14 +659,15 @@ def get_template_instance_points(labels, skeleton):
 
     # Check if labels has labeled_frames attribute
     if not hasattr(labels, "labeled_frames"):
+        print("Labels object has no labeled_frames attribute")
         return None
 
-    # Check if there are any labeled frames
+    # Check if labeled_frame list is empty
     if not labels.labeled_frames:
         # No labeled frames so use force-directed graph layout
         try:
             import networkx as nx
-            from sleap.util import to_graph
+            from sleap.sleap_io_adaptors.skeleton_utils import to_graph
 
             # Create graph from skeleton and get spring layout
             G = to_graph(skeleton)

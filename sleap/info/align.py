@@ -250,7 +250,7 @@ def get_instances_points(instances: List[Instance]) -> np.ndarray:
     for inst in instances:
         # Extract xy coordinates from the list of (x, y, visible, ...) tuples
         xy_coords = np.array(
-            [p[0] for p in inst.points]
+            [p["xy"] for p in inst.points]
         )  # Extract x, y from each tuple
         points_list.append(xy_coords)
 

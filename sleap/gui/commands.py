@@ -3457,7 +3457,6 @@ class AddInstance(EditCommand):
         Returns:
             Whether the new instance has missing nodes.
         """
-
         if copy_instance is None:
             return True
 
@@ -3755,18 +3754,19 @@ class AddMissingInstanceNodes(EditCommand):
     def add_nodes_from_template(
         cls,
         context,
-        instance,
+        instance,  # should be zeroes
         visible: bool = False,
         center_point: QtCore.QPoint = None,
     ):
         # Get the "template" instance
+        # context.labels.get_template_instance()
         template_points = get_template_instance_points(
             context.labels, skeleton=instance.skeleton
         )
 
         # Align the template on to the current instance with missing points
         if not np.all(np.isnan(instance.numpy())) and not np.allclose(
-            instance.points["xy"], 0.0, equal_nan=True
+            instance.numpy(), 0.0
         ):
             aligned_template = align.align_instance_points(
                 source_points_array=template_points,
@@ -3783,7 +3783,9 @@ class AddMissingInstanceNodes(EditCommand):
         input_arrays = PointsArray.empty(len(instance.skeleton.nodes))
         # Make missing points from the aligned template
         for i, node in enumerate(instance.skeleton.nodes):
-            if node.name not in instance.points["name"]:
+            if np.all(np.isnan(instance.points[i]["xy"])) or np.allclose(
+                instance.points[i]["xy"], 0.0, equal_nan=True
+            ):
                 x, y = aligned_template[i]
                 input_array = np.array(
                     [([x, y], visible, False, node.name)],
@@ -3797,6 +3799,7 @@ class AddMissingInstanceNodes(EditCommand):
                 input_arrays[i] = input_array
             else:
                 input_arrays[i] = instance.points[i]
+
         instance.points = PointsArray.from_array(input_arrays)
 
     @classmethod
