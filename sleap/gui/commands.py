@@ -1025,14 +1025,14 @@ class SaveProjectAs(AppCommand):
     @staticmethod
     def _try_save(context, labels: Labels, filename: str):
         """Helper function which attempts save and handles errors."""
-        from sleap_io.io.nwb import write_nwb
+        import sleap_io as sio
 
         success = False
         try:
             extension = (PurePath(filename).suffix)[1:]
             extension = None if (extension == "slp") else extension
             if extension == "nwb":
-                write_nwb(labels=labels, nwbfile_path=filename)
+                sio.save_nwb(labels=labels, filename=filename)
             else:
                 save_file(labels=labels, filename=filename, format=extension)
             success = True
