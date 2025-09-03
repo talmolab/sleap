@@ -1297,3 +1297,62 @@ def labels_frames(labels: Labels, video: Video = None):
         return labels.labeled_frames
     else:
         return labels.find(video)
+
+
+def labeled_frame_find(labeled_frame: LabeledFrame, track: Track = None):
+    """Find instances in a labeled frame that match the given track.
+    
+    This provides backward compatibility for the missing LabeledFrame.find() method.
+    In sleap-io, we need to manually search through instances to find matching tracks.
+    
+    Args:
+        labeled_frame: LabeledFrame to search in
+        track: Track to search for
+        
+    Returns:
+        List of instances that match the track, or empty list if none found
+    """
+    if track is None:
+        return list(labeled_frame.instances)
+    
+    matching_instances = []
+    for instance in labeled_frame.instances:
+        if instance.track == track:
+            matching_instances.append(instance)
+    
+    return matching_instances
+
+
+def labels_append_suggestions(labels: Labels, suggestions):
+    """Append suggestions to the Labels object.
+    
+    This provides backward compatibility for the missing append_suggestions() method.
+    In sleap-io, suggestions are stored as a list that can be extended directly.
+    
+    Args:
+        labels: Labels object to append suggestions to
+        suggestions: List of SuggestionFrame objects to append
+    """
+    if hasattr(suggestions, '__iter__'):
+        labels.suggestions.extend(suggestions)
+    else:
+        labels.suggestions.append(suggestions)
+
+
+def labels_add_instance(labels: Labels, frame: LabeledFrame, instance):
+    """Add an instance to a labeled frame.
+    
+    This provides backward compatibility for the missing add_instance() method.
+    In sleap-io, we manually add instances to the frame's instances list.
+    
+    Args:
+        labels: Labels object (for consistency with legacy API, but not used)
+        frame: LabeledFrame to add instance to
+        instance: Instance to add to the frame
+    """
+    # In sleap-io, instances are stored in the LabeledFrame directly
+    if hasattr(frame, 'instances'):
+        frame.instances.append(instance)
+    else:
+        # Fallback if instances is not a list
+        frame.instances = list(frame.instances) + [instance]

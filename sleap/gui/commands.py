@@ -3831,6 +3831,7 @@ class AddUserInstancesFromPredictions(EditCommand):
     ) -> Instance:
         # create the new instance
         new_instance = Instance(
+            points=copy_instance.points,
             skeleton=copy_instance.skeleton,
             from_predicted=copy_instance,
         )
@@ -3841,7 +3842,7 @@ class AddUserInstancesFromPredictions(EditCommand):
             node_idx = new_instance.skeleton.node_names.index(node)
             if (
                 node in copy_instance.points["name"]
-                and not copy_instance.numpy()[node_idx].isnan()
+                and not np.any(np.isnan(copy_instance.numpy()[node_idx]))
             ):
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute

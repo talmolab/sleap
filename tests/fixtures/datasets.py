@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 import sleap_io as sio
 from sleap_io import LabeledFrame
@@ -155,25 +156,21 @@ def simple_predictions():
 
     instances = []
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[1, 1], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([0.5, 0.7], dtype=np.float32),
             score=2,
             track=track_a,
-            points=dict(
-                a=([1, 1], 0.5, True, False),
-                b=([1, 1], 0.5, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[1, 1], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([0.5, 0.7], dtype=np.float32),
             score=5,
             track=track_b,
-            points=dict(
-                a=([1, 1], 0.7, True, False),
-                b=([1, 1], 0.7, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
 
@@ -182,25 +179,21 @@ def simple_predictions():
 
     instances = []
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[4, 5], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([1.0, 1.6], dtype=np.float32),
             score=3,
             track=track_a,
-            points=dict(
-                a=([4, 5], 1.5, True, False),
-                b=([1, 1], 1.0, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[6, 13], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([1.0, 1.6], dtype=np.float32),
             score=6,
             track=track_b,
-            points=dict(
-                a=([6, 13], 1.7, True, False),
-                b=([1, 1], 1.0, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
 

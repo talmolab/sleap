@@ -325,7 +325,8 @@ def test_hdf5_video_arg(
     instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
         copy_instance=labels[0].predicted_instances[0]
     )
-    labels.add_instance(frame=labeled_frame, instance=instance)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_instance
+    labels_add_instance(labels, frame=labeled_frame, instance=instance)
     labels.append(labeled_frame)
     print(f"labels.tracks = {labels.tracks}")
     print(f"None in labels.tracks = {None in labels.tracks}")
