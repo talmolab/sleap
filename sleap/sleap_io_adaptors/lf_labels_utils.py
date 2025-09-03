@@ -685,9 +685,6 @@ def get_template_instance_points(labels: Labels, skeleton: Skeleton):
             # Fallback if networkx is not available
             template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
             return template_points
-        except Exception as e:
-            template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
-            return template_points
 
     # Check if there are any instances
     if not hasattr(labels, "instances") or not instances(labels):
