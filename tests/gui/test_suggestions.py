@@ -1,7 +1,7 @@
 from typing import List
-from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
+from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap_io import Video
-from sleap_io import LabeledFrame, Labels
+from sleap_io import LabeledFrame, Labels, SuggestionFrame
 from sleap_io.model.instance import PredictedInstance, Track
 from sleap_io import Skeleton
 from sleap.sleap_io_adaptors.lf_labels_utils import labels_get, get_instances_to_show
@@ -539,9 +539,7 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
                 n_instance_below_score <= instance_upper_limit
                 and n_instance_below_score >= instance_lower_limit
             ):
-                temp_suggest = SuggestionFrame(
-                    labels.video, pred_instances[0].frame_idx
-                )
+                temp_suggest = SuggestionFrame(labels.video, lf.frame_idx)
                 if temp_suggest not in sugg:
                     return False
 
