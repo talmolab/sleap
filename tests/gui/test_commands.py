@@ -254,7 +254,7 @@ def test_ExportAnalysisFile(
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Add a video (no labels) and test with all_videos True
-    labels.add_video(small_robot_mp4_vid)
+    labels_add_video(labels, small_robot_mp4_vid)
 
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
@@ -601,7 +601,7 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     context.state["video"] = labels.videos[0]
 
     # Remove all tracks
-    labels.remove_all_tracks()
+    remove_all_tracks(labels)
 
     # Create instance from predicted instance
     context.newInstance(copy_instance=pred_inst, mark_complete=False)
@@ -965,7 +965,7 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
     # Remove frames we want to use for suggestions and predictions
     lfs_sugg = [centered_pair_labels[idx] for idx in [-1, -2]]
     lfs_pred = [centered_pair_labels[idx] for idx in [-3, -4]]
-    centered_pair_labels.remove_frames(lfs_sugg)
+    remove_frames(centered_pair_labels, lfs_sugg)
 
     # Add suggestions
     for lf in lfs_sugg:
@@ -1110,7 +1110,7 @@ def test_ExportLabelsSubset(
     labels.add_suggestion(video, 1)  # Should be excluded since outside video clip.
     labels.add_suggestion(video, upper_bound + 1)  # Should be excluded.
     video_extra = small_robot_mp4_vid
-    labels.add_video(video_extra)  # Should be excluded since outside video clip.
+    labels_add_video(labels, video_extra)  # Should be excluded since outside video clip.
     labels.add_suggestion(video_extra, 0)  # Should be excluded since outside video clip
     n_suggestions_original = len(labels.suggestions)
     n_videos_original = len(labels.videos)

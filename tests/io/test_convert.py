@@ -1,6 +1,7 @@
 from sleap.io.convert import default_analysis_filename, main as sleap_convert
 from sleap_io import Video, Labels
 from sleap_io.model.instance import Instance
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
 from pathlib import PurePath, Path
 import re
 import pytest
@@ -66,7 +67,7 @@ def test_analysis_format(
     sleap_convert_assert(output_paths, slp_path, format)
 
     # Add video and retest
-    labels.add_video(small_robot_mp4_vid)
+    labels_add_video(labels, small_robot_mp4_vid)
     slp_path = tmpdir.with_name("new_slp.slp")
     labels.save(filename=slp_path)
 
