@@ -30,6 +30,7 @@ dynamic = ["version", "readme"]
 dependencies = [
     "attrs",
     "cattrs",
+    "omegaconf",
     "imageio",
     "imageio-ffmpeg",
     "imgstore",
