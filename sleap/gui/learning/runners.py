@@ -21,7 +21,7 @@ from qtpy import QtWidgets
 from sleap_io import Labels, Video, LabeledFrame
 from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.sleap_io_adaptors.lf_labels_utils import load_and_match
-
+from sleap.gui.config_utils import filter_cfg
 logger = logging.getLogger(__name__)
 
 
@@ -272,8 +272,8 @@ class InferenceTask:
 
         cli_args.extend(["-o", output_path])
 
-        if "batch_size" in self.inference_params:
-            cli_args.extend(["--batch_size", str(self.inference_params["batch_size"])])
+        if "_batch_size" in self.inference_params:
+            cli_args.extend(["--batch_size", str(self.inference_params["_batch_size"])])
 
         if (
             "_max_instances" in self.inference_params
@@ -886,14 +886,12 @@ def train_subprocess(
     with tempfile.TemporaryDirectory() as temp_dir:
         # Write a temporary file of the TrainingJob so that we can respect
         # any changed made to the job attributes after it was loaded.
-        temp_filename = datetime.now().strftime("%y%m%d_%H%M%S") + "_training_job.json"
-        training_job_path = os.path.join(temp_dir, temp_filename)
-
         from sleap_nn.config.training_job_config import verify_training_cfg
 
         # convert json to yaml (to sleap-nn config format)
         cfg_file_name = datetime.now().strftime("%y%m%d_%H%M%S") + "_config"
-        cfg = verify_training_cfg(job_config)
+        filter_job_config = filter_cfg(job_config.copy())
+        cfg = verify_training_cfg(filter_job_config)
         cfg.data_config.train_labels_path = [labels_filename]
 
         cfg.trainer_config.save_ckpt_path = run_path

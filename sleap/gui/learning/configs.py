@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Text
 
 from sleap_io import Skeleton, load_file
 from sleap import util as sleap_utils
+from sleap.gui.config_utils import get_head_from_omegaconf
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FieldComboWidget
 from omegaconf import OmegaConf
@@ -187,10 +188,7 @@ class ConfigFileInfo:
                 TrainingJobConfig as snn_TrainingJobConfig,
             )
             cfg = snn_TrainingJobConfig.load_sleap_config(path)
-        for head in cfg.model_config.head_configs:
-            if cfg.model_config.head_configs[f"{head}"] is not None:
-                head_name = head
-                break
+        head_name = get_head_from_omegaconf(cfg)
         filename = os.path.basename(path)
         return cls(config=cfg, path=path, filename=filename, head_name=head_name)
 
@@ -488,10 +486,7 @@ class TrainingConfigsGetter:
             from omegaconf import OmegaConf
 
             cfg = OmegaConf.load(path)
-            for head in cfg.model_config.head_configs:
-                if cfg.model_config.head_configs[f"{head}"] is not None:
-                    key = head
-                    break
+            key = get_head_from_omegaconf(cfg)
 
             filename = os.path.basename(path)
             logging.debug(f"Loaded YAML config file: {filename}")
@@ -521,10 +516,7 @@ class TrainingConfigsGetter:
                 pass
             else:
                 # Get the head from the model (i.e., what the model will predict)
-                for head in cfg.model_config.head_configs:
-                    if cfg.model_config.head_configs[f"{head}"] is not None:
-                        key = head
-                        break
+                key = get_head_from_omegaconf(cfg)
                 if key == "multi_instance":
                     key = "bottomup"
 

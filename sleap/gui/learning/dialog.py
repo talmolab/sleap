@@ -338,11 +338,11 @@ class LearningDialog(QtWidgets.QDialog):
         anchor_part = None
         set_anchor = False
 
-        if "model_config.head_configs.centroid.anchor_part" in source_data:
-            anchor_part = source_data["model_config.head_configs.centroid.anchor_part"]
+        if "model_config.head_configs.centroid.confmaps.anchor_part" in source_data:
+            anchor_part = source_data["model_config.head_configs.centroid.confmaps.anchor_part"]
             set_anchor = True
-        elif "model_config.head_configs.centered_instance.anchor_part" in source_data:
-            anchor_part = source_data["model_config.head_configs.centered_instance.anchor_part"]
+        elif "model_config.head_configs.centered_instance.confmaps.anchor_part" in source_data:
+            anchor_part = source_data["model_config.head_configs.centered_instance.confmaps.anchor_part"]
             set_anchor = True
         elif "model_config.head_configs.multi_class_topdown.confmaps.anchor_part" in source_data:
             anchor_part = source_data[
@@ -354,8 +354,8 @@ class LearningDialog(QtWidgets.QDialog):
         anchor_part = anchor_part or None
 
         if set_anchor:
-            updated_data["model_config.head_configs.centroid.anchor_part"] = anchor_part
-            updated_data["model_config.head_configs.centered_instance.anchor_part"] = anchor_part
+            updated_data["model_config.head_configs.centroid.confmaps.anchor_part"] = anchor_part
+            updated_data["model_config.head_configs.centered_instance.confmaps.anchor_part"] = anchor_part
             updated_data["model_config.head_configs.multi_class_topdown.confmaps.anchor_part"] = (
                 anchor_part
             )
@@ -476,12 +476,12 @@ class LearningDialog(QtWidgets.QDialog):
 
     @staticmethod
     def update_loaded_config(
-        loaded_cfg: OmegaConf, tab_cfg_key_val_dict: dict
+        loaded_cfg: dict, tab_cfg_key_val_dict: dict
     ): # -> scopedkeydict.ScopedKeyDict:
         """Update a loaded preset config with values from the training editor.
 
         Args:
-            loaded_cfg: A `TrainingJobConfig` that was loaded from a preset or previous
+            loaded_cfg: A Dict from a yaml file that was loaded from a preset or previous
                 training run.
             tab_cfg_key_val_dict: A dictionary with the values extracted from the
                 training editor GUI tab.
@@ -490,24 +490,11 @@ class LearningDialog(QtWidgets.QDialog):
                     A `ScopedKeyDict` with the loaded config values overriden by the
         corresponding ones from the `tab_cfg_key_val_dict`.
         """
-        # Serialize training config
-        loaded_cfg_hierarchical: dict = cattr.unstructure(loaded_cfg)
-
-        # Clear backbone subfields since these will be set by the GUI
-        if (
-            "model" in loaded_cfg_hierarchical
-            and "backbone" in loaded_cfg_hierarchical["model"]
-        ):
-            for k in loaded_cfg_hierarchical["model"]["backbone"]:
-                loaded_cfg_hierarchical["model"]["backbone"][k] = None
-
-        loaded_cfg_scoped = OmegaConf.create(loaded_cfg_hierarchical)
-
         # Replace params exposed in GUI with values from GUI
         for param, value in tab_cfg_key_val_dict.items():
-            loaded_cfg_scoped.key_val_dict[param] = value
+            loaded_cfg[param] = value
 
-        return loaded_cfg_scoped
+        return loaded_cfg
 
     def get_every_head_config_data(
         self, pipeline_form_data
@@ -538,7 +525,7 @@ class LearningDialog(QtWidgets.QDialog):
                 else:
                     # Config was loaded, override with the values from the GUI
                     loaded_cfg_scoped = LearningDialog.update_loaded_config(
-                        trained_cfg_info.config, tab_cfg_key_val_dict
+                        get_keyval_dict_from_omegaconf(trained_cfg_info.config), tab_cfg_key_val_dict
                     )
 
                 # Deserialize merged dict to object
@@ -1201,7 +1188,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             return
 
         cfg = cfg_info.config
-        key_val_dict = OmegaConf.to_container(cfg)
+        key_val_dict = get_keyval_dict_from_omegaconf(cfg)
         self.set_fields_from_key_val_dict(key_val_dict)
 
     # def _set_user_config(self):
@@ -1260,10 +1247,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
             # Set model form to match config
             cfg = cfg_info.config
-            cfg_dict = OmegaConf.to_container(cfg)
-            model_dict = {"model": cfg_dict["model"]}
-            key_val_dict = get_keyval_dict_from_omegaconf(model_dict)
-            self.set_fields_from_key_val_dict(key_val_dict)
+            key_val_dict = get_keyval_dict_from_omegaconf(cfg)
+            self.set_fields_from_key_val_dict({"model":key_val_dict})
 
         # If user wants to use trained model, then reset entire form to match config
         if use_trained_params:

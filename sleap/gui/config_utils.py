@@ -3,6 +3,7 @@ import os
 from omegaconf import OmegaConf, DictConfig
 
 def filter_cfg(cfg):
+    """Filter out keys that start with underscore to get training config."""
     for k, v in cfg.items():
         if not isinstance(v, DictConfig) and k.startswith("_"):
             del cfg[k]
@@ -11,6 +12,7 @@ def filter_cfg(cfg):
     return cfg
 
 def get_keyval_dict_from_omegaconf(cfg, parent_key="", sep="."):
+    """Get a flat dictionary from an OmegaConf object."""
     items = {}
     for k, v in cfg.items():
         new_key = f"{parent_key}{sep}{k}" if parent_key else k
@@ -21,6 +23,7 @@ def get_keyval_dict_from_omegaconf(cfg, parent_key="", sep="."):
     return items
 
 def get_omegaconf_from_gui_form(flat_dict):
+    """Get an OmegaConf object from a flat dictionary."""
     result = {}
     for key, value in flat_dict.items():
         parts = key.split(".")
@@ -29,6 +32,20 @@ def get_omegaconf_from_gui_form(flat_dict):
             d = d.setdefault(p, {})
         d[parts[-1]] = value
     return OmegaConf.create(result)
+
+def get_backbone_from_omegaconf(cfg: OmegaConf):
+    """Get the backbone model name from the config."""
+    for k, v in cfg.model_config.backbone_config.items():
+        if v is not None:
+            return k
+    return None
+
+def get_head_from_omegaconf(cfg: OmegaConf):
+    """Get the head model name from the config."""
+    for k, v in cfg.model_config.head_configs.items():
+        if v is not None:
+            return k
+    return None
 
 def find_backbone_name_from_key_val_dict(key_val_dict: dict):
     """Find the backbone model name from the config dictionary."""

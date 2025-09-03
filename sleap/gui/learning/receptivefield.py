@@ -8,6 +8,7 @@ import numpy as np
 from qtpy import QtWidgets, QtGui
 from omegaconf import OmegaConf
 from sleap.gui.widgets.video import GraphicsView
+from sleap.gui.config_utils import get_head_from_omegaconf
 
 
 def compute_rf(down_blocks: int, convs_per_block: int = 2, kernel_size: int = 3) -> int:
@@ -50,11 +51,7 @@ def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
         convs_per_block=None,
         kernel_size=None,
     )
-    head_type = None
-    for head in model_cfg.head_configs:
-        if model_cfg.head_configs[f"{head}"] is not None:
-            head_type = head
-            break
+    head_type = get_head_from_omegaconf(cfg)
     output_strides = []
     for k,head_cfg in model_cfg.head_configs[head_type].items():
         if k == "class_vectors":
