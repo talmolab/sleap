@@ -19,7 +19,11 @@ from sleap.info.write_tracking_h5 import (
 from sleap_io import Video, Labels
 from sleap_io.model.instance import Instance
 from sleap.gui.commands import AddUserInstancesFromPredictions
-from sleap.sleap_io_adaptors.lf_labels_utils import find_track_occupancy, remove_video, labels_add_instance
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    find_track_occupancy,
+    remove_video,
+    labels_add_instance,
+)
 
 
 def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: Labels):
@@ -325,7 +329,6 @@ def test_hdf5_video_arg(
     instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
         copy_instance=labels[0].predicted_instances[0]
     )
-    from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_instance
 
     labels_add_instance(labels, frame=labeled_frame, instance=instance)
     labels.append(labeled_frame)

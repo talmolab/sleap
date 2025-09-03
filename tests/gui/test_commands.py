@@ -36,7 +36,12 @@ from sleap.util import get_package_file
 # Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
-from sleap.sleap_io_adaptors.lf_labels_utils import add_suggestion, remove_video, labels_add_instance, remove_instance
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    add_suggestion,
+    remove_video,
+    labels_add_instance,
+    remove_instance,
+)
 from sleap.sleap_io_adaptors.instance_utils import instance_same_pose_as_compat
 
 
@@ -282,8 +287,7 @@ def test_ExportAnalysisFile(
     # Add labels and test with all_videos False
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
     instance = Instance(
-        points=Instance.empty(labels.skeleton).points,
-        skeleton=labels.skeleton
+        points=Instance.empty(labels.skeleton).points, skeleton=labels.skeleton
     )
     labels_add_instance(labels, labeled_frame, instance)
     labels.append(labeled_frame)
@@ -1002,9 +1006,7 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
     # Add predictions and remove user instances from those frames
     for lf in lfs_pred:
         predicted_inst = PredictedInstance.from_numpy(
-            lf.instances[0].points["xy"],
-            skeleton=lf.instances[0].skeleton,
-            score=0.5
+            lf.instances[0].points["xy"], skeleton=lf.instances[0].skeleton, score=0.5
         )
         labels_add_instance(centered_pair_labels, lf, predicted_inst)
         for inst in lf.user_instances:
@@ -1149,7 +1151,9 @@ def test_ExportLabelsSubset(
     labels_add_video(
         labels, video_extra
     )  # Should be excluded since outside video clip.
-    add_suggestion(labels, video_extra, 0)  # Should be excluded since outside video clip
+    add_suggestion(
+        labels, video_extra, 0
+    )  # Should be excluded since outside video clip
     n_suggestions_original = len(labels.suggestions)
     n_videos_original = len(labels.videos)
 

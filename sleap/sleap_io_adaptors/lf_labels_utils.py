@@ -1276,8 +1276,8 @@ def labels_load_file(filename: str, **kwargs) -> Labels:
     Handles video_search parameter that sleap-io doesn't support.
     """
     # Extract video_search parameter if present
-    video_search = kwargs.pop('video_search', None)
-    
+    video_search = kwargs.pop("video_search", None)
+
     if video_search is not None:
         # Use existing video search function
         return load_labels_video_search(filename, video_search)
