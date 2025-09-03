@@ -853,10 +853,10 @@ def test_LoadProjectFile(
     def ask_LoadProjectFile(params):
         """Implement `LoadProjectFile.ask` without GUI elements."""
         filename: Path = params["filename"]
-        gui_video_callback = Labels.make_video_callback(
+        gui_video_callback = make_video_callback(
             search_paths=[str(filename)], context=params
         )
-        from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
+        from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file, make_video_callback
         
         labels = labels_load_file(
             centered_pair_predictions_slp_path, video_search=gui_video_callback
