@@ -111,8 +111,10 @@ class SleapAnalysisAdaptor(Adaptor):
                     point_scores = np.ones(len(points))
                     # make everything a PredictedInstance since the usual use
                     # case is to export predictions for analysis
+                    from sleap.sleap_io_adaptors.instance_utils import predicted_instance_from_numpy_compat
+                    
                     instances.append(
-                        PredictedInstance.from_numpy(
+                        predicted_instance_from_numpy_compat(
                             points=points,
                             point_confidences=point_scores,
                             skeleton=skeleton,

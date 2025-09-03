@@ -169,7 +169,10 @@ class StatisticSeries:
                     if inst.track is not None:
                         track_idx = self.labels.tracks.index(inst.track)
                         if track_idx < track_count:
-                            point = inst.points_array[primary_node_idx, :2]
+                            from sleap.sleap_io_adaptors.instance_utils import instance_get_points_array
+                            
+                            points_array = instance_get_points_array(inst)
+                            point = points_array[primary_node_idx, :2]
                             location_matrix[frame_idx, track_idx] = point
 
                             if not np.all(np.isnan(point)):
@@ -243,8 +246,10 @@ class StatisticSeries:
             if last_lf is not None:
                 last_inst = last_lf.find(track=inst.track)
                 if last_inst:
-                    points_a = inst.points_array
-                    points_b = last_inst[0].points_array
+                    from sleap.sleap_io_adaptors.instance_utils import instance_get_points_array
+                    
+                    points_a = instance_get_points_array(inst)
+                    points_b = instance_get_points_array(last_inst[0])
                     point_dist = np.linalg.norm(points_a - points_b, axis=1)
                     inst_dist = reduce_function(point_dist)
                     val += inst_dist if not np.isnan(inst_dist) else 0

@@ -68,7 +68,9 @@ def test_import_labels_from_dlc_folder():
     assert len(labels) == 3
     assert len(labels.videos) == 2
     assert len(labels.skeletons) == 1
-    assert len(labels.nodes) == 3
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_get_nodes
+    
+    assert len(labels_get_nodes(labels)) == 3
     assert len(labels.tracks) == 3
 
     assert set(
@@ -106,9 +108,11 @@ def test_RemoveVideo(
 
     RemoveVideo.ask = ask
 
-    labels = centered_pair_predictions.copy()
-    labels.add_video(small_robot_mp4_vid)
-    labels.add_video(centered_pair_vid)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_copy, labels_add_video
+    
+    labels = labels_copy(centered_pair_predictions)
+    labels_add_video(labels, small_robot_mp4_vid)
+    labels_add_video(labels, centered_pair_vid)
 
     all_videos = labels.videos
     assert len(all_videos) == 3
@@ -156,8 +160,10 @@ def test_ExportAnalysisFile(
         else:
             all_videos = [context.state["video"] or context.labels.videos[0]]
 
+        from sleap.sleap_io_adaptors.lf_labels_utils import labels_get
+        
         # Check for labeled frames in each video
-        videos = [video for video in all_videos if len(labels.get(video)) != 0]
+        videos = [video for video in all_videos if len(labels_get(labels, video)) != 0]
         if len(videos) == 0:
             raise ValueError("No labeled frames in video(s). Nothing to export.")
 
@@ -215,7 +221,9 @@ def test_ExportAnalysisFile(
 
     tmpdir = Path(tmpdir)
 
-    labels = centered_pair_predictions.copy()
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_copy
+    
+    labels = labels_copy(centered_pair_predictions)
     context = CommandContext.from_labels(labels)
     context.state["filename"] = None
 
@@ -362,7 +370,9 @@ def test_ReplaceVideo(
     """Test functionality for ToggleGrayscale on mp4/avi video"""
 
     def get_last_lf_in_video(labels, video):
-        lfs: List[LabeledFrame] = list(labels.get(videos[0]))
+        from sleap.sleap_io_adaptors.lf_labels_utils import labels_get
+        
+        lfs: List[LabeledFrame] = list(labels_get(labels, video))
         lfs.sort(key=lambda lf: lf.frame_idx)
         return lfs[-1].frame_idx
 
@@ -753,12 +763,16 @@ def test_PasteInstance(min_tracks_2node_labels: Labels):
         assert context.state["labeled_frame"] not in labels.labeled_frames
 
     def assertions_post(instances_checkpoint, lf_to_copy, lf_to_paste, *args):
+        from sleap.sleap_io_adaptors.instance_utils import instance_same_pose_as_compat
+        
         assert len(lf_to_paste.instances) == len(instances_checkpoint) + 1
-        assert lf_to_paste.instances[-1].points == instance.points
+        assert instance_same_pose_as_compat(lf_to_paste.instances[-1], instance)
         assert lf_to_paste.instances[-1].track == instance.track
         assert lf_to_paste in labels.labeled_frames
 
-    lf_to_paste = labels.get((labels.video, 3))
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_get
+    
+    lf_to_paste = labels_get(labels, labels.videos[0], frame_idx=3)
     labels.labeled_frames.remove(lf_to_paste)
     lf_to_paste.instances = []
     context.state["labeled_frame"] = lf_to_paste
@@ -842,7 +856,9 @@ def test_LoadProjectFile(
         gui_video_callback = Labels.make_video_callback(
             search_paths=[str(filename)], context=params
         )
-        labels = Labels.load_file(
+        from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
+        
+        labels = labels_load_file(
             centered_pair_predictions_slp_path, video_search=gui_video_callback
         )
         return labels
@@ -856,7 +872,9 @@ def test_LoadProjectFile(
         assert params["changed_on_load"]
 
     # Get labels and video path
-    labels = Labels.load_file(centered_pair_predictions_slp_path)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
+    
+    labels = labels_load_file(centered_pair_predictions_slp_path)
     expected_video_path = Path(labels.video.filename)
 
     # Move video to new location based on case

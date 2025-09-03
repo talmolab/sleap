@@ -168,8 +168,10 @@ def point_dist(
 ) -> np.ndarray:
     """Given two instances, returns array of distances for corresponding nodes."""
 
-    points_a = inst_a.points_array
-    points_b = inst_b.points_array
+    from sleap.sleap_io_adaptors.instance_utils import instance_get_points_array
+    
+    points_a = instance_get_points_array(inst_a)
+    points_b = instance_get_points_array(inst_b)
     point_dist = np.linalg.norm(points_a - points_b, axis=1)
     return point_dist
 
@@ -184,8 +186,10 @@ def nodeless_point_dist(
     matrix_size = (len(inst_a.skeleton.nodes), len(inst_b.skeleton.nodes))
     pairwise_distance_matrix = np.full(matrix_size, 0)
 
-    points_a = inst_a.points_array
-    points_b = inst_b.points_array
+    from sleap.sleap_io_adaptors.instance_utils import instance_get_points_array
+    
+    points_a = instance_get_points_array(inst_a)
+    points_b = instance_get_points_array(inst_b)
 
     # Calculate the distance between any pair of inst A and inst B points
     for idx_a in range(points_a.shape[0]):
@@ -223,7 +227,9 @@ def list_points_array(
     instances: List[Union[Instance, PredictedInstance]],
 ) -> np.ndarray:
     """Given list of Instances, returns (instances * nodes * 2) matrix."""
-    points_arrays = list(map(lambda inst: inst.points_array, instances))
+    from sleap.sleap_io_adaptors.instance_utils import instance_get_points_array
+    
+    points_arrays = list(map(lambda inst: instance_get_points_array(inst), instances))
     return np.stack(points_arrays)
 
 

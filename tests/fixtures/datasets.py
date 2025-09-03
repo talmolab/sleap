@@ -1,5 +1,6 @@
 import pytest
 
+import sleap_io as sio
 from sleap_io import LabeledFrame
 from sleap_io.model.instance import Instance, PredictedInstance, Track
 from sleap_io import Skeleton
@@ -7,6 +8,7 @@ from sleap_io import Labels
 from sleap_io import Video
 
 TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"
+TEST_SLP_LABELS = "tests/data/slp_hdf5/centered_pair.slp"
 TEST_JSON_PREDICTIONS = "tests/data/json_format_v2/centered_pair_predictions.json"
 TEST_JSON_MIN_LABELS = "tests/data/json_format_v2/minimal_instance.json"
 TEST_SLP_MIN_LABELS = "tests/data/slp_hdf5/minimal_instance.slp"
@@ -26,12 +28,16 @@ TEST_CSV_PREDICTIONS = (
 
 @pytest.fixture
 def centered_pair_labels():
-    return Labels.load_file(TEST_JSON_LABELS)
+    # FIXME: Legacy JSON format not supported
+    # return sio.load_file(TEST_JSON_LABELS)
+    return sio.load_file(TEST_SLP_LABELS)
 
 
 @pytest.fixture
 def centered_pair_predictions():
-    return Labels.load_file(TEST_JSON_PREDICTIONS)
+    # FIXME: Legacy JSON format not supported
+    # return sio.load_file(TEST_JSON_PREDICTIONS)
+    return sio.load_file(TEST_SLP_PREDICTIONS)
 
 
 @pytest.fixture
@@ -43,12 +49,14 @@ def centered_pair_predictions_sorted(centered_pair_predictions):
 
 @pytest.fixture
 def min_labels():
-    return Labels.load_file(TEST_JSON_MIN_LABELS)
+    # FIXME: Legacy JSON format not supported
+    # return sio.load_file(TEST_JSON_MIN_LABELS
+    return sio.load_file(TEST_SLP_MIN_LABELS)
 
 
 @pytest.fixture
 def min_labels_slp():
-    return Labels.load_file(TEST_SLP_MIN_LABELS)
+    return sio.load_file(TEST_SLP_MIN_LABELS)
 
 
 @pytest.fixture
@@ -58,13 +66,13 @@ def min_labels_slp_path():
 
 @pytest.fixture
 def min_labels_robot():
-    return Labels.load_file(TEST_SLP_MIN_LABELS_ROBOT)
+    return sio.load_file(TEST_SLP_MIN_LABELS_ROBOT)
 
 
 @pytest.fixture
 def siv_robot():
     """Created before grayscale attribute was added to SingleImageVideo backend."""
-    return Labels.load_file(TEST_SLP_SIV_ROBOT, video_search="tests/data/videos/")
+    return sio.load_file(TEST_SLP_SIV_ROBOT)
 
 
 @pytest.fixture
@@ -78,16 +86,12 @@ def siv_robot_caching():
     release), this is a fixture to test that datasets created while `caching` was added
     into the serialization are read in correctly.
     """
-    return Labels.load_file(
-        TEST_SLP_SIV_ROBOT_CACHING, video_search="tests/data/videos/"
-    )
+    return sio.load_file(TEST_SLP_SIV_ROBOT_CACHING)
 
 
 @pytest.fixture
 def min_tracks_2node_labels():
-    return Labels.load_file(
-        TEST_MIN_TRACKS_2NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"]
-    )
+    return sio.load_file(TEST_MIN_TRACKS_2NODE_LABELS)
 
 
 @pytest.fixture
@@ -99,22 +103,17 @@ def min_tracks_2node_predictions():
         "tests/data/tracks/clip.mp4"
     ```
     """
-    return Labels.load_file(
-        "tests/data/tracks/clip.predictions.slp",
-        video_search=["tests/data/tracks/clip.mp4"],
-    )
+    return sio.load_file("tests/data/tracks/clip.predictions.slp")
 
 
 @pytest.fixture
 def min_tracks_13node_labels():
-    return Labels.load_file(
-        TEST_MIN_TRACKS_13NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"]
-    )
+    return sio.load_file(TEST_MIN_TRACKS_13NODE_LABELS)
 
 
 @pytest.fixture
 def mat_labels():
-    return Labels.load_leap_matlab(TEST_MAT_LABELS, gui=False)
+    return sio.load_leap(TEST_MAT_LABELS)
 
 
 TEST_LEGACY_GRID_LABELS = "tests/data/test_grid/test_grid_labels.legacy.h5"
@@ -128,9 +127,7 @@ def legacy_grid_labels_path():
 
 @pytest.fixture
 def legacy_grid_labels():
-    return Labels.load_file(
-        TEST_LEGACY_GRID_LABELS, video_search=TEST_LEGACY_GRID_LABELS
-    )
+    return sio.load_file(TEST_LEGACY_GRID_LABELS)
 
 
 @pytest.fixture
@@ -140,9 +137,7 @@ def midpoint_grid_labels_path():
 
 @pytest.fixture
 def midpoint_grid_labels():
-    return Labels.load_file(
-        TEST_MIDPOINT_GRID_LABELS, video_search=TEST_MIDPOINT_GRID_LABELS
-    )
+    return sio.load_file(TEST_MIDPOINT_GRID_LABELS)
 
 
 @pytest.fixture
@@ -288,9 +283,7 @@ def centered_pair_predictions_slp_path():
 
 @pytest.fixture
 def min_dance_labels():
-    return Labels.load_file(
-        TEST_MIN_DANCE_LABELS, video_search=["tests/data/videos/dance.mp4"]
-    )
+    return sio.load_file(TEST_MIN_DANCE_LABELS)
 
 
 @pytest.fixture

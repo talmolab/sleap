@@ -3,6 +3,7 @@ Standalone utility functions for working with Labels and LabeledFrame objects.
 """
 
 import math
+import copy
 from typing import List, Dict, Optional, Text, Union
 
 from pathlib import Path
@@ -108,7 +109,7 @@ def remove_frames(labels: Labels, frames: List[LabeledFrame]):
                 lab_fr.video.matches_content(lf.video)
                 and lab_fr.frame_idx == lf.frame_idx
             ):
-                labels.pop(lf_idx)
+                labels_pop(labels, lf_idx)
     labels.update()
 
 
@@ -146,11 +147,15 @@ def remove_unused_tracks(labels: Labels):
 
 def remove_video(labels: Labels, video: Video):
     """Remove a video from the labels dataset and update all related instances."""
-    for lf_idx, lf in enumerate(labels):
+    # Remove labeled frames for this video (iterate backwards to avoid index issues)
+    for lf_idx in reversed(range(len(labels.labeled_frames))):
+        lf = labels.labeled_frames[lf_idx]
         if lf.video.matches_content(video):
-            labels.pop(lf_idx)
+            labels_pop(labels, lf_idx)
 
-    for vid_idx, vid in enumerate(labels.videos):
+    # Remove video from videos list (iterate backwards to avoid index issues)
+    for vid_idx in reversed(range(len(labels.videos))):
+        vid = labels.videos[vid_idx]
         if video.matches_content(vid):
             labels.videos.pop(vid_idx)
 
@@ -1140,3 +1145,105 @@ def track_set_instance(
 def clear_suggestion(labels: Labels):
     """Delete all suggestions."""
     labels.suggestions.clear()
+
+
+# Labels API Compatibility Functions
+# These functions provide backward compatibility with legacy SLEAP Labels API
+
+def labels_copy(labels: Labels) -> Labels:
+    """Create a copy of the Labels object.
+    
+    This provides backward compatibility for the missing copy() method.
+    Uses copy.deepcopy() which should be handled gracefully by sleap-io.
+    """
+    return copy.deepcopy(labels)
+
+
+def labels_get(labels: Labels, video: Video, frame_idx: int = None):
+    """Get labeled frames for a video, optionally filtered by frame index.
+    
+    This provides backward compatibility for the missing get() method.
+    
+    Args:
+        labels: Labels object to search
+        video: Video to search for
+        frame_idx: Optional frame index to filter by
+        
+    Returns:
+        List of LabeledFrame objects or single LabeledFrame if frame_idx specified
+    """
+    if frame_idx is not None:
+        # Return single labeled frame or None
+        matches = labels.find(video, frame_idx=frame_idx)
+        return matches[0] if matches else None
+    else:
+        # Return all labeled frames for this video
+        return labels.find(video)
+
+
+def labels_add_video(labels: Labels, video: Video):
+    """Add a video to the Labels object.
+    
+    This provides backward compatibility for the missing add_video() method.
+    """
+    if video not in labels.videos:
+        labels.videos.append(video)
+
+
+def labels_pop(labels: Labels, index: int) -> LabeledFrame:
+    """Remove and return a labeled frame at the given index.
+    
+    This provides backward compatibility for the missing pop() method.
+    """
+    if 0 <= index < len(labels.labeled_frames):
+        return labels.labeled_frames.pop(index)
+    else:
+        raise IndexError(f"Index {index} out of range for {len(labels.labeled_frames)} labeled frames")
+
+
+def labels_remove_frame(labels: Labels, labeled_frame: LabeledFrame):
+    """Remove a single labeled frame from the Labels object.
+    
+    This provides backward compatibility for a missing remove_frame() method.
+    Uses the existing remove_frames() function.
+    """
+    remove_frames(labels, [labeled_frame])
+
+
+def labels_load_file(filename: str, **kwargs) -> Labels:
+    """Load a Labels object from file.
+    
+    This provides backward compatibility for the missing static load_file() method.
+    Simply wraps the sleap_io.load_file() function.
+    """
+    return load_file(filename, **kwargs)
+
+
+# Attribute compatibility functions
+def labels_get_nodes(labels: Labels):
+    """Get skeleton nodes for backward compatibility.
+    
+    Maps labels.nodes to labels.skeleton.nodes or labels.skeletons[0].nodes
+    """
+    if labels.skeletons:
+        return labels.skeletons[0].nodes
+    return []
+
+
+def labels_get_labels_attr(labels: Labels):
+    """Get labeled frames for backward compatibility.
+    
+    Maps labels.labels to labels.labeled_frames
+    """
+    return labels.labeled_frames
+
+
+def labels_frames(labels: Labels, video: Video = None):
+    """Get labeled frames, optionally filtered by video.
+    
+    This provides backward compatibility for the missing frames() method.
+    """
+    if video is None:
+        return labels.labeled_frames
+    else:
+        return labels.find(video)

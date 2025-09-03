@@ -163,3 +163,110 @@ def fill_missing(
         )
 
     return new_instance
+
+
+# Instance/PredictedInstance API Compatibility Functions
+# These functions provide backward compatibility with legacy SLEAP Instance API
+
+def instance_get_points_array(instance):
+    """Get points array for backward compatibility.
+    
+    This provides backward compatibility for the missing points_array attribute.
+    Maps instance.points_array to instance.numpy() or instance.points["xy"].
+    """
+    # Try using numpy() method first (preferred)
+    if hasattr(instance, "numpy") and callable(instance.numpy):
+        return instance.numpy()
+    else:
+        # Fallback to extracting xy coordinates from points
+        return instance.points["xy"]
+
+
+def instance_get_scores(instance):
+    """Get point-wise scores for backward compatibility.
+    
+    This provides backward compatibility for the missing scores attribute.
+    Maps instance.scores to point-wise scores from instance.points["score"] if available,
+    or falls back to instance.score for PredictedInstance.
+    """
+    if hasattr(instance, "points") and "score" in instance.points.dtype.names:
+        # Return point-wise scores
+        return instance.points["score"]
+    elif hasattr(instance, "score"):
+        # Fallback to instance-level score for PredictedInstance
+        return instance.score
+    else:
+        # No scores available
+        return None
+
+
+def predicted_instance_from_numpy_compat(
+    points, 
+    skeleton,
+    point_confidences=None,
+    instance_score=None,
+    track=None,
+    **kwargs
+):
+    """Create PredictedInstance from numpy array with backward compatibility.
+    
+    This provides backward compatibility for PredictedInstance.from_numpy() method
+    signature changes. Maps old parameter names to new ones.
+    """
+    # Convert old parameter names to new sleap-io API
+    from sleap_io.model.instance import PredictedInstance
+    
+    # Handle parameter mapping
+    if point_confidences is not None:
+        # In sleap-io, point scores are stored in the points structure
+        # We need to create a proper points dict/array
+        points_dict = {}
+        for i, node in enumerate(skeleton.nodes):
+            x, y = points[i] if len(points) > i else (np.nan, np.nan)
+            score = point_confidences[i] if point_confidences is not None and len(point_confidences) > i else 1.0
+            points_dict[node.name] = (x, y, score, True, True)  # x, y, score, visible, complete
+        
+        return PredictedInstance(
+            points=points_dict,
+            skeleton=skeleton,
+            track=track,
+            score=instance_score if instance_score is not None else 1.0,
+            **kwargs
+        )
+    else:
+        # Simple case - just use points directly
+        points_dict = {}
+        for i, node in enumerate(skeleton.nodes):
+            if i < len(points):
+                x, y = points[i]
+                points_dict[node.name] = (x, y, 1.0, True, True)  # x, y, score, visible, complete
+        
+        return PredictedInstance(
+            points=points_dict,
+            skeleton=skeleton,
+            track=track,
+            score=instance_score if instance_score is not None else 1.0,
+            **kwargs
+        )
+
+
+def instance_same_pose_as_compat(instance1, instance2):
+    """Compare poses between instances for backward compatibility.
+    
+    This provides a safe way to compare instance poses that handles
+    array comparison ambiguity issues.
+    """
+    try:
+        # Try the native same_pose_as method first
+        if hasattr(instance1, "same_pose_as"):
+            return instance1.same_pose_as(instance2)
+        else:
+            # Fallback to numpy array comparison
+            points1 = instance_get_points_array(instance1)
+            points2 = instance_get_points_array(instance2)
+            return np.array_equal(points1, points2, equal_nan=True)
+    except ValueError:
+        # Handle "truth value is ambiguous" errors
+        points1 = instance_get_points_array(instance1)
+        points2 = instance_get_points_array(instance2)
+        return np.array_equal(points1, points2, equal_nan=True)
