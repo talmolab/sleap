@@ -231,7 +231,8 @@ class InferenceTask:
     ) -> List[Text]:
         """Makes list of CLI arguments needed for running inference."""
         cli_args = [
-            "sleap-nn-track",
+            "sleap-nn",
+            "track",
         ]
         cli_args.extend(
             item_for_inference.cli_args
@@ -479,7 +480,7 @@ def write_pipeline_files(
 
             # Add a line to the script for training this model
             train_script += (
-                f"sleap-nn-train --config-name {new_cfg_filename} --config-dir {''} "
+                f"sleap-nn train --config-name {new_cfg_filename} --config-dir {''} "
                 f"trainer_config.save_ckpt_path={ckpt_path} "
                 f"trainer_config.zmq.controller_address=tcp://127.0.0.1:"
                 f"{str(inference_params['controller_port'])} "
@@ -591,9 +592,6 @@ def run_learning_pipeline(
 
     """
 
-    save_viz = inference_params.get("_save_viz", False)
-    keep_viz = inference_params.get("_keep_viz", False)
-
     if "movenet" in inference_params["_pipeline"]:
         trained_job_paths = [inference_params["_pipeline"]]
 
@@ -605,8 +603,6 @@ def run_learning_pipeline(
             config_info_list=config_info_list,
             inference_params=inference_params,
             gui=True,
-            save_viz=save_viz,
-            keep_viz=keep_viz,
         )
 
         # Check that all the models were trained
@@ -634,8 +630,6 @@ def run_gui_training(
     config_info_list: List[ConfigFileInfo],
     inference_params: Dict[str, Any],
     gui: bool = True,
-    save_viz: bool = False,
-    keep_viz: bool = False,
 ) -> Dict[Text, Text]:
     """
     Runs training for each training job.
@@ -644,8 +638,6 @@ def run_gui_training(
         labels: Labels object from which we'll get training data.
         config_info_list: List of ConfigFileInfo with configs for training.
         gui: Whether to show gui windows and process gui events.
-        save_viz: Whether to save visualizations from training.
-        keep_viz: Whether to keep prediction visualization images after training.
 
     Returns:
         Dictionary, keys are head name, values are path to trained config.
@@ -720,7 +712,7 @@ def run_gui_training(
                 )
                 win.setWindowTitle(f"Training Model - {str(model_type)}")
                 win.set_message("Preparing to run training...")
-                if save_viz:
+                if job.trainer_config.visualize_preds_during_training:
                     viz_window = QtImageDirectoryWidget.make_training_vizualizer(
                         job.trainer_config.save_ckpt_path
                     )
@@ -742,8 +734,6 @@ def run_gui_training(
                 labels_filename=labels_filename,
                 video_paths=video_path_list,
                 waiting_callback=waiting,
-                save_viz=save_viz,
-                keep_viz=keep_viz,
             )
 
             if ret == "success":
@@ -885,8 +875,6 @@ def train_subprocess(
     inference_params: Dict[str, Any],
     video_paths: Optional[List[Text]] = None,
     waiting_callback: Optional[Callable] = None,
-    save_viz: bool = False,
-    keep_viz: bool = False,
 ):
     """Runs training inside subprocess."""
     run_path = job_config.trainer_config.save_ckpt_path
@@ -903,8 +891,6 @@ def train_subprocess(
         cfg.data_config.train_labels_path = [labels_filename]
 
         cfg.trainer_config.save_ckpt_path = run_path
-        cfg.trainer_config.visualize_preds_during_training = save_viz
-        cfg.trainer_config.keep_viz = keep_viz
         cfg.trainer_config.zmq.controller_address = (
             f"tcp://127.0.0.1:{str(inference_params['controller_port'])}"
         )
@@ -916,7 +902,8 @@ def train_subprocess(
 
         # Build CLI arguments for training
         cli_args = [
-            "sleap-nn-train",
+            "sleap-nn",
+            "train",
             "--config-name",
             f"{cfg_file_name}",
             "--config-dir",

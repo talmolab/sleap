@@ -443,6 +443,27 @@ optimization:
   name: trainer_config.train_data_loader.batch_size
   type: int
   range: 1,512
+- default: 0
+  help: Number of subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
+    This can help improve data loading speed. However, when using `data_pipeline_fw` as `torch_dataset`, i.e., when
+    not caching the data samples, then the number of workers should be set to 0 to avoid race conditions. If using caching,
+    then set number of workers to a value greater than 0. (Start with 2 and increase if needed)
+  label: Number of workers
+  name: trainer_config.train_data_loader.num_workers
+  type: int
+  range: 0,16
+- default: "auto"
+  help: Number of devices to train on (int), or "auto" to select automatically. 
+  label: Number of GPU devices
+  name: trainer_config.trainer_devices
+  type: str
+- default: "auto"
+  help: Accelerator to use for training. "auto" means "cuda" if GPUs are available, otherwise "cpu".
+    For mac, "mps" can be used for Apple Silicon.
+  label: Device Accelerator
+  name: trainer_config.trainer_accelerator
+  type: list
+  options: auto,cuda,cpu,mps
 - default: 100
   help: Maximum number of epochs to train for. Training can be stopped manually or automatically if early stopping is enabled and a plateau is detected.
   label: Epochs

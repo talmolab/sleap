@@ -144,3 +144,6 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
     key_val_dict["trainer_config.val_data_loader.batch_size"] = key_val_dict[
         "trainer_config.train_data_loader.batch_size"
     ]
+    key_val_dict["trainer_config.val_data_loader.num_workers"] = key_val_dict[
+        "trainer_config.train_data_loader.num_workers"
+    ]

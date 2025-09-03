@@ -212,6 +212,63 @@ training:
   type: list
 
 - type: text
+  text: '<b>Data Pipeline framework options</b>'
+
+- default: 'torch_dataset'
+  help: Framework to create the data loaders. (When using torch_dataset,
+    num_workers in trainer_config should be set to 0 as multiprocessing
+    doesn't work with pickling video backends.)
+  label: Data Pipeline Framework
+  name: data_config.data_pipeline_fw
+  options: 'torch_dataset,torch_dataset_cache_img_memory,torch_dataset_cache_img_disk'
+  type: list
+
+- type: text
+  text: '<b>WandB options</b>'
+
+- default: false
+  help: If True, the model training will be logged to WandB.
+  label: Enable WandB for logging
+  name: trainer_config.use_wandb
+  type: bool
+
+- name: trainer_config.wandb.entity
+  label:  Entity Name
+  type: string
+  default: null
+
+- name: trainer_config.wandb.project
+  label:  Project Name
+  type: string
+  default: null
+
+- name: trainer_config.wandb.name
+  label:  Run Name
+  type: string
+  default: null
+
+- name: trainer_config.wandb.api_key
+  label: WandBAPI Key
+  type: string
+  default: null
+  help: WandB API Key. You could also set it in your terminal by exporting the WANDB_API_KEY environment variable.
+    Or `wandb.login()` in your Python shell.
+  hidden: true
+
+- name: trainer_config.wandb.prv_runid
+  label: Previous Run ID
+  type: string
+  default: null
+  help: Previous run ID if you want to resume training from a previous run. If None, a new run will be created.
+
+- name: trainer_config.wandb.group
+  label: Group Name
+  type: string
+  default: null
+  help: Group name if you want to group runs together.
+
+
+- type: text
   text: '<b>ZMQ Options</b>'
 
 - name: trainer_config.zmq.controller_address
@@ -256,12 +313,12 @@ training:
   name: trainer_config.model_ckpt.save_last
   type: bool
 
-- name: _save_viz
+- name: trainer_config.visualize_preds_during_training
   label: Visualize Predictions During Training
   type: bool
   default: true
 
-- name: _keep_viz
+- name: trainer_config.keep_viz
   label: Keep Prediction Visualization Images After Training
   type: bool
   default: false
