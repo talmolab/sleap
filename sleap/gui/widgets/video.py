@@ -1862,8 +1862,6 @@ class QtInstance(QGraphicsObject):
         # Show predicted instances behind non-predicted ones
         self.setZValue(1 if self.predicted else 2)
 
-        print(f"--- img_shape: {self.player.video.shape}")
-
         if not self.predicted:
             # Initialize missing nodes with random points marked as non-visible.
             fill_missing(

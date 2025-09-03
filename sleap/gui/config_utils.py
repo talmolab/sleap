@@ -1,4 +1,5 @@
 from typing import Tuple
+import os
 from omegaconf import OmegaConf, DictConfig
 
 def filter_cfg(cfg):
@@ -82,10 +83,8 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
     Returns:
         None, modifies dict in place.
     """
-    # if "outputs.tags" in key_val_dict and isinstance(key_val_dict["outputs.tags"], str):
-    #     key_val_dict["outputs.tags"] = [
-    #         tag.strip() for tag in key_val_dict["outputs.tags"].split(",")
-#     ] TODO:cfg:
+    if "_runs_folder" in key_val_dict:
+        key_val_dict["trainer_config.save_ckpt_path"] = os.path.join(key_val_dict["_runs_folder"], key_val_dict["trainer_config.save_ckpt_path"])
 
     if "_ensure_channels" in key_val_dict:
         ensure_channels = key_val_dict["_ensure_channels"].lower()

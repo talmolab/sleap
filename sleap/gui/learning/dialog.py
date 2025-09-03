@@ -554,8 +554,6 @@ class LearningDialog(QtWidgets.QDialog):
                     backbone_name = find_backbone_name_from_key_val_dict(
                         tab_cfg_key_val_dict
                     )
-                    print(f"---- backbone_name: {backbone_name}")
-                    print(f"---- tab_cfg_key_val_dict: {tab_cfg_key_val_dict}")
                     max_stride = tab_cfg_key_val_dict[
                         f"model_config.backbone_config.{backbone_name}.max_stride"
                     ]
@@ -578,6 +576,7 @@ class LearningDialog(QtWidgets.QDialog):
 
                 cfg_info_list.append(cfg_info)
 
+            print(f"---- cfg_info_list: {cfg_info_list[-1].config}")
         return cfg_info_list
 
     def get_selected_frames_to_predict(
@@ -777,14 +776,15 @@ class LearningDialog(QtWidgets.QDialog):
         config_info_list = self.get_every_head_config_data(pipeline_form_data)
 
         # Format information for each tab in dialog
-        output = [pipeline_form_data]
+        # output = [OmegaConf.to_yaml(pipeline_form_data)] # TODO:cfg:
+        output = []
         for config_info in config_info_list:
             config_info = config_info.config
             # convert to sleap-nn cfg (yaml)
             from sleap_nn.config.training_job_config import verify_training_cfg
             config_info = filter_cfg(config_info)
             cfg = verify_training_cfg(config_info)
-            cfg.data_config.train_labels_path.append(self.labels_filename)
+            cfg.data_config.train_labels_path = [self.labels_filename]
             output.append(OmegaConf.to_yaml(cfg))
 
         output = "\n".join(output)
@@ -1339,22 +1339,23 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         else:
             # Set certain parameters to defaults
             trained_config = trained_config_info.config
-            trained_config.data.labels.validation_labels = None
-            trained_config.data.labels.test_labels = None
-            trained_config.data.labels.split_by_inds = False
-            trained_config.data.labels.skeletons = []
-            trained_config.outputs.run_name = None
-            trained_config.outputs.run_name_prefix = ""
-            trained_config.outputs.run_name_suffix = None
+            trained_config.data_config.val_labels_path = None
+            trained_config.data_config.test_file_path = None
+            trained_config.data_config.skeletons = []
+            trained_config.trainer_config.save_ckpt_path = None
 
         if self.resume_training:
             # Get the folder path of trained config and set it as the output
             # folder
-            trained_config_info.config.model.base_checkpoint = str(
+            trained_config_info.config.model_config.pretrained_backbone_weights = str(
+                Path(cast(str, trained_config_info.path)).parent
+            )
+            trained_config_info.config.model_config.pretrained_head_weights = str(
                 Path(cast(str, trained_config_info.path)).parent
             )
         else:
-            trained_config_info.config.model.base_checkpoint = None
+            trained_config_info.config.model_config.pretrained_backbone_weights = None
+            trained_config_info.config.model_config.pretrained_head_weights = None
 
         return trained_config_info
 

@@ -87,10 +87,10 @@ class ConfigFileInfo:
         Returns:
             Full path + filename if found, otherwise None.
         """
-        if not self.config.trainer_config.save_ckpt_path: # TODO:cfg:
+        if not self.config.trainer_config.save_ckpt_path:
             return None
 
-        for dir in [self.config.trainer_config.save_ckpt_path, self.path_dir]: # TODO:cfg:
+        for dir in [self.config.trainer_config.save_ckpt_path, self.path_dir]:
             full_path = os.path.join(dir, shortname)
             if os.path.exists(full_path):
                 return full_path
@@ -146,7 +146,7 @@ class ConfigFileInfo:
     def timestamp(self):
         """Timestamp on file; parsed from filename (not OS timestamp)."""
         match = re.match(
-            r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b", self.config.outputs.run_name # TODO:cfg:
+            r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b", self.config.trainer_config.save_ckpt_path
         )
         if match:
             year, month, day = int(match[1]), int(match[2]), int(match[3])
@@ -255,9 +255,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
                 display_name += "[Trained] "
 
             display_name += (
-                # f"{cfg.outputs.run_name_prefix or ''}" # TODO:cfg:
                 f"{cfg.trainer_config.save_ckpt_path}"
-                # f"{cfg.outputs.run_name_suffix or ''}" # TODO:cfg:
                 f"({filename})"
             )
 

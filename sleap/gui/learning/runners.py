@@ -37,28 +37,15 @@ def setup_new_run_folder(
     run_path = None
     if config.trainer_config.save_ckpt:
         # Auto-generate run name.
-        if config.run_name is None: # TODO:cfg:
-            config.run_name = get_timestamp()
+        if config.trainer_config.save_ckpt_path is None:
+            run_name = get_timestamp()
             if isinstance(base_run_name, str):
-                config.run_name = config.run_name + "." + base_run_name
+                run_name = run_name + "." + base_run_name
 
-        # Find new run name suffix if needed.
-        if config.run_name_suffix is None: # TODO:cfg:
-            config.run_name_suffix = ""
-            run_path = os.path.join(
-                config.runs_folder, f"{config.run_name_prefix}{config.run_name}"
-            )
-            i = 0
-            while os.path.exists(run_path):
-                i += 1
-                config.run_name_suffix = f"_{i}" # TODO:cfg:
-                run_path = os.path.join(
-                    config.runs_folder,
-                    f"{config.run_name_prefix}{config.run_name}{config.run_name_suffix}",
-                )
+            config.trainer_config.save_ckpt_path = run_name
 
         # Build run path.
-        run_path = config.run_path # TODO:cfg:
+        run_path = config.trainer_config.save_ckpt_path
 
     return run_path
 
@@ -289,10 +276,10 @@ class InferenceTask:
             cli_args.extend(["--batch_size", str(self.inference_params["batch_size"])])
 
         if (
-            "max_instances" in self.inference_params
-            and self.inference_params["max_instances"] is not None
+            "_max_instances" in self.inference_params
+            and self.inference_params["_max_instances"] is not None
         ):
-            cli_args.extend(["--max_instances", self.inference_params["max_instances"]])
+            cli_args.extend(["--max_instances", self.inference_params["_max_instances"]])
 
         # add tracking args
         if (
@@ -441,20 +428,8 @@ def write_pipeline_files(
     # Add head type to save path suffix to prevent overwriting.
     for cfg_info in config_info_list:
         if not cfg_info.dont_retrain:
-            if (
-                cfg_info.config.outputs.run_name_suffix is not None #TODO:cfg:
-                and len(cfg_info.config.outputs.run_name_suffix) > 0
-            ):
-                # Keep existing suffix if defined.
-                suffix = "." + cfg_info.config.outputs.run_name_suffix
-            else:
-                suffix = ""
-
-            # Add head name.
-            suffix = "." + cfg_info.head_name + suffix
-
             # Update config.
-            cfg_info.config.outputs.run_name_suffix = suffix
+            cfg_info.config.trainer_config.save_ckpt_path += OmegaConf.select(cfg_info.config, "trainer_config.save_ckpt_path", default="") + cfg_info.head_name
 
     training_jobs = []
     for cfg_info in config_info_list:
@@ -713,12 +688,17 @@ def run_gui_training(
             # so we have access to them here (rather than letting
             # train_subprocess update them).
             # training.Trainer.set_run_name(job, labels_filename)
-            job.outputs.runs_folder = os.path.join(
-                os.path.dirname(labels_filename), "models" # TODO:cfg:
+            folder_path = os.path.join(
+                os.path.dirname(labels_filename), "models"
+            )
+            base_run_name = f"{model_type}.n={len(labels.user_labeled_frames)}"
+            job.trainer_config.save_ckpt_path = os.path.join(
+                folder_path,
+                base_run_name,
             )
             setup_new_run_folder(
                 job,
-                base_run_name=f"{model_type}.n={len(labels.user_labeled_frames)}",
+                base_run_name=base_run_name,
             )
 
             if gui:
