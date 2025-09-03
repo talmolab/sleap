@@ -2294,10 +2294,8 @@ class OpenSkeleton(EditCommand):
 
     @staticmethod
     def load_skeleton(filename: str):
-        with open(filename, "r") as f:
-            skeleton_data = json.load(f)
-        return SkeletonDecoder().decode(data=skeleton_data["nx_graph"])
-        # return `sio.Skeleton` object instead of list
+        import sleap_io as sio
+        return sio.load_skeleton(filename)
 
     @staticmethod
     def compare_skeletons(
@@ -2475,7 +2473,9 @@ class OpenSkeleton(EditCommand):
 
         # Delete pre-existing symmetry
         for symmetry in skeleton.symmetries:
-            delete_symmetry(skeleton, symmetry.nodes[0].name, symmetry.nodes[1].name)
+            # In sleap-io, symmetry.nodes is a set, not a list
+            nodes_list = list(symmetry.nodes)
+            delete_symmetry(skeleton, nodes_list[0].name, nodes_list[1].name)
 
         # Link mismatched nodes
         if "linked_nodes" in params.keys():
