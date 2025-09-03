@@ -1195,6 +1195,21 @@ def labels_get(labels: Labels, video_and_frame_or_video, frame_idx=None, use_cac
         return labels.find(video)
 
 
+def labels_all_instances(labels: Labels):
+    """Get all instances as a list for backward compatibility.
+    
+    This provides backward compatibility for the missing all_instances attribute.
+    In sleap-io, labels.instances is a generator, but legacy SLEAP expects a list-like object.
+    
+    Args:
+        labels: Labels object to get all instances from
+        
+    Returns:
+        List of all Instance objects from all labeled frames
+    """
+    return list(labels.instances)
+
+
 def labels_copy(labels: Labels) -> Labels:
     """Create a copy of the Labels object.
     

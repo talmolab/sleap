@@ -6,6 +6,7 @@ import pandas as pd
 from sleap.io.format import filehandle
 from sleap.info.write_tracking_h5 import get_nodes_as_np_strings
 from sleap.io.format.sleap_analysis import SleapAnalysisAdaptor
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_all_instances
 
 
 def test_sleap_analysis_read(small_robot_3_frame_vid, small_robot_3_frame_hdf5):
@@ -52,7 +53,7 @@ def test_analysis_hdf5(tmpdir, centered_pair_predictions):
 
     assert len(labels) == len(centered_pair_predictions)
     assert len(labels.tracks) == len(centered_pair_predictions.tracks)
-    assert len(labels.all_instances) == len(centered_pair_predictions.all_instances)
+    assert len(labels_all_instances(labels)) == len(labels_all_instances(centered_pair_predictions))
 
 
 def test_matching_adaptor(centered_pair_predictions_hdf5_path):
