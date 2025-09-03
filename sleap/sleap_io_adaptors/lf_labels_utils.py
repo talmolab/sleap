@@ -1150,6 +1150,51 @@ def clear_suggestion(labels: Labels):
 # Labels API Compatibility Functions
 # These functions provide backward compatibility with legacy SLEAP Labels API
 
+def labels_get_suggestions(labels: Labels):
+    """Get all suggestions from labels for backward compatibility.
+    
+    This provides backward compatibility for the missing get_suggestions() method.
+    In sleap-io, suggestions are stored directly as an attribute.
+    
+    Args:
+        labels: Labels object to get suggestions from
+        
+    Returns:
+        List of SuggestionFrame objects
+    """
+    return getattr(labels, 'suggestions', [])
+
+
+def labels_get(labels: Labels, video_and_frame_or_video, frame_idx=None, use_cache=False):
+    """Get labeled frames for backward compatibility.
+    
+    This provides backward compatibility for the missing get() method.
+    Handles both tuple format (video, frame_idx) and separate video, frame_idx args.
+    
+    Args:
+        labels: Labels object to search
+        video_and_frame_or_video: Either a (Video, frame_idx) tuple or a Video object
+        frame_idx: Frame index (when first arg is Video)
+        use_cache: Ignored for sleap-io compatibility (caching handled internally)
+        
+    Returns:
+        Single LabeledFrame if found, None otherwise (when frame_idx specified)
+        List of LabeledFrame objects for video (when frame_idx not specified)
+    """
+    # Handle tuple format: labels.get((video, frame_idx))
+    if isinstance(video_and_frame_or_video, tuple) and len(video_and_frame_or_video) == 2:
+        video, frame_idx = video_and_frame_or_video
+    else:
+        video = video_and_frame_or_video
+    
+    # Use the existing Labels.find method from sleap-io
+    if frame_idx is not None:
+        matches = labels.find(video, frame_idx=frame_idx)
+        return matches[0] if matches else None
+    else:
+        return labels.find(video)
+
+
 def labels_copy(labels: Labels) -> Labels:
     """Create a copy of the Labels object.
     
