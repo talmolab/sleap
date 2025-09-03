@@ -37,6 +37,7 @@ from sleap.util import get_package_file
 from tests.info.test_h5 import extract_meta_hdf5
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 from sleap.sleap_io_adaptors.lf_labels_utils import add_suggestion, remove_video, labels_add_instance, remove_instance
+from sleap.sleap_io_adaptors.instance_utils import instance_same_pose_as_compat
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -733,7 +734,7 @@ def test_PasteInstance(min_tracks_2node_labels: Labels):
         ]
         assert len(lf_checkpoint_tracks) == len(lf_to_copy_tracks)
         assert len(lf_to_paste.instances) == len(instances_checkpoint) + 1
-        assert lf_to_paste.instances[-1].points == instance.points
+        assert instance_same_pose_as_compat(lf_to_paste.instances[-1], instance)
 
     context.state["labeled_frame"] = lf_to_copy
     context.state["clipboard_instance"] = instance
@@ -767,7 +768,7 @@ def test_PasteInstance(min_tracks_2node_labels: Labels):
 
     def assertions_post(instances_checkpoint, lf_to_copy, lf_to_paste, *args):
         assert len(lf_to_paste.instances) == len(instances_checkpoint) + 1
-        assert lf_to_paste.instances[-1].points == instance.points
+        assert instance_same_pose_as_compat(lf_to_paste.instances[-1], instance)
         assert lf_to_paste.instances[-1].track == instance.track
 
     lf_to_paste = labels.labeled_frames[2]
@@ -847,7 +848,7 @@ def test_PasteInstanceTrack(min_tracks_2node_labels: Labels):
 
     context.pasteInstanceTrack()
     assert instance_to_paste.track == instance.track
-    assert instance_with_same_track.track != instance.track
+    assert instance_with_same_track.track is None
 
     # Case 3: Instance selected and no track
     lf_to_paste = labels.labeled_frames[2]
