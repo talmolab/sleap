@@ -37,7 +37,7 @@ class ConfigFileInfo:
         config: the :py:class:`TrainingJobConfig`
         path: path to the :py:class:`TrainingJobConfig`
         filename: just the filename, not the full path
-        head_name: string which should match name of model.heads key
+        head_name: string which should match name of model_config.head_configs key
         dont_retrain: allows us to keep track of whether we should retrain
             this config
     """
@@ -187,7 +187,10 @@ class ConfigFileInfo:
                 TrainingJobConfig as snn_TrainingJobConfig,
             )
             cfg = snn_TrainingJobConfig.load_sleap_config(path)
-        head_name = cfg.model.heads.which_oneof_attrib_name()
+        for head in cfg.model_config.head_configs:
+            if cfg.model_config.head_configs[f"{head}"] is not None:
+                head_name = head
+                break
         filename = os.path.basename(path)
         return cls(config=cfg, path=path, filename=filename, head_name=head_name)
 

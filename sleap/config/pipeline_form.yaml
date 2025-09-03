@@ -358,7 +358,7 @@ inference:
 
   tracking-only:
 
-- name: batch_size
+- name: _batch_size
   label: Batch Size
   type: int
   default: 4

@@ -29,10 +29,9 @@ from sleap.sleap_io_adaptors.lf_labels_utils import instances
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
-    "data.instance_cropping.center_on_part",
-    "model.heads.centered_instance.anchor_part",
-    "model.heads.centroid.anchor_part",
-    "model.heads.multi_class_topdown.confmaps.anchor_part",
+    "model_config.head_configs.centered_instance.anchor_part",
+    "model_config.head_configs.centroid.anchor_part",
+    "model_config.head_configs.multi_class_topdown.confmaps.anchor_part",
 ]
 
 
@@ -341,15 +340,15 @@ class LearningDialog(QtWidgets.QDialog):
         anchor_part = None
         set_anchor = False
 
-        if "model.heads.centroid.anchor_part" in source_data:
-            anchor_part = source_data["model.heads.centroid.anchor_part"]
+        if "model_config.head_configs.centroid.anchor_part" in source_data:
+            anchor_part = source_data["model_config.head_configs.centroid.anchor_part"]
             set_anchor = True
-        elif "model.heads.centered_instance.anchor_part" in source_data:
-            anchor_part = source_data["model.heads.centered_instance.anchor_part"]
+        elif "model_config.head_configs.centered_instance.anchor_part" in source_data:
+            anchor_part = source_data["model_config.head_configs.centered_instance.anchor_part"]
             set_anchor = True
-        elif "model.heads.multi_class_topdown.confmaps.anchor_part" in source_data:
+        elif "model_config.head_configs.multi_class_topdown.confmaps.anchor_part" in source_data:
             anchor_part = source_data[
-                "model.heads.multi_class_topdown.confmaps.anchor_part"
+                "model_config.head_configs.multi_class_topdown.confmaps.anchor_part"
             ]
             set_anchor = True
 
@@ -357,12 +356,11 @@ class LearningDialog(QtWidgets.QDialog):
         anchor_part = anchor_part or None
 
         if set_anchor:
-            updated_data["model.heads.centroid.anchor_part"] = anchor_part
-            updated_data["model.heads.centered_instance.anchor_part"] = anchor_part
-            updated_data["model.heads.multi_class_topdown.confmaps.anchor_part"] = (
+            updated_data["model_config.head_configs.centroid.anchor_part"] = anchor_part
+            updated_data["model_config.head_configs.centered_instance.anchor_part"] = anchor_part
+            updated_data["model_config.head_configs.multi_class_topdown.confmaps.anchor_part"] = (
                 anchor_part
             )
-            updated_data["data.instance_cropping.center_on_part"] = anchor_part
 
     def update_tabs_from_pipeline(self, source_data):
         self.adjust_data_to_update_other_tabs(source_data)
@@ -472,7 +470,7 @@ class LearningDialog(QtWidgets.QDialog):
         for key, val in pipeline_data.items():
             # if key.starts_with("_"):
             #     continue
-            if key.startswith("model.heads."):
+            if key.startswith("model_config.head_configs."):
                 key_scope = key.split(".")
                 if key_scope[2] != head_name:
                     continue
@@ -576,7 +574,6 @@ class LearningDialog(QtWidgets.QDialog):
 
                 cfg_info_list.append(cfg_info)
 
-            print(f"---- cfg_info_list: {cfg_info_list[-1].config}")
         return cfg_info_list
 
     def get_selected_frames_to_predict(
