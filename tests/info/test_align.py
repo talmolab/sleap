@@ -6,7 +6,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import instances
 def test_get_instances_points(centered_pair_labels):
     x = align.get_instances_points(instances(centered_pair_labels))
 
-    instance_count = len(centered_pair_labels.labels) * 2
+    instance_count = len(centered_pair_labels.labeled_frames) * 2
     node_count = len(centered_pair_labels.skeletons[0].nodes)
 
     assert x.shape == (instance_count, node_count, 2)

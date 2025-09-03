@@ -182,7 +182,14 @@ def get_occupancy_and_points_matrices(
         locations_matrix[frame_i, ..., track_i] = inst.numpy()
         tracking_scores[frame_i, ..., track_i] = inst.tracking_score
         if type(inst) == PredictedInstance:
-            point_scores[frame_i, ..., track_i] = inst.scores
+            from sleap.sleap_io_adaptors.instance_utils import instance_get_scores
+            
+            scores = instance_get_scores(inst)
+            if scores is not None:
+                point_scores[frame_i, ..., track_i] = scores
+            else:
+                # Fallback to NaN if no scores available
+                point_scores[frame_i, ..., track_i] = np.nan
             instance_scores[frame_i, ..., track_i] = inst.score
 
     return (

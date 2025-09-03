@@ -100,7 +100,9 @@ def test_video_selection(
     # Testing the functionality of choosing a specific video in a project and
     # only generating suggestions for the video
 
-    centered_pair_predictions.add_video(small_robot_3_frame_vid)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
+    
+    labels_add_video(centered_pair_predictions, small_robot_3_frame_vid)
     # Testing suggestion generation from Image Features
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,

@@ -284,7 +284,9 @@ class VideoMarkerThread(Thread):
         nodes = instance.skeleton.nodes
 
         # Get matrix of all point locations
-        points_array = instance.points_array
+        from sleap.sleap_io_adaptors.instance_utils import instance_get_points_array
+        
+        points_array = instance_get_points_array(instance)
 
         # Rescale point locations
         points_array *= scale
