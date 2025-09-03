@@ -1165,7 +1165,7 @@ def labels_get_suggestions(labels: Labels):
     return getattr(labels, 'suggestions', [])
 
 
-def labels_get(labels: Labels, video_and_frame_or_video, frame_idx=None, use_cache=False):
+def labels_get(labels: Labels, video_and_frame_or_video, frame_idx=None, **kwargs):
     """Get labeled frames for backward compatibility.
     
     This provides backward compatibility for the missing get() method.
@@ -1175,7 +1175,7 @@ def labels_get(labels: Labels, video_and_frame_or_video, frame_idx=None, use_cac
         labels: Labels object to search
         video_and_frame_or_video: Either a (Video, frame_idx) tuple or a Video object
         frame_idx: Frame index (when first arg is Video)
-        use_cache: Ignored for sleap-io compatibility (caching handled internally)
+        **kwargs: Additional arguments like use_cache (ignored for sleap-io compatibility)
         
     Returns:
         Single LabeledFrame if found, None otherwise (when frame_idx specified)
@@ -1217,28 +1217,6 @@ def labels_copy(labels: Labels) -> Labels:
     Uses copy.deepcopy() which should be handled gracefully by sleap-io.
     """
     return copy.deepcopy(labels)
-
-
-def labels_get(labels: Labels, video: Video, frame_idx: int = None):
-    """Get labeled frames for a video, optionally filtered by frame index.
-    
-    This provides backward compatibility for the missing get() method.
-    
-    Args:
-        labels: Labels object to search
-        video: Video to search for
-        frame_idx: Optional frame index to filter by
-        
-    Returns:
-        List of LabeledFrame objects or single LabeledFrame if frame_idx specified
-    """
-    if frame_idx is not None:
-        # Return single labeled frame or None
-        matches = labels.find(video, frame_idx=frame_idx)
-        return matches[0] if matches else None
-    else:
-        # Return all labeled frames for this video
-        return labels.find(video)
 
 
 def labels_add_video(labels: Labels, video: Video):
