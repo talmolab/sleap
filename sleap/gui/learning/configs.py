@@ -16,9 +16,10 @@ from typing import Any, Dict, List, Optional, Text
 
 from sleap_io import Skeleton, load_file
 from sleap import util as sleap_utils
+from sleap.gui.config_utils import get_head_from_omegaconf
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FieldComboWidget
-from sleap.gui.legacy.config import TrainingJobConfig
+from omegaconf import OmegaConf
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -37,12 +38,12 @@ class ConfigFileInfo:
         config: the :py:class:`TrainingJobConfig`
         path: path to the :py:class:`TrainingJobConfig`
         filename: just the filename, not the full path
-        head_name: string which should match name of model.heads key
+        head_name: string which should match name of model_config.head_configs key
         dont_retrain: allows us to keep track of whether we should retrain
             this config
     """
 
-    config: TrainingJobConfig
+    config: OmegaConf
     path: Optional[Text] = None
     filename: Optional[Text] = None
     head_name: Optional[Text] = None
@@ -87,10 +88,10 @@ class ConfigFileInfo:
         Returns:
             Full path + filename if found, otherwise None.
         """
-        if not self.config.outputs.run_name:
+        if not self.config.trainer_config.save_ckpt_path:
             return None
 
-        for dir in [self.config.outputs.run_path, self.path_dir]:
+        for dir in [self.config.trainer_config.save_ckpt_path, self.path_dir]:
             full_path = os.path.join(dir, shortname)
             if os.path.exists(full_path):
                 return full_path
@@ -106,8 +107,8 @@ class ConfigFileInfo:
         # cache skeleton so we only search once
         if self._skeleton is None and not self._tried_finding_skeleton:
             # if skeleton was saved in config, great!
-            if self.config.data.labels.skeletons:
-                self._skeleton = self.config.data.labels.skeletons[0]
+            if self.config.data_config.skeletons:
+                self._skeleton = self.config.data_config.skeletons[0]
 
             # otherwise try loading it from validation labels (much slower!)
             else:
@@ -146,7 +147,8 @@ class ConfigFileInfo:
     def timestamp(self):
         """Timestamp on file; parsed from filename (not OS timestamp)."""
         match = re.match(
-            r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b", self.config.outputs.run_name
+            r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b",
+            self.config.trainer_config.save_ckpt_path,
         )
         if match:
             year, month, day = int(match[1]), int(match[2]), int(match[3])
@@ -180,16 +182,15 @@ class ConfigFileInfo:
     @classmethod
     def from_config_file(cls, path: Text) -> "ConfigFileInfo":
         if path.endswith("yaml") or path.endswith("yml"):
-            # convert yaml to legacy GUI config.
-            from omegaconf import OmegaConf
-            from sleap.gui.legacy.config.yaml_cfg_sleap_trainingjob_cfg import mapper
-
-            omegaconf_cfg = OmegaConf.load(path)
-            cfg = mapper(omegaconf_cfg)
+            cfg = OmegaConf.load(path)
 
         else:
-            cfg = TrainingJobConfig.load_json(path)
-        head_name = cfg.model.heads.which_oneof_attrib_name()
+            from sleap_nn.config.training_job_config import (
+                TrainingJobConfig as snn_TrainingJobConfig,
+            )
+
+            cfg = snn_TrainingJobConfig.load_sleap_config(path)
+        head_name = get_head_from_omegaconf(cfg)
         filename = os.path.basename(path)
         return cls(config=cfg, path=path, filename=filename, head_name=head_name)
 
@@ -256,12 +257,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             if cfg_info.has_trained_model:
                 display_name += "[Trained] "
 
-            display_name += (
-                f"{cfg.outputs.run_name_prefix or ''}"
-                f"{cfg.outputs.run_name}"
-                f"{cfg.outputs.run_name_suffix or ''}"
-                f"({filename})"
-            )
+            display_name += f"{cfg.trainer_config.save_ckpt_path}({filename})"
 
             if select is not None:
                 if select.config == cfg_info.config:
@@ -487,16 +483,9 @@ class TrainingConfigsGetter:
         if path.endswith("yaml") or path.endswith("yml"):
             # Get the head from the model (i.e., what the model will predict)
             from omegaconf import OmegaConf
-            from sleap.gui.legacy.config.yaml_cfg_sleap_trainingjob_cfg import mapper
 
             cfg = OmegaConf.load(path)
-            for head in cfg.model_config.head_configs:
-                if cfg.model_config.head_configs[f"{head}"] is not None:
-                    key = head
-                    break
-
-            if key == "bottomup":
-                key = "multi_instance"
+            key = get_head_from_omegaconf(cfg)
 
             filename = os.path.basename(path)
             logging.debug(f"Loaded YAML config file: {filename}")
@@ -507,7 +496,7 @@ class TrainingConfigsGetter:
                 # Try mapping to TrainingJobConfig
                 try:
                     return ConfigFileInfo(
-                        path=path, filename=filename, config=mapper(cfg), head_name=key
+                        path=path, filename=filename, config=cfg, head_name=key
                     )
                 except Exception as e:
                     # Couldn't map so just ignore
@@ -516,14 +505,20 @@ class TrainingConfigsGetter:
         else:
             # Get the head from the model (i.e., what the model will predict)
             try:
-                cfg = TrainingJobConfig.load_json(path)
+                from sleap_nn.config.training_job_config import (
+                    TrainingJobConfig as snn_TrainingJobConfig,
+                )
+
+                cfg = snn_TrainingJobConfig.load_sleap_config(path)
             except Exception as e:
                 # Couldn't load so just ignore
                 print(e)
                 pass
             else:
                 # Get the head from the model (i.e., what the model will predict)
-                key = cfg.model.heads.which_oneof_attrib_name()
+                key = get_head_from_omegaconf(cfg)
+                if key == "multi_instance":
+                    key = "bottomup"
 
                 filename = os.path.basename(path)
 

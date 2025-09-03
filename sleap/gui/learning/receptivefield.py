@@ -6,9 +6,9 @@ from typing import Optional, Text
 
 import numpy as np
 from qtpy import QtWidgets, QtGui
-
-from sleap.gui.legacy.config import ModelConfig
+from omegaconf import OmegaConf
 from sleap.gui.widgets.video import GraphicsView
+from sleap.gui.config_utils import get_head_from_omegaconf
 
 
 def compute_rf(down_blocks: int, convs_per_block: int = 2, kernel_size: int = 3) -> int:
@@ -39,8 +39,13 @@ def compute_rf(down_blocks: int, convs_per_block: int = 2, kernel_size: int = 3)
     return int(rf)
 
 
-def receptive_field_info_from_model_cfg(model_cfg: ModelConfig) -> dict:
+def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
     """Gets receptive field information given specific model configuration."""
+    model_cfg = cfg.model_config
+    model_cfg.backbone_config.unet.max_stride = int(
+        model_cfg.backbone_config.unet.max_stride
+    )
+
     rf_info = dict(
         size=None,
         max_stride=None,
@@ -48,32 +53,37 @@ def receptive_field_info_from_model_cfg(model_cfg: ModelConfig) -> dict:
         convs_per_block=None,
         kernel_size=None,
     )
+    head_type = get_head_from_omegaconf(cfg)
+    output_strides = []
+    for k, head_cfg in model_cfg.head_configs[head_type].items():
+        if k == "class_vectors":
+            output_strides.append(int(model_cfg.backbone_config.unet.max_stride))
+        else:
+            output_strides.append(int(head_cfg.output_stride))
+    output_stride = min(output_strides)
     # Currently, this works only for UNet backbones.
     # TODO: Add support for other backbones.
     try:
-        _ = np.log2(
-            model_cfg.backbone.which_oneof().max_stride
-            / model_cfg.backbone.which_oneof().output_stride
-        )
+        _ = np.log2(model_cfg.backbone_config.unet.max_stride / output_stride)
     except ZeroDivisionError:
         # Unable to create model from these config parameters
         return rf_info
 
-    if hasattr(model_cfg.backbone.which_oneof(), "max_stride"):
-        rf_info["max_stride"] = model_cfg.backbone.which_oneof().max_stride
+    if hasattr(model_cfg.backbone_config.unet, "max_stride"):
+        rf_info["max_stride"] = model_cfg.backbone_config.unet.max_stride
 
     rf_info["convs_per_block"] = 2
 
     rf_info["kernel_size"] = 3
 
     stem_blocks = 0
-    if hasattr(model_cfg.backbone.which_oneof(), "stem_stride"):
-        cfg_stem_stride = model_cfg.backbone.which_oneof().stem_stride
+    if hasattr(model_cfg.backbone_config.unet, "stem_stride"):
+        cfg_stem_stride = model_cfg.backbone_config.unet.stem_stride
         if cfg_stem_stride is not None:
             stem_blocks = np.log2(cfg_stem_stride).astype(int)
 
     down_blocks = (
-        np.log2(model_cfg.backbone.which_oneof().max_stride).astype(int) - stem_blocks
+        np.log2(model_cfg.backbone_config.unet.max_stride).astype(int) - stem_blocks
     )
 
     rf_info["down_blocks"] = down_blocks
@@ -151,7 +161,7 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
 
         return result
 
-    def setModelConfig(self, model_cfg: ModelConfig, scale: float):
+    def setModelConfig(self, model_cfg: OmegaConf, scale: float):
         """Updates receptive field preview from model config."""
         rf_info = receptive_field_info_from_model_cfg(model_cfg)
 

@@ -14,7 +14,7 @@ training:
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
   - label: Max Instances
-    name: max_instances
+    name: _max_instances
     type: optional_int
     help: Maximum number of instances per frame.
     none_label: No max
@@ -22,7 +22,7 @@ training:
     range: 1,100
     default: 1
 
-  - name: model.heads.multi_instance.confmaps.sigma
+  - name: model_config.head_configs.bottomup.confmaps.sigma
     label: Sigma for Nodes
     type: double
     default: 5.0
@@ -33,7 +33,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
 
-  - name: model.heads.multi_instance.pafs.sigma
+  - name: model_config.head_configs.bottomup.pafs.sigma
     label: Sigma for Edges
     type: double
     default: 15.0
@@ -54,7 +54,7 @@ training:
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
   - label: Max Instances
-    name: max_instances
+    name: _max_instances
     type: optional_int
     help: Maximum number of instances per frame.
     none_label: No max
@@ -70,7 +70,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Centroids
-    name: model.heads.centroid.sigma
+    name: model_config.head_configs.centroid.confmaps.sigma
     type: double
 
   - default: null
@@ -81,7 +81,7 @@ training:
       significantly improve topdown model accuracy as they benefit from a consistent
       geometry of the body parts relative to the center of the image.
     label: Anchor Part
-    name: model.heads.centered_instance.anchor_part
+    name: model_config.head_configs.centered_instance.confmaps.anchor_part
     type: optional_list
 
   - default: 5.0
@@ -92,7 +92,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Nodes
-    name: model.heads.centered_instance.sigma
+    name: model_config.head_configs.centered_instance.confmaps.sigma
     type: double
 
   multi-animal bottom-up-id:
@@ -103,7 +103,7 @@ training:
       affinity field</u>" head to group the nodes into distinct animal
       instances. It also handles classification and tracking.'
 
-  - name: model.heads.multi_class_bottomup.confmaps.sigma
+  - name: model_config.head_configs.multi_class_bottomup.confmaps.sigma
     label: Sigma for Nodes
     type: double
     default: 5.0
@@ -114,7 +114,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
 
-  - name: model.heads.multi_class_bottomup.class_maps.sigma
+  - name: model_config.head_configs.multi_class_bottomup.class_maps.sigma
     label: Sigma for Edges
     type: double
     default: 15.0
@@ -144,7 +144,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Centroids
-    name: model.heads.centroid.sigma
+    name: model_config.head_configs.centroid.confmaps.sigma
     type: double
 
   - default: null
@@ -155,7 +155,7 @@ training:
       significantly improve topdown model accuracy as they benefit from a consistent
       geometry of the body parts relative to the center of the image.
     label: Anchor Part
-    name: model.heads.multi_class_topdown.confmaps.anchor_part
+    name: model_config.head_configs.multi_class_topdown.confmaps.anchor_part
     type: optional_list
 
   - default: 5.0
@@ -166,7 +166,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Nodes
-    name: model.heads.multi_class_topdown.confmaps.sigma
+    name: model_config.head_configs.multi_class_topdown.confmaps.sigma
     type: double
 
   single animal:
@@ -178,7 +178,7 @@ training:
       For predicting on videos with more than one animal per frame, use a
       multi-animal pipeline (even if your training data has one instance per frame).'
 
-  - name: model.heads.single_instance.sigma
+  - name: model_config.head_configs.single_instance.confmaps.sigma
     label: Sigma for Nodes
     type: double
     default: 5.0
@@ -214,13 +214,13 @@ training:
 - type: text
   text: '<b>ZMQ Options</b>'
 
-- name: controller_port
+- name: trainer_config.zmq.controller_address
   label: Controller Port
   type: int
   default: 9000
   range: 1024,65535
 
-- name: publish_port
+- name: trainer_config.zmq.publish_address
   label: Publish Port
   type: int
   default: 9001
@@ -229,43 +229,31 @@ training:
 - type: text
   text: '<b>Output Options</b>'
 
-- default: ''
-  help: String to prepend to the run name. This is useful to prevent multiple runs
-    started at the same exact time to be mapped to the same folder, or when a fixed
-    run name is specified.
-  label: Run Name Prefix
-  name: outputs.run_name_prefix
+- default: null
+  help: String to set as the run name. This would be the ckpt_dir. If None, it will be auto-generated {runs_folder}/{time_stamp}_{head_name}_n={num_samples}.
+  label: Run Name
+  name: trainer_config.save_ckpt_path
   type: string
 - default: models
   help: 'Path to the folder that run data should be stored in. All the data for a
-    single run are stored in the path: "{runs_folder}/{run_name_prefix}{run_name}{run_name_suffix}"
-    These are specified separately to allow the `run_name` to be auto-generated. This
-    can be specified as an absolute or relative path. Relative paths specify a path
-    with respect to the current working directory. Non-existing folders will be created
+    single run are stored in the path: "{runs_folder}/{trainer_config.save_ckpt_path}". Non-existing folders will be created
     if they do not already exist. Defaults to the "models" subdirectory of the current
     working directory.'
   label: Runs Folder
-  name: outputs.runs_folder
+  name: _runs_folder
   type: string
-- default: ''
-  help: A list of strings to use as "tags" that can be used to organize multiple runs.
-    These are not used for anything during training or inference, so they can be used
-    to store arbitrary user-specified metadata.
-  label: Tags
-  name: outputs.tags
-  type: string_list
 - default: true
   help: 'If True, the model will be saved at the end of an epoch if the validation
     loss has improved. If enabled, the model will be serialized to: "{run_folder}/best_model.h5"'
   label: Best Model
-  name: outputs.checkpointing.best_model
+  name: trainer_config.save_ckpt
   type: bool
 - default: false
   help: 'If True, the model will be saved at the end of every epoch, regardless of
     whether there was an improvement detected, but will overwrite the previous latest
     model. If enabled, the model will be serialized to: "{run_folder}/latest_model.h5"'
   label: Latest Model
-  name: outputs.checkpointing.latest_model
+  name: trainer_config.model_ckpt.save_last
   type: bool
 
 - name: _save_viz
@@ -300,7 +288,7 @@ inference:
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
   - label: Max Instances
-    name: max_instances
+    name: _max_instances
     type: optional_int
     help: Maximum number of instances per frame.
     none_label: No max
@@ -316,7 +304,7 @@ inference:
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
   - label: Max Instances
-    name: max_instances
+    name: _max_instances
     type: optional_int
     help: Maximum number of instances per frame.
     none_label: No max
@@ -370,7 +358,7 @@ inference:
 
   tracking-only:
 
-- name: batch_size
+- name: _batch_size
   label: Batch Size
   type: int
   default: 4
