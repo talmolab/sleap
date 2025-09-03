@@ -4,7 +4,7 @@ from sleap_io import Video
 from sleap_io import LabeledFrame, Labels
 from sleap_io.model.instance import PredictedInstance, Track
 from sleap_io import Skeleton
-from sleap.sleap_io_adaptors.lf_labels_utils import labels_get
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_get, get_instances_to_show
 import numpy as np
 
 
@@ -513,7 +513,9 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
     for sugg in suggestions:
         lf = labels_get(labels, (sugg.video, sugg.frame_idx))
         pred_instances = [
-            inst for inst in lf.instances_to_show if isinstance(inst, PredictedInstance)
+            inst
+            for inst in get_instances_to_show(lf)
+            if isinstance(inst, PredictedInstance)
         ]
         n_instance_below_score = np.nansum(
             [True for inst in pred_instances if inst.score <= score_limit]
@@ -527,7 +529,7 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
         for lf in lfs:
             pred_instances = [
                 inst
-                for inst in lf.instances_to_show
+                for inst in get_instances_to_show(lf)
                 if isinstance(inst, PredictedInstance)
             ]
             n_instance_below_score = np.nansum(
