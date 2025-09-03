@@ -56,12 +56,12 @@ def test_track_color(centered_pair_predictions):
     # Make sure that nodes can be distinctly colored
     color_manager.distinctly_color = "nodes"
     assert color_manager.get_item_color(
-        inst_0.skeleton[1], inst_0
-    ) == color_manager.get_color_by_idx(3)
+        inst_0.skeleton.nodes[1], inst_0
+    ) == color_manager.get_color_by_idx(1)
 
     # Check line width for node
     assert (
-        color_manager.get_item_pen_width(inst_0.skeleton[1], inst_0)
+        color_manager.get_item_pen_width(inst_0.skeleton.nodes[1], inst_0)
         == color_manager.thick_pen_width
     )
 

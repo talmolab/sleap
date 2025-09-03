@@ -534,7 +534,7 @@ class ItemStack(object):
         return tuples
 
     def to_suggestion_frames(self, group_offset: int = 0) -> List["SuggestionFrame"]:
-        from sleap.gui.suggestions import SuggestionFrame
+        from sleap_io import SuggestionFrame
 
         suggestions = []
         for frame in self.items:

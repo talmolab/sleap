@@ -18,7 +18,7 @@ import yaml
 
 from sleap.util import get_config_file
 from sleap_io.model.instance import Instance, Track
-from sleap_io.model.skeleton import Node
+from sleap_io.model.skeleton import Node, Edge
 from sleap_io import Labels
 from sleap_io.model.skeleton import Skeleton
 from sleap.prefs import prefs
@@ -192,7 +192,12 @@ class ColorManager:
     @classmethod
     def is_edge(cls, item) -> bool:
         """Returns whether item is an edge, i.e., pair of nodes."""
-        return cls.is_sequence(item) and len(item) == 2 and cls.is_node(item[0])
+        return (
+            cls.is_sequence(item)
+            and len(item) == 2
+            and cls.is_node(item[0])
+            or isinstance(item, Edge)
+        )
 
     @staticmethod
     def is_node(item) -> bool:
