@@ -54,7 +54,9 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
 
 
 @pytest.mark.parametrize("background", ["original", "black", "white", "grey"])
-def test_sleap_render_with_different_backgrounds(background, centered_pair_predictions_slp_path, tmp_path):
+def test_sleap_render_with_different_backgrounds(
+    background, centered_pair_predictions_slp_path, tmp_path
+):
     output_video = tmp_path / f"test_{background}.avi"
     args = (
         f"-o {output_video} -f 2 --scale 1.2 --frames 1,2 --video-index 0 "
@@ -62,10 +64,7 @@ def test_sleap_render_with_different_backgrounds(background, centered_pair_predi
         f"{centered_pair_predictions_slp_path}".split()
     )
     sleap_render(args)
-    assert (
-        output_video.exists()
-        and output_video.stat().st_size > 0
-    )
+    assert output_video.exists() and output_video.stat().st_size > 0
 
     # Check if the background is set correctly if not original background
     if background != "original":

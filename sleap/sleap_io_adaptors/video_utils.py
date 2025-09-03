@@ -53,8 +53,10 @@ def video_util_reset(video: Video, filename: str = None, grayscale: bool = None)
     # potential breaking change
     if (filename is not None) or (grayscale is not None):
         # In sleap-io, keep_open is a backend attribute, not a video attribute
-        if hasattr(video, 'backend') and hasattr(video.backend, 'keep_open'):
-            video.backend.keep_open = False  # Reader depends on both filename and grayscale
+        if hasattr(video, "backend") and hasattr(video.backend, "keep_open"):
+            video.backend.keep_open = (
+                False  # Reader depends on both filename and grayscale
+            )
 
 
 def get_last_frame_idx(video=None):
@@ -73,10 +75,10 @@ def get_last_frame_idx(video=None):
 
 def video_get_frames(video: Video) -> int:
     """Get frame count for backward compatibility.
-    
+
     Args:
         video: Video object to get frame count from.
-        
+
     Returns:
         Number of frames in the video.
     """
@@ -85,10 +87,10 @@ def video_get_frames(video: Video) -> int:
 
 def video_get_height(video: Video) -> int:
     """Get video height for backward compatibility.
-    
+
     Args:
         video: Video object to get height from.
-        
+
     Returns:
         Height of video frames in pixels.
     """
@@ -97,10 +99,10 @@ def video_get_height(video: Video) -> int:
 
 def video_get_width(video: Video) -> int:
     """Get video width for backward compatibility.
-    
+
     Args:
         video: Video object to get width from.
-        
+
     Returns:
         Width of video frames in pixels.
     """
@@ -109,10 +111,10 @@ def video_get_width(video: Video) -> int:
 
 def video_get_channels(video: Video) -> int:
     """Get video channels for backward compatibility.
-    
+
     Args:
         video: Video object to get channels from.
-        
+
     Returns:
         Number of channels in video frames.
     """
@@ -121,11 +123,11 @@ def video_get_channels(video: Video) -> int:
 
 def video_get_frame(video: Video, idx: int):
     """Get frame by index for backward compatibility.
-    
+
     Args:
         video: Video object to get frame from.
         idx: Frame index to retrieve.
-        
+
     Returns:
         Frame data as numpy array.
     """

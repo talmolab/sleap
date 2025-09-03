@@ -15,7 +15,12 @@ def test_frame_item(small_robot_mp4_vid):
         == small_robot_mp4_vid[12][:15, :15, 0]
     )
 
-    from sleap.sleap_io_adaptors.video_utils import video_get_height, video_get_width, video_get_channels
+    from sleap.sleap_io_adaptors.video_utils import (
+        video_get_height,
+        video_get_width,
+        video_get_channels,
+    )
+
     assert item.get_raw_image(scale=1).shape == (
         1,
         video_get_height(small_robot_mp4_vid),
@@ -66,6 +71,7 @@ def test_item_stack(centered_pair_vid, small_robot_mp4_vid):
 
     # Make sure that we got the right frame items
     from sleap.sleap_io_adaptors.video_utils import video_get_frames
+
     assert len(stack.items) == 6
     assert stack.items[0].frame_idx == 0
     assert stack.items[1].frame_idx == video_get_frames(centered_pair_vid) // 3
@@ -80,11 +86,24 @@ def test_item_stack(centered_pair_vid, small_robot_mp4_vid):
     assert stack.get_item_by_data_row(3) == stack.items[3]
 
     # Make sure that we loaded correctly sized data
-    from sleap.sleap_io_adaptors.video_utils import video_get_height, video_get_width, video_get_channels
+    from sleap.sleap_io_adaptors.video_utils import (
+        video_get_height,
+        video_get_width,
+        video_get_channels,
+    )
+
     i = len(stack.items)
-    h = max(video_get_height(centered_pair_vid) // 10, video_get_height(small_robot_mp4_vid) // 10)
-    w = max(video_get_width(centered_pair_vid) // 10, video_get_width(small_robot_mp4_vid) // 10)
-    c = max(video_get_channels(centered_pair_vid), video_get_channels(small_robot_mp4_vid))
+    h = max(
+        video_get_height(centered_pair_vid) // 10,
+        video_get_height(small_robot_mp4_vid) // 10,
+    )
+    w = max(
+        video_get_width(centered_pair_vid) // 10,
+        video_get_width(small_robot_mp4_vid) // 10,
+    )
+    c = max(
+        video_get_channels(centered_pair_vid), video_get_channels(small_robot_mp4_vid)
+    )
     assert stack.data.shape == (i, h, w, c)
     assert stack.get_item_data(stack.items[1]).shape == (1, h, w, c)
 

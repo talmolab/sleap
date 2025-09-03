@@ -100,8 +100,6 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 from sleap_io import save_skeleton
-import json
-from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
 from sleap.info import align
 from sleap.io.format.adaptor import Adaptor
@@ -2295,6 +2293,7 @@ class OpenSkeleton(EditCommand):
     @staticmethod
     def load_skeleton(filename: str):
         import sleap_io as sio
+
         return sio.load_skeleton(filename)
 
     @staticmethod
@@ -3840,9 +3839,8 @@ class AddUserInstancesFromPredictions(EditCommand):
         for node in new_instance.skeleton.node_names:
             # if we're copying from a skeleton that has this node
             node_idx = new_instance.skeleton.node_names.index(node)
-            if (
-                node in copy_instance.points["name"]
-                and not np.any(np.isnan(copy_instance.numpy()[node_idx]))
+            if node in copy_instance.points["name"] and not np.any(
+                np.isnan(copy_instance.numpy()[node_idx])
             ):
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute

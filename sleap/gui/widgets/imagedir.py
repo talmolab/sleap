@@ -9,7 +9,6 @@ training/validation images. For this use-case, there's a factory method which
 creates widgets with relevant filters from a given training run path.
 """
 
-from sleap import Video
 from sleap.gui.widgets.video import QtVideoPlayer
 
 from qtpy import QtWidgets
@@ -99,6 +98,7 @@ class QtImageDirectoryWidget(QtVideoPlayer):
 
             self.files = files
             import sleap_io as sio
+
             self.video = sio.load_video(files)
             self.load_video(video=self.video)
 

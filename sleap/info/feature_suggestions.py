@@ -3,7 +3,6 @@ Module for generating lists of frames using frame features, pca, kmeans, etc.
 """
 
 import attr
-import cattr
 import itertools
 import logging
 import numpy as np
@@ -665,7 +664,7 @@ class ParallelFeaturePipeline(object):
     def make(cls, pipeline, videos):
         """Make class object from pipeline and list of videos."""
         import copy
-        
+
         # Use close -> copy strategy for sleap-io Video compatibility
         # Don't reopen until inside the subprocess worker
         videos_for_processes = []
@@ -676,7 +675,7 @@ class ParallelFeaturePipeline(object):
             if was_open:
                 video.open()  # Reopen original, but keep copy closed
             videos_for_processes.append(video_copy)  # Send closed copy to processes
-            
+
         return cls(pipeline, videos_for_processes)
 
     @classmethod

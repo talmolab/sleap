@@ -9,7 +9,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     labels_get_suggestions,
     labels_get,
     labels_add_video,
-    labels_clear_suggestions
+    labels_clear_suggestions,
 )
 
 
@@ -283,8 +283,9 @@ def test_app_workflow(
     # Check that frames returned by labeled frames cache are correct
     prev_idx = -frame_delta
     for l_suggestion, st_suggestion in list(
-        zip(labels_get_suggestions(app.labels),
-            app.suggestions_dock.table.model().items)
+        zip(
+            labels_get_suggestions(app.labels), app.suggestions_dock.table.model().items
+        )
     ):
         assert l_suggestion == st_suggestion["SuggestionFrame"]
         lf = labels_get(

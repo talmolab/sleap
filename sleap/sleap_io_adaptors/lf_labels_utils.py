@@ -1150,43 +1150,48 @@ def clear_suggestion(labels: Labels):
 # Labels API Compatibility Functions
 # These functions provide backward compatibility with legacy SLEAP Labels API
 
+
 def labels_get_suggestions(labels: Labels):
     """Get all suggestions from labels for backward compatibility.
-    
+
     This provides backward compatibility for the missing get_suggestions() method.
     In sleap-io, suggestions are stored directly as an attribute.
-    
+
     Args:
         labels: Labels object to get suggestions from
-        
+
     Returns:
         List of SuggestionFrame objects
     """
-    return getattr(labels, 'suggestions', [])
+    return getattr(labels, "suggestions", [])
 
 
 def labels_get(labels: Labels, video_and_frame_or_video, frame_idx=None, **kwargs):
     """Get labeled frames for backward compatibility.
-    
+
     This provides backward compatibility for the missing get() method.
     Handles both tuple format (video, frame_idx) and separate video, frame_idx args.
-    
+
     Args:
         labels: Labels object to search
         video_and_frame_or_video: Either a (Video, frame_idx) tuple or a Video object
         frame_idx: Frame index (when first arg is Video)
-        **kwargs: Additional arguments like use_cache (ignored for sleap-io compatibility)
-        
+        **kwargs: Additional arguments like use_cache
+            (ignored for sleap-io compatibility)
+
     Returns:
         Single LabeledFrame if found, None otherwise (when frame_idx specified)
         List of LabeledFrame objects for video (when frame_idx not specified)
     """
     # Handle tuple format: labels.get((video, frame_idx))
-    if isinstance(video_and_frame_or_video, tuple) and len(video_and_frame_or_video) == 2:
+    if (
+        isinstance(video_and_frame_or_video, tuple)
+        and len(video_and_frame_or_video) == 2
+    ):
         video, frame_idx = video_and_frame_or_video
     else:
         video = video_and_frame_or_video
-    
+
     # Use the existing Labels.find method from sleap-io
     if frame_idx is not None:
         matches = labels.find(video, frame_idx=frame_idx)
@@ -1197,13 +1202,14 @@ def labels_get(labels: Labels, video_and_frame_or_video, frame_idx=None, **kwarg
 
 def labels_all_instances(labels: Labels):
     """Get all instances as a list for backward compatibility.
-    
+
     This provides backward compatibility for the missing all_instances attribute.
-    In sleap-io, labels.instances is a generator, but legacy SLEAP expects a list-like object.
-    
+    In sleap-io, labels.instances is a generator, but legacy SLEAP expects
+    a list-like object.
+
     Args:
         labels: Labels object to get all instances from
-        
+
     Returns:
         List of all Instance objects from all labeled frames
     """
@@ -1212,10 +1218,10 @@ def labels_all_instances(labels: Labels):
 
 def labels_clear_suggestions(labels: Labels):
     """Clear all suggestions from labels for backward compatibility.
-    
+
     This provides backward compatibility for the missing clear_suggestions() method.
     In sleap-io, suggestions are stored as a list that can be cleared directly.
-    
+
     Args:
         labels: Labels object to clear suggestions from
     """
@@ -1224,7 +1230,7 @@ def labels_clear_suggestions(labels: Labels):
 
 def labels_copy(labels: Labels) -> Labels:
     """Create a copy of the Labels object.
-    
+
     This provides backward compatibility for the missing copy() method.
     Uses copy.deepcopy() which should be handled gracefully by sleap-io.
     """
@@ -1233,7 +1239,7 @@ def labels_copy(labels: Labels) -> Labels:
 
 def labels_add_video(labels: Labels, video: Video):
     """Add a video to the Labels object.
-    
+
     This provides backward compatibility for the missing add_video() method.
     """
     if video not in labels.videos:
@@ -1242,18 +1248,21 @@ def labels_add_video(labels: Labels, video: Video):
 
 def labels_pop(labels: Labels, index: int) -> LabeledFrame:
     """Remove and return a labeled frame at the given index.
-    
+
     This provides backward compatibility for the missing pop() method.
     """
     if 0 <= index < len(labels.labeled_frames):
         return labels.labeled_frames.pop(index)
     else:
-        raise IndexError(f"Index {index} out of range for {len(labels.labeled_frames)} labeled frames")
+        raise IndexError(
+            f"Index {index} out of range for "
+            f"{len(labels.labeled_frames)} labeled frames"
+        )
 
 
 def labels_remove_frame(labels: Labels, labeled_frame: LabeledFrame):
     """Remove a single labeled frame from the Labels object.
-    
+
     This provides backward compatibility for a missing remove_frame() method.
     Uses the existing remove_frames() function.
     """
@@ -1262,7 +1271,7 @@ def labels_remove_frame(labels: Labels, labeled_frame: LabeledFrame):
 
 def labels_load_file(filename: str, **kwargs) -> Labels:
     """Load a Labels object from file.
-    
+
     This provides backward compatibility for the missing static load_file() method.
     Simply wraps the sleap_io.load_file() function.
     """
@@ -1272,7 +1281,7 @@ def labels_load_file(filename: str, **kwargs) -> Labels:
 # Attribute compatibility functions
 def labels_get_nodes(labels: Labels):
     """Get skeleton nodes for backward compatibility.
-    
+
     Maps labels.nodes to labels.skeleton.nodes or labels.skeletons[0].nodes
     """
     if labels.skeletons:
@@ -1282,7 +1291,7 @@ def labels_get_nodes(labels: Labels):
 
 def labels_get_labels_attr(labels: Labels):
     """Get labeled frames for backward compatibility.
-    
+
     Maps labels.labels to labels.labeled_frames
     """
     return labels.labeled_frames
@@ -1290,7 +1299,7 @@ def labels_get_labels_attr(labels: Labels):
 
 def labels_frames(labels: Labels, video: Video = None):
     """Get labeled frames, optionally filtered by video.
-    
+
     This provides backward compatibility for the missing frames() method.
     """
     if video is None:
@@ -1301,39 +1310,39 @@ def labels_frames(labels: Labels, video: Video = None):
 
 def labeled_frame_find(labeled_frame: LabeledFrame, track: Track = None):
     """Find instances in a labeled frame that match the given track.
-    
+
     This provides backward compatibility for the missing LabeledFrame.find() method.
     In sleap-io, we need to manually search through instances to find matching tracks.
-    
+
     Args:
         labeled_frame: LabeledFrame to search in
         track: Track to search for
-        
+
     Returns:
         List of instances that match the track, or empty list if none found
     """
     if track is None:
         return list(labeled_frame.instances)
-    
+
     matching_instances = []
     for instance in labeled_frame.instances:
         if instance.track == track:
             matching_instances.append(instance)
-    
+
     return matching_instances
 
 
 def labels_append_suggestions(labels: Labels, suggestions):
     """Append suggestions to the Labels object.
-    
+
     This provides backward compatibility for the missing append_suggestions() method.
     In sleap-io, suggestions are stored as a list that can be extended directly.
-    
+
     Args:
         labels: Labels object to append suggestions to
         suggestions: List of SuggestionFrame objects to append
     """
-    if hasattr(suggestions, '__iter__'):
+    if hasattr(suggestions, "__iter__"):
         labels.suggestions.extend(suggestions)
     else:
         labels.suggestions.append(suggestions)
@@ -1341,17 +1350,17 @@ def labels_append_suggestions(labels: Labels, suggestions):
 
 def labels_add_instance(labels: Labels, frame: LabeledFrame, instance):
     """Add an instance to a labeled frame.
-    
+
     This provides backward compatibility for the missing add_instance() method.
     In sleap-io, we manually add instances to the frame's instances list.
-    
+
     Args:
         labels: Labels object (for consistency with legacy API, but not used)
         frame: LabeledFrame to add instance to
         instance: Instance to add to the frame
     """
     # In sleap-io, instances are stored in the LabeledFrame directly
-    if hasattr(frame, 'instances'):
+    if hasattr(frame, "instances"):
         frame.instances.append(instance)
     else:
         # Fallback if instances is not a list
