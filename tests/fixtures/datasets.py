@@ -226,15 +226,16 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
     stick_tracks[2] = None
 
     for f in range(500):
+        from sleap.sleap_io_adaptors.video_utils import video_get_frames, video_get_height, video_get_width
         vid = [hdf5_vid, small_robot_mp4_vid][f % 2]
-        label = LabeledFrame(video=vid, frame_idx=f % vid.frames)
+        label = LabeledFrame(video=vid, frame_idx=f % video_get_frames(vid))
 
         fly_instances = []
         for i in range(6):
             fly_instances.append(Instance(skeleton=skeleton, track=fly_tracks[i]))
             for node in skeleton.nodes:
                 fly_instances[i][node] = (
-                    [i % vid.width, i % vid.height],
+                    [i % video_get_width(vid), i % video_get_height(vid)],
                     True,
                     False,
                 )  # (xy, visible, complete)
@@ -246,7 +247,7 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
             )
             for node in stickman.nodes:
                 stickman_instances[i][node] = (
-                    [i % vid.width, i % vid.height],
+                    [i % video_get_width(vid), i % video_get_height(vid)],
                     True,
                     False,
                 )  # (xy, visible, complete)

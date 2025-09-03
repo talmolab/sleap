@@ -1101,7 +1101,8 @@ def test_ExportLabelsSubset(
     video: Video = labels.videos[0]
 
     # Select subset of frames
-    n_frames = video.frames
+    from sleap.sleap_io_adaptors.video_utils import video_get_frames
+    n_frames = video_get_frames(video)
     lower_bound = int(n_frames / 4)
     upper_bound = int(n_frames / 4 + 2)
 
@@ -1186,7 +1187,7 @@ def test_ExportLabelsSubset(
     assert Path(video_path_to_export).is_file()
     assert Path(video_path_to_export).name == video_name_to_export
     assert video_subset.filename == video_path_to_export
-    assert video_subset.frames == n_frames_expected
+    assert video_get_frames(video_subset) == n_frames_expected
 
     # Do not mutate original labels.
     assert len(labels.labeled_frames) == n_labels_original
@@ -1216,7 +1217,7 @@ def test_ExportLabelsSubset(
 
     # Videos in package reference pkg.slp. filename.
     assert video_subset.filename == path_to_export.as_posix()
-    assert video_subset.frames <= n_frames_expected + len(labels_subset.suggestions)
+    assert video_get_frames(video_subset) <= n_frames_expected + len(labels_subset.suggestions)
 
     # Do not mutate original labels.
     assert len(labels.labeled_frames) == n_labels_original

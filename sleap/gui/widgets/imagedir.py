@@ -98,7 +98,8 @@ class QtImageDirectoryWidget(QtVideoPlayer):
                 was_on_last_image = True
 
             self.files = files
-            self.video = Video.from_image_filenames(filenames=files)
+            import sleap_io as sio
+            self.video = sio.load_video(files)
             self.load_video(video=self.video)
 
             if was_on_last_image:
