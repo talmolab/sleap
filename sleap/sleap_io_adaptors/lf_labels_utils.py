@@ -3,7 +3,7 @@ Standalone utility functions for working with Labels and LabeledFrame objects.
 """
 
 import math
-from typing import Iterable, List, Dict, Optional, Text, Union
+from typing import List, Dict, Optional, Text, Union
 
 from pathlib import Path
 import cattr
@@ -770,7 +770,7 @@ def make_video_callback(
     context = context or {}
 
     def video_callback(
-        video_list: List[dict],
+        video_list: List[Video],
         new_paths: List[str] = search_paths,
         context: Optional[Dict] = context,
     ):
@@ -783,7 +783,7 @@ def make_video_callback(
             context: A dictionary containing a "changed_on_load" key with a boolean
                 value. Used externally to determine if any filenames were updated.
         """
-        filenames = [item["backend"]["filename"] for item in video_list]
+        filenames = [item.filename for item in video_list]
         context = context or {"changed_on_load": False}
 
         # Equivalent to pathutils.list_file_missing(filenames)
@@ -843,17 +843,45 @@ def make_video_callback(
 
         # Replace the video filenames with changes by user
         for i, item in enumerate(video_list):
-            item["backend"]["filename"] = filenames[i]
+            item.replace_filename(filenames[i])
 
         if USE_DUMMY_FOR_MISSING_VIDEOS and sum(missing):
             # Replace any video still missing with "dummy" video
             for is_missing, item in zip(missing, video_list):
                 from sleap.io.video import DummyVideo
 
-                vid = DummyVideo(filename=item["backend"]["filename"])
+                vid = DummyVideo(filename=item.filename)
                 item["backend"] = cattr.unstructure(vid)
 
     return video_callback
+
+
+def load_labels_video_search(filename, video_search):
+    labels = load_file(filename)
+
+    if isinstance(video_search, str):
+        video_search = [video_search]
+
+    if hasattr(video_search, "__iter__"):
+        # If the callback is an iterable, then we'll expect it to be a
+        # list of strings and build a non-gui callback with those as
+        # the search paths.
+        # When path is to a file, use the path of parent directory.
+        search_paths = [
+            os.path.dirname(path) if os.path.isfile(path) else path
+            for path in video_search
+        ]
+
+        # Make the search function from list of paths
+        video_search = make_video_callback(search_paths)
+
+    if callable(video_search):
+        abort = video_search(labels.videos)
+
+        if abort:
+            raise FileNotFoundError
+
+    return labels
 
 
 def find_suggestion(labels: Labels, video, frame_idx):
@@ -1015,33 +1043,6 @@ def merge_nodes(
     #     inst._fix_array()
 
 
-def find_labeled_frames(
-    self,
-    video: Video,
-    frame_idx: Optional[Union[int, Iterable[int]]] = None,
-    return_new: bool = False,
-) -> List[LabeledFrame]:
-    """Search for labeled frames given video and/or frame index.
-
-    Args:
-        video: A :class:`Video` that is associated with the project.
-        frame_idx: The frame index (or indices) which we want to
-            find in the video. If a range is specified, we'll return
-            all frames with indices in that range. If not specific,
-            then we'll return all labeled frames for video.
-        return_new: Whether to return singleton of new and empty
-            :class:`LabeledFrame` if none is found in project.
-    Returns:
-        List of `LabeledFrame` objects that match the criteria.
-        Empty if no matches found, unless return_new is True,
-        in which case it contains a new `LabeledFrame` with
-        `video` and `frame_index` set.
-    """
-    null_result = [LabeledFrame(video=video, frame_idx=frame_idx)] if return_new else []
-    result = self._cache.find_frames(video, frame_idx)
-    return null_result if result is None else result
-
-
 def find_track_occupancy(
     labels: Labels, video: Video, track: Union[Track, int], frame_range=None
 ) -> List[Instance]:
@@ -1073,7 +1074,7 @@ def find_track_occupancy(
 
     track_frame_inst = [
         instance
-        for lf in find_labeled_frames(labels, video)
+        for lf in labels.find(video)
         for instance in lf.instances
         if does_track_match(instance, track, lf)
         and (frame_range is None or lf.frame_idx in frame_range)
@@ -1134,3 +1135,8 @@ def track_set_instance(
         (frame.frame_idx, frame.frame_idx + 1),
     )
     instance.track = new_track
+
+
+def clear_suggestion(labels: Labels):
+    """Delete all suggestions."""
+    labels.suggestions.clear()

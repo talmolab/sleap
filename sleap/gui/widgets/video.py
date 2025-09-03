@@ -1862,6 +1862,9 @@ class QtInstance(QGraphicsObject):
         # Show predicted instances behind non-predicted ones
         self.setZValue(1 if self.predicted else 2)
 
+        # Set mouse grabbed boolean
+        self._mouse_grabbed = False
+
         if not self.predicted:
             # Initialize missing nodes with random points marked as non-visible.
             fill_missing(
@@ -2220,7 +2223,7 @@ class QtInstance(QGraphicsObject):
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
             self.updatePoints(user_change=True)
             self.updateBox()
-            self.ungrabMouse()
+            # self.ungrabMouse()
             super().mouseReleaseEvent(event)
 
 

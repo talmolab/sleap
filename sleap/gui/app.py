@@ -598,7 +598,7 @@ class MainWindow(QMainWindow):
             "select next",
             "Select Next Instance",
             lambda: self.state.increment_in_list(
-                "instance", self.state["labeled_frame"].instances_to_show
+                "instance", get_instances_to_show(self.state["labeled_frame"])
             ),
         )
         add_menu_item(
@@ -1241,6 +1241,7 @@ class MainWindow(QMainWindow):
                         suggestion.video,
                         suggestion.frame_idx,  # ), use_cache=True
                     )
+                    lf = lf[0] if lf else None
                     if lf is not None and lf.has_user_instances:
                         labeled_count += 1
                 prc = (labeled_count / len(suggestion_list)) * 100
@@ -1511,7 +1512,7 @@ class MainWindow(QMainWindow):
 
         selection["random"] = {
             video: remove_user_labeled(
-                video, random.sample(range(video.frames), min(20, video.frames))
+                video, random.sample(range(video.shape[0]), min(20, video.shape[0]))
             )
             for video in self.labels.videos
         }
@@ -1521,7 +1522,7 @@ class MainWindow(QMainWindow):
                 current_video: remove_user_labeled(
                     current_video,
                     random.sample(
-                        range(current_video.frames), min(20, current_video.frames)
+                        range(current_video.shape[0]), min(20, current_video.shape[0])
                     ),
                 )
             }

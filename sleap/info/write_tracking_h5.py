@@ -33,8 +33,12 @@ import pandas as pd
 
 from typing import Any, Dict, List, Tuple
 
-from sleap_io import Labels, load_file, PredictedInstance
+from sleap_io import Labels, PredictedInstance
 from sleap_io import Video
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    make_video_callback,
+    load_labels_video_search,
+)
 
 
 def get_tracks_as_np_strings(labels: Labels) -> List[bytes]:
@@ -452,9 +456,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    video_callback = Labels.make_video_callback([os.path.dirname(args.data_path)])
-    # labels = Labels.load_file(args.data_path, video_search=video_callback)
-    labels = load_file(args.data_path)
+    video_callback = make_video_callback([os.path.dirname(args.data_path)])
+    labels = load_labels_video_search(args.data_path, video_search=video_callback)
 
     output_path = re.sub("(\\.json(\\.zip)?|\\.h5|\\.slp)$", "", args.data_path)
     output_path = output_path + ".tracking.h5"
