@@ -100,8 +100,6 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 from sleap_io import save_skeleton
-import json
-from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
 from sleap.info import align
 from sleap.io.format.adaptor import Adaptor
@@ -1025,14 +1023,14 @@ class SaveProjectAs(AppCommand):
     @staticmethod
     def _try_save(context, labels: Labels, filename: str):
         """Helper function which attempts save and handles errors."""
-        from sleap_io.io.nwb import write_nwb
+        import sleap_io as sio
 
         success = False
         try:
             extension = (PurePath(filename).suffix)[1:]
             extension = None if (extension == "slp") else extension
             if extension == "nwb":
-                write_nwb(labels=labels, nwbfile_path=filename)
+                sio.save_nwb(labels=labels, filename=filename)
             else:
                 save_file(labels=labels, filename=filename, format=extension)
             success = True
@@ -2294,10 +2292,9 @@ class OpenSkeleton(EditCommand):
 
     @staticmethod
     def load_skeleton(filename: str):
-        with open(filename, "r") as f:
-            skeleton_data = json.load(f)
-        return SkeletonDecoder().decode(data=skeleton_data["nx_graph"])
-        # return `sio.Skeleton` object instead of list
+        import sleap_io as sio
+
+        return sio.load_skeleton(filename)
 
     @staticmethod
     def compare_skeletons(
@@ -2475,7 +2472,9 @@ class OpenSkeleton(EditCommand):
 
         # Delete pre-existing symmetry
         for symmetry in skeleton.symmetries:
-            delete_symmetry(skeleton, symmetry.nodes[0].name, symmetry.nodes[1].name)
+            # In sleap-io, symmetry.nodes is a set, not a list
+            nodes_list = list(symmetry.nodes)
+            delete_symmetry(skeleton, nodes_list[0].name, nodes_list[1].name)
 
         # Link mismatched nodes
         if "linked_nodes" in params.keys():
@@ -3831,6 +3830,7 @@ class AddUserInstancesFromPredictions(EditCommand):
     ) -> Instance:
         # create the new instance
         new_instance = Instance(
+            points=copy_instance.points,
             skeleton=copy_instance.skeleton,
             from_predicted=copy_instance,
         )
@@ -3839,9 +3839,8 @@ class AddUserInstancesFromPredictions(EditCommand):
         for node in new_instance.skeleton.node_names:
             # if we're copying from a skeleton that has this node
             node_idx = new_instance.skeleton.node_names.index(node)
-            if (
-                node in copy_instance.points["name"]
-                and not copy_instance.numpy()[node_idx].isnan()
+            if node in copy_instance.points["name"] and not np.any(
+                np.isnan(copy_instance.numpy()[node_idx])
             ):
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute

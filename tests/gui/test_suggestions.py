@@ -101,7 +101,7 @@ def test_video_selection(
     # only generating suggestions for the video
 
     from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
-    
+
     labels_add_video(centered_pair_predictions, small_robot_3_frame_vid)
     # Testing suggestion generation from Image Features
     suggestions = VideoFrameSuggestions.suggest(
@@ -263,34 +263,66 @@ def assert_suggestions_unique(labels: Labels, new_suggestions: List[SuggestionFr
 
 def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     """Ensure only unique suggestions are returned and that suggestions are appended."""
+    import numpy as np
+
+    def _create_points(point_dict, skeleton):
+        """Helper to convert old dict format to numpy arrays"""
+        points_array = np.full((len(skeleton), 2), np.nan, dtype=np.float32)
+        point_scores = np.full(len(skeleton), 0.0, dtype=np.float32)
+        for node_name, data in point_dict.items():
+            node_idx = skeleton.node_names.index(node_name)
+            xy_coords = data[0] if isinstance(data[0], (list, tuple)) else data[:2]
+            score = (
+                data[1] if len(data) > 1 and isinstance(data[0], (list, tuple)) else 0.5
+            )
+            points_array[node_idx] = xy_coords
+            point_scores[node_idx] = score
+        return points_array, point_scores
+
     track_a = Track(name="a")
     track_b = Track(name="b")
+
+    # Frame 0 instances
+    points_a0, scores_a0 = _create_points(
+        {"head": ([1, 2], 0.5), "neck": ([2, 3], 0.5)}, stickman
+    )
+    points_b0, scores_b0 = _create_points(
+        {"head": ([11, 12], 0.5), "neck": ([12, 13], 0.5)}, stickman
+    )
+
+    # Frame 1 instances
+    points_a1, scores_a1 = _create_points(
+        {"head": ([2, 1], 0.5), "neck": ([3, 2], 0.5)}, stickman
+    )
+    points_b1, scores_b1 = _create_points(
+        {"head": ([2, 1], 0.5), "neck": ([3, 2], 0.5)}, stickman
+    )
+
+    # Frame 2 instances
+    points_a2, scores_a2 = _create_points(
+        {"head": ([11, 12], 0.5), "neck": ([12, 13], 0.5)}, stickman
+    )
+    points_b2, scores_b2 = _create_points(
+        {"head": ([1, 2], 0.5), "neck": ([2, 3], 0.5)}, stickman
+    )
 
     lfs = [
         LabeledFrame(
             small_robot_3_frame_vid,
             frame_idx=0,
             instances=[
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_a0,
                     skeleton=stickman,
+                    point_scores=scores_a0,
                     score=0.1,
-                    points=dict(
-                        head=([1, 2], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                        neck=([2, 3], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                    ),
                     track=track_a,
                 ),
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_b0,
                     skeleton=stickman,
+                    point_scores=scores_b0,
                     score=0.5,
-                    points=dict(
-                        head=([11, 12], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                        neck=([12, 13], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                    ),
                     track=track_b,
                 ),
             ],
@@ -299,26 +331,18 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
             small_robot_3_frame_vid,
             frame_idx=1,
             instances=[
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_a1,
                     skeleton=stickman,
+                    point_scores=scores_a1,
                     score=0.1,
-                    points=dict(
-                        head=([2, 1], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                        neck=([3, 2], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                    ),
                     track=track_a,
                 ),
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_b1,
                     skeleton=stickman,
+                    point_scores=scores_b1,
                     score=0.5,
-                    points=dict(
-                        head=([2, 1], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                        neck=([3, 2], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                    ),
                     track=track_b,
                 ),
             ],
@@ -327,26 +351,18 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
             small_robot_3_frame_vid,
             frame_idx=2,
             instances=[
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_a2,
                     skeleton=stickman,
+                    point_scores=scores_a2,
                     score=0.5,
-                    points=dict(
-                        head=([11, 12], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                        neck=([12, 13], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                    ),
                     track=track_a,
                 ),
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_b2,
                     skeleton=stickman,
+                    point_scores=scores_b2,
                     score=0.5,
-                    points=dict(
-                        head=([1, 2], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                        neck=([2, 3], 0.5, True, False),
-                        # (xy, score, visible, complete)
-                    ),
                     track=track_b,
                 ),
             ],
@@ -365,7 +381,9 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
         },
     )
     assert len(suggestions) == 3
-    labels.append_suggestions(suggestions[0:2])
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_append_suggestions
+
+    labels_append_suggestions(labels, suggestions[0:2])
 
     # Sample with stride method
     suggestions = VideoFrameSuggestions.suggest(
@@ -381,7 +399,7 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     # Check that stride method returns only unique suggestions
     assert len(suggestions) == 1
     assert_suggestions_unique(labels, suggestions)
-    labels.append_suggestions(suggestions)
+    labels_append_suggestions(labels, suggestions)
 
     suggestions = VideoFrameSuggestions.suggest(
         labels=labels,
@@ -410,7 +428,7 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     # Check that random method only returns unique suggestions
     assert len(suggestions) == 1
     assert_suggestions_unique(labels, suggestions)
-    labels.append_suggestions(suggestions)
+    labels_append_suggestions(labels, suggestions)
 
     suggestions = VideoFrameSuggestions.suggest(
         labels=labels,

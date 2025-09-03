@@ -13,6 +13,7 @@ from sleap.gui.widgets.docks import (
     SuggestionsDock,
     VideosDock,
 )
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
 
 
 def test_videos_dock(
@@ -26,9 +27,9 @@ def test_videos_dock(
 
     # Add some extra videos to the labels
     labels = centered_pair_predictions
-    labels.add_video(small_robot_3_frame_vid)
-    labels.add_video(centered_pair_vid)
-    labels.add_video(small_robot_mp4_vid)
+    labels_add_video(labels, small_robot_3_frame_vid)
+    labels_add_video(labels, centered_pair_vid)
+    labels_add_video(labels, small_robot_mp4_vid)
     assert len(labels.videos) == 4
 
     # Create the dock

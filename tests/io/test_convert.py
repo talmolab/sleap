@@ -1,6 +1,7 @@
 from sleap.io.convert import default_analysis_filename, main as sleap_convert
 from sleap_io import Video, Labels
 from sleap_io.model.instance import Instance
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
 from pathlib import PurePath, Path
 import re
 import pytest
@@ -66,7 +67,7 @@ def test_analysis_format(
     sleap_convert_assert(output_paths, slp_path, format)
 
     # Add video and retest
-    labels.add_video(small_robot_mp4_vid)
+    labels_add_video(labels, small_robot_mp4_vid)
     slp_path = tmpdir.with_name("new_slp.slp")
     labels.save(filename=slp_path)
 
@@ -99,7 +100,9 @@ def test_sleap_format(
     tmpdir = PurePath(tmpdir)
 
     output_path = Path(tmpdir, slp_path)
-    sleap_convert_assert(output_path, slp_path)
+    # Create intermediate directories
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    sleap_convert_assert(output_path, str(slp_path))
 
 
 @pytest.mark.parametrize("suffix", [".slp", ".json", ".h5"])
@@ -110,7 +113,7 @@ def test_auto_slp_h5_json_format(
     suffix,
 ):
     def sleap_convert_assert(output_path: Path, slp_path):
-        args = f"--format {output_path.suffix[1:]} {slp_path}".split()
+        args = f"--format {output_path.suffix[1:]} -o {output_path} {slp_path}".split()
         print(f"args = {args}")
         sleap_convert(args)
         assert Path(output_path).exists()
@@ -118,8 +121,8 @@ def test_auto_slp_h5_json_format(
     labels = min_labels_slp
     slp_path = PurePath(min_labels_slp_path)
     new_slp_path = PurePath(tmpdir, slp_path.name)
-    labels.save(new_slp_path)
+    labels.save(str(new_slp_path))  # Convert to string for sleap-io
 
     output_path = Path(f"{new_slp_path}{suffix}")
     print(f"output_path = {output_path}")
-    sleap_convert_assert(output_path, new_slp_path)
+    sleap_convert_assert(output_path, str(new_slp_path))  # Convert to string

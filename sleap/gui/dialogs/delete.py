@@ -8,7 +8,7 @@ from sleap_io import LabeledFrame, Instance
 from qtpy import QtCore, QtWidgets
 
 from typing import List, Text, Tuple
-from sleap.sleap_io_adaptors.lf_labels_utils import remove_instance
+from sleap.sleap_io_adaptors.lf_labels_utils import remove_instance, labels_pop
 
 
 class DeleteDialog(QtWidgets.QDialog):
@@ -221,7 +221,7 @@ class DeleteDialog(QtWidgets.QDialog):
                         lab_fr.video.matches_content(lf.video)
                         and lab_fr.frame_idx == lf.frame_idx
                     ):
-                        self.context.labels.pop(lf_idx)
+                        labels_pop(self.context.labels, lf_idx)
         self.context.labels.update()
 
         # # Update caches since we skipped doing this after each deletion

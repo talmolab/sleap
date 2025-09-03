@@ -4,7 +4,13 @@ from qtpy.QtWidgets import QApplication
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
 from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
-from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    get_instances_to_show,
+    labels_get_suggestions,
+    labels_get,
+    labels_add_video,
+    labels_clear_suggestions,
+)
 
 
 def test_app_workflow(
@@ -277,11 +283,13 @@ def test_app_workflow(
     # Check that frames returned by labeled frames cache are correct
     prev_idx = -frame_delta
     for l_suggestion, st_suggestion in list(
-        zip(app.labels.get_suggestions(), app.suggestions_dock.table.model().items)
+        zip(
+            labels_get_suggestions(app.labels), app.suggestions_dock.table.model().items
+        )
     ):
         assert l_suggestion == st_suggestion["SuggestionFrame"]
-        lf = app.labels.get(
-            (l_suggestion.video, l_suggestion.frame_idx), use_cache=True
+        lf = labels_get(
+            app.labels, (l_suggestion.video, l_suggestion.frame_idx), use_cache=True
         )
         assert type(lf) == LabeledFrame
         assert lf.video == video_clip
@@ -290,13 +298,13 @@ def test_app_workflow(
 
     # Add video, add frame suggestions, remove the video, verify the frame suggestions
     # are also removed
-    app.labels.add_video(small_robot_mp4_vid)
+    labels_add_video(app.labels, small_robot_mp4_vid)
     app.on_data_update([UpdateTopic.video])
 
     assert len(app.labels.videos) == 2
 
     # Generate suggested frames in both videos
-    app.labels.clear_suggestions()
+    labels_clear_suggestions(app.labels)
     num_samples = 3
     app.labels.suggestions = VideoFrameSuggestions.suggest(
         labels=app.labels,

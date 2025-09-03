@@ -54,21 +54,21 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
 
 
 @pytest.mark.parametrize("background", ["original", "black", "white", "grey"])
-def test_sleap_render_with_different_backgrounds(background):
+def test_sleap_render_with_different_backgrounds(
+    background, centered_pair_predictions_slp_path, tmp_path
+):
+    output_video = tmp_path / f"test_{background}.avi"
     args = (
-        f"-o test_{background}.avi -f 2 --scale 1.2 --frames 1,2 --video-index 0 "
+        f"-o {output_video} -f 2 --scale 1.2 --frames 1,2 --video-index 0 "
         f"--background {background} "
-        "tests/data/json_format_v2/centered_pair_predictions.json".split()
+        f"{centered_pair_predictions_slp_path}".split()
     )
     sleap_render(args)
-    assert (
-        os.path.exists(f"test_{background}.avi")
-        and os.path.getsize(f"test_{background}.avi") > 0
-    )
+    assert output_video.exists() and output_video.stat().st_size > 0
 
     # Check if the background is set correctly if not original background
     if background != "original":
-        saved_video_path = f"test_{background}.avi"
+        saved_video_path = str(output_video)
         cap = cv2.VideoCapture(saved_video_path)
         ret, frame = cap.read()
 
@@ -93,13 +93,14 @@ def test_sleap_render_with_different_backgrounds(background):
         assert background_color == background
 
 
-def test_sleap_render(centered_pair_predictions):
+def test_sleap_render(centered_pair_predictions_slp_path, tmp_path):
+    output_video = tmp_path / "testvis.avi"
     args = (
-        "-o testvis.avi -f 2 --scale 1.2 --frames 1,2 --video-index 0 "
-        "tests/data/json_format_v2/centered_pair_predictions.json".split()
+        f"-o {output_video} -f 2 --scale 1.2 --frames 1,2 --video-index 0 "
+        f"{centered_pair_predictions_slp_path}".split()
     )
     sleap_render(args)
-    assert os.path.exists("testvis.avi")
+    assert output_video.exists()
 
 
 @pytest.mark.parametrize("crop", ["Half", "Quarter", None])

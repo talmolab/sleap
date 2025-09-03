@@ -3,7 +3,6 @@ Module for generating lists of frames using frame features, pca, kmeans, etc.
 """
 
 import attr
-import cattr
 import itertools
 import logging
 import numpy as np
@@ -639,12 +638,14 @@ class ParallelFeaturePipeline(object):
     """
 
     pipeline: FeatureSuggestionPipeline
-    videos_as_dicts: List[Dict]
+    videos_for_processes: List
 
     def get(self, video_idx):
         """Apply pipeline to single video by idx. Can be called in process."""
-        video_dict = self.videos_as_dicts[video_idx]
-        video = Video.cattr().structure(video_dict, Video)
+        video = self.videos_for_processes[video_idx]
+        # Reopen video in the new process
+        if not video.is_open:
+            video.open()
         group_offset = video_idx * self.pipeline.n_clusters
 
         # t0 = time()
@@ -662,8 +663,20 @@ class ParallelFeaturePipeline(object):
     @classmethod
     def make(cls, pipeline, videos):
         """Make class object from pipeline and list of videos."""
-        videos_as_dicts = cattr.unstructure(videos)
-        return cls(pipeline, videos_as_dicts)
+        import copy
+
+        # Use close -> copy strategy for sleap-io Video compatibility
+        # Don't reopen until inside the subprocess worker
+        videos_for_processes = []
+        for video in videos:
+            was_open = video.is_open
+            video.close()  # Close original for safe copying
+            video_copy = copy.deepcopy(video)  # Copy the closed video
+            if was_open:
+                video.open()  # Reopen original, but keep copy closed
+            videos_for_processes.append(video_copy)  # Send closed copy to processes
+
+        return cls(pipeline, videos_for_processes)
 
     @classmethod
     def tuples_to_suggestions(cls, tuples, videos):

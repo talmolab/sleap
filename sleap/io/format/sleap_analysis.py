@@ -17,7 +17,7 @@ from typing import Union
 
 from sleap_io import Labels, Video, LabeledFrame
 from sleap_io import Skeleton
-from sleap_io.model.instance import PredictedInstance, Track
+from sleap_io.model.instance import Track
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
@@ -111,8 +111,10 @@ class SleapAnalysisAdaptor(Adaptor):
                     point_scores = np.ones(len(points))
                     # make everything a PredictedInstance since the usual use
                     # case is to export predictions for analysis
-                    from sleap.sleap_io_adaptors.instance_utils import predicted_instance_from_numpy_compat
-                    
+                    from sleap.sleap_io_adaptors.instance_utils import (
+                        predicted_instance_from_numpy_compat,
+                    )
+
                     instances.append(
                         predicted_instance_from_numpy_compat(
                             points=points,

@@ -1,3 +1,4 @@
+import pytest
 from sleap.info.summary import StatisticSeries
 
 
@@ -12,13 +13,13 @@ def test_frame_statistics(simple_predictions):
 
     x = stats.get_point_score_series(video, "sum")
     assert len(x) == 2
-    assert x[0] == 2.4
-    assert x[1] == 5.2
+    assert x[0] == pytest.approx(2.4)
+    assert x[1] == pytest.approx(5.2)
 
     x = stats.get_point_score_series(video, "min")
     assert len(x) == 2
-    assert x[0] == 0.5
-    assert x[1] == 1.0
+    assert x[0] == pytest.approx(0.5)
+    assert x[1] == pytest.approx(1.0)
 
     x = stats.get_instance_score_series(video, "sum")
     assert len(x) == 2

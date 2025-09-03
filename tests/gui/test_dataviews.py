@@ -30,7 +30,9 @@ def test_skeleton_nodes(qtbot, centered_pair_predictions):
     table = GenericTableView(
         row_name="instance",
         name_prefix="",
-        model=LabeledFrameTableModel(items=centered_pair_predictions.labeled_frames[13]),
+        model=LabeledFrameTableModel(
+            items=centered_pair_predictions.labeled_frames[13]
+        ),
     )
     table.selectRow(1)
     assert table.model().data(table.currentIndex()) == "21/24"
@@ -41,7 +43,9 @@ def test_table_sort(qtbot, centered_pair_predictions):
         row_name="instance",
         is_sortable=True,
         name_prefix="",
-        model=LabeledFrameTableModel(items=centered_pair_predictions.labeled_frames[13]),
+        model=LabeledFrameTableModel(
+            items=centered_pair_predictions.labeled_frames[13]
+        ),
     )
     table.selectRow(1)
     assert table.model().data(table.currentIndex()) == "21/24"

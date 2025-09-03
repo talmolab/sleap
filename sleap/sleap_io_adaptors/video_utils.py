@@ -52,7 +52,11 @@ def video_util_reset(video: Video, filename: str = None, grayscale: bool = None)
 
     # potential breaking change
     if (filename is not None) or (grayscale is not None):
-        video.keep_open = False  # Reader depends on both filename and grayscale
+        # In sleap-io, keep_open is a backend attribute, not a video attribute
+        if hasattr(video, "backend") and hasattr(video.backend, "keep_open"):
+            video.backend.keep_open = (
+                False  # Reader depends on both filename and grayscale
+            )
 
 
 def get_last_frame_idx(video=None):
@@ -67,3 +71,64 @@ def get_last_frame_idx(video=None):
         return max(source_inds)
     else:
         return len(video) - 1
+
+
+def video_get_frames(video: Video) -> int:
+    """Get frame count for backward compatibility.
+
+    Args:
+        video: Video object to get frame count from.
+
+    Returns:
+        Number of frames in the video.
+    """
+    return len(video)
+
+
+def video_get_height(video: Video) -> int:
+    """Get video height for backward compatibility.
+
+    Args:
+        video: Video object to get height from.
+
+    Returns:
+        Height of video frames in pixels.
+    """
+    return video.shape[1] if len(video.shape) > 1 else None
+
+
+def video_get_width(video: Video) -> int:
+    """Get video width for backward compatibility.
+
+    Args:
+        video: Video object to get width from.
+
+    Returns:
+        Width of video frames in pixels.
+    """
+    return video.shape[2] if len(video.shape) > 2 else None
+
+
+def video_get_channels(video: Video) -> int:
+    """Get video channels for backward compatibility.
+
+    Args:
+        video: Video object to get channels from.
+
+    Returns:
+        Number of channels in video frames.
+    """
+    return video.shape[3] if len(video.shape) > 3 else 3
+
+
+def video_get_frame(video: Video, idx: int):
+    """Get frame by index for backward compatibility.
+
+    Args:
+        video: Video object to get frame from.
+        idx: Frame index to retrieve.
+
+    Returns:
+        Frame data as numpy array.
+    """
+    return video[idx]

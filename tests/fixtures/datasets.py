@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 import sleap_io as sio
 from sleap_io import LabeledFrame
@@ -116,8 +117,8 @@ def mat_labels():
     return sio.load_leap(TEST_MAT_LABELS)
 
 
-TEST_LEGACY_GRID_LABELS = "tests/data/test_grid/test_grid_labels.legacy.h5"
-TEST_MIDPOINT_GRID_LABELS = "tests/data/test_grid/test_grid_labels.midpoint.h5"
+TEST_LEGACY_GRID_LABELS = "tests/data/test_grid/test_grid_labels.legacy.slp"
+TEST_MIDPOINT_GRID_LABELS = "tests/data/test_grid/test_grid_labels.midpoint.slp"
 
 
 @pytest.fixture
@@ -155,25 +156,21 @@ def simple_predictions():
 
     instances = []
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[1, 1], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([0.5, 0.7], dtype=np.float32),
             score=2,
             track=track_a,
-            points=dict(
-                a=([1, 1], 0.5, True, False),
-                b=([1, 1], 0.5, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[1, 1], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([0.5, 0.7], dtype=np.float32),
             score=5,
             track=track_b,
-            points=dict(
-                a=([1, 1], 0.7, True, False),
-                b=([1, 1], 0.7, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
 
@@ -182,25 +179,21 @@ def simple_predictions():
 
     instances = []
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[4, 5], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([1.0, 1.6], dtype=np.float32),
             score=3,
             track=track_a,
-            points=dict(
-                a=([4, 5], 1.5, True, False),
-                b=([1, 1], 1.0, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[6, 13], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([1.0, 1.6], dtype=np.float32),
             score=6,
             track=track_b,
-            points=dict(
-                a=([6, 13], 1.7, True, False),
-                b=([1, 1], 1.0, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
 
@@ -233,15 +226,21 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
     stick_tracks[2] = None
 
     for f in range(500):
+        from sleap.sleap_io_adaptors.video_utils import (
+            video_get_frames,
+            video_get_height,
+            video_get_width,
+        )
+
         vid = [hdf5_vid, small_robot_mp4_vid][f % 2]
-        label = LabeledFrame(video=vid, frame_idx=f % vid.frames)
+        label = LabeledFrame(video=vid, frame_idx=f % video_get_frames(vid))
 
         fly_instances = []
         for i in range(6):
             fly_instances.append(Instance(skeleton=skeleton, track=fly_tracks[i]))
             for node in skeleton.nodes:
                 fly_instances[i][node] = (
-                    [i % vid.width, i % vid.height],
+                    [i % video_get_width(vid), i % video_get_height(vid)],
                     True,
                     False,
                 )  # (xy, visible, complete)
@@ -253,7 +252,7 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
             )
             for node in stickman.nodes:
                 stickman_instances[i][node] = (
-                    [i % vid.width, i % vid.height],
+                    [i % video_get_width(vid), i % video_get_height(vid)],
                     True,
                     False,
                 )  # (xy, visible, complete)

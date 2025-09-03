@@ -80,7 +80,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
 
     # Remove the first labeled frame
     from sleap.sleap_io_adaptors.lf_labels_utils import labels_remove_frame
-    
+
     labels_remove_frame(centered_pair_predictions, centered_pair_predictions[0])
     assert len(centered_pair_predictions) == 1099
 
@@ -127,7 +127,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     track = centered_pair_predictions.tracks[13]
     instances = find_track_occupancy(centered_pair_predictions, vid, track)
     from sleap.sleap_io_adaptors.lf_labels_utils import labels_frames, remove_instance
-    
+
     for instance in instances:
         # Find the frame that contains this instance
         # since instances don't have frame attribute
@@ -298,7 +298,7 @@ def test_hdf5_video_arg(
 ):
     labels = centered_pair_predictions
     from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
-    
+
     labels_add_video(labels, small_robot_mp4_vid)
 
     output_paths = []
@@ -325,7 +325,9 @@ def test_hdf5_video_arg(
     instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
         copy_instance=labels[0].predicted_instances[0]
     )
-    labels.add_instance(frame=labeled_frame, instance=instance)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_instance
+
+    labels_add_instance(labels, frame=labeled_frame, instance=instance)
     labels.append(labeled_frame)
     print(f"labels.tracks = {labels.tracks}")
     print(f"None in labels.tracks = {None in labels.tracks}")
