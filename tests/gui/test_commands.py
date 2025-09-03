@@ -8,7 +8,15 @@ from pathlib import PurePath, Path
 from qtpy import QtCore
 from typing import List
 
-from sleap_io import Skeleton, Track, PredictedInstance, Labels, LabeledFrame, Instance
+from sleap_io import (
+    Skeleton,
+    Track,
+    PredictedInstance,
+    Labels,
+    LabeledFrame,
+    Instance,
+    load_file,
+)
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
     AddInstance,
@@ -951,13 +959,15 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
     def assert_loaded_package_similar(path_to_pkg: Path, sugg=False, pred=False):
         """Assert that the loaded labels are similar to the original."""
 
+        from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
+
         # Load the labels, but first copy file to a location (which pytest can and will
         # keep in memory, but won't affect our re-use of the original file name)
         filename_for_pytest_to_hoard: Path = path_to_pkg.with_name(
             f"pytest_labels_{time.perf_counter_ns()}{export_extension}"
         )
         shutil.copyfile(path_to_pkg.as_posix(), filename_for_pytest_to_hoard.as_posix())
-        labels_reload: Labels = Labels.load_file(
+        labels_reload: Labels = labels_load_file(
             filename_for_pytest_to_hoard.as_posix()
         )
 

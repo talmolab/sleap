@@ -159,6 +159,12 @@ def remove_video(labels: Labels, video: Video):
         if video.matches_content(vid):
             labels.videos.pop(vid_idx)
 
+        # Remove any suggestions for this video
+        if hasattr(labels, "suggestions"):
+            labels.suggestions = [
+                s for s in labels.suggestions if not s.video.matches_content(video)
+            ]
+
 
 def get_track_occupancy(labels, video):
     """Get track occupancy information for a specific video.
