@@ -12,6 +12,7 @@ from sleap.info.feature_suggestions import (
     FeatureSuggestionPipeline,
     ParallelFeaturePipeline,
 )
+from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 GroupType = int
 
@@ -210,7 +211,7 @@ class VideoFrameSuggestions(object):
 
         for i, lf in enumerate(lfs):
             # Scores from visible instances in frame
-            pred_fs = lf.instances_to_show
+            pred_fs = get_instances_to_show(lf)
             frame_scores = np.array(
                 [inst.score for inst in pred_fs if hasattr(inst, "score")]
             )

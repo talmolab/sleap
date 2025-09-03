@@ -94,6 +94,8 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     track_set_instance,
     make_video_callback,
     load_labels_video_search,
+    clear_suggestion,
+    get_instances_to_show,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
@@ -1982,7 +1984,7 @@ class GoNextTrackFrame(NavCommand):
             # Select the instance in the new track
             lf = context.labels.find(video, next_idx, return_new=True)[0]
             track_instances = [
-                inst for inst in lf.instances_to_show if inst.track == next_track
+                inst for inst in get_instances_to_show(lf) if inst.track == next_track
             ]
             if track_instances:
                 context.state["instance"] = track_instances[0]
@@ -2001,7 +2003,7 @@ class GoFrameGui(NavCommand):
             "Frame Number:",
             context.state["frame_idx"] + 1,
             1,
-            context.state["video"].frames,
+            context.state["video"].shape[0],
         )
         params["frame_idx"] = frame_number - 1
 
@@ -2023,7 +2025,7 @@ class SelectToFrameGui(NavCommand):
             "Frame Number:",
             context.state["frame_idx"] + 1,
             1,
-            context.state["video"].frames,
+            context.state["video"].shape[0],
         )
         params["from_frame_idx"] = context.state["frame_idx"]
         params["to_frame_idx"] = frame_number - 1
@@ -3215,7 +3217,7 @@ class RemoveSuggestion(EditCommand):
         if selected_frame is not None:
             for sug_idx, suggestion in enumerate(context.labels.suggestions):
                 if (
-                    suggestion.video.match_content(selected_frame.video)
+                    suggestion.video.matches_content(selected_frame.video)
                     and suggestion.frame_idx == selected_frame.frame_idx
                 ):
                     context.labels.suggestions.pop(sug_idx)
@@ -3247,7 +3249,7 @@ class ClearSuggestions(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        context.labels.clear_suggestions()
+        clear_suggestion(context.labels)
 
 
 class MergeProject(EditCommand):
