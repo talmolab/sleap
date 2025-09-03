@@ -1210,6 +1210,18 @@ def labels_all_instances(labels: Labels):
     return list(labels.instances)
 
 
+def labels_clear_suggestions(labels: Labels):
+    """Clear all suggestions from labels for backward compatibility.
+    
+    This provides backward compatibility for the missing clear_suggestions() method.
+    In sleap-io, suggestions are stored as a list that can be cleared directly.
+    
+    Args:
+        labels: Labels object to clear suggestions from
+    """
+    labels.suggestions.clear()
+
+
 def labels_copy(labels: Labels) -> Labels:
     """Create a copy of the Labels object.
     

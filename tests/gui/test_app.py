@@ -8,7 +8,8 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     get_instances_to_show,
     labels_get_suggestions,
     labels_get,
-    labels_add_video
+    labels_add_video,
+    labels_clear_suggestions
 )
 
 
@@ -302,7 +303,7 @@ def test_app_workflow(
     assert len(app.labels.videos) == 2
 
     # Generate suggested frames in both videos
-    app.labels.clear_suggestions()
+    labels_clear_suggestions(app.labels)
     num_samples = 3
     app.labels.suggestions = VideoFrameSuggestions.suggest(
         labels=app.labels,
