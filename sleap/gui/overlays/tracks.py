@@ -92,10 +92,13 @@ class TrackTrailOverlay(BaseOverlay):
                     # loop through all nodes
                     for node_i, node in enumerate(nodes):
                         if (
-                            node in inst.points["name"]
+                            node.name in inst.points["name"]
                             and inst.points["visible"][node_i]
                         ):
-                            point = (inst[node].x, inst[node].y)
+                            point = (
+                                inst.points["xy"][node_i][0],
+                                inst.points["xy"][node_i][1],
+                            )
 
                         # Add last location of node so that we can easily
                         # calculate trail length (since we adjust opacity).
