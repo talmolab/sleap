@@ -192,12 +192,15 @@ class MetricsTableModel(GenericTableModel):
         else:
             n_val_str = ""
 
-        arch_str = cfg.config.model.backbone.which_oneof_attrib_name()
-
-        backbone = cfg.config.model.backbone.which_oneof()
-        if hasattr(backbone, "max_stride"):
+        for k, v in cfg.config.model_config.backbone_config.items():
+            if v is not None:
+                arch_str = k
+                break
+        
+        backbone = cfg.config.model_config.backbone_config[arch_str]
+        if "max_stride" in backbone:
             arch_str = f"{arch_str}, max stride: {backbone.max_stride}"
-        if hasattr(backbone, "filters"):
+        if "filters" in backbone:
             arch_str = f"{arch_str}, filters: {backbone.filters}"
 
         # scale = cfg.config.data.preprocessing.input_scaling

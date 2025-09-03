@@ -22,7 +22,7 @@ training:
     range: 1,100
     default: 1
 
-  - name: model.heads.multi_instance.confmaps.sigma
+  - name: model_config.head_configs.bottomup.confmaps.sigma
     label: Sigma for Nodes
     type: double
     default: 5.0
@@ -33,7 +33,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
 
-  - name: model.heads.multi_instance.pafs.sigma
+  - name: model_config.head_configs.bottomup.pafs.sigma
     label: Sigma for Edges
     type: double
     default: 15.0
@@ -70,7 +70,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Centroids
-    name: model.heads.centroid.sigma
+    name: model_config.head_configs.centroid.confmaps.sigma
     type: double
 
   - default: null
@@ -81,7 +81,7 @@ training:
       significantly improve topdown model accuracy as they benefit from a consistent
       geometry of the body parts relative to the center of the image.
     label: Anchor Part
-    name: model.heads.centered_instance.anchor_part
+    name: model_config.head_configs.centered_instance.confmaps.anchor_part
     type: optional_list
 
   - default: 5.0
@@ -92,7 +92,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Nodes
-    name: model.heads.centered_instance.sigma
+    name: model_config.head_configs.centered_instance.confmaps.sigma
     type: double
 
   multi-animal bottom-up-id:
@@ -103,7 +103,7 @@ training:
       affinity field</u>" head to group the nodes into distinct animal
       instances. It also handles classification and tracking.'
 
-  - name: model.heads.multi_class_bottomup.confmaps.sigma
+  - name: model_config.head_configs.multi_class_bottomup.confmaps.sigma
     label: Sigma for Nodes
     type: double
     default: 5.0
@@ -114,7 +114,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
 
-  - name: model.heads.multi_class_bottomup.class_maps.sigma
+  - name: model_config.head_configs.multi_class_bottomup.class_maps.sigma
     label: Sigma for Edges
     type: double
     default: 15.0
@@ -144,7 +144,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Centroids
-    name: model.heads.centroid.sigma
+    name: model_config.head_configs.centroid.confmaps.sigma
     type: double
 
   - default: null
@@ -155,7 +155,7 @@ training:
       significantly improve topdown model accuracy as they benefit from a consistent
       geometry of the body parts relative to the center of the image.
     label: Anchor Part
-    name: model.heads.multi_class_topdown.confmaps.anchor_part
+    name: model_config.head_configs.multi_class_topdown.confmaps.anchor_part
     type: optional_list
 
   - default: 5.0
@@ -166,7 +166,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Nodes
-    name: model.heads.multi_class_topdown.confmaps.sigma
+    name: model_config.head_configs.multi_class_topdown.confmaps.sigma
     type: double
 
   single animal:
@@ -178,7 +178,7 @@ training:
       For predicting on videos with more than one animal per frame, use a
       multi-animal pipeline (even if your training data has one instance per frame).'
 
-  - name: model.heads.single_instance.sigma
+  - name: model_config.head_configs.single_instance.confmaps.sigma
     label: Sigma for Nodes
     type: double
     default: 5.0
@@ -234,7 +234,7 @@ training:
     started at the same exact time to be mapped to the same folder, or when a fixed
     run name is specified.
   label: Run Name Prefix
-  name: outputs.run_name_prefix
+  name: outputs.run_name_prefix # TODO:cfg:
   type: string
 - default: models
   help: 'Path to the folder that run data should be stored in. All the data for a
@@ -245,27 +245,27 @@ training:
     if they do not already exist. Defaults to the "models" subdirectory of the current
     working directory.'
   label: Runs Folder
-  name: outputs.runs_folder
+  name: outputs.runs_folder # TODO:cfg:
   type: string
 - default: ''
   help: A list of strings to use as "tags" that can be used to organize multiple runs.
     These are not used for anything during training or inference, so they can be used
     to store arbitrary user-specified metadata.
   label: Tags
-  name: outputs.tags
+  name: outputs.tags # TODO:cfg:
   type: string_list
 - default: true
   help: 'If True, the model will be saved at the end of an epoch if the validation
     loss has improved. If enabled, the model will be serialized to: "{run_folder}/best_model.h5"'
   label: Best Model
-  name: outputs.checkpointing.best_model
+  name: trainer_config.save_ckpt
   type: bool
 - default: false
   help: 'If True, the model will be saved at the end of every epoch, regardless of
     whether there was an improvement detected, but will overwrite the previous latest
     model. If enabled, the model will be serialized to: "{run_folder}/latest_model.h5"'
   label: Latest Model
-  name: outputs.checkpointing.latest_model
+  name: trainer_config.model_ckpt.save_last
   type: bool
 
 - name: _save_viz
