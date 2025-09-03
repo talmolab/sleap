@@ -2576,10 +2576,10 @@ class SetNodeName(EditCommand):
         name = params["name"]
         skeleton = params["skeleton"]
 
-        if name in skeleton.node_names:
+        # if name in skeleton.node_names:
+        if context.labels is not None:
             # Merge
-            # context.labels.merge_nodes(name, node.name)
-            merge_nodes(name, node.name, context.labels, skeleton)
+            context.labels.rename_nodes({node.name: name})
         else:
             # Simple relabel
             skeleton.rename_node(node.name, name)
