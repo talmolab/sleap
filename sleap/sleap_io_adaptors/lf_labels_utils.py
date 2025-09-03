@@ -655,7 +655,7 @@ def get_template_instance_points(labels: Labels, skeleton: Skeleton):
     if not hasattr(labels, "labeled_frames"):
         print("Labels object has no labeled_frames attribute")
         return None
-    
+
     # Check if labeled_frame list is empty
     if not labels.labeled_frames:
         # No labeled frames so use force-directed graph layout
@@ -694,7 +694,6 @@ def get_template_instance_points(labels: Labels, skeleton: Skeleton):
         # No instances, use fallback
         template_points = np.random.randint(0, 50, size=(len(skeleton.nodes), 2))
         return template_points
-
 
     # Get first 1000 instances for this skeleton
     try:

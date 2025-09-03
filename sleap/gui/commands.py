@@ -3754,20 +3754,20 @@ class AddMissingInstanceNodes(EditCommand):
     def add_nodes_from_template(
         cls,
         context,
-        instance, # should be zeroes
+        instance,  # should be zeroes
         visible: bool = False,
         center_point: QtCore.QPoint = None,
     ):
         # Get the "template" instance
         # context.labels.get_template_instance()
-        template_points = get_template_instance_points( # <---- sleap_io adapter function
+        template_points = get_template_instance_points(
             context.labels, skeleton=instance.skeleton
         )
 
         # Align the template on to the current instance with missing points
         if not np.all(np.isnan(instance.numpy())) and not np.allclose(
-                instance.numpy(), 0.0
-            ):
+            instance.numpy(), 0.0
+        ):
             aligned_template = align.align_instance_points(
                 source_points_array=template_points,
                 target_points_array=instance.points["xy"],
@@ -3783,11 +3783,10 @@ class AddMissingInstanceNodes(EditCommand):
         input_arrays = PointsArray.empty(len(instance.skeleton.nodes))
         # Make missing points from the aligned template
         for i, node in enumerate(instance.skeleton.nodes):
-            if np.all(np.isnan(instance.points[i]['xy'])) or np.allclose(
+            if np.all(np.isnan(instance.points[i]["xy"])) or np.allclose(
                 instance.points[i]["xy"], 0.0, equal_nan=True
             ):
                 x, y = aligned_template[i]
-                
                 input_array = np.array(
                     [([x, y], visible, False, node.name)],
                     dtype=[
