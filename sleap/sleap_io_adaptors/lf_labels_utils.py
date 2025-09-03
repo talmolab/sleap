@@ -1273,9 +1273,17 @@ def labels_load_file(filename: str, **kwargs) -> Labels:
     """Load a Labels object from file.
 
     This provides backward compatibility for the missing static load_file() method.
-    Simply wraps the sleap_io.load_file() function.
+    Handles video_search parameter that sleap-io doesn't support.
     """
-    return load_file(filename, **kwargs)
+    # Extract video_search parameter if present
+    video_search = kwargs.pop("video_search", None)
+
+    if video_search is not None:
+        # Use existing video search function
+        return load_labels_video_search(filename, video_search)
+    else:
+        # Standard load without video search
+        return load_file(filename, **kwargs)
 
 
 # Attribute compatibility functions
