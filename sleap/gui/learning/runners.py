@@ -22,6 +22,7 @@ from sleap_io import Labels, Video, LabeledFrame
 from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.sleap_io_adaptors.lf_labels_utils import load_and_match
 from sleap.gui.config_utils import filter_cfg
+
 logger = logging.getLogger(__name__)
 
 
@@ -279,7 +280,9 @@ class InferenceTask:
             "_max_instances" in self.inference_params
             and self.inference_params["_max_instances"] is not None
         ):
-            cli_args.extend(["--max_instances", self.inference_params["_max_instances"]])
+            cli_args.extend(
+                ["--max_instances", self.inference_params["_max_instances"]]
+            )
 
         # add tracking args
         if (
@@ -429,7 +432,12 @@ def write_pipeline_files(
     for cfg_info in config_info_list:
         if not cfg_info.dont_retrain:
             # Update config.
-            cfg_info.config.trainer_config.save_ckpt_path += OmegaConf.select(cfg_info.config, "trainer_config.save_ckpt_path", default="") + cfg_info.head_name
+            cfg_info.config.trainer_config.save_ckpt_path += (
+                OmegaConf.select(
+                    cfg_info.config, "trainer_config.save_ckpt_path", default=""
+                )
+                + cfg_info.head_name
+            )
 
     training_jobs = []
     for cfg_info in config_info_list:
@@ -483,7 +491,9 @@ def write_pipeline_files(
             training_jobs.append(
                 {
                     "cfg": new_cfg_filename,
-                    "run_path": Path(cfg_info.config.trainer_config.save_ckpt_path).as_posix(),
+                    "run_path": Path(
+                        cfg_info.config.trainer_config.save_ckpt_path
+                    ).as_posix(),
                     "train_labels": os.path.basename(labels_filename),
                 }
             )
@@ -688,9 +698,7 @@ def run_gui_training(
             # so we have access to them here (rather than letting
             # train_subprocess update them).
             # training.Trainer.set_run_name(job, labels_filename)
-            folder_path = os.path.join(
-                os.path.dirname(labels_filename), "models"
-            )
+            folder_path = os.path.join(os.path.dirname(labels_filename), "models")
             base_run_name = f"{model_type}.n={len(labels.user_labeled_frames)}"
             job.trainer_config.save_ckpt_path = os.path.join(
                 folder_path,

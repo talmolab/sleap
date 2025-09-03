@@ -193,7 +193,7 @@ class MetricsTableModel(GenericTableModel):
             n_val_str = ""
 
         arch_str = get_backbone_from_omegaconf(cfg.config)
-        
+
         backbone = cfg.config.model_config.backbone_config[arch_str]
         if "max_stride" in backbone:
             arch_str = f"{arch_str}, max stride: {backbone.max_stride}"

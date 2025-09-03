@@ -2,6 +2,7 @@ from typing import Tuple
 import os
 from omegaconf import OmegaConf, DictConfig
 
+
 def filter_cfg(cfg):
     """Filter out keys that start with underscore to get training config."""
     for k, v in cfg.items():
@@ -10,6 +11,7 @@ def filter_cfg(cfg):
         elif isinstance(v, DictConfig):
             filter_cfg(v)
     return cfg
+
 
 def get_keyval_dict_from_omegaconf(cfg, parent_key="", sep="."):
     """Get a flat dictionary from an OmegaConf object."""
@@ -22,6 +24,7 @@ def get_keyval_dict_from_omegaconf(cfg, parent_key="", sep="."):
             items[new_key] = v
     return items
 
+
 def get_omegaconf_from_gui_form(flat_dict):
     """Get an OmegaConf object from a flat dictionary."""
     result = {}
@@ -33,6 +36,7 @@ def get_omegaconf_from_gui_form(flat_dict):
         d[parts[-1]] = value
     return OmegaConf.create(result)
 
+
 def get_backbone_from_omegaconf(cfg: OmegaConf):
     """Get the backbone model name from the config."""
     for k, v in cfg.model_config.backbone_config.items():
@@ -40,12 +44,14 @@ def get_backbone_from_omegaconf(cfg: OmegaConf):
             return k
     return None
 
+
 def get_head_from_omegaconf(cfg: OmegaConf):
     """Get the head model name from the config."""
     for k, v in cfg.model_config.head_configs.items():
         if v is not None:
             return k
     return None
+
 
 def find_backbone_name_from_key_val_dict(key_val_dict: dict):
     """Find the backbone model name from the config dictionary."""
@@ -56,11 +62,14 @@ def find_backbone_name_from_key_val_dict(key_val_dict: dict):
 
     return backbone_name
 
+
 def resolve_strides_from_key_val_dict(
     key_val_dict: dict, backbone_name: str
 ) -> Tuple[int, int]:
     """Find the valid max and output strides from the config dictionary."""
-    max_stride = key_val_dict.get(f"model_config.backbone_config.{backbone_name}.max_stride", None)
+    max_stride = key_val_dict.get(
+        f"model_config.backbone_config.{backbone_name}.max_stride", None
+    )
     output_stride = key_val_dict.get(
         f"model_config.backbone_config.{backbone_name}.output_stride", None
     )
@@ -91,6 +100,7 @@ def resolve_strides_from_key_val_dict(
 
     return max_stride, output_stride
 
+
 def apply_cfg_transforms_to_key_val_dict(key_val_dict):
     """
     Transforms data from form to correct data types before converting to object.
@@ -101,7 +111,9 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         None, modifies dict in place.
     """
     if "_runs_folder" in key_val_dict:
-        key_val_dict["trainer_config.save_ckpt_path"] = os.path.join(key_val_dict["_runs_folder"], key_val_dict["trainer_config.save_ckpt_path"])
+        key_val_dict["trainer_config.save_ckpt_path"] = os.path.join(
+            key_val_dict["_runs_folder"], key_val_dict["trainer_config.save_ckpt_path"]
+        )
 
     if "_ensure_channels" in key_val_dict:
         ensure_channels = key_val_dict["_ensure_channels"].lower()
@@ -121,8 +133,14 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         max_stride, output_stride = resolve_strides_from_key_val_dict(
             key_val_dict, backbone_name
         )
-        key_val_dict[f"model_config.backbone_config.{backbone_name}.output_stride"] = output_stride
-        key_val_dict[f"model_config.backbone_config.{backbone_name}.max_stride"] = max_stride
+        key_val_dict[f"model_config.backbone_config.{backbone_name}.output_stride"] = (
+            output_stride
+        )
+        key_val_dict[f"model_config.backbone_config.{backbone_name}.max_stride"] = (
+            max_stride
+        )
 
     # batch size for val
-    key_val_dict["trainer_config.val_data_loader.batch_size"] = key_val_dict["trainer_config.train_data_loader.batch_size"]
+    key_val_dict["trainer_config.val_data_loader.batch_size"] = key_val_dict[
+        "trainer_config.train_data_loader.batch_size"
+    ]

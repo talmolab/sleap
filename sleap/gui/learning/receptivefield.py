@@ -42,8 +42,10 @@ def compute_rf(down_blocks: int, convs_per_block: int = 2, kernel_size: int = 3)
 def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
     """Gets receptive field information given specific model configuration."""
     model_cfg = cfg.model_config
-    model_cfg.backbone_config.unet.max_stride = int(model_cfg.backbone_config.unet.max_stride)
-    
+    model_cfg.backbone_config.unet.max_stride = int(
+        model_cfg.backbone_config.unet.max_stride
+    )
+
     rf_info = dict(
         size=None,
         max_stride=None,
@@ -53,7 +55,7 @@ def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
     )
     head_type = get_head_from_omegaconf(cfg)
     output_strides = []
-    for k,head_cfg in model_cfg.head_configs[head_type].items():
+    for k, head_cfg in model_cfg.head_configs[head_type].items():
         if k == "class_vectors":
             output_strides.append(int(model_cfg.backbone_config.unet.max_stride))
         else:
@@ -62,11 +64,7 @@ def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
     # Currently, this works only for UNet backbones.
     # TODO: Add support for other backbones.
     try:
-        backbone = "unet"
-        _ = np.log2(
-            model_cfg.backbone_config.unet.max_stride
-            / output_stride
-        )
+        _ = np.log2(model_cfg.backbone_config.unet.max_stride / output_stride)
     except ZeroDivisionError:
         # Unable to create model from these config parameters
         return rf_info

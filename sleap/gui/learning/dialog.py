@@ -2,19 +2,23 @@
 Dialogs for running training and/or inference in GUI.
 """
 
-import json
 import shutil
 import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Text, cast
 
-import cattr
 from qtpy import QtCore, QtGui, QtWidgets
 
 import sleap
 from omegaconf import OmegaConf
 from sleap_io import Labels, Video, Skeleton, load_file
-from sleap.gui.config_utils import get_omegaconf_from_gui_form, apply_cfg_transforms_to_key_val_dict, find_backbone_name_from_key_val_dict, get_keyval_dict_from_omegaconf, filter_cfg
+from sleap.gui.config_utils import (
+    get_omegaconf_from_gui_form,
+    apply_cfg_transforms_to_key_val_dict,
+    find_backbone_name_from_key_val_dict,
+    get_keyval_dict_from_omegaconf,
+    filter_cfg,
+)
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import receptivefield, runners, configs
@@ -33,6 +37,8 @@ NODE_LIST_FIELDS = [
     "model.model_config.head_configs.centroid.confmaps.anchor_part",
     "model.model_config.head_configs.multi_class_topdown.confmaps.anchor_part",
 ]
+
+
 class LearningDialog(QtWidgets.QDialog):
     """
     Dialog for running training and/or inference.
@@ -339,12 +345,22 @@ class LearningDialog(QtWidgets.QDialog):
         set_anchor = False
 
         if "model_config.head_configs.centroid.confmaps.anchor_part" in source_data:
-            anchor_part = source_data["model_config.head_configs.centroid.confmaps.anchor_part"]
+            anchor_part = source_data[
+                "model_config.head_configs.centroid.confmaps.anchor_part"
+            ]
             set_anchor = True
-        elif "model_config.head_configs.centered_instance.confmaps.anchor_part" in source_data:
-            anchor_part = source_data["model_config.head_configs.centered_instance.confmaps.anchor_part"]
+        elif (
+            "model_config.head_configs.centered_instance.confmaps.anchor_part"
+            in source_data
+        ):
+            anchor_part = source_data[
+                "model_config.head_configs.centered_instance.confmaps.anchor_part"
+            ]
             set_anchor = True
-        elif "model_config.head_configs.multi_class_topdown.confmaps.anchor_part" in source_data:
+        elif (
+            "model_config.head_configs.multi_class_topdown.confmaps.anchor_part"
+            in source_data
+        ):
             anchor_part = source_data[
                 "model_config.head_configs.multi_class_topdown.confmaps.anchor_part"
             ]
@@ -354,11 +370,15 @@ class LearningDialog(QtWidgets.QDialog):
         anchor_part = anchor_part or None
 
         if set_anchor:
-            updated_data["model_config.head_configs.centroid.confmaps.anchor_part"] = anchor_part
-            updated_data["model_config.head_configs.centered_instance.confmaps.anchor_part"] = anchor_part
-            updated_data["model_config.head_configs.multi_class_topdown.confmaps.anchor_part"] = (
+            updated_data["model_config.head_configs.centroid.confmaps.anchor_part"] = (
                 anchor_part
             )
+            updated_data[
+                "model_config.head_configs.centered_instance.confmaps.anchor_part"
+            ] = anchor_part
+            updated_data[
+                "model_config.head_configs.multi_class_topdown.confmaps.anchor_part"
+            ] = anchor_part
 
     def update_tabs_from_pipeline(self, source_data):
         self.adjust_data_to_update_other_tabs(source_data)
@@ -477,11 +497,11 @@ class LearningDialog(QtWidgets.QDialog):
     @staticmethod
     def update_loaded_config(
         loaded_cfg: dict, tab_cfg_key_val_dict: dict
-    ): # -> scopedkeydict.ScopedKeyDict:
+    ):  # -> scopedkeydict.ScopedKeyDict:
         """Update a loaded preset config with values from the training editor.
 
         Args:
-            loaded_cfg: A Dict from a yaml file that was loaded from a preset or previous
+            loaded_cfg: Dict from a yaml file that was loaded from a preset or previous
                 training run.
             tab_cfg_key_val_dict: A dictionary with the values extracted from the
                 training editor GUI tab.
@@ -525,7 +545,8 @@ class LearningDialog(QtWidgets.QDialog):
                 else:
                     # Config was loaded, override with the values from the GUI
                     loaded_cfg_scoped = LearningDialog.update_loaded_config(
-                        get_keyval_dict_from_omegaconf(trained_cfg_info.config), tab_cfg_key_val_dict
+                        get_keyval_dict_from_omegaconf(trained_cfg_info.config),
+                        tab_cfg_key_val_dict,
                     )
 
                 # Deserialize merged dict to object
@@ -543,14 +564,28 @@ class LearningDialog(QtWidgets.QDialog):
 
                     # Classes should be added here to prevent value error in
                     # model since we don't add them in the training config yaml.
-                    if OmegaConf.select(cfg, "model_config.head_configs.multi_class_bottomup", default=None) is not None:
-                        cfg.model_config.head_configs.multi_class_bottomup.class_maps.classes = [
-                            t.name for t in self.labels.tracks
-                        ]
-                    elif OmegaConf.select(cfg, "model_config.head_configs.multi_class_topdown", default=None) is not None:
-                        cfg.model_config.head_configs.multi_class_topdown.class_vectors.classes = [
-                            t.name for t in self.labels.tracks
-                        ]
+                    if (
+                        OmegaConf.select(
+                            cfg,
+                            "model_config.head_configs.multi_class_bottomup",
+                            default=None,
+                        )
+                        is not None
+                    ):
+                        (
+                            cfg.model_config.head_configs.multi_class_bottomup.class_maps.classes
+                        ) = [t.name for t in self.labels.tracks]
+                    elif (
+                        OmegaConf.select(
+                            cfg,
+                            "model_config.head_configs.multi_class_topdown",
+                            default=None,
+                        )
+                        is not None
+                    ):
+                        (
+                            cfg.model_config.head_configs.multi_class_topdown.class_vectors.classes
+                        ) = [t.name for t in self.labels.tracks]
                         (
                             cfg.model_config.head_configs.multi_class_topdown.class_vectors.output_stride
                         ) = max_stride
@@ -764,6 +799,7 @@ class LearningDialog(QtWidgets.QDialog):
             config_info = config_info.config
             # convert to sleap-nn cfg (yaml)
             from sleap_nn.config.training_job_config import verify_training_cfg
+
             config_info = filter_cfg(config_info)
             cfg = verify_training_cfg(config_info)
             cfg.data_config.train_labels_path = [self.labels_filename]
@@ -1164,11 +1200,17 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self.update_receptive_field()
 
     def update_receptive_field(self):
-        data_form_data = get_omegaconf_from_gui_form(self.form_widgets["data"].get_form_data())
+        data_form_data = get_omegaconf_from_gui_form(
+            self.form_widgets["data"].get_form_data()
+        )
 
-        model_cfg = get_omegaconf_from_gui_form(self.form_widgets["model"].get_form_data())
+        model_cfg = get_omegaconf_from_gui_form(
+            self.form_widgets["model"].get_form_data()
+        )
 
-        rf_image_scale = OmegaConf.select(data_form_data, "data_config.preprocessing.scale", default=1.0)
+        rf_image_scale = OmegaConf.select(
+            data_form_data, "data_config.preprocessing.scale", default=1.0
+        )
 
         if self._receptive_field_widget:
             self._receptive_field_widget.setModelConfig(model_cfg, scale=rf_image_scale)
@@ -1248,7 +1290,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             # Set model form to match config
             cfg = cfg_info.config
             key_val_dict = get_keyval_dict_from_omegaconf(cfg)
-            self.set_fields_from_key_val_dict({"model":key_val_dict})
+            self.set_fields_from_key_val_dict({"model": key_val_dict})
 
         # If user wants to use trained model, then reset entire form to match config
         if use_trained_params:

@@ -75,6 +75,7 @@ def describe_model(model_path, verbose=False):
     import sleap
     import numpy as np
     from omegaconf import OmegaConf
+
     print("=====")
     print("Model:", model_path)
     print("=====")
@@ -84,6 +85,7 @@ def describe_model(model_path, verbose=False):
 
     if "training_config.json" in os.listdir(model_path):
         from sleap_nn.config.training_job_config import TrainingJobConfig
+
         cfg = TrainingJobConfig.load_sleap_config(rel_path("training_config.json"))
     elif "training_config.yaml" in os.listdir(model_path):
         cfg = OmegaConf.load(rel_path("training_config.yaml"))

@@ -147,7 +147,8 @@ class ConfigFileInfo:
     def timestamp(self):
         """Timestamp on file; parsed from filename (not OS timestamp)."""
         match = re.match(
-            r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b", self.config.trainer_config.save_ckpt_path
+            r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b",
+            self.config.trainer_config.save_ckpt_path,
         )
         if match:
             year, month, day = int(match[1]), int(match[2]), int(match[3])
@@ -187,6 +188,7 @@ class ConfigFileInfo:
             from sleap_nn.config.training_job_config import (
                 TrainingJobConfig as snn_TrainingJobConfig,
             )
+
             cfg = snn_TrainingJobConfig.load_sleap_config(path)
         head_name = get_head_from_omegaconf(cfg)
         filename = os.path.basename(path)
@@ -255,10 +257,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             if cfg_info.has_trained_model:
                 display_name += "[Trained] "
 
-            display_name += (
-                f"{cfg.trainer_config.save_ckpt_path}"
-                f"({filename})"
-            )
+            display_name += f"{cfg.trainer_config.save_ckpt_path}({filename})"
 
             if select is not None:
                 if select.config == cfg_info.config:
@@ -509,6 +508,7 @@ class TrainingConfigsGetter:
                 from sleap_nn.config.training_job_config import (
                     TrainingJobConfig as snn_TrainingJobConfig,
                 )
+
                 cfg = snn_TrainingJobConfig.load_sleap_config(path)
             except Exception as e:
                 # Couldn't load so just ignore
