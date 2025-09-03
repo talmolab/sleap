@@ -117,8 +117,8 @@ def mat_labels():
     return sio.load_leap(TEST_MAT_LABELS)
 
 
-TEST_LEGACY_GRID_LABELS = "tests/data/test_grid/test_grid_labels.legacy.h5"
-TEST_MIDPOINT_GRID_LABELS = "tests/data/test_grid/test_grid_labels.midpoint.h5"
+TEST_LEGACY_GRID_LABELS = "tests/data/test_grid/test_grid_labels.legacy.slp"
+TEST_MIDPOINT_GRID_LABELS = "tests/data/test_grid/test_grid_labels.midpoint.slp"
 
 
 @pytest.fixture
@@ -226,7 +226,12 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
     stick_tracks[2] = None
 
     for f in range(500):
-        from sleap.sleap_io_adaptors.video_utils import video_get_frames, video_get_height, video_get_width
+        from sleap.sleap_io_adaptors.video_utils import (
+            video_get_frames,
+            video_get_height,
+            video_get_width,
+        )
+
         vid = [hdf5_vid, small_robot_mp4_vid][f % 2]
         label = LabeledFrame(video=vid, frame_idx=f % video_get_frames(vid))
 
