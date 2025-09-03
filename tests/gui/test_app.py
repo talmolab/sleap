@@ -8,7 +8,10 @@ from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 
 def test_app_workflow(
-    qtbot, centered_pair_vid: Video, small_robot_mp4_vid: Video, min_tracks_2node_labels: Labels
+    qtbot,
+    centered_pair_vid: Video,
+    small_robot_mp4_vid: Video,
+    min_tracks_2node_labels: Labels,
 ):
     app = MainWindow(no_usage_data=True)
 
@@ -68,8 +71,8 @@ def test_app_workflow(
     assert len(app.state["skeleton"].edges) == 1
 
     # FIXME: for now we'll bypass the video adding gui
-    app.labels.add_video(centered_pair_vid)
-    app.labels.add_video(small_robot_mp4_vid)
+    app.labels.videos.append(centered_pair_vid)
+    app.labels.videos.append(small_robot_mp4_vid)
     app.on_data_update([UpdateTopic.video])
 
     assert len(app.labels.videos) == 2
@@ -133,13 +136,13 @@ def test_app_workflow(
         inst_27_0, {"a": (15, 20), "b": (15, 40), "c": (40, 40)}
     )
 
-    assert inst_27_0["a"].x == 15
-    assert inst_27_0["a"].y == 20
+    assert inst_27_0["a"]["xy"][0] == 15
+    assert inst_27_0["a"]["xy"][1] == 20
 
     # Toggle node visibility
-    assert inst_27_0["b"].visible
+    assert inst_27_0["b"]["visible"]
     app.commands.setInstancePointVisibility(inst_27_0, "b", False)
-    assert not inst_27_0["b"].visible
+    assert not inst_27_0["b"]["visible"]
 
     # Select and delete instance
     app.state["instance"] = inst_27_1
@@ -348,9 +351,7 @@ def test_app_new_window(qtbot, min_labels_slp_path, centered_pair_predictions_sl
     assert wins == start_wins
 
     # this time it will open in new window, so current window shouldn't change
-    OpenProject.do_action(
-        win.commands, dict(filename=min_labels_slp_path)
-    )
+    OpenProject.do_action(win.commands, dict(filename=min_labels_slp_path))
 
     assert win.state["filename"] == centered_pair_predictions_slp_path
 
