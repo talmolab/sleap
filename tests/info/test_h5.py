@@ -40,9 +40,9 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
 
     def assert_instance_points(points, inst: Instance, track_idx: int, frame_idx: int):
         instance_points = points[frame_idx, :, :, track_idx]
-        for node_idx, _ in enumerate(inst.nodes):
-            assert instance_points[node_idx][0] == inst[node_idx].x
-            assert instance_points[node_idx][1] == inst[node_idx].y
+        for node_idx, _ in enumerate(inst.points):
+            assert instance_points[node_idx][0] == inst.points[node_idx]["xy"][0]
+            assert instance_points[node_idx][1] == inst.points[node_idx]["xy"][1]
 
     names = get_tracks_as_np_strings(centered_pair_predictions)
     assert len(names) == 27
@@ -159,7 +159,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
         names, occupancy, points, point_scores, instance_scores, tracking_scores
     )
     assert_output_matrices_shape(
-        num_tracks=26, num_frames=1100, num_nodes=24, check_names=True
+        num_tracks=27, num_frames=1100, num_nodes=24, check_names=True
     )
 
     # Create a user-instance from a predicted-instance
@@ -171,11 +171,13 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     )
     # Make a minor modification to the user-instance to differentiate
     node_idx = 0
-    user_instance[node_idx] = ([1, 1], True, True)  # (xy, visible, complete)
-    centered_pair_predictions.add_instance(lf, user_instance)
+    user_instance[node_idx]["xy"] = np.array([1, 1])
+    user_instance[node_idx]["visible"] = True
+    user_instance[node_idx]["complete"] = True
+    labels_add_instance(centered_pair_predictions, lf, user_instance)
 
     # Add another predicted instance (same track) incase ordering matters
-    centered_pair_predictions.add_instance(lf, lf.predicted_instances[0])
+    labels_add_instance(centered_pair_predictions, lf, lf.predicted_instances[0])
 
     # Ensure user-instance is used in occupancy matrix instead of predicted-instance
     (
@@ -189,7 +191,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     assert_instance_points(
         points,
         user_instance,
-        track_idx=user_instance.track.spawned_on,
+        track_idx=0,
         frame_idx=lf.frame_idx,
     )
 
