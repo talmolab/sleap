@@ -578,7 +578,6 @@ def test_OpenSkeleton(
     # Run without OpenSkeleton.ask()
     params = {"filename": fly_legs_skeleton_json}
     new_skeleton = OpenSkeleton.load_skeleton(fly_legs_skeleton_json)
-    new_skeleton.add_symmetry(new_skeleton.nodes[0], new_skeleton.nodes[1])
     OpenSkeleton.do_action(context, params)
     print("line: 586:", skeleton.symmetries)
     assert len(labels.skeletons) == 1
