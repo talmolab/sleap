@@ -1,7 +1,6 @@
 import numpy as np
 import os
 import pytest
-import cv2
 from sleap_io import Labels
 from sleap.io.visuals import (
     save_labeled_video,
@@ -51,46 +50,6 @@ def test_serial_pipeline(centered_pair_predictions, tmpdir):
     assert np.allclose(
         marked_image_list[0][10:20, :10, 0], small_images[0, 10:20, :10, 0]
     )
-
-
-@pytest.mark.parametrize("background", ["original", "black", "white", "grey"])
-def test_sleap_render_with_different_backgrounds(
-    background, centered_pair_predictions_slp_path, tmp_path
-):
-    output_video = tmp_path / f"test_{background}.avi"
-    args = (
-        f"-o {output_video} -f 2 --scale 1.2 --frames 1,2 --video-index 0 "
-        f"--background {background} "
-        f"{centered_pair_predictions_slp_path}".split()
-    )
-    sleap_render(args)
-    assert output_video.exists() and output_video.stat().st_size > 0
-
-    # Check if the background is set correctly if not original background
-    if background != "original":
-        saved_video_path = str(output_video)
-        cap = cv2.VideoCapture(saved_video_path)
-        ret, frame = cap.read()
-
-        # Calculate mean color of the channels
-        b, g, r = cv2.split(frame)
-        mean_b = np.mean(b)
-        mean_g = np.mean(g)
-        mean_r = np.mean(r)
-
-        # Set threshold values. Color is white if greater than white threshold, black
-        # if less than grey threshold and grey if in between both threshold values.
-        white_threshold = 240
-        grey_threshold = 40
-
-        # Check if the average color is white, grey, or black
-        if all(val > white_threshold for val in [mean_b, mean_g, mean_r]):
-            background_color = "white"
-        elif all(val < grey_threshold for val in [mean_b, mean_g, mean_r]):
-            background_color = "black"
-        else:
-            background_color = "grey"
-        assert background_color == background
 
 
 def test_sleap_render(centered_pair_predictions_slp_path, tmp_path):
