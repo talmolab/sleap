@@ -3711,7 +3711,7 @@ class AddMissingInstanceNodes(EditCommand):
 
         for node_name in context.state["skeleton"].node_names:
             node_idx = context.state["skeleton"].node_names.index(node_name)
-            if node_name in instance.points["name"] or np.any(
+            if node_name not in instance.points["name"] or np.any(
                 np.isnan(instance.numpy()[node_idx])
             ):
                 # pick random points within currently zoomed view
@@ -3729,7 +3729,18 @@ class AddMissingInstanceNodes(EditCommand):
                 )
                 input_arrays[node_idx] = input_array
             else:
-                input_arrays[node_idx] = instance.numpy()[node_idx]
+                x, y = instance.points[node_idx]["xy"]
+                visible = instance.points[node_idx]["visible"]
+                complete = instance.points[node_idx]["complete"]
+                input_arrays[node_idx] = np.array(
+                    (np.array([x, y]), visible, complete, node_name),
+                    dtype=[
+                        ("xy", "<f8", (2,)),
+                        ("visible", "bool"),
+                        ("complete", "bool"),
+                        ("name", "O"),
+                    ],
+                )
         instance.points = PointsArray.from_array(input_arrays)
 
     @staticmethod
