@@ -861,6 +861,8 @@ def test_PasteInstanceTrack(min_tracks_2node_labels: Labels):
     instance_with_same_track = lf_to_paste.instances[0]
     instance_to_paste = lf_to_paste.instances[1]
     context.state["instance"] = instance_to_paste
+    context.state["labeled_frame"] = lf_to_paste
+    print(instance.track, instance_with_same_track.track, instance_to_paste.track)
     assert instance_to_paste.track != instance.track
     assert instance_with_same_track.track == instance.track
 
