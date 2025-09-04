@@ -28,7 +28,6 @@ def test_frame_item(small_robot_mp4_vid):
     )
 
     assert item.get_raw_image(scale=0.5).shape == (
-        1,
         video_get_height(small_robot_mp4_vid) // 2,
         video_get_width(small_robot_mp4_vid) // 2,
         video_get_channels(small_robot_mp4_vid),
