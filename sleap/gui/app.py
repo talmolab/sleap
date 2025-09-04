@@ -160,6 +160,7 @@ class MainWindow(QMainWindow):
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
         self.state["share usage data"] = prefs["share usage data"]
+        self.state["debug mode"] = False
         self.state["skeleton_preview_image"] = None
         self.state["skeleton_description"] = "No skeleton loaded yet"
         if no_usage_data:
@@ -1028,6 +1029,7 @@ class MainWindow(QMainWindow):
 
         helpMenu.addSeparator()
         helpMenu.addAction("Keyboard Shortcuts", self._show_keyboard_shortcuts_window)
+        add_menu_check_item(helpMenu, "debug mode", "Debug mode")
 
     def process_events_then(self, action: Callable):
         """Decorates a function with a call to first process events."""

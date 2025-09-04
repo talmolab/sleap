@@ -174,9 +174,6 @@ def ndarray_to_qimage(
     return qimg
 
 
-# LoadImageWorker removed - replaced with FrameLoaderThread in video_worker.py
-
-
 class QtVideoPlayer(QWidget):
     """
     Main QWidget for displaying video with skeleton instances.
@@ -289,6 +286,10 @@ class QtVideoPlayer(QWidget):
 
         # Create the worker thread
         self.worker_thread = FrameLoaderThread()
+        self.worker_thread.debug_mode = self.state["debug mode"]
+        self.state["debug mode"].connect(
+            lambda value: self.worker_thread.set_debug_mode(value)
+        )
 
         # Connect the result signal to display frames
         # This is the ONLY signal connection we need
