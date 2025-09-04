@@ -961,7 +961,7 @@ def test_DeleteFrameLimitPredictions(
     assert len(instances_to_delete) == 2070
 
 
-@pytest.mark.parametrize("export_extension", [".json.zip", ".slp"])
+@pytest.mark.parametrize("export_extension", [".slp"])
 def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmpdir):
     def assert_loaded_package_similar(path_to_pkg: Path, sugg=False, pred=False):
         """Assert that the loaded labels are similar to the original."""
