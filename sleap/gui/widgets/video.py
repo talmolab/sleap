@@ -287,8 +287,8 @@ class QtVideoPlayer(QWidget):
         # Create the worker thread
         self.worker_thread = FrameLoaderThread()
         self.worker_thread.debug_mode = self.state["debug mode"]
-        self.state["debug mode"].connect(
-            lambda value: self.worker_thread.set_debug_mode(value)
+        self.state.connect(
+            "debug mode", lambda value: self.worker_thread.set_debug_mode(value)
         )
 
         # Connect the result signal to display frames
