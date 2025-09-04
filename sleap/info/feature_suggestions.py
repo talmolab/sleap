@@ -231,7 +231,8 @@ class FrameItem(object):
 
     def get_raw_image(self, scale: float = 1.0):
         if scale == 1.0:
-            return self.video[self.frame_idx]
+            # Add batch dimension to ensure 4D output (B, H, W, C)
+            return self.video[self.frame_idx][None, ...]
         else:
             img = self.video[self.frame_idx]
             h, w, c = img.shape
@@ -421,7 +422,7 @@ class ItemStack(object):
             self.data = np.zeros((len(self.items), *data_shape), dtype="uint8")
             for i, img in enumerate(imgs):
                 _, rows, columns, channels = img.shape
-                self.data[i, :rows, :columns, :channels] = img
+                self.data[i, :rows, :columns, :channels] = img[0]
         else:
             self.data = np.concatenate(imgs)
 
@@ -686,7 +687,7 @@ class ParallelFeaturePipeline(object):
         suggestions = []
         for video_idx, frame_idx, group in tuples:
             video = videos[video_idx]
-            suggestions.append(SuggestionFrame(video, frame_idx, group))
+            suggestions.append(SuggestionFrame(video, frame_idx))
         return suggestions
 
     @classmethod
