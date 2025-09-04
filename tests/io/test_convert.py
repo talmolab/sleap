@@ -1,10 +1,15 @@
 from sleap.io.convert import default_analysis_filename, main as sleap_convert
 from sleap_io import Video, Labels
 from sleap_io.model.instance import Instance
-from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video, labels_get
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    labels_add_video,
+    labels_get,
+    labels_add_instance,
+)
 from pathlib import PurePath, Path
 import re
 import pytest
+import numpy as np
 
 
 @pytest.mark.parametrize("format", ["analysis", "analysis.csv"])
@@ -69,18 +74,20 @@ def test_analysis_format(
     # Add video and retest
     labels_add_video(labels, small_robot_mp4_vid)
     slp_path = tmpdir.with_name("new_slp.slp")
-    labels.save(filename=slp_path)
+    labels.save(filename=str(slp_path))
 
     output_paths = [str(tmpdir.with_name("prefix"))]
     sleap_convert_assert(output_paths, slp_path, format)
 
     # Add labeled frame to video and retest
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
-    instance = Instance(skeleton=labels.skeleton, frame=labeled_frame)
-    labels.add_instance(frame=labeled_frame, instance=instance)
+    instance = Instance.from_numpy(
+        np.zeros((len(labels.skeleton), 2)), skeleton=labels.skeleton
+    )
+    labels_add_instance(labels, frame=labeled_frame, instance=instance)
     labels.append(labeled_frame)
     slp_path = tmpdir.with_name("new_slp.slp")
-    labels.save(filename=slp_path)
+    labels.save(filename=str(slp_path))
 
     output_paths = [str(tmpdir.with_name("prefix"))]
     sleap_convert_assert(output_paths, slp_path, format)

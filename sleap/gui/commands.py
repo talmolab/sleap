@@ -796,10 +796,7 @@ class OpenProject(AppCommand):
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
         if params["filename"] is None:
-            filters = [
-                "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
-                "JSON labels (*.json *.json.zip)",
-            ]
+            filters = ["SLEAP dataset (*.slp)"]
 
             filename, selected_filter = FileDialog.open(
                 context.app,
@@ -1612,8 +1609,7 @@ class ExportDatasetWithImages(AppCommand):
         )
 
         filters = [
-            "SLEAP HDF5 dataset (*.slp *.h5)",
-            "Compressed JSON dataset (*.json *.json.zip)",
+            "SLEAP dataset (*.slp)",
         ]
 
         filename, _ = FileDialog.save(
@@ -3258,10 +3254,7 @@ class MergeProject(EditCommand):
     def ask_and_do(cls, context: CommandContext, params: dict):
         filenames = params["filenames"]
         if filenames is None:
-            filters = [
-                "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
-                "SLEAP JSON dataset (*.json *.json.zip)",
-            ]
+            filters = ["SLEAP HDF5 dataset (*.slp)"]
 
             filenames, selected_filter = FileDialog.openMultiple(
                 context.app,
