@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Text
 
 from sleap_io import Skeleton, load_file
 from sleap import util as sleap_utils
-from sleap.gui.config_utils import get_head_from_omegaconf
+from sleap.gui.config_utils import get_head_from_omegaconf, get_skeleton_from_config
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FieldComboWidget
 from omegaconf import OmegaConf
@@ -108,7 +108,8 @@ class ConfigFileInfo:
         if self._skeleton is None and not self._tried_finding_skeleton:
             # if skeleton was saved in config, great!
             if self.config.data_config.skeletons:
-                self._skeleton = self.config.data_config.skeletons[0]
+                skeletons = get_skeleton_from_config(self.config.data_config.skeletons)
+                self._skeleton = skeletons[0] if skeletons else None
 
             # otherwise try loading it from validation labels (much slower!)
             else:
@@ -193,6 +194,7 @@ class ConfigFileInfo:
                 "dist.p95": data["distance_metrics"].item().get("p95"),
                 "dist.p75": data["distance_metrics"].item().get("p75"),
                 "dist.avg": data["distance_metrics"].item().get("avg"),
+                "dist.dists": data["distance_metrics"].item().get("dists"),
             }
             return return_dict
 

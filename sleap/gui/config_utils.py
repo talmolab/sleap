@@ -1,6 +1,7 @@
 from typing import Tuple
 import os
 from omegaconf import OmegaConf, DictConfig
+import sleap_io as sio
 
 
 def filter_cfg(cfg):
@@ -147,3 +148,31 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
     key_val_dict["trainer_config.val_data_loader.num_workers"] = key_val_dict[
         "trainer_config.train_data_loader.num_workers"
     ]
+
+
+def get_skeleton_from_config(skeleton_config: OmegaConf):
+    """Create Sleap-io Skeleton objects from config.
+
+    Args:
+        skeleton_config: OmegaConf object containing the skeleton config.
+
+    Returns:
+        Returns a list of `sio.Skeleton` objects created from the skeleton config
+        stored in the `training_config.yaml`.
+
+    """
+    skeletons = []
+    for skel_cfg in skeleton_config:
+        skel = sio.Skeleton(
+            nodes=[n["name"] for n in skel_cfg.nodes], name=skel_cfg.name
+        )
+        skel.add_edges(
+            [(e["source"]["name"], e["destination"]["name"]) for e in skel_cfg.edges]
+        )
+        if skel_cfg.symmetries:
+            for n1, n2 in skel_cfg.symmetries:
+                skel.add_symmetry(n1["name"], n2["name"])
+
+        skeletons.append(skel)
+
+    return skeletons

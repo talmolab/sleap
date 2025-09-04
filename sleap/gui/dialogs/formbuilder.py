@@ -30,6 +30,7 @@ want to add a new type of supported form field.
 from typing import Any, Dict, List, Optional, Text
 
 import yaml
+from omegaconf import ListConfig
 from qtpy import QtCore, QtWidgets
 
 from sleap.gui.dialogs.filedialog import FileDialog
@@ -785,6 +786,12 @@ class OptionalSpinWidget(QtWidgets.QWidget):
         return self.spin_widget.value()
 
     def setValue(self, val):
+        if isinstance(val, ListConfig):
+            if len(val) > 0:
+                val = val[0]
+            else:
+                val = self.noneVal
+
         is_none = self.isNoneVal(val)
         self.check_widget.setChecked(is_none)
         if not is_none:
