@@ -10,16 +10,20 @@ def instances(skeleton, centered_pair_vid):
 
     instances = []
     for i in range(NUM_INSTANCES):
-        instance = Instance(skeleton=skeleton)
-        instance["head"] = ([i * 1, i * 2], True, False)  # (xy, visible, complete)
-        instance["left-wing"] = ([10 + i * 1, 10 + i * 2], True, False)
-        instance["right-wing"] = ([20 + i * 1, 20 + i * 2], True, False)
+        # Create numpy points array for the instance
+        import numpy as np
 
-        # Lets make an NaN entry to test skip_nan as well
-        instance["thorax"]
+        points_array = np.array(
+            [
+                [i * 1, i * 2],
+                [10 + i * 1, 10 + i * 2],
+                [20 + i * 1, 20 + i * 2],
+                [float("nan"), float("nan")],
+            ],
+            dtype=float,
+        )
 
-        # Add a LabeledFrame
-
+        instance = Instance.from_numpy(points_array, skeleton=skeleton)
         instances.append(instance)
 
     return instances
@@ -27,7 +31,10 @@ def instances(skeleton, centered_pair_vid):
 
 @pytest.fixture
 def predicted_instances(instances):
-    return [PredictedInstance.from_instance(i, 1.0) for i in instances]
+    return [
+        PredictedInstance.from_numpy(i.points["xy"], skeleton=i.skeleton, score=1.0)
+        for i in instances
+    ]
 
 
 @pytest.fixture
@@ -39,27 +46,38 @@ def multi_skel_instances(skeleton, stickman):
     # Generate some instances
     NUM_INSTANCES = 500
 
+    import numpy as np
+
     instances = []
+
+    # First skeleton instances
     for i in range(NUM_INSTANCES):
-        instance = Instance(skeleton=skeleton, video=None, frame_idx=i)
-        # (xy, visible, complete)
-        instance["head"] = ([i * 1, i * 2], True, False)
-        instance["left-wing"] = ([10 + i * 1, 10 + i * 2], True, False)
-        instance["right-wing"] = ([20 + i * 1, 20 + i * 2], True, False)
+        points_array = np.array(
+            [
+                [i * 1, i * 2],
+                [10 + i * 1, 10 + i * 2],
+                [20 + i * 1, 20 + i * 2],
+                [float("nan"), float("nan")],  # thorax NaN entry for testing
+            ],
+            dtype=float,
+        )
 
-        # Lets make an NaN entry to test skip_nan as well
-        instance["thorax"]
-
+        instance = Instance.from_numpy(points_array, skeleton=skeleton)
         instances.append(instance)
 
     # Setup some instances of the stick man on the same frames
     for i in range(NUM_INSTANCES):
-        instance = Instance(skeleton=stickman, video=None, frame_idx=i)
-        # (xy, visible, complete)
-        instance["head"] = ([i * 10, i * 20], True, False)
-        instance["body"] = ([100 + i * 1, 100 + i * 2], True, False)
-        instance["left-arm"] = ([200 + i * 1, 200 + i * 2], True, False)
+        # Stickman skeleton typically has different nodes
+        stickman_points = np.array(
+            [
+                [i * 10, i * 20],  # head
+                [100 + i * 1, 100 + i * 2],  # body
+                [200 + i * 1, 200 + i * 2],  # left-arm
+            ],
+            dtype=float,
+        )
 
+        instance = Instance.from_numpy(stickman_points, skeleton=stickman)
         instances.append(instance)
 
     return instances

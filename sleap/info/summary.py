@@ -59,10 +59,10 @@ class StatisticSeries:
 
         for lf in self.labels.find(video):
             val = reduce_funct(
-                point.score
+                point["score"]
                 for inst in lf
                 for point in inst.points
-                if hasattr(inst, "score")
+                if "score" in inst.points.dtype.names
             )
             series[lf.frame_idx] = val
         return series
@@ -169,7 +169,12 @@ class StatisticSeries:
                     if inst.track is not None:
                         track_idx = self.labels.tracks.index(inst.track)
                         if track_idx < track_count:
-                            point = inst.points_array[primary_node_idx, :2]
+                            from sleap.sleap_io_adaptors.instance_utils import (
+                                instance_get_points_array,
+                            )
+
+                            points_array = instance_get_points_array(inst)
+                            point = points_array[primary_node_idx, :2]
                             location_matrix[frame_idx, track_idx] = point
 
                             if not np.all(np.isnan(point)):
@@ -241,10 +246,16 @@ class StatisticSeries:
         val = 0
         for inst in lf:
             if last_lf is not None:
-                last_inst = last_lf.find(track=inst.track)
+                from sleap.sleap_io_adaptors.lf_labels_utils import labeled_frame_find
+
+                last_inst = labeled_frame_find(last_lf, track=inst.track)
                 if last_inst:
-                    points_a = inst.points_array
-                    points_b = last_inst[0].points_array
+                    from sleap.sleap_io_adaptors.instance_utils import (
+                        instance_get_points_array,
+                    )
+
+                    points_a = instance_get_points_array(inst)
+                    points_b = instance_get_points_array(last_inst[0])
                     point_dist = np.linalg.norm(points_a - points_b, axis=1)
                     inst_dist = reduce_function(point_dist)
                     val += inst_dist if not np.isnan(inst_dist) else 0

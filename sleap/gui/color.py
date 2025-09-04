@@ -18,10 +18,11 @@ import yaml
 
 from sleap.util import get_config_file
 from sleap_io.model.instance import Instance, Track
-from sleap_io.model.skeleton import Node
+from sleap_io.model.skeleton import Node, Edge
 from sleap_io import Labels
 from sleap_io.model.skeleton import Skeleton
 from sleap.prefs import prefs
+from sleap.sleap_io_adaptors.skeleton_utils import node_to_index, edge_to_index
 
 
 ColorTupleStringType = Text
@@ -191,7 +192,12 @@ class ColorManager:
     @classmethod
     def is_edge(cls, item) -> bool:
         """Returns whether item is an edge, i.e., pair of nodes."""
-        return cls.is_sequence(item) and len(item) == 2 and cls.is_node(item[0])
+        return (
+            cls.is_sequence(item)
+            and len(item) == 2
+            and cls.is_node(item[0])
+            or isinstance(item, Edge)
+        )
 
     @staticmethod
     def is_node(item) -> bool:
@@ -283,7 +289,7 @@ class ColorManager:
                 node = item[1]
 
             if node:
-                node_idx = parent_skeleton.node_to_index(node)
+                node_idx = node_to_index(parent_skeleton, node)
                 return self.get_color_by_idx(node_idx)
 
             # return (255, 0, 0)
@@ -291,7 +297,7 @@ class ColorManager:
         if self.distinctly_color == "edges" and parent_skeleton:
             edge_idx = 0
             if self.is_edge(item):
-                edge_idx = parent_skeleton.edge_to_index(*item)
+                edge_idx = edge_to_index(parent_skeleton, *item)
             elif self.is_node(item):
                 for i, (src, dst) in enumerate(parent_skeleton.edges):
                     if dst == item:

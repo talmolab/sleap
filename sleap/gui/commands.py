@@ -67,8 +67,8 @@ from sleap.gui.dialogs.message import MessageDialog
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
-from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap_io import LabeledFrame, Labels, save_file
+from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap_io import LabeledFrame, Labels, save_file, SuggestionFrame
 from sleap_io.model.instance import (
     Instance,
     PredictedInstance,
@@ -89,18 +89,17 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     get_next_suggestion,
-    merge_nodes,
     track_swap,
     find_track_occupancy,
     track_set_instance,
     make_video_callback,
     load_labels_video_search,
+    clear_suggestion,
+    get_instances_to_show,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 from sleap_io import save_skeleton
-import json
-from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.sleap_io_adaptors.video_utils import can_use_ffmpeg
 from sleap.info import align
 from sleap.io.format.adaptor import Adaptor
@@ -797,10 +796,7 @@ class OpenProject(AppCommand):
     @staticmethod
     def ask(context: "CommandContext", params: dict) -> bool:
         if params["filename"] is None:
-            filters = [
-                "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
-                "JSON labels (*.json *.json.zip)",
-            ]
+            filters = ["SLEAP dataset (*.slp)"]
 
             filename, selected_filter = FileDialog.open(
                 context.app,
@@ -1024,14 +1020,14 @@ class SaveProjectAs(AppCommand):
     @staticmethod
     def _try_save(context, labels: Labels, filename: str):
         """Helper function which attempts save and handles errors."""
-        from sleap_io.io.nwb import write_nwb
+        import sleap_io as sio
 
         success = False
         try:
             extension = (PurePath(filename).suffix)[1:]
             extension = None if (extension == "slp") else extension
             if extension == "nwb":
-                write_nwb(labels=labels, nwbfile_path=filename)
+                sio.save_nwb(labels=labels, filename=filename)
             else:
                 save_file(labels=labels, filename=filename, format=extension)
             success = True
@@ -1613,8 +1609,7 @@ class ExportDatasetWithImages(AppCommand):
         )
 
         filters = [
-            "SLEAP HDF5 dataset (*.slp *.h5)",
-            "Compressed JSON dataset (*.json *.json.zip)",
+            "SLEAP dataset (*.slp)",
         ]
 
         filename, _ = FileDialog.save(
@@ -1983,7 +1978,7 @@ class GoNextTrackFrame(NavCommand):
             # Select the instance in the new track
             lf = context.labels.find(video, next_idx, return_new=True)[0]
             track_instances = [
-                inst for inst in lf.instances_to_show if inst.track == next_track
+                inst for inst in get_instances_to_show(lf) if inst.track == next_track
             ]
             if track_instances:
                 context.state["instance"] = track_instances[0]
@@ -2002,7 +1997,7 @@ class GoFrameGui(NavCommand):
             "Frame Number:",
             context.state["frame_idx"] + 1,
             1,
-            context.state["video"].frames,
+            context.state["video"].shape[0],
         )
         params["frame_idx"] = frame_number - 1
 
@@ -2024,7 +2019,7 @@ class SelectToFrameGui(NavCommand):
             "Frame Number:",
             context.state["frame_idx"] + 1,
             1,
-            context.state["video"].frames,
+            context.state["video"].shape[0],
         )
         params["from_frame_idx"] = context.state["frame_idx"]
         params["to_frame_idx"] = frame_number - 1
@@ -2293,10 +2288,9 @@ class OpenSkeleton(EditCommand):
 
     @staticmethod
     def load_skeleton(filename: str):
-        with open(filename, "r") as f:
-            skeleton_data = json.load(f)
-        return SkeletonDecoder().decode(data=skeleton_data["nx_graph"])
-        # return `sio.Skeleton` object instead of list
+        import sleap_io as sio
+
+        return sio.load_skeleton(filename)
 
     @staticmethod
     def compare_skeletons(
@@ -2474,7 +2468,9 @@ class OpenSkeleton(EditCommand):
 
         # Delete pre-existing symmetry
         for symmetry in skeleton.symmetries:
-            delete_symmetry(skeleton, symmetry.nodes[0].name, symmetry.nodes[1].name)
+            # In sleap-io, symmetry.nodes is a set, not a list
+            nodes_list = list(symmetry.nodes)
+            delete_symmetry(skeleton, nodes_list[0].name, nodes_list[1].name)
 
         # Link mismatched nodes
         if "linked_nodes" in params.keys():
@@ -2576,10 +2572,10 @@ class SetNodeName(EditCommand):
         name = params["name"]
         skeleton = params["skeleton"]
 
-        if name in skeleton.node_names:
+        # if name in skeleton.node_names:
+        if context.labels is not None:
             # Merge
-            # context.labels.merge_nodes(name, node.name)
-            merge_nodes(name, node.name, context.labels, skeleton)
+            context.labels.rename_nodes({node.name: name}, skeleton=skeleton)
         else:
             # Simple relabel
             skeleton.rename_node(node.name, name)
@@ -3216,7 +3212,7 @@ class RemoveSuggestion(EditCommand):
         if selected_frame is not None:
             for sug_idx, suggestion in enumerate(context.labels.suggestions):
                 if (
-                    suggestion.video.match_content(selected_frame.video)
+                    suggestion.video.matches_content(selected_frame.video)
                     and suggestion.frame_idx == selected_frame.frame_idx
                 ):
                     context.labels.suggestions.pop(sug_idx)
@@ -3248,7 +3244,7 @@ class ClearSuggestions(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        context.labels.clear_suggestions()
+        clear_suggestion(context.labels)
 
 
 class MergeProject(EditCommand):
@@ -3258,10 +3254,7 @@ class MergeProject(EditCommand):
     def ask_and_do(cls, context: CommandContext, params: dict):
         filenames = params["filenames"]
         if filenames is None:
-            filters = [
-                "SLEAP HDF5 dataset (*.slp *.h5 *.hdf5)",
-                "SLEAP JSON dataset (*.json *.json.zip)",
-            ]
+            filters = ["SLEAP HDF5 dataset (*.slp)"]
 
             filenames, selected_filter = FileDialog.openMultiple(
                 context.app,
@@ -3457,7 +3450,6 @@ class AddInstance(EditCommand):
         Returns:
             Whether the new instance has missing nodes.
         """
-
         if copy_instance is None:
             return True
 
@@ -3755,18 +3747,19 @@ class AddMissingInstanceNodes(EditCommand):
     def add_nodes_from_template(
         cls,
         context,
-        instance,
+        instance,  # should be zeroes
         visible: bool = False,
         center_point: QtCore.QPoint = None,
     ):
         # Get the "template" instance
+        # context.labels.get_template_instance()
         template_points = get_template_instance_points(
             context.labels, skeleton=instance.skeleton
         )
 
         # Align the template on to the current instance with missing points
         if not np.all(np.isnan(instance.numpy())) and not np.allclose(
-            instance.points["xy"], 0.0, equal_nan=True
+            instance.numpy(), 0.0
         ):
             aligned_template = align.align_instance_points(
                 source_points_array=template_points,
@@ -3783,7 +3776,9 @@ class AddMissingInstanceNodes(EditCommand):
         input_arrays = PointsArray.empty(len(instance.skeleton.nodes))
         # Make missing points from the aligned template
         for i, node in enumerate(instance.skeleton.nodes):
-            if node.name not in instance.points["name"]:
+            if np.all(np.isnan(instance.points[i]["xy"])) or np.allclose(
+                instance.points[i]["xy"], 0.0, equal_nan=True
+            ):
                 x, y = aligned_template[i]
                 input_array = np.array(
                     [([x, y], visible, False, node.name)],
@@ -3797,6 +3792,7 @@ class AddMissingInstanceNodes(EditCommand):
                 input_arrays[i] = input_array
             else:
                 input_arrays[i] = instance.points[i]
+
         instance.points = PointsArray.from_array(input_arrays)
 
     @classmethod
@@ -3830,6 +3826,7 @@ class AddUserInstancesFromPredictions(EditCommand):
     ) -> Instance:
         # create the new instance
         new_instance = Instance(
+            points=copy_instance.points,
             skeleton=copy_instance.skeleton,
             from_predicted=copy_instance,
         )
@@ -3838,9 +3835,8 @@ class AddUserInstancesFromPredictions(EditCommand):
         for node in new_instance.skeleton.node_names:
             # if we're copying from a skeleton that has this node
             node_idx = new_instance.skeleton.node_names.index(node)
-            if (
-                node in copy_instance.points["name"]
-                and not copy_instance.numpy()[node_idx].isnan()
+            if node in copy_instance.points["name"] and not np.any(
+                np.isnan(copy_instance.numpy()[node_idx])
             ):
                 # just copy x, y, and visible
                 # we don't want to copy a PredictedPoint or score attribute

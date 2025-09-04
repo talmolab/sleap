@@ -1,5 +1,7 @@
 import pytest
+import numpy as np
 
+import sleap_io as sio
 from sleap_io import LabeledFrame
 from sleap_io.model.instance import Instance, PredictedInstance, Track
 from sleap_io import Skeleton
@@ -7,6 +9,7 @@ from sleap_io import Labels
 from sleap_io import Video
 
 TEST_JSON_LABELS = "tests/data/json_format_v1/centered_pair.json"
+TEST_SLP_LABELS = "tests/data/slp_hdf5/centered_pair.slp"
 TEST_JSON_PREDICTIONS = "tests/data/json_format_v2/centered_pair_predictions.json"
 TEST_JSON_MIN_LABELS = "tests/data/json_format_v2/minimal_instance.json"
 TEST_SLP_MIN_LABELS = "tests/data/slp_hdf5/minimal_instance.slp"
@@ -26,12 +29,16 @@ TEST_CSV_PREDICTIONS = (
 
 @pytest.fixture
 def centered_pair_labels():
-    return Labels.load_file(TEST_JSON_LABELS)
+    # FIXME: Legacy JSON format not supported
+    # return sio.load_file(TEST_JSON_LABELS)
+    return sio.load_file(TEST_SLP_LABELS)
 
 
 @pytest.fixture
 def centered_pair_predictions():
-    return Labels.load_file(TEST_JSON_PREDICTIONS)
+    # FIXME: Legacy JSON format not supported
+    # return sio.load_file(TEST_JSON_PREDICTIONS)
+    return sio.load_file(TEST_SLP_PREDICTIONS)
 
 
 @pytest.fixture
@@ -43,12 +50,14 @@ def centered_pair_predictions_sorted(centered_pair_predictions):
 
 @pytest.fixture
 def min_labels():
-    return Labels.load_file(TEST_JSON_MIN_LABELS)
+    # FIXME: Legacy JSON format not supported
+    # return sio.load_file(TEST_JSON_MIN_LABELS
+    return sio.load_file(TEST_SLP_MIN_LABELS)
 
 
 @pytest.fixture
 def min_labels_slp():
-    return Labels.load_file(TEST_SLP_MIN_LABELS)
+    return sio.load_file(TEST_SLP_MIN_LABELS)
 
 
 @pytest.fixture
@@ -58,13 +67,13 @@ def min_labels_slp_path():
 
 @pytest.fixture
 def min_labels_robot():
-    return Labels.load_file(TEST_SLP_MIN_LABELS_ROBOT)
+    return sio.load_file(TEST_SLP_MIN_LABELS_ROBOT)
 
 
 @pytest.fixture
 def siv_robot():
     """Created before grayscale attribute was added to SingleImageVideo backend."""
-    return Labels.load_file(TEST_SLP_SIV_ROBOT, video_search="tests/data/videos/")
+    return sio.load_file(TEST_SLP_SIV_ROBOT)
 
 
 @pytest.fixture
@@ -78,16 +87,12 @@ def siv_robot_caching():
     release), this is a fixture to test that datasets created while `caching` was added
     into the serialization are read in correctly.
     """
-    return Labels.load_file(
-        TEST_SLP_SIV_ROBOT_CACHING, video_search="tests/data/videos/"
-    )
+    return sio.load_file(TEST_SLP_SIV_ROBOT_CACHING)
 
 
 @pytest.fixture
 def min_tracks_2node_labels():
-    return Labels.load_file(
-        TEST_MIN_TRACKS_2NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"]
-    )
+    return sio.load_file(TEST_MIN_TRACKS_2NODE_LABELS)
 
 
 @pytest.fixture
@@ -99,26 +104,21 @@ def min_tracks_2node_predictions():
         "tests/data/tracks/clip.mp4"
     ```
     """
-    return Labels.load_file(
-        "tests/data/tracks/clip.predictions.slp",
-        video_search=["tests/data/tracks/clip.mp4"],
-    )
+    return sio.load_file("tests/data/tracks/clip.predictions.slp")
 
 
 @pytest.fixture
 def min_tracks_13node_labels():
-    return Labels.load_file(
-        TEST_MIN_TRACKS_13NODE_LABELS, video_search=["tests/data/tracks/clip.mp4"]
-    )
+    return sio.load_file(TEST_MIN_TRACKS_13NODE_LABELS)
 
 
 @pytest.fixture
 def mat_labels():
-    return Labels.load_leap_matlab(TEST_MAT_LABELS, gui=False)
+    return sio.load_leap(TEST_MAT_LABELS)
 
 
-TEST_LEGACY_GRID_LABELS = "tests/data/test_grid/test_grid_labels.legacy.h5"
-TEST_MIDPOINT_GRID_LABELS = "tests/data/test_grid/test_grid_labels.midpoint.h5"
+TEST_LEGACY_GRID_LABELS = "tests/data/test_grid/test_grid_labels.legacy.slp"
+TEST_MIDPOINT_GRID_LABELS = "tests/data/test_grid/test_grid_labels.midpoint.slp"
 
 
 @pytest.fixture
@@ -128,9 +128,7 @@ def legacy_grid_labels_path():
 
 @pytest.fixture
 def legacy_grid_labels():
-    return Labels.load_file(
-        TEST_LEGACY_GRID_LABELS, video_search=TEST_LEGACY_GRID_LABELS
-    )
+    return sio.load_file(TEST_LEGACY_GRID_LABELS)
 
 
 @pytest.fixture
@@ -140,9 +138,7 @@ def midpoint_grid_labels_path():
 
 @pytest.fixture
 def midpoint_grid_labels():
-    return Labels.load_file(
-        TEST_MIDPOINT_GRID_LABELS, video_search=TEST_MIDPOINT_GRID_LABELS
-    )
+    return sio.load_file(TEST_MIDPOINT_GRID_LABELS)
 
 
 @pytest.fixture
@@ -160,25 +156,21 @@ def simple_predictions():
 
     instances = []
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[1, 1], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([0.5, 0.7], dtype=np.float32),
             score=2,
             track=track_a,
-            points=dict(
-                a=([1, 1], 0.5, True, False),
-                b=([1, 1], 0.5, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[1, 1], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([0.5, 0.7], dtype=np.float32),
             score=5,
             track=track_b,
-            points=dict(
-                a=([1, 1], 0.7, True, False),
-                b=([1, 1], 0.7, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
 
@@ -187,25 +179,21 @@ def simple_predictions():
 
     instances = []
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[4, 5], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([1.0, 1.6], dtype=np.float32),
             score=3,
             track=track_a,
-            points=dict(
-                a=([4, 5], 1.5, True, False),
-                b=([1, 1], 1.0, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
     instances.append(
-        PredictedInstance(
+        PredictedInstance.from_numpy(
+            np.array([[6, 13], [1, 1]], dtype=np.float32),
             skeleton=skeleton,
+            point_scores=np.array([1.0, 1.6], dtype=np.float32),
             score=6,
             track=track_b,
-            points=dict(
-                a=([6, 13], 1.7, True, False),
-                b=([1, 1], 1.0, True, False),  # (xy, score, visible, complete)
-            ),
         )
     )
 
@@ -238,15 +226,21 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
     stick_tracks[2] = None
 
     for f in range(500):
+        from sleap.sleap_io_adaptors.video_utils import (
+            video_get_frames,
+            video_get_height,
+            video_get_width,
+        )
+
         vid = [hdf5_vid, small_robot_mp4_vid][f % 2]
-        label = LabeledFrame(video=vid, frame_idx=f % vid.frames)
+        label = LabeledFrame(video=vid, frame_idx=f % video_get_frames(vid))
 
         fly_instances = []
         for i in range(6):
             fly_instances.append(Instance(skeleton=skeleton, track=fly_tracks[i]))
             for node in skeleton.nodes:
                 fly_instances[i][node] = (
-                    [i % vid.width, i % vid.height],
+                    [i % video_get_width(vid), i % video_get_height(vid)],
                     True,
                     False,
                 )  # (xy, visible, complete)
@@ -258,7 +252,7 @@ def multi_skel_vid_labels(hdf5_vid, small_robot_mp4_vid, skeleton, stickman):
             )
             for node in stickman.nodes:
                 stickman_instances[i][node] = (
-                    [i % vid.width, i % vid.height],
+                    [i % video_get_width(vid), i % video_get_height(vid)],
                     True,
                     False,
                 )  # (xy, visible, complete)
@@ -288,9 +282,7 @@ def centered_pair_predictions_slp_path():
 
 @pytest.fixture
 def min_dance_labels():
-    return Labels.load_file(
-        TEST_MIN_DANCE_LABELS, video_search=["tests/data/videos/dance.mp4"]
-    )
+    return sio.load_file(TEST_MIN_DANCE_LABELS)
 
 
 @pytest.fixture

@@ -3,7 +3,6 @@ Module for generating lists of frames using frame features, pca, kmeans, etc.
 """
 
 import attr
-import cattr
 import itertools
 import logging
 import numpy as np
@@ -235,10 +234,10 @@ class FrameItem(object):
             return self.video[self.frame_idx]
         else:
             img = self.video[self.frame_idx]
-            _, h, w, c = img.shape
+            h, w, c = img.shape
             h_, w_ = int(h // (1 / scale)), int(w // (1 / scale))
             # note that cv2 expects (width, height) instead of (rows, columns)
-            img = cv2.resize(np.squeeze(img), (w_, h_))[None, ...]
+            img = cv2.resize(np.squeeze(img), (w_, h_))
             if c == 1:
                 img = img[..., None]
             return img
@@ -412,7 +411,8 @@ class ItemStack(object):
 
             # Keep track of shape large enough to hold any of the images
             img_shape = img.shape
-            data_shape = [max(data_shape[i], img_shape[i + 1]) for i in (0, 1, 2)]
+            # get_raw_image returns 3D arrays (H, W, C), so use indices 0, 1, 2 directly
+            data_shape = [max(data_shape[i], img_shape[i]) for i in (0, 1, 2)]
 
             if data_shape != img_shape:
                 mixed_shapes = True
@@ -421,10 +421,11 @@ class ItemStack(object):
             # Make array large enough to hold any image and pad smaller images
             self.data = np.zeros((len(self.items), *data_shape), dtype="uint8")
             for i, img in enumerate(imgs):
-                _, rows, columns, channels = img.shape
+                rows, columns, channels = img.shape
                 self.data[i, :rows, :columns, :channels] = img
         else:
-            self.data = np.concatenate(imgs)
+            # All images have same shape, add batch dimension and concatenate
+            self.data = np.stack(imgs)
 
     def flatten(self):
         """Flattens each row of data to 1-d array."""
@@ -535,14 +536,14 @@ class ItemStack(object):
         return tuples
 
     def to_suggestion_frames(self, group_offset: int = 0) -> List["SuggestionFrame"]:
-        from sleap.gui.suggestions import SuggestionFrame
+        from sleap_io import SuggestionFrame
 
         suggestions = []
         for frame in self.items:
             group = self.current_groupset.get_item_group(frame)
             if group is not None:
                 group += group_offset
-            suggestions.append(SuggestionFrame(frame.video, frame.frame_idx, group))
+            suggestions.append(SuggestionFrame(frame.video, frame.frame_idx))
         return suggestions
 
 
@@ -639,12 +640,14 @@ class ParallelFeaturePipeline(object):
     """
 
     pipeline: FeatureSuggestionPipeline
-    videos_as_dicts: List[Dict]
+    videos_for_processes: List
 
     def get(self, video_idx):
         """Apply pipeline to single video by idx. Can be called in process."""
-        video_dict = self.videos_as_dicts[video_idx]
-        video = Video.cattr().structure(video_dict, Video)
+        video = self.videos_for_processes[video_idx]
+        # Reopen video in the new process
+        if not video.is_open:
+            video.open()
         group_offset = video_idx * self.pipeline.n_clusters
 
         # t0 = time()
@@ -662,8 +665,20 @@ class ParallelFeaturePipeline(object):
     @classmethod
     def make(cls, pipeline, videos):
         """Make class object from pipeline and list of videos."""
-        videos_as_dicts = cattr.unstructure(videos)
-        return cls(pipeline, videos_as_dicts)
+        import copy
+
+        # Use close -> copy strategy for sleap-io Video compatibility
+        # Don't reopen until inside the subprocess worker
+        videos_for_processes = []
+        for video in videos:
+            was_open = video.is_open
+            video.close()  # Close original for safe copying
+            video_copy = copy.deepcopy(video)  # Copy the closed video
+            if was_open:
+                video.open()  # Reopen original, but keep copy closed
+            videos_for_processes.append(video_copy)  # Send closed copy to processes
+
+        return cls(pipeline, videos_for_processes)
 
     @classmethod
     def tuples_to_suggestions(cls, tuples, videos):
@@ -673,7 +688,7 @@ class ParallelFeaturePipeline(object):
         suggestions = []
         for video_idx, frame_idx, group in tuples:
             video = videos[video_idx]
-            suggestions.append(SuggestionFrame(video, frame_idx, group))
+            suggestions.append(SuggestionFrame(video, frame_idx))
         return suggestions
 
     @classmethod

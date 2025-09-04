@@ -1,7 +1,7 @@
 """Command line utility for converting between various dataset formats.
 
 Reads:
-* SLEAP dataset in .slp, .h5, .json, or .json.zip file
+* SLEAP dataset in .slp
 * SLEAP "analysis" file in .h5 format
 * LEAP dataset in .mat file
 * DeepLabCut dataset in .yaml or .csv file
@@ -181,12 +181,12 @@ def main(args: list = None):
 
     elif len(args.outputs) > 0:
         print(f"Output SLEAP dataset: {args.outputs[0]}")
-        save_file(labels, args.outputs[0])
+        save_file(labels, str(args.outputs[0]))
 
     elif args.format in ("slp", "json"):
         output_path = f"{args.input_path}.{args.format}"
         print(f"Output SLEAP dataset: {output_path}")
-        save_file(labels, output_path)
+        save_file(labels, str(output_path))
 
     else:
         print("You didn't specify how to convert the file.")

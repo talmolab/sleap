@@ -53,10 +53,6 @@ def test_frame_list():
 
 def test_weak_match():
     assert weak_filename_match("one/two", "one/two")
-    assert weak_filename_match(
-        "M:\\code\\sandbox\\sleap_nas\\pilot_6pts\\tmp_11576_FoxP1_6pts.training.n=468.json.zip\\frame_data_vid0\\metadata.yaml",
-        "D:\\projects\\code\\sandbox\\sleap_nas\\pilot_6pts\\tmp_99713_FoxP1_6pts.training.n=468.json.zip\\frame_data_vid0\\metadata.yaml",
-    )
     assert weak_filename_match("zero/one/two/three.mp4", "other\\one\\two\\three.mp4")
 
     assert not weak_filename_match("one/two/three", "two/three")

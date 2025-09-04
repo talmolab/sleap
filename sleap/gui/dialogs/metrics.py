@@ -12,7 +12,7 @@ from sleap.gui.dataviews import GenericTableModel, GenericTableView
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import TrainingConfigsGetter, ConfigFileInfo
 from sleap.gui.learning.dialog import TrainingEditorWidget
-
+from sleap.gui.config_utils import get_backbone_from_omegaconf
 from sleap.gui.widgets.mpl import MplCanvas
 
 from typing import Optional, Text
@@ -192,12 +192,12 @@ class MetricsTableModel(GenericTableModel):
         else:
             n_val_str = ""
 
-        arch_str = cfg.config.model.backbone.which_oneof_attrib_name()
+        arch_str = get_backbone_from_omegaconf(cfg.config)
 
-        backbone = cfg.config.model.backbone.which_oneof()
-        if hasattr(backbone, "max_stride"):
+        backbone = cfg.config.model_config.backbone_config[arch_str]
+        if "max_stride" in backbone:
             arch_str = f"{arch_str}, max stride: {backbone.max_stride}"
-        if hasattr(backbone, "filters"):
+        if "filters" in backbone:
             arch_str = f"{arch_str}, filters: {backbone.filters}"
 
         # scale = cfg.config.data.preprocessing.input_scaling

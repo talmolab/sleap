@@ -74,6 +74,7 @@ def describe_labels(data_path, verbose=False):
 def describe_model(model_path, verbose=False):
     import sleap
     import numpy as np
+    from omegaconf import OmegaConf
 
     print("=====")
     print("Model:", model_path)
@@ -82,20 +83,24 @@ def describe_model(model_path, verbose=False):
     def rel_path(x):
         return os.path.join(model_path, x)
 
-    sleap.load_config(rel_path("initial_config.json"))
-    cfg = sleap.load_config(rel_path("training_config.json"))
+    if "training_config.json" in os.listdir(model_path):
+        from sleap_nn.config.training_job_config import TrainingJobConfig
+
+        cfg = TrainingJobConfig.load_sleap_config(rel_path("training_config.json"))
+    elif "training_config.yaml" in os.listdir(model_path):
+        cfg = OmegaConf.load(rel_path("training_config.yaml"))
 
     print("=====")
     print("Heads:")
     print("=====")
-    print(cfg.model.heads)
+    print(cfg.model_config.head_configs)
     print("=====")
     print()
 
     print("=====")
     print("Backbone:")
     print("=====")
-    print(cfg.model.backbone)
+    print(cfg.model_config.backbone_config)
     print("=====")
     print()
     print()

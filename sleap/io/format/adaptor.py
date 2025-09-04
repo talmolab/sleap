@@ -80,9 +80,9 @@ class Adaptor:
         """Returns whether this adaptor can write format of this filename."""
 
         # We don't match the ext against the result of os.path.splitext because
-        # we want to match extensions like ".json.zip".
+        # we want to match extensions like ".pkg.slp".
 
-        return filename.endswith(tuple(self.all_exts))
+        return str(filename).endswith(tuple(self.all_exts))
 
     @property
     def formatted_ext_options(self):

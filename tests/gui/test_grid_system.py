@@ -13,12 +13,12 @@ def test_grid_system_midpoint_gui(qtbot, midpoint_grid_labels):
     assert len(lf) == 1
     inst = lf[0]
 
-    assert inst.points[0].x == -0.5
-    assert inst.points[0].y == -0.5
-    assert inst.points[1].x == 0.0
-    assert inst.points[1].y == 0.0
-    assert inst.points[2].x == -0.5
-    assert inst.points[2].y == 0.5
+    assert inst.points[0]["xy"][0] == -0.5
+    assert inst.points[0]["xy"][1] == -0.5
+    assert inst.points[1]["xy"][0] == 0.0
+    assert inst.points[1]["xy"][1] == 0.0
+    assert inst.points[2]["xy"][0] == -0.5
+    assert inst.points[2]["xy"][1] == 0.5
 
     # app.player  # QtVideoPlayer
     # app.player.view  # GraphicsView(QGraphicsView)
@@ -49,12 +49,17 @@ def test_grid_system_legacy_gui(qtbot, legacy_grid_labels):
     assert len(lf) == 1
     inst = lf[0]
 
-    assert inst.points[0].x == -1
-    assert inst.points[0].y == -1
-    assert inst.points[1].x == -0.5
-    assert inst.points[1].y == -0.5
-    assert inst.points[2].x == -1
-    assert inst.points[2].y == 0
+    # TODO: COORDINATE SYSTEM BUG - sleap-io needs coordinate system fix
+    # for legacy grid labels
+    # These assertions will fail until sleap-io implements the coordinate
+    # system correction
+    # Expected values are correct, actual values from sleap-io are shifted
+    assert inst.points[0]["xy"][0] == -1
+    assert inst.points[0]["xy"][1] == -1
+    assert inst.points[1]["xy"][0] == -0.5
+    assert inst.points[1]["xy"][1] == -0.5
+    assert inst.points[2]["xy"][0] == -1
+    assert inst.points[2]["xy"][1] == 0
 
     # app.player  # QtVideoPlayer
     # app.player.view  # GraphicsView(QGraphicsView)
@@ -78,10 +83,15 @@ def test_grid_system_legacy_gui(qtbot, legacy_grid_labels):
 def test_grid_system_midpoint_labels(midpoint_grid_labels):
     inst = midpoint_grid_labels[0][0]
     np.testing.assert_array_equal(
-        inst.points_array, [[-0.5, -0.5], [0, 0], [-0.5, 0.5]]
+        inst.points["xy"], [[-0.5, -0.5], [0, 0], [-0.5, 0.5]]
     )
 
 
 def test_grid_system_legacy_labels(legacy_grid_labels):
     inst = legacy_grid_labels[0][0]
-    np.testing.assert_array_equal(inst.points_array, [[-1, -1], [-0.5, -0.5], [-1, 0]])
+    # TODO: COORDINATE SYSTEM BUG - sleap-io needs coordinate system fix
+    # for legacy grid labels
+    # Expected: [[-1, -1], [-0.5, -0.5], [-1, 0]]
+    # Actual:   [[-0.5, -0.5], [0, 0], [-0.5, 0.5]]
+    # This test will fail until sleap-io implements the coordinate system correction
+    np.testing.assert_array_equal(inst.points["xy"], [[-1, -1], [-0.5, -0.5], [-1, 0]])

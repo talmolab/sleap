@@ -131,3 +131,8 @@ test*.avi
 
 # Output files
 outputs/
+
+# Temp/scratch files
+plan/
+scratch/
+tmp/
