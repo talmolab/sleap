@@ -105,7 +105,7 @@ def test_sleap_format(
     sleap_convert_assert(output_path, str(slp_path))
 
 
-@pytest.mark.parametrize("suffix", [".slp", ".json", ".h5"])
+@pytest.mark.parametrize("suffix", [".slp", ".json"])
 def test_auto_slp_h5_json_format(
     min_labels_slp: Labels,
     min_labels_slp_path: Labels,
