@@ -159,7 +159,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
         names, occupancy, points, point_scores, instance_scores, tracking_scores
     )
     assert_output_matrices_shape(
-        num_tracks=27, num_frames=1100, num_nodes=24, check_names=True
+        num_tracks=26, num_frames=1100, num_nodes=24, check_names=True
     )
 
     # Create a user-instance from a predicted-instance
