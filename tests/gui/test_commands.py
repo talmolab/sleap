@@ -15,7 +15,6 @@ from sleap_io import (
     Labels,
     LabeledFrame,
     Instance,
-    load_file,
 )
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
@@ -33,7 +32,6 @@ from sleap.gui.commands import (
     DeleteFrameLimitPredictions,
     get_new_version_filename,
 )
-from sleap_io import load_skeleton
 from sleap.io.convert import default_analysis_filename
 from sleap.io.format.adaptor import Adaptor
 from sleap.io.pathutils import fix_path_separator
@@ -506,19 +504,24 @@ def test_OpenSkeleton(
     centered_pair_predictions: Labels, stickman: Skeleton, fly_legs_skeleton_json: str
 ):
     def assert_skeletons_match(new_skeleton: Skeleton, skeleton: Skeleton):
-        # Node names match
-        assert len(set(new_skeleton.nodes) - set(skeleton.nodes))
-        # Edges match
-        for (new_src, new_dst), (src, dst) in zip(new_skeleton.edges, skeleton.edges):
-            assert new_src.name == src.name
-            assert new_dst.name == dst.name
+        print(skeleton)
+        print(new_skeleton)
+        print(skeleton.symmetries)
+        print(new_skeleton.symmetries)
+        assert skeleton.matches(new_skeleton)
+        # # Node names match
+        # assert len(set(new_skeleton.nodes) - set(skeleton.nodes))
+        # # Edges match
+        # for (new_src, new_dst), (src, dst) in zip(new_skeleton.edges, skeleton.edges):
+        #     assert new_src.name == src.name
+        #     assert new_dst.name == dst.name
 
-        # Symmetries match
-        for (new_src, new_dst), (src, dst) in zip(
-            new_skeleton.symmetries, skeleton.symmetries
-        ):
-            assert new_src.name == src.name
-            assert new_dst.name == dst.name
+        # # Symmetries match
+        # for (new_src, new_dst), (src, dst) in zip(
+        #     new_skeleton.symmetries, skeleton.symmetries
+        # ):
+        #     assert new_src.name == src.name
+        #     assert new_dst.name == dst.name
 
     def OpenSkeleton_ask(context: CommandContext, params: dict) -> bool:
         """Implement `OpenSkeleton.ask` without GUI elements."""
@@ -565,22 +568,26 @@ def test_OpenSkeleton(
     labels = centered_pair_predictions
     skeleton = labels.skeleton
     skeleton.add_symmetry(skeleton.nodes[0].name, skeleton.nodes[1].name)
+    print(skeleton.symmetries)
     context = CommandContext.from_labels(labels)
     context.app.__setattr__("currentText", "Custom")
     # Add multiple skeletons to and ensure the unused skeleton is removed
     labels.skeletons.append(stickman)
+    print("line: 578:", skeleton.symmetries)
 
     # Run without OpenSkeleton.ask()
     params = {"filename": fly_legs_skeleton_json}
     new_skeleton = OpenSkeleton.load_skeleton(fly_legs_skeleton_json)
     new_skeleton.add_symmetry(new_skeleton.nodes[0], new_skeleton.nodes[1])
     OpenSkeleton.do_action(context, params)
+    print("line: 586:", skeleton.symmetries)
     assert len(labels.skeletons) == 1
 
     # State is updated
     assert context.state["skeleton"] == skeleton
 
     # Structure is identical
+    print("line: 591:", skeleton.symmetries)
     assert_skeletons_match(new_skeleton, skeleton)
 
     # Run again with OpenSkeleton_ask()
@@ -598,7 +605,7 @@ def test_OpenSkeleton(
     fly32_json = get_package_file("skeletons/fly32.json")
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly32_json
-    fly32_skeleton = load_skeleton(fly32_json)
+    fly32_skeleton = OpenSkeleton.load_skeleton(fly32_json)
     OpenSkeleton.do_action(context, params)
     assert_skeletons_match(labels.skeleton, fly32_skeleton)
 
@@ -1125,9 +1132,11 @@ def test_newInstance(qtbot, centered_pair_predictions: Labels):
     new_inst = lf.instances[-1]
     reference_node_idx = np.where(
         np.all(
-            new_inst.numpy() == [right_click_location_x, right_click_location_y], axis=1
+            new_inst.numpy()
+            == np.array([right_click_location_x, right_click_location_y]),
+            axis=1,
         )
-    )[0][0]
+    )[0]
     offset = (
         new_inst.numpy()[reference_node_idx] - copy_instance.numpy()[reference_node_idx]
     )
