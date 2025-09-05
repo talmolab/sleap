@@ -103,8 +103,8 @@ def remove_all_tracks(labels: Labels):
 
 def remove_frames(labels: Labels, frames: List[LabeledFrame]):
     """Remove a list of frames from the labels dataset."""
-    for lf in frames:
-        for lf_idx, lab_fr in enumerate(labels):
+    for lf in frames: # suggested frames to remove
+        for lf_idx, lab_fr in enumerate(labels): # labels in dataset
             if (
                 lab_fr.video.matches_content(lf.video)
                 and lab_fr.frame_idx == lf.frame_idx
@@ -236,9 +236,10 @@ def get_track_occupancy(labels, video):
     return track_occupancy
 
 
-def add_suggestion(labels, video, frame_idx):
+def add_suggestion(labels: Labels, video: Video, frame_idx: int):
     """Add a suggestion to the labels dataset."""
-    labels.suggestions.append(SuggestionFrame(video=video, frame_idx=frame_idx))
+    suggestion_frame = SuggestionFrame(video=video, frame_idx=frame_idx)
+    labels.suggestions.append(suggestion_frame)
 
 
 def get_video_suggestions(labels, video, user_labeled: bool = True) -> List[int]:
@@ -1275,7 +1276,7 @@ def labels_pop(labels: Labels, index: int) -> LabeledFrame:
     This provides backward compatibility for the missing pop() method.
     """
     if 0 <= index < len(labels.labeled_frames):
-        return labels.labeled_frames.pop(index)
+        labels.labeled_frames.pop(index)
     else:
         raise IndexError(
             f"Index {index} out of range for "
