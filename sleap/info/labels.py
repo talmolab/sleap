@@ -5,14 +5,16 @@ Command line utility which prints data about labels file.
 import os
 from sleap.sleap_io_adaptors.instance_utils import bounding_box
 from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
 
 
 def describe_labels(data_path, verbose=False):
-    from sleap_io import load_file
+    from sleap.sleap_io_adaptors.lf_labels_utils import (
+        make_video_callback,
+    )
 
-    # video_callback = Labels.make_video_callback([os.path.dirname(data_path)])
-    # TODO use gui callback
-    labels = load_file(data_path)
+    video_callback = make_video_callback([os.path.dirname(data_path)])
+    labels = labels_load_file(data_path, video_search=video_callback)
 
     print(f"Labeled frames: {len(labels)}")
     print(f"Tracks: {len(labels.tracks)}")
@@ -50,7 +52,7 @@ def describe_labels(data_path, verbose=False):
             print("    labeled frames:              bounding box top left (x, y)")
             for lf in lfs:
                 bb_cords = [
-                    f"({bounding_box(inst)[0]:.2f}, {bounding_box(inst)[1]:.2f})"
+                    f"({bounding_box(inst)[0, 1]:.2f}, {bounding_box(inst)[0, 0]:.2f})"
                     f"{'^' if hasattr(inst, 'score') else ''}"
                     for inst in lf.instances
                 ]
@@ -72,7 +74,6 @@ def describe_labels(data_path, verbose=False):
 
 
 def describe_model(model_path, verbose=False):
-    import sleap
     import numpy as np
     from omegaconf import OmegaConf
 
@@ -105,33 +106,75 @@ def describe_model(model_path, verbose=False):
     print()
     print()
 
-    def describe_metrics(metrics):
-        if isinstance(metrics, str):
-            metrics = np.load(metrics, allow_pickle=True)["metrics"].tolist()
+    def describe_metrics(metrics, legacy):
+        if legacy:
+            if isinstance(metrics, str):
+                metrics = np.load(metrics, allow_pickle=True)["metrics"].tolist()
 
-        print(
-            f"Dist (90%/95%/99%): {metrics['dist.p90']} / {metrics['dist.p95']} / "
-            f"{metrics['dist.p99']}"
-        )
-        print(
-            f"OKS VOC (mAP / mAR): {metrics['oks_voc.mAP']} / {metrics['oks_voc.mAR']}"
-        )
-        print(
-            f"PCK (mean {metrics['pck.thresholds'][0]}-"
-            f"{metrics['pck.thresholds'][-1]} px): {metrics['pck.mPCK']}"
-        )
+            print(
+                f"Dist (90%/95%/99%): {metrics['dist.p90']} / {metrics['dist.p95']} / "
+                f"{metrics['dist.p99']}"
+            )
+            print(
+                f"OKS VOC (mAP / mAR): {metrics['oks_voc.mAP']} / "
+                f"{metrics['oks_voc.mAR']}"
+            )
+            print(
+                f"PCK (mean {metrics['pck.thresholds'][0]}-"
+                f"{metrics['pck.thresholds'][-1]} px): {metrics['pck.mPCK']}"
+            )
+        else:
+            if isinstance(metrics, str):
+                with np.load(metrics, allow_pickle=True) as data:
+                    display_data = {
+                        "dist.p99": data["distance_metrics"].item().get("p99"),
+                        "dist.p95": data["distance_metrics"].item().get("p95"),
+                        "dist.p90": data["distance_metrics"].item().get("p90"),
+                        "oks_voc.mAP": data["voc_metrics"].item().get("oks_voc.mAP"),
+                        "oks_voc.mAR": data["voc_metrics"].item().get("oks_voc.mAR"),
+                        "pck.mPCK": data["pck_metrics"].item().get("mPCK"),
+                        "pck.thresholds": data["pck_metrics"].item().get("thresholds"),
+                    }
+
+            print(
+                f"Dist (90%/95%/99%): {display_data['dist.p90']} / "
+                f"{display_data['dist.p95']} / {display_data['dist.p99']}"
+            )
+            print(
+                f"OKS VOC (mAP / mAR): {display_data['oks_voc.mAP']} / "
+                f"{display_data['oks_voc.mAR']}"
+            )
+            print(
+                f"PCK (mean {display_data['pck.thresholds'][0]}-"
+                f"{display_data['pck.thresholds'][-1]} px): {display_data['pck.mPCK']}"
+            )
 
     def describe_dataset(split_name):
+        # Check whether the checkpoint files are sleap_nn or legacy sleap
+        # and load the labels accordingly
+        labels = None
         if os.path.exists(rel_path(f"labels_gt.{split_name}.slp")):
-            labels = sleap.load_file(rel_path(f"labels_gt.{split_name}.slp"))
+            labels = labels_load_file(rel_path(f"labels_gt.{split_name}.slp"))
+        elif os.path.exists(rel_path(f"labels_{split_name}_gt_0.slp")):
+            labels = labels_load_file(rel_path(f"labels_{split_name}_gt_0.slp"))
+
+        if labels is not None:
+            labeled_frames_user = [
+                lf for lf in labels.labeled_frames if lf.has_user_instances
+            ]
+            user_instances = [
+                inst for lf in labeled_frames_user for inst in lf.user_instances
+            ]
             print(
-                f"Frames: {len(labels.user_labeled_frames)} / "
-                f"Instances: {len(labels.user_instances)}"
+                f"Frames: {len(labeled_frames_user)} / Instances: {len(user_instances)}"
             )
 
         if os.path.exists(rel_path(f"metrics.{split_name}.npz")):
             print("Metrics:")
-            describe_metrics(rel_path(f"metrics.{split_name}.npz"))
+            describe_metrics(rel_path(f"metrics.{split_name}.npz"), legacy=True)
+        elif os.path.exists(rel_path(f"{split_name}_0_pred_metrics.npz")):
+            print("Metrics:")
+            describe_metrics(rel_path(f"{split_name}_0_pred_metrics.npz"), legacy=False)
 
     print("=====")
     print("Training set:")
@@ -167,7 +210,9 @@ def main():
         describe_labels(args.data_path, verbose=args.verbose)
 
     elif os.path.isdir(args.data_path):
-        if os.path.exists(os.path.join(args.data_path, "training_config.json")):
+        if os.path.exists(
+            os.path.join(args.data_path, "training_config.yaml")
+        ) or os.path.exists(os.path.join(args.data_path, "training_config.json")):
             describe_model(args.data_path, verbose=args.verbose)
 
 

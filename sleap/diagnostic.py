@@ -147,10 +147,10 @@ def get_diagnostics(output_path=None):
 
 
 def gui_check():
-    from PySide2.QtWidgets import QApplication
+    from qtpy.QtWidgets import QApplication
 
-    QApplication()
-    print("successfully created PySide2.QtWidgets.QApplication instance")
+    QApplication([])
+    print("successfully created QApplication instance")
 
 
 def main():
