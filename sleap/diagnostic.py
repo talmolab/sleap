@@ -147,7 +147,7 @@ def get_diagnostics(output_path=None):
 
 
 def gui_check():
-    from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
+    from qtpy.QtWidgets import QApplication
 
     QApplication([])
     print("successfully created QApplication instance")
