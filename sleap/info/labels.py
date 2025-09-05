@@ -105,21 +105,46 @@ def describe_model(model_path, verbose=False):
     print()
     print()
 
-    def describe_metrics(metrics):
-        if isinstance(metrics, str):
-            metrics = np.load(metrics, allow_pickle=True)["metrics"].tolist()
+    def describe_metrics(metrics, legacy):
+        if legacy:
+            if isinstance(metrics, str):
+                metrics = np.load(metrics, allow_pickle=True)["metrics"].tolist()
 
-        print(
-            f"Dist (90%/95%/99%): {metrics['dist.p90']} / {metrics['dist.p95']} / "
-            f"{metrics['dist.p99']}"
-        )
-        print(
-            f"OKS VOC (mAP / mAR): {metrics['oks_voc.mAP']} / {metrics['oks_voc.mAR']}"
-        )
-        print(
-            f"PCK (mean {metrics['pck.thresholds'][0]}-"
-            f"{metrics['pck.thresholds'][-1]} px): {metrics['pck.mPCK']}"
-        )
+            print(
+                f"Dist (90%/95%/99%): {metrics['dist.p90']} / {metrics['dist.p95']} / "
+                f"{metrics['dist.p99']}"
+            )
+            print(
+                f"OKS VOC (mAP / mAR): {metrics['oks_voc.mAP']} / {metrics['oks_voc.mAR']}"
+            )
+            print(
+                f"PCK (mean {metrics['pck.thresholds'][0]}-"
+                f"{metrics['pck.thresholds'][-1]} px): {metrics['pck.mPCK']}"
+            )
+        else:
+            if isinstance(metrics, str):
+                with np.load(metrics, allow_pickle=True) as data:
+                    display_data = {
+                        "dist.p99": data["distance_metrics"].item().get("p99"),
+                        "dist.p95": data["distance_metrics"].item().get("p95"),
+                        "dist.p90": data["distance_metrics"].item().get("p90"),
+                        "oks_voc.mAP": data["voc_metrics"].item().get("oks_voc.mAP"),
+                        "oks_voc.mAR": data["voc_metrics"].item().get("oks_voc.mAR"),
+                        "pck.mPCK": data["pck_metrics"].item().get("mPCK"),
+                        "pck.thresholds": data["pck_metrics"].item().get("thresholds"),
+                    }
+
+            print(
+                f"Dist (90%/95%/99%): {display_data['dist.p90']} / {display_data['dist.p95']} / "
+                f"{display_data['dist.p99']}"
+            )
+            print(
+                f"OKS VOC (mAP / mAR): {display_data['oks_voc.mAP']} / {display_data['oks_voc.mAR']}"
+            )
+            print(
+                f"PCK (mean {display_data['pck.thresholds'][0]}-"
+                f"{display_data['pck.thresholds'][-1]} px): {display_data['pck.mPCK']}"
+            )
 
     def describe_dataset(split_name):
         if os.path.exists(rel_path(f"labels_gt.{split_name}.slp")):
@@ -131,7 +156,10 @@ def describe_model(model_path, verbose=False):
 
         if os.path.exists(rel_path(f"metrics.{split_name}.npz")):
             print("Metrics:")
-            describe_metrics(rel_path(f"metrics.{split_name}.npz"))
+            describe_metrics(rel_path(f"metrics.{split_name}.npz"), legacy=True)
+        elif os.path.exists(rel_path(f"{split_name}_0_pred_metrics.npz")):
+            print("Metrics:")
+            describe_metrics(rel_path(f"{split_name}_0_pred_metrics.npz"), legacy=False)
 
     print("=====")
     print("Training set:")
@@ -167,7 +195,9 @@ def main():
         describe_labels(args.data_path, verbose=args.verbose)
 
     elif os.path.isdir(args.data_path):
-        if os.path.exists(os.path.join(args.data_path, "training_config.json")):
+        if os.path.exists(
+            os.path.join(args.data_path, "training_config.yaml")
+        ) or os.path.exists(os.path.join(args.data_path, "training_config.json")):
             describe_model(args.data_path, verbose=args.verbose)
 
 
