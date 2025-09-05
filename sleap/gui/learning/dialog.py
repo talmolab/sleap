@@ -1141,10 +1141,12 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self._update_use_trained()
         elif self._cfg_list_widget is not None:
             # Add option for using trained model from selected config file
-            self._use_trained_model = QtWidgets.QCheckBox("Use Trained Model")
+            self._use_trained_model = QtWidgets.QCheckBox(
+                "Use Existing Training Config"
+            )
             self._use_trained_model.setEnabled(False)
             self._use_trained_model.setVisible(False)
-            self._resume_training = QtWidgets.QCheckBox("Resume Training")
+            self._resume_training = QtWidgets.QCheckBox("Use Trained Model Weights")
             self._resume_training.setEnabled(False)
             self._resume_training.setVisible(False)
 
@@ -1316,8 +1318,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     def _set_backbone_from_key_val_dict(self, cfg_key_val_dict):
         for key, val in cfg_key_val_dict.items():
-            if key.startswith("model.backbone.") and val is not None:
-                backbone_name = key.split(".")[2]
+            if (
+                key.startswith("model.model_config.backbone_config.")
+                and val is not None
+            ):
+                backbone_name = key.split(".")[3]
                 self.set_fields_from_key_val_dict(dict(_backbone_name=backbone_name))
                 break
 
@@ -1364,16 +1369,26 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             trained_config.data_config.val_labels_path = None
             trained_config.data_config.test_file_path = None
             trained_config.data_config.skeletons = []
-            trained_config.trainer_config.save_ckpt_path = None
+            trained_config.trainer_config.ckpt_dir = None
+            trained_config.trainer_config.run_name = None
 
         if self.resume_training:
             # Get the folder path of trained config and set it as the output
             # folder
-            trained_config_info.config.model_config.pretrained_backbone_weights = str(
-                Path(cast(str, trained_config_info.path)).parent
-            )
-            trained_config_info.config.model_config.pretrained_head_weights = str(
-                Path(cast(str, trained_config_info.path)).parent
+            file_list = list(Path(cast(str, trained_config_info.path)).parent.iterdir())
+            if (
+                Path(cast(str, trained_config_info.path)).parent / "best.ckpt"
+            ) in file_list:
+                ckpt = "best.ckpt"
+            elif (
+                Path(cast(str, trained_config_info.path)).parent / "best_model.h5"
+            ) in file_list:
+                ckpt = "best_model.h5"
+            trained_config_info.config.model_config.pretrained_backbone_weights = (
+                Path(cast(str, trained_config_info.path)).parent / ckpt
+            ).as_posix()
+            trained_config_info.config.model_config.pretrained_head_weights = (
+                trained_config_info.config.model_config.pretrained_backbone_weights
             )
         else:
             trained_config_info.config.model_config.pretrained_backbone_weights = None

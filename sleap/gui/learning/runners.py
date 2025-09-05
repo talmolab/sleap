@@ -37,16 +37,24 @@ def setup_new_run_folder(
     """Create a new run folder from config."""
     run_path = None
     if config.trainer_config.save_ckpt:
-        # Auto-generate run name.
-        if config.trainer_config.save_ckpt_path is None:
-            run_name = get_timestamp()
-            if isinstance(base_run_name, str):
-                run_name = run_name + "." + base_run_name
+        # Auto-generate run name suffix.
+        run_name = get_timestamp()
+        if isinstance(base_run_name, str):
+            run_name = run_name + "." + base_run_name
 
-            config.trainer_config.save_ckpt_path = run_name
+        cfg_run_name = (
+            config.trainer_config.run_name
+            if config.trainer_config.run_name is not None
+            else ""
+        )
+        cfg_run_name = cfg_run_name + "_" + run_name
+
+        config.trainer_config.run_name = cfg_run_name
 
         # Build run path.
-        run_path = config.trainer_config.save_ckpt_path
+        run_path = (
+            Path(config.trainer_config.ckpt_dir) / config.trainer_config.run_name
+        ).as_posix()
 
     return run_path
 
@@ -433,10 +441,8 @@ def write_pipeline_files(
     for cfg_info in config_info_list:
         if not cfg_info.dont_retrain:
             # Update config.
-            cfg_info.config.trainer_config.save_ckpt_path += (
-                OmegaConf.select(
-                    cfg_info.config, "trainer_config.save_ckpt_path", default=""
-                )
+            cfg_info.config.trainer_config.run_name += (
+                OmegaConf.select(cfg_info.config, "trainer_config.run_name", default="")
                 + cfg_info.head_name
             )
 
@@ -476,12 +482,18 @@ def write_pipeline_files(
             OmegaConf.save(cfg, new_cfg_filename)
 
             # Keep track of the path where we'll find the trained model
-            new_cfg_filenames.append(cfg_info.config.trainer_config.save_ckpt_path)
+            new_cfg_filenames.append(
+                (
+                    Path(cfg_info.config.trainer_config.ckpt_dir)
+                    / cfg_info.config.trainer_config.run_name
+                ).as_posix()
+            )
 
             # Add a line to the script for training this model
             train_script += (
                 f"sleap-nn train --config-name {new_cfg_filename} --config-dir {''} "
-                f"trainer_config.save_ckpt_path={ckpt_path} "
+                f"trainer_config.ckpt_dir={Path(ckpt_path).parent.as_posix()} "
+                f"trainer_config.run_name={Path(ckpt_path).name}"
                 f"trainer_config.zmq.controller_address=tcp://127.0.0.1:"
                 f"{str(inference_params['controller_port'])} "
                 f"trainer_config.zmq.publish_address=tcp://127.0.0.1:"
@@ -492,8 +504,9 @@ def write_pipeline_files(
             training_jobs.append(
                 {
                     "cfg": new_cfg_filename,
-                    "run_path": Path(
-                        cfg_info.config.trainer_config.save_ckpt_path
+                    "run_path": (
+                        Path(cfg_info.config.trainer_config.ckpt_dir)
+                        / cfg_info.config.trainer_config.run_name
                     ).as_posix(),
                     "train_labels": os.path.basename(labels_filename),
                 }
@@ -690,12 +703,10 @@ def run_gui_training(
             # so we have access to them here (rather than letting
             # train_subprocess update them).
             # training.Trainer.set_run_name(job, labels_filename)
-            folder_path = os.path.join(os.path.dirname(labels_filename), "models")
-            base_run_name = f"{model_type}.n={len(labels.user_labeled_frames)}"
-            job.trainer_config.save_ckpt_path = os.path.join(
-                folder_path,
-                base_run_name,
+            job.trainer_config.ckpt_dir = os.path.join(
+                os.path.dirname(labels_filename), "models"
             )
+            base_run_name = f"{model_type}.n={len(labels.user_labeled_frames)}"
             setup_new_run_folder(
                 job,
                 base_run_name=base_run_name,
@@ -714,7 +725,10 @@ def run_gui_training(
                 win.set_message("Preparing to run training...")
                 if job.trainer_config.visualize_preds_during_training:
                     viz_window = QtImageDirectoryWidget.make_training_vizualizer(
-                        job.trainer_config.save_ckpt_path
+                        (
+                            Path(job.trainer_config.ckpt_dir)
+                            / job.trainer_config.run_name
+                        ).as_posix()
                     )
                     viz_window.move(win.x() + win.width() + 20, win.y())
                     win.on_epoch.connect(viz_window.poll)
@@ -877,7 +891,9 @@ def train_subprocess(
     waiting_callback: Optional[Callable] = None,
 ):
     """Runs training inside subprocess."""
-    run_path = job_config.trainer_config.save_ckpt_path
+    run_path = (
+        Path(job_config.trainer_config.ckpt_dir) / job_config.trainer_config.run_name
+    ).as_posix()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         # Write a temporary file of the TrainingJob so that we can respect
@@ -890,7 +906,8 @@ def train_subprocess(
         cfg = verify_training_cfg(filter_job_config)
         cfg.data_config.train_labels_path = [labels_filename]
 
-        cfg.trainer_config.save_ckpt_path = run_path
+        cfg.trainer_config.ckpt_dir = Path(run_path).parent.as_posix()
+        cfg.trainer_config.run_name = Path(run_path).name
         cfg.trainer_config.zmq.controller_address = (
             f"tcp://127.0.0.1:{str(inference_params['controller_port'])}"
         )

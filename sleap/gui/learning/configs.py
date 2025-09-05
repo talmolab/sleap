@@ -88,10 +88,10 @@ class ConfigFileInfo:
         Returns:
             Full path + filename if found, otherwise None.
         """
-        if not self.config.trainer_config.save_ckpt_path:
+        if not self.config.trainer_config.run_name:
             return None
 
-        for dir in [self.config.trainer_config.save_ckpt_path, self.path_dir]:
+        for dir in [self.config.trainer_config.ckpt_dir, self.path_dir]:
             full_path = os.path.join(dir, shortname)
             if os.path.exists(full_path):
                 return full_path
@@ -149,7 +149,7 @@ class ConfigFileInfo:
         """Timestamp on file; parsed from filename (not OS timestamp)."""
         match = re.match(
             r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b",
-            self.config.trainer_config.save_ckpt_path,
+            self.config.trainer_config.run_name,
         )
         if match:
             year, month, day = int(match[1]), int(match[2]), int(match[3])
@@ -276,7 +276,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             if cfg_info.has_trained_model:
                 display_name += "[Trained] "
 
-            display_name += f"{cfg.trainer_config.save_ckpt_path}({filename})"
+            display_name += f"{cfg.trainer_config.run_name}({filename})"
 
             if select is not None:
                 if select.config == cfg_info.config:

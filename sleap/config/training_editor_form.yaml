@@ -17,7 +17,7 @@ data:
     data during training or from the model input layer during inference. This must
     be divisible by the model's max stride (typically 32).
   label: Crop Size
-  name: data_config.preprocessing.crop_hw
+  name: data_config.preprocessing.crop_size
   type: optional_int
   none_label: Auto
   range: 0,832
@@ -452,11 +452,12 @@ optimization:
   name: trainer_config.train_data_loader.num_workers
   type: int
   range: 0,16
-- default: "auto"
+- default: null
   help: Number of devices to train on (int), or "auto" to select automatically. 
   label: Number of GPU devices
   name: trainer_config.trainer_devices
-  type: str
+  type: optional_int
+  none_label: Auto
 - default: "auto"
   help: Accelerator to use for training. "auto" means "cuda" if GPUs are available, otherwise "cpu".
     For mac, "mps" can be used for Apple Silicon.
@@ -522,17 +523,17 @@ optimization:
   type: optional_int
 outputs:
 - default: null
-  help: String to set as the run name. This would be the ckpt_dir. If None, it will be auto-generated {runs_folder}/{time_stamp}_{head_name}_n={num_samples}.
+  help: String to set as the run name. ckpts are saved to {trainer_config.ckpt_dir}/{run_name}. If None, it will be auto-generated {trainer_config.ckpt_dir}/{time_stamp}_{head_name}_n={num_samples}.
   label: Run Name
-  name: trainer_config.save_ckpt_path
+  name: trainer_config.run_name
   type: string
 - default: models
   help: 'Path to the folder that run data should be stored in. All the data for a
-    single run are stored in the path: "{runs_folder}/{trainer_config.save_ckpt_path}". Non-existing folders will be created
+    single run are stored in the path: "{Runs folder}/{Run name}". Non-existing folders will be created
     if they do not already exist. Defaults to the "models" subdirectory of the current
     working directory.'
   label: Runs Folder
-  name: _runs_folder
+  name: trainer_config.ckpt_dir
   type: string
 - default: true
   help: 'If True, the model will be saved at the end of an epoch if the validation

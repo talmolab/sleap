@@ -15,7 +15,7 @@ data_config:
     max_height: null
     max_width: null
     scale: 1.0
-    crop_hw: null
+    crop_size: null
     min_crop_size: 100
   use_augmentations_train: true
   augmentation_config:
@@ -97,7 +97,7 @@ trainer_config:
   model_ckpt:
     save_top_k: 1
     save_last: false
-  trainer_devices: auto
+  trainer_devices:
   trainer_accelerator: auto
   profiler: null
   trainer_strategy: auto
@@ -110,7 +110,8 @@ trainer_config:
   seed: 0
   use_wandb: false
   save_ckpt: true
-  save_ckpt_path:
+  ckpt_dir: models
+  run_name:
   resume_ckpt_path: null
   optimizer_name: Adam
   optimizer:
