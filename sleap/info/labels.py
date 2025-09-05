@@ -6,7 +6,6 @@ import os
 from sleap.sleap_io_adaptors.instance_utils import bounding_box
 from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count
 from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
-from sleap_io import Instance
 
 
 def describe_labels(data_path, verbose=False):
@@ -75,7 +74,6 @@ def describe_labels(data_path, verbose=False):
 
 
 def describe_model(model_path, verbose=False):
-    import sleap
     import numpy as np
     from omegaconf import OmegaConf
 
@@ -118,7 +116,8 @@ def describe_model(model_path, verbose=False):
                 f"{metrics['dist.p99']}"
             )
             print(
-                f"OKS VOC (mAP / mAR): {metrics['oks_voc.mAP']} / {metrics['oks_voc.mAR']}"
+                f"OKS VOC (mAP / mAR): {metrics['oks_voc.mAP']} / "
+                f"{metrics['oks_voc.mAR']}"
             )
             print(
                 f"PCK (mean {metrics['pck.thresholds'][0]}-"
@@ -138,11 +137,12 @@ def describe_model(model_path, verbose=False):
                     }
 
             print(
-                f"Dist (90%/95%/99%): {display_data['dist.p90']} / {display_data['dist.p95']} / "
-                f"{display_data['dist.p99']}"
+                f"Dist (90%/95%/99%): {display_data['dist.p90']} / "
+                f"{display_data['dist.p95']} / {display_data['dist.p99']}"
             )
             print(
-                f"OKS VOC (mAP / mAR): {display_data['oks_voc.mAP']} / {display_data['oks_voc.mAR']}"
+                f"OKS VOC (mAP / mAR): {display_data['oks_voc.mAP']} / "
+                f"{display_data['oks_voc.mAR']}"
             )
             print(
                 f"PCK (mean {display_data['pck.thresholds'][0]}-"
