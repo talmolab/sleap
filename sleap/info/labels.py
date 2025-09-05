@@ -52,7 +52,7 @@ def describe_labels(data_path, verbose=False):
             print("    labeled frames:              bounding box top left (x, y)")
             for lf in lfs:
                 bb_cords = [
-                    f"({bounding_box(inst)[0]:.2f}, {bounding_box(inst)[1]:.2f})"
+                    f"({bounding_box(inst)[0, 1]:.2f}, {bounding_box(inst)[0, 0]:.2f})"
                     f"{'^' if hasattr(inst, 'score') else ''}"
                     for inst in lf.instances
                 ]
