@@ -5,14 +5,17 @@ Command line utility which prints data about labels file.
 import os
 from sleap.sleap_io_adaptors.instance_utils import bounding_box
 from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
+from sleap_io import Instance
 
 
 def describe_labels(data_path, verbose=False):
-    from sleap_io import load_file
+    from sleap.sleap_io_adaptors.lf_labels_utils import (
+        make_video_callback,
+    )
 
-    # video_callback = Labels.make_video_callback([os.path.dirname(data_path)])
-    # TODO use gui callback
-    labels = load_file(data_path)
+    video_callback = make_video_callback([os.path.dirname(data_path)])
+    labels = labels_load_file(data_path, video_search=video_callback)
 
     print(f"Labeled frames: {len(labels)}")
     print(f"Tracks: {len(labels.tracks)}")
@@ -147,11 +150,24 @@ def describe_model(model_path, verbose=False):
             )
 
     def describe_dataset(split_name):
+        # Check whether the checkpoint files are sleap_nn or legacy sleap
+        # and load the labels accordingly
+        labels = None
         if os.path.exists(rel_path(f"labels_gt.{split_name}.slp")):
-            labels = sleap.load_file(rel_path(f"labels_gt.{split_name}.slp"))
+            labels = labels_load_file(rel_path(f"labels_gt.{split_name}.slp"))
+        elif os.path.exists(rel_path(f"labels_{split_name}_gt_0.slp")):
+            labels = labels_load_file(rel_path(f"labels_{split_name}_gt_0.slp"))
+
+        if labels is not None:
+            labeled_frames_user = [
+                lf for lf in labels.labeled_frames if lf.has_user_instances
+            ]
+            user_instances = [
+                inst for lf in labeled_frames_user for inst in lf.user_instances
+            ]
             print(
-                f"Frames: {len(labels.user_labeled_frames)} / "
-                f"Instances: {len(labels.user_instances)}"
+                f"Frames: {len(labeled_frames_user)} / "
+                f"Instances: {len(user_instances)}"
             )
 
         if os.path.exists(rel_path(f"metrics.{split_name}.npz")):
