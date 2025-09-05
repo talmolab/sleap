@@ -166,8 +166,7 @@ def describe_model(model_path, verbose=False):
                 inst for lf in labeled_frames_user for inst in lf.user_instances
             ]
             print(
-                f"Frames: {len(labeled_frames_user)} / "
-                f"Instances: {len(user_instances)}"
+                f"Frames: {len(labeled_frames_user)} / Instances: {len(user_instances)}"
             )
 
         if os.path.exists(rel_path(f"metrics.{split_name}.npz")):
