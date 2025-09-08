@@ -540,7 +540,7 @@ def load_and_match(filename: str, match_to: Labels):
             nodes = labels.skeleton.nodes
             for i, node in enumerate(nodes):
                 if node.name in old_node_names:
-                    node[i] = old_skel.nodes[old_node_names.index(node.name)]
+                    nodes[i] = old_skel.nodes[old_node_names.index(node.name)]
             labels.skeletons[0] = old_skel
 
         # Match Videos
