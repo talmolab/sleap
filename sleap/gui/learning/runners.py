@@ -477,6 +477,7 @@ def write_pipeline_files(
             from sleap_nn.config.training_job_config import verify_training_cfg
 
             # Save the config file
+            cfg_info.config = filter_cfg(cfg_info.config)
             cfg = verify_training_cfg(cfg_info.config)
             cfg.data_config.train_labels_path = [os.path.basename(labels_filename)]
             OmegaConf.save(cfg, new_cfg_filename)
@@ -495,9 +496,10 @@ def write_pipeline_files(
                 f"trainer_config.ckpt_dir={Path(ckpt_path).parent.as_posix()} "
                 f"trainer_config.run_name={Path(ckpt_path).name}"
                 f"trainer_config.zmq.controller_address=tcp://127.0.0.1:"
-                f"{str(inference_params['controller_port'])} "
+                f"{str(cfg_info.config.trainer_config.zmq.controller_address)} "
                 f"trainer_config.zmq.publish_address=tcp://127.0.0.1:"
-                f"{str(inference_params['publish_port'])}"
+                f"{str(cfg_info.config.trainer_config.zmq.publish_address)}"
+                "\n"
             )
 
             # Setup job params
