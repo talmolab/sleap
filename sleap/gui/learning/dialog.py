@@ -844,7 +844,8 @@ class LearningDialog(QtWidgets.QDialog):
     def export_package(self, output_path: Optional[str] = None, gui: bool = True):
         """Export training job package."""
         # TODO: Warn if self.mode != "training"?
-        if output_path is None:
+
+        if output_path is None or not output_path:
             # Prompt for output path.
             output_path, _ = FileDialog.save(
                 caption="Export Training Job Package...",
