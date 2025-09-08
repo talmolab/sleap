@@ -146,7 +146,7 @@ model:
     options: 1,2,4,8,16,32,64
   default: ''
   label: Heads
-  multi_instance:
+  bottomup:
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
       Smaller values are more precise but may be difficult to learn as they have a
@@ -313,7 +313,7 @@ model:
     name: model_config.head_configs.multi_class_bottomup.class_maps.loss_weight
     type: double
   name: _heads_name
-  options: single_instance,centroid,centered_instance,multi_instance,multi_class_topdown,multi_class_bottomup
+  options: single_instance,centroid,centered_instance,bottomup,multi_class_topdown,multi_class_bottomup
   single_instance:
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.

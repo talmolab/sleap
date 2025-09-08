@@ -321,7 +321,7 @@ class LearningDialog(QtWidgets.QDialog):
             "single_instance",
             "centroid",
             "centered_instance",
-            "multi_instance",
+            "bottomup",
             "multi_class_topdown",
             "multi_class_bottomup",
         )
@@ -422,7 +422,7 @@ class LearningDialog(QtWidgets.QDialog):
                 return "top-down-id"
             if recent_cfg_info.head_name in ("centroid", "centered_instance"):
                 return "top-down"
-            if recent_cfg_info.head_name in ("multi_instance",):
+            if recent_cfg_info.head_name in ("bottomup",):
                 return "bottom-up"
             if recent_cfg_info.head_name in ("single_instance",):
                 return "single"
@@ -450,7 +450,7 @@ class LearningDialog(QtWidgets.QDialog):
             "single_instance": "Single Instance Model Configuration",
             "centroid": "Centroid Model Configuration",
             "centered_instance": "Centered Instance Model Configuration",
-            "multi_instance": "Bottom-Up Model Configuration",
+            "bottomup": "Bottom-Up Model Configuration",
             "multi_class_topdown": "Top-Down-Id Model Configuration",
             "multi_class_bottomup": "Bottom-Up-Id Model Configuration",
         }
@@ -469,7 +469,7 @@ class LearningDialog(QtWidgets.QDialog):
                 self.add_tab("centroid")
                 self.add_tab("centered_instance")
             elif pipeline == "bottom-up":
-                self.add_tab("multi_instance")
+                self.add_tab("bottomup")
             elif pipeline == "top-down-id":
                 self.add_tab("centroid")
                 self.add_tab("multi_class_topdown")
