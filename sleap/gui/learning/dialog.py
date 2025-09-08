@@ -814,7 +814,7 @@ class LearningDialog(QtWidgets.QDialog):
         self, output_dir: Optional[str] = None, labels_filename: Optional[str] = None
     ):
         """Save scripts and configs to run pipeline."""
-        if output_dir is None:
+        if output_dir is None or not output_dir:
             labels_fn = Path(self.labels_filename)
             models_dir = Path(labels_fn.parent, "models")
             output_dir = FileDialog.openDir(
@@ -832,6 +832,8 @@ class LearningDialog(QtWidgets.QDialog):
 
         if labels_filename is None:
             labels_filename = self.labels_filename
+
+        print(output_dir, type(output_dir))
 
         runners.write_pipeline_files(
             output_dir=output_dir,
