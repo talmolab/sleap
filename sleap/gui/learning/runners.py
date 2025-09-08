@@ -298,7 +298,7 @@ class InferenceTask:
             "tracking.tracker" in self.inference_params
             and self.inference_params["tracking.tracker"] != "none"
         ):
-            cli_args.extend(["--tracking", "True"])
+            cli_args.extend(["--tracking"])
             cli_args.extend(
                 ["--track_matching_method", self.inference_params["tracking.match"]]
             )
@@ -321,12 +321,13 @@ class InferenceTask:
 
             if self.inference_params["tracking.robust"] != 1.0:
                 cli_args.extend(["--scoring_reduction", "robust_quantile"])
-                cli_args.extend(
-                    [
-                        "--robust_best_instance",
-                        str(self.inference_params["tracking.robust"]),
-                    ]
-                )
+                if self.inference_params["tracking.robust"] is not None:
+                    cli_args.extend(
+                        [
+                            "--robust_best_instance",
+                            str(self.inference_params["tracking.robust"]),
+                        ]
+                    )
 
             if self.inference_params["tracking.similarity"] == "oks":
                 cli_args.extend(["--features", "keypoints"])
