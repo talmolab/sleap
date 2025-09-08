@@ -546,7 +546,7 @@ class SuggestionsTableModel(GenericTableModel):
             for inst in lf
             if hasattr(inst, "score")
         ]
-        val = sum(scores) / len(scores) if scores else ""
+        val = float(sum(scores) / len(scores)) if scores else ""
         item_dict["mean score"] = val
 
         return item_dict
