@@ -21,7 +21,7 @@ from qtpy import QtWidgets
 from sleap_io import Labels, Video, LabeledFrame
 import sleap_io as sio
 from sleap.gui.learning.configs import ConfigFileInfo
-from sleap.sleap_io_adaptors.lf_labels_utils import load_and_match
+# from sleap.sleap_io_adaptors.lf_labels_utils import load_and_match
 from sleap.gui.config_utils import filter_cfg
 
 logger = logging.getLogger(__name__)
@@ -394,7 +394,8 @@ class InferenceTask:
 
         if success and append_results:
             # Load frames from inference into results list
-            # new_inference_labels = load_and_match(output_path, match_to=self.labels) # FIXME:If necessary
+            # new_inference_labels = load_and_match(output_path, match_to=self.labels)
+            # FIXME:If necessary
             new_inference_labels = sio.load_slp(output_path)
             self.results.extend(new_inference_labels.labeled_frames)
 
