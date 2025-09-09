@@ -88,10 +88,10 @@ class ConfigFileInfo:
         Returns:
             Full path + filename if found, otherwise None.
         """
-        if not self.config.trainer_config.run_name:
-            return None
-
-        for dir in [self.config.trainer_config.ckpt_dir, self.path_dir]:
+        for dir in [
+            OmegaConf.select(self.config, "trainer_config.ckpt_dir", default="."),
+            self.path_dir,
+        ]:
             full_path = os.path.join(dir, shortname)
             if os.path.exists(full_path):
                 return full_path
@@ -288,7 +288,8 @@ class TrainingConfigFilesWidget(FieldComboWidget):
             if cfg_info.has_trained_model:
                 display_name += "[Trained] "
 
-            display_name += f"{cfg.trainer_config.run_name}({filename})"
+            run_name = OmegaConf.select(cfg, "trainer_config.run_name", default="")
+            display_name += f"{run_name}({filename})"
 
             if select is not None:
                 if select.config == cfg_info.config:
@@ -548,8 +549,6 @@ class TrainingConfigsGetter:
             else:
                 # Get the head from the model (i.e., what the model will predict)
                 key = get_head_from_omegaconf(cfg)
-                if key == "multi_instance":
-                    key = "bottomup"
 
                 filename = os.path.basename(path)
 
