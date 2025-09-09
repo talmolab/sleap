@@ -148,7 +148,7 @@ class ConfigFileInfo:
     def timestamp(self):
         """Timestamp on file; parsed from filename (not OS timestamp)."""
         match = re.match(
-            r"_?(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b",
+            r".*?(?<!\d)(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\b",
             self.config.trainer_config.run_name,
         )
         if match:
