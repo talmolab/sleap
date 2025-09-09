@@ -41,6 +41,7 @@ first transpose the datasets so they matche the shapes described above.
 
 import argparse
 import re
+import os
 
 from pathlib import PurePath
 
@@ -101,27 +102,29 @@ def main(args: list = None):
     Args:
         args: A list of arguments to be passed into sleap-convert.
     """
-    # from sleap.sleap_io_adaptors.video import make_video_callback
-    from sleap_io import load_file
+    from sleap.sleap_io_adaptors.lf_labels_utils import (
+        make_video_callback,
+        labels_load_file,
+    )
 
     parser = create_parser()
     args = parser.parse_args(args=args)
 
-    # video_callback = make_video_callback([os.path.dirname(args.input_path)])
+    video_callback = make_video_callback([os.path.dirname(args.input_path)])
     try:
-        #         labels: Labels = Labels.load_file(args.input_path,
-        # video_search=video_callback) TODO: need to add this back
-        labels = load_file(args.input_path, format="*")
+        labels = labels_load_file(
+            args.input_path, format="*", video_search=video_callback
+        )
     except TypeError:
         print("Input file isn't SLEAP dataset so attempting other importers...")
 
-        # video_path = args.video if args.video else None
+        video_path = args.video if args.video else None
 
-        labels = load_file(
+        labels = labels_load_file(
             args.input_path,
             format="*",
-            # video_search=video_callback,
-            # video=video_path, # TODO: need to add this back
+            video_search=video_callback,
+            video=video_path,
         )
     if "analysis" in args.format:
         vids = []
