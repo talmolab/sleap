@@ -2206,7 +2206,6 @@ class QtInstance(QGraphicsObject):
                     # immediately drag
                     qt_inst.setCursor(Qt.ClosedHandCursor)
                     qt_inst.grabMouse()
-            
 
         # Connect the callback to the updatedSelection signal
         self.player.view.updatedSelection.connect(on_selection_update)
@@ -2224,7 +2223,7 @@ class QtInstance(QGraphicsObject):
 
     def mouseReleaseEvent(self, event):
         """Custom event handler for mouse release."""
-        # self.ungrabMouse() causes QGraphicsItem::ungrabMouse: not a mouse grabber warning
+        # self.ungrabMouse() causes QGraphicsItem::ungrabMouse: warning
         if self.flags() & QGraphicsItem.ItemIsMovable:
             self.setFlag(QGraphicsItem.ItemIsMovable, False)
             self.updatePoints(user_change=True)
