@@ -2166,10 +2166,10 @@ class QtInstance(QGraphicsObject):
     def duplicate_instance(self):
         """Duplicate the instance and add it to the scene."""
         # Add instance to the context
-        print('duplicate instance method called')
+        print("duplicate instance method called")
 
         if self.player.context is None:
-            print('self.player.context is None, cannot duplicate instance')
+            print("self.player.context is None, cannot duplicate instance")
             return
 
         # Copy the instance and add it to the context
