@@ -314,7 +314,7 @@ class InferenceTask:
                     ["--max_tracks", str(self.inference_params["tracking.max_tracks"])]
                 )
             if "flow" in self.inference_params["tracking.tracker"]:
-                cli_args.extend(["--use_flow", "True"])
+                cli_args.extend(["--use_flow"])
 
             if self.inference_params["tracking.post_connect_single_breaks"] == 1:
                 cli_args.extend(["--post_connect_single_breaks"])
