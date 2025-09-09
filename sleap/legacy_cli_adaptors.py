@@ -86,9 +86,7 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--run_name",
     "run_name",
-    help=(
-        "Run name to use when saving file, overrides other run name settings."
-    ),
+    help=("Run name to use when saving file, overrides other run name settings."),
 )
 @click.option("--prefix", "prefix", help="Prefix to prepend to run name.")
 @click.option("--suffix", "suffix", help="Suffix to append to run name.")
