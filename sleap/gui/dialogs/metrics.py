@@ -283,6 +283,7 @@ class DetailedMetricsDialog(QtWidgets.QWidget):
             for key, val in self.metrics.items():
                 if (
                     isinstance(val, np.float64)
+                    or isinstance(val, np.int64)
                     or isinstance(val, np.ndarray)
                     and not len(val.shape)
                 ):

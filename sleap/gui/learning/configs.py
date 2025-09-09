@@ -148,7 +148,7 @@ class ConfigFileInfo:
     def timestamp(self):
         """Timestamp on file; parsed from filename (not OS timestamp)."""
         match = re.match(
-            r"(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b",
+            r"_?(\d\d)(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)\b",
             self.config.trainer_config.run_name,
         )
         if match:
@@ -188,13 +188,25 @@ class ConfigFileInfo:
                 return data["metrics"].item()
 
             return_dict = {
-                "oks_voc.mAP": data["voc_metrics"].item().get("oks_voc.mAP"),
+                "vis.tp": data["visibility_metrics"].item().get("tp"),
+                "vis.fp": data["visibility_metrics"].item().get("fp"),
+                "vis.tn": data["visibility_metrics"].item().get("tn"),
+                "vis.fn": data["visibility_metrics"].item().get("fn"),
                 "vis.precision": data["visibility_metrics"].item().get("precision"),
                 "vis.recall": data["visibility_metrics"].item().get("recall"),
-                "dist.p95": data["distance_metrics"].item().get("p95"),
-                "dist.p75": data["distance_metrics"].item().get("p75"),
-                "dist.avg": data["distance_metrics"].item().get("avg"),
                 "dist.dists": data["distance_metrics"].item().get("dists"),
+                "dist.avg": data["distance_metrics"].item().get("avg"),
+                "dist.p50": data["distance_metrics"].item().get("p50"),
+                "dist.p75": data["distance_metrics"].item().get("p75"),
+                "dist.p90": data["distance_metrics"].item().get("p90"),
+                "dist.p95": data["distance_metrics"].item().get("p95"),
+                "dist.p99": data["distance_metrics"].item().get("p99"),
+                "pck.mPCK": data["pck_metrics"].item().get("mPCK"),
+                "oks.mOKS": data["mOKS"].item().get("mOKS"),
+                "oks_voc.mAP": data["voc_metrics"].item().get("oks_voc.mAP"),
+                "oks_voc.mAR": data["voc_metrics"].item().get("oks_voc.mAR"),
+                "pck_voc.mAP": data["voc_metrics"].item().get("pck_voc.mAP"),
+                "pck_voc.mAR": data["voc_metrics"].item().get("pck_voc.mAR"),
             }
             return return_dict
 
