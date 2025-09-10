@@ -189,7 +189,8 @@ def train_command(
 
     if val is None:
         train, val = train.make_training_splits(
-            n_train=1 - config.data_config.validation_fraction, n_val=config.data_config.validation_fraction, seed=42
+            n_train=1 - config.data_config.validation_fraction, 
+            n_val=config.data_config.validation_fraction, seed=42
         )
 
     start_train_time = time.time()
@@ -659,5 +660,5 @@ def track_command(
     if tracking_of_max_levels is not None:
         kwargs["of_max_levels"] = tracking_of_max_levels
 
-    # Call the original tracking function with kwargs
-    track(data_path, **kwargs)
+    # # Call the original tracking function with kwargs
+    # track(data_path, **kwargs)
