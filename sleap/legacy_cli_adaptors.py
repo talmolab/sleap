@@ -12,7 +12,7 @@ import sleap_io as sio
 from sleap_nn.training.model_trainer import ModelTrainer
 
 # from sleap_nn.track import main as track
-from sleap_nn.predict import main as predict
+from sleap_nn.predict import run_inference as predict
 from sleap_nn.config.training_job_config import TrainingJobConfig
 from sleap_nn.evaluation import Evaluator
 from sleap.sleap_io_adaptors.lf_labels_utils import load_labels_video_search
@@ -454,6 +454,7 @@ def train_command(
     "tracking_tracker",
     help="Options: simple, flow, simplemaxtracks, flowmaxtracks, None (default: None)",
 )
+# tracking.max_tracking is a boolean flag now, not integer
 @click.option(
     "--tracking.max_tracking",
     "tracking_max_tracking",
@@ -583,7 +584,6 @@ def track_command(
     """Track instances in video data using trained SLEAP models."""
     # Build kwargs for the tracking function
     kwargs = {}
-    kwargs["data_path"] = data_path
 
     if models is not None:
         kwargs["model_paths"] = models
@@ -663,4 +663,4 @@ def track_command(
         kwargs["of_max_levels"] = tracking_of_max_levels
 
     # # Call the original tracking function with kwargs
-    # track(data_path, **kwargs)
+    predict(data_path=data_path, **kwargs)
