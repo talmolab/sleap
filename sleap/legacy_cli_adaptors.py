@@ -10,7 +10,7 @@ import logging
 
 import sleap_io as sio
 from sleap_nn.training.model_trainer import ModelTrainer
-from sleap_nn.track import main as track
+# from sleap_nn.track import main as track
 from sleap_nn.predict import main as predict
 from sleap_nn.config.training_job_config import TrainingJobConfig
 from sleap_nn.evaluation import Evaluator
@@ -136,7 +136,10 @@ def train_command(
 ):
     """Train a SLEAP model with the specified configuration."""
     # Convert click arguments to the format expected by the training function
-    config = TrainingJobConfig.load_sleap_config(training_job_path)
+    if training_job_path.endswith(".json"):
+        config = TrainingJobConfig.load_sleap_config(training_job_path)
+    elif training_job_path.endswith((".yaml", ".yml")):
+        config = OmegaConf.load(training_job_path)
 
     if labels_path is not None:
         config.data_config.train_labels_path = [labels_path]
@@ -184,7 +187,12 @@ def train_command(
         train = sio.load_slp(labels_path)
         val = sio.load_slp(val_labels) if val_labels is not None else None
 
-    start_train_time = time()
+    if val is None:
+        train, val = train.make_training_splits(
+            n_train=1 - config.data_config.validation_fraction, n_val=config.data_config.validation_fraction, seed=42
+        )
+
+    start_train_time = time.time()
     start_timestamp = str(datetime.now())
     logger.info(f"Started training at: {start_timestamp}")
 
@@ -196,7 +204,7 @@ def train_command(
     trainer.train()
 
     finish_timestamp = str(datetime.now())
-    total_elapsed = time() - start_train_time
+    total_elapsed = time.time() - start_train_time
     logger.info(f"Finished training at: {finish_timestamp}")
     logger.info(f"Total training time: {total_elapsed} secs")
 
