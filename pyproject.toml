@@ -108,8 +108,8 @@ sleap-render = "sleap.io.visuals:main"
 sleap-label = "sleap.gui.app:main"
 sleap-inspect = "sleap.info.labels:main"
 sleap-diagnostic = "sleap.diagnostic:main"
-sleap-train = "sleap.legacy_cli_adaptors:train"
-sleap-track = "sleap.legacy_cli_adaptors:track"
+sleap-train = "sleap.legacy_cli_adaptors:train_command"
+sleap-track = "sleap.legacy_cli_adaptors:track_command"
 # sleap-export = "sleap.legacy_cli_adaptors:export_cli"
 
 [tool.setuptools.packages.find]
