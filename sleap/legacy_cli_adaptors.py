@@ -189,7 +189,7 @@ def train_command(
 
     if val is None:
         train, val = train.make_training_splits(
-            n_train=1 - config.data_config.validation_fraction, 
+            n_train=1 - config.data_config.validation_fraction,
             n_val=config.data_config.validation_fraction, seed=42
         )
 
