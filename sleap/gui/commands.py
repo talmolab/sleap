@@ -2293,7 +2293,12 @@ class OpenSkeleton(EditCommand):
 
         with open(filename, "r") as f:
             skeleton_data = json.load(f)
-        skel = SkeletonDecoder().decode(data=skeleton_data["nx_graph"])
+            skeleton_data = (
+                skeleton_data["nx_graph"]
+                if "nx_graph" in skeleton_data
+                else skeleton_data
+            )
+        skel = SkeletonDecoder().decode(data=skeleton_data)
         return skel
 
     @staticmethod
