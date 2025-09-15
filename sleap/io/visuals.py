@@ -409,30 +409,52 @@ def save_labeled_video(
         None.
     """
     # Create marker thread and queues.
-    # q1 = Queue(maxsize=10)
-    # q2 = Queue(maxsize=10)
-    # thread_mark = VideoMarkerThread(
-    #     in_q=q1,
-    #     out_q=q2,
-    #     labels=labels,
-    #     video_idx=labels.videos.index(video),
-    #     scale=scale,
-    #     show_edges=show_edges,
-    #     edge_is_wedge=edge_is_wedge,
-    #     marker_size=marker_size,
-    #     crop_size_xy=crop_size_xy,
-    #     color_manager=color_manager,
-    #     palette=palette,
-    #     distinctly_color=distinctly_color,
-    # )
+    in_q = Queue(maxsize=10)
+    out_q = Queue(maxsize=10)
+
+    marker_thread = VideoMarkerThread(
+        in_q=in_q,
+        out_q=out_q,
+        labels=labels,
+        video_idx=labels.videos.index(video),
+        scale=scale,
+        show_edges=show_edges,
+        edge_is_wedge=edge_is_wedge,
+        marker_size=marker_size,
+        crop_size_xy=crop_size_xy,
+        color_manager=color_manager,
+        palette=palette,
+        distinctly_color=distinctly_color,
+    )
+    marker_thread.start()
+
+    chunk_size = 64
+    for i in range(0, len(frames), chunk_size):
+        frame_inds = frames[i : i + chunk_size]
+        frame_imgs = [video[j] for j in frame_inds]
+        in_q.put((frame_inds, frame_imgs))
+    in_q.put(_sentinel) # Signal end of input
+    
+    # Collect annotated frames from the output queue
+    annotated_frames = []
+    while True:
+        imgs = out_q.get()
+        if imgs is _sentinel:
+            break
+        annotated_frames.extend(imgs)
+
+    marker_thread.join()
 
     # Pass marker thread in as intrmediate thread to write_video (and write video).
     # intermediate_threads = [thread_mark]
+
+    # Save video at end after getting annotated frames
     save_video(
-        frames=[video[i] for i in frames],
+        frames=annotated_frames,
         filename=filename,
         fps=fps,
     )  # TODO: add other parameters
+
     # write_video(
     #     filename=filename,
     #     video=video,
