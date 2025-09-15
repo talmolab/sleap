@@ -578,10 +578,10 @@ def main(args: list = None):
 
     filename = args.output or args.data_path + ".avi"
 
-    try:
-        crop_size_xy = list(map(int, args.crop.split(",")))
-    except Exception:
-        crop_size_xy = None
+    # try:
+    #     crop_size_xy = list(map(int, args.crop.split(",")))
+    # except Exception:
+    #     crop_size_xy = None
 
     save_labeled_video(
         filename=filename,
