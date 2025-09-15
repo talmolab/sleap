@@ -433,8 +433,8 @@ def save_labeled_video(
         frame_inds = frames[i : i + chunk_size]
         frame_imgs = [video[j] for j in frame_inds]
         in_q.put((frame_inds, frame_imgs))
-    in_q.put(_sentinel) # Signal end of input
-    
+    in_q.put(_sentinel)  # Signal end of input
+
     # Collect annotated frames from the output queue
     annotated_frames = []
     while True:
