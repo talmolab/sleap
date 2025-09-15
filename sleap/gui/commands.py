@@ -2288,9 +2288,18 @@ class OpenSkeleton(EditCommand):
 
     @staticmethod
     def load_skeleton(filename: str):
-        import sleap_io as sio
+        from sleap_io.io.skeleton import SkeletonDecoder
+        import simplejson as json
 
-        return sio.load_skeleton(filename)
+        with open(filename, "r") as f:
+            skeleton_data = json.load(f)
+            skeleton_data = (
+                skeleton_data["nx_graph"]
+                if "nx_graph" in skeleton_data
+                else skeleton_data
+            )
+        skel = SkeletonDecoder().decode(data=skeleton_data)
+        return skel
 
     @staticmethod
     def compare_skeletons(
