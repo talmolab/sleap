@@ -500,9 +500,9 @@ def main(args: list = None):
     )
     parser.add_argument("-f", "--fps", type=int, default=25, help="Frames per second")
     parser.add_argument("--scale", type=float, default=1.0, help="Output image scale")
-    parser.add_argument(
-        "--crop", type=str, default="", help="Crop size as <width>,<height>"
-    )
+    # parser.add_argument(
+    #     "--crop", type=str, default="", help="Crop size as <width>,<height>"
+    # )
     parser.add_argument(
         "--frames",
         type=frame_list,
@@ -552,15 +552,15 @@ def main(args: list = None):
             "'edges', and 'nodes' (default: 'nodes')"
         ),
     )
-    parser.add_argument(
-        "--background",
-        type=str,
-        default="original",
-        help=(
-            "Specify the type of background to be used to save the videos."
-            "Options for background: original, black, white and grey"
-        ),
-    )
+    # parser.add_argument(
+    #     "--background",
+    #     type=str,
+    #     default="original",
+    #     help=(
+    #         "Specify the type of background to be used to save the videos."
+    #         "Options for background: original, black, white and grey"
+    #     ),
+    # )
     args = parser.parse_args(args=args)
     labels = load_labels_video_search(
         args.data_path, video_search=[os.path.dirname(args.data_path)]
@@ -590,13 +590,13 @@ def main(args: list = None):
         frames=frames,
         fps=args.fps,
         scale=args.scale,
-        crop_size_xy=crop_size_xy,
+        crop_size_xy=None, # default value since argument is commented out
         show_edges=args.show_edges > 0,
         edge_is_wedge=args.edge_is_wedge > 0,
         marker_size=args.marker_size,
         palette=args.palette,
         distinctly_color=args.distinctly_color,
-        background=args.background,
+        background='original', # default value since argument is commented out
     )
 
     print(f"Video saved as: {filename}")
