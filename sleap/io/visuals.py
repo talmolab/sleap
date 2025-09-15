@@ -590,13 +590,13 @@ def main(args: list = None):
         frames=frames,
         fps=args.fps,
         scale=args.scale,
-        crop_size_xy=None, # default value since argument is commented out
+        crop_size_xy=None,  # default value since argument is commented out
         show_edges=args.show_edges > 0,
         edge_is_wedge=args.edge_is_wedge > 0,
         marker_size=args.marker_size,
         palette=args.palette,
         distinctly_color=args.distinctly_color,
-        background='original', # default value since argument is commented out
+        background="original",  # default value since argument is commented out
     )
 
     print(f"Video saved as: {filename}")
