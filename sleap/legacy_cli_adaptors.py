@@ -188,6 +188,7 @@ def train_command(
         train = sio.load_slp(labels_path)
         val = sio.load_slp(val_labels) if val_labels is not None else None
 
+    # TODO: DS
     if val is None:
         train, val = train.make_training_splits(
             n_train=1 - config.data_config.validation_fraction,
