@@ -169,8 +169,8 @@ class LearningDialog(QtWidgets.QDialog):
 
         # Connect actions for buttons
         self.copy_button.clicked.connect(self.copy)
-        self.save_button.clicked.connect(self.save)
-        self.export_button.clicked.connect(self.export_package)
+        self.save_button.clicked.connect(lambda: self.save())
+        self.export_button.clicked.connect(lambda: self.export_package())
         self.cancel_button.clicked.connect(self.reject)
         self.run_button.clicked.connect(self.run)
 
@@ -833,8 +833,6 @@ class LearningDialog(QtWidgets.QDialog):
         if labels_filename is None:
             labels_filename = self.labels_filename
 
-        print(output_dir, type(output_dir))
-
         runners.write_pipeline_files(
             output_dir=output_dir,
             labels_filename=labels_filename,
@@ -846,7 +844,6 @@ class LearningDialog(QtWidgets.QDialog):
     def export_package(self, output_path: Optional[str] = None, gui: bool = True):
         """Export training job package."""
         # TODO: Warn if self.mode != "training"?
-
         if output_path is None or not output_path:
             # Prompt for output path.
             output_path, _ = FileDialog.save(
