@@ -455,12 +455,11 @@ def train_command(
     "tracking_tracker",
     help="Options: simple, flow, simplemaxtracks, flowmaxtracks, None (default: None)",
 )
-# tracking.max_tracking is a boolean flag now, not integer
 @click.option(
     "--tracking.max_tracking",
     "tracking_max_tracking",
-    is_flag=True,
-    help="If true then the tracker will cap the max number of tracks. (default: False)",
+    type=int,
+    help="If 1 (True) then the tracker will cap the max number of tracks. (default: 0, (False))",
 )
 @click.option(
     "--tracking.max_tracks",
@@ -627,7 +626,8 @@ def track_command(
         if "flow" in tracking_tracker:
             kwargs["use_flow"] = True
 
-    if tracking_max_tracking is not None and tracking_max_tracking:
+    # Check max_tracking flag int value for True/False
+    if tracking_max_tracking is not None and tracking_max_tracking == 1:
         kwargs["candidates_method"] = "local_queues"
         kwargs["max_tracks"] = tracking_max_tracks
 
