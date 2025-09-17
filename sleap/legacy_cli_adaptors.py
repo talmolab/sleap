@@ -169,12 +169,15 @@ def train_command(
         config.trainer_config.run_name = config.trainer_config.run_name + suffix
     if cpu is not None and cpu:
         config.trainer_config.trainer_accelerator = "cpu"
-    # if first_gpu: #TODO
-    #     args.append('--first-gpu')
-    # if last_gpu:
-    #     args.append('--last-gpu')
-    # if gpu:
-    #     args.extend(['--gpu', gpu])
+    if first_gpu:
+        config.trainer_config.trainer_accelerator = "gpu"
+        config.trainer_config.trainer_device_indices = [0]
+    if last_gpu:
+        config.trainer_config.trainer_accelerator = "gpu"
+        config.trainer_config.trainer_device_indices = [-1]
+    if gpu:
+        config.trainer_config.trainer_accelerator = "gpu"
+        config.trainer_config.trainer_device_indices = [gpu] if gpu != "auto" else None
 
     # Call the original training function with the arguments
     if video_paths is not None:
@@ -574,6 +577,8 @@ def track_command(
     tracking_of_max_levels,
 ):
     """Track instances in video data using trained SLEAP models."""
+    import torch
+
     # Build kwargs for the tracking function
     kwargs = {}
 
@@ -595,12 +600,14 @@ def track_command(
         kwargs["video_index"] = video_index
     if cpu is not None and cpu:
         kwargs["device"] = "cpu"
-    # if first_gpu:
-    #     kwargs['first_gpu'] = True
-    # if last_gpu:
-    #     kwargs['last_gpu'] = True
-    # if gpu:
-    #     kwargs['gpu'] = gpu #TODO
+    if torch.cuda.is_available():
+        if first_gpu:
+            kwargs["device"] = "cuda:0"
+        if last_gpu:
+            n_gpus = torch.cuda.device_count()
+            kwargs["device"] = f"cuda:{n_gpus - 1}"
+        if gpu:
+            kwargs["device"] = f"cuda:{gpu}" if gpu != "auto" else "cuda"
     if max_edge_length_ratio is not None:
         kwargs["max_edge_length_ratio"] = max_edge_length_ratio
     if dist_penalty_weight is not None:
