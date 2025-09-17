@@ -500,10 +500,8 @@ def write_pipeline_files(
                 f"sleap-nn train --config-name {new_cfg_filename} --config-dir {''} "
                 f"trainer_config.ckpt_dir={Path(ckpt_path).parent.as_posix()} "
                 f"trainer_config.run_name={Path(ckpt_path).name}"
-                f"trainer_config.zmq.controller_address=tcp://127.0.0.1:"
-                f"{str(cfg_info.config.trainer_config.zmq.controller_address)} "
-                f"trainer_config.zmq.publish_address=tcp://127.0.0.1:"
-                f"{str(cfg_info.config.trainer_config.zmq.publish_address)}"
+                f"trainer_config.zmq.controller_port={cfg_info.config.trainer_config.zmq.controller_port}"
+                f"trainer_config.zmq.publish_port={cfg_info.config.trainer_config.zmq.publish_port}"
                 "\n"
             )
 
@@ -915,12 +913,8 @@ def train_subprocess(
 
         cfg.trainer_config.ckpt_dir = Path(run_path).parent.as_posix()
         cfg.trainer_config.run_name = Path(run_path).name
-        cfg.trainer_config.zmq.controller_address = (
-            f"tcp://127.0.0.1:{str(inference_params['controller_port'])}"
-        )
-        cfg.trainer_config.zmq.publish_address = (
-            f"tcp://127.0.0.1:{str(inference_params['publish_port'])}"
-        )
+        cfg.trainer_config.zmq.controller_port = inference_params["controller_port"]
+        cfg.trainer_config.zmq.publish_port = inference_params["publish_port"]
 
         OmegaConf.save(cfg, (Path(temp_dir) / f"{cfg_file_name}.yaml").as_posix())
 

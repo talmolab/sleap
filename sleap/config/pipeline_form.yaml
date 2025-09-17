@@ -271,13 +271,13 @@ training:
 - type: text
   text: '<b>ZMQ Options</b>'
 
-- name: trainer_config.zmq.controller_address
+- name: trainer_config.zmq.controller_port
   label: Controller Port
   type: int
   default: 9000
   range: 1024,65535
 
-- name: trainer_config.zmq.publish_address
+- name: trainer_config.zmq.publish_port
   label: Publish Port
   type: int
   default: 9001

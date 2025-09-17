@@ -138,8 +138,8 @@ trainer_config:
     max_hard_keypoints: null
     loss_scale: 5.0
   zmq:
-    publish_address:
-    controller_address:
+    publish_port:
+    controller_port:
     controller_polling_timeout: 10
 name: ''
 description: ''
