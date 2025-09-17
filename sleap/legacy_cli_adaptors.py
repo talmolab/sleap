@@ -159,8 +159,8 @@ def train_command(
     if keep_viz is not None and keep_viz:
         config.trainer_config.keep_viz = True
     if zmq is not None and not zmq:
-        config.trainer_config.zmq.publish_address = None
-        config.trainer_config.zmq.controller_address = None
+        config.trainer_config.zmq.publish_port = None
+        config.trainer_config.zmq.controller_port = None
     if run_name is not None:
         config.trainer_config.run_name = run_name
     if prefix is not None:

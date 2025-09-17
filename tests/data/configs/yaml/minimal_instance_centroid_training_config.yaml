@@ -151,9 +151,9 @@ trainer_config:
     max_hard_keypoints: null
     loss_scale: 5.0
   zmq:
-    controller_address: tcp://127.0.0.1:9000
+    controller_port: 9000
     controller_polling_timeout: 10
-    publish_address: tcp://127.0.0.1:9001
+    publish_port: 9001
 name: ''
 description: ''
 sleap_nn_version: 0.0.1
