@@ -92,8 +92,12 @@ jupyter = [
     "jupyterlab",
 ]
 
-sleap-nn = [
+nn-cpu = [
     "sleap-nn[torch-cpu]"
+]
+
+nn-gpu = [
+    "sleap-nn[torch-cuda128]"
 ]
 
 [project.urls]

@@ -188,14 +188,6 @@ def train_command(
         train = sio.load_slp(labels_path)
         val = sio.load_slp(val_labels) if val_labels is not None else None
 
-    # TODO: DS
-    if val is None:
-        train, val = train.make_training_splits(
-            n_train=1 - config.data_config.validation_fraction,
-            n_val=config.data_config.validation_fraction,
-            seed=42,
-        )
-
     start_train_time = time.time()
     start_timestamp = str(datetime.now())
     logger.info(f"Started training at: {start_timestamp}")
@@ -203,7 +195,7 @@ def train_command(
     trainer = ModelTrainer.get_model_trainer_from_config(
         config=config,
         train_labels=[train],
-        val_labels=[val],
+        val_labels=[val] if val is not None else None,
     )
     trainer.train()
 
