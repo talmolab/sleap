@@ -382,6 +382,7 @@ def save_labeled_video(
     palette: str = "standard",
     distinctly_color: str = "instances",
     gui_progress: bool = False,
+    chunk_size: int = 64,
 ):
     """Function to generate and save video with annotations.
 
@@ -428,10 +429,11 @@ def save_labeled_video(
     )
     marker_thread.start()
 
-    chunk_size = 64
-    for i in range(0, len(frames), chunk_size):
-        frame_inds = frames[i : i + chunk_size]
-        frame_imgs = [video[j] for j in frame_inds]
+    # Send frames to marker thread via input queue
+    for i0 in range(0, len(frames), chunk_size):
+        i1 = min(i0 + chunk_size, len(frames))
+        frame_inds = frames[i0:i1]
+        frame_imgs = video[frame_inds]
         in_q.put((frame_inds, frame_imgs))
     in_q.put(_sentinel)  # Signal end of input
 
