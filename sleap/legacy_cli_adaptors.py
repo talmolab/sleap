@@ -459,7 +459,7 @@ def train_command(
     "--tracking.max_tracking",
     "tracking_max_tracking",
     type=int,
-    help="If 1 (True) then the tracker will cap the max number of tracks. 0 (False)"
+    help="If 1 (True) then the tracker will cap the max number of tracks. 0 (False)",
 )
 @click.option(
     "--tracking.max_tracks",
