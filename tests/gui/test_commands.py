@@ -50,6 +50,8 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
 )
 from sleap.sleap_io_adaptors.instance_utils import instance_same_pose_as_compat
 
+from copy import deepcopy
+
 
 def test_delete_user_dialog(centered_pair_predictions):
     context = CommandContext.from_labels(centered_pair_predictions)
@@ -1026,10 +1028,13 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
         predicted_inst = PredictedInstance.from_numpy(
             lf.instances[0].points["xy"], skeleton=lf.instances[0].skeleton, score=0.5
         )
+        lf.instances = []
         labels_add_instance(centered_pair_labels, lf, predicted_inst)
-        for inst in lf.user_instances:
-            remove_instance(centered_pair_labels, inst, lf)
-    context = CommandContext.from_labels(centered_pair_labels)
+        # for inst in lf.user_instances:
+            # remove_instance(centered_pair_labels, inst, lf)
+
+    # FIXME: DEEPCOPY Labels to prevent mutation during case exports
+    context = CommandContext.from_labels(deepcopy(centered_pair_labels))
 
     # Case 1: Export user-labeled frames with image data into a single SLP file.
     context.exportUserLabelsPackage()
@@ -1037,10 +1042,12 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
     assert_loaded_package_similar(path_to_pkg)
 
     # Case 2: Export user-labeled frames and suggested frames with image data.
+    context = CommandContext.from_labels(deepcopy(centered_pair_labels))
     context.exportTrainingPackage()
     assert_loaded_package_similar(path_to_pkg, sugg=True)
 
     # Case 3: Export all frames and suggested frames with image data.
+    context = CommandContext.from_labels(deepcopy(centered_pair_labels))
     context.exportFullPackage()
     assert_loaded_package_similar(path_to_pkg, sugg=True, pred=True)
 
