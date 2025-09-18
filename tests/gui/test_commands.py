@@ -46,7 +46,6 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     add_suggestion,
     remove_video,
     labels_add_instance,
-    remove_instance,
 )
 from sleap.sleap_io_adaptors.instance_utils import instance_same_pose_as_compat
 
