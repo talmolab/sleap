@@ -1031,7 +1031,7 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
         lf.instances = []
         labels_add_instance(centered_pair_labels, lf, predicted_inst)
         # for inst in lf.user_instances:
-            # remove_instance(centered_pair_labels, inst, lf)
+        # remove_instance(centered_pair_labels, inst, lf)
 
     # FIXME: DEEPCOPY Labels to prevent mutation during case exports
     context = CommandContext.from_labels(deepcopy(centered_pair_labels))
