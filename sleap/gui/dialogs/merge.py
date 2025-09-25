@@ -103,7 +103,7 @@ class MergeDialog(QtWidgets.QDialog):
 
         # Count merged frames
         self.frames_merged = (
-            len(merge_result.frames_merged)
+            merge_result.frames_merged
             if hasattr(merge_result, "frames_merged")
             else 0
         )
@@ -367,7 +367,9 @@ class MergeTableModel(QtCore.QAbstractTableModel):
         """Extract merge data from merge result."""
         data_table = []
 
-        if hasattr(self.merge_result, "frames_merged"):
+        if hasattr(self.merge_result, "frames_merged") and isinstance(
+            self.merge_result.frames_merged, list
+        ):
             # Extract data from merge result object
             for frame_info in self.merge_result.frames_merged:
                 data_table.append(
