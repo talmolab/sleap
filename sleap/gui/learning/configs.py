@@ -184,7 +184,6 @@ class ConfigFileInfo:
             metrics_path = metrics_path_nn
 
         with np.load(metrics_path, allow_pickle=True) as data:
-
             metric_data = data["metrics"].item()
 
             return_dict = {
