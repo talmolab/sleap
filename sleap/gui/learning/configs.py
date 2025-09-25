@@ -430,29 +430,25 @@ class TrainingConfigsGetter:
             )
             json_files.extend(
                 sleap_utils.find_files_by_suffix(
-                    config_dir, "training_config.yaml", depth=self.search_depth
+                    config_dir, ".yaml", depth=self.search_depth
                 )
             )
             json_files.extend(
                 sleap_utils.find_files_by_suffix(
-                    config_dir, "training_config.yml", depth=self.search_depth
+                    config_dir, ".yml", depth=self.search_depth
                 )
             )
 
             if Path(config_dir).as_posix().endswith("sleap/training_profiles"):
                 # Use hardcoded sort.
                 BUILTIN_ORDER = [
-                    "baseline.centroid.json",
-                    "baseline_medium_rf.bottomup.json",
-                    "baseline_medium_rf.single.json",
-                    "baseline_medium_rf.topdown.json",
-                    "baseline_large_rf.bottomup.json",
-                    "baseline_large_rf.single.json",
-                    "baseline_large_rf.topdown.json",
-                    "pretrained.bottomup.json",
-                    "pretrained.centroid.json",
-                    "pretrained.single.json",
-                    "pretrained.topdown.json",
+                    "baseline.centroid.yaml",
+                    "baseline_medium_rf.bottomup.yaml",
+                    "baseline_medium_rf.single.yaml",
+                    "baseline_medium_rf.topdown.yaml",
+                    "baseline_large_rf.bottomup.yaml",
+                    "baseline_large_rf.single.yaml",
+                    "baseline_large_rf.topdown.yaml",
                 ]
                 json_files.sort(key=lambda f: BUILTIN_ORDER.index(f.name))
 

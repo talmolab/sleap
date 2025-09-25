@@ -35,6 +35,7 @@ import re
 import subprocess
 import sys
 import traceback
+from copy import deepcopy
 from enum import Enum
 from glob import glob
 from pathlib import Path, PurePath
@@ -2250,7 +2251,7 @@ class RemoveVideo(EditCommand):
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
-        videos = context.labels.videos.copy()
+        videos = deepcopy(context.labels.videos)
         row_idxs = context.state["selected_batch_video"]
         video_file_names = []
         total_num_labeled_frames = 0

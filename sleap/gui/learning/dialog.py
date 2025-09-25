@@ -696,7 +696,7 @@ class LearningDialog(QtWidgets.QDialog):
             "top-down-id",
             "bottom-up-id",
         ):
-            can_run = self.validate_id_model()
+            can_run = self._validate_id_model()
             if not can_run:
                 message = "Cannot run ID model training without tracks."
 

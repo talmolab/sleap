@@ -1,0 +1,152 @@
+data_config:
+  train_labels_path: null
+  val_labels_path: null
+  validation_fraction: 0.1
+  test_file_path: null
+  provider: LabelsReader
+  user_instances_only: true
+  data_pipeline_fw: torch_dataset
+  cache_img_path: null
+  use_existing_imgs: false
+  delete_cache_imgs_after_training: true
+  preprocessing:
+    ensure_rgb: false
+    ensure_grayscale: false
+    max_height: null
+    max_width: null
+    scale: 0.5
+    crop_size: null
+    min_crop_size: 100
+  use_augmentations_train: true
+  augmentation_config:
+    intensity:
+      uniform_noise_min: 0.0
+      uniform_noise_max: 1.0
+      uniform_noise_p: 0.0
+      gaussian_noise_mean: 5.0
+      gaussian_noise_std: 1.0
+      gaussian_noise_p: 0.0
+      contrast_min: 0.5
+      contrast_max: 2.0
+      contrast_p: 0.0
+      brightness_min: 0.0
+      brightness_max: 2.0
+      brightness_p: 0.0
+    geometric:
+      rotation_min: -15.0
+      rotation_max: 15.0
+      scale_min: 0.9
+      scale_max: 1.1
+      translate_width: 0.0
+      translate_height: 0.0
+      affine_p: 1.0
+      erase_scale_min: 0.0001
+      erase_scale_max: 0.01
+      erase_ratio_min: 1.0
+      erase_ratio_max: 1.0
+      erase_p: 0.0
+      mixup_lambda_min: 0.01
+      mixup_lambda_max: 0.05
+      mixup_p: 0.0
+  skeletons: []
+model_config:
+  init_weights: default
+  pretrained_backbone_weights: null
+  pretrained_head_weights: null
+  backbone_config:
+    unet:
+      in_channels: 1
+      kernel_size: 3
+      filters: 16
+      filters_rate: 2.0
+      max_stride: 16
+      stem_stride: null
+      middle_block: true
+      up_interpolate: true
+      stacks: 1
+      convs_per_block: 2
+      output_stride: 2
+    convnext: null
+    swint: null
+  head_configs:
+    single_instance: null
+    centroid:
+      confmaps:
+        anchor_part: null
+        sigma: 2.5
+        output_stride: 2
+    centered_instance: null
+    bottomup: null
+    multi_class_bottomup: null
+    multi_class_topdown: null
+  total_params: null
+trainer_config:
+  train_data_loader:
+    batch_size: 4
+    shuffle: true
+    num_workers: 0
+  val_data_loader:
+    batch_size: 4
+    shuffle: false
+    num_workers: 0
+  model_ckpt:
+    save_top_k: 1
+    save_last: false
+  trainer_devices:
+  trainer_device_indices: null
+  trainer_accelerator: auto
+  profiler: null
+  trainer_strategy: auto
+  enable_progress_bar: true
+  min_train_steps_per_epoch: 200
+  train_steps_per_epoch: null
+  visualize_preds_during_training: true
+  keep_viz: false
+  max_epochs: 200
+  seed: null
+  use_wandb: false
+  save_ckpt: true
+  ckpt_dir: models
+  run_name: null
+  resume_ckpt_path: null
+  wandb:
+    entity: null
+    project: null
+    name: null
+    save_viz_imgs_wandb: false
+    api_key: null
+    wandb_mode: null
+    prv_runid: null
+    group: null
+    current_run_id: null
+  optimizer_name: Adam
+  optimizer:
+    lr: 0.0001
+    amsgrad: false
+  lr_scheduler:
+    step_lr: null
+    reduce_lr_on_plateau:
+      threshold: 1.0e-08
+      threshold_mode: rel
+      cooldown: 3
+      patience: 5
+      factor: 0.5
+      min_lr: 1.0e-08
+  early_stopping:
+    min_delta: 1.0e-08
+    patience: 20
+    stop_training_on_plateau: true
+  online_hard_keypoint_mining:
+    online_mining: false
+    hard_to_easy_ratio: 2.0
+    min_hard_keypoints: 2
+    max_hard_keypoints: null
+    loss_scale: 5.0
+  zmq:
+    controller_port: 9000
+    controller_polling_timeout: 10
+    publish_port: 9001
+name: ''
+description: ''
+sleap_nn_version: 0.0.1
+filename: ''

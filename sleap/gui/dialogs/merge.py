@@ -3,6 +3,7 @@ Gui for merging two labels files with options to resolve conflicts using sleap-i
 """
 
 import logging
+from copy import deepcopy
 from typing import Dict, List, Optional
 
 from qtpy import QtWidgets, QtCore
@@ -79,7 +80,7 @@ class MergeDialog(QtWidgets.QDialog):
         """Perform merge analysis using sleap-io functionality."""
         try:
             # Create a copy for analysis
-            base_copy = self.base_labels.copy()
+            base_copy = deepcopy(self.base_labels)
 
             # Attempt merge with frame strategy
             merge_result = base_copy.merge(

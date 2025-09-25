@@ -4,6 +4,7 @@ import abc
 import attr
 import os
 from omegaconf import OmegaConf
+from copy import deepcopy
 import psutil
 import json
 import subprocess
@@ -419,7 +420,7 @@ class InferenceTask:
         new_labels = Labels(self.results)
 
         # Merge pred results into base labels
-        self.labels.merge(new_labels, frame_strategy="keep_both")
+        self.labels.merge(new_labels)  # , frame_strategy="keep_both")
 
 
 def write_pipeline_files(
@@ -907,7 +908,7 @@ def train_subprocess(
 
         # convert json to yaml (to sleap-nn config format)
         cfg_file_name = datetime.now().strftime("%y%m%d_%H%M%S") + "_config"
-        filter_job_config = filter_cfg(job_config.copy())
+        filter_job_config = filter_cfg(deepcopy(job_config))
         cfg = verify_training_cfg(filter_job_config)
         cfg.data_config.train_labels_path = [labels_filename]
 
