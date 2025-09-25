@@ -88,7 +88,6 @@ class MergeDialog(QtWidgets.QDialog):
                 frame_strategy="keep_both",  # Use sleap-io frame strategy
             )
 
-
             # Analyze what was merged vs conflicts
             self._analyze_merge_result(merge_result)
 
@@ -355,8 +354,13 @@ class MergeTable(QtWidgets.QTableView):
 class MergeTableModel(QtCore.QAbstractTableModel):
     """Qt table model for summarizing merged frames."""
 
+    _props = [
+        "frames merged",
+        "instances added",
+        "instances updated",
+        "instances skipped",
+    ]
 
-    _props = ["frames merged", "instances added", "instances updated", "instances skipped"]
     def __init__(self, merge_result):
         super(MergeTableModel, self).__init__()
         self.merge_result = merge_result
