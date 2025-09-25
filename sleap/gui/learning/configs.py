@@ -184,29 +184,29 @@ class ConfigFileInfo:
             metrics_path = metrics_path_nn
 
         with np.load(metrics_path, allow_pickle=True) as data:
-            if "metrics" in data:
-                return data["metrics"].item()
+
+            metric_data = data["metrics"].item()
 
             return_dict = {
-                "vis.tp": data["visibility_metrics"].item().get("tp"),
-                "vis.fp": data["visibility_metrics"].item().get("fp"),
-                "vis.tn": data["visibility_metrics"].item().get("tn"),
-                "vis.fn": data["visibility_metrics"].item().get("fn"),
-                "vis.precision": data["visibility_metrics"].item().get("precision"),
-                "vis.recall": data["visibility_metrics"].item().get("recall"),
-                "dist.dists": data["distance_metrics"].item().get("dists"),
-                "dist.avg": data["distance_metrics"].item().get("avg"),
-                "dist.p50": data["distance_metrics"].item().get("p50"),
-                "dist.p75": data["distance_metrics"].item().get("p75"),
-                "dist.p90": data["distance_metrics"].item().get("p90"),
-                "dist.p95": data["distance_metrics"].item().get("p95"),
-                "dist.p99": data["distance_metrics"].item().get("p99"),
-                "pck.mPCK": data["pck_metrics"].item().get("mPCK"),
-                "oks.mOKS": data["mOKS"].item().get("mOKS"),
-                "oks_voc.mAP": data["voc_metrics"].item().get("oks_voc.mAP"),
-                "oks_voc.mAR": data["voc_metrics"].item().get("oks_voc.mAR"),
-                "pck_voc.mAP": data["voc_metrics"].item().get("pck_voc.mAP"),
-                "pck_voc.mAR": data["voc_metrics"].item().get("pck_voc.mAR"),
+                "vis.tp": metric_data["visibility_metrics"].get("tp"),
+                "vis.fp": metric_data["visibility_metrics"].get("fp"),
+                "vis.tn": metric_data["visibility_metrics"].get("tn"),
+                "vis.fn": metric_data["visibility_metrics"].get("fn"),
+                "vis.precision": metric_data["visibility_metrics"].get("precision"),
+                "vis.recall": metric_data["visibility_metrics"].get("recall"),
+                "dist.dists": metric_data["distance_metrics"].get("dists"),
+                "dist.avg": metric_data["distance_metrics"].get("avg"),
+                "dist.p50": metric_data["distance_metrics"].get("p50"),
+                "dist.p75": metric_data["distance_metrics"].get("p75"),
+                "dist.p90": metric_data["distance_metrics"].get("p90"),
+                "dist.p95": metric_data["distance_metrics"].get("p95"),
+                "dist.p99": metric_data["distance_metrics"].get("p99"),
+                "pck.mPCK": metric_data["pck_metrics"].get("mPCK"),
+                "oks.mOKS": metric_data["mOKS"].get("mOKS"),
+                "oks_voc.mAP": metric_data["voc_metrics"].get("oks_voc.mAP"),
+                "oks_voc.mAR": metric_data["voc_metrics"].get("oks_voc.mAR"),
+                "pck_voc.mAP": metric_data["voc_metrics"].get("pck_voc.mAP"),
+                "pck_voc.mAR": metric_data["voc_metrics"].get("pck_voc.mAR"),
             }
             return return_dict
 
