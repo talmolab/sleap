@@ -290,12 +290,6 @@ def get_centroid(instance: Instance) -> np.ndarray:
 
     Notes:
         This computes the centroid as the median of the visible points.
-
-    Args:
-        instance: sleap_io Instance object
-
-    Returns:
-        Centroid as a numpy array [x, y] or np.array([np.nan, np.nan]) if no points are labeled.
     """
     points = instance.points["xy"]
     centroid = np.nanmedian(points, axis=0)
