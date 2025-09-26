@@ -14,6 +14,7 @@ from sleap_io import Labels
 from sleap_io import Video
 from sleap.sleap_io_adaptors.skeleton_utils import node_to_index
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
+from sleap.sleap_io_adaptors.instance_utils import get_centroid
 
 
 @attr.s(auto_attribs=True)
@@ -210,7 +211,7 @@ class StatisticSeries:
             if len(instances) < 2:
                 return np.nan
             # centroids for all instances in frame
-            centroids = np.array([inst.centroid for inst in instances])
+            centroids = np.array([get_centroid(inst) for inst in instances])
             # calculate distance between each pair of instance centroids
             distances = np.linalg.norm(
                 centroids[np.newaxis, :, :] - centroids[:, np.newaxis, :], axis=-1
