@@ -1233,6 +1233,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         cfg = cfg_info.config
         key_val_dict = get_keyval_dict_from_omegaconf(cfg)
+        if key_val_dict.get("trainer_config.trainer_devices") == "auto":
+            key_val_dict["trainer_config.trainer_devices"] = None
         self.set_fields_from_key_val_dict(key_val_dict)
 
     # def _set_user_config(self):
