@@ -1,6 +1,6 @@
 site_name: SLEAP Documentation
-site_url: https://talmolab.github.io/sleap-core-docs
-
+site_url: https://docs.sleap.ai/
+repo_url: https://github.com/talmolab/sleap
 
 theme:
   name: material
@@ -94,7 +94,6 @@ nav:
   - Home: index.md
   - Overview: overview.md
   - Installation: installation.md
-  - What's New in SLEAP 1.5+: whats-new.md
   - Tutorial: 
       - Overview: tutorial/overview.md
       - Setup: tutorial/setup.md
@@ -106,8 +105,9 @@ nav:
       - Proofreading: tutorial/proofreading.md
       - Exporting the results: tutorial/exporting-the-results.md
       - I'm done SLEAPing, now what?: tutorial/i-m-done-sleaping-now-what.md
-  - How-To Guides:
+  - Guides:
       - Overview: how-to-guides/guides-overview.md
+      - Migrating to SLEAP 1.5+: migrating-to-sleap-1-5.md
       - Importing predictions for labeling: how-to-guides/importing-predictions-for-labeling.md
       - Tracking and proofreading: how-to-guides/tracking-and-proofreading.md
       - Run training and inference on Colab: how-to-guides/run-training-and-inference-on-colab.md
@@ -140,5 +140,5 @@ nav:
       - Command line interfaces: reference/command-line-interfaces.md
       - Evaluation metrics: reference/evaluation_metrics.md
       - Full API: api/
-      - Changelog: changelog.md
+      - Changelog: CHANGELOG.md
   - Help: help.md
