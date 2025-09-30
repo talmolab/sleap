@@ -5,30 +5,16 @@
     If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](http://legacy.sleap.ai).
 
 
-SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For a quick sample using [`uv`](https://docs.astral.sh/uv/)- an ultra-fast Python package and project manager, see below (no installation required!):
+SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For **quick start** using [`uv`](https://docs.astral.sh/uv/)- an ultra-fast Python package and project manager, see below!:
 
-=== "Windows/Linux (CUDA 12.8)"
-    ```bash
-    uvx --from "sleap[nn]" --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu128 sleap-label
-    ```
-    !!! info "Other CUDA versions"
-        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--extra-index-url` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cuda118` for CUDA 11.8, `https://download.pytorch.org/whl/cuda128` for CUDA 12.8, etc.).
-        - On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.
+```bash
+uv tool install "sleap[nn]" --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu128
+```
 
-=== "macOS/CPU Only"
-    ```bash
-    uvx --from "sleap[nn]" sleap-label
-    ```
-
-=== "SLEAP GUI Only"
-    ```bash
-    uvx --from "sleap" sleap-label
-    ```
-    !!! warning "GUI <u>ONLY</u>"
-        Installing this version of SLEAP will **NOT** include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for **labeling**.
-
-!!! tip "Sample with `uvx`"
-    Note that opening SLEAP w/ `uvx` will **not** install SLEAP onto your system, it will only **'invoke'** SLEAP.
+Then run:
+```bash
+sleap-label
+```
 
 For more in-depth installation instructions, see the [installation methods](#installation-methods). The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
 
@@ -66,6 +52,7 @@ For more in-depth installation instructions, see the [installation methods](#ins
 
 !!! tip "Choose Your Installation Method"
     - **[Installation with as a system-wide tool with uv](#installation-with-uv-tool-install)**: Use `uv tool install` to install SLEAP globally as a tool (Installation needed, **strongly recommended**)
+    - **[Installation with uvx](#installation-with-uvx)**: Use `uvx` for one-off commands. (no installation needed!)
     - **[Installation with uv pip](#installation-with-uv-pip)**: Use `uv pip` to install from pypi in a uv virtual env.
     - **[Installation with pip](#installation-with-pip)**: Use `pip` to install from pypi in a conda env. (Recommended to use with a conda env)
     - **[Installation from source](#development-setup-with-uv)**: Use `uv sync` to install from source. (For developmental purposes)
@@ -124,6 +111,46 @@ For more in-depth installation instructions, see the [installation methods](#ins
 # Test the installation
 sleap-label --help
 ```
+
+---
+
+### Installation with uvx
+`uvx` automatically installs sleap-nn and runs your command inside a temporary virtual environment (venv). This means each run is fully isolated and leaves no trace on your system—perfect for trying out sleap-nn without any *permanent* installation.
+
+!!! note "Install uv"
+    Install [`uv`](https://docs.astral.sh/uv/)- an ultra-fast Python package manager:
+    ```bash
+    # macOS/Linux
+    curl -LsSf http://astral.sh/uv/install.sh | sh
+
+    # Windows
+    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+    ```
+
+### Platform-Specific Commands
+
+=== "Windows/Linux (CUDA 12.8)"
+    ```bash
+    uvx --from "sleap[nn]" --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu128 sleap-label
+    ```
+    !!! info "Other CUDA versions"
+        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--extra-index-url` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cuda118` for CUDA 11.8, `https://download.pytorch.org/whl/cuda128` for CUDA 12.8, etc.).
+        - On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.
+
+=== "macOS/CPU Only"
+    ```bash
+    uvx --from "sleap[nn]" sleap-label
+    ```
+
+=== "SLEAP GUI Only"
+    ```bash
+    uvx --from "sleap" sleap-label
+    ```
+    !!! warning "GUI <u>ONLY</u>"
+        Installing this version of SLEAP will **NOT** include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for **labeling**.
+
+!!! tip "Sample with `uvx`"
+    Note that opening SLEAP w/ `uvx` will **not** install SLEAP onto your system, it will only **'invoke'** SLEAP.
 
 ---
 
