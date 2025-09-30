@@ -6,7 +6,7 @@ Stuck? Can't get SLEAP to run? Crashing? Try the recommended tips below.
 
 ### I can't get SLEAP to install!
 
-Have you tried all of the steps in the [installation instructions](installation)?
+Have you tried all of the steps in the [installation instructions](installation.md)?
 
 If so, please feel free to [start a discussion](https://github.com/talmolab/sleap/discussions) or [open an issue](https://github.com/talmolab/sleap/issues) and tell us how you're trying to install it, what error messages you're getting and which operating system you're on.
 
@@ -16,7 +16,7 @@ Yes! You can install SLEAP as you normally would using the `conda` or `pip`-base
 
 ### What if I already have CUDA set up on my system?
 
-You can use the system CUDA installation by simply using the [](./installation.md#pip-package) installation method.
+You can use the system CUDA installation by simply using the [pip package](installation.md/#installation-methods) installation method.
 
 Note that you will need to use a version compatible with **TensorFlow 2.6+** (**CUDA Toolkit v11.3** and **cuDNN v8.2**).
 
@@ -26,11 +26,9 @@ Note that you will need to use a version compatible with **TensorFlow 2.6+** (**
 
 If you're new to pose tracking in general, check out [this talk](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking) or our review in _[Nature Neuroscience](https://rdcu.be/caH3H)_.
 
-If you're just new to SLEAP, we suggest starting with the {ref}`high-level overview` and then following the {ref}`tutorial`.
+If you're just new to SLEAP, we suggest starting with the [high-level overview](overview.md) and then following the [tutorial](tutorial/overview.md).
 
-Once you get the hang of it, check out the {ref}`guides` for more detailed info.
-
-(reencoding)=
+Once you get the hang of it, check out the [guides](how-to-guides/guides-overview.md) for more detailed info.
 
 ### Does my data need to be in a particular format?
 
@@ -40,7 +38,7 @@ Many types of video acquisition software, however, do not save videos in a forma
 
 If you think you may be affected by this issue, or just want to be safe, re-encode your videos using the following command:
 
-```
+```sh
 ffmpeg -y -i "input.mp4" -c:v libx264 -pix_fmt yuv420p -preset superfast -crf 23 "output.mp4"
 ```
 
@@ -57,15 +55,15 @@ If you don't have `ffmpeg` on your system, you can install it using `conda insta
 
 ### I get strange results where the poses appear to be correct but shifted relative to the image.
 
-This is most likely an issue with the video compression format. {ref}`See above <reencoding>`.
+This is most likely an issue with the video compression format. [`See above`](#does-my-data-need-to-be-in-a-particular-format).
 
 ### How do I get predictions out?
 
-See {ref}`export-analysis` and {ref}`sleap-convert`.
+See [export-analysis](learnings/export-analysis.md) and [sleap-convert](reference/command-line-interfaces.md/#sleap-convert).
 
 ### What do I do with the output of SLEAP?
 
-Check out the [Analysis examples](notebooks/Analysis_examples) notebooks.
+Check out the [Analysis examples](notebooks/Analysis_examples.ipynb) notebooks.
 
 ## Getting more help
 
@@ -88,7 +86,8 @@ Feel free to reach out to us at `talmo@salk.edu` if you have a question that isn
 
 - [Cite our paper](https://www.nature.com/articles/s41592-022-01426-1)! Here's a BibTeX citation for your reference manager:
 
-   ```
+## BibTeX
+
     @ARTICLE{Pereira2022sleap,
         title={SLEAP: A deep learning system for multi-animal pose tracking},
         author={Pereira, Talmo D and
@@ -117,17 +116,14 @@ Feel free to reach out to us at `talmo@salk.edu` if you have a question that isn
         number={4},
         year={2022},
         publisher={Nature Publishing Group}
-        }
+        
     }
-   ```
 
 - Share new ideas for new features or improvements in the [Discussion forum](https://github.com/talmolab/sleap/discussions/categories/ideas).
 
-- Contribute some code! See our [contribution guidelines](https://sleap.ai/CONTRIBUTING.html) for more info.
+- Contribute some code! See our [contribution guidelines](contribute.md) for more info.
 
-
-(usage-data)=
-### What is usage data?
+## What is usage data?
 
 To help us improve SLEAP, you may allow us to collect basic and **anonymous** usage data. If enabled from the **Help** menu, the SLEAP GUI will transmit information such as which version of Python and operating system you are running SLEAP on.
 

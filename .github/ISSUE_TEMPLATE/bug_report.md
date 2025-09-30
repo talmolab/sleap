@@ -29,11 +29,7 @@ Please include information about how you installed.
 <!-- [e.g. ubuntu 20.04, macOS 11.0] -->
 -   Version(s):
 <!-- e.g. [SLEAP v1.4.1, python 3.8] --->
--   SLEAP installation method (listed [here](https://sleap.ai/installation.html#)):
-    -   [ ] [Conda from package](https://sleap.ai/installation.html#conda-package)
-    -   [ ] [Conda from source](https://sleap.ai/installation.html#conda-from-source)
-    -   [ ] [pip package](https://sleap.ai/installation.html#pip-package)
-    -   [ ] [Apple Silicon Macs](https://sleap.ai/installation.html#apple-silicon-macs)
+-   SLEAP installation method (listed [here](https://docs.sleap.ai/installation/#installation-methods)):
 
 <details><summary>Environment packages</summary>
 <!-- For reproduction, it's useful to have the full environment. For example, the output of `pip freeze` or `conda list` --->
