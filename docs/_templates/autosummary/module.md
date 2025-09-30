@@ -1,3 +1,0 @@
-# {{ fullname }}
-
-{{ module_content }}

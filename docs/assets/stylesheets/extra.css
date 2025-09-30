@@ -1,0 +1,4 @@
+.md-typeset .admonition, 
+.md-typeset details { 
+    font-size: inherit; /* Ensures it matches the surrounding text */
+}

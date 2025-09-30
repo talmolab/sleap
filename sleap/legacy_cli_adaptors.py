@@ -20,7 +20,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import load_labels_video_search
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.argument("training_job_path", required=True)
 @click.argument("labels_path", required=False)
 @click.option(
@@ -284,7 +284,7 @@ def train_command(
                 logger.info(f"p50 dist: {metrics['distance_metrics']['p50']}")
 
 
-@click.command()
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.argument("data_path", required=True)
 @click.option(
     "-m",
@@ -292,8 +292,8 @@ def train_command(
     "models",
     multiple=True,
     help=(
-        "Path to trained model directory (with training_config.json). Multiple models "
-        "can be specified, each preceded by --model."
+        "Path to trained model directory (with training_config json/yaml). "
+        "Multiple models can be specified, each preceded by --model."
     ),
 )
 @click.option(
@@ -331,25 +331,6 @@ def train_command(
     help=(
         "The output filename or directory path to use for the predicted data. If not "
         "provided, defaults to '[data_path].predictions.slp'."
-    ),
-)
-@click.option(
-    "--no-empty-frames",
-    "no_empty_frames",
-    is_flag=True,
-    help=(
-        "Clear any empty frames that did not have any detected instances before saving "
-        "to output."
-    ),
-)
-@click.option(
-    "--verbosity",
-    "verbosity",
-    type=click.Choice(["none", "rich", "json"]),
-    help=(
-        "Verbosity of inference progress reporting. 'none' does not output anything "
-        "during inference, 'rich' displays an updating progress bar, and 'json' "
-        "outputs the progress as a JSON encoded response to the console."
     ),
 )
 @click.option("--video.dataset", "video_dataset", help="The dataset for HDF5 videos.")
@@ -463,12 +444,6 @@ def train_command(
     help="Maximum number of tracks to be tracked by the tracker. (default: None)",
 )
 @click.option(
-    "--tracking.target_instance_count",
-    "tracking_target_instance_count",
-    type=int,
-    help="Target number of instances to track per frame. (default: 0)",
-)
-@click.option(
     "--tracking.post_connect_single_breaks",
     "tracking_post_connect_single_breaks",
     type=int,
@@ -546,8 +521,6 @@ def track_command(
     only_labeled_frames,
     only_suggested_frames,
     output,
-    no_empty_frames,
-    verbosity,
     video_dataset,
     video_input_format,
     video_index,
@@ -564,7 +537,6 @@ def track_command(
     tracking_tracker,
     tracking_max_tracking,
     tracking_max_tracks,
-    tracking_target_instance_count,
     tracking_post_connect_single_breaks,
     tracking_similarity,
     tracking_match,
@@ -590,8 +562,9 @@ def track_command(
         kwargs["only_labeled_frames"] = True
     if only_suggested_frames is not None and only_suggested_frames:
         kwargs["only_suggested_frames"] = True
-    if output is not None:
-        kwargs["output_path"] = output
+    kwargs["output_path"] = output
+    if output is None:
+        kwargs["output_path"] = f"{data_path}.predictions.slp"
     if video_dataset is not None:
         kwargs["video_dataset"] = video_dataset
     if video_input_format is not None:
@@ -664,3 +637,9 @@ def track_command(
 
     # # Call the original tracking function with kwargs
     predict(data_path=data_path, **kwargs)
+
+    if open_in_gui:
+        import subprocess
+
+        # Launch SLEAP GUI with the output file
+        subprocess.run(["sleap-label", str(kwargs.get("output_path", ""))])

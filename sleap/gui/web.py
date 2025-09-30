@@ -168,7 +168,7 @@ def ping_analytics():
         This only gets called when the GUI starts and obeys user preferences for data
         collection.
 
-        See https://sleap.ai/help.html#usage-data for more information.
+        See https://docs.sleap.ai/help/#usage for more information.
     """
     import threading
 
