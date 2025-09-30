@@ -1,5 +1,0 @@
-﻿sleap.gui.dialogs.metrics
-=========================
-
-.. automodule:: sleap.gui.dialogs.metrics
-   :members:

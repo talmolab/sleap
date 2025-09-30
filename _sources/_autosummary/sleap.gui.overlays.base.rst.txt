@@ -1,5 +1,0 @@
-﻿sleap.gui.overlays.base
-=======================
-
-.. automodule:: sleap.gui.overlays.base
-   :members:
