@@ -1,0 +1,2160 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://talmolab.github.io/sleap-core-docs/dev/learnings/gui/">
+      
+      
+        <link rel="prev" href="../system-overview/">
+      
+      
+        <link rel="next" href="../training-options/">
+      
+      
+      <link rel="icon" href="../../assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.21">
+    
+    
+      
+        <title>Using GUI - SLEAP Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.2a3383ac.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#gui" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SLEAP Documentation" class="md-header__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
+      
+  <img src="../../assets/sleap-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SLEAP Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Using GUI
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-orange" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SLEAP Documentation" class="md-nav__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
+      
+  <img src="../../assets/sleap-logo.png" alt="logo">
+
+    </a>
+    SLEAP Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../whats-new/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    What's New in SLEAP 1.5+
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Tutorial
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Tutorial
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/importing-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Importing data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/initial-labeling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Initial labeling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/training-a-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Training a model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/correcting-predictions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Correcting predictions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/tracking-new-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tracking new data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/proofreading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Proofreading
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/exporting-the-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Exporting the results
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorial/i-m-done-sleaping-now-what/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    I'm done SLEAPing, now what?
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    How-To Guides
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            How-To Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/guides-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/importing-predictions-for-labeling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Importing predictions for labeling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/tracking-and-proofreading/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tracking and proofreading
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/run-training-and-inference-on-colab/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Run training and inference on Colab
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/creating-a-custom-training-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Creating a custom training profile
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-to-guides/running-sleap-remotely/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Running SLEAP remotely
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Notebooks
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Notebooks
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/notebooks-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Training_and_inference_on_an_example_dataset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Training and inference on an example dataset
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Training_and_inference_using_Google_Drive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Training and inference on your own data using Google Drive
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Model_evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model evaluation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Analysis_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Analysis examples
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Data_structures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data structures
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Post_inference_tracking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Post-inference tracking
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Interactive_and_resumable_training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Interactive and resumable training
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/Interactive_and_realtime_inference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Interactive and realtime inference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SLEAP Tutorial at Cosyne 2024 - Using exported data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../notebooks/sleap_io_idtracker_IDs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Using idTracker.ai with SLEAP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Learning
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Learning
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../system-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    System Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Using GUI
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Using GUI
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#menus" class="md-nav__link">
+    <span class="md-ellipsis">
+      Menus
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file" class="md-nav__link">
+    <span class="md-ellipsis">
+      File
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#go" class="md-nav__link">
+    <span class="md-ellipsis">
+      Go
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#view" class="md-nav__link">
+    <span class="md-ellipsis">
+      View
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Labels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#predict" class="md-nav__link">
+    <span class="md-ellipsis">
+      Predict
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Help
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-gui" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application GUI
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mouse
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#navigation-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Navigation Keys
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selection-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Selection Keys
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#seekbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      Seekbar
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#labeling-suggestions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Labeling Suggestions
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training-options/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Training Options
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skeleton-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Skeleton design
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuring-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuring models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prediction-assisted-labeling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Prediction Assisted Labeling
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../main-mistakes-by-tracking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Types of mistakes in tracking code
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshoot-workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting workflows
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Export Data For Analysis
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Datasets
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/command-line-interfaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Command line interfaces
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/evaluation_metrics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Evaluation metrics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    Full API
+    
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_9_4" id="__nav_9_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_4">
+            <span class="md-nav__icon md-icon"></span>
+            Full API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../help/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Help
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#menus" class="md-nav__link">
+    <span class="md-ellipsis">
+      Menus
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file" class="md-nav__link">
+    <span class="md-ellipsis">
+      File
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#go" class="md-nav__link">
+    <span class="md-ellipsis">
+      Go
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#view" class="md-nav__link">
+    <span class="md-ellipsis">
+      View
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Labels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#predict" class="md-nav__link">
+    <span class="md-ellipsis">
+      Predict
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#help" class="md-nav__link">
+    <span class="md-ellipsis">
+      Help
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#application-gui" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application GUI
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mouse" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mouse
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#navigation-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Navigation Keys
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selection-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Selection Keys
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#seekbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      Seekbar
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#labeling-suggestions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Labeling Suggestions
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="gui">GUI<a class="headerlink" href="#gui" title="Permanent link">&para;</a></h1>
+<p>The SLEAP labeling interface is accessible via the <code>sleap_label</code> command (see <a href="../../reference/command-line-interfaces/"><code>Command Line Interfaces</code></a>).</p>
+<h2 id="menus">Menus<a class="headerlink" href="#menus" title="Permanent link">&para;</a></h2>
+<p>Note that many of the menu command have keyboard shortcuts which can be configured from "<strong>Keyboard Reference</strong>" in the "<strong>Help</strong>" menu.</p>
+<h2 id="file">File<a class="headerlink" href="#file" title="Permanent link">&para;</a></h2>
+<p>"<strong>New...</strong>", "<strong>Open...</strong>", "Save, and "<strong>Save As...</strong>" have their usual behavior.</p>
+<p>"<strong>Import...</strong>" allows you to import the data external formats into a new SLEAP dataset. This includes <a href="http://cocodataset.org/#format-data">COCO</a> keypoint detection (<code>.json</code> files), <a href="http://deeplabcut.org">DeepLabCut</a> (<code>.csv</code>), <a href="http://deepposekit.org">DeepPoseKit</a> (<code>.h5</code>), and <a href="https://github.com/talmo/leap">LEAP</a> (<code>.mat</code>).</p>
+<p>"<strong>Merge Data From...</strong>" allows you to copy labels and/or predictions from another SLEAP dataset into the currently open project. This is useful because you can only train on data from a single SLEAP dataset, so you may need to import data before training. For instance, suppose you've trained a model and use it to get predictions on another video. You then open the predictions file in the GUI and realize that you'd like to correct some of the predictions and add those corrections to your training data. You can do this by importing data from the predictions file into the SLEAP project which has your training data.</p>
+<p>"<strong>Add Videos...</strong>" allows you to add videos to your currently open project.</p>
+<p>"<strong>Replace Videos...</strong>" allows you to <em>swap</em> the videos currently in your project with other videos. This is useful if you want to have your project access copies of the videos at a different path, e.g., if you copy the videos between a network drive and a local drive and want to change which is used by your project. This can also be used if you want to replace you videos with copies that have been re-encoded, cropped, or edited in some other way that doesn't affect the frame numbers (since your annotations will be placed directly on the corresponding frames of the new video).</p>
+<h2 id="go">Go<a class="headerlink" href="#go" title="Permanent link">&para;</a></h2>
+<p>"<strong>Next Labeled Frame</strong>" will take you to the next frame of the video which has any labeled data—either labels added by the user or predictions.</p>
+<p>"<strong>Next User Labeled Frame</strong>" will take you to the next frame which has labels added by the user, skipping any frames which are unlabeled or have only predictions.</p>
+<p>"<strong>Next Suggestion</strong>" will take you to the next frame in the list of suggested frames. If you are currently on a suggested frame, it will take you to the next frame in the list, which may not be a later frame in the video (or even a frame in the same video). If you are not currently on a suggested frame, it will take you to the nearest subsequent suggested frame.</p>
+<p>"<strong>Next Track Spawn Frame</strong>" will take you to the next frame on which a new track starts—i.e., a predicted instance which were not able to identify as the same instance from some prior frame. This is useful when proofreading predictions, since you can skip between track spawn frames and then manually join the new track with one of the pre-existing tracks from prior frames.</p>
+<p>"<strong>Next Video</strong>" will show the next video in the project (if your project has multiple videos). All the videos are listed in the "Videos" window.</p>
+<p>"<strong>Go to Frame...</strong>" allows you to go to a specific frame (in the current video) by frame number. It's also handy if you want to copy the current frame number to the clipboard.</p>
+<p>"<strong>Select to Frame...</strong>" allows you to select the clip from the current frame to a specified frame. If you want to select from frames X to Y, you can use <strong>Go to</strong> to go to X then <strong>Select to</strong> to select from X to Y.</p>
+<h2 id="view">View<a class="headerlink" href="#view" title="Permanent link">&para;</a></h2>
+<p>"<strong>Color Predicted Instances</strong>" allows you to toggle whether <em>predicted</em> instances are all shown in yellow, or whether to apply distinct colors to (e.g.) track identities. You should turn this on when proofreading predictions for a video.</p>
+<p>"<strong>Color Palette</strong>" allows you to choose the palette which will be used for coloring instances. Most of the palettes cycle colors, so that if there are five colors in the palette, the sixth item to color will be the same as the first. A few things to know:</p>
+<ul>
+<li>The "alphabet" palette has 26 visually distinct colors, which can be useful when there are many items to color.</li>
+<li>If the palette name ends with "+", the colors won't cycle and everything beyond the number of colors in the palette will use the last color in the palette. This is especially useful for proofreading when you're trying to merge all the track identities in the first few tracks (assuming you have a small number of instances in each frame). In particular, the "five+" palette will show any instance in the fourth or subsequent track as orange.</li>
+<li>Color palettes can be customized by modifying the <code>colors.yaml</code> file that SLEAP creates inside the <code>.sleap</code> directory in your home directory. You can add your own palette or modify those already present in the file. Each color in a palette is listed on it's own line as r,g,b values (between 0 and 255).</li>
+</ul>
+<p>"<strong>Apply Distinct Colors To</strong>" allows you to determine whether distinct colors are used for distinct tracks (instance identities), nodes, or edges. Try it!</p>
+<p>"<strong>Show Instances</strong>" toggles the visibility of all instances in the frame. Useful for quickly hiding overlapping predictions.</p>
+<p>"<strong>Show Non-Visible Nodes</strong>" toggles the visibility of "non-visible" nodes. Non-visible here means they are landmarks that were manually marked as occluded or not present. Hiding them is useful when inspecting manual labels with many missing nodes.</p>
+<p>"<strong>Show Node Names</strong>" allows you to toggle the visibility of the node names. This is useful if you have lots of nearby instances or very dense skeletons and the node names make it hard to see where the nodes are located.</p>
+<p>"<strong>Show Edges</strong>" allows you to toggle the visibility of the edges which connect the nodes. This can be useful when you have lots of edges which make it hard to see the features of animals in your video.</p>
+<p>"<strong>Edge Style</strong>" controls whether edges are drawn as thin lines or as wedges which indicate the <a href="../../how-to-guides/tracking-and-proofreading/#orientation"><code>orientation</code></a> of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a "bottom-up" approach).</p>
+<p>"<strong>Trail Length</strong>" allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames. By default, you can only select trail lengths of up to 250 frames. You can use a custom trail length by modifying the default length in the <code>preferences.yaml</code> file. However, using trail lengths longer than about 500 frames can result in significant lag.</p>
+<p>"<strong>Fit Instances to View</strong>" allows you to toggle whether the view is auto-zoomed to the instances in each frame. This can be useful when proofreading predictions.</p>
+<p>"<strong>Seekbar Header</strong>" allows you to plot relevant information above the seekbar. Note that the seekbar is not updated when you modify instances; it only updates when you select a new seekbar header.</p>
+<p>"<strong>Videos</strong>", "<strong>Skeleton</strong>", "<strong>Instances</strong>", and "<strong>Labeling Suggestions</strong>" allow you to toggle which information windows are shown (by default these are docked to the right side of the main GUI window).</p>
+<h2 id="labels">Labels<a class="headerlink" href="#labels" title="Permanent link">&para;</a></h2>
+<p>"<strong>Add Instance</strong>" will add an instance to the current frame. You can also add an instance by right-clicking within the frame. For predicted instances, you can also "convert" the predicted instance to a regular, editable instance by double-clicking on the predicted instance (the predictions are still there, but they won't be shown unless you delete the editable instance you just created).</p>
+<p>"<strong>Instance Placement Method</strong>" allows you to pick how we determine where to place the instance and its nodes on the video frame. "Best" (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will use a force-directed graph algorithm to place the nodes. You can also choose the "average" method which creates an "average" instance from the instances you've already labeled.</p>
+<p>"<strong>Delete Instance</strong>" will delete the currently selected instance (the selected instance will have an outline drawn around it and will be highlighted in the "Instances" window).</p>
+<p>"<strong>Set Instance Track</strong>" sets the track for the currently selected instance. If the new track already has an instance assigned to it, then the tracks are swapped (the other instance is assigned to the track currently assigned to the selected instance). These changes are applied to instances in the same tracks in every subsequent frame, not just the current frame.</p>
+<p>"<strong>Propagate Track Labels</strong>" propagates manual track selection (via proofreading) for the entirety of the selected instance's track. If selected, the track switch of an instance in the current frame will be applied in all subsequent frames. Otherwise, the track switch of an instance will only be applied in the current frame.</p>
+<p>"<strong>Transpose Instance Tracks</strong>" swaps the tracks assigned to two instances. If there are only two instances in the current frame, then this command will be applied to those. If there are more then two instances, then you'll be prompted to select the two instances in sequence. (This has the same functionality as selecting an instance and using "<strong>Set Instance Track</strong>" with the track of the other instance).</p>
+<p>"<strong>Delete Instance and Track</strong>" deletes all instances in the track of the currently selected instance. This applied to <em>all</em> frames in the current video.</p>
+<p>"<strong>Custom Instance Delete...</strong>" allows you to delete all the instances which meet criteria you specify: whether they are user instances or predicted instances, which frames they are on, and which track identities they have.</p>
+<p>"<strong>Select Next Instance</strong>" allows you to cycle through the instances in the current frame.</p>
+<p>"<strong>Clear Selection</strong>" allows you to deselect the selected instance.</p>
+<h2 id="predict">Predict<a class="headerlink" href="#predict" title="Permanent link">&para;</a></h2>
+<p>"<strong>Run Training...</strong>" allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.</p>
+<p>"<strong>Run Inference...</strong>" allows you to generate predictions using a pre-trained set of models. Any trained models in the <code>models</code> directory next to your current project will be listed, and you also have the option to select models saved elsewhere.</p>
+<p>"<strong>Evaluate Metrics for Trained Models...</strong>" provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).</p>
+<p>"<strong>Add Instances from All Predictions on Current Frame</strong>" converts ever predicted instance on the current frame into a user editable instance (which allows you to make corrections and/or use it for training).</p>
+<p>"<strong>Delete All Predictions...</strong>" deletes <em>all</em> predicted instances across <em>all</em> frames in the current video. (You'll be asked to confirm before the instances are deleted.)</p>
+<p>"<strong>Delete All Predictions from Clip...</strong>" deletes all instances from within a selected range of frames. You can select a clip by shift-dragging in the seekbar (or shift + other movement key).</p>
+<p>"<strong>Delete All Predictions from Area...</strong>" deletes all instances which are entirely within some rectangular area on any frame in the current video. You'll be asked to select the rectangle, and then asked to confirm before instances are deleted. This is useful when there's something in the video which is visually similar to the animal instances and which creates many false-positives.</p>
+<p>"<strong>Delete All Predictions with Low Score...</strong>" deletes all instances with a prediction score below the specified value. You'll be asked for the value, and then asked to confirm before instances are deleted. Instance scores are shown in the "Instances" table and below the selected instance in the current frame.</p>
+<p>"<strong>Delete All Predictions beyond Frame Limit...</strong>" deletes the lowest scoring instances beyond some set number of instances in each frame. For example, if you know that there are only two animals in the video, this would let you keep just the two best predicted instances. You'll be asked for the number of instances to keep, and then asked to confirm before instances are deleted.</p>
+<p>"<strong>Export Video with Visual Annotations...</strong>" allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). If you select a clip in the seekbar, just those frames will be included in the new video; otherwise the whole (current) video will be used.</p>
+<h2 id="help">Help<a class="headerlink" href="#help" title="Permanent link">&para;</a></h2>
+<p>"<strong>Keyboard Shortcuts</strong>" allows you to view and change keyboard shortcuts for common menu and GUI actions.</p>
+<h2 id="application-gui">Application GUI<a class="headerlink" href="#application-gui" title="Permanent link">&para;</a></h2>
+<h2 id="mouse">Mouse<a class="headerlink" href="#mouse" title="Permanent link">&para;</a></h2>
+<p><strong>Mouse wheel</strong> on image: zoom in / out</p>
+<p><strong>Left-click (hold) + drag</strong> on image: drag image</p>
+<p><strong>Right-click</strong> (or control + click) on node: Toggle visibility</p>
+<p><strong>Right-click</strong> (or control + click) elsewhere on image: Add instance (with pop-up menu)</p>
+<p><strong>Alt + left-click (hold) + drag</strong> on image: Zoom into region</p>
+<p><strong>Alt + double-click</strong>: Zoom out</p>
+<p><strong>Alt + left-click (hold) + drag</strong> on node (or node label): Move entire instance</p>
+<p><strong>Alt + left-click (hold) + mouse wheel</strong> on node (or node label): Rotate entire instance</p>
+<p>(On a Mac, substitute <strong>Option</strong> for <strong>Alt</strong>.)</p>
+<p><strong>Double-click</strong> on predicted instance: Create new editable instance from prediction</p>
+<p><strong>Double-click</strong> on editable instance: Any missing nodes (nodes added to the skeleton after this instance was created) will be added and marked as "non-visible"</p>
+<p><strong>Click</strong> on instance: Select that instance</p>
+<p><strong>Click</strong> elsewhere on image: Clear selection</p>
+<p><strong>Control + left-click (hold) + drag</strong> on instance: Duplicate the selected instance and drag the entire copied instance</p>
+<h2 id="navigation-keys">Navigation Keys<a class="headerlink" href="#navigation-keys" title="Permanent link">&para;</a></h2>
+<p><strong>Right arrow</strong>: Move one frame forward</p>
+<p><strong>Left arrow</strong>: Move one frame back</p>
+<p><strong>Control + Right arrow</strong>: Move a <em>medium</em> step forward (4 frames by default)</p>
+<p><strong>Control + Left arrow</strong>: Move a <em>medium</em> step backward (4 frames by default)</p>
+<p><strong>Control + Alt + Right arrow</strong>: Move a <em>large</em> step forward (100 frames by default)</p>
+<p><strong>Control + Alt + Left arrow</strong>: Move a <em>large</em> step backward (100 frames by default)</p>
+<p><strong>Home</strong>: Move to the first frame of the video</p>
+<p><strong>End</strong>: Move to the last frame of the video</p>
+<p><strong>Shift</strong> + <em>any navigation key</em>: Select the frames over which you've moved</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These keys are the defaults; you can configure them with <strong>Keyboard Shortcuts</strong> in the <strong>Help</strong> menu.</p>
+</div>
+<h2 id="selection-keys">Selection Keys<a class="headerlink" href="#selection-keys" title="Permanent link">&para;</a></h2>
+<p><em>Number</em> (e.g., <strong>2</strong>): Select the instance corresponding to that number</p>
+<p><strong>Control (hold)</strong> while instance is selected: Show color-coded list of numbered
+tracks (<strong>Show tracks legend</strong> key)</p>
+<p>(On a Mac, substitute <strong>Control</strong> for <strong>Command</strong>.)</p>
+<p><strong>Escape</strong>: Deselect all instances</p>
+<h2 id="seekbar">Seekbar<a class="headerlink" href="#seekbar" title="Permanent link">&para;</a></h2>
+<p><strong>Shift + drag</strong>: Select a range of frames</p>
+<p><strong>Shift + left-click</strong>: Clear frame selection</p>
+<p><strong>Alt + left-click (hold) + drag</strong>: Zoom into a range of frames</p>
+<p><strong>Alt + left-click</strong>: Zoom out so that all frames are visible in seekbar</p>
+<h2 id="labeling-suggestions">Labeling Suggestions<a class="headerlink" href="#labeling-suggestions" title="Permanent link">&para;</a></h2>
+<p>There are various methods to generate a list "suggested" frames for labeling or proofreading.</p>
+<p>The <strong>sample</strong> method is a quick way to get some number of frames for every video in your project. You can tell it how many samples (frames) to take from each video, and whether they should be evenly spaced throughout a video (the "stride" sampling method) or randomly distributed.</p>
+<p>The <strong>image feature</strong> method uses various algorithms to give you visually distinctive frames, since you will be able to train more robust models if the frames you've labeled are more representative of the visual variations in your videos. Generating suggestions based on image features can be slow.</p>
+<p>The <strong>prediction score</strong> method will identify frames which have more than some number of instances predicted and where the instance prediction score is below some threshold. This method can be useful when proofreading frame-by-frame prediction results. The instance score depends on your specific skeleton so you'll need to look at the instance scores you're getting to decide an appropriate threshold.</p>
+<p>The <strong>velocity</strong> method will identify frames where a predicted instance appears to move more than is typical in the video. This is based on the tracking results, so it can be useful for finding frames where the tracker incorrectly matched up two identities (since this will make the identity "jump").</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 Talmo Lab 
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/talmolab" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://x.com/talmop" target="_blank" rel="noopener" title="x.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
