@@ -42,7 +42,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --all-extras
+        uv sync --extra dev --extra nn-cpu
 
     - name: Run ruff checks
       run: |
@@ -83,7 +83,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --all-extras
+          uv sync --extra dev --extra nn-cpu
           # uv pip install PySide6==6.7.3  # exit code 139
           # uv pip install PySide6==6.8.1.1  # exit code 139
           # uv pip install PySide6==6.8.3  # exit code 139
