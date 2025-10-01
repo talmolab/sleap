@@ -31,6 +31,7 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
 )
 from sleap.sleap_io_adaptors.lf_labels_utils import instances
 from sleap.util import show_sleap_nn_installation_message
+
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
     "model.model_config.head_configs.centered_instance.confmaps.anchor_part",
@@ -807,7 +808,11 @@ class LearningDialog(QtWidgets.QDialog):
                 output.append(OmegaConf.to_yaml(cfg))
             except ImportError:
                 show_sleap_nn_installation_message()
-                print("sleap-nn is not installed. This appears to be a GUI-only installation. To enable training, please install SLEAP with the 'nn' dependency. See the installation guide: https://docs.sleap.ai/latest/installation/")
+                print(
+                    "sleap-nn is not installed. This appears to be GUI-only install."
+                    "To enable training, please install SLEAP with the 'nn' dependency."
+                    "See the installation guide: https://docs.sleap.ai/latest/installation/"
+                )
 
         output = "\n".join(output)
         # Set the clipboard text

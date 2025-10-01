@@ -224,11 +224,18 @@ class ConfigFileInfo:
                 cfg = snn_TrainingJobConfig.load_sleap_config(path)
                 head_name = get_head_from_omegaconf(cfg)
                 filename = os.path.basename(path)
-                return cls(config=cfg, path=path, filename=filename, head_name=head_name)
-            except:
+                return cls(
+                    config=cfg, path=path, filename=filename, head_name=head_name
+                )
+            except ImportError:
                 show_sleap_nn_installation_message()
-                print("sleap-nn is not installed. This appears to be a GUI-only installation. To enable training, please install SLEAP with the 'nn' dependency. See the installation guide: https://docs.sleap.ai/latest/installation/")
+                print(
+                    "sleap-nn is not installed. This appears to be GUI-only install."
+                    "To enable training, please install SLEAP with the 'nn' dependency."
+                    "See the installation guide: https://docs.sleap.ai/latest/installation/"
+                )
                 return None
+
 
 class TrainingConfigFilesWidget(FieldComboWidget):
     """
@@ -544,7 +551,11 @@ class TrainingConfigsGetter:
                 cfg = snn_TrainingJobConfig.load_sleap_config(path)
             except ImportError:
                 show_sleap_nn_installation_message()
-                print("sleap-nn is not installed. This appears to be a GUI-only installation. To enable training, please install SLEAP with the 'nn' dependency. See the installation guide: https://docs.sleap.ai/latest/installation/")
+                print(
+                    "sleap-nn is not installed. This appears to be a GUI-only install."
+                    "To enable training, please install SLEAP with the 'nn' dependency."
+                    "See the installation guide: https://docs.sleap.ai/latest/installation/"
+                )
                 return None
             except Exception as e:
                 # Couldn't load so just ignore

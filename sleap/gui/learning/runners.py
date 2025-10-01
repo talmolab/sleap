@@ -500,7 +500,8 @@ def write_pipeline_files(
 
                 # Add a line to the script for training this model
                 train_script += (
-                    f"sleap-nn train --config-name {new_cfg_filename} --config-dir {''} "
+                    f"sleap-nn train --config-name {new_cfg_filename} "
+                    f"--config-dir {''} "
                     f"trainer_config.ckpt_dir={Path(ckpt_path).parent.as_posix()} "
                     f"trainer_config.run_name={Path(ckpt_path).name}"
                     f"trainer_config.zmq.controller_port={cfg_info.config.trainer_config.zmq.controller_port}"
@@ -521,7 +522,11 @@ def write_pipeline_files(
                 )
             except ImportError:
                 show_sleap_nn_installation_message()
-                logger.error("sleap-nn is not installed. This appears to be a GUI-only installation. To enable training, please install SLEAP with the 'nn' dependency. See the installation guide: https://docs.sleap.ai/latest/installation/")
+                logger.error(
+                    "sleap-nn is not installed. This appears to be GUI-only install."
+                    "To enable training, please install SLEAP with the 'nn' dependency."
+                    "See the installation guide: https://docs.sleap.ai/latest/installation/"
+                )
                 return
 
     # Write the script to train the models which need to be trained
@@ -912,6 +917,7 @@ def train_subprocess(
         # any changed made to the job attributes after it was loaded.
         try:
             from sleap_nn.config.training_job_config import verify_training_cfg
+
             # convert json to yaml (to sleap-nn config format)
             cfg_file_name = datetime.now().strftime("%y%m%d_%H%M%S") + "_config"
             filter_job_config = filter_cfg(deepcopy(job_config))
@@ -957,7 +963,11 @@ def train_subprocess(
                 ret = proc.returncode
         except ImportError:
             show_sleap_nn_installation_message()
-            logger.error("sleap-nn is not installed. This appears to be a GUI-only installation. To enable training, please install SLEAP with the 'nn' dependency. See the installation guide: https://docs.sleap.ai/latest/installation/")
+            logger.error(
+                "sleap-nn is not installed. This appears to be a GUI-only installation."
+                "To enable training, please install SLEAP with the 'nn' dependency."
+                "See the installation guide: https://docs.sleap.ai/latest/installation/"
+            )
             ret = "error"
 
     print("Run Path:", run_path)

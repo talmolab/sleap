@@ -177,7 +177,9 @@ def train_command(
             config.trainer_config.trainer_device_indices = [-1]
         if gpu:
             config.trainer_config.trainer_accelerator = "gpu"
-            config.trainer_config.trainer_device_indices = [gpu] if gpu != "auto" else None
+            config.trainer_config.trainer_device_indices = (
+                [gpu] if gpu != "auto" else None
+            )
 
         # Call the original training function with the arguments
         if video_paths is not None:
@@ -215,7 +217,9 @@ def train_command(
             # run inference on val dataset
             if trainer.config.trainer_config.save_ckpt:
                 data_paths = {}
-                for index, path in enumerate(trainer.config.data_config.train_labels_path):
+                for index, path in enumerate(
+                    trainer.config.data_config.train_labels_path
+                ):
                     ckpt_path = (
                         Path(trainer.config.trainer_config.ckpt_dir)
                         / trainer.config.trainer_config.run_name
@@ -259,8 +263,8 @@ def train_command(
 
                     if not len(pred_labels):
                         logger.info(
-                            f"Skipping eval on `{d_name}` dataset as there are no labeled "
-                            f"frames..."
+                            f"Skipping eval on `{d_name}` dataset as there are no"
+                            f"labeled frames..."
                         )
                         continue  # skip if there are no labeled frames
 
@@ -279,7 +283,9 @@ def train_command(
 
                     logger.info(f"---------Evaluation on `{d_name}` dataset---------")
                     logger.info(f"OKS mAP: {metrics['voc_metrics']['oks_voc.mAP']}")
-                    logger.info(f"Average distance: {metrics['distance_metrics']['avg']}")
+                    logger.info(
+                        f"Average distance: {metrics['distance_metrics']['avg']}"
+                    )
                     logger.info(f"p90 dist: {metrics['distance_metrics']['p90']}")
                     logger.info(f"p50 dist: {metrics['distance_metrics']['p50']}")
 
@@ -289,6 +295,7 @@ def train_command(
             "To enable training, please install SLEAP with the 'nn' dependency. "
             "See the installation guide: https://docs.sleap.ai/latest/installation/"
         )
+
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.argument("data_path", required=True)
