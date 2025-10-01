@@ -68,12 +68,36 @@ extra_css:
   - assets/stylesheets/extra.css
 
 markdown_extensions:
+  - abbr
   - admonition
+  - attr_list
+  - def_list
+  - md_in_html
   - codehilite
   - footnotes
   - meta
   - toc:
       permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.superfences
@@ -81,6 +105,8 @@ markdown_extensions:
   - tables
 
 extra:
+  version:
+    provider: mike
   social:
       - icon: fontawesome/brands/github 
         link: https://github.com/talmolab
@@ -107,7 +133,7 @@ nav:
       - I'm done SLEAPing, now what?: tutorial/i-m-done-sleaping-now-what.md
   - Guides:
       - Overview: guides/guides-overview.md
-      - Migrating to SLEAP 1.5+: migrating-to-sleap-1-5.md
+      - Migrating to SLEAP 1.5+: guides/migrating-to-sleap-1-5.md
       - Importing predictions for labeling: guides/importing-predictions-for-labeling.md
       - Tracking and proofreading: guides/tracking-and-proofreading.md
       - Run training and inference on Colab: guides/run-training-and-inference-on-colab.md
