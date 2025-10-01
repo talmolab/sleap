@@ -1,495 +1,495 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/</loc>
+         <loc>https://docs.sleap.ai/dev/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/CHANGELOG/</loc>
+         <loc>https://docs.sleap.ai/dev/CHANGELOG/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/code-of-conduct/</loc>
+         <loc>https://docs.sleap.ai/dev/code-of-conduct/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/contribute/</loc>
+         <loc>https://docs.sleap.ai/dev/contribute/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/help/</loc>
+         <loc>https://docs.sleap.ai/dev/help/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/installation/</loc>
+         <loc>https://docs.sleap.ai/dev/installation/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/overview/</loc>
+         <loc>https://docs.sleap.ai/dev/overview/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/whats-new/</loc>
+         <loc>https://docs.sleap.ai/dev/api/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/</loc>
+         <loc>https://docs.sleap.ai/dev/api/SUMMARY/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/SUMMARY/</loc>
+         <loc>https://docs.sleap.ai/dev/api/diagnostic/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/diagnostic/</loc>
+         <loc>https://docs.sleap.ai/dev/api/legacy_cli_adaptors/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/legacy_cli_adaptors/</loc>
+         <loc>https://docs.sleap.ai/dev/api/message/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/message/</loc>
+         <loc>https://docs.sleap.ai/dev/api/prefs/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/prefs/</loc>
+         <loc>https://docs.sleap.ai/dev/api/rangelist/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/rangelist/</loc>
+         <loc>https://docs.sleap.ai/dev/api/util/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/util/</loc>
+         <loc>https://docs.sleap.ai/dev/api/version/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/version/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/app/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/app/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/color/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/color/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/commands/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/commands/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/config_utils/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/config_utils/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dataviews/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dataviews/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/shortcuts/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/shortcuts/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/state/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/state/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/suggestions/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/suggestions/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/utils/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/utils/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/web/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/web/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/delete/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/delete/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/export_clip/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/export_clip/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/filedialog/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/filedialog/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/formbuilder/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/formbuilder/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/frame_range/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/frame_range/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/importvideos/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/importvideos/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/merge/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/merge/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/message/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/message/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/metrics/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/metrics/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/missingfiles/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/missingfiles/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/query/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/query/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/shortcuts/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/dialogs/shortcuts/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/learning/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/learning/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/learning/configs/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/learning/configs/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/learning/dialog/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/learning/dialog/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/learning/receptivefield/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/learning/receptivefield/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/learning/runners/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/learning/runners/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/overlays/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/overlays/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/overlays/base/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/overlays/base/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/overlays/confmaps/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/overlays/confmaps/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/overlays/instance/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/overlays/instance/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/overlays/pafs/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/overlays/pafs/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/overlays/tracks/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/overlays/tracks/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/docks/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/docks/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/imagedir/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/imagedir/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/monitor/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/monitor/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/mpl/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/mpl/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/multicheck/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/multicheck/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/slider/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/slider/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/video/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/video/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/video_worker/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/video_worker/</loc>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/views/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/gui/widgets/views/</loc>
+         <loc>https://docs.sleap.ai/dev/api/info/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/info/</loc>
+         <loc>https://docs.sleap.ai/dev/api/info/align/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/info/align/</loc>
+         <loc>https://docs.sleap.ai/dev/api/info/feature_suggestions/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/info/feature_suggestions/</loc>
+         <loc>https://docs.sleap.ai/dev/api/info/labels/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/info/labels/</loc>
+         <loc>https://docs.sleap.ai/dev/api/info/metrics/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/info/metrics/</loc>
+         <loc>https://docs.sleap.ai/dev/api/info/summary/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/info/summary/</loc>
+         <loc>https://docs.sleap.ai/dev/api/info/write_tracking_h5/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/info/write_tracking_h5/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/convert/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/convert/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/pathutils/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/pathutils/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/visuals/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/visuals/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/format/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/format/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/format/adaptor/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/format/adaptor/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/format/csv/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/format/csv/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/format/filehandle/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/format/filehandle/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/format/genericjson/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/format/genericjson/</loc>
+         <loc>https://docs.sleap.ai/dev/api/io/format/sleap_analysis/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/io/format/sleap_analysis/</loc>
+         <loc>https://docs.sleap.ai/dev/api/sleap_io_adaptors/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/sleap_io_adaptors/</loc>
+         <loc>https://docs.sleap.ai/dev/api/sleap_io_adaptors/instance_utils/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/sleap_io_adaptors/instance_utils/</loc>
+         <loc>https://docs.sleap.ai/dev/api/sleap_io_adaptors/lf_labels_utils/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/sleap_io_adaptors/lf_labels_utils/</loc>
+         <loc>https://docs.sleap.ai/dev/api/sleap_io_adaptors/skeleton_utils/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/sleap_io_adaptors/skeleton_utils/</loc>
+         <loc>https://docs.sleap.ai/dev/api/sleap_io_adaptors/video_utils/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/api/sleap_io_adaptors/video_utils/</loc>
+         <loc>https://docs.sleap.ai/dev/guides/creating-a-custom-training-profile/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/how-to-guides/creating-a-custom-training-profile/</loc>
+         <loc>https://docs.sleap.ai/dev/guides/guides-overview/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/how-to-guides/guides-overview/</loc>
+         <loc>https://docs.sleap.ai/dev/guides/importing-predictions-for-labeling/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/how-to-guides/importing-predictions-for-labeling/</loc>
+         <loc>https://docs.sleap.ai/dev/guides/migrating-to-sleap-1-5/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/how-to-guides/run-training-and-inference-on-colab/</loc>
+         <loc>https://docs.sleap.ai/dev/guides/run-training-and-inference-on-colab/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/how-to-guides/running-sleap-remotely/</loc>
+         <loc>https://docs.sleap.ai/dev/guides/running-sleap-remotely/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/how-to-guides/tracking-and-proofreading/</loc>
+         <loc>https://docs.sleap.ai/dev/guides/tracking-and-proofreading/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/learnings/configuring-models/</loc>
+         <loc>https://docs.sleap.ai/dev/learnings/configuring-models/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/learnings/export-analysis/</loc>
+         <loc>https://docs.sleap.ai/dev/learnings/export-analysis/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/learnings/gui/</loc>
+         <loc>https://docs.sleap.ai/dev/learnings/gui/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/learnings/main-mistakes-by-tracking/</loc>
+         <loc>https://docs.sleap.ai/dev/learnings/main-mistakes-by-tracking/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/learnings/prediction-assisted-labeling/</loc>
+         <loc>https://docs.sleap.ai/dev/learnings/prediction-assisted-labeling/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/learnings/skeleton-design/</loc>
+         <loc>https://docs.sleap.ai/dev/learnings/skeleton-design/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/learnings/system-overview/</loc>
+         <loc>https://docs.sleap.ai/dev/learnings/system-overview/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/learnings/training-options/</loc>
+         <loc>https://docs.sleap.ai/dev/learnings/training-options/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/learnings/troubleshoot-workflows/</loc>
+         <loc>https://docs.sleap.ai/dev/learnings/troubleshoot-workflows/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/Analysis_examples/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/Analysis_examples/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/Data_structures/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/Data_structures/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/Interactive_and_realtime_inference/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/Interactive_and_realtime_inference/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/Interactive_and_resumable_training/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/Interactive_and_resumable_training/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/Model_evaluation/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/Model_evaluation/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/Post_inference_tracking/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/Post_inference_tracking/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/Training_and_inference_on_an_example_dataset/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/Training_and_inference_on_an_example_dataset/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/Training_and_inference_using_Google_Drive/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/Training_and_inference_using_Google_Drive/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/notebooks-overview/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/notebooks-overview/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/notebooks/sleap_io_idtracker_IDs/</loc>
+         <loc>https://docs.sleap.ai/dev/notebooks/sleap_io_idtracker_IDs/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/reference/command-line-interfaces/</loc>
+         <loc>https://docs.sleap.ai/dev/reference/command-line-interfaces/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/reference/datasets/</loc>
+         <loc>https://docs.sleap.ai/dev/reference/datasets/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/reference/evaluation_metrics/</loc>
+         <loc>https://docs.sleap.ai/dev/reference/evaluation_metrics/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/correcting-predictions/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/correcting-predictions/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/exporting-the-results/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/exporting-the-results/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/i-m-done-sleaping-now-what/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/i-m-done-sleaping-now-what/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/importing-data/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/importing-data/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/initial-labeling/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/initial-labeling/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/overview/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/overview/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/proofreading/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/proofreading/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/setup/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/setup/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/tracking-new-data/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/tracking-new-data/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
     <url>
-         <loc>https://talmolab.github.io/sleap-core-docs/dev/tutorial/training-a-model/</loc>
+         <loc>https://docs.sleap.ai/dev/tutorial/training-a-model/</loc>
          <lastmod>2025-10-01</lastmod>
     </url>
 </urlset>
