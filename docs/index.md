@@ -56,32 +56,35 @@ You can find the latest version of SLEAP in the [Releases](https://github.com/ta
 !!! tip "Sample with `uvx`"
     Note that opening SLEAP w/ `uvx` will **not** install SLEAP onto your system, it will only **'invoke'** SLEAP.
 
-**`uvx` (any OS):**
+**`uv tool install` (any OS):**
 
-=== "Windows/Linux (CUDA 12.8)"
+!!! warning "First Time uv Setup"
+    Install [`uv`](https://github.com/astral-sh/uv) first - an ultra-fast Python package manager:
     ```bash
-    uvx --from "sleap[nn]" --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cu128 sleap-label
-    ```
-    !!! info "Other CUDA versions"
-        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--extra-index-url` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cuda118` for CUDA 11.8, `https://download.pytorch.org/whl/cuda128` for CUDA 12.8, etc.).
-        - On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.
-
-=== "macOS/CPU Only"
-    ```bash
-    uvx --from "sleap[nn]" sleap-label
+    # macOS/Linux
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    
+    # Windows
+    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
     ```
 
-=== "SLEAP GUI Only"
-    ```bash
-    uvx --from "sleap" sleap-label
-    ```
-    !!! warning "GUI <u>ONLY</u>"
-        Installing this version of SLEAP will **NOT** include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for **labeling**.
+```bash
+# CUDA 12.8
+uv tool install "sleap[nn]" --index-url https://download.pytorch.org/whl/cu128 --index-url https://pypi.org/simple
+
+# CPU
+uv tool install "sleap[nn]" --index-url https://download.pytorch.org/whl/cpu --index-url https://pypi.org/simple
+```
 
 **`pip` (any OS)**:
 
 ```
 pip install sleap
+```
+
+Run the SLEAP GUI after installation!
+```bash
+sleap-label
 ```
 
 See the docs for [full installation instructions](installation.md).
