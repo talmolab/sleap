@@ -55,7 +55,7 @@ Note that many of the menu command have keyboard shortcuts which can be configur
 
 "**Show Edges**" allows you to toggle the visibility of the edges which connect the nodes. This can be useful when you have lots of edges which make it hard to see the features of animals in your video.
 
-"**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the [`orientation`](../how-to-guides/tracking-and-proofreading.md/#orientation) of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a "bottom-up" approach).
+"**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the [`orientation`](../guides/tracking-and-proofreading.md/#orientation) of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a "bottom-up" approach).
 
 "**Trail Length**" allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames. By default, you can only select trail lengths of up to 250 frames. You can use a custom trail length by modifying the default length in the `preferences.yaml` file. However, using trail lengths longer than about 500 frames can result in significant lag.
 

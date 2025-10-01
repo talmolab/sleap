@@ -106,13 +106,13 @@ nav:
       - Exporting the results: tutorial/exporting-the-results.md
       - I'm done SLEAPing, now what?: tutorial/i-m-done-sleaping-now-what.md
   - Guides:
-      - Overview: how-to-guides/guides-overview.md
+      - Overview: guides/guides-overview.md
       - Migrating to SLEAP 1.5+: migrating-to-sleap-1-5.md
-      - Importing predictions for labeling: how-to-guides/importing-predictions-for-labeling.md
-      - Tracking and proofreading: how-to-guides/tracking-and-proofreading.md
-      - Run training and inference on Colab: how-to-guides/run-training-and-inference-on-colab.md
-      - Creating a custom training profile: how-to-guides/creating-a-custom-training-profile.md
-      - Running SLEAP remotely: how-to-guides/running-sleap-remotely.md
+      - Importing predictions for labeling: guides/importing-predictions-for-labeling.md
+      - Tracking and proofreading: guides/tracking-and-proofreading.md
+      - Run training and inference on Colab: guides/run-training-and-inference-on-colab.md
+      - Creating a custom training profile: guides/creating-a-custom-training-profile.md
+      - Running SLEAP remotely: guides/running-sleap-remotely.md
   - Notebooks:
     - Overview: notebooks/notebooks-overview.md
     - Training and inference on an example dataset: notebooks/Training_and_inference_on_an_example_dataset.ipynb

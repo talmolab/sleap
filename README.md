@@ -48,7 +48,7 @@ See the docs for [full installation instructions](https://docs.sleap.ai/latest/i
 ## Learn to SLEAP
 
 - **Learn step-by-step**: [Tutorial](https://docs.sleap.ai/latest/tutorial/overview)
-- **Learn more advanced usage**: [Guides](https://docs.sleap.ai/latest/how-to-guides/guides-overview/) and [Notebooks](https://docs.sleap.ai/latest/notebooks/notebooks-overview/)
+- **Learn more advanced usage**: [Guides](https://docs.sleap.ai/latest/guides/guides-overview/) and [Notebooks](https://docs.sleap.ai/latest/notebooks/notebooks-overview/)
 - **Learn by watching**: [ABL:AOC 2023 Workshop](https://www.youtube.com/watch?v=BfW-HgeDfMI) and [MIT CBMM Tutorial](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking)
 - **Learn by reading**: [Paper (Pereira et al., Nature Methods, 2022)](https://www.nature.com/articles/s41592-022-01426-1) and [Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020)](https://rdcu.be/caH3H)
 - **Learn from others**: [Discussions on Github](https://github.com/talmolab/sleap/discussions)
@@ -139,7 +139,7 @@ SLEAP is released under a [Clear BSD License](https://raw.githubusercontent.com/
 * [Overview](https://docs.sleap.ai/latest/overview)
 * [Installation](https://docs.sleap.ai/latest/installation)
 * [Tutorial](https://docs.sleap.ai/latest/tutorial/overview/)
-* [Guides](https://docs.sleap.ai/latest/how-to-guides/guides-overview/)
+* [Guides](https://docs.sleap.ai/latest/guides/guides-overview/)
 * [Notebooks](https://docs.sleap.ai/latest/notebooks/notebooks-overview/)
 * [Developer API](https://docs.sleap.ai/latest/api)
 * [Help](https://docs.sleap.ai/latest/help)

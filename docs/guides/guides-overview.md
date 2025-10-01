@@ -1,5 +1,5 @@
 # Overview
-**Here's an overview of the How-to-guides:**
+**Here's an overview of the guides:**
 
 !!! warning "Documentation for New SLEAP Versions"
     This documentation is for the **latest version of SLEAP**.  
