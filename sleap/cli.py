@@ -3,7 +3,9 @@
 import click
 from pathlib import Path
 from click import Command
-from sleap.util import show_sleap_nn_installation_message
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TrainCommand(Command):
@@ -85,10 +87,11 @@ def train(config_name, config_dir, overrides):
             run_training(cfg)
 
     except ImportError:
-        show_sleap_nn_installation_message()
-        print("sleap-nn is not installed. This appears to be a GUI-only installation.")
-        print("To enable training, please install SLEAP with the 'nn' dependency.")
-        print("See the installation guide: https://docs.sleap.ai/latest/installation/")
+        logger.error(
+            "sleap-nn is not installed. This appears to be a GUI-only installation. "
+            "To enable training, please install SLEAP with the 'nn' dependency. "
+            "See the installation guide: https://docs.sleap.ai/latest/installation/"
+        )
 
 
 @click.command()
@@ -449,7 +452,8 @@ def track(**kwargs):
         return run_inference(**kwargs)
 
     except ImportError:
-        show_sleap_nn_installation_message()
-        print("sleap-nn is not installed. This appears to be a GUI-only installation.")
-        print("To enable training, please install SLEAP with the 'nn' dependency.")
-        print("See the installation guide: https://docs.sleap.ai/latest/installation/")
+        logger.error(
+            "sleap-nn is not installed. This appears to be a GUI-only installation. "
+            "To enable training, please install SLEAP with the 'nn' dependency. "
+            "See the installation guide: https://docs.sleap.ai/latest/installation/"
+        )
