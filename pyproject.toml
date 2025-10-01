@@ -17,11 +17,9 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Image Processing",
@@ -53,7 +51,6 @@ dependencies = [
     "rich",
     "scikit-image",
     "scikit-learn",
-    "scikit-video",
     "scipy",
     "seaborn",
     "urllib3",
@@ -92,12 +89,17 @@ jupyter = [
     "jupyterlab",
 ]
 
+nn = [
+    "sleap-nn[torch-cpu]>=0.0.2 ; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sleap-nn[torch-cuda128]>=0.0.2 ; sys_platform != 'darwin' or platform_machine != 'arm64'"
+]
+
 nn-cpu = [
-    "sleap-nn[torch-cpu]"
+    "sleap-nn[torch-cpu]>=0.0.2"
 ]
 
 nn-gpu = [
-    "sleap-nn[torch-cuda128]"
+    "sleap-nn[torch-cuda128]>=0.0.2"
 ]
 
 [project.urls]
