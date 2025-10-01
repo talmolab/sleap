@@ -2114,8 +2114,7 @@ this config</p>
 
               <details class="quote">
                 <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 27</span>
-<span class="normal"> 28</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 28</span>
 <span class="normal"> 29</span>
 <span class="normal"> 30</span>
 <span class="normal"> 31</span>
@@ -2312,7 +2311,19 @@ this config</p>
 <span class="normal">222</span>
 <span class="normal">223</span>
 <span class="normal">224</span>
-<span class="normal">225</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ConfigFileInfo</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Object to represent a saved :py:class:`TrainingJobConfig`</span>
@@ -2503,14 +2514,25 @@ this config</p>
             <span class="n">cfg</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.config.training_job_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-                <span class="n">TrainingJobConfig</span> <span class="k">as</span> <span class="n">snn_TrainingJobConfig</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.config.training_job_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+                    <span class="n">TrainingJobConfig</span> <span class="k">as</span> <span class="n">snn_TrainingJobConfig</span><span class="p">,</span>
+                <span class="p">)</span>
 
-            <span class="n">cfg</span> <span class="o">=</span> <span class="n">snn_TrainingJobConfig</span><span class="o">.</span><span class="n">load_sleap_config</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="n">head_name</span> <span class="o">=</span> <span class="n">get_head_from_omegaconf</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">head_name</span><span class="o">=</span><span class="n">head_name</span><span class="p">)</span>
+                <span class="n">cfg</span> <span class="o">=</span> <span class="n">snn_TrainingJobConfig</span><span class="o">.</span><span class="n">load_sleap_config</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="n">head_name</span> <span class="o">=</span> <span class="n">get_head_from_omegaconf</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+                    <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">head_name</span><span class="o">=</span><span class="n">head_name</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="n">show_sleap_nn_installation_message</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;sleap-nn is not installed. This appears to be GUI-only install.&quot;</span>
+                    <span class="s2">&quot;To enable training, please install SLEAP with the &#39;nn&#39; dependency.&quot;</span>
+                    <span class="s2">&quot;See the installation guide: https://docs.sleap.ai/latest/installation/&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2808,19 +2830,7 @@ is populated.</p>
 
               <details class="quote">
                 <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span>
-<span class="normal">232</span>
-<span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">240</span>
 <span class="normal">241</span>
 <span class="normal">242</span>
 <span class="normal">243</span>
@@ -2964,7 +2974,19 @@ is populated.</p>
 <span class="normal">381</span>
 <span class="normal">382</span>
 <span class="normal">383</span>
-<span class="normal">384</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainingConfigFilesWidget</span><span class="p">(</span><span class="n">FieldComboWidget</span><span class="p">):</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainingConfigFilesWidget</span><span class="p">(</span><span class="n">FieldComboWidget</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Widget to show list of saved :py:class:`TrainingJobConfig` files.</span>
 
@@ -3153,20 +3175,20 @@ is populated.</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">349</span>
-<span class="normal">350</span>
-<span class="normal">351</span>
-<span class="normal">352</span>
-<span class="normal">353</span>
-<span class="normal">354</span>
-<span class="normal">355</span>
-<span class="normal">356</span>
-<span class="normal">357</span>
-<span class="normal">358</span>
-<span class="normal">359</span>
-<span class="normal">360</span>
-<span class="normal">361</span>
-<span class="normal">362</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">doFileSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">doFileSelection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Shows file browser to add training profile for given model type.&quot;&quot;&quot;</span>
     <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;JSON (*.json)&quot;</span><span class="p">,</span> <span class="s2">&quot;YAML (*.yaml;*.yml)&quot;</span><span class="p">]</span>
     <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">FileDialog</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
@@ -3202,10 +3224,10 @@ is populated.</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">getConfigInfoByMenuIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">getConfigInfoByMenuIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return `ConfigFileInfo` for menu item index.&quot;&quot;&quot;</span>
     <span class="n">cfg_idx</span> <span class="o">=</span> <span class="n">menu_idx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_menu_cfg_idx_offset</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list</span><span class="p">[</span><span class="n">cfg_idx</span><span class="p">]</span> <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">cfg_idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg_list</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
@@ -3231,11 +3253,11 @@ is populated.</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">319</span>
-<span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">getSelectedConfigInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">getSelectedConfigInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return currently selected `ConfigFileInfo` (if any, None otherwise).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3264,21 +3286,21 @@ is populated.</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">325</span>
-<span class="normal">326</span>
-<span class="normal">327</span>
-<span class="normal">328</span>
-<span class="normal">329</span>
-<span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span>
-<span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span>
-<span class="normal">336</span>
-<span class="normal">337</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">337</span>
 <span class="normal">338</span>
-<span class="normal">339</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">onSelectionIdxChange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">onSelectionIdxChange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">menu_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Handler for when user selects a menu item.</span>
 
@@ -3315,13 +3337,13 @@ is populated.</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">341</span>
-<span class="normal">342</span>
-<span class="normal">343</span>
-<span class="normal">344</span>
-<span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">setUserConfigData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_data_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">setUserConfigData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_data_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Text</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sets the user config option from settings made by user.&quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_user_config_data_dict</span> <span class="o">=</span> <span class="n">cfg_data_dict</span>
 
@@ -3350,19 +3372,7 @@ is populated.</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">279</span>
 <span class="normal">280</span>
 <span class="normal">281</span>
 <span class="normal">282</span>
@@ -3385,7 +3395,19 @@ is populated.</p>
 <span class="normal">299</span>
 <span class="normal">300</span>
 <span class="normal">301</span>
-<span class="normal">302</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">select</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">select</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Updates menu options, optionally selecting a specific config.&quot;&quot;&quot;</span>
     <span class="n">cfg_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg_getter</span><span class="o">.</span><span class="n">get_filtered_configs</span><span class="p">(</span>
         <span class="n">head_filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_name</span><span class="p">,</span> <span class="n">only_trained</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_require_trained</span>
@@ -3587,19 +3609,7 @@ e.g., "centered_instance".</p>
 
               <details class="quote">
                 <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">399</span>
 <span class="normal">400</span>
 <span class="normal">401</span>
 <span class="normal">402</span>
@@ -3773,7 +3783,27 @@ e.g., "centered_instance".</p>
 <span class="normal">570</span>
 <span class="normal">571</span>
 <span class="normal">572</span>
-<span class="normal">573</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">auto_attribs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TrainingConfigsGetter</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Searches for and loads :py:class:`TrainingJobConfig` files.</span>
@@ -3926,6 +3956,14 @@ e.g., "centered_instance".</p>
                 <span class="p">)</span>
 
                 <span class="n">cfg</span> <span class="o">=</span> <span class="n">snn_TrainingJobConfig</span><span class="o">.</span><span class="n">load_sleap_config</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="n">show_sleap_nn_installation_message</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;sleap-nn is not installed. This appears to be a GUI-only install.&quot;</span>
+                    <span class="s2">&quot;To enable training, please install SLEAP with the &#39;nn&#39; dependency.&quot;</span>
+                    <span class="s2">&quot;See the installation guide: https://docs.sleap.ai/latest/installation/&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="c1"># Couldn&#39;t load so just ignore</span>
                 <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
@@ -3992,19 +4030,7 @@ e.g., "centered_instance".</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">431</span>
 <span class="normal">432</span>
 <span class="normal">433</span>
 <span class="normal">434</span>
@@ -4037,7 +4063,19 @@ e.g., "centered_instance".</p>
 <span class="normal">461</span>
 <span class="normal">462</span>
 <span class="normal">463</span>
-<span class="normal">464</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">find_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">find_configs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load configs from all saved paths.&quot;&quot;&quot;</span>
     <span class="n">configs</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -4105,19 +4143,7 @@ e.g., "centered_instance".</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span>
-<span class="normal">472</span>
-<span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
-<span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">478</span>
 <span class="normal">479</span>
 <span class="normal">480</span>
 <span class="normal">481</span>
@@ -4137,7 +4163,19 @@ e.g., "centered_instance".</p>
 <span class="normal">495</span>
 <span class="normal">496</span>
 <span class="normal">497</span>
-<span class="normal">498</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_filtered_configs</span><span class="p">(</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_filtered_configs</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">head_filter</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">only_trained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns filtered subset of loaded configs.&quot;&quot;&quot;</span>
@@ -4192,9 +4230,9 @@ e.g., "centered_instance".</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">500</span>
-<span class="normal">501</span>
-<span class="normal">502</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_first</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_first</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get first loaded config.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="k">else</span> <span class="kc">None</span>
 </code></pre></div></td></tr></table></div>
@@ -4219,9 +4257,9 @@ e.g., "centered_instance".</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">504</span>
-<span class="normal">505</span>
-<span class="normal">506</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">insert_first</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">ConfigFileInfo</span><span class="p">):</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">insert_first</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">:</span> <span class="n">ConfigFileInfo</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Insert config at beginning of list.&quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cfg_info</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -4250,22 +4288,22 @@ e.g., "centered_instance".</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">558</span>
-<span class="normal">559</span>
-<span class="normal">560</span>
-<span class="normal">561</span>
-<span class="normal">562</span>
-<span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
-<span class="normal">567</span>
-<span class="normal">568</span>
-<span class="normal">569</span>
-<span class="normal">570</span>
-<span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">make_from_labels_filename</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span> <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Text</span><span class="p">,</span> <span class="n">head_filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainingConfigsGetter&quot;</span><span class="p">:</span>
@@ -4303,19 +4341,7 @@ e.g., "centered_instance".</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">508</span>
-<span class="normal">509</span>
-<span class="normal">510</span>
-<span class="normal">511</span>
-<span class="normal">512</span>
-<span class="normal">513</span>
-<span class="normal">514</span>
-<span class="normal">515</span>
-<span class="normal">516</span>
-<span class="normal">517</span>
-<span class="normal">518</span>
-<span class="normal">519</span>
-<span class="normal">520</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">520</span>
 <span class="normal">521</span>
 <span class="normal">522</span>
 <span class="normal">523</span>
@@ -4351,7 +4377,27 @@ e.g., "centered_instance".</p>
 <span class="normal">553</span>
 <span class="normal">554</span>
 <span class="normal">555</span>
-<span class="normal">556</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">try_loading_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">try_loading_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ConfigFileInfo</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Attempts to load config file and wrap in `ConfigFileInfo` object.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;yaml&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;yml&quot;</span><span class="p">):</span>
         <span class="c1"># Get the head from the model (i.e., what the model will predict)</span>
@@ -4383,6 +4429,14 @@ e.g., "centered_instance".</p>
             <span class="p">)</span>
 
             <span class="n">cfg</span> <span class="o">=</span> <span class="n">snn_TrainingJobConfig</span><span class="o">.</span><span class="n">load_sleap_config</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="n">show_sleap_nn_installation_message</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;sleap-nn is not installed. This appears to be a GUI-only install.&quot;</span>
+                <span class="s2">&quot;To enable training, please install SLEAP with the &#39;nn&#39; dependency.&quot;</span>
+                <span class="s2">&quot;See the installation guide: https://docs.sleap.ai/latest/installation/&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Couldn&#39;t load so just ignore</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
@@ -4422,16 +4476,16 @@ e.g., "centered_instance".</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/configs.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span>
-<span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Re-searches paths and loads any previously unloaded config files.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_configs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_configs</span><span class="p">()</span>

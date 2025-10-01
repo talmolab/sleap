@@ -2095,8 +2095,7 @@ for list of nodes for (e.g.) selecting anchor node</p>
 
               <details class="quote">
                 <summary>Source code in <code>sleap/gui/learning/dialog.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 42</span>
-<span class="normal"> 43</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 43</span>
 <span class="normal"> 44</span>
 <span class="normal"> 45</span>
 <span class="normal"> 46</span>
@@ -2987,7 +2986,16 @@ for list of nodes for (e.g.) selecting anchor node</p>
 <span class="normal">931</span>
 <span class="normal">932</span>
 <span class="normal">933</span>
-<span class="normal">934</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LearningDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+<span class="normal">934</span>
+<span class="normal">935</span>
+<span class="normal">936</span>
+<span class="normal">937</span>
+<span class="normal">938</span>
+<span class="normal">939</span>
+<span class="normal">940</span>
+<span class="normal">941</span>
+<span class="normal">942</span>
+<span class="normal">943</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">LearningDialog</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dialog for running training and/or inference.</span>
 
@@ -3746,12 +3754,20 @@ for list of nodes for (e.g.) selecting anchor node</p>
         <span class="k">for</span> <span class="n">config_info</span> <span class="ow">in</span> <span class="n">config_info_list</span><span class="p">:</span>
             <span class="n">config_info</span> <span class="o">=</span> <span class="n">config_info</span><span class="o">.</span><span class="n">config</span>
             <span class="c1"># convert to sleap-nn cfg (yaml)</span>
-            <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.config.training_job_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">verify_training_cfg</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.config.training_job_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">verify_training_cfg</span>
 
-            <span class="n">config_info</span> <span class="o">=</span> <span class="n">filter_cfg</span><span class="p">(</span><span class="n">config_info</span><span class="p">)</span>
-            <span class="n">cfg</span> <span class="o">=</span> <span class="n">verify_training_cfg</span><span class="p">(</span><span class="n">config_info</span><span class="p">)</span>
-            <span class="n">cfg</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">train_labels_path</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">]</span>
-            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">OmegaConf</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(</span><span class="n">cfg</span><span class="p">))</span>
+                <span class="n">config_info</span> <span class="o">=</span> <span class="n">filter_cfg</span><span class="p">(</span><span class="n">config_info</span><span class="p">)</span>
+                <span class="n">cfg</span> <span class="o">=</span> <span class="n">verify_training_cfg</span><span class="p">(</span><span class="n">config_info</span><span class="p">)</span>
+                <span class="n">cfg</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">train_labels_path</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">]</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">OmegaConf</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(</span><span class="n">cfg</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="n">show_sleap_nn_installation_message</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;sleap-nn is not installed. This appears to be GUI-only install.&quot;</span>
+                    <span class="s2">&quot;To enable training, please install SLEAP with the &#39;nn&#39; dependency.&quot;</span>
+                    <span class="s2">&quot;See the installation guide: https://docs.sleap.ai/latest/installation/&quot;</span>
+                <span class="p">)</span>
 
         <span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
         <span class="c1"># Set the clipboard text</span>
@@ -3935,8 +3951,7 @@ for list of nodes for (e.g.) selecting anchor node</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/dialog.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">788</span>
-<span class="normal">789</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">789</span>
 <span class="normal">790</span>
 <span class="normal">791</span>
 <span class="normal">792</span>
@@ -3958,7 +3973,16 @@ for list of nodes for (e.g.) selecting anchor node</p>
 <span class="normal">808</span>
 <span class="normal">809</span>
 <span class="normal">810</span>
-<span class="normal">811</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">811</span>
+<span class="normal">812</span>
+<span class="normal">813</span>
+<span class="normal">814</span>
+<span class="normal">815</span>
+<span class="normal">816</span>
+<span class="normal">817</span>
+<span class="normal">818</span>
+<span class="normal">819</span>
+<span class="normal">820</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Copy scripts and configs to clipboard&quot;&quot;&quot;</span>
 
     <span class="c1"># Get all info from dialog</span>
@@ -3971,12 +3995,20 @@ for list of nodes for (e.g.) selecting anchor node</p>
     <span class="k">for</span> <span class="n">config_info</span> <span class="ow">in</span> <span class="n">config_info_list</span><span class="p">:</span>
         <span class="n">config_info</span> <span class="o">=</span> <span class="n">config_info</span><span class="o">.</span><span class="n">config</span>
         <span class="c1"># convert to sleap-nn cfg (yaml)</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.config.training_job_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">verify_training_cfg</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.config.training_job_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">verify_training_cfg</span>
 
-        <span class="n">config_info</span> <span class="o">=</span> <span class="n">filter_cfg</span><span class="p">(</span><span class="n">config_info</span><span class="p">)</span>
-        <span class="n">cfg</span> <span class="o">=</span> <span class="n">verify_training_cfg</span><span class="p">(</span><span class="n">config_info</span><span class="p">)</span>
-        <span class="n">cfg</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">train_labels_path</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">]</span>
-        <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">OmegaConf</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(</span><span class="n">cfg</span><span class="p">))</span>
+            <span class="n">config_info</span> <span class="o">=</span> <span class="n">filter_cfg</span><span class="p">(</span><span class="n">config_info</span><span class="p">)</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">verify_training_cfg</span><span class="p">(</span><span class="n">config_info</span><span class="p">)</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">train_labels_path</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">labels_filename</span><span class="p">]</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">OmegaConf</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(</span><span class="n">cfg</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="n">show_sleap_nn_installation_message</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;sleap-nn is not installed. This appears to be GUI-only install.&quot;</span>
+                <span class="s2">&quot;To enable training, please install SLEAP with the &#39;nn&#39; dependency.&quot;</span>
+                <span class="s2">&quot;See the installation guide: https://docs.sleap.ai/latest/installation/&quot;</span>
+            <span class="p">)</span>
 
     <span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
     <span class="c1"># Set the clipboard text</span>
@@ -4004,16 +4036,7 @@ for list of nodes for (e.g.) selecting anchor node</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/dialog.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">844</span>
-<span class="normal">845</span>
-<span class="normal">846</span>
-<span class="normal">847</span>
-<span class="normal">848</span>
-<span class="normal">849</span>
-<span class="normal">850</span>
-<span class="normal">851</span>
-<span class="normal">852</span>
-<span class="normal">853</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">853</span>
 <span class="normal">854</span>
 <span class="normal">855</span>
 <span class="normal">856</span>
@@ -4094,7 +4117,16 @@ for list of nodes for (e.g.) selecting anchor node</p>
 <span class="normal">931</span>
 <span class="normal">932</span>
 <span class="normal">933</span>
-<span class="normal">934</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">export_package</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="normal">934</span>
+<span class="normal">935</span>
+<span class="normal">936</span>
+<span class="normal">937</span>
+<span class="normal">938</span>
+<span class="normal">939</span>
+<span class="normal">940</span>
+<span class="normal">941</span>
+<span class="normal">942</span>
+<span class="normal">943</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">export_package</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">gui</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Export training job package.&quot;&quot;&quot;</span>
     <span class="c1"># TODO: Warn if self.mode != &quot;training&quot;?</span>
     <span class="k">if</span> <span class="n">output_path</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">output_path</span><span class="p">:</span>
@@ -4207,8 +4239,7 @@ for list of nodes for (e.g.) selecting anchor node</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/dialog.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">749</span>
-<span class="normal">750</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">750</span>
 <span class="normal">751</span>
 <span class="normal">752</span>
 <span class="normal">753</span>
@@ -4244,7 +4275,8 @@ for list of nodes for (e.g.) selecting anchor node</p>
 <span class="normal">783</span>
 <span class="normal">784</span>
 <span class="normal">785</span>
-<span class="normal">786</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">786</span>
+<span class="normal">787</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run with current dialog settings.&quot;&quot;&quot;</span>
 
     <span class="n">pipeline_form_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_form_widget</span><span class="o">.</span><span class="n">get_form_data</span><span class="p">()</span>
@@ -4304,16 +4336,7 @@ for list of nodes for (e.g.) selecting anchor node</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/dialog.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">813</span>
-<span class="normal">814</span>
-<span class="normal">815</span>
-<span class="normal">816</span>
-<span class="normal">817</span>
-<span class="normal">818</span>
-<span class="normal">819</span>
-<span class="normal">820</span>
-<span class="normal">821</span>
-<span class="normal">822</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">822</span>
 <span class="normal">823</span>
 <span class="normal">824</span>
 <span class="normal">825</span>
@@ -4333,7 +4356,16 @@ for list of nodes for (e.g.) selecting anchor node</p>
 <span class="normal">839</span>
 <span class="normal">840</span>
 <span class="normal">841</span>
-<span class="normal">842</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span>
+<span class="normal">842</span>
+<span class="normal">843</span>
+<span class="normal">844</span>
+<span class="normal">845</span>
+<span class="normal">846</span>
+<span class="normal">847</span>
+<span class="normal">848</span>
+<span class="normal">849</span>
+<span class="normal">850</span>
+<span class="normal">851</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Save scripts and configs to run pipeline.&quot;&quot;&quot;</span>
@@ -4461,8 +4493,7 @@ training editor GUI tab.</p>
 
             <details class="quote">
               <summary>Source code in <code>sleap/gui/learning/dialog.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">497</span>
-<span class="normal">498</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">498</span>
 <span class="normal">499</span>
 <span class="normal">500</span>
 <span class="normal">501</span>
@@ -4481,7 +4512,8 @@ training editor GUI tab.</p>
 <span class="normal">514</span>
 <span class="normal">515</span>
 <span class="normal">516</span>
-<span class="normal">517</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">517</span>
+<span class="normal">518</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">update_loaded_config</span><span class="p">(</span>
     <span class="n">loaded_cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">tab_cfg_key_val_dict</span><span class="p">:</span> <span class="nb">dict</span>
 <span class="p">):</span>  <span class="c1"># -&gt; scopedkeydict.ScopedKeyDict:</span>
@@ -4648,16 +4680,7 @@ when :py:class:<code>LearningDialog</code> is in "inference" mode.</p>
 
               <details class="quote">
                 <summary>Source code in <code>sleap/gui/learning/dialog.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1028</span>
-<span class="normal">1029</span>
-<span class="normal">1030</span>
-<span class="normal">1031</span>
-<span class="normal">1032</span>
-<span class="normal">1033</span>
-<span class="normal">1034</span>
-<span class="normal">1035</span>
-<span class="normal">1036</span>
-<span class="normal">1037</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1037</span>
 <span class="normal">1038</span>
 <span class="normal">1039</span>
 <span class="normal">1040</span>
@@ -5036,7 +5059,16 @@ when :py:class:<code>LearningDialog</code> is in "inference" mode.</p>
 <span class="normal">1413</span>
 <span class="normal">1414</span>
 <span class="normal">1415</span>
-<span class="normal">1416</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainingEditorWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+<span class="normal">1416</span>
+<span class="normal">1417</span>
+<span class="normal">1418</span>
+<span class="normal">1419</span>
+<span class="normal">1420</span>
+<span class="normal">1421</span>
+<span class="normal">1422</span>
+<span class="normal">1423</span>
+<span class="normal">1424</span>
+<span class="normal">1425</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainingEditorWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dialog for viewing and modifying training profiles (model hyperparameters).</span>
 
@@ -5481,16 +5513,7 @@ when :py:class:<code>LearningDialog</code> is in "inference" mode.</p>
 
               <details class="quote">
                 <summary>Source code in <code>sleap/gui/learning/dialog.py</code></summary>
-                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 937</span>
-<span class="normal"> 938</span>
-<span class="normal"> 939</span>
-<span class="normal"> 940</span>
-<span class="normal"> 941</span>
-<span class="normal"> 942</span>
-<span class="normal"> 943</span>
-<span class="normal"> 944</span>
-<span class="normal"> 945</span>
-<span class="normal"> 946</span>
+                <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 946</span>
 <span class="normal"> 947</span>
 <span class="normal"> 948</span>
 <span class="normal"> 949</span>
@@ -5569,7 +5592,16 @@ when :py:class:<code>LearningDialog</code> is in "inference" mode.</p>
 <span class="normal">1022</span>
 <span class="normal">1023</span>
 <span class="normal">1024</span>
-<span class="normal">1025</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainingPipelineWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+<span class="normal">1025</span>
+<span class="normal">1026</span>
+<span class="normal">1027</span>
+<span class="normal">1028</span>
+<span class="normal">1029</span>
+<span class="normal">1030</span>
+<span class="normal">1031</span>
+<span class="normal">1032</span>
+<span class="normal">1033</span>
+<span class="normal">1034</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">TrainingPipelineWidget</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Widget used in :py:class:`LearningDialog` for configuring pipeline.</span>
 <span class="sd">    &quot;&quot;&quot;</span>

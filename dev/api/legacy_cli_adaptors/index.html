@@ -1830,20 +1830,7 @@
 
             <details class="quote">
               <summary>Source code in <code>sleap/legacy_cli_adaptors.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span>
-<span class="normal">292</span>
-<span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">300</span>
 <span class="normal">301</span>
 <span class="normal">302</span>
 <span class="normal">303</span>
@@ -2188,7 +2175,29 @@
 <span class="normal">642</span>
 <span class="normal">643</span>
 <span class="normal">644</span>
-<span class="normal">645</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">context_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;help_option_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;-h&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">]})</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">context_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;help_option_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;-h&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">]})</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;data_path&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
     <span class="s2">&quot;-m&quot;</span><span class="p">,</span>
@@ -2453,100 +2462,109 @@
     <span class="n">tracking_of_max_levels</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Track instances in video data using trained SLEAP models.&quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_inference</span> <span class="k">as</span> <span class="n">predict</span>
 
-    <span class="c1"># Build kwargs for the tracking function</span>
-    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Build kwargs for the tracking function</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">if</span> <span class="n">models</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;model_paths&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">models</span>
-    <span class="k">if</span> <span class="n">frames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;frames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">frames</span>
-    <span class="k">if</span> <span class="n">only_labeled_frames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">only_labeled_frames</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;only_labeled_frames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">if</span> <span class="n">only_suggested_frames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">only_suggested_frames</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;only_suggested_frames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span>
-    <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s2">.predictions.slp&quot;</span>
-    <span class="k">if</span> <span class="n">video_dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;video_dataset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video_dataset</span>
-    <span class="k">if</span> <span class="n">video_input_format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;video_input_format&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video_input_format</span>
-    <span class="k">if</span> <span class="n">video_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;video_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video_index</span>
-    <span class="k">if</span> <span class="n">cpu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cpu</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span>
-    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">first_gpu</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;cuda:0&quot;</span>
-        <span class="k">if</span> <span class="n">last_gpu</span><span class="p">:</span>
-            <span class="n">n_gpus</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cuda:</span><span class="si">{</span><span class="n">n_gpus</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">if</span> <span class="n">gpu</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cuda:</span><span class="si">{</span><span class="n">gpu</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">gpu</span> <span class="o">!=</span> <span class="s2">&quot;auto&quot;</span> <span class="k">else</span> <span class="s2">&quot;cuda&quot;</span>
-    <span class="k">if</span> <span class="n">max_edge_length_ratio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_edge_length_ratio&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_edge_length_ratio</span>
-    <span class="k">if</span> <span class="n">dist_penalty_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;dist_penalty_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist_penalty_weight</span>
-    <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch_size</span>
-    <span class="c1"># if open_in_gui:</span>
-    <span class="c1">#     kwargs[&#39;open_in_gui&#39;] = True #TODO</span>
-    <span class="k">if</span> <span class="n">peak_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;peak_threshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">peak_threshold</span>
-    <span class="k">if</span> <span class="n">max_instances</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_instances&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_instances</span>
+        <span class="k">if</span> <span class="n">models</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;model_paths&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">models</span>
+        <span class="k">if</span> <span class="n">frames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;frames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">frames</span>
+        <span class="k">if</span> <span class="n">only_labeled_frames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">only_labeled_frames</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;only_labeled_frames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">only_suggested_frames</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">only_suggested_frames</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;only_suggested_frames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span>
+        <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;output_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s2">.predictions.slp&quot;</span>
+        <span class="k">if</span> <span class="n">video_dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;video_dataset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video_dataset</span>
+        <span class="k">if</span> <span class="n">video_input_format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;video_input_format&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video_input_format</span>
+        <span class="k">if</span> <span class="n">video_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;video_index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">video_index</span>
+        <span class="k">if</span> <span class="n">cpu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cpu</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span>
+        <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">first_gpu</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;cuda:0&quot;</span>
+            <span class="k">if</span> <span class="n">last_gpu</span><span class="p">:</span>
+                <span class="n">n_gpus</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cuda:</span><span class="si">{</span><span class="n">n_gpus</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">gpu</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cuda:</span><span class="si">{</span><span class="n">gpu</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">gpu</span> <span class="o">!=</span> <span class="s2">&quot;auto&quot;</span> <span class="k">else</span> <span class="s2">&quot;cuda&quot;</span>
+        <span class="k">if</span> <span class="n">max_edge_length_ratio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_edge_length_ratio&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_edge_length_ratio</span>
+        <span class="k">if</span> <span class="n">dist_penalty_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;dist_penalty_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist_penalty_weight</span>
+        <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="c1"># if open_in_gui:</span>
+        <span class="c1">#     kwargs[&#39;open_in_gui&#39;] = True #TODO</span>
+        <span class="k">if</span> <span class="n">peak_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;peak_threshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">peak_threshold</span>
+        <span class="k">if</span> <span class="n">max_instances</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_instances&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_instances</span>
 
-    <span class="k">if</span> <span class="n">tracking_tracker</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;flow&quot;</span> <span class="ow">in</span> <span class="n">tracking_tracker</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;use_flow&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">tracking_tracker</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;flow&quot;</span> <span class="ow">in</span> <span class="n">tracking_tracker</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;use_flow&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="c1"># Check max_tracking flag int value for True/False</span>
-    <span class="k">if</span> <span class="n">tracking_max_tracking</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">tracking_max_tracking</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;candidates_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;local_queues&quot;</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_tracks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_max_tracks</span>
+        <span class="c1"># Check max_tracking flag int value for True/False</span>
+        <span class="k">if</span> <span class="n">tracking_max_tracking</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">tracking_max_tracking</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;candidates_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;local_queues&quot;</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;max_tracks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_max_tracks</span>
 
-    <span class="k">if</span> <span class="n">tracking_similarity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">tracking_similarity</span> <span class="o">==</span> <span class="s2">&quot;oks&quot;</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;keypoints&quot;</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;scoring_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;oks&quot;</span>
-        <span class="k">elif</span> <span class="n">tracking_similarity</span> <span class="o">==</span> <span class="s2">&quot;centroids&quot;</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;centroids&quot;</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;scoring_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;euclidean_dist&quot;</span>
-        <span class="k">elif</span> <span class="n">tracking_similarity</span> <span class="o">==</span> <span class="s2">&quot;iou&quot;</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bboxes&quot;</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;scoring_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;iou&quot;</span>
-    <span class="k">if</span> <span class="p">(</span>
-        <span class="n">tracking_post_connect_single_breaks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="ow">and</span> <span class="n">tracking_post_connect_single_breaks</span>
-    <span class="p">):</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;post_connect_single_breaks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_post_connect_single_breaks</span>
-    <span class="k">if</span> <span class="n">tracking_match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;track_matching_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_match</span>
-    <span class="k">if</span> <span class="n">tracking_robust</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;robust_best_instance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_robust</span>
-    <span class="k">if</span> <span class="n">tracking_track_window</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;tracking_window_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_track_window</span>
-    <span class="k">if</span> <span class="n">tracking_min_new_track_points</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;min_new_track_points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_min_new_track_points</span>
-    <span class="k">if</span> <span class="n">tracking_min_match_points</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;min_match_points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_min_match_points</span>
-    <span class="k">if</span> <span class="n">tracking_img_scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;of_img_scale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_img_scale</span>
-    <span class="k">if</span> <span class="n">tracking_of_window_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;of_window_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_of_window_size</span>
-    <span class="k">if</span> <span class="n">tracking_of_max_levels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;of_max_levels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_of_max_levels</span>
+        <span class="k">if</span> <span class="n">tracking_similarity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tracking_similarity</span> <span class="o">==</span> <span class="s2">&quot;oks&quot;</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;keypoints&quot;</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;scoring_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;oks&quot;</span>
+            <span class="k">elif</span> <span class="n">tracking_similarity</span> <span class="o">==</span> <span class="s2">&quot;centroids&quot;</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;centroids&quot;</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;scoring_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;euclidean_dist&quot;</span>
+            <span class="k">elif</span> <span class="n">tracking_similarity</span> <span class="o">==</span> <span class="s2">&quot;iou&quot;</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;features&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bboxes&quot;</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;scoring_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;iou&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">tracking_post_connect_single_breaks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">tracking_post_connect_single_breaks</span>
+        <span class="p">):</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;post_connect_single_breaks&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_post_connect_single_breaks</span>
+        <span class="k">if</span> <span class="n">tracking_match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;track_matching_method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_match</span>
+        <span class="k">if</span> <span class="n">tracking_robust</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;robust_best_instance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_robust</span>
+        <span class="k">if</span> <span class="n">tracking_track_window</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;tracking_window_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_track_window</span>
+        <span class="k">if</span> <span class="n">tracking_min_new_track_points</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;min_new_track_points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_min_new_track_points</span>
+        <span class="k">if</span> <span class="n">tracking_min_match_points</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;min_match_points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_min_match_points</span>
+        <span class="k">if</span> <span class="n">tracking_img_scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;of_img_scale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_img_scale</span>
+        <span class="k">if</span> <span class="n">tracking_of_window_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;of_window_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_of_window_size</span>
+        <span class="k">if</span> <span class="n">tracking_of_max_levels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;of_max_levels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tracking_of_max_levels</span>
 
-    <span class="c1"># # Call the original tracking function with kwargs</span>
-    <span class="n">predict</span><span class="p">(</span><span class="n">data_path</span><span class="o">=</span><span class="n">data_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># # Call the original tracking function with kwargs</span>
+        <span class="n">predict</span><span class="p">(</span><span class="n">data_path</span><span class="o">=</span><span class="n">data_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">open_in_gui</span><span class="p">:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+        <span class="k">if</span> <span class="n">open_in_gui</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 
-        <span class="c1"># Launch SLEAP GUI with the output file</span>
-        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;sleap-label&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))])</span>
+            <span class="c1"># Launch SLEAP GUI with the output file</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;sleap-label&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;output_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))])</span>
+
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">&quot;sleap-nn is not installed. This appears to be a GUI-only installation. &quot;</span>
+            <span class="s2">&quot;To enable training, please install SLEAP with the &#39;nn&#39; dependency. &quot;</span>
+            <span class="s2">&quot;See the installation guide: https://docs.sleap.ai/latest/installation/&quot;</span>
+        <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2569,7 +2587,13 @@
 
             <details class="quote">
               <summary>Source code in <code>sleap/legacy_cli_adaptors.py</code></summary>
-              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 23</span>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 17</span>
+<span class="normal"> 18</span>
+<span class="normal"> 19</span>
+<span class="normal"> 20</span>
+<span class="normal"> 21</span>
+<span class="normal"> 22</span>
+<span class="normal"> 23</span>
 <span class="normal"> 24</span>
 <span class="normal"> 25</span>
 <span class="normal"> 26</span>
@@ -2830,7 +2854,20 @@
 <span class="normal">281</span>
 <span class="normal">282</span>
 <span class="normal">283</span>
-<span class="normal">284</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">context_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;help_option_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;-h&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">]})</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">(</span><span class="n">context_settings</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;help_option_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;-h&quot;</span><span class="p">,</span> <span class="s2">&quot;--help&quot;</span><span class="p">]})</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;training_job_path&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">&quot;labels_path&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
@@ -2946,152 +2983,171 @@
     <span class="n">gpu</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Train a SLEAP model with the specified configuration.&quot;&quot;&quot;</span>
-    <span class="c1"># Convert click arguments to the format expected by the training function</span>
-    <span class="k">if</span> <span class="n">training_job_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">TrainingJobConfig</span><span class="o">.</span><span class="n">load_sleap_config</span><span class="p">(</span><span class="n">training_job_path</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">training_job_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yml&quot;</span><span class="p">)):</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">training_job_path</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.training.model_trainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.predict</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_inference</span> <span class="k">as</span> <span class="n">predict</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.config.training_job_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainingJobConfig</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">sleap_nn.evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Evaluator</span>
 
-    <span class="k">if</span> <span class="n">labels_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">train_labels_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels_path</span><span class="p">]</span>
+        <span class="c1"># Convert click arguments to the format expected by the training function</span>
+        <span class="k">if</span> <span class="n">training_job_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">):</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">TrainingJobConfig</span><span class="o">.</span><span class="n">load_sleap_config</span><span class="p">(</span><span class="n">training_job_path</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">training_job_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.yaml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yml&quot;</span><span class="p">)):</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">training_job_path</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">video_paths</span><span class="p">:</span>
-        <span class="n">video_paths</span> <span class="o">=</span> <span class="n">video_paths</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">val_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">val_labels_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">val_labels</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">test_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">test_file_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_labels</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">base_checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">model_config</span><span class="o">.</span><span class="n">pretrained_backbone_weights</span> <span class="o">=</span> <span class="n">base_checkpoint</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">model_config</span><span class="o">.</span><span class="n">pretrained_head_weights</span> <span class="o">=</span> <span class="n">base_checkpoint</span>
-    <span class="k">if</span> <span class="n">save_viz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">save_viz</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">visualize_preds_during_training</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">if</span> <span class="n">keep_viz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">keep_viz</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">keep_viz</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">if</span> <span class="n">zmq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">zmq</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">zmq</span><span class="o">.</span><span class="n">publish_port</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">zmq</span><span class="o">.</span><span class="n">controller_port</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">if</span> <span class="n">run_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="n">run_name</span>
-    <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
-    <span class="k">if</span> <span class="n">suffix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span> <span class="o">+</span> <span class="n">suffix</span>
-    <span class="k">if</span> <span class="n">cpu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cpu</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_accelerator</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span>
-    <span class="k">if</span> <span class="n">first_gpu</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_accelerator</span> <span class="o">=</span> <span class="s2">&quot;gpu&quot;</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_device_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">last_gpu</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_accelerator</span> <span class="o">=</span> <span class="s2">&quot;gpu&quot;</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_device_indices</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">gpu</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_accelerator</span> <span class="o">=</span> <span class="s2">&quot;gpu&quot;</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_device_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">gpu</span><span class="p">]</span> <span class="k">if</span> <span class="n">gpu</span> <span class="o">!=</span> <span class="s2">&quot;auto&quot;</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">labels_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">train_labels_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels_path</span><span class="p">]</span>
 
-    <span class="c1"># Call the original training function with the arguments</span>
-    <span class="k">if</span> <span class="n">video_paths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">train</span> <span class="o">=</span> <span class="n">load_labels_video_search</span><span class="p">(</span><span class="n">labels_path</span><span class="p">,</span> <span class="n">video_paths</span><span class="p">)</span>
-        <span class="n">val</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">load_labels_video_search</span><span class="p">(</span><span class="n">val_labels</span><span class="p">,</span> <span class="n">video_paths</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">val_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">video_paths</span><span class="p">:</span>
+            <span class="n">video_paths</span> <span class="o">=</span> <span class="n">video_paths</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">val_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">val_labels_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">val_labels</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">test_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">test_file_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">test_labels</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">base_checkpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">model_config</span><span class="o">.</span><span class="n">pretrained_backbone_weights</span> <span class="o">=</span> <span class="n">base_checkpoint</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">model_config</span><span class="o">.</span><span class="n">pretrained_head_weights</span> <span class="o">=</span> <span class="n">base_checkpoint</span>
+        <span class="k">if</span> <span class="n">save_viz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">save_viz</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">visualize_preds_during_training</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">keep_viz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">keep_viz</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">keep_viz</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">zmq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">zmq</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">zmq</span><span class="o">.</span><span class="n">publish_port</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">zmq</span><span class="o">.</span><span class="n">controller_port</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">run_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="n">run_name</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
+        <span class="k">if</span> <span class="n">suffix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span> <span class="o">+</span> <span class="n">suffix</span>
+        <span class="k">if</span> <span class="n">cpu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cpu</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_accelerator</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span>
+        <span class="k">if</span> <span class="n">first_gpu</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_accelerator</span> <span class="o">=</span> <span class="s2">&quot;gpu&quot;</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_device_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">last_gpu</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_accelerator</span> <span class="o">=</span> <span class="s2">&quot;gpu&quot;</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_device_indices</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">gpu</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_accelerator</span> <span class="o">=</span> <span class="s2">&quot;gpu&quot;</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">trainer_device_indices</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">[</span><span class="n">gpu</span><span class="p">]</span> <span class="k">if</span> <span class="n">gpu</span> <span class="o">!=</span> <span class="s2">&quot;auto&quot;</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Call the original training function with the arguments</span>
+        <span class="k">if</span> <span class="n">video_paths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">train</span> <span class="o">=</span> <span class="n">load_labels_video_search</span><span class="p">(</span><span class="n">labels_path</span><span class="p">,</span> <span class="n">video_paths</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">load_labels_video_search</span><span class="p">(</span><span class="n">val_labels</span><span class="p">,</span> <span class="n">video_paths</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">val_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">train</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_slp</span><span class="p">(</span><span class="n">labels_path</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_slp</span><span class="p">(</span><span class="n">val_labels</span><span class="p">)</span> <span class="k">if</span> <span class="n">val_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="n">start_train_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">start_timestamp</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Started training at: </span><span class="si">{</span><span class="n">start_timestamp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="o">.</span><span class="n">get_model_trainer_from_config</span><span class="p">(</span>
+            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+            <span class="n">train_labels</span><span class="o">=</span><span class="p">[</span><span class="n">train</span><span class="p">],</span>
+            <span class="n">val_labels</span><span class="o">=</span><span class="p">[</span><span class="n">val</span><span class="p">]</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">train</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_slp</span><span class="p">(</span><span class="n">labels_path</span><span class="p">)</span>
-        <span class="n">val</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_slp</span><span class="p">(</span><span class="n">val_labels</span><span class="p">)</span> <span class="k">if</span> <span class="n">val_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 
-    <span class="n">start_train_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-    <span class="n">start_timestamp</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Started training at: </span><span class="si">{</span><span class="n">start_timestamp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">finish_timestamp</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+        <span class="n">total_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_train_time</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished training at: </span><span class="si">{</span><span class="n">finish_timestamp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total training time: </span><span class="si">{</span><span class="n">total_elapsed</span><span class="si">}</span><span class="s2"> secs&quot;</span><span class="p">)</span>
 
-    <span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="o">.</span><span class="n">get_model_trainer_from_config</span><span class="p">(</span>
-        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
-        <span class="n">train_labels</span><span class="o">=</span><span class="p">[</span><span class="n">train</span><span class="p">],</span>
-        <span class="n">val_labels</span><span class="o">=</span><span class="p">[</span><span class="n">val</span><span class="p">]</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">global_rank</span> <span class="k">if</span> <span class="n">trainer</span><span class="o">.</span><span class="n">trainer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
 
-    <span class="n">finish_timestamp</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
-    <span class="n">total_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_train_time</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished training at: </span><span class="si">{</span><span class="n">finish_timestamp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total training time: </span><span class="si">{</span><span class="n">total_elapsed</span><span class="si">}</span><span class="s2"> secs&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training Config: </span><span class="si">{</span><span class="n">OmegaConf</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="n">rank</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">global_rank</span> <span class="k">if</span> <span class="n">trainer</span><span class="o">.</span><span class="n">trainer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
-
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training Config: </span><span class="si">{</span><span class="n">OmegaConf</span><span class="o">.</span><span class="n">to_yaml</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">rank</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
-        <span class="c1"># run inference on val dataset</span>
-        <span class="k">if</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">save_ckpt</span><span class="p">:</span>
-            <span class="n">data_paths</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">train_labels_path</span><span class="p">):</span>
-                <span class="n">ckpt_path</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
-                    <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training labels path for index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">ckpt_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">data_paths</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;train_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
-                    <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
-                    <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;labels_train_gt_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">.slp&quot;</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-                <span class="n">data_paths</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;val_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
-                    <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
-                    <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;labels_val_gt_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">.slp&quot;</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
-
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">OmegaConf</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;data_config.test_file_path&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-                <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="p">):</span>
-                <span class="n">data_paths</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">test_file_path</span>
-
-            <span class="k">for</span> <span class="n">d_name</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">data_paths</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">labels</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_slp</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-
-                <span class="n">pred_labels</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span>
-                    <span class="n">data_path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
-                    <span class="n">model_paths</span><span class="o">=</span><span class="p">[</span>
+        <span class="k">if</span> <span class="n">rank</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c1"># run inference on val dataset</span>
+            <span class="k">if</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">save_ckpt</span><span class="p">:</span>
+                <span class="n">data_paths</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                    <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">train_labels_path</span>
+                <span class="p">):</span>
+                    <span class="n">ckpt_path</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
                         <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
-                    <span class="p">],</span>
-                    <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
-                    <span class="n">make_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">device</span><span class="o">=</span><span class="n">trainer</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">root_device</span><span class="p">,</span>
-                    <span class="n">output_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
-                    <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
-                    <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;pred_</span><span class="si">{</span><span class="n">d_name</span><span class="si">}</span><span class="s2">.slp&quot;</span><span class="p">,</span>
-                    <span class="n">ensure_rgb</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span><span class="p">,</span>
-                    <span class="n">ensure_grayscale</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span><span class="p">,</span>
-                <span class="p">)</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training labels path for index </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">ckpt_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">data_paths</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;train_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
+                        <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
+                        <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;labels_train_gt_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">.slp&quot;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+                    <span class="n">data_paths</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;val_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
+                        <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
+                        <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;labels_val_gt_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">.slp&quot;</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
 
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred_labels</span><span class="p">):</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Skipping eval on `</span><span class="si">{</span><span class="n">d_name</span><span class="si">}</span><span class="s2">` dataset as there are no labeled &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;frames...&quot;</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">OmegaConf</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;data_config.test_file_path&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="p">):</span>
+                    <span class="n">data_paths</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">test_file_path</span>
+
+                <span class="k">for</span> <span class="n">d_name</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">data_paths</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">labels</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_slp</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+                    <span class="n">pred_labels</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span>
+                        <span class="n">data_path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                        <span class="n">model_paths</span><span class="o">=</span><span class="p">[</span>
+                            <span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
+                            <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
+                        <span class="p">],</span>
+                        <span class="n">peak_threshold</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                        <span class="n">make_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">device</span><span class="o">=</span><span class="n">trainer</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">strategy</span><span class="o">.</span><span class="n">root_device</span><span class="p">,</span>
+                        <span class="n">output_path</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
+                        <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
+                        <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;pred_</span><span class="si">{</span><span class="n">d_name</span><span class="si">}</span><span class="s2">.slp&quot;</span><span class="p">,</span>
+                        <span class="n">ensure_rgb</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_rgb</span><span class="p">,</span>
+                        <span class="n">ensure_grayscale</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">data_config</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">ensure_grayscale</span><span class="p">,</span>
                     <span class="p">)</span>
-                    <span class="k">continue</span>  <span class="c1"># skip if there are no labeled frames</span>
 
-                <span class="n">evaluator</span> <span class="o">=</span> <span class="n">Evaluator</span><span class="p">(</span>
-                    <span class="n">ground_truth_instances</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">predicted_instances</span><span class="o">=</span><span class="n">pred_labels</span>
-                <span class="p">)</span>
-                <span class="n">metrics</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span>
-                    <span class="p">(</span>
-                        <span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
-                        <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
-                        <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">d_name</span><span class="si">}</span><span class="s2">_pred_metrics.npz&quot;</span>
-                    <span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span>
-                    <span class="o">**</span><span class="n">metrics</span><span class="p">,</span>
-                <span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">pred_labels</span><span class="p">):</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Skipping eval on `</span><span class="si">{</span><span class="n">d_name</span><span class="si">}</span><span class="s2">` dataset as there are no&quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;labeled frames...&quot;</span>
+                        <span class="p">)</span>
+                        <span class="k">continue</span>  <span class="c1"># skip if there are no labeled frames</span>
 
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;---------Evaluation on `</span><span class="si">{</span><span class="n">d_name</span><span class="si">}</span><span class="s2">` dataset---------&quot;</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;OKS mAP: </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;voc_metrics&#39;</span><span class="p">][</span><span class="s1">&#39;oks_voc.mAP&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average distance: </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;distance_metrics&#39;</span><span class="p">][</span><span class="s1">&#39;avg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;p90 dist: </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;distance_metrics&#39;</span><span class="p">][</span><span class="s1">&#39;p90&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;p50 dist: </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;distance_metrics&#39;</span><span class="p">][</span><span class="s1">&#39;p50&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">evaluator</span> <span class="o">=</span> <span class="n">Evaluator</span><span class="p">(</span>
+                        <span class="n">ground_truth_instances</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">predicted_instances</span><span class="o">=</span><span class="n">pred_labels</span>
+                    <span class="p">)</span>
+                    <span class="n">metrics</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="n">Path</span><span class="p">(</span><span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">)</span>
+                            <span class="o">/</span> <span class="n">trainer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span>
+                            <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">d_name</span><span class="si">}</span><span class="s2">_pred_metrics.npz&quot;</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span>
+                        <span class="o">**</span><span class="n">metrics</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;---------Evaluation on `</span><span class="si">{</span><span class="n">d_name</span><span class="si">}</span><span class="s2">` dataset---------&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;OKS mAP: </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;voc_metrics&#39;</span><span class="p">][</span><span class="s1">&#39;oks_voc.mAP&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Average distance: </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;distance_metrics&#39;</span><span class="p">][</span><span class="s1">&#39;avg&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;p90 dist: </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;distance_metrics&#39;</span><span class="p">][</span><span class="s1">&#39;p90&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;p50 dist: </span><span class="si">{</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;distance_metrics&#39;</span><span class="p">][</span><span class="s1">&#39;p50&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">&quot;sleap-nn is not installed. This appears to be a GUI-only installation. &quot;</span>
+            <span class="s2">&quot;To enable training, please install SLEAP with the &#39;nn&#39; dependency. &quot;</span>
+            <span class="s2">&quot;See the installation guide: https://docs.sleap.ai/latest/installation/&quot;</span>
+        <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

@@ -1871,6 +1871,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sleap.util.show_sleap_nn_installation_message" class="md-nav__link">
+    <span class="md-ellipsis">
+      show_sleap_nn_installation_message
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sleap.util.uniquify" class="md-nav__link">
     <span class="md-ellipsis">
       uniquify
@@ -2106,6 +2115,14 @@ depend on any other modules in the package.</p>
               <td>
                 <div class="doc-md-description">
                   <p>Saves dictionary to an HDF5 file.</p>
+                </div>
+              </td>
+            </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot; language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;show_sleap_nn_installation_message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;sleap.util.show_sleap_nn_installation_message&lt;/code&gt;)" href="#sleap.util.show_sleap_nn_installation_message">show_sleap_nn_installation_message</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Show a Qt popup message about SLEAP-NN installation requirements.</p>
                 </div>
               </td>
             </tr>
@@ -4274,6 +4291,83 @@ Assume it is open.</p>
             <span class="n">h5file</span><span class="p">[</span><span class="n">path</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot save </span><span class="si">%s</span><span class="s2"> type&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="sleap.util.show_sleap_nn_installation_message" class="doc doc-heading">
+            <code class=" language-python"><span class="n">show_sleap_nn_installation_message</span><span class="p">()</span></code>
+
+<a href="#sleap.util.show_sleap_nn_installation_message" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Show a Qt popup message about SLEAP-NN installation requirements.</p>
+<p>This function displays a popup window informing users that sleap-nn is not installed
+and provides instructions for enabling training functionality.</p>
+
+
+            <details class="quote">
+              <summary>Source code in <code>sleap/util.py</code></summary>
+              <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">599</span>
+<span class="normal">600</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">show_sleap_nn_installation_message</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Show a Qt popup message about SLEAP-NN installation requirements.</span>
+
+<span class="sd">    This function displays a popup window informing users that sleap-nn is not installed</span>
+<span class="sd">    and provides instructions for enabling training functionality.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">PySide6.QtWidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">QMessageBox</span><span class="p">,</span> <span class="n">QApplication</span>
+
+    <span class="c1"># Ensure QApplication exists</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">app</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
+
+    <span class="n">msg_box</span> <span class="o">=</span> <span class="n">QMessageBox</span><span class="p">()</span>
+    <span class="n">msg_box</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;SLEAP Training Not Available&quot;</span><span class="p">)</span>
+    <span class="n">msg_box</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Warning</span><span class="p">)</span>
+
+    <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;sleap-nn is not installed. This appears to be a GUI-only installation. &quot;</span>
+        <span class="s2">&quot;To enable training, please install SLEAP with the &#39;nn&#39; dependency. &quot;</span>
+        <span class="s2">&quot;See the installation guide: https://docs.sleap.ai/latest/installation/&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">msg_box</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+    <span class="n">msg_box</span><span class="o">.</span><span class="n">setStandardButtons</span><span class="p">(</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Ok</span><span class="p">)</span>
+    <span class="n">msg_box</span><span class="o">.</span><span class="n">exec</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
