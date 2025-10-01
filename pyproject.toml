@@ -116,6 +116,8 @@ sleap-inspect = "sleap.info.labels:main"
 sleap-diagnostic = "sleap.diagnostic:main"
 sleap-train = "sleap.legacy_cli_adaptors:train_command"
 sleap-track = "sleap.legacy_cli_adaptors:track_command"
+sleap-nn-train = "sleap.cli:train"
+sleap-nn-track = "sleap.cli:track"
 # sleap-export = "sleap.legacy_cli_adaptors:export_cli"
 
 [tool.setuptools.packages.find]
