@@ -87,6 +87,10 @@
       
     </div>
     
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
     
       
 
@@ -702,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrating-to-sleap-1-5.md" class="md-nav__link">
+      <a href="../migrating-to-sleap-1-5/" class="md-nav__link">
         
   
   
@@ -1791,8 +1795,8 @@
 <p>Our guide to <a href="../creating-a-custom-training-profile/">creating a custom training profile</a> explains how to use the GUI to export custom training profiles. You can also use the <code>initial_config.yaml</code> file saved from previous training run as a template for a new training config. You can copy the <code>yaml</code> file and edit it in any text editor.</p>
 <p><strong>Command-line training</strong>:</p>
 <p>Once you have your training job package (or labels package and training profile), you can run training using the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command like so:</p>
-<div class="highlight"><pre><span></span><code>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config-name<span class="w"> </span>&lt;config_name&gt;<span class="w"> </span>--config-dir<span class="w"> </span>&lt;path/to/config&gt;<span class="w"> </span><span class="s2">&quot;data_config.train_labels_path=[&lt;path/to/slp/file&gt;]&quot;</span><span class="w"> </span>trainer_config.ckpt_dir<span class="o">=</span><span class="s2">&quot;models&quot;</span><span class="w"> </span>trainer_config.run_name<span class="o">=</span>&lt;run_name&gt;
-</code></pre></div>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config-name<span class="w"> </span>&lt;config_name&gt;<span class="w"> </span>--config-dir<span class="w"> </span>&lt;path/to/config&gt;<span class="w"> </span><span class="s2">&quot;data_config.train_labels_path=[&lt;path/to/slp/file&gt;]&quot;</span><span class="w"> </span>trainer_config.ckpt_dir<span class="o">=</span><span class="s2">&quot;models&quot;</span><span class="w"> </span>trainer_config.run_name<span class="o">=</span>&lt;run_name&gt;
+</span></code></pre></div>
 <p>The model will be saved in the <code>models/</code> directory within the same directory as the <strong>training job package</strong> (in this case, <code>models/run_name/</code>).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1829,11 +1833,11 @@ This allows you to run inference on older models without needing to retrain them
 <p>For this example, let's suppose you're working with an HDF5 video at <code>path/to/video.mp4</code>.</p>
 <p><strong>Command-line inference</strong>:</p>
 <p>To run inference, you'll call <a href="https://nn.sleap.ai/latest/inference/#run-inference-with-cli"><code>sleap-nn track</code></a> with the paths to each trained model and your video file, like so:</p>
-<div class="highlight"><pre><span></span><code>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>path/to/video.mp4<span class="w"> </span><span class="se">\</span>
---video_dataset<span class="w"> </span>video<span class="w"> </span>--video_input_format<span class="w"> </span>channels_last<span class="w"> </span><span class="se">\</span>
--m<span class="w"> </span>path/to/models/centroid<span class="w"> </span><span class="se">\</span>
--m<span class="w"> </span>path/to/models/centered-instance
-</code></pre></div>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>path/to/video.mp4<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>--video_dataset<span class="w"> </span>video<span class="w"> </span>--video_input_format<span class="w"> </span>channels_last<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>-m<span class="w"> </span>path/to/models/centroid<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>-m<span class="w"> </span>path/to/models/centered-instance
+</span></code></pre></div>
 <p>This will run inference on the entire video. If you only want to run inference on some range of frames, you can specify this with the <code>--frames 123-456</code> command-line argument.</p>
 <p>This will give you predictions frame-by-frame, but will not connect those predictions across frames into <code>tracks</code>. If you want cross-frame identity tracking, set <code>--tracking</code> argument. For optical flow, use <code>--use_flow</code>. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use <code>--features centroids --scoring_method euclidean_dist</code>.</p>
 <p>It's also be possible to run tracking separately after you've generated a predictions file (see <a href="https://nn.sleap.ai/latest/inference/#track-only-workflow"><code>Track-only workflow</code></a>). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.</p>
@@ -1924,7 +1928,7 @@ This allows you to run inference on older models without needing to retrain them
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>

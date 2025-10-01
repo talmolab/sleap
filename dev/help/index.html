@@ -85,6 +85,10 @@
       
     </div>
     
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
     
       
 
@@ -698,7 +702,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../migrating-to-sleap-1-5.md" class="md-nav__link">
+      <a href="../guides/migrating-to-sleap-1-5/" class="md-nav__link">
         
   
   
@@ -2123,8 +2127,8 @@
 <p>SLEAP supports a large number of formats, including all video formats and imported data from DeepLabCut and others.</p>
 <p>Many types of video acquisition software, however, do not save videos in a format suitable for computer vision-based processing. A very common issue is that videos are not <strong>reliably seekable</strong>, meaning that you may not get the same data when trying to read a particular frame index. This is because many video formats are optimized for realtime and sequential playback and save space by reconstructing the image using data in adjacent frames. The consequence is that you may not get the exact same image depending on what the last frame you read was. Check out <a href="http://blog.loopbio.com/video-io-1-introduction.html">this blog post</a> for more details.</p>
 <p>If you think you may be affected by this issue, or just want to be safe, re-encode your videos using the following command:</p>
-<div class="highlight"><pre><span></span><code>ffmpeg<span class="w"> </span>-y<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;input.mp4&quot;</span><span class="w"> </span>-c:v<span class="w"> </span>libx264<span class="w"> </span>-pix_fmt<span class="w"> </span>yuv420p<span class="w"> </span>-preset<span class="w"> </span>superfast<span class="w"> </span>-crf<span class="w"> </span><span class="m">23</span><span class="w"> </span><span class="s2">&quot;output.mp4&quot;</span>
-</code></pre></div>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ffmpeg<span class="w"> </span>-y<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;input.mp4&quot;</span><span class="w"> </span>-c:v<span class="w"> </span>libx264<span class="w"> </span>-pix_fmt<span class="w"> </span>yuv420p<span class="w"> </span>-preset<span class="w"> </span>superfast<span class="w"> </span>-crf<span class="w"> </span><span class="m">23</span><span class="w"> </span><span class="s2">&quot;output.mp4&quot;</span>
+</span></code></pre></div>
 <p>Breaking down what this does:</p>
 <ul>
 <li><code>-i "input.mp4"</code>: Specifies the path to the input file. Replace this with your video. Can be <code>.avi</code> or any other video format.</li>
@@ -2289,7 +2293,7 @@ Or <a href="https://github.com/talmolab/sleap/issues">open an issue</a> and we'l
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>

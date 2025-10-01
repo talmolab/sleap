@@ -87,6 +87,10 @@
       
     </div>
     
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
     
       
 
@@ -700,7 +704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrating-to-sleap-1-5.md" class="md-nav__link">
+      <a href="../../guides/migrating-to-sleap-1-5/" class="md-nav__link">
         
   
   
@@ -1628,21 +1632,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="sleap-track">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Examples
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
         
       </ul>
@@ -1967,21 +1956,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="sleap-track">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Examples
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
         
       </ul>
@@ -2098,18 +2072,18 @@
 <h2 id="gui">GUI<a class="headerlink" href="#gui" title="Permanent link">&para;</a></h2>
 <h3 id="sleap-label"><code>sleap-label</code><a class="headerlink" href="#sleap-label" title="Permanent link">&para;</a></h3>
 <p><code>sleap-label</code> runs the GUI application for labeling and viewing <code>.slp</code> files.</p>
-<div class="highlight"><pre><span></span><code>usage: sleap-label [-h] [--nonnative] [--profiling] [--reset] [labels_path]
-
-positional arguments:
-  labels_path  Path to labels file
-
-optional arguments:
-  -h, --help   show this help message and exit
-  --nonnative  Don&#39;t use native file dialogs
-  --profiling  Enable performance profiling
-  --reset      Reset GUI state and preferences. Use this flag if the GUI
-               appears incorrectly or fails to open.
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>usage: sleap-label [-h] [--nonnative] [--profiling] [--reset] [labels_path]
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>positional arguments:
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  labels_path  Path to labels file
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>optional arguments:
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  -h, --help   show this help message and exit
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  --nonnative  Don&#39;t use native file dialogs
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  --profiling  Enable performance profiling
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  --reset      Reset GUI state and preferences. Use this flag if the GUI
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>               appears incorrectly or fails to open.
+</span></code></pre></div>
 <h2 id="training">Training<a class="headerlink" href="#training" title="Permanent link">&para;</a></h2>
 <h3 id="sleap-train"><code>sleap-train</code><a class="headerlink" href="#sleap-train" title="Permanent link">&para;</a></h3>
 <div class="admonition note">
@@ -2121,52 +2095,52 @@ optional arguments:
 <p class="admonition-title">Warning</p>
 <p>The <code>--tensorboard</code> option is not currently supported. For experiment tracking and logging, consider using alternative options such as <a href="https://wandb.ai/">Weights &amp; Biases (WandB)</a> which are supported in the PyTorch backend (<a href="https://nn.sleap.ai">nn.sleap.ai</a>). See the documentation for details on enabling these logging options.</p>
 </div>
-<div class="highlight"><pre><span></span><code>usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
-                   [--test_labels TEST_LABELS] [--save_viz] 
-                   [--keep_viz] [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
-                   [--suffix SUFFIX]
-                   training_job_path [labels_path]
-
-positional arguments:
-  training_job_path     Path to training job profile JSON/YAML file.
-  labels_path           Path to labels file to use for training. If specified,
-                        overrides the path specified in the training job
-                        config.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --video-paths VIDEO_PATHS
-                        List of paths for finding videos in case paths inside
-                        labels file are not accessible.
-  --val_labels VAL_LABELS, --val VAL_LABELS
-                        Path to labels file to use for validation. If
-                        specified, overrides the path specified in the
-                        training job config.
-  --test_labels TEST_LABELS, --test TEST_LABELS
-                        Path to labels file to use for test. If specified,
-                        overrides the path specified in the training job
-                        config.
-  --base_checkpoint BASE_CHECKPOINT
-                        Path to base checkpoint (directory containing best_model.h5)
-                        to resume training from.
-  --save_viz            Enable saving of prediction visualizations to the run
-                        folder if not already specified in the training job
-                        config.
-  --keep_viz            Keep prediction visualization images in the run
-                        folder after training if --save_viz is enabled.
-  --zmq                 Enable ZMQ logging (for GUI) if not already specified
-                        in the training job config.
-  --run_name RUN_NAME   Run name to use when saving file, overrides other run
-                        name settings.
-  --prefix PREFIX       Prefix to prepend to run name.
-  --suffix SUFFIX       Suffix to append to run name.
-  --cpu                 Run training only on CPU. If not specified, will use
-                        available GPU.
-  --first-gpu           Run training on the first GPU, if available.
-  --last-gpu            Run training on the last GPU, if available.
-  --gpu GPU             Run training on the i-th GPU on the system. If &#39;auto&#39;, run on
-                        the GPU with the highest percentage of available memory.
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>                   [--test_labels TEST_LABELS] [--save_viz] 
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>                   [--keep_viz] [--zmq] [--run_name RUN_NAME] [--prefix PREFIX]
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>                   [--suffix SUFFIX]
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>                   training_job_path [labels_path]
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>positional arguments:
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  training_job_path     Path to training job profile JSON/YAML file.
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  labels_path           Path to labels file to use for training. If specified,
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>                        overrides the path specified in the training job
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>                        config.
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>optional arguments:
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>  -h, --help            show this help message and exit
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>  --video-paths VIDEO_PATHS
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>                        List of paths for finding videos in case paths inside
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>                        labels file are not accessible.
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>  --val_labels VAL_LABELS, --val VAL_LABELS
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>                        Path to labels file to use for validation. If
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>                        specified, overrides the path specified in the
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>                        training job config.
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>  --test_labels TEST_LABELS, --test TEST_LABELS
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>                        Path to labels file to use for test. If specified,
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>                        overrides the path specified in the training job
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>                        config.
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>  --base_checkpoint BASE_CHECKPOINT
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>                        Path to base checkpoint (directory containing best_model.h5)
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>                        to resume training from.
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>  --save_viz            Enable saving of prediction visualizations to the run
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>                        folder if not already specified in the training job
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>                        config.
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>  --keep_viz            Keep prediction visualization images in the run
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>                        folder after training if --save_viz is enabled.
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>  --zmq                 Enable ZMQ logging (for GUI) if not already specified
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>                        in the training job config.
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>  --run_name RUN_NAME   Run name to use when saving file, overrides other run
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>                        name settings.
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>  --prefix PREFIX       Prefix to prepend to run name.
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>  --suffix SUFFIX       Suffix to append to run name.
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>  --cpu                 Run training only on CPU. If not specified, will use
+</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>                        available GPU.
+</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>  --first-gpu           Run training on the first GPU, if available.
+</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>  --last-gpu            Run training on the last GPU, if available.
+</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>  --gpu GPU             Run training on the i-th GPU on the system. If &#39;auto&#39;, run on
+</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>                        the GPU with the highest percentage of available memory.
+</span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The <code>sleap-export</code> command is <strong>not currently supported</strong> in the latest versions of SLEAP, as we have transitioned to a PyTorch backend (<code>sleap-nn</code>). For more information about the new backend, see the <a href="https://nn.sleap.ai">sleap-nn documentation</a>.</p>
@@ -2180,218 +2154,218 @@ optional arguments:
 </div>
 <p><code>sleap-track</code> is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Google Colab notebook.</p>
 <p>If you specify how many identities there should be in a frame (i.e., the number of animals) with the <code>--tracking.clean_instance_count</code> argument, then we will use a heuristic method to connect "breaks" in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify <code>--tracking.tracker none</code>). See <a href="../../guides/tracking-and-proofreading/"><code>Tracking and proofreading</code></a> for more details on tracking.</p>
-<div class="highlight"><pre><span></span><code>usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [--only-suggested-frames] [-o OUTPUT]
-                   [--video.dataset VIDEO.DATASET] [--video.input_format VIDEO.INPUT_FORMAT]
-                   [--video.index VIDEO.INDEX] [--cpu | --first-gpu | --last-gpu | --gpu GPU] [--max_edge_length_ratio MAX_EDGE_LENGTH_RATIO]
-                   [--dist_penalty_weight DIST_PENALTY_WEIGHT] [--batch_size BATCH_SIZE] [--open-in-gui] [--peak_threshold PEAK_THRESHOLD]
-                   [-n MAX_INSTANCES] [--tracking.tracker TRACKING.TRACKER] [--tracking.max_tracking TRACKING.MAX_TRACKING]
-                   [--tracking.max_tracks TRACKING.MAX_TRACKS]
-                   [--tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS]
-                   [--tracking.similarity TRACKING.SIMILARITY] [--tracking.match TRACKING.MATCH] [--tracking.robust TRACKING.ROBUST]
-                   [--tracking.track_window TRACKING.TRACK_WINDOW] [--tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS]
-                   [--tracking.min_match_points TRACKING.MIN_MATCH_POINTS] [--tracking.img_scale TRACKING.IMG_SCALE]
-                   [--tracking.of_window_size TRACKING.OF_WINDOW_SIZE] [--tracking.of_max_levels TRACKING.OF_MAX_LEVELS]
-                   [data_path]
-
-positional arguments:
-  data_path             Path to data to predict on. This can be one of the following: A .slp file containing labeled data; A folder containing multiple
-                        video files in supported formats; An individual video file in a supported format; A CSV file with a column of video file paths. 
-                        If more than one column is provided in the CSV file, the first will be used for the input data paths and the next column will be
-                        used as the output paths; A text file with a path to a video file on each line
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -m MODELS, --model MODELS
-                        Path to trained model directory (with training_config.json). Multiple models can be specified, each preceded by --model.
-  --frames FRAMES       List of frames to predict when running on a video. Can be specified as a comma separated list (e.g. 1,2,3) or a range
-                        separated by hyphen (e.g., 1-3, for 1,2,3). If not provided, defaults to predicting on the entire video.
-  --only-labeled-frames
-                        Only run inference on user labeled frames when running on labels dataset. This is useful for generating predictions to compare
-                        against ground truth.
-  --only-suggested-frames
-                        Only run inference on unlabeled suggested frames when running on labels dataset. This is useful for generating predictions for
-                        initialization during labeling.
-  -o OUTPUT, --output OUTPUT
-                        The output filename or directory path to use for the predicted data. If not provided, defaults to &#39;[data_path].predictions.slp&#39;.
-  --video.dataset VIDEO.DATASET
-                        The dataset for HDF5 videos.
-  --video.input_format VIDEO.INPUT_FORMAT
-                        The input_format for HDF5 videos.
-  --video.index VIDEO.INDEX
-                        Integer index of video in .slp file to predict on. To be used with an .slp path as an alternative to specifying the video
-                        path.
-  --cpu                 Run inference only on CPU. If not specified, will use available GPU.
-  --first-gpu           Run inference on the first GPU, if available.
-  --last-gpu            Run inference on the last GPU, if available.
-  --gpu GPU             Run training on the i-th GPU on the system. If &#39;auto&#39;, run on the GPU with the highest percentage of available memory.
-  --max_edge_length_ratio MAX_EDGE_LENGTH_RATIO
-                        The maximum expected length of a connected pair of points as a fraction of the image size. Candidate connections longer than
-                        this length will be penalized during matching. Only applies to bottom-up (PAF) models.
-  --dist_penalty_weight DIST_PENALTY_WEIGHT
-                        A coefficient to scale weight of the distance penalty. Set to values greater than 1.0 to enforce the distance penalty more
-                        strictly. Only applies to bottom-up (PAF) models.
-  --batch_size BATCH_SIZE
-                        Number of frames to predict at a time. Larger values result in faster inference speeds, but require more memory.
-  --open-in-gui         Open the resulting predictions in the GUI when finished.
-  --peak_threshold PEAK_THRESHOLD
-                        Minimum confidence map value to consider a peak as valid.
-  -n MAX_INSTANCES, --max_instances MAX_INSTANCES
-                        Limit maximum number of instances in multi-instance models. Not available for ID models. Defaults to None.
-  --tracking.tracker TRACKING.TRACKER
-                        Options: simple, flow, simplemaxtracks, flowmaxtracks, None (default: None)
-  --tracking.max_tracking TRACKING.MAX_TRACKING
-                        If true then the tracker will cap the max number of tracks. (default: False)
-  --tracking.max_tracks TRACKING.MAX_TRACKS
-                        Maximum number of tracks to be tracked by the tracker. (default: None)
-  --tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT
-                        Target number of instances to track per frame. (default: 0)
-  --tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS
-                        If non-zero and target_instance_count is also non-zero, then connect track breaks when exactly one track is lost and exactly
-                        one track is spawned in frame. (default: 0)
-  --tracking.similarity TRACKING.SIMILARITY
-                        Options: instance, normalized_instance, object_keypoint, centroid, iou (default: instance)
-  --tracking.match TRACKING.MATCH
-                        Options: hungarian, greedy (default: greedy)
-  --tracking.robust TRACKING.ROBUST
-                        Robust quantile of similarity score for instance matching. If equal to 1, keep the max similarity score (non-robust).
-                        (default: 1)
-  --tracking.track_window TRACKING.TRACK_WINDOW
-                        How many frames back to look for matches (default: 5)
-  --tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS
-                        Minimum number of instance points for spawning new track (default: 0)
-  --tracking.min_match_points TRACKING.MIN_MATCH_POINTS
-                        Minimum points for match candidates (default: 0)
-  --tracking.img_scale TRACKING.IMG_SCALE
-                        For optical-flow: Image scale (default: 1.0)
-  --tracking.of_window_size TRACKING.OF_WINDOW_SIZE
-                        For optical-flow: Optical flow window size to consider at each pyramid (default: 21)
-  --tracking.of_max_levels TRACKING.OF_MAX_LEVELS
-                        For optical-flow: Number of pyramid scale levels to consider (default: 3)
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [--only-suggested-frames] [-o OUTPUT]
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>                   [--video.dataset VIDEO.DATASET] [--video.input_format VIDEO.INPUT_FORMAT]
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>                   [--video.index VIDEO.INDEX] [--cpu | --first-gpu | --last-gpu | --gpu GPU] [--max_edge_length_ratio MAX_EDGE_LENGTH_RATIO]
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>                   [--dist_penalty_weight DIST_PENALTY_WEIGHT] [--batch_size BATCH_SIZE] [--open-in-gui] [--peak_threshold PEAK_THRESHOLD]
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>                   [-n MAX_INSTANCES] [--tracking.tracker TRACKING.TRACKER] [--tracking.max_tracking TRACKING.MAX_TRACKING]
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>                   [--tracking.max_tracks TRACKING.MAX_TRACKS]
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>                   [--tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS]
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>                   [--tracking.similarity TRACKING.SIMILARITY] [--tracking.match TRACKING.MATCH] [--tracking.robust TRACKING.ROBUST]
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>                   [--tracking.track_window TRACKING.TRACK_WINDOW] [--tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS]
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>                   [--tracking.min_match_points TRACKING.MIN_MATCH_POINTS] [--tracking.img_scale TRACKING.IMG_SCALE]
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>                   [--tracking.of_window_size TRACKING.OF_WINDOW_SIZE] [--tracking.of_max_levels TRACKING.OF_MAX_LEVELS]
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>                   [data_path]
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>positional arguments:
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>  data_path             Path to data to predict on. This can be one of the following: A .slp file containing labeled data; A folder containing multiple
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>                        video files in supported formats; An individual video file in a supported format; A CSV file with a column of video file paths. 
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>                        If more than one column is provided in the CSV file, the first will be used for the input data paths and the next column will be
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>                        used as the output paths; A text file with a path to a video file on each line
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>optional arguments:
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>  -h, --help            show this help message and exit
+</span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>  -m MODELS, --model MODELS
+</span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>                        Path to trained model directory (with training_config.json). Multiple models can be specified, each preceded by --model.
+</span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>  --frames FRAMES       List of frames to predict when running on a video. Can be specified as a comma separated list (e.g. 1,2,3) or a range
+</span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>                        separated by hyphen (e.g., 1-3, for 1,2,3). If not provided, defaults to predicting on the entire video.
+</span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>  --only-labeled-frames
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>                        Only run inference on user labeled frames when running on labels dataset. This is useful for generating predictions to compare
+</span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>                        against ground truth.
+</span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>  --only-suggested-frames
+</span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>                        Only run inference on unlabeled suggested frames when running on labels dataset. This is useful for generating predictions for
+</span><span id="__span-2-31"><a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>                        initialization during labeling.
+</span><span id="__span-2-32"><a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>  -o OUTPUT, --output OUTPUT
+</span><span id="__span-2-33"><a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>                        The output filename or directory path to use for the predicted data. If not provided, defaults to &#39;[data_path].predictions.slp&#39;.
+</span><span id="__span-2-34"><a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>  --video.dataset VIDEO.DATASET
+</span><span id="__span-2-35"><a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>                        The dataset for HDF5 videos.
+</span><span id="__span-2-36"><a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>  --video.input_format VIDEO.INPUT_FORMAT
+</span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>                        The input_format for HDF5 videos.
+</span><span id="__span-2-38"><a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>  --video.index VIDEO.INDEX
+</span><span id="__span-2-39"><a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>                        Integer index of video in .slp file to predict on. To be used with an .slp path as an alternative to specifying the video
+</span><span id="__span-2-40"><a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>                        path.
+</span><span id="__span-2-41"><a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>  --cpu                 Run inference only on CPU. If not specified, will use available GPU.
+</span><span id="__span-2-42"><a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>  --first-gpu           Run inference on the first GPU, if available.
+</span><span id="__span-2-43"><a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>  --last-gpu            Run inference on the last GPU, if available.
+</span><span id="__span-2-44"><a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>  --gpu GPU             Run training on the i-th GPU on the system. If &#39;auto&#39;, run on the GPU with the highest percentage of available memory.
+</span><span id="__span-2-45"><a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>  --max_edge_length_ratio MAX_EDGE_LENGTH_RATIO
+</span><span id="__span-2-46"><a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>                        The maximum expected length of a connected pair of points as a fraction of the image size. Candidate connections longer than
+</span><span id="__span-2-47"><a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>                        this length will be penalized during matching. Only applies to bottom-up (PAF) models.
+</span><span id="__span-2-48"><a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>  --dist_penalty_weight DIST_PENALTY_WEIGHT
+</span><span id="__span-2-49"><a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>                        A coefficient to scale weight of the distance penalty. Set to values greater than 1.0 to enforce the distance penalty more
+</span><span id="__span-2-50"><a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>                        strictly. Only applies to bottom-up (PAF) models.
+</span><span id="__span-2-51"><a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>  --batch_size BATCH_SIZE
+</span><span id="__span-2-52"><a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>                        Number of frames to predict at a time. Larger values result in faster inference speeds, but require more memory.
+</span><span id="__span-2-53"><a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>  --open-in-gui         Open the resulting predictions in the GUI when finished.
+</span><span id="__span-2-54"><a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>  --peak_threshold PEAK_THRESHOLD
+</span><span id="__span-2-55"><a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a>                        Minimum confidence map value to consider a peak as valid.
+</span><span id="__span-2-56"><a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>  -n MAX_INSTANCES, --max_instances MAX_INSTANCES
+</span><span id="__span-2-57"><a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a>                        Limit maximum number of instances in multi-instance models. Not available for ID models. Defaults to None.
+</span><span id="__span-2-58"><a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a>  --tracking.tracker TRACKING.TRACKER
+</span><span id="__span-2-59"><a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a>                        Options: simple, flow, simplemaxtracks, flowmaxtracks, None (default: None)
+</span><span id="__span-2-60"><a id="__codelineno-2-60" name="__codelineno-2-60" href="#__codelineno-2-60"></a>  --tracking.max_tracking TRACKING.MAX_TRACKING
+</span><span id="__span-2-61"><a id="__codelineno-2-61" name="__codelineno-2-61" href="#__codelineno-2-61"></a>                        If true then the tracker will cap the max number of tracks. (default: False)
+</span><span id="__span-2-62"><a id="__codelineno-2-62" name="__codelineno-2-62" href="#__codelineno-2-62"></a>  --tracking.max_tracks TRACKING.MAX_TRACKS
+</span><span id="__span-2-63"><a id="__codelineno-2-63" name="__codelineno-2-63" href="#__codelineno-2-63"></a>                        Maximum number of tracks to be tracked by the tracker. (default: None)
+</span><span id="__span-2-64"><a id="__codelineno-2-64" name="__codelineno-2-64" href="#__codelineno-2-64"></a>  --tracking.target_instance_count TRACKING.TARGET_INSTANCE_COUNT
+</span><span id="__span-2-65"><a id="__codelineno-2-65" name="__codelineno-2-65" href="#__codelineno-2-65"></a>                        Target number of instances to track per frame. (default: 0)
+</span><span id="__span-2-66"><a id="__codelineno-2-66" name="__codelineno-2-66" href="#__codelineno-2-66"></a>  --tracking.post_connect_single_breaks TRACKING.POST_CONNECT_SINGLE_BREAKS
+</span><span id="__span-2-67"><a id="__codelineno-2-67" name="__codelineno-2-67" href="#__codelineno-2-67"></a>                        If non-zero and target_instance_count is also non-zero, then connect track breaks when exactly one track is lost and exactly
+</span><span id="__span-2-68"><a id="__codelineno-2-68" name="__codelineno-2-68" href="#__codelineno-2-68"></a>                        one track is spawned in frame. (default: 0)
+</span><span id="__span-2-69"><a id="__codelineno-2-69" name="__codelineno-2-69" href="#__codelineno-2-69"></a>  --tracking.similarity TRACKING.SIMILARITY
+</span><span id="__span-2-70"><a id="__codelineno-2-70" name="__codelineno-2-70" href="#__codelineno-2-70"></a>                        Options: instance, normalized_instance, object_keypoint, centroid, iou (default: instance)
+</span><span id="__span-2-71"><a id="__codelineno-2-71" name="__codelineno-2-71" href="#__codelineno-2-71"></a>  --tracking.match TRACKING.MATCH
+</span><span id="__span-2-72"><a id="__codelineno-2-72" name="__codelineno-2-72" href="#__codelineno-2-72"></a>                        Options: hungarian, greedy (default: greedy)
+</span><span id="__span-2-73"><a id="__codelineno-2-73" name="__codelineno-2-73" href="#__codelineno-2-73"></a>  --tracking.robust TRACKING.ROBUST
+</span><span id="__span-2-74"><a id="__codelineno-2-74" name="__codelineno-2-74" href="#__codelineno-2-74"></a>                        Robust quantile of similarity score for instance matching. If equal to 1, keep the max similarity score (non-robust).
+</span><span id="__span-2-75"><a id="__codelineno-2-75" name="__codelineno-2-75" href="#__codelineno-2-75"></a>                        (default: 1)
+</span><span id="__span-2-76"><a id="__codelineno-2-76" name="__codelineno-2-76" href="#__codelineno-2-76"></a>  --tracking.track_window TRACKING.TRACK_WINDOW
+</span><span id="__span-2-77"><a id="__codelineno-2-77" name="__codelineno-2-77" href="#__codelineno-2-77"></a>                        How many frames back to look for matches (default: 5)
+</span><span id="__span-2-78"><a id="__codelineno-2-78" name="__codelineno-2-78" href="#__codelineno-2-78"></a>  --tracking.min_new_track_points TRACKING.MIN_NEW_TRACK_POINTS
+</span><span id="__span-2-79"><a id="__codelineno-2-79" name="__codelineno-2-79" href="#__codelineno-2-79"></a>                        Minimum number of instance points for spawning new track (default: 0)
+</span><span id="__span-2-80"><a id="__codelineno-2-80" name="__codelineno-2-80" href="#__codelineno-2-80"></a>  --tracking.min_match_points TRACKING.MIN_MATCH_POINTS
+</span><span id="__span-2-81"><a id="__codelineno-2-81" name="__codelineno-2-81" href="#__codelineno-2-81"></a>                        Minimum points for match candidates (default: 0)
+</span><span id="__span-2-82"><a id="__codelineno-2-82" name="__codelineno-2-82" href="#__codelineno-2-82"></a>  --tracking.img_scale TRACKING.IMG_SCALE
+</span><span id="__span-2-83"><a id="__codelineno-2-83" name="__codelineno-2-83" href="#__codelineno-2-83"></a>                        For optical-flow: Image scale (default: 1.0)
+</span><span id="__span-2-84"><a id="__codelineno-2-84" name="__codelineno-2-84" href="#__codelineno-2-84"></a>  --tracking.of_window_size TRACKING.OF_WINDOW_SIZE
+</span><span id="__span-2-85"><a id="__codelineno-2-85" name="__codelineno-2-85" href="#__codelineno-2-85"></a>                        For optical-flow: Optical flow window size to consider at each pyramid (default: 21)
+</span><span id="__span-2-86"><a id="__codelineno-2-86" name="__codelineno-2-86" href="#__codelineno-2-86"></a>  --tracking.of_max_levels TRACKING.OF_MAX_LEVELS
+</span><span id="__span-2-87"><a id="__codelineno-2-87" name="__codelineno-2-87" href="#__codelineno-2-87"></a>                        For optical-flow: Number of pyramid scale levels to consider (default: 3)
+</span></code></pre></div>
 <h4 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h4>
 <p><strong>1. Simple inference without tracking:</strong></p>
-<div class="highlight"><pre><span></span><code>sleap-track -m &quot;models/my_model&quot; -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sleap-track -m &quot;models/my_model&quot; -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
+</span></code></pre></div>
 <p><strong>2. Inference with multi-model pipelines (e.g., top-down):</strong></p>
-<div class="highlight"><pre><span></span><code>sleap-track -m &quot;models/centroid&quot; -m &quot;models/centered_instance&quot; -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap-track -m &quot;models/centroid&quot; -m &quot;models/centered_instance&quot; -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
+</span></code></pre></div>
 <p><strong>3. Inference on suggested frames of a labeling project:</strong></p>
-<div class="highlight"><pre><span></span><code>sleap-track -m &quot;models/my_model&quot; --only-suggested-frames -o &quot;labels_with_predictions.slp&quot; &quot;labels.v005.slp&quot;
-</code></pre></div>
-<p>The resulting <code>labels_with_predictions.slp</code> can then merged into the base labels project from the SLEAP GUI via <strong>File</strong> --&gt; <strong>Merge into project...</strong>.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sleap-track -m &quot;models/my_model&quot; --only-suggested-frames -o &quot;labels_with_predictions.slp&quot; &quot;labels.v005.slp&quot;
+</span></code></pre></div>
+<p>The resulting <code>labels_with_predictions.slp</code> can then merged into the base labels project from the SLEAP GUI via <strong>File</strong> &rarr; <strong>Merge into project...</strong>.</p>
 <p><strong>4. Inference with simple tracking:</strong></p>
-<div class="highlight"><pre><span></span><code>sleap-track -m &quot;models/my_model&quot; --tracking.tracker simple -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sleap-track -m &quot;models/my_model&quot; --tracking.tracker simple -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
+</span></code></pre></div>
 <p><strong>5. Inference with max tracks limit:</strong></p>
-<div class="highlight"><pre><span></span><code>sleap-track -m &quot;models/my_model&quot; --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sleap-track -m &quot;models/my_model&quot; --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 -o &quot;output_predictions.slp&quot; &quot;input_video.mp4&quot;
+</span></code></pre></div>
 <p><strong>6. Re-tracking without pose inference:</strong></p>
-<div class="highlight"><pre><span></span><code>sleap-track --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 -o &quot;retracked.slp&quot; &quot;input_predictions.slp&quot;
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sleap-track --tracking.tracker simplemaxtracks --tracking.max_tracking 1 --tracking.max_tracks 4 -o &quot;retracked.slp&quot; &quot;input_predictions.slp&quot;
+</span></code></pre></div>
 <p><strong>7. Select GPU for pose inference:</strong></p>
-<div class="highlight"><pre><span></span><code>sleap-track --gpu 1 ...
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sleap-track --gpu 1 ...
+</span></code></pre></div>
 <p><strong>8. Select subset of frames to predict on:</strong></p>
-<div class="highlight"><pre><span></span><code>sleap-track -m &quot;models/my_model&quot; --frames 1000-2000 &quot;input_video.mp4&quot;
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sleap-track -m &quot;models/my_model&quot; --frames 1000-2000 &quot;input_video.mp4&quot;
+</span></code></pre></div>
 <h2 id="dataset-files">Dataset files<a class="headerlink" href="#dataset-files" title="Permanent link">&para;</a></h2>
 <h3 id="sleap-convert"><code>sleap-convert</code><a class="headerlink" href="#sleap-convert" title="Permanent link">&para;</a></h3>
 <p><code>sleap-convert</code> allows you to convert between various dataset file formats. Amongst other things, it can be used to export data from a SLEAP dataset into an HDF5 file that can be easily used for analysis (e.g., read from MATLAB). </p>
-<div class="highlight"><pre><span></span><code>usage: sleap-convert [-h] [-o OUTPUT] [--format FORMAT] [--video VIDEO]
-                     input_path
-
-positional arguments:
-  input_path            Path to input file.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -o OUTPUT, --output OUTPUT
-                        Path to output file (optional). The analysis format expects an
-                        output path per video in the project. Otherwise, the default
-                        naming convention
-                        &lt;slp path&gt;.&lt;video index&gt;_&lt;video filename&gt;.analysis.h5 will be
-                        used for every video without a specified output path. Multiple
-                        outputs can be specified, each preceded by --output.
-
-                        Example (analysis format):
-                          Input:
-                            predictions.slp: Path to .slp file to convert which has two
-                            videos:
-                            - first-video.mp4 at video index 0 and
-                            - second-video.mp4 at video index 1.
-                          Command:
-                            sleap-convert predictions.slp --format analysis --output analysis_video_0.h5
-                          Output analysis files:
-                            analysis_video_0.h5: Analysis file for first-video.mp4
-                              (at index 0) in predictions.slp.
-                            predictions.001_second-video.analysis.h5: Analysis file for
-                              second-video.mp4 (at index 1) in predictions.slp. Since
-                              only a single --output argument was specified, the
-                              analysis file for the latter video is given a default name.
-  --format FORMAT       Output format. Default (&#39;slp&#39;) is SLEAP dataset;
-                        &#39;analysis&#39; results in analysis.h5 file; &#39;analysis.nix&#39; results
-                        in an analysis nix file; &#39;analysis.csv&#39; results
-                        in an analysis csv file; &#39;h5&#39; or &#39;json&#39; results in SLEAP dataset
-                        with specified file format.
-  --video VIDEO         Path to video (if needed for conversion).
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>usage: sleap-convert [-h] [-o OUTPUT] [--format FORMAT] [--video VIDEO]
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>                     input_path
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>positional arguments:
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>  input_path            Path to input file.
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>optional arguments:
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>  -h, --help            show this help message and exit
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>  -o OUTPUT, --output OUTPUT
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>                        Path to output file (optional). The analysis format expects an
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>                        output path per video in the project. Otherwise, the default
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>                        naming convention
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>                        &lt;slp path&gt;.&lt;video index&gt;_&lt;video filename&gt;.analysis.h5 will be
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>                        used for every video without a specified output path. Multiple
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>                        outputs can be specified, each preceded by --output.
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>                        Example (analysis format):
+</span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>                          Input:
+</span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>                            predictions.slp: Path to .slp file to convert which has two
+</span><span id="__span-11-20"><a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>                            videos:
+</span><span id="__span-11-21"><a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>                            - first-video.mp4 at video index 0 and
+</span><span id="__span-11-22"><a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a>                            - second-video.mp4 at video index 1.
+</span><span id="__span-11-23"><a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a>                          Command:
+</span><span id="__span-11-24"><a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a>                            sleap-convert predictions.slp --format analysis --output analysis_video_0.h5
+</span><span id="__span-11-25"><a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a>                          Output analysis files:
+</span><span id="__span-11-26"><a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a>                            analysis_video_0.h5: Analysis file for first-video.mp4
+</span><span id="__span-11-27"><a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a>                              (at index 0) in predictions.slp.
+</span><span id="__span-11-28"><a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a>                            predictions.001_second-video.analysis.h5: Analysis file for
+</span><span id="__span-11-29"><a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a>                              second-video.mp4 (at index 1) in predictions.slp. Since
+</span><span id="__span-11-30"><a id="__codelineno-11-30" name="__codelineno-11-30" href="#__codelineno-11-30"></a>                              only a single --output argument was specified, the
+</span><span id="__span-11-31"><a id="__codelineno-11-31" name="__codelineno-11-31" href="#__codelineno-11-31"></a>                              analysis file for the latter video is given a default name.
+</span><span id="__span-11-32"><a id="__codelineno-11-32" name="__codelineno-11-32" href="#__codelineno-11-32"></a>  --format FORMAT       Output format. Default (&#39;slp&#39;) is SLEAP dataset;
+</span><span id="__span-11-33"><a id="__codelineno-11-33" name="__codelineno-11-33" href="#__codelineno-11-33"></a>                        &#39;analysis&#39; results in analysis.h5 file; &#39;analysis.nix&#39; results
+</span><span id="__span-11-34"><a id="__codelineno-11-34" name="__codelineno-11-34" href="#__codelineno-11-34"></a>                        in an analysis nix file; &#39;analysis.csv&#39; results
+</span><span id="__span-11-35"><a id="__codelineno-11-35" name="__codelineno-11-35" href="#__codelineno-11-35"></a>                        in an analysis csv file; &#39;h5&#39; or &#39;json&#39; results in SLEAP dataset
+</span><span id="__span-11-36"><a id="__codelineno-11-36" name="__codelineno-11-36" href="#__codelineno-11-36"></a>                        with specified file format.
+</span><span id="__span-11-37"><a id="__codelineno-11-37" name="__codelineno-11-37" href="#__codelineno-11-37"></a>  --video VIDEO         Path to video (if needed for conversion).
+</span></code></pre></div>
 <p>For example, to convert a predictions SLP file to an analysis HDF5 file:</p>
-<div class="highlight"><pre><span></span><code>sleap-convert --format analysis -o &quot;session1.predictions.analysis.h5&quot; &quot;session1.predictions.slp&quot;
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>sleap-convert --format analysis -o &quot;session1.predictions.analysis.h5&quot; &quot;session1.predictions.slp&quot;
+</span></code></pre></div>
 <p>See <a href="../../notebooks/Analysis_examples/">Analysis examples</a> for how to work with these outputs.</p>
 <h3 id="sleap-inspect"><code>sleap-inspect</code><a class="headerlink" href="#sleap-inspect" title="Permanent link">&para;</a></h3>
 <p><code>sleap-inspect</code> gives you various information about a SLEAP dataset file such as a list of videos and a count of the frames with labels.</p>
 <p>You can also specify a model folder to get a quick summary of the configuration and metrics (if available).</p>
-<div class="highlight"><pre><span></span><code>usage: sleap-inspect [-h] [--verbose] data_path
-
-positional arguments:
-  data_path   Path to labels file (.slp) or model folder
-
-optional arguments:
-  -h, --help  show this help message and exit
-  --verbose
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>usage: sleap-inspect [-h] [--verbose] data_path
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>positional arguments:
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>  data_path   Path to labels file (.slp) or model folder
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>optional arguments:
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>  -h, --help  show this help message and exit
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>  --verbose
+</span></code></pre></div>
 <h2 id="rendering">Rendering<a class="headerlink" href="#rendering" title="Permanent link">&para;</a></h2>
 <h3 id="sleap-render"><code>sleap-render</code><a class="headerlink" href="#sleap-render" title="Permanent link">&para;</a></h3>
 <p><code>sleap-render</code> allows you to render videos directly from the CLI. It is used to render video clips with Instances.</p>
-<div class="highlight"><pre><span></span><code>usage: sleap-render [-h] [-o OUTPUT] [-f FPS] [--scale SCALE] [--frames FRAMES] [--video-index VIDEO_INDEX] data_path
-
-positional arguments:
-  data_path             Path to labels json file
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -o OUTPUT, --output OUTPUT
-                        Path for saving output (default: None)
-  --video-index VIDEO_INDEX
-                        Index of video in labels dataset (default: 0)
-  --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3)
-                        or a range separated by hyphen (e.g. 1-3). (default is entire video)
-  -f FPS, --fps FPS     Frames per second for output video (default: 25)
-  --scale SCALE         Output image scale (default: 1.0)
-  --show_edges SHOW_EDGES
-                        Whether to draw lines between nodes (default: 1)
-  --edge_is_wedge EDGE_IS_WEDGE
-                        Whether to draw edges as wedges (default: 0)
-  --marker_size MARKER_SIZE
-                        Size of marker in pixels before scaling by SCALE (default: 4)
-  --palette PALETTE     SLEAP color palette to use. Options include: &quot;alphabet&quot;, &quot;five+&quot;,
-                        &quot;solarized&quot;, or &quot;standard&quot; (default: &quot;standard&quot;)
-  --distinctly_color DISTINCTLY_COLOR
-                        Specify how to color instances. Options include: &quot;instances&quot;,
-                        &quot;edges&quot;, and &quot;nodes&quot; (default: &quot;instances&quot;)
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>usage: sleap-render [-h] [-o OUTPUT] [-f FPS] [--scale SCALE] [--frames FRAMES] [--video-index VIDEO_INDEX] data_path
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>positional arguments:
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>  data_path             Path to labels json file
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>optional arguments:
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>  -h, --help            show this help message and exit
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>  -o OUTPUT, --output OUTPUT
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>                        Path for saving output (default: None)
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>  --video-index VIDEO_INDEX
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>                        Index of video in labels dataset (default: 0)
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>  --frames FRAMES       List of frames to predict. Either comma separated list (e.g. 1,2,3)
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>                        or a range separated by hyphen (e.g. 1-3). (default is entire video)
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>  -f FPS, --fps FPS     Frames per second for output video (default: 25)
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>  --scale SCALE         Output image scale (default: 1.0)
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>  --show_edges SHOW_EDGES
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>                        Whether to draw lines between nodes (default: 1)
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>  --edge_is_wedge EDGE_IS_WEDGE
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>                        Whether to draw edges as wedges (default: 0)
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>  --marker_size MARKER_SIZE
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>                        Size of marker in pixels before scaling by SCALE (default: 4)
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>  --palette PALETTE     SLEAP color palette to use. Options include: &quot;alphabet&quot;, &quot;five+&quot;,
+</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>                        &quot;solarized&quot;, or &quot;standard&quot; (default: &quot;standard&quot;)
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>  --distinctly_color DISTINCTLY_COLOR
+</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a>                        Specify how to color instances. Options include: &quot;instances&quot;,
+</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a>                        &quot;edges&quot;, and &quot;nodes&quot; (default: &quot;instances&quot;)
+</span></code></pre></div>
 <h2 id="debugging">Debugging<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
 <h3 id="sleap-diagnostic"><code>sleap-diagnostic</code><a class="headerlink" href="#sleap-diagnostic" title="Permanent link">&para;</a></h3>
 <p>There's also a script to output diagnostic information which may help us if you need to contact us about problems installing or running SLEAP. If you were able to install the SLEAP Python package, you can run this script with <code>sleap-diagnostic</code>. Otherwise, you can download <a href="https://raw.githubusercontent.com/talmolab/sleap/main/sleap/diagnostic.py">diagnostic.py</a> and run <code>python diagnostic.py</code>.</p>
-<div class="highlight"><pre><span></span><code>usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -o OUTPUT, --output OUTPUT
-                        Path for saving output
-  --gui-check           Check if Qt GUI widgets can be used
-</code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>optional arguments:
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>  -h, --help            show this help message and exit
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>  -o OUTPUT, --output OUTPUT
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>                        Path for saving output
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>  --gui-check           Check if Qt GUI widgets can be used
+</span></code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>For more details about any command, run with the <code>--help</code> argument (e.g., <code>sleap-track --help</code>).</p>
@@ -2482,7 +2456,7 @@ optional arguments:
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>

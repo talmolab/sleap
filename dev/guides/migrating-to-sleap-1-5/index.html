@@ -11,6 +11,10 @@
         <link rel="canonical" href="https://docs.sleap.ai/dev/guides/migrating-to-sleap-1-5/">
       
       
+        <link rel="prev" href="../guides-overview/">
+      
+      
+        <link rel="next" href="../importing-predictions-for-labeling/">
       
       
       <link rel="icon" href="../../assets/favicon.ico">
@@ -18,7 +22,7 @@
     
     
       
-        <title>Migrating to SLEAP 1.5 - SLEAP Documentation</title>
+        <title>Migrating to SLEAP 1.5+ - SLEAP Documentation</title>
       
     
     
@@ -83,6 +87,10 @@
       
     </div>
     
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
     
       
 
@@ -109,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Migrating to SLEAP 1.5
+              Migrating to SLEAP 1.5+
             
           </span>
         </div>
@@ -616,8 +624,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -639,11 +649,11 @@
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -659,7 +669,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Guides
@@ -693,10 +703,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../migrating-to-sleap-1-5.md" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Migrating to SLEAP 1.5+
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -707,6 +739,101 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#major-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Major Changes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Major Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uv-based-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      UV-Based Installation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pytorch-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      PyTorch Backend
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#standalone-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standalone Libraries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#torch-backend-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Torch Backend Changes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Torch Backend Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-backbones" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Backbones
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legacy-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Legacy Support
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1721,30 +1848,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Standalone Libraries">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#sleap-io" class="md-nav__link">
-    <span class="md-ellipsis">
-      SLEAP-IO
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sleap-nn" class="md-nav__link">
-    <span class="md-ellipsis">
-      SLEAP-NN
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
         
       </ul>
@@ -1924,7 +2027,7 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
