@@ -20,6 +20,7 @@ from sleap.gui.config_utils import get_head_from_omegaconf, get_skeleton_from_co
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FieldComboWidget
 from omegaconf import OmegaConf
+from sleap.util import show_sleap_nn_installation_message
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -215,14 +216,25 @@ class ConfigFileInfo:
             cfg = OmegaConf.load(path)
 
         else:
-            from sleap_nn.config.training_job_config import (
-                TrainingJobConfig as snn_TrainingJobConfig,
-            )
+            try:
+                from sleap_nn.config.training_job_config import (
+                    TrainingJobConfig as snn_TrainingJobConfig,
+                )
 
-            cfg = snn_TrainingJobConfig.load_sleap_config(path)
-        head_name = get_head_from_omegaconf(cfg)
-        filename = os.path.basename(path)
-        return cls(config=cfg, path=path, filename=filename, head_name=head_name)
+                cfg = snn_TrainingJobConfig.load_sleap_config(path)
+                head_name = get_head_from_omegaconf(cfg)
+                filename = os.path.basename(path)
+                return cls(
+                    config=cfg, path=path, filename=filename, head_name=head_name
+                )
+            except ImportError:
+                show_sleap_nn_installation_message()
+                print(
+                    "sleap-nn is not installed. This appears to be GUI-only install."
+                    "To enable training, please install SLEAP with the 'nn' dependency."
+                    "See the installation guide: https://docs.sleap.ai/latest/installation/"
+                )
+                return None
 
 
 class TrainingConfigFilesWidget(FieldComboWidget):
@@ -537,6 +549,14 @@ class TrainingConfigsGetter:
                 )
 
                 cfg = snn_TrainingJobConfig.load_sleap_config(path)
+            except ImportError:
+                show_sleap_nn_installation_message()
+                print(
+                    "sleap-nn is not installed. This appears to be a GUI-only install."
+                    "To enable training, please install SLEAP with the 'nn' dependency."
+                    "See the installation guide: https://docs.sleap.ai/latest/installation/"
+                )
+                return None
             except Exception as e:
                 # Couldn't load so just ignore
                 print(e)
