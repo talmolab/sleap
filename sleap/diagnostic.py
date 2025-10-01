@@ -112,6 +112,23 @@ def tensorflow_section():
     label("tensorflow", "Neural network functionality has been removed")
 
 
+def pytorch_section():
+    header("PYTORCH")
+    try:
+        import torch
+
+        label("pytorch import", True)
+        label("pytorch version", torch.__version__)
+        label("pytorch path", torch.__file__)
+        label("cuda available", torch.cuda.is_available())
+        if torch.cuda.is_available():
+            label("cuda device count", torch.cuda.device_count())
+            for i in range(torch.cuda.device_count()):
+                label(f"cuda device {i} name", torch.cuda.get_device_name(i))
+    except Exception:
+        label("pytorch import", False)
+
+
 def package_section():
     header("CONDA")
     call(["conda", "list"])
@@ -135,7 +152,8 @@ def get_diagnostics(output_path=None):
     system_section()
     imports_section()
     git_section()
-    tensorflow_section()
+    # tensorflow_section()
+    pytorch_section()
     package_section()
     nvidia_section()
 
