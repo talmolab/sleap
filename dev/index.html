@@ -1989,37 +1989,29 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 <p class="admonition-title">Sample with <code>uvx</code></p>
 <p>Note that opening SLEAP w/ <code>uvx</code> will <strong>not</strong> install SLEAP onto your system, it will only <strong>'invoke'</strong> SLEAP.</p>
 </div>
-<p><strong><code>uvx</code> (any OS):</strong></p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Windows/Linux (CUDA 12.8)</label><label for="__tabbed_1_2">macOS/CPU Only</label><label for="__tabbed_1_3">SLEAP GUI Only</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple<span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>sleap-label
-</span></code></pre></div>
-<div class="admonition info">
-<p class="admonition-title">Other CUDA versions</p>
-<ul>
-<li>For more information on which CUDA version to use for your system, see the <a href="https://pytorch.org/get-started/locally/">PyTorch installation</a> guide. The <code>--extra-index-url</code> in the install command should match the CUDA version you need (e.g., <code>https://download.pytorch.org/whl/cuda118</code> for CUDA 11.8, <code>https://download.pytorch.org/whl/cuda128</code> for CUDA 12.8, etc.).</li>
-<li>On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.</li>
-</ul>
-</div>
-</div>
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>sleap-label
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">&quot;sleap&quot;</span><span class="w"> </span>sleap-label
-</span></code></pre></div>
+<p><strong><code>uv tool install</code> (any OS):</strong></p>
 <div class="admonition warning">
-<p class="admonition-title">GUI <u>ONLY</u></p>
-<p>Installing this version of SLEAP will <strong>NOT</strong> include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for <strong>labeling</strong>.</p>
+<p class="admonition-title">First Time uv Setup</p>
+<p>Install <a href="https://github.com/astral-sh/uv"><code>uv</code></a> first - an ultra-fast Python package manager:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># macOS/Linux</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Windows</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>powershell<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
+</span></code></pre></div></p>
 </div>
-</div>
-</div>
-</div>
-<p><strong><code>pip</code> (any OS)</strong>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip install sleap
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># CUDA 12.8</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># CPU</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
 </span></code></pre></div>
+<p><strong><code>pip</code> (any OS)</strong>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip install sleap
+</span></code></pre></div>
+<p>Run the SLEAP GUI after installation!
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sleap-label
+</span></code></pre></div></p>
 <p>See the docs for <a href="installation/">full installation instructions</a>.</p>
 <h2 id="learn-to-sleap">Learn to SLEAP<a class="headerlink" href="#learn-to-sleap" title="Permanent link">&para;</a></h2>
 <ul>
