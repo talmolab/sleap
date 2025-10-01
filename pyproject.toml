@@ -34,6 +34,7 @@ dependencies = [
     "imgstore",
     "jsmin",
     "jsonpickle",
+    "markupsafe",
     "ndx-pose",
     "networkx",
     "nixio",
@@ -90,16 +91,19 @@ jupyter = [
 ]
 
 nn = [
-    "sleap-nn[torch-cpu]>=0.0.2 ; sys_platform == 'darwin' and platform_machine == 'arm64'",
-    "sleap-nn[torch-cuda128]>=0.0.2 ; sys_platform != 'darwin' or platform_machine != 'arm64'"
+    "sleap-nn[torch]>=0.0.2"
 ]
 
 nn-cpu = [
-    "sleap-nn[torch-cpu]>=0.0.2"
+    "sleap-nn[torch]>=0.0.2"
 ]
 
-nn-gpu = [
-    "sleap-nn[torch-cuda128]>=0.0.2"
+nn-cuda128 = [
+    "sleap-nn[torch]>=0.0.2"
+]
+
+nn-cuda118 = [
+    "sleap-nn[torch]>=0.0.2"
 ]
 
 [project.urls]
@@ -116,7 +120,53 @@ sleap-inspect = "sleap.info.labels:main"
 sleap-diagnostic = "sleap.diagnostic:main"
 sleap-train = "sleap.legacy_cli_adaptors:train_command"
 sleap-track = "sleap.legacy_cli_adaptors:track_command"
+sleap-nn-train = "sleap.cli:train"
+sleap-nn-track = "sleap.cli:track"
 # sleap-export = "sleap.legacy_cli_adaptors:export_cli"
+
+[tool.uv]
+index-url = "https://download.pytorch.org/whl/cu128"
+extra-index-url = ["https://pypi.org/simple"]
+conflicts = [
+    [
+        { extra = "nn-cpu" },
+        { extra = "nn-cuda118" },
+        { extra = "nn-cuda128" }
+    ]
+]
+
+[tool.uv.sources]
+sleap-nn = [
+    { index = "pytorch-cpu", extra = "nn-cpu" },
+    { index = "pytorch-cu118", extra = "nn-cuda118" },
+    { index = "pytorch-cu128", extra = "nn-cuda128" },
+]
+markupsafe = { index = "pypi" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://pypi.org/simple"
+index-url = "https://pypi.org/simple"
+extra-index-url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu118"
+url = "https://pypi.org/simple"
+index-url = "https://pypi.org/simple"
+extra-index-url = "https://download.pytorch.org/whl/cu118"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://pypi.org/simple"
+extra-index-url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+explicit = true
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "tests.*", "docs"]

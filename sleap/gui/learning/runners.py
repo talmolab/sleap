@@ -243,8 +243,7 @@ class InferenceTask:
     ) -> List[Text]:
         """Makes list of CLI arguments needed for running inference."""
         cli_args = [
-            "sleap-nn",
-            "track",
+            "sleap-nn-track",
         ]
         cli_args.extend(
             item_for_inference.cli_args
@@ -500,7 +499,7 @@ def write_pipeline_files(
 
                 # Add a line to the script for training this model
                 train_script += (
-                    f"sleap-nn train --config-name {new_cfg_filename} "
+                    f"sleap-nn-train --config-name {new_cfg_filename} "
                     f"--config-dir {''} "
                     f"trainer_config.ckpt_dir={Path(ckpt_path).parent.as_posix()} "
                     f"trainer_config.run_name={Path(ckpt_path).name}"
@@ -933,8 +932,7 @@ def train_subprocess(
 
             # Build CLI arguments for training
             cli_args = [
-                "sleap-nn",
-                "train",
+                "sleap-nn-train",
                 "--config-name",
                 f"{cfg_file_name}",
                 "--config-dir",
