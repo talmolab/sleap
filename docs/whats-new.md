@@ -37,7 +37,7 @@ SLEAP 1.5 introduces three powerful new backbone architectures (check [here](htt
 We've maintained full backward compatibility:
 
 - **GUI Support**: SLEAP now uses a new <u>YAML-based</u> config file structure, but you can still upload and work with old SLEAP JSON files in the GUI. For details on converting legacy SLEAP 1.4 config/JSON files to the new YAML format, see our [conversion guide](https://nn.sleap.ai/latest/config/#converting-legacy-sleap-14-configjson-to-sleap-nn-yaml).
-- **TensorFlow Model Inference**: Continue to support running inference on old TensorFlow models (UNet backbone only). Check [using legacy models](https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support) for more details.
+- **Using TensorFlow Model Weights**: Continue to support running inference on SLEAP <1.4 TensorFlow model weights (UNet backbone only). Check [using legacy models](https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support) for more details.
 
 
 *For a complete list of changes, see our [Changelog](changelog.md).*
