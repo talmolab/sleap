@@ -29,7 +29,7 @@ Please include information about how you installed.
 <!-- [e.g. ubuntu 20.04, macOS 11.0] -->
 -   Version(s):
 <!-- e.g. [SLEAP v1.4.1, python 3.8] --->
--   SLEAP installation method (listed [here](https://docs.sleap.ai/installation/#installation-methods)):
+-   SLEAP installation method (listed [here](https://docs.sleap.ai/latest/installation/#installation-methods)):
 
 <details><summary>Environment packages</summary>
 <!-- For reproduction, it's useful to have the full environment. For example, the output of `pip freeze` or `conda list` --->

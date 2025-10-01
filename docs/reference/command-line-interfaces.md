@@ -102,7 +102,7 @@ optional arguments:
 
 `sleap-track` is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Google Colab notebook.
 
-If you specify how many identities there should be in a frame (i.e., the number of animals) with the `--tracking.clean_instance_count` argument, then we will use a heuristic method to connect "breaks" in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify `--tracking.tracker none`). See [`Tracking and proofreading`](../how-to-guides/tracking-and-proofreading.md) for more details on tracking.
+If you specify how many identities there should be in a frame (i.e., the number of animals) with the `--tracking.clean_instance_count` argument, then we will use a heuristic method to connect "breaks" in the track identities where we lose one identity and spawn another. This can be used as part of the inference pipeline (if models are specified), as part of the tracking-only pipeline (if the predictions file is specified and no models are specified), or by itself on predictions with pre-tracked identities (if you specify `--tracking.tracker none`). See [`Tracking and proofreading`](../guides/tracking-and-proofreading.md) for more details on tracking.
 
 ```none
 usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [--only-labeled-frames] [--only-suggested-frames] [-o OUTPUT]

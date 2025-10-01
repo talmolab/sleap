@@ -1,12 +1,13 @@
 name: Deploy MkDocs to GitHub Pages
 
 on:
+  release:
+    types:
+      - published
   push:
     branches:
-      - main
       - develop
-      - divya/change-to-mkdocs
-  workflow_dispatch:  # Allows manual triggering from GitHub UI
+
 
 jobs:
   docs:
@@ -27,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --extra dev --extra nn-cpu --extra docs --extra jupyter
+          uv sync --extra dev --extra nn-cpu --extra docs
 
       - name: Print environment info
         run: |
@@ -40,35 +41,16 @@ jobs:
             git config --global user.name "github-actions[bot]"
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Build and upload docs (release event)
+      - name: Build and upload docs (release)
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          uv runmike deploy --update-aliases --allow-empty --push "${{ github.event.release.tag_name }}" stable
+            uv run mike deploy --update-aliases --allow-empty --push "${{ github.event.release.tag_name }}" latest
 
-      - name: Get tag that 'stable' alias points to, or fallback to 'dev'
-        id: get-stable-tag
+      - name: Build and upload docs (dev)
+        if: ${{ github.event_name == 'push' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git fetch origin gh-pages || true
-          git checkout origin/gh-pages -- versions.json 2>/dev/null || true
-
-          if [ -f versions.json ]; then
-            stable_tag=$(jq -r '.[] | select(.aliases | index("stable")) | .version' versions.json)
-          fi
-
-          if [ -z "$stable_tag" ]; then
-            echo "No stable alias found. Falling back to 'dev'."
-            stable_tag="dev"
-          fi
-
-          echo "Using: $stable_tag"
-          echo "stable_tag=$stable_tag" >> $GITHUB_OUTPUT
-
-
-      - name: Build and upload docs (push event)
-        if: github.event_name == 'push'
-        run: |
-          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            uv run mike deploy --update-aliases --allow-empty --push "${{ steps.get-stable-tag.outputs.stable_tag }}" stable
-          else
             uv run mike deploy --update-aliases --allow-empty --push dev
-          fi

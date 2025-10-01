@@ -44,4 +44,4 @@ instance track to the track from previous frames. The “Next Track Spawn
 Frame” command in the “Labels” menu will take you to the next frame in
 which a new track is spawned.
 
-For more tools and tips, see the [`proofreading`](../how-to-guides/tracking-and-proofreading.md) guide.
+For more tools and tips, see the [`proofreading`](../guides/tracking-and-proofreading.md) guide.

@@ -1,6 +1,6 @@
 site_name: SLEAP Documentation
-site_url: https://talmolab.github.io/sleap-core-docs
-
+site_url: https://docs.sleap.ai/
+repo_url: https://github.com/talmolab/sleap
 
 theme:
   name: material
@@ -94,7 +94,6 @@ nav:
   - Home: index.md
   - Overview: overview.md
   - Installation: installation.md
-  - What's New in SLEAP 1.5+: whats-new.md
   - Tutorial: 
       - Overview: tutorial/overview.md
       - Setup: tutorial/setup.md
@@ -106,13 +105,14 @@ nav:
       - Proofreading: tutorial/proofreading.md
       - Exporting the results: tutorial/exporting-the-results.md
       - I'm done SLEAPing, now what?: tutorial/i-m-done-sleaping-now-what.md
-  - How-To Guides:
-      - Overview: how-to-guides/guides-overview.md
-      - Importing predictions for labeling: how-to-guides/importing-predictions-for-labeling.md
-      - Tracking and proofreading: how-to-guides/tracking-and-proofreading.md
-      - Run training and inference on Colab: how-to-guides/run-training-and-inference-on-colab.md
-      - Creating a custom training profile: how-to-guides/creating-a-custom-training-profile.md
-      - Running SLEAP remotely: how-to-guides/running-sleap-remotely.md
+  - Guides:
+      - Overview: guides/guides-overview.md
+      - Migrating to SLEAP 1.5+: migrating-to-sleap-1-5.md
+      - Importing predictions for labeling: guides/importing-predictions-for-labeling.md
+      - Tracking and proofreading: guides/tracking-and-proofreading.md
+      - Run training and inference on Colab: guides/run-training-and-inference-on-colab.md
+      - Creating a custom training profile: guides/creating-a-custom-training-profile.md
+      - Running SLEAP remotely: guides/running-sleap-remotely.md
   - Notebooks:
     - Overview: notebooks/notebooks-overview.md
     - Training and inference on an example dataset: notebooks/Training_and_inference_on_an_example_dataset.ipynb
@@ -140,5 +140,5 @@ nav:
       - Command line interfaces: reference/command-line-interfaces.md
       - Evaluation metrics: reference/evaluation_metrics.md
       - Full API: api/
-      - Changelog: changelog.md
+      - Changelog: CHANGELOG.md
   - Help: help.md

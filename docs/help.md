@@ -28,7 +28,7 @@ If you're new to pose tracking in general, check out [this talk](https://cbmm.mi
 
 If you're just new to SLEAP, we suggest starting with the [high-level overview](overview.md) and then following the [tutorial](tutorial/overview.md).
 
-Once you get the hang of it, check out the [guides](how-to-guides/guides-overview.md) for more detailed info.
+Once you get the hang of it, check out the [guides](guides/guides-overview.md) for more detailed info.
 
 ### Does my data need to be in a particular format?
 

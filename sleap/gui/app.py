@@ -1024,7 +1024,9 @@ class MainWindow(QMainWindow):
         add_menu_check_item(usageMenu, "share usage data", "Share usage data")
         usageMenu.addAction(
             "What is usage data?",
-            lambda: self.commands.openWebsite("https://docs.sleap.ai/help/#usage"),
+            lambda: self.commands.openWebsite(
+                "https://docs.sleap.ai/latest/help/#usage"
+            ),
         )
 
         helpMenu.addSeparator()

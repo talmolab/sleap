@@ -1,4 +1,4 @@
-# What's New in SLEAP 1.5
+# Migrating to SLEAP 1.5
 
 SLEAP 1.5 represents a major milestone with significant architectural improvements, performance enhancements, and new installation methods. Here are the key changes:
 
@@ -40,4 +40,4 @@ We've maintained full backward compatibility:
 - **Using TensorFlow Model Weights**: Continue to support running inference on SLEAP <1.4 TensorFlow model weights (UNet backbone only). Check [using legacy models](https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support) for more details.
 
 
-*For a complete list of changes, see our [Changelog](changelog.md).*
+*For a complete list of changes, see our [Changelog](../CHANGELOG.md).*

@@ -46,7 +46,7 @@ Below is a high-level overview of a typical end-to-end workflow in SLEAP. You ca
 8. **[Optional] Importing additional videos from your experiment, and applying the trained model to predict animal poses**
     Once the machine learning model performance is satisfactory (w.r.t. pose estimation quality), the next step is to predict the animal poses across all video frames from your experiment. This step is only needed if not all video(s) were imported in the first step.
 
-    See [Import predictions for labeling](how-to-guides/importing-predictions-for-labeling.md).
+    See [Import predictions for labeling](guides/importing-predictions-for-labeling.md).
 
 9. **Applying the tracking algorithm to track animal instances across frames**
     Tracking associates animal instances in consequent frames. Here too SLEAP provides several algorithms for tracking with their own configuration parameters.

@@ -8,7 +8,7 @@
 
 # Social LEAP Estimates Animal Poses (SLEAP)
 
-![SLEAP Demo](https://docs.sleap.ai/docs/_static/sleap_movie.gif)
+![SLEAP Demo](https://raw.githubusercontent.com/talmolab/sleap/develop/docs/assets/images/sleap_movie.gif)
 
 **SLEAP** is an open source deep-learning based framework for multi-animal pose tracking [(Pereira et al., Nature Methods, 2022)](https://www.nature.com/articles/s41592-022-01426-1). It can be used to track any type or number of animals and includes an advanced labeling/training GUI for active learning and proofreading.
 
@@ -43,12 +43,12 @@ conda create -y -n sleap -c conda-forge -c nvidia -c sleap/label/dev -c sleap -c
 pip install sleap[pypi]
 ```
 
-See the docs for [full installation instructions](https://docs.sleap.ai/installation).
+See the docs for [full installation instructions](https://docs.sleap.ai/latest/installation).
 
 ## Learn to SLEAP
 
-- **Learn step-by-step**: [Tutorial](https://docs.sleap.ai/tutorial/overview)
-- **Learn more advanced usage**: [Guides](https://docs.sleap.ai/how-to-guides/guides-overview/) and [Notebooks](https://docs.sleap.ai/notebooks/notebooks-overview/)
+- **Learn step-by-step**: [Tutorial](https://docs.sleap.ai/latest/tutorial/overview)
+- **Learn more advanced usage**: [Guides](https://docs.sleap.ai/latest/guides/guides-overview/) and [Notebooks](https://docs.sleap.ai/latest/notebooks/notebooks-overview/)
 - **Learn by watching**: [ABL:AOC 2023 Workshop](https://www.youtube.com/watch?v=BfW-HgeDfMI) and [MIT CBMM Tutorial](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking)
 - **Learn by reading**: [Paper (Pereira et al., Nature Methods, 2022)](https://www.nature.com/articles/s41592-022-01426-1) and [Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020)](https://rdcu.be/caH3H)
 - **Learn from others**: [Discussions on Github](https://github.com/talmolab/sleap/discussions)
@@ -102,7 +102,7 @@ Follow [@talmop](https://twitter.com/talmop) on Twitter for news and updates!
 
 **Technical issue with the software?**
 
-1. Check the [Help page](https://docs.sleap.ai/help).
+1. Check the [Help page](https://docs.sleap.ai/latest/help).
 2. Ask the community via [discussions on Github](https://github.com/talmolab/sleap/discussions).
 3. Search the [issues on GitHub](https://github.com/talmolab/sleap/issues) or open a new one.
 
@@ -136,10 +136,10 @@ SLEAP is released under a [Clear BSD License](https://raw.githubusercontent.com/
 ## Links
 
 * [Documentation Homepage](https://docs.sleap.ai)
-* [Overview](https://docs.sleap.ai/overview)
-* [Installation](https://docs.sleap.ai/installation)
-* [Tutorial](https://docs.sleap.ai/tutorial/overview/)
-* [Guides](https://docs.sleap.ai/how-to-guides/guides-overview/)
-* [Notebooks](https://docs.sleap.ai/notebooks/notebooks-overview/)
-* [Developer API](https://docs.sleap.ai/api)
-* [Help](https://docs.sleap.ai/help)
+* [Overview](https://docs.sleap.ai/latest/overview)
+* [Installation](https://docs.sleap.ai/latest/installation)
+* [Tutorial](https://docs.sleap.ai/latest/tutorial/overview/)
+* [Guides](https://docs.sleap.ai/latest/guides/guides-overview/)
+* [Notebooks](https://docs.sleap.ai/latest/notebooks/notebooks-overview/)
+* [Developer API](https://docs.sleap.ai/latest/api)
+* [Help](https://docs.sleap.ai/latest/help)
