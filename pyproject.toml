@@ -27,6 +27,7 @@ classifiers = [
 dynamic = ["version", "readme"]
 dependencies = [
     "attrs",
+    "cattrs",
     "omegaconf",
     "imageio",
     "imageio-ffmpeg",
@@ -89,16 +90,16 @@ jupyter = [
 ]
 
 nn = [
-    "sleap-nn[torch-cpu] ; sys_platform == 'darwin' and platform_machine == 'arm64'",
-    "sleap-nn[torch-cuda128] ; sys_platform != 'darwin' or platform_machine != 'arm64'"
+    "sleap-nn[torch-cpu]>=0.0.2 ; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sleap-nn[torch-cuda128]>=0.0.2 ; sys_platform != 'darwin' or platform_machine != 'arm64'"
 ]
 
 nn-cpu = [
-    "sleap-nn[torch-cpu]"
+    "sleap-nn[torch-cpu]>=0.0.2"
 ]
 
 nn-gpu = [
-    "sleap-nn[torch-cuda128]"
+    "sleap-nn[torch-cuda128]>=0.0.2"
 ]
 
 [project.urls]
