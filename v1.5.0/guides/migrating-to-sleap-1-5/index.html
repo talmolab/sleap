@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.sleap.ai/v1.5.0/how-to-guides/running-sleap-remotely/">
+        <link rel="canonical" href="https://docs.sleap.ai/v1.5.0/guides/migrating-to-sleap-1-5/">
       
       
-        <link rel="prev" href="../creating-a-custom-training-profile/">
+        <link rel="prev" href="../guides-overview/">
       
       
-        <link rel="next" href="../../notebooks/notebooks-overview/">
+        <link rel="next" href="../importing-predictions-for-labeling/">
       
       
       <link rel="icon" href="../../assets/favicon.ico">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Running SLEAP remotely - SLEAP Documentation</title>
+        <title>Migrating to SLEAP 1.5+ - SLEAP Documentation</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#remote-inference" class="md-skip">
+        <a href="#migrating-to-sleap-15" class="md-skip">
           Skip to content
         </a>
       
@@ -86,6 +86,10 @@
     <div data-md-component="announce">
       
     </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
     
     
       
@@ -113,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Running SLEAP remotely
+              Migrating to SLEAP 1.5+
             
           </span>
         </div>
@@ -194,6 +198,18 @@
       
     
     
+      <div class="md-header__source">
+        <a href="https://github.com/talmolab/sleap" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
   </nav>
   
 </header>
@@ -226,6 +242,18 @@
     </a>
     SLEAP Documentation
   </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/talmolab/sleap" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
   
   <ul class="md-nav__list" data-md-scrollfix>
     
@@ -301,28 +329,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../whats-new/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    What's New in SLEAP 1.5+
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
     
     
       
@@ -354,10 +360,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -370,8 +376,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Tutorial
           </label>
@@ -637,6 +643,8 @@
       
         
       
+        
+      
     
     
     
@@ -645,15 +653,15 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
   <span class="md-ellipsis">
-    How-To Guides
+    Guides
     
   </span>
   
@@ -661,10 +669,10 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
-            How-To Guides
+            Guides
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -686,6 +694,146 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Migrating to SLEAP 1.5+
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Migrating to SLEAP 1.5+
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#major-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Major Changes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Major Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uv-based-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      UV-Based Installation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pytorch-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      PyTorch Backend
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#standalone-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standalone Libraries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#torch-backend-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Torch Backend Changes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Torch Backend Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-backbones" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Backbones
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legacy-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Legacy Support
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -787,30 +935,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Running SLEAP remotely
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../running-sleap-remotely/" class="md-nav__link">
         
   
   
@@ -821,33 +949,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#remote-inference" class="md-nav__link">
-    <span class="md-ellipsis">
-      Remote inference
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -899,10 +1000,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
             
   
   
@@ -915,8 +1016,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Notebooks
           </label>
@@ -1217,10 +1318,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -1233,8 +1334,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Learning
           </label>
@@ -1481,10 +1582,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
-          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
             
   
   
@@ -1497,8 +1598,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             Reference
           </label>
@@ -1594,7 +1695,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_4" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -1611,14 +1712,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_9_4" id="__nav_9_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_8_4" id="__nav_8_4_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_4">
             <span class="md-nav__icon md-icon"></span>
             Full API
           </label>
@@ -1641,7 +1742,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../changelog.md" class="md-nav__link">
+      <a href="../../CHANGELOG/" class="md-nav__link">
         
   
   
@@ -1703,6 +1804,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1711,11 +1814,77 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#remote-inference" class="md-nav__link">
+  <a href="#major-changes" class="md-nav__link">
     <span class="md-ellipsis">
-      Remote inference
+      Major Changes
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Major Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uv-based-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      UV-Based Installation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pytorch-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      PyTorch Backend
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#standalone-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standalone Libraries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#torch-backend-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Torch Backend Changes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Torch Backend Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-backbones" class="md-nav__link">
+    <span class="md-ellipsis">
+      New Backbones
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#legacy-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Legacy Support
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1734,80 +1903,44 @@
                   
 
 
+  
+  
 
-  <h1>Running SLEAP remotely</h1>
 
-<p><em>Case: You already have a project with training data and you want to train on a different machine using a command-line interface.</em></p>
-<p>You need three things to run training:</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<div class="codehilite"><pre><span></span><code><span class="nx">If</span><span class="w"> </span><span class="nx">you</span><span class="w"> </span><span class="nx">only</span><span class="w"> </span><span class="nx">need</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">run</span><span class="w"> </span><span class="nx">training</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nx">inference</span><span class="w"> </span><span class="nx">from</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">command</span><span class="w"> </span><span class="nx">line</span><span class="p">,</span><span class="w"> </span><span class="nx">you</span><span class="w"> </span><span class="nx">do</span><span class="w"> </span><span class="o">**</span><span class="k">not</span><span class="o">**</span><span class="w"> </span><span class="nx">need</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">install</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">full</span><span class="w"> </span><span class="nx">SLEAP</span><span class="w"> </span><span class="kn">package</span><span class="err">—</span><span class="nx">just</span><span class="w"> </span><span class="nx">installing</span><span class="w"> </span><span class="err">`</span><span class="nx">sleap</span><span class="o">-</span><span class="nx">nn</span><span class="err">`</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="nx">sufficient</span><span class="p">.</span>
-</code></pre></div>
-
-</div>
-<ol>
-<li>You need to install <code>sleap-nn</code> on the remote machine where you'll run training.</li>
-<li>Labels and images to use for training.</li>
-<li>A training profile which defines the training parameters (e.g., learning rate, image augmentation methods).</li>
-</ol>
-<p><strong>Installing sleap-nn</strong>:</p>
-<p>See the <a href="https://nn.sleap.ai/latest/installation">installation instructions</a>.</p>
-<p><strong>Training labels and images</strong>:</p>
-<p>Usually the easiest and best way to make the training labels and images available is to export a training job package ("Predict" -&gt; "Run Training.." -&gt; "Export Training Job Package..") and copy that to the remote machine.</p>
-<p>Although it's easiest if you bundle the labels and images into training job package, there are alternatives. If the files are already on a shared network drive, it may be possible to use the original labels project and videos for training. But this can be tricky, because often the full paths to the files will be different when accessed from different machines (i.e., different paths on Windows and Linux machines or different paths from how the network drive is mounted). To use the original labels and video files, you'll either need to ensure that the file paths to videos used in the project are the same on the remote machine as on the local machine where you last saved the project, <strong>or</strong> if all the video files have distinct filenames, you can place the videos inside the same directory which contains the labels project file.</p>
-<p>But in most cases it's best to create a training job package and just use that for remote training.</p>
-<p><strong>Training profile</strong>:</p>
-<p>sleap-nn comes with "default" training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the <a href="https://github.com/talmolab/sleap-nn/tree/main/docs/sample_configs">sample configs</a> can be downloaded/ used, and path to the config file is passed to <code>sleap-nn train</code> CLI.</p>
-<p>Our guide to <a href="../creating-a-custom-training-profile/">creating a custom training profile</a> explains how to use the GUI to export custom training profiles. You can also use the <code>initial_config.yaml</code> file saved from previous training run as a template for a new training config. You can copy the <code>yaml</code> file and edit it in any text editor.</p>
-<p><strong>Command-line training</strong>:</p>
-<p>Once you have your training job package (or labels package and training profile), you can run training using the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command like so:</p>
-<div class="highlight"><pre><span></span><code>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config-name<span class="w"> </span>&lt;config_name&gt;<span class="w"> </span>--config-dir<span class="w"> </span>&lt;path/to/config&gt;<span class="w"> </span><span class="s2">&quot;data_config.train_labels_path=[&lt;path/to/slp/file&gt;]&quot;</span><span class="w"> </span>trainer_config.ckpt_dir<span class="o">=</span><span class="s2">&quot;models&quot;</span><span class="w"> </span>trainer_config.run_name<span class="o">=</span>&lt;run_name&gt;
-</code></pre></div>
-<p>The model will be saved in the <code>models/</code> directory within the same directory as the <strong>training job package</strong> (in this case, <code>models/run_name/</code>).</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If you exported the training package as a ZIP file, it contains both the <code>.pkg.slp</code> and <code>.yaml</code> files necessary to train with the configuration you selected in the GUI. Before running the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command, make sure to unzip this file.</p>
-</div>
-<h2 id="remote-inference">Remote inference<a class="headerlink" href="#remote-inference" title="Permanent link">&para;</a></h2>
-<p><em>Case: You already have models and you want to run inference on a different machine using a command-line interface.</em></p>
-<p>Here's what you need to run inference:</p>
-<ol>
-<li>You need to install sleap-nn on the remote machine where you'll run training.</li>
-<li>You need a compatible set of trained model files.</li>
-<li>You need a video for which you want predictions.</li>
-</ol>
-<p><strong>Installing sleap-nn</strong>:</p>
-<p>See the <a href="https://nn.sleap.ai/latest/installation">installation instructions</a>.</p>
-<p><strong>Trained models</strong></p>
-<p>When you train a model, you'll get a directory with the <code>run_name</code> of the model.</p>
-<p>The model directory will contain at least these two files:</p>
+<h1 id="migrating-to-sleap-15">Migrating to SLEAP 1.5<a class="headerlink" href="#migrating-to-sleap-15" title="Permanent link">&para;</a></h1>
+<p>SLEAP 1.5 represents a major milestone with significant architectural improvements, performance enhancements, and new installation methods. Here are the key changes:</p>
+<h2 id="major-changes">Major Changes<a class="headerlink" href="#major-changes" title="Permanent link">&para;</a></h2>
+<h3 id="uv-based-installation">UV-Based Installation<a class="headerlink" href="#uv-based-installation" title="Permanent link">&para;</a></h3>
+<p>SLEAP 1.5+ now uses <a href="https://docs.astral.sh/uv/"><strong>uv</strong></a> for installation, making it much faster than previous methods. Get up and running in seconds with our streamlined installation process.</p>
+<h3 id="pytorch-backend">PyTorch Backend<a class="headerlink" href="#pytorch-backend" title="Permanent link">&para;</a></h3>
+<p>Neural network backend switched from TensorFlow to PyTorch, providing:</p>
 <ul>
-<li><code>training_config.yaml</code> (or <code>training_config.json</code> from SLEAP&lt;=1.4.1) is the training profile used to train the model, together with some additional information about the trained model. Amongst other things, this specifies the network architecture of the model.</li>
-<li><code>best.ckpt</code> (or <code>best_model.h5</code> from SLEAP&lt;=1.4.1) contains the weights for the trained model.</li>
+<li><strong>Much faster training and inference speeds</strong></li>
+<li><strong>Modern deep learning capabilities</strong></li>
+<li><strong>Improved developer experience</strong></li>
+<li><strong>Multi-GPU training</strong></li>
 </ul>
-<p>You'll need both of these files for each model you're going to use for inference. </p>
-<div class="admonition note">
-<p class="admonition-title">Legacy SLEAP Model Support</p>
-<p>SLEAP-NN supports running inference on models trained with legacy SLEAP (version 1.4.1 or earlier).<br />
-You can use the <code>sleap-nn track</code> command with legacy model files (<code>.h5</code> and <code>.json</code>) as described in the <a href="https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support">Legacy SLEAP Model Support documentation</a>.<br />
-This allows you to run inference on older models without needing to retrain them with the new backend.</p>
-</div>
-<p>Inference will run in different modes depending on the output types of the models you supply. See the instructions for <a href="../../learnings/configuring-models/">Configuring models</a>.</p>
-<p>For this example, let's suppose you have two models: centroids and instance-centered confidence maps. This is the typical "top-down" case for multi-instance predictions.</p>
-<p><strong>Video</strong></p>
-<p>sleap-nn (which uses <code>sleap-io</code>) uses OpenCV to read a variety of video formats including <code>mp4</code> and <code>avi</code> files. You'll just need the file path to run inference on such a video file.</p>
-<p>For this example, let's suppose you're working with an HDF5 video at <code>path/to/video.mp4</code>.</p>
-<p><strong>Command-line inference</strong>:</p>
-<p>To run inference, you'll call <a href="https://nn.sleap.ai/latest/inference/#run-inference-with-cli"><code>sleap-nn track</code></a> with the paths to each trained model and your video file, like so:</p>
-<div class="highlight"><pre><span></span><code>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>path/to/video.mp4<span class="w"> </span><span class="se">\</span>
---video_dataset<span class="w"> </span>video<span class="w"> </span>--video_input_format<span class="w"> </span>channels_last<span class="w"> </span><span class="se">\</span>
--m<span class="w"> </span>path/to/models/centroid<span class="w"> </span><span class="se">\</span>
--m<span class="w"> </span>path/to/models/centered-instance
-</code></pre></div>
-<p>This will run inference on the entire video. If you only want to run inference on some range of frames, you can specify this with the <code>--frames 123-456</code> command-line argument.</p>
-<p>This will give you predictions frame-by-frame, but will not connect those predictions across frames into <code>tracks</code>. If you want cross-frame identity tracking, set <code>--tracking</code> argument. For optical flow, use <code>--use_flow</code>. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use <code>--features centroids --scoring_method euclidean_dist</code>.</p>
-<p>It's also be possible to run tracking separately after you've generated a predictions file (see <a href="https://nn.sleap.ai/latest/inference/#track-only-workflow"><code>Track-only workflow</code></a>). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.</p>
-<p>When inference is finished, it will save the predictions in a new slp file. This file has the same format as a standard SLEAP project file, and you can use the GUI to proofread this file or merge the predictions into an existing SLEAP project. The file will be in the same directory as the video and the filename will be <code>{video filename}.predictions.slp</code>.</p>
+<h3 id="standalone-libraries">Standalone Libraries<a class="headerlink" href="#standalone-libraries" title="Permanent link">&para;</a></h3>
+<p>SLEAP GUI is now supported by two new packages for modular workflows:</p>
+<h4 id="sleap-io"><a href="https://io.sleap.ai">SLEAP-IO</a><a class="headerlink" href="#sleap-io" title="Permanent link">&para;</a></h4>
+<p>I/O backend for handling labels, processing <code>.slp</code> files, and data manipulation. Essential for any SLEAP workflow and can be used independently for data processing tasks.</p>
+<h4 id="sleap-nn"><a href="https://nn.sleap.ai">SLEAP-NN</a><a class="headerlink" href="#sleap-nn" title="Permanent link">&para;</a></h4>
+<p>PyTorch-based neural network backend for training and inference. Perfect for custom training pipelines, remote processing, and headless server deployments.</p>
+<h2 id="torch-backend-changes">Torch Backend Changes<a class="headerlink" href="#torch-backend-changes" title="Permanent link">&para;</a></h2>
+<h3 id="new-backbones">New Backbones<a class="headerlink" href="#new-backbones" title="Permanent link">&para;</a></h3>
+<p>SLEAP 1.5 introduces three powerful new backbone architectures (check <a href="https://nn.sleap.ai/latest/models/#backbone-architectures">here</a> for more details):</p>
+<ul>
+<li><strong>UNet</strong> - Classic encoder-decoder architecture for precise pose estimation</li>
+<li><strong>SwinT</strong> - Swin Transformer for state-of-the-art performance</li>
+<li><strong>ConvNeXt</strong> - Modern convolutional architecture with improved efficiency</li>
+</ul>
+<h3 id="legacy-support">Legacy Support<a class="headerlink" href="#legacy-support" title="Permanent link">&para;</a></h3>
+<p>We've maintained full backward compatibility:</p>
+<ul>
+<li><strong>GUI Support</strong>: SLEAP now uses a new <u>YAML-based</u> config file structure, but you can still upload and work with old SLEAP JSON files in the GUI. For details on converting legacy SLEAP 1.4 config/JSON files to the new YAML format, see our <a href="https://nn.sleap.ai/latest/config/#converting-legacy-sleap-14-configjson-to-sleap-nn-yaml">conversion guide</a>.</li>
+<li><strong>Using TensorFlow Model Weights</strong>: Continue to support running inference on SLEAP &lt;1.4 TensorFlow model weights (UNet backbone only). Check <a href="https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support">using legacy models</a> for more details.</li>
+</ul>
+<p><em>For a complete list of changes, see our <a href="../../CHANGELOG/">Changelog</a>.</em></p>
 
 
 
@@ -1893,7 +2026,7 @@ This allows you to run inference on older models without needing to retrain them
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.92b07e13.min.js"></script>
