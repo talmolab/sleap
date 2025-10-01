@@ -6,7 +6,7 @@ import os
 from sleap.sleap_io_adaptors.instance_utils import bounding_box
 from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count
 from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
-
+from sleap.util import show_sleap_nn_installation_message
 
 def describe_labels(data_path, verbose=False):
     from sleap.sleap_io_adaptors.lf_labels_utils import (
@@ -85,9 +85,13 @@ def describe_model(model_path, verbose=False):
         return os.path.join(model_path, x)
 
     if "training_config.json" in os.listdir(model_path):
-        from sleap_nn.config.training_job_config import TrainingJobConfig
-
-        cfg = TrainingJobConfig.load_sleap_config(rel_path("training_config.json"))
+        try:
+            from sleap_nn.config.training_job_config import TrainingJobConfig
+            cfg = TrainingJobConfig.load_sleap_config(rel_path("training_config.json"))
+        except ImportError:
+            show_sleap_nn_installation_message()
+            print("sleap-nn is not installed. This appears to be a GUI-only installation. To enable training, please install SLEAP with the 'nn' dependency. See the installation guide: https://docs.sleap.ai/latest/installation/")
+            return
     elif "training_config.yaml" in os.listdir(model_path):
         cfg = OmegaConf.load(rel_path("training_config.yaml"))
 

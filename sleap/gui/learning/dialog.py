@@ -30,7 +30,7 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
     in_degree_over_one,
 )
 from sleap.sleap_io_adaptors.lf_labels_utils import instances
-
+from sleap.util import show_sleap_nn_installation_message
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
     "model.model_config.head_configs.centered_instance.confmaps.anchor_part",
@@ -798,12 +798,16 @@ class LearningDialog(QtWidgets.QDialog):
         for config_info in config_info_list:
             config_info = config_info.config
             # convert to sleap-nn cfg (yaml)
-            from sleap_nn.config.training_job_config import verify_training_cfg
+            try:
+                from sleap_nn.config.training_job_config import verify_training_cfg
 
-            config_info = filter_cfg(config_info)
-            cfg = verify_training_cfg(config_info)
-            cfg.data_config.train_labels_path = [self.labels_filename]
-            output.append(OmegaConf.to_yaml(cfg))
+                config_info = filter_cfg(config_info)
+                cfg = verify_training_cfg(config_info)
+                cfg.data_config.train_labels_path = [self.labels_filename]
+                output.append(OmegaConf.to_yaml(cfg))
+            except ImportError:
+                show_sleap_nn_installation_message()
+                print("sleap-nn is not installed. This appears to be a GUI-only installation. To enable training, please install SLEAP with the 'nn' dependency. See the installation guide: https://docs.sleap.ai/latest/installation/")
 
         output = "\n".join(output)
         # Set the clipboard text

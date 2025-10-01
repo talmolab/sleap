@@ -594,3 +594,32 @@ def plot_instances(
         h_lines.append(h_lines_i)
 
     return h_lines
+
+
+def show_sleap_nn_installation_message():
+    """Show a Qt popup message about SLEAP-NN installation requirements.
+
+    This function displays a popup window informing users that sleap-nn is not installed
+    and provides instructions for enabling training functionality.
+
+    """
+    from PySide6.QtWidgets import QMessageBox, QApplication
+
+    # Ensure QApplication exists
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+
+    msg_box = QMessageBox()
+    msg_box.setWindowTitle("SLEAP Training Not Available")
+    msg_box.setIcon(QMessageBox.Warning)
+
+    message = (
+        "sleap-nn is not installed. This appears to be a GUI-only installation. "
+        "To enable training, please install SLEAP with the 'nn' dependency. "
+        "See the installation guide: https://docs.sleap.ai/latest/installation/"
+    )
+
+    msg_box.setText(message)
+    msg_box.setStandardButtons(QMessageBox.Ok)
+    msg_box.exec()
