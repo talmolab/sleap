@@ -31,7 +31,7 @@ optional arguments:
 ### `sleap-train`
 
 !!! note
-    `sleap-train` is the legacy CLI for training and internally invokes the `sleap-nn` training workflow. **We recommend using [`sleap-nn train`](https://nn.sleap.ai/latest/training/#using-cli) directly for new projects.** You do **not** need to install the full SLEAP package to use the training CLI—having just `sleap-nn` is sufficient. If SLEAP was installed or built with the neural network (nn) dependencies, then `sleap-nn train` would still work.
+    `sleap-train` is the legacy CLI for training and internally invokes the `sleap-nn` training workflow. **We recommend using [`sleap-nn-train`](#sleap-nn-train) or [`sleap-nn train`](https://nn.sleap.ai/latest/training/#using-cli) directly for new projects.** You do **not** need to install the full SLEAP package to use `sleap-nn train`—having just `sleap-nn` is sufficient. If SLEAP was installed or built with the neural network (nn) dependencies, then `sleap-nn-train` would work.
 
 `sleap-train` is the command-line interface for training. Use this for training on a remote machine/cluster/colab notebook instead of through the GUI.
 
@@ -88,17 +88,50 @@ optional arguments:
 
 ```
 
+### `sleap-nn-train`
+
+!!! note
+    `sleap-nn-train` is similar to `sleap-nn train` but is only accessible when SLEAP is installed. To use `sleap-nn train` directly, you can install just the `sleap-nn` package without the full SLEAP installation. For detailed information about `sleap-nn train`, see the [sleap-nn training documentation](https://nn.sleap.ai/latest/training/#using-cli). The functionality works the same way—both commands use Hydra configuration files and support the same training options and parameters.
+
+`sleap-nn-train` is the command-line interface for training neural network models using the PyTorch backend. This command provides the same functionality as `sleap-nn train` but is available when you have the full SLEAP installation.
+
+**Usage:**
+```bash
+sleap-nn-train --config-name <config_name> --config-dir <config_directory> [overrides]
+```
+
+**Examples:**
+```bash
+# Start a new training run
+sleap-nn-train --config-name baseline --config-dir /path/to/config/
+
+# with shortcuts
+sleap-nn-train -c baseline -d /path/to/config/
+
+# Override any config parameters
+sleap-nn-train --config-name baseline --config-dir /path/to/config/ \
+  trainer_config.max_epochs=100 
+
+# Resume training with additional epochs
+sleap-nn-train --config-name baseline --config-dir /path/to/config/ \
+  trainer_config.resume_ckpt_path=/path/to/checkpoint.ckpt \
+  trainer_config.max_epochs=20
+```
+
+For more detailed information about training configurations, model architectures, and advanced options, refer to the [sleap-nn training documentation](https://nn.sleap.ai/latest/training/#using-cli).
+
 !!! warning
     The `sleap-export` command is **not currently supported** in the latest versions of SLEAP, as we have transitioned to a PyTorch backend (`sleap-nn`). For more information about the new backend, see the [sleap-nn documentation](https://nn.sleap.ai).
 
-    `sleap-export` is still available in SLEAP versions **1.4.1 and earlier**. Please refer to the [legacy SLEAP documentation](http://legacy.sleap.ai/guides/cli.html#sleap-export) for details on using this command in older versions.
+    `sleap-export` is still available in SLEAP versions **1.4.1 and earlier**. Please refer to the [legacy SLEAP documentation](https://legacy.sleap.ai/guides/cli.html#sleap-export) for details on using this command in older versions.
+
 
 ## Inference and Tracking
 
 ### `sleap-track`
 
 !!! note
-    `sleap-track` is the legacy CLI for training and internally invokes the `sleap-nn` inference workflow. **We recommend using [`sleap-nn track`](https://nn.sleap.ai/latest/inference/#run-inference-with-cli) directly for new projects.** You do **not** need to install the full SLEAP package to use the training CLI—having just `sleap-nn` is sufficient. If SLEAP was installed or built with the neural network (nn) dependencies, then `sleap-nn track` would still work.
+    `sleap-track` is the legacy CLI for training and internally invokes the `sleap-nn` training workflow. **We recommend using [`sleap-nn-track`](#sleap-nn-track) or [`sleap-nn track`](https://nn.sleap.ai/latest/inference/#run-inference-with-cli) directly for new projects.** You do **not** need to install the full SLEAP package to use `sleap-nn track`—having just `sleap-nn` is sufficient. If SLEAP was installed or built with the neural network (nn) dependencies, then `sleap-nn-track` would work.
 
 `sleap-track` is the command-line interface for running inference using models which have already been trained. Use this for running inference on a remote machine such as an HPC cluster or Google Colab notebook.
 
@@ -245,6 +278,64 @@ sleap-track --gpu 1 ...
 ```none
 sleap-track -m "models/my_model" --frames 1000-2000 "input_video.mp4"
 ```
+
+
+### `sleap-nn-track`
+
+!!! note
+    `sleap-nn-track` is similar to `sleap-nn track` but is only accessible when SLEAP is installed. To use `sleap-nn track` directly, you can install just the `sleap-nn` package without the full SLEAP installation. For detailed information about `sleap-nn track`, see the [sleap-nn inference documentation](https://nn.sleap.ai/latest/inference/#run-inference-with-cli). The functionality works the same way—both commands use the same parameters.
+
+`sleap-nn-track` is the command-line interface for running inference and tracking using models which have already been trained using the PyTorch backend. This command provides the same functionality as `sleap-nn track` but is available when you have the full SLEAP installation.
+
+**Usage:**
+```bash
+sleap-nn-track --data_path <input_path> --model_paths <model_directory> [options]
+```
+
+**Examples:**
+```bash
+# Basic inference on a video
+sleap-nn-track -i video.mp4 -m models/ckpt_folder/
+
+# Run inference on a specific CUDA device
+sleap-nn-track --data_path video.mp4 --model_paths models/ckpt_folder/ --device cuda:0
+
+# Run inference on specific frames
+sleap-nn-track --data_path video.mp4 --frames "0-100,200-300" --model_paths models/ckpt_folder/
+
+# Run inference with tracking enabled
+sleap-nn-track --data_path video.mp4 --model_paths models/ckpt_folder/ --tracking
+
+# Two-stage model inference (topdown models)
+sleap-nn-track --data_path video.mp4 \
+  --model_paths models/centroid_unet/ \
+  --model_paths models/centered_instance_unet/
+
+# Track-only workflow on existing labels
+sleap-nn-track --data_path labels.slp --tracking
+```
+
+**Key Parameters:**
+
+- `--data_path / -i`: Path to video file or .slp labels file
+- `--model_paths / -m`: Path to model directory containing best.ckpt and training_config.yaml
+- `--output_path / -o`: Output filename (defaults to [data_path].predictions.slp)
+- `--device / -d`: Device to use ('cpu', 'cuda', 'mps', 'auto')
+- `--batch_size / -b`: Number of frames to process at once (default: 4)
+- `--tracking / -t`: Enable tracking on predicted instances
+- `--frames`: Specific frames to process (e.g., "0-100,200-300")
+- `--peak_threshold`: Minimum confidence for peak detection (default: 0.2)
+
+**Tracking Options:**
+
+- `--tracking_window_size`: Number of frames for candidate matching (default: 5)
+- `--candidates_method`: Either 'fixed_window' or 'local_queues' (default: fixed_window)
+- `--features`: Feature representation for matching ('keypoints', 'centroids', 'bboxes', 'image')
+- `--scoring_method`: Association scoring method ('oks', 'cosine_sim', 'iou', 'euclidean_dist')
+- `--use_flow`: Enable optical flow-based tracking
+
+For more detailed information about all available parameters, tracking methods, and advanced options, refer to the [sleap-nn inference documentation](https://nn.sleap.ai/latest/inference/#run-inference-with-cli).
+
 ## Dataset files
 
 ### `sleap-convert`

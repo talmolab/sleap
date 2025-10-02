@@ -2,7 +2,7 @@
 
 !!! warning "Documentation for New SLEAP Versions"
     This documentation is for the **latest version of SLEAP**.  
-    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](http://legacy.sleap.ai).
+    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
 
 SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
 
