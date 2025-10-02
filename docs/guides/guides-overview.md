@@ -3,7 +3,7 @@
 
 !!! warning "Documentation for New SLEAP Versions"
     This documentation is for the **latest version of SLEAP**.  
-    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](http://legacy.sleap.ai).
+    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
 
 !!! info "Major Changes in SLEAP 1.5+"
     Want to learn about the major changes and updates in the latest release?  
@@ -21,5 +21,5 @@
 
 !!! note "Bonsai Integration"
     **Bonsai is not natively supported with the new Torch backend in SLEAP.**  
-    If you want to use Bonsai with legacy SLEAP models, please refer to the [legacy Bonsai guide](http://legacy.sleap.ai/guides/bonsai.html).
+    If you want to use Bonsai with legacy SLEAP models, please refer to the [legacy Bonsai guide](https://legacy.sleap.ai/guides/bonsai.html).
 
