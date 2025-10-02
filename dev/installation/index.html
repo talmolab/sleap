@@ -467,9 +467,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#platform-specific-installation" class="md-nav__link">
+  <a href="#platform-specific-commands_3" class="md-nav__link">
     <span class="md-ellipsis">
-      Platform-Specific Installation
+      Platform-Specific Commands
     </span>
   </a>
   
@@ -2062,9 +2062,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#platform-specific-installation" class="md-nav__link">
+  <a href="#platform-specific-commands_3" class="md-nav__link">
     <span class="md-ellipsis">
-      Platform-Specific Installation
+      Platform-Specific Commands
     </span>
   </a>
   
@@ -2213,7 +2213,7 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 <li><strong><a href="#installation-with-uv-tool-install">Installation as a system-wide tool with uv</a></strong>: Use <code>uv tool install</code> to install SLEAP globally as a tool (Installation needed, <strong>strongly recommended</strong>)</li>
 <li><strong><a href="#installation-with-uvx">Installation with uvx</a></strong>: Use <code>uvx</code> for one-off commands. (no installation needed!)</li>
 <li><strong><a href="#installation-with-uv-pip">Installation with uv pip</a></strong>: Use <code>uv pip</code> to install from pypi in a uv virtual env.</li>
-<li><strong><a href="#installation-with-pip">Installation with pip</a></strong>: Use <code>pip</code> to install from pypi in a conda env. (Recommended to use with a conda env)</li>
+<li><strong><a href="#installation-with-pip">Installation with pip</a></strong>: Use <code>pip</code> to install from pypi in a conda env.</li>
 <li><strong><a href="#installation-from-source">Installation from source</a></strong>: Use <code>uv sync</code> to install from source. (For developmental purposes)</li>
 </ul>
 </div>
@@ -2355,7 +2355,7 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 </div>
 <div class="admonition note">
 <p class="admonition-title">uvx Installation</p>
-<p>Because <code>uvx</code> installs packages fresh on every run, it's ideal for quick one-off tests. For regular use, you could install with <a href="#installation-as-a-system-wide-tool-with-uv"><code>uv tool install</code></a> or setting up a development environment with <a href="#installation-from-source"><code>uv sync</code></a> to avoid repeated downloads.</p>
+<p>Because <code>uvx</code> installs packages fresh on every run, it's ideal for quick one-off tests. For regular use, you could install with <a href="#installation-with-uv-tool-install"><code>uv tool install</code></a> or setting up a development environment with <a href="#installation-from-source"><code>uv sync</code></a> to avoid repeated downloads.</p>
 </div>
 <hr />
 <h2 id="installation-with-uv-pip">Installation with uv pip<a class="headerlink" href="#installation-with-uv-pip" title="Permanent link">&para;</a></h2>
@@ -2423,7 +2423,7 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">SLEAP not recognized after installation?</p>
-<p>If running the verification step above gives an error like <code>sleap-nn: command not found</code> or <code>'sleap-nn' is not recognized as an internal or external command</code>, try the following workarounds:</p>
+<p>If running the verification step above gives an error like <code>command not found</code> or <code>not recognized as an internal or external command</code>, try the following workarounds:</p>
 <ul>
 <li>Activate your virtual environment (the venv name should be the same as your current working dir name). If you used <code>uv</code>, activate it and then run:
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv<span class="w"> </span>run<span class="w"> </span>--active<span class="w"> </span>sleap-label<span class="w"> </span>--help
@@ -2440,12 +2440,12 @@ This ensures the command runs in the correct environment.</li>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.12
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>conda<span class="w"> </span>activate<span class="w"> </span>sleap
 </span></code></pre></div></p>
-<h3 id="platform-specific-installation">Platform-Specific Installation<a class="headerlink" href="#platform-specific-installation" title="Permanent link">&para;</a></h3>
+<h3 id="platform-specific-commands_3">Platform-Specific Commands<a class="headerlink" href="#platform-specific-commands_3" title="Permanent link">&para;</a></h3>
 <div class="tabbed-set tabbed-alternate" data-tabs="5:4"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><input id="__tabbed_5_3" name="__tabbed_5" type="radio" /><input id="__tabbed_5_4" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Windows/Linux (CUDA)</label><label for="__tabbed_5_2">Windows/Linux (CPU)</label><label for="__tabbed_5_3">macOS Only</label><label for="__tabbed_5_4">SLEAP GUI Only</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># CUDA 12.8</span>
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>nn<span class="o">]</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
 </span></code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Other CUDA versions</p>
@@ -2455,11 +2455,11 @@ This ensures the command runs in the correct environment.</li>
 </div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>nn<span class="o">]</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>nn<span class="o">]</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span>
 </span></code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Mac MPS support</p>
