@@ -10,7 +10,7 @@ SLEAP is an open-source deep-learning based framework for multi-animal pose trac
 
 
 !!! tip "New in SLEAP 1.5"
-    Check out our [What's New](whats-new.md) page to learn about the latest features including UV-based installation, PyTorch backend, and new standalone libraries!
+    Check out our [migration notes](guides/migrating-to-sleap-1-5) to learn about the latest features including UV-based installation, PyTorch backend, and new standalone libraries!
 
 
 ## Features
