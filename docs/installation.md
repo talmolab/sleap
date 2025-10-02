@@ -26,7 +26,7 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The ne
     - **[Installation as a system-wide tool with uv](#installation-with-uv-tool-install)**: Use `uv tool install` to install SLEAP globally as a tool (Installation needed, **strongly recommended**)
     - **[Installation with uvx](#installation-with-uvx)**: Use `uvx` for one-off commands. (no installation needed!)
     - **[Installation with uv pip](#installation-with-uv-pip)**: Use `uv pip` to install from pypi in a uv virtual env.
-    - **[Installation with pip](#installation-with-pip)**: Use `pip` to install from pypi in a conda env. (Recommended to use with a conda env)
+    - **[Installation with pip](#installation-with-pip)**: Use `pip` to install from pypi in a conda env.
     - **[Installation from source](#installation-from-source)**: Use `uv sync` to install from source. (For developmental purposes)
 
 **How to open a terminal**
@@ -115,6 +115,7 @@ sleap-label --help
     ```
 
 ### Platform-Specific Commands
+
 === "Windows/Linux (CUDA)"
     ```bash
     # CUDA 12.8
@@ -143,7 +144,7 @@ sleap-label --help
         Installing this version of SLEAP will **NOT** include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for **labeling**.
 
 !!! note "uvx Installation"
-    Because `uvx` installs packages fresh on every run, it's ideal for quick one-off tests. For regular use, you could install with [`uv tool install`](#installation-as-a-system-wide-tool-with-uv) or setting up a development environment with [`uv sync`](#installation-from-source) to avoid repeated downloads.
+    Because `uvx` installs packages fresh on every run, it's ideal for quick one-off tests. For regular use, you could install with [`uv tool install`](#installation-with-uv-tool-install) or setting up a development environment with [`uv sync`](#installation-from-source) to avoid repeated downloads.
 
 ---
 
@@ -207,7 +208,7 @@ uv run sleap-label --help
 ```
 
 !!! warning "SLEAP not recognized after installation?"
-    If running the verification step above gives an error like `sleap-nn: command not found` or `'sleap-nn' is not recognized as an internal or external command`, try the following workarounds:
+    If running the verification step above gives an error like `command not found` or `not recognized as an internal or external command`, try the following workarounds:
 
     - Activate your virtual environment (the venv name should be the same as your current working dir name). If you used `uv`, activate it and then run:
     ```bash
@@ -229,24 +230,24 @@ conda create -n sleap python=3.12
 conda activate sleap
 ```
 
-### Platform-Specific Installation
+### Platform-Specific Commands
 
 === "Windows/Linux (CUDA)"
     ```bash
     # CUDA 12.8
-    pip install sleap[nn] --extra-index-url https://download.pytorch.org/whl/cu128 --index-url https://pypi.org/simple
+    pip install "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cu128 --index-url https://pypi.org/simple
     ```
     !!! info "Other CUDA versions"
         - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--extra-index-url` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cuda118` for CUDA 11.8, `https://download.pytorch.org/whl/cuda128` for CUDA 12.8, etc.).
 
 === "Windows/Linux (CPU)"
     ```bash
-    pip install sleap[nn] --extra-index-url https://download.pytorch.org/whl/cpu --index-url https://pypi.org/simple
+    pip install "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cpu --index-url https://pypi.org/simple
     ```
 
 === "macOS Only"
     ```bash
-    pip install sleap[nn]
+    pip install "sleap[nn]"
     ```
     !!! info "Mac MPS support"
         - On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.

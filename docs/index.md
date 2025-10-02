@@ -53,9 +53,6 @@ You can find the latest version of SLEAP in the [Releases](https://github.com/ta
 
 ### Quick start
 
-!!! tip "Sample with `uvx`"
-    Note that opening SLEAP w/ `uvx` will **not** install SLEAP onto your system, it will only **'invoke'** SLEAP.
-
 **`uv tool install` (any OS):**
 
 !!! warning "First Time uv Setup"
@@ -69,17 +66,11 @@ You can find the latest version of SLEAP in the [Releases](https://github.com/ta
     ```
 
 ```bash
-# CUDA 12.8
-uv tool install "sleap[nn]" --index-url https://download.pytorch.org/whl/cu128 --index-url https://pypi.org/simple
+# Windows/ Linux CUDA 12.8
+uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
 
-# CPU
-uv tool install "sleap[nn]" --index-url https://download.pytorch.org/whl/cpu --index-url https://pypi.org/simple
-```
-
-**`pip` (any OS)**:
-
-```
-pip install sleap
+# MacOS / CPU-only
+uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
 ```
 
 Run the SLEAP GUI after installation!
