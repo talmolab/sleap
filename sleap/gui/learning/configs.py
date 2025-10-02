@@ -214,6 +214,12 @@ class ConfigFileInfo:
     def from_config_file(cls, path: Text) -> "ConfigFileInfo":
         if path.endswith("yaml") or path.endswith("yml"):
             cfg = OmegaConf.load(path)
+            return cls(
+                config=cfg,
+                path=path,
+                filename=os.path.basename(path),
+                head_name=get_head_from_omegaconf(cfg),
+            )
 
         else:
             try:

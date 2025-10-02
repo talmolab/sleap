@@ -51,7 +51,7 @@ def setup_new_run_folder(
             if config.trainer_config.run_name is not None
             else ""
         )
-        cfg_run_name = cfg_run_name + "_" + run_name
+        cfg_run_name = cfg_run_name + "_" + run_name if cfg_run_name != "" else run_name
 
         config.trainer_config.run_name = cfg_run_name
 
@@ -293,7 +293,7 @@ class InferenceTask:
             and self.inference_params["_max_instances"] is not None
         ):
             cli_args.extend(
-                ["--max_instances", self.inference_params["_max_instances"]]
+                ["--max_instances", str(self.inference_params["_max_instances"])]
             )
 
         # add tracking args
