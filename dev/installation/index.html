@@ -467,24 +467,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#miniforge" class="md-nav__link">
-    <span class="md-ellipsis">
-      Miniforge
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#miniconda" class="md-nav__link">
-    <span class="md-ellipsis">
-      Miniconda
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#platform-specific-installation" class="md-nav__link">
     <span class="md-ellipsis">
       Platform-Specific Installation
@@ -508,11 +490,68 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#development-setup-with-uv" class="md-nav__link">
+  <a href="#installation-from-source" class="md-nav__link">
     <span class="md-ellipsis">
-      Development Setup with uv
+      Installation from source
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Installation from source">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verify-installation_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Installation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-that-things-are-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      Testing that things are working
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing that things are working">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gui-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      GUI support
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Importing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpu-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      GPU support
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2023,24 +2062,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#miniforge" class="md-nav__link">
-    <span class="md-ellipsis">
-      Miniforge
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#miniconda" class="md-nav__link">
-    <span class="md-ellipsis">
-      Miniconda
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#platform-specific-installation" class="md-nav__link">
     <span class="md-ellipsis">
       Platform-Specific Installation
@@ -2064,11 +2085,68 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#development-setup-with-uv" class="md-nav__link">
+  <a href="#installation-from-source" class="md-nav__link">
     <span class="md-ellipsis">
-      Development Setup with uv
+      Installation from source
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Installation from source">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#verify-installation_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Installation
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-that-things-are-working" class="md-nav__link">
+    <span class="md-ellipsis">
+      Testing that things are working
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Testing that things are working">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gui-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      GUI support
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#importing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Importing
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gpu-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      GPU support
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2115,50 +2193,19 @@
 <p>This documentation is for the <strong>latest version of SLEAP</strong>.<br />
 If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit the <a href="http://legacy.sleap.ai">legacy documentation</a>.</p>
 </div>
-<p>SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. For <strong>quick start</strong> using <a href="https://docs.astral.sh/uv/"><code>uv</code></a>- an ultra-fast Python package and project manager, see below:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># CUDA 12.8</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># CPU</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
-</span></code></pre></div>
-<p>Then run:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sleap-label
-</span></code></pre></div></p>
-<p>For more in-depth installation instructions, see the <a href="#installation-methods">installation methods</a>. The newest version of SLEAP can always be found in the <a href="https://github.com/talmolab/sleap/releases">Releases page</a>.</p>
+<p>SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The newest version of SLEAP can always be found in the <a href="https://github.com/talmolab/sleap/releases">Releases page</a>.</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>SLEAP currently supports GPU-accelerated training on <strong>NVIDIA GPUs</strong> and <strong>Apple Silicon Macs</strong>. Training on other GPU architectures (e.g., AMD GPUs and older Macs) is not supported and may lead to failures or unexpected behavior. If no supported GPU is available, SLEAP can still run in CPU mode, but training speed may be reduced. </p>
-<p>For detailed GPU setup instructions, see <a href="#gpu-support">gpu-support</a>.</p>
+<p class="admonition-title">GPU Support</p>
+<p>SLEAP offers GPU-accelerated training on <strong>NVIDIA GPUs</strong> (Windows/Linux) and <strong>Apple Silicon Macs</strong> (macOS). Other GPU types (such as AMD GPUs or Intel graphics) are <strong>not supported</strong> for training and may result in errors or unexpected behavior. If you do not have a supported GPU, SLEAP will automatically use CPU mode—this works for all features, but training will be significantly slower.</p>
+<p>For more details on GPU, see the <a href="#gpu-support">GPU Support section</a>.</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For labeling purposes, the SLEAP GUI can be installed on its own. However, <strong>sleap-nn</strong> is a neural network backend available for training and inference w/ the SLEAP GUI. </p>
-<p>For more details on this backend, see <a href="https://github.com/talmolab/sleap-nn">sleap-nn</a>.</p>
+<div class="admonition info">
+<p class="admonition-title">SLEAP GUI and Neural Network Backend</p>
+<p>The SLEAP GUI for labeling can be installed and used on its own. For training and inference with neural networks, SLEAP uses the <strong>sleap-nn</strong> backend, which integrates seamlessly with the GUI (use <code>nn</code> extra dependency to train/ run inference).</p>
+<p>To learn more about sleap-nn and its capabilities, visit the <a href="https://github.com/talmolab/sleap-nn">sleap-nn repository</a>.</p>
 </div>
 <hr />
 <h2 id="installation-methods">Installation methods<a class="headerlink" href="#installation-methods" title="Permanent link">&para;</a></h2>
-<p><strong>How to open a terminal:</strong></p>
-<div class="admonition hint">
-<p>Installation requires entering commands in a terminal. To open one:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Windows</label><label for="__tabbed_1_2">Linux</label><label for="__tabbed_1_3">Mac OS</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>Open the <em>Start menu</em> and search for the <em>Command Prompt</em>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>On Windows, our personal preference is to use alternative terminal apps like <a href="https://cmder.app">Cmder</a> or <a href="https://aka.ms/terminal">Windows Terminal</a>.</p>
-</div>
-</div>
-<div class="tabbed-block">
-<p>Launch a new terminal by pressing <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>.</p>
-</div>
-<div class="tabbed-block">
-<p>Launch a new terminal by pressing <kbd>Cmd</kbd> + <kbd>Space</kbd> and searching for <em>Terminal</em>.</p>
-</div>
-</div>
-</div>
-</div>
 <p><strong>Prerequisites:</strong> Python 3.11+ (required for all installation methods)</p>
 <div class="admonition tip">
 <p class="admonition-title">Choose Your Installation Method</p>
@@ -2167,46 +2214,74 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 <li><strong><a href="#installation-with-uvx">Installation with uvx</a></strong>: Use <code>uvx</code> for one-off commands. (no installation needed!)</li>
 <li><strong><a href="#installation-with-uv-pip">Installation with uv pip</a></strong>: Use <code>uv pip</code> to install from pypi in a uv virtual env.</li>
 <li><strong><a href="#installation-with-pip">Installation with pip</a></strong>: Use <code>pip</code> to install from pypi in a conda env. (Recommended to use with a conda env)</li>
-<li><strong><a href="#development-setup-with-uv">Installation from source</a></strong>: Use <code>uv sync</code> to install from source. (For developmental purposes)</li>
+<li><strong><a href="#installation-from-source">Installation from source</a></strong>: Use <code>uv sync</code> to install from source. (For developmental purposes)</li>
 </ul>
+</div>
+<p><strong>How to open a terminal</strong></p>
+<p>To install SLEAP, you'll need to enter commands in a terminal. Here's how to open one on your system:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Windows</label><label for="__tabbed_1_2">Linux</label><label for="__tabbed_1_3">macOS</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<ul>
+<li>Open the <strong>Start menu</strong> and search for <strong>Command Prompt</strong>.</li>
+<li><em>Tip:</em> You may prefer alternative terminal apps like <a href="https://cmder.app">Cmder</a> or <a href="https://aka.ms/terminal">Windows Terminal</a>.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<ul>
+<li>Press <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> to launch a new terminal window.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<ul>
+<li>Press <kbd>Cmd</kbd> + <kbd>Space</kbd>, type <strong>Terminal</strong>, and press <kbd>Enter</kbd> to open it.</li>
+</ul>
+</div>
+</div>
 </div>
 <hr />
 <h2 id="installation-with-uv-tool-install">Installation with uv tool install<a class="headerlink" href="#installation-with-uv-tool-install" title="Permanent link">&para;</a></h2>
-<p><code>uv tool install</code> automatically installs and creates the <code>sleap-label</code> tool inside a virtual environment located inside the <a href="https://docs.astral.sh/uv/concepts/tools/#tools-directory">uv tool directory</a>. This means that running this global tool will use this installed version.</p>
-<div class="admonition warning">
-<p class="admonition-title">First Time uv Setup</p>
-<p>Install <a href="https://github.com/astral-sh/uv"><code>uv</code></a> first - an ultra-fast Python package manager:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># macOS/Linux</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Windows</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>powershell<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
+<p><code>uv tool install</code> installs SLEAP globally as a system-wide CLI tool, making all SLEAP CLI commands available from anywhere in your terminal.</p>
+<div class="admonition note">
+<p class="admonition-title">Install uv</p>
+<p>Install <a href="https://github.com/astral-sh/uv"><code>uv</code></a> - a fast Python package manager:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># macOS/Linux</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Windows</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>powershell<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
 </span></code></pre></div></p>
 </div>
 <h3 id="platform-specific-commands">Platform-Specific Commands<a class="headerlink" href="#platform-specific-commands" title="Permanent link">&para;</a></h3>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Windows/Linux (CUDA)</label><label for="__tabbed_2_2">macOS/CPU Only</label><label for="__tabbed_2_3">SLEAP GUI Only</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:4"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><input id="__tabbed_2_4" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Windows/Linux (CUDA)</label><label for="__tabbed_2_2">Windows/Linux (CPU)</label><label for="__tabbed_2_3">macOS</label><label for="__tabbed_2_4">SLEAP GUI Only</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># CUDA 12.8</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># CUDA 11.8</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu118<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># CUDA 12.8</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
 </span></code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Other CUDA versions</p>
 <ul>
-<li>For more information on which CUDA version to use for your system, see the <a href="https://pytorch.org/get-started/locally/">PyTorch installation</a> guide. The <code>--index-url</code> in the install command should match the CUDA version you need (e.g., <code>https://download.pytorch.org/whl/cuda118</code> for CUDA 11.8, <code>https://download.pytorch.org/whl/cuda128</code> for CUDA 12.8, etc.).</li>
+<li>For more information on which CUDA version to use for your system, see the <a href="https://pytorch.org/get-started/locally/">PyTorch installation</a> guide. The <code>--index</code> in the install command should match the CUDA version you need (e.g., <code>https://download.pytorch.org/whl/cuda118</code> for CUDA 11.8, <code>https://download.pytorch.org/whl/cuda128</code> for CUDA 12.8, etc.).</li>
+</ul>
+</div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span>
+</span></code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">Mac MPS support</p>
+<ul>
 <li>On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.</li>
 </ul>
 </div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap&quot;</span>
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">GUI <u>ONLY</u></p>
@@ -2219,45 +2294,54 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 <p class="admonition-title">How uv tool install Works</p>
 <ul>
 <li><strong>Automatic Installation</strong>: Downloads and installs SLEAP with dependencies</li>
-<li><strong>Isolated Environment</strong>: Each run after installation runs in a clean, separated virtual environment</li>
 <li><strong>No Conflicts</strong>: Won't interfere with your existing Python packages/dependencies</li>
 <li><strong>Uses Recent Packages</strong>: Uses the latest version from PyPI</li>
 </ul>
 </div>
 <h3 id="verify-installation">Verify Installation<a class="headerlink" href="#verify-installation" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Test the installation</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>sleap-label<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Test the installation</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>sleap-label<span class="w"> </span>--help
 </span></code></pre></div>
 <hr />
 <h2 id="installation-with-uvx">Installation with uvx<a class="headerlink" href="#installation-with-uvx" title="Permanent link">&para;</a></h2>
-<p><code>uvx</code> automatically installs sleap-nn and runs your command inside a temporary virtual environment (venv). This means each run is fully isolated and leaves no trace on your system— perfect for trying out sleap-nn without any <em>permanent</em> installation.</p>
+<p><code>uvx</code> automatically installs sleap and runs your command inside a temporary virtual environment (venv). This means each run is fully isolated and leaves no trace on your system— perfect for trying out SLEAP without any <strong>permanent</strong> installation.</p>
 <div class="admonition note">
 <p class="admonition-title">Install uv</p>
 <p>Install <a href="https://docs.astral.sh/uv/"><code>uv</code></a>- an ultra-fast Python package manager:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># macOS/Linux</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>http://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Windows</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>powershell<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># macOS/Linux</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>http://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Windows</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>powershell<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
 </span></code></pre></div></p>
 </div>
 <h3 id="platform-specific-commands_1">Platform-Specific Commands<a class="headerlink" href="#platform-specific-commands_1" title="Permanent link">&para;</a></h3>
-<div class="tabbed-set tabbed-alternate" data-tabs="3:3"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Windows/Linux (CUDA 12.8)</label><label for="__tabbed_3_2">macOS/CPU Only</label><label for="__tabbed_3_3">SLEAP GUI Only</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:4"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><input id="__tabbed_3_4" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Windows/Linux (CUDA)</label><label for="__tabbed_3_2">Windows/Linux (CPU)</label><label for="__tabbed_3_3">macOS</label><label for="__tabbed_3_4">SLEAP GUI Only</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple<span class="w"> </span>sleap-label
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># CUDA 12.8</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple<span class="w"> </span>sleap-label
 </span></code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Other CUDA versions</p>
 <ul>
-<li>For more information on which CUDA version to use for your system, see the <a href="https://pytorch.org/get-started/locally/">PyTorch installation</a> guide. The <code>--index-url</code> in the install command should match the CUDA version you need (e.g., <code>https://download.pytorch.org/whl/cuda118</code> for CUDA 11.8, <code>https://download.pytorch.org/whl/cuda128</code> for CUDA 12.8, etc.).</li>
-<li>On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.</li>
+<li>For more information on which CUDA version to use for your system, see the <a href="https://pytorch.org/get-started/locally/">PyTorch installation</a> guide. The <code>--index</code> in the install command should match the CUDA version you need (e.g., <code>https://download.pytorch.org/whl/cuda118</code> for CUDA 11.8, <code>https://download.pytorch.org/whl/cuda128</code> for CUDA 12.8, etc.).</li>
 </ul>
 </div>
 </div>
 <div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple<span class="w"> </span>sleap-label
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>sleap-label
 </span></code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">Mac MPS support</p>
+<ul>
+<li>On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.</li>
+</ul>
+</div>
 </div>
 <div class="tabbed-block">
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>uvx<span class="w"> </span>--from<span class="w"> </span><span class="s2">&quot;sleap&quot;</span><span class="w"> </span>sleap-label
@@ -2269,9 +2353,9 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 </div>
 </div>
 </div>
-<div class="admonition tip">
-<p class="admonition-title">Sample with <code>uvx</code></p>
-<p>Note that opening SLEAP w/ <code>uvx</code> will <strong>not</strong> install SLEAP onto your system, it will only <strong>'invoke'</strong> SLEAP.</p>
+<div class="admonition note">
+<p class="admonition-title">uvx Installation</p>
+<p>Because <code>uvx</code> installs packages fresh on every run, it's ideal for quick one-off tests. For regular use, you could install with <a href="#installation-as-a-system-wide-tool-with-uv"><code>uv tool install</code></a> or setting up a development environment with <a href="#installation-from-source"><code>uv sync</code></a> to avoid repeated downloads.</p>
 </div>
 <hr />
 <h2 id="installation-with-uv-pip">Installation with uv pip<a class="headerlink" href="#installation-with-uv-pip" title="Permanent link">&para;</a></h2>
@@ -2279,7 +2363,7 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 <div class="admonition note">
 <p class="admonition-title">Install and set-up uv</p>
 <p>Step-1: Install <a href="https://github.com/astral-sh/uv"><code>uv</code></a> - an ultra-fast Python package manager:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>macOS/Linux
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># macOS/Linux</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># Windows</span>
@@ -2291,29 +2375,36 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 </span></code></pre></div></p>
 </div>
 <h3 id="platform-specific-commands_2">Platform-Specific Commands<a class="headerlink" href="#platform-specific-commands_2" title="Permanent link">&para;</a></h3>
-<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Windows/Linux (CUDA)</label><label for="__tabbed_4_2">macOS/CPU Only</label><label for="__tabbed_4_3">SLEAP GUI Only</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:4"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><input id="__tabbed_4_4" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Windows/Linux (CUDA)</label><label for="__tabbed_4_2">Windows/Linux (CPU)</label><label for="__tabbed_4_3">macOS</label><label for="__tabbed_4_4">SLEAP GUI Only</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># CUDA 12.8</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1"># CUDA 11.8</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu118<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
 </span></code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Other CUDA versions</p>
 <ul>
-<li>For more information on which CUDA version to use for your system, see the <a href="https://pytorch.org/get-started/locally/">PyTorch installation</a> guide. The <code>--index-url</code> in the install command should match the CUDA version you need (e.g., <code>https://download.pytorch.org/whl/cuda118</code> for CUDA 11.8, <code>https://download.pytorch.org/whl/cuda128</code> for CUDA 12.8, etc.).</li>
+<li>For more information on which CUDA version to use for your system, see the <a href="https://pytorch.org/get-started/locally/">PyTorch installation</a> guide. The <code>--index</code> in the install command should match the CUDA version you need (e.g., <code>https://download.pytorch.org/whl/cuda118</code> for CUDA 11.8, <code>https://download.pytorch.org/whl/cuda128</code> for CUDA 12.8, etc.).</li>
+</ul>
+</div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># CUDA 12.8</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span>
+</span></code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">Mac MPS support</p>
+<ul>
 <li>On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.</li>
 </ul>
 </div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap&quot;</span>
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">GUI <u>ONLY</u></p>
@@ -2324,263 +2415,192 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 </div>
 <div class="admonition info">
 <p class="admonition-title">Running With <code>uv run</code></p>
-<p><code>uv sync</code> &amp; <code>uv pip install</code> creates a <code>.venv</code> (virtual environment) inside your current working directory. This environment is only active within that directory and can't be directly accessed from outside. To use all installed packages, <u><strong>you must run commands with <code>uv run</code></strong></u> (e.g., <code>uv run sleap-label ...</code> or <code>uv run pytest ...</code>) with these installation methods.</p>
+<p><code>uv pip install</code> creates a <code>.venv</code> (virtual environment) inside your current working directory. To use all installed packages, <u><strong>you must run commands with <code>uv run</code></strong></u> (e.g., <code>uv run sleap-label ...</code> or <code>uv run pytest ...</code>) with these installation methods.</p>
 </div>
 <h3 id="verify-installation_1">Verify Installation<a class="headerlink" href="#verify-installation_1" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Test the installation</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap-label<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Test the installation</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap-label<span class="w"> </span>--help
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">SLEAP not recognized after installation?</p>
 <p>If running the verification step above gives an error like <code>sleap-nn: command not found</code> or <code>'sleap-nn' is not recognized as an internal or external command</code>, try the following workarounds:</p>
 <ul>
 <li>Activate your virtual environment (the venv name should be the same as your current working dir name). If you used <code>uv</code>, activate it and then run:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>uv<span class="w"> </span>run<span class="w"> </span>--active<span class="w"> </span>sleap-label<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv<span class="w"> </span>run<span class="w"> </span>--active<span class="w"> </span>sleap-label<span class="w"> </span>--help
 </span></code></pre></div>
 This ensures the command runs in the correct environment.</li>
-<li>Another workaround (not recommended):
+<li>Another workaround <strong>(not recommended)</strong>:
   Check if you have any <em>empty</em> <code>pyproject.toml</code> or <code>uv.lock</code> files in <code>Users/&lt;your-user-name&gt;</code>. If you find empty files with these names, delete them, and try again (Empty files here can sometimes interfere with uv's environment resolution.)</li>
 </ul>
 </div>
 <hr />
 <h2 id="installation-with-pip">Installation with pip<a class="headerlink" href="#installation-with-pip" title="Permanent link">&para;</a></h2>
-<p>SLEAP requires many complex dependencies, so we <strong>strongly</strong> recommend using a package manager such as <a href="https://github.com/conda-forge/miniforge">Miniforge</a> or <a href="https://docs.anaconda.com/free/miniconda/">Miniconda</a> to install SLEAP in its own isolated environment, if not using <code>uv</code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If you already have Anaconda on your computer (and it is an <a href="https://conda.org/blog/2023-11-06-conda-23-10-0-release/">older installation</a>), then make sure to <a href="https://www.anaconda.com/blog/a-faster-conda-for-a-growing-community">set the solver to <code>libmamba</code></a> in the <code>base</code> environment.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>conda<span class="w"> </span>update<span class="w"> </span>-n<span class="w"> </span>base<span class="w"> </span>conda
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>conda<span class="w"> </span>install<span class="w"> </span>-n<span class="w"> </span>base<span class="w"> </span>conda-libmamba-solver
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w"> </span>solver<span class="w"> </span>libmamba
-</span></code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Any subsequent <code>conda</code> commands in the docs will need to be replaced with <code>mamba</code> if you have <a href="https://mamba.readthedocs.io/en/latest/">Mamba</a> installed instead of Anaconda or Miniconda.</p>
-</div>
-</div>
-<p>If you don't have a <code>conda</code> package manager installation, here are some quick install options:</p>
-<h3 id="miniforge">Miniforge<a class="headerlink" href="#miniforge" title="Permanent link">&para;</a></h3>
-<p>Miniforge is a minimal installer for conda that includes the <code>conda</code> package manager and is maintained by the <a href="https://conda-forge.org">conda-forge</a> community. The only difference between Miniforge and Miniconda is that Miniforge uses the <code>conda-forge</code> channel by default, which provides a much wider selection of community-maintained packages.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="5:4"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><input id="__tabbed_5_3" name="__tabbed_5" type="radio" /><input id="__tabbed_5_4" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Windows</label><label for="__tabbed_5_2">Linux</label><label for="__tabbed_5_3">Mac (Apple Silicon)</label><label for="__tabbed_5_4">Mac (Intel)</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>Open a new PowerShell terminal (does not need to be admin) and enter:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>Invoke-WebRequest<span class="w"> </span>-Uri<span class="w"> </span><span class="s2">&quot;https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe&quot;</span><span class="w"> </span>-OutFile<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$env</span><span class="s2">:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe&quot;</span><span class="p">;</span><span class="w"> </span>Start-Process<span class="w"> </span>-FilePath<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$env</span><span class="s2">:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe&quot;</span><span class="w"> </span>-ArgumentList<span class="w"> </span><span class="s2">&quot;/InstallationType=JustMe /RegisterPython=1 /S&quot;</span><span class="w"> </span>-Wait<span class="p">;</span><span class="w"> </span>Remove-Item<span class="w"> </span>-Path<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$env</span><span class="s2">:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe&quot;</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Open a new terminal and enter:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>--compressed<span class="w"> </span>https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-Linux-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-Linux-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-Linux-x86_64.sh&quot;</span><span class="w"> </span>-b<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniforge3&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-Linux-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniforge3/bin/conda&quot;</span><span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Open a new terminal and enter:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>--compressed<span class="w"> </span>https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-MacOSX-arm64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-MacOSX-arm64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-MacOSX-arm64.sh&quot;</span><span class="w"> </span>-b<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniforge3&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-MacOSX-arm64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniforge3/bin/conda&quot;</span><span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Open a new terminal and enter:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>--compressed<span class="w"> </span>https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-x86_64.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-MacOSX-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-MacOSX-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-MacOSX-x86_64.sh&quot;</span><span class="w"> </span>-b<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniforge3&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniforge3-MacOSX-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniforge3/bin/conda&quot;</span><span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
-</span></code></pre></div>
-</div>
-</div>
-</div>
-<h3 id="miniconda">Miniconda<a class="headerlink" href="#miniconda" title="Permanent link">&para;</a></h3>
-<p>This is a minimal installer for conda that includes the <code>conda</code> package manager and is maintained by the <a href="https://www.anaconda.com">Anaconda</a> company.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="6:4"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><input id="__tabbed_6_3" name="__tabbed_6" type="radio" /><input id="__tabbed_6_4" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Windows</label><label for="__tabbed_6_2">Linux</label><label for="__tabbed_6_3">Mac (Apple Silicon)</label><label for="__tabbed_6_4">Mac (Intel)</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>Open a new PowerShell terminal (does not need to be admin) and enter:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>curl<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe<span class="w"> </span>-o<span class="w"> </span>miniconda.exe<span class="p">;</span><span class="w"> </span>Start-Process<span class="w"> </span>-FilePath<span class="w"> </span><span class="s2">&quot;.\miniconda.exe&quot;</span><span class="w"> </span>-ArgumentList<span class="w"> </span><span class="s2">&quot;/S&quot;</span><span class="w"> </span>-Wait<span class="p">;</span><span class="w"> </span>del<span class="w"> </span>miniconda.exe
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Open a new terminal and enter:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>wget<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh<span class="w"> </span>-O<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3/miniconda.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3/miniconda.sh&quot;</span><span class="w"> </span>-b<span class="w"> </span>-u<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3/miniconda.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3/bin/conda&quot;</span><span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Open a new terminal and enter:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>--compressed<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniconda3-latest-MacOSX-arm64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniconda3-latest-MacOSX-arm64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniconda3-latest-MacOSX-arm64.sh&quot;</span><span class="w"> </span>-b<span class="w"> </span>-u<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniconda3-latest-MacOSX-arm64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3/bin/conda&quot;</span><span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Open a new terminal and enter:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>--compressed<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniconda3-latest-MacOSX-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniconda3-latest-MacOSX-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniconda3-latest-MacOSX-x86_64.sh&quot;</span><span class="w"> </span>-b<span class="w"> </span>-u<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/Downloads/Miniconda3-latest-MacOSX-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/miniconda3/bin/conda&quot;</span><span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
-</span></code></pre></div>
-</div>
-</div>
-</div>
-<p>See the <a href="https://docs.anaconda.com/free/miniconda/">Miniconda website</a> for up-to-date installation instructions if the above instructions don't work for your system.</p>
-<p>SLEAP can be installed with pip via <code>pip package</code>. See below.</p>
-<p>This is the <strong>recommended method for Google Colab</strong>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ul>
-<li>Requires Python 3.11+</li>
-</ul>
-</div>
-<p>Although you do not need Miniconda installed to perform a <code>pip install</code>, we recommend <a href="https://docs.anaconda.com/free/miniconda/">installing Miniconda</a> to create a new environment where we can isolate the <code>pip install</code>. Alternatively, you can use a virtual environment (venv) if you have an existing Python 3.11+ installation. If you are working on <strong>Google Colab</strong>, skip to step 3 to perform the <code>pip install</code> without using a conda environment.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ol>
-<li>
-<p>Otherwise, create a new conda environment where we will <code>pip install sleap</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>sleap<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
-</span></code></pre></div>
-</li>
-<li>
-<p>Then activate the environment to isolate the <code>pip install</code> from other environments on your computer:
-    <div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>conda<span class="w"> </span>activate<span class="w"> </span>sleap
+<p>We recommend creating a dedicated environment with <a href="https://docs.conda.io/en/latest/miniconda.html">conda</a> or <a href="https://github.com/conda-forge/miniforge">mamba/miniforge</a> before installing <code>sleap</code> with pip. This helps avoid dependency conflicts and keeps your Python setup clean. After installing Miniconda or Miniforge, create and activate an environment, then run the pip install commands below inside the activated environment.</p>
+<p>To create a conda environment, run:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.12
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>conda<span class="w"> </span>activate<span class="w"> </span>sleap
 </span></code></pre></div></p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Refrain from installing anything into the <code>base</code> environment. Always create a new environment to install new packages.</p>
-</div>
-</li>
-</ol>
-</div>
 <h3 id="platform-specific-installation">Platform-Specific Installation<a class="headerlink" href="#platform-specific-installation" title="Permanent link">&para;</a></h3>
-<div class="tabbed-set tabbed-alternate" data-tabs="7:3"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><input id="__tabbed_7_3" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Windows/Linux (CUDA)</label><label for="__tabbed_7_2">macOS/CPU Only</label><label for="__tabbed_7_3">SLEAP GUI Only</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:4"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><input id="__tabbed_5_3" name="__tabbed_5" type="radio" /><input id="__tabbed_5_4" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Windows/Linux (CUDA)</label><label for="__tabbed_5_2">Windows/Linux (CPU)</label><label for="__tabbed_5_3">macOS Only</label><label for="__tabbed_5_4">SLEAP GUI Only</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># CUDA 12.8</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>nn<span class="o">]</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
-</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>
-</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="c1"># CUDA 11.8</span>
-</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>nn<span class="o">]</span><span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu118<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># CUDA 12.8</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>nn<span class="o">]</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
 </span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>nn<span class="o">]</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap
-</span></code></pre></div>
-</div>
-</div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The pypi distributed package of SLEAP ships with the following extras:</p>
+<div class="admonition info">
+<p class="admonition-title">Other CUDA versions</p>
 <ul>
-<li><strong>dev</strong>: This installs all <em>jupyter</em> dependencies and developement tools for testing and building docs.</li>
-<li><strong>docs</strong>: This installs all <em>docs</em>-related dependencies (ex. mkdocs).</li>
-<li><strong>nn</strong>: This installs sleap-nn default with torch-cpu (can also use index for CUDA wheel).</li>
-<li><strong>jupyter</strong>: This installs all <em>pypi</em> and jupyter lab dependencies.</li>
+<li>For more information on which CUDA version to use for your system, see the <a href="https://pytorch.org/get-started/locally/">PyTorch installation</a> guide. The <code>--extra-index-url</code> in the install command should match the CUDA version you need (e.g., <code>https://download.pytorch.org/whl/cuda118</code> for CUDA 11.8, <code>https://download.pytorch.org/whl/cuda128</code> for CUDA 12.8, etc.).</li>
 </ul>
+</div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>nn<span class="o">]</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index-url<span class="w"> </span>https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap<span class="o">[</span>nn<span class="o">]</span>
+</span></code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">Mac MPS support</p>
+<ul>
+<li>On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.</li>
+</ul>
+</div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>pip<span class="w"> </span>install<span class="w"> </span>sleap
+</span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">GUI <u>ONLY</u></p>
+<p>Installing this version of SLEAP will <strong>NOT</strong> include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for <strong>labeling</strong>.</p>
+</div>
+</div>
+</div>
 </div>
 <h3 id="verify-installation_2">Verify Installation<a class="headerlink" href="#verify-installation_2" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>sleap-label<span class="w"> </span>--help
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>sleap-label<span class="w"> </span>--help
 </span></code></pre></div>
 <hr />
-<h2 id="development-setup-with-uv">Development Setup with uv<a class="headerlink" href="#development-setup-with-uv" title="Permanent link">&para;</a></h2>
+<h2 id="installation-from-source">Installation from source<a class="headerlink" href="#installation-from-source" title="Permanent link">&para;</a></h2>
 <p>For contributing to SLEAP or development workflows.</p>
 <div class="admonition info">
-<p class="admonition-title">Running With <code>uv run</code></p>
-<p><code>uv sync</code> &amp; <code>uv pip install</code> creates a <code>.venv</code> (virtual environment) inside your current working directory. This environment is only active within that directory and can't be directly accessed from outside. To use all installed packages, <u><strong>you must run commands with <code>uv run</code></strong></u> (e.g., <code>uv run sleap-label ...</code> or <code>uv run pytest ...</code>) with these installation methods.</p>
+<p class="admonition-title">Running With <code>uv sync</code></p>
+<p><code>uv sync</code> creates a <code>.venv</code> (virtual environment) inside your current working directory. This environment is only active within that directory and can't be directly accessed from outside. To use all installed packages, <u><strong>you must run commands with <code>uv run</code></strong></u> (e.g., <code>uv run sleap-label ...</code> or <code>uv run pytest ...</code>) with these installation methods.</p>
 </div>
 <p><strong>1. Clone the Repository</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap.git
-</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a><span class="nb">cd</span><span class="w"> </span>sleap
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap.git
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="nb">cd</span><span class="w"> </span>sleap
 </span></code></pre></div>
 <p><strong>2. Install uv (skip if already installed)</strong></p>
-<div class="tabbed-set tabbed-alternate" data-tabs="8:2"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><input id="__tabbed_8_2" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">macOS/Linux</label><label for="__tabbed_8_2">Windows</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="6:2"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">macOS/Linux</label><label for="__tabbed_6_2">Windows</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>powershell<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>powershell<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
 </span></code></pre></div>
 </div>
 </div>
 </div>
 <p><strong>3. Install Dependencies</strong></p>
-<div class="tabbed-set tabbed-alternate" data-tabs="9:3"><input checked="checked" id="__tabbed_9_1" name="__tabbed_9" type="radio" /><input id="__tabbed_9_2" name="__tabbed_9" type="radio" /><input id="__tabbed_9_3" name="__tabbed_9" type="radio" /><div class="tabbed-labels"><label for="__tabbed_9_1">Windows/Linux (CUDA 12.8)</label><label for="__tabbed_9_2">macOS/CPU Only</label><label for="__tabbed_9_3">GUI Only</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="7:4"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><input id="__tabbed_7_3" name="__tabbed_7" type="radio" /><input id="__tabbed_7_4" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Windows/Linux (CUDA)</label><label for="__tabbed_7_2">Windows/Linux (CPU)</label><label for="__tabbed_7_3">macOS</label><label for="__tabbed_7_4">GUI Only</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w"> </span>--extra<span class="w"> </span>nn-cuda128<span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># CUDA 12.8</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w"> </span>--extra<span class="w"> </span>nn-cuda128<span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="c1"># CUDA 11.8</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w"> </span>--extra<span class="w"> </span>nn-cuda118<span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cu118<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w"> </span>--extra<span class="w"> </span>nn-cpu<span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w"> </span>--extra<span class="w"> </span>nn-cpu<span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w"> </span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w"> </span>--extra<span class="w"> </span>nn-cpu<span class="w"> </span>--index<span class="w"> </span>https://download.pytorch.org/whl/cpu<span class="w"> </span>--index<span class="w"> </span>https://pypi.org/simple
 </span></code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">Mac MPS support</p>
+<ul>
+<li>On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.</li>
+</ul>
+</div>
+</div>
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w"> </span>
+</span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">GUI <u>ONLY</u></p>
+<p>Installing this version of SLEAP will <strong>NOT</strong> include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for <strong>labeling</strong>.</p>
 </div>
 </div>
 </div>
-<!-- Additionally, if using CUDA 12.8 w/ `sleap-nn` backend on Windows/Linux (CUDA 12.8):
-
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>torch<span class="w"> </span>torchvision<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128<span class="w"> </span>--reinstall
-</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>
-</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a><span class="c1"># Skip if using PyTorch CPU wheel</span>
-</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a><span class="sb">```</span><span class="w"> </span>--&gt;
-</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>
-</span><span id="__span-39-6"><a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>**4.<span class="w"> </span>Verify<span class="w"> </span>Development<span class="w"> </span>Setup**
-</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>
-</span><span id="__span-39-8"><a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a><span class="sb">```</span>bash
-</span><span id="__span-39-9"><a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a><span class="c1"># Run tests</span>
-</span><span id="__span-39-10"><a id="__codelineno-39-10" name="__codelineno-39-10" href="#__codelineno-39-10"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests
-</span><span id="__span-39-11"><a id="__codelineno-39-11" name="__codelineno-39-11" href="#__codelineno-39-11"></a>
-</span><span id="__span-39-12"><a id="__codelineno-39-12" name="__codelineno-39-12" href="#__codelineno-39-12"></a><span class="c1"># Check code formatting</span>
-</span><span id="__span-39-13"><a id="__codelineno-39-13" name="__codelineno-39-13" href="#__codelineno-39-13"></a>uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>sleap<span class="w"> </span>tests
-</span><span id="__span-39-14"><a id="__codelineno-39-14" name="__codelineno-39-14" href="#__codelineno-39-14"></a>
-</span><span id="__span-39-15"><a id="__codelineno-39-15" name="__codelineno-39-15" href="#__codelineno-39-15"></a><span class="c1"># Run CLI command</span>
-</span><span id="__span-39-16"><a id="__codelineno-39-16" name="__codelineno-39-16" href="#__codelineno-39-16"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap-label<span class="w"> </span>...
+</div>
+<div class="admonition note">
+<p class="admonition-title">SLEAP <code>uv sync</code> Extras</p>
+<p>The <code>uv sync</code> comes with the following <strong>extras</strong> (for local builds):</p>
+<ul>
+<li><strong>nn-cpu</strong>: Installs <code>sleap-nn</code> with the default torch-cpu backend.</li>
+<li><strong>nn-cuda118</strong>: Installs <code>sleap-nn</code> with the torch CUDA 11.8.</li>
+<li><strong>nn-cuda128</strong>: Installs <code>sleap-nn</code> with the torch CUDA 12.8.</li>
+<li><strong>dev</strong>: Installs all development tools for testing.</li>
+<li><strong>docs</strong>: Installs all documentation-related dependencies (e.g., mkdocs).</li>
+<li><strong>jupyter</strong>: Installs all Jupyter and JupyterLab dependencies.</li>
+</ul>
+</div>
+<h3 id="verify-installation_3">Verify Installation<a class="headerlink" href="#verify-installation_3" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># Run tests</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="c1"># Check code formatting</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>sleap<span class="w"> </span>tests
+</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a>
+</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a><span class="c1"># Run CLI command</span>
+</span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap-label
 </span></code></pre></div>
-
----
-
-
-## Testing that things are working
-
-**If you installed using `conda`**, first activate the `sleap` environment by opening a terminal and typing:
-
-<div class="language-text highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>conda activate sleap
+<hr />
+<h2 id="testing-that-things-are-working">Testing that things are working<a class="headerlink" href="#testing-that-things-are-working" title="Permanent link">&para;</a></h2>
+<p><strong>If you installed using <code>conda</code></strong>, first activate the <code>sleap</code> environment by opening a terminal and typing:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>conda activate sleap
 </span></code></pre></div>
-!!! hint "Not sure what `conda` environments you already installed?"
-    You can get a list of the environments on your system with:
-    <div class="language-text highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>conda env list
+<div class="admonition hint">
+<p class="admonition-title">Not sure what <code>conda</code> environments you already installed?</p>
+<p>You can get a list of the environments on your system with:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>conda env list
+</span></code></pre></div></p>
+</div>
+<h3 id="gui-support">GUI support<a class="headerlink" href="#gui-support" title="Permanent link">&para;</a></h3>
+<p>To check that the GUI is working, simply type:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>sleap-label
 </span></code></pre></div>
-
-### GUI support
-
-To check that the GUI is working, simply type:
-
-<div class="language-text highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>sleap-label
+<div class="admonition note">
+<p class="admonition-title">Using <code>uv run</code></p>
+<p>If you installed SLEAP using <code>uv pip install</code> or <code>uv sync</code>, you must prefix commands with <code>uv run</code> to ensure they run inside the correct virtual environment. For example, use:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>uv run sleap-label
 </span></code></pre></div>
-
-You should see the SLEAP labeling interface pop up within a few moments.
-
-
-### Importing
-
-To check if SLEAP is installed correctly in non-interactive environments, such as remote servers, confirm that you can import it with:
-
-<div class="language-text highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>python -c &quot;import sleap; sleap.versions()&quot;
+instead of just <code>sleap-label</code>.</p>
+</div>
+<p>You should see the SLEAP labeling interface pop up within a few moments.</p>
+<h3 id="importing">Importing<a class="headerlink" href="#importing" title="Permanent link">&para;</a></h3>
+<p>To check if SLEAP is installed correctly in non-interactive environments, such as remote servers, confirm that you can import it with:</p>
+<p><div class="language-text highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>python -c &quot;import sleap; sleap.versions()&quot;
 </span></code></pre></div>
-<small>Output:</small>
-
-<div class="language-text highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>(sleap) λ python -c &quot;import sleap; sleap.versions()&quot;
-</span><span id="__span-44-2"><a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a>SLEAP: 1.5.0
-</span><span id="__span-44-3"><a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a>Numpy: 2.3.2
-</span><span id="__span-44-4"><a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a>Python: 3.12.1
-</span><span id="__span-44-5"><a id="__codelineno-44-5" name="__codelineno-44-5" href="#__codelineno-44-5"></a>OS: macOS-14.4.1-arm64-arm-64bit
+<small>Output:</small></p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>(sleap) λ python -c &quot;import sleap; sleap.versions()&quot;
+</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>SLEAP: 1.5.0
+</span><span id="__span-38-3"><a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a>Numpy: 2.3.2
+</span><span id="__span-38-4"><a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a>Python: 3.12.1
+</span><span id="__span-38-5"><a id="__codelineno-38-5" name="__codelineno-38-5" href="#__codelineno-38-5"></a>OS: macOS-14.4.1-arm64-arm-64bit
 </span></code></pre></div>
-
-
-### GPU support
-
-Assuming you installed using either `uv` or the `pip`-based methods, SLEAP should automatically have GPU support enabled.
-
+<h3 id="gpu-support">GPU support<a class="headerlink" href="#gpu-support" title="Permanent link">&para;</a></h3>
+<p>Assuming you installed using either <code>uv</code> or the <code>pip</code>-based methods, SLEAP should automatically have GPU support enabled.</p>
 <!-- To check, verify that SLEAP can detect the GPUs on your system:
 
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sleap; sleap.system_summary()&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import sleap; sleap.system_summary()&quot;</span>
 </span></code></pre></div>
 
 <small>**Output:**</small>
@@ -2597,107 +2617,67 @@ Assuming you installed using either `uv` or the `pip`-based methods, SLEAP shoul
          Memory growth: None -->
 
 <p>SLEAP uses PyTorch for GPU acceleration. To directly check if PyTorch is detecting your GPUs:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import torch; print(torch.cuda.is_available())&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="c1"># for windows/ linux</span>
+</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import torch; print(torch.cuda.is_available())&quot;</span>
+</span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>
+</span><span id="__span-40-4"><a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a><span class="c1"># for mac</span>
+</span><span id="__span-40-5"><a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import torch; print(torch.backends.mps.is_available())&quot;</span>
 </span></code></pre></div>
-<p><small><strong>Output:</strong></small></p>
-<div class="codehilite"><pre><span></span><code><span class="p">(</span><span class="n">sleap</span><span class="p">)</span> <span class="n">λ</span> <span class="n">python</span> <span class="o">-</span><span class="n">c</span> <span class="s2">&quot;import torch; print(torch.cuda.is_available())&quot;</span>
-<span class="kc">False</span>
-
-<span class="c1"># Test run on Apple Silicon architecture</span>
-</code></pre></div>
-
-<div class="admonition info">
-<p class="admonition-title">macOS MPS Support</p>
-<p>Even with <code>[nn]</code> when installing SLEAP, macOS automatically enables MPS (Metal Performance Shaders) for Apple Silicon acceleration via <a href="https://nn.sleap.ai/dev/installation/#platform-specific-installation">sleap-nn backend</a>.</p>
-</div>
-<!-- !!! note
-    - GPU support requires an NVIDIA GPU.
-    - If you haven't yet (or in a while), update to the [latest NVIDIA drivers for your GPU](https://nvidia.com/drivers).
-    - We use the official conda packages for [cudatoolkit](https://anaconda.org/anaconda/cudatoolkit) and [cudnn](https://anaconda.org/anaconda/cudnn), so no external installations are required. If you already have those installed on your system, they should not interfere with the ones in the SLEAP environment.
-    - TensorFlow 2.6-2.8 are compatible with **CUDA Toolkit v11.3** and **cuDNN v8.2**.
-
-!!! warning
-    TensorFlow 2.7+ is currently failing to detect CUDA Toolkit and CuDNN on some systems (see [Issue thread](https://github.com/tensorflow/tensorflow/issues/52988)).
-
-    If you run into issues, either try downgrading to TensorFlow 2.6:
-    <div class="language-bash highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">tensorflow</span><span class="o">==</span><span class="m">2</span>.6.3
-</span></code></pre></div>
-    or follow the note below. -->
-
-<!-- !!! note
-    If you are on Linux, have a NVIDIA GPU, but cannot detect your GPU:
-
-    <div class="language-bash highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>W<span class="w"> </span>tensorflow/stream_executor/platform/default/dso_loader.cc:64<span class="w"> </span>Could<span class="w"> </span>not<span class="w"> </span>load<span class="w"> </span>dynamic
-</span><span id="__span-48-2"><a id="__codelineno-48-2" name="__codelineno-48-2" href="#__codelineno-48-2"></a>library<span class="w"> </span><span class="s1">&#39;libcudart.so.11.0&#39;</span><span class="p">;</span><span class="w"> </span>dlerror:<span class="w"> </span>libcudart.so.11.0:<span class="w"> </span>cannot<span class="w"> </span>open<span class="w"> </span>shared<span class="w"> </span>object
-</span><span id="__span-48-3"><a id="__codelineno-48-3" name="__codelineno-48-3" href="#__codelineno-48-3"></a>file:<span class="w"> </span>No<span class="w"> </span>such<span class="w"> </span>file<span class="w"> </span>or<span class="w"> </span>directory
-</span></code></pre></div>
-
-    then activate the environment:
-
-    <div class="language-bash highlight"><pre><span></span><code><span id="__span-49-1"><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a>conda<span class="w"> </span>activate<span class="w"> </span>sleap
-</span></code></pre></div>
-
-    and run the commands:
-    <div class="language-bash highlight"><pre><span></span><code><span id="__span-50-1"><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d
-</span><span id="__span-50-2"><a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;#!/bin/sh&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/sleap_activate.sh
-</span><span id="__span-50-3"><a id="__codelineno-50-3" name="__codelineno-50-3" href="#__codelineno-50-3"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export SLEAP_OLD_LD_LIBRARY_PATH=$LD_LIBRARY_PATH&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/sleap_activate.sh
-</span><span id="__span-50-4"><a id="__codelineno-50-4" name="__codelineno-50-4" href="#__codelineno-50-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/sleap_activate.sh
-</span><span id="__span-50-5"><a id="__codelineno-50-5" name="__codelineno-50-5" href="#__codelineno-50-5"></a><span class="nb">source</span><span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/activate.d/sleap_activate.sh
-</span></code></pre></div>
-
-    This will set the environment variable `LD_LIBRARY_PATH` each time the environment is activated. The environment variable will remain set in the current terminal even if we deactivate the environment. Although not strictly necessary, if you would also like the environment variable to be reset to the original value when deactivating the environment, we can run the following commands:
-    <div class="language-bash highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/deactivate.d
-</span><span id="__span-51-2"><a id="__codelineno-51-2" name="__codelineno-51-2" href="#__codelineno-51-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;#!/bin/sh&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/deactivate.d/sleap_deactivate.sh
-</span><span id="__span-51-3"><a id="__codelineno-51-3" name="__codelineno-51-3" href="#__codelineno-51-3"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export LD_LIBRARY_PATH=$SLEAP_OLD_LD_LIBRARY_PATH&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span><span class="nv">$CONDA_PREFIX</span>/etc/conda/deactivate.d/sleap_deactivate.sh
-</span></code></pre></div>
-
-    These commands only need to be run once and will subsequently run automatically upon [de]activating your `sleap` environment. -->
-
 <h2 id="upgrading-and-uninstalling">Upgrading and uninstalling<a class="headerlink" href="#upgrading-and-uninstalling" title="Permanent link">&para;</a></h2>
 <p>We <strong>strongly recommend</strong> installing SLEAP in a fresh environment when updating. This is because dependency versions might change, and depending on the state of your previous environment, directly updating might break compatibility with some of them.</p>
+<p>To uninstall SLEAP (if installed with <code>uv tool</code>):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>uninstall<span class="w"> </span>sleap
+</span></code></pre></div>
 <p>To uninstall an existing <code>uv</code> venv or <code>conda</code> environment named <code>sleap</code>:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="10:2"><input checked="checked" id="__tabbed_10_1" name="__tabbed_10" type="radio" /><input id="__tabbed_10_2" name="__tabbed_10" type="radio" /><div class="tabbed-labels"><label for="__tabbed_10_1">uv venv</label><label for="__tabbed_10_2">conda environment</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="8:2"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><input id="__tabbed_8_2" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">uv venv</label><label for="__tabbed_8_2">conda environment</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a><span class="c1"># Installed with uv</span>
-</span><span id="__span-52-2"><a id="__codelineno-52-2" name="__codelineno-52-2" href="#__codelineno-52-2"></a>rm<span class="w"> </span>-rf<span class="w"> </span>path/to/venv
-</span><span id="__span-52-3"><a id="__codelineno-52-3" name="__codelineno-52-3" href="#__codelineno-52-3"></a>rm<span class="w"> </span>-rf<span class="w"> </span>path/to/uv.lock
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="c1"># Installed with uv</span>
+</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a><span class="c1"># Delete `.venv/` and `uv.lock`</span>
+</span><span id="__span-42-3"><a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a>
+</span><span id="__span-42-4"><a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a><span class="c1">#For eg:</span>
+</span><span id="__span-42-5"><a id="__codelineno-42-5" name="__codelineno-42-5" href="#__codelineno-42-5"></a>rm<span class="w"> </span>-rf<span class="w"> </span>path/to/venv
+</span><span id="__span-42-6"><a id="__codelineno-42-6" name="__codelineno-42-6" href="#__codelineno-42-6"></a>rm<span class="w"> </span>uv.lock
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a><span class="c1"># Installed with pip</span>
-</span><span id="__span-53-2"><a id="__codelineno-53-2" name="__codelineno-53-2" href="#__codelineno-53-2"></a>conda<span class="w"> </span>env<span class="w"> </span>remove<span class="w"> </span>-n<span class="w"> </span>sleap
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a><span class="c1"># Installed with pip in a conda env</span>
+</span><span id="__span-43-2"><a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>conda<span class="w"> </span>env<span class="w"> </span>remove<span class="w"> </span>-n<span class="w"> </span>sleap
 </span></code></pre></div>
 <div class="admonition hint">
 <p class="admonition-title">Not sure what <code>conda</code> environments you already installed?</p>
 <p>You can get a list of the environments on your system with:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-54-1"><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a>conda env list
+<div class="language-text highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>conda env list
 </span></code></pre></div></p>
 </div>
 </div>
 </div>
 </div>
-<p>Once the environment has been removed, you are free to install SLEAP using any of the installation methods above into a venv or conda environment of the same name.</p>
+<p>Once the environment has been removed, you are free to install SLEAP using any of the <a href="#installation-methods">installation methods</a> above into a venv or conda environment of the same name.</p>
 <h2 id="getting-help">Getting help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
 <p>If you run into any problems, check out the <a href="https://github.com/talmolab/sleap/discussions">Github Discussions</a> and <a href="https://github.com/talmolab/sleap/issues">GitHub Issues</a> to see if others have had the same problem.</p>
 <p>If you get any errors or the GUI fails to launch, try running the diagnostics to see what SLEAP is able to detect on your system:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-55-1"><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a>sleap-diagnostic
-</span><span id="__span-55-2"><a id="__codelineno-55-2" name="__codelineno-55-2" href="#__codelineno-55-2"></a>
-</span><span id="__span-55-3"><a id="__codelineno-55-3" name="__codelineno-55-3" href="#__codelineno-55-3"></a><span class="c1"># If SLEAP installed with `uv pip` or `uv sync`: </span>
-</span><span id="__span-55-4"><a id="__codelineno-55-4" name="__codelineno-55-4" href="#__codelineno-55-4"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap-diagnostic
+<div class="admonition note">
+<p class="admonition-title">Using <code>uv run</code></p>
+<p>If you installed SLEAP using <code>uv pip install</code> or <code>uv sync</code>, you must prefix commands with <code>uv run</code> to ensure they run inside the correct virtual environment. For example, use:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>uv run sleap-diagnostic
+</span></code></pre></div>
+instead of just <code>sleap-diagnostic</code>.</p>
+</div>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>sleap-diagnostic
 </span></code></pre></div>
 <div class="admonition hint">
 <p class="admonition-title">If you were not able to get SLEAP installed:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="11:2"><input checked="checked" id="__tabbed_11_1" name="__tabbed_11" type="radio" /><input id="__tabbed_11_2" name="__tabbed_11" type="radio" /><div class="tabbed-labels"><label for="__tabbed_11_1">Installed w/ uv:</label><label for="__tabbed_11_2">Installed w/ pip:</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="9:2"><input checked="checked" id="__tabbed_9_1" name="__tabbed_9" type="radio" /><input id="__tabbed_9_2" name="__tabbed_9" type="radio" /><div class="tabbed-labels"><label for="__tabbed_9_1">Installed w/ uv:</label><label for="__tabbed_9_2">Installed w/ pip:</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p>Run the following command on the venv created by <code>uv tool install</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-56-1"><a id="__codelineno-56-1" name="__codelineno-56-1" href="#__codelineno-56-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>list<span class="w"> </span>
+<p>Run the following command on the venv (not using <code>uv tool install</code>):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>list<span class="w"> </span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>Activate the conda environment it is in and generate a list of the package versions installed:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-57-1"><a id="__codelineno-57-1" name="__codelineno-57-1" href="#__codelineno-57-1"></a>conda<span class="w"> </span>list
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a>conda<span class="w"> </span>list
 </span></code></pre></div>
 </div>
 </div>
