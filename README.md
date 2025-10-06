@@ -1,4 +1,4 @@
-[![CI](https://github.com/talmolab/sleap/workflows/CI/badge.svg?event=push&branch=develop)](https://github.com/talmolab/sleap/actions?query=workflow:CI)
+[![CI](https://github.com/talmolab/sleap/actions/workflows/ci.yml/badge.svg)](https://github.com/talmolab/sleap/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/talmolab/sleap/branch/develop/graph/badge.svg?token=oBmTlGIQRn)](https://codecov.io/gh/talmolab/sleap)
 [![Documentation](https://img.shields.io/badge/Documentation-sleap.ai-lightgrey)](https://docs.sleap.ai)
 [![Downloads](https://static.pepy.tech/personalized-badge/sleap?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=PyPI%20Downloads)](https://pepy.tech/project/sleap)
