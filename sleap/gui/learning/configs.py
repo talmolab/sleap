@@ -466,6 +466,8 @@ class TrainingConfigsGetter:
                     "baseline_large_rf.bottomup.yaml",
                     "baseline_large_rf.single.yaml",
                     "baseline_large_rf.topdown.yaml",
+                    "baseline.multi_class_bottomup.yaml",
+                    "baseline.multi_class_topdown.yaml",
                 ]
                 json_files.sort(key=lambda f: BUILTIN_ORDER.index(f.name))
 
@@ -529,24 +531,23 @@ class TrainingConfigsGetter:
             # Get the head from the model (i.e., what the model will predict)
             from omegaconf import OmegaConf
 
-            cfg = OmegaConf.load(path)
-            key = get_head_from_omegaconf(cfg)
+            try:
+                cfg = OmegaConf.load(path)
+                key = get_head_from_omegaconf(cfg)
 
-            filename = os.path.basename(path)
-            logging.debug(f"Loaded YAML config file: {filename}")
+                filename = os.path.basename(path)
+                logging.debug(f"Loaded YAML config file: {filename}")
 
-            # If filter isn't set or matches head name, add config to list
-            if self.head_filter in (None, key):
-                logging.debug(f"Config file matches head filter: {self.head_filter}")
-                # Try mapping to TrainingJobConfig
-                try:
+                # If filter isn't set or matches head name, add config to list
+                if self.head_filter in (None, key):
+                    logging.debug(f"Config matches head filter: {self.head_filter}")
+                    # Try mapping to TrainingJobConfig
                     return ConfigFileInfo(
                         path=path, filename=filename, config=cfg, head_name=key
                     )
-                except Exception as e:
-                    # Couldn't map so just ignore
-                    logging.error(f"Error mapping YAML config: {e}")
-                    return None
+            except Exception:
+                # Couldn't load so just ignore
+                return None
         else:
             # Get the head from the model (i.e., what the model will predict)
             try:
@@ -565,7 +566,7 @@ class TrainingConfigsGetter:
                 return None
             except Exception as e:
                 # Couldn't load so just ignore
-                print(e)
+                print(f"Couldn't load config: {e}")
                 pass
             else:
                 # Get the head from the model (i.e., what the model will predict)

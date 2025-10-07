@@ -48,7 +48,7 @@ data_config:
       mixup_lambda_min: 0.01
       mixup_lambda_max: 0.05
       mixup_p: 0.0
-  skeletons: []
+  skeletons: null
 model_config:
   init_weights: default
   pretrained_backbone_weights: null
