@@ -1,6 +1,6 @@
 data_config:
-  train_labels_path: null
-  val_labels_path: null
+  train_labels_path: 
+  val_labels_path: 
   validation_fraction: 0.1
   test_file_path: null
   provider: LabelsReader
@@ -15,7 +15,7 @@ data_config:
     max_height: null
     max_width: null
     scale: 1.0
-    crop_size: null
+    crop_size:
     min_crop_size: 100
   use_augmentations_train: true
   augmentation_config:
@@ -26,17 +26,17 @@ data_config:
       gaussian_noise_mean: 5.0
       gaussian_noise_std: 1.0
       gaussian_noise_p: 0.0
-      contrast_min: 0.5
-      contrast_max: 2.0
+      contrast_min: 0.9
+      contrast_max: 1.1
       contrast_p: 0.0
-      brightness_min: 0.0
-      brightness_max: 2.0
+      brightness_min: 0.9
+      brightness_max: 1.1
       brightness_p: 0.0
     geometric:
       rotation_min: -15.0
       rotation_max: 15.0
-      scale_min: 0.9
-      scale_max: 1.1
+      scale_min: 1.0
+      scale_max: 1.0
       translate_width: 0.0
       translate_height: 0.0
       affine_p: 1.0
@@ -50,41 +50,42 @@ data_config:
       mixup_p: 0.0
   skeletons: null
 model_config:
-  init_weights: default
+  init_weights: xavier
   pretrained_backbone_weights: null
   pretrained_head_weights: null
   backbone_config:
     unet:
       in_channels: 1
       kernel_size: 3
-      filters: 32
+      filters: 16
       filters_rate: 1.5
-      max_stride: 64
+      max_stride: 16
       stem_stride: null
       middle_block: true
       up_interpolate: true
       stacks: 1
       convs_per_block: 2
-      output_stride: 4
+      output_stride: 2
     convnext: null
     swint: null
   head_configs:
-    single_instance: null
-    centroid: null
-    centered_instance: null
-    bottomup:
+    single_instance:
+    centroid:
+    centered_instance:
+    multi_class_topdown:
       confmaps:
-        part_names: null
-        sigma: 2.5
-        output_stride: 4
-        loss_weight: 1.0
-      pafs:
-        edges: null
-        sigma: 75.0
-        output_stride: 8
-        loss_weight: 1.0
-    multi_class_bottomup: null
-    multi_class_topdown: null
+        sigma: 1.5
+        output_stride: 2
+        anchor_part:
+        part_names: 
+      class_vectors:
+        classes:
+        num_fc_layers: 3
+        num_fc_units: 64
+        global_pool: true
+        output_stride: 16
+        loss_weight: 0.01
+    bottomup: null
   total_params: null
 trainer_config:
   train_data_loader:
@@ -99,32 +100,22 @@ trainer_config:
     save_top_k: 1
     save_last: false
   trainer_devices:
-  trainer_device_indices: null
+  trainer_device_indices:
   trainer_accelerator: auto
   profiler: null
   trainer_strategy: auto
   enable_progress_bar: true
   min_train_steps_per_epoch: 200
-  train_steps_per_epoch: null
+  train_steps_per_epoch:
   visualize_preds_during_training: true
   keep_viz: false
   max_epochs: 200
-  seed: null
+  seed:
   use_wandb: false
   save_ckpt: true
   ckpt_dir: models
-  run_name: null
+  run_name:
   resume_ckpt_path: null
-  wandb:
-    entity: null
-    project: null
-    name: null
-    save_viz_imgs_wandb: false
-    api_key: null
-    wandb_mode: null
-    prv_runid: null
-    group: null
-    current_run_id: null
   optimizer_name: Adam
   optimizer:
     lr: 0.0001
@@ -132,10 +123,10 @@ trainer_config:
   lr_scheduler:
     step_lr: null
     reduce_lr_on_plateau:
-      threshold: 1.0e-08
+      threshold: 1.0e-06
       threshold_mode: rel
       cooldown: 3
-      patience: 8
+      patience: 5
       factor: 0.5
       min_lr: 1.0e-08
   early_stopping:
@@ -149,9 +140,9 @@ trainer_config:
     max_hard_keypoints: null
     loss_scale: 5.0
   zmq:
-    controller_port: 9000
+    publish_port:
+    controller_port:
     controller_polling_timeout: 10
-    publish_port: 9001
 name: ''
 description: ''
 sleap_nn_version: 0.0.1
