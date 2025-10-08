@@ -1,74 +1,78 @@
-"""Generate changelog page from git history."""
-
-import subprocess
-from pathlib import Path
-
+import re
+import requests
 import mkdocs_gen_files
+import os
+
+OWNER = "talmolab"
+REPO = "sleap"
+GH_TOKEN = os.environ.get("GH_TOKEN", None)
+if GH_TOKEN is None:
+    GH_TOKEN = os.environ.get("GH_TOKEN_READ_ONLY", None)
+if GH_TOKEN is None:
+    GH_TOKEN = os.environ.get("GITHUB_TOKEN", None)
+if GH_TOKEN is None:
+    import subprocess
+
+    proc = subprocess.run("gh auth token", shell=True, capture_output=True)
+    GH_TOKEN = proc.stdout.decode().strip()
+
+if GH_TOKEN is None:
+    print("Warning: No GitHub token found, rate limits may be exceeded.")
 
 
-def get_changelog():
-    """Extract changelog from git tags and commits."""
-    try:
-        # Get all tags sorted by version
-        result = subprocess.run(
-            ["git", "tag", "--sort=-v:refname"],
-            capture_output=True,
-            text=True,
-            check=True,
+def fetch_release_notes(owner, repo, github_token=None):
+    """
+    Fetches the release notes for all releases of a GitHub repository.
+
+    Parameters:
+    - owner (str): The owner of the repository.
+    - repo (str): The name of the repository.
+    - github_token (str, optional): GitHub personal access token for authentication (if required).
+
+    Returns:
+    - list of dict: A list of releases, each containing "tag_name" and "body" of the release.
+    """
+    url = f"https://api.github.com/repos/{owner}/{repo}/releases"
+
+    headers = {}
+    if github_token:
+        headers["Authorization"] = f"token {github_token}"
+    headers["Accept"] = "application/vnd.github.html+json"
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
+        raise Exception(
+            f"Failed to fetch releases: {response.status_code}, {response.text}"
         )
-        tags = result.stdout.strip().split("\n")
 
-        changelog = "# Changelog\n\n"
+    releases = response.json()
 
-        # For each tag, get the date and commits since previous tag
-        for i, tag in enumerate(tags):
-            if not tag:
-                continue
+    release_notes = []
+    for release in releases:
+        release_notes.append(
+            {
+                "tag_name": release["tag_name"],
+                "body_html": release["body_html"],
+            }
+        )
 
-            # Get tag date
-            date_result = subprocess.run(
-                ["git", "log", "-1", "--format=%ai", tag],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            date = date_result.stdout.strip().split()[0]
-
-            changelog += f"## {tag} ({date})\n\n"
-
-            # Get commits between this tag and the previous one
-            if i < len(tags) - 1 and tags[i + 1]:
-                range_spec = f"{tags[i + 1]}..{tag}"
-            else:
-                # For the oldest tag, show all commits up to that tag
-                range_spec = tag
-
-            commits_result = subprocess.run(
-                ["git", "log", "--oneline", "--no-merges", range_spec],
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-
-            commits = commits_result.stdout.strip().split("\n")
-            for commit in commits:
-                if commit:
-                    # Format: hash message -> - message
-                    parts = commit.split(" ", 1)
-                    if len(parts) == 2:
-                        changelog += f"- {parts[1]}\n"
-
-            changelog += "\n"
-
-        return changelog
-
-    except subprocess.CalledProcessError:
-        # Fallback if git commands fail
-        return "# Changelog\n\nNo changelog available yet.\n"
+    return release_notes
 
 
-# Generate changelog
-changelog_content = get_changelog()
+releases = fetch_release_notes(OWNER, REPO, GH_TOKEN)
 
-with mkdocs_gen_files.open("CHANGELOG.md", "w") as f:
-    f.write(changelog_content)
+with mkdocs_gen_files.open("changelog.md", "w") as page:
+    contents = ["# Changelog\n"]
+
+    for release in releases:
+        # Title
+        url = f"https://github.com/talmolab/sleap/releases/tag/{release['tag_name']}"
+        contents.append(f"## [{release['tag_name']}]({url})\n")
+
+        # Body
+        contents.append(release["body_html"])
+
+        contents.append("\n")
+
+    page.writelines(contents)
