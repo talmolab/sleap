@@ -10,7 +10,7 @@ authors = [
     {name = "Talmo Pereira", email = "talmo@salk.edu"}
 ]
 license = {text = "BSD-3-Clause"}
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 keywords = ["deep learning", "pose estimation", "tracking", "neuroscience"]
 classifiers = [
     "Intended Audience :: Science/Research",

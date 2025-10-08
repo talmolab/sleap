@@ -18,9 +18,21 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The ne
 
 ---
 
+## Prerequisites
+
+Python 3.11 (or) 3.12 (or) 3.13 (required for all installation methods)
+
+!!! warning "Python 3.14 is not yet supported"
+    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** If you have Python 3.14 installed, you must specify the Python version in all `uv` install commands by adding `--python 3.13`.  
+    For example:
+    ```bash
+    uv tool install --python 3.13 "sleap[nn]"  ...
+    ```
+    Replace `...` with the rest of your install command as needed.
+
+
 ## Installation methods
 
-**Prerequisites:** Python 3.11+ (required for all installation methods)
 
 !!! tip "Choose Your Installation Method"
     - **[Installation as a system-wide tool with uv](#installation-with-uv-tool-install)**: Use `uv tool install` to install SLEAP globally as a tool (Installation needed, **strongly recommended**)
@@ -60,6 +72,14 @@ To install SLEAP, you'll need to enter commands in a terminal. Here's how to ope
     ```
 
 ### Platform-Specific Commands
+
+!!! warning "Python 3.14 is not yet supported"
+    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the installation command.  
+    For example:
+    ```bash
+    uv tool install --python 3.13 "sleap[nn]"  ...
+    ```
+    Replace `...` with the rest of your install command as needed.
 
 === "Windows/Linux (CUDA)"
     ```bash
@@ -116,6 +136,14 @@ sleap-label --help
 
 ### Platform-Specific Commands
 
+!!! warning "Python 3.14 is not yet supported"
+    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the installation command.  
+    For example:
+    ```bash
+    uvx --python 3.13 "sleap[nn]"  ...
+    ```
+    Replace `...` with the rest of your install command as needed.
+
 === "Windows/Linux (CUDA)"
     ```bash
     # CUDA 12.8
@@ -151,6 +179,14 @@ sleap-label --help
 ## Installation with uv pip
 
 This method creates a dedicated project environment using uv's modern Python project management. It initializes a new project with `uv init`, creates an isolated virtual environment with `uv venv`, and installs SLEAP using `uv pip`.
+
+!!! warning "Python 3.14 is not yet supported"
+    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the venv command.  
+    For example:
+    ```bash
+    uv venv --python 3.13  ...
+    ```
+    Replace `...` with the rest of your install command as needed.
 
 !!! note "Install and set-up uv"
     Step-1: Install [`uv`](https://github.com/astral-sh/uv) - an ultra-fast Python package manager:
@@ -224,9 +260,12 @@ uv run sleap-label --help
 
 We recommend creating a dedicated environment with [conda](https://docs.conda.io/en/latest/miniconda.html) or [mamba/miniforge](https://github.com/conda-forge/miniforge) before installing `sleap` with pip. This helps avoid dependency conflicts and keeps your Python setup clean. After installing Miniconda or Miniforge, create and activate an environment, then run the pip install commands below inside the activated environment.
 
+!!! warning "Python 3.14 is not yet supported"
+    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.**
+
 To create a conda environment, run:
 ```bash
-conda create -n sleap python=3.12
+conda create -n sleap python=3.13
 conda activate sleap
 ```
 
@@ -294,6 +333,14 @@ cd sleap
     ```
 
 **3. Install Dependencies**
+
+!!! warning "Python 3.14 is not yet supported"
+    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the installation command.  
+    For example:
+    ```bash
+    uv sync --python 3.13 ...
+    ```
+    Replace `...` with the rest of your install command as needed.
 
 === "Windows/Linux (CUDA)"
     ```bash
