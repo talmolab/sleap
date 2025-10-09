@@ -346,6 +346,12 @@ def train_command(
         "provided, defaults to '[data_path].predictions.slp'."
     ),
 )
+@click.option(
+    "--no-empty-frames",
+    "no_empty_frames",
+    is_flag=True,
+    help=("Clear empty frames that did not have predictions before saving to output."),
+)
 @click.option("--video.dataset", "video_dataset", help="The dataset for HDF5 videos.")
 @click.option(
     "--video.input_format",
@@ -457,6 +463,33 @@ def train_command(
     help="Maximum number of tracks to be tracked by the tracker. (default: None)",
 )
 @click.option(
+    "--tracking.target_instance_count",
+    "tracking_target_instance_count",
+    type=int,
+    default=0,
+    help="Target number of instances to track per frame. (default: 0)",
+)
+@click.option(
+    "--tracking.pre_cull_to_target",
+    "tracking_pre_cull_to_target",
+    type=int,
+    default=0,
+    help=(
+        "If non-zero and target_instance_count is also non-zero, then cull instances "
+        "over target count per frame *before* tracking. (default: 0)"
+    ),
+)
+@click.option(
+    "--tracking.pre_cull_iou_threshold",
+    "tracking_pre_cull_iou_threshold",
+    type=float,
+    default=0,
+    help=(
+        "If non-zero and pre_cull_to_target also set, then use IOU threshold to remove "
+        "overlapping instances over count *before* tracking. (default: 0)"
+    ),
+)
+@click.option(
     "--tracking.post_connect_single_breaks",
     "tracking_post_connect_single_breaks",
     type=int,
@@ -465,6 +498,20 @@ def train_command(
         "breaks when exactly one track is lost and exactly one track is spawned in "
         "frame. (default: 0)"
     ),
+)
+@click.option(
+    "--tracking.clean_instance_count",
+    "tracking_clean_instance_count",
+    type=int,
+    default=0,
+    help="Target number of instances to clean *after* tracking. (default: 0)",
+)
+@click.option(
+    "--tracking.clean_iou_threshold",
+    "tracking_clean_iou_threshold",
+    type=float,
+    default=0,
+    help="IOU to use when culling instances *after* tracking. (default: 0)",
 )
 @click.option(
     "--tracking.similarity",
@@ -534,6 +581,7 @@ def track_command(
     only_labeled_frames,
     only_suggested_frames,
     output,
+    no_empty_frames,
     video_dataset,
     video_input_format,
     video_index,
@@ -550,7 +598,12 @@ def track_command(
     tracking_tracker,
     tracking_max_tracking,
     tracking_max_tracks,
+    tracking_target_instance_count,
+    tracking_pre_cull_to_target,
+    tracking_pre_cull_iou_threshold,
     tracking_post_connect_single_breaks,
+    tracking_clean_instance_count,
+    tracking_clean_iou_threshold,
     tracking_similarity,
     tracking_match,
     tracking_robust,
@@ -577,6 +630,8 @@ def track_command(
             kwargs["only_labeled_frames"] = True
         if only_suggested_frames is not None and only_suggested_frames:
             kwargs["only_suggested_frames"] = True
+        if no_empty_frames is not None and no_empty_frames:
+            kwargs["no_empty_frames"] = True
         kwargs["output_path"] = output
         if output is None:
             kwargs["output_path"] = f"{data_path}.predictions.slp"
@@ -618,6 +673,21 @@ def track_command(
             kwargs["candidates_method"] = "local_queues"
             kwargs["max_tracks"] = tracking_max_tracks
 
+        if (
+            tracking_target_instance_count is not None
+            and tracking_target_instance_count > 0
+        ):
+            kwargs["target_instance_count"] = tracking_target_instance_count
+
+        if tracking_pre_cull_to_target is not None and tracking_pre_cull_to_target > 0:
+            kwargs["pre_cull_to_target"] = tracking_pre_cull_to_target
+
+        if (
+            tracking_pre_cull_iou_threshold is not None
+            and tracking_pre_cull_iou_threshold > 0
+        ):
+            kwargs["pre_cull_iou_threshold"] = tracking_pre_cull_iou_threshold
+
         if tracking_similarity is not None:
             if tracking_similarity == "oks":
                 kwargs["features"] = "keypoints"
@@ -633,6 +703,19 @@ def track_command(
             and tracking_post_connect_single_breaks
         ):
             kwargs["post_connect_single_breaks"] = tracking_post_connect_single_breaks
+
+        if (
+            tracking_clean_instance_count is not None
+            and tracking_clean_instance_count > 0
+        ):
+            kwargs["clean_instance_count"] = tracking_clean_instance_count
+
+        if (
+            tracking_clean_iou_threshold is not None
+            and tracking_clean_iou_threshold > 0
+        ):
+            kwargs["clean_iou_threshold"] = tracking_clean_iou_threshold
+
         if tracking_match is not None:
             kwargs["track_matching_method"] = tracking_match
         if tracking_robust is not None:
