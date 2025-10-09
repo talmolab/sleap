@@ -166,5 +166,5 @@ nav:
       - Command line interfaces: reference/command-line-interfaces.md
       - Evaluation metrics: reference/evaluation_metrics.md
       - Full API: api/
-      - Changelog: CHANGELOG.md
+      - Changelog: changelog.md
   - Help: help.md

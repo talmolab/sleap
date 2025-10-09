@@ -79,7 +79,7 @@ jobs:
       - name: Setup UV
         uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.12"
+          python-version: "3.13"
 
       - name: Install dependencies
         run: |
@@ -88,7 +88,6 @@ jobs:
           # uv pip install PySide6==6.8.1.1  # exit code 139
           # uv pip install PySide6==6.8.3  # exit code 139
           # uv pip install PySide6==6.9.1  # exit code 139
-          uv pip install matplotlib==3.8.4
 
       - name: Print environment info
         run: |
