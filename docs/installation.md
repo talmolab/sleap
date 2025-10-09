@@ -37,7 +37,7 @@ Python 3.11 (or) 3.12 (or) 3.13 (required for all installation methods)
 !!! tip "Choose Your Installation Method"
     - **[Installation as a system-wide tool with uv](#installation-with-uv-tool-install)**: Use `uv tool install` to install SLEAP globally as a tool (Installation needed, **strongly recommended**)
     - **[Installation with uvx](#installation-with-uvx)**: Use `uvx` for one-off commands. (no installation needed!)
-    - **[Installation with uv pip](#installation-with-uv-pip)**: Use `uv pip` to install from pypi in a uv virtual env.
+    - **[Installation with uv add](#installation-with-uv-add)**: Use `uv add` to install sleap in a uv virtual env.
     - **[Installation with pip](#installation-with-pip)**: Use `pip` to install from pypi in a conda env.
     - **[Installation from source](#installation-from-source)**: Use `uv sync` to install from source. (For developmental purposes)
 
@@ -176,9 +176,9 @@ sleap-label --help
 
 ---
 
-## Installation with uv pip
+## Installation with uv add
 
-This method creates a dedicated project environment using uv's modern Python project management. It initializes a new project with `uv init`, creates an isolated virtual environment with `uv venv`, and installs SLEAP using `uv pip`.
+This method creates a dedicated project environment using uv's modern Python project management. It initializes a new project with `uv init`, creates an isolated virtual environment with `uv venv`, and installs SLEAP using `uv add`.
 
 !!! warning "Python 3.14 is not yet supported"
     SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the venv command.  
@@ -206,10 +206,20 @@ This method creates a dedicated project environment using uv's modern Python pro
 
 ### Platform-Specific Commands
 
+!!! tip "How `uv add` works"
+    - When you run `uv init`, it creates a `pyproject.toml` file in your working directory to manage your project's dependencies.
+    - When you use `uv add "sleap[nn]"`, it adds `sleap` as a dependency in your `pyproject.toml` and installs it in your virtual environment.
+    - To add other packages, simply run `uv add <package>`. After adding new packages, you should run `uv sync` to update your environment with all dependencies specified in `pyproject.toml`.
+    - To install a local package (such as a local clone of sleap-nn) in editable mode, use:
+      ```bash
+      uv add --editable "./sleap[nn]" ...
+      ```
+      This is useful for development, as changes to the code are immediately reflected in your environment.
+
 === "Windows/Linux (CUDA)"
     ```bash
     # CUDA 12.8
-    uv pip install "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv add "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
     !!! info "Other CUDA versions"
         - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--index` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cuda118` for CUDA 11.8, `https://download.pytorch.org/whl/cuda128` for CUDA 12.8, etc.).
@@ -217,25 +227,25 @@ This method creates a dedicated project environment using uv's modern Python pro
 === "Windows/Linux (CPU)"
     ```bash
     # CUDA 12.8
-    uv pip install "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv add "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```bash
-    uv pip install "sleap[nn]"
+    uv add "sleap[nn]"
     ```
     !!! info "Mac MPS support"
         - On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.
 
 === "SLEAP GUI Only"
     ```bash
-    uv pip install "sleap"
+    uv add "sleap"
     ```
     !!! warning "GUI <u>ONLY</u>"
         Installing this version of SLEAP will **NOT** include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for **labeling**.
 
 !!! info "Running With `uv run`"
-    `uv pip install` creates a `.venv` (virtual environment) inside your current working directory. To use all installed packages, <u>**you must run commands with `uv run`**</u> (e.g., `uv run sleap-label ...` or `uv run pytest ...`) with these installation methods.
+    `uv add` creates a `.venv` (virtual environment) inside your current working directory. To use all installed packages, <u>**you must run commands with `uv run`**</u> (e.g., `uv run sleap-label ...` or `uv run pytest ...`) with these installation methods.
 
 ### Verify Installation
 ```bash
