@@ -226,6 +226,12 @@ def train(config_name, config_dir, overrides):
     "labels dataset.This is useful for generating predictions for initialization.",
 )
 @click.option(
+    "--no_empty_frames",
+    is_flag=True,
+    default=False,
+    help=("Clear empty frames that did not have predictions before saving to output."),
+)
+@click.option(
     "--video_index",
     type=int,
     default=None,
@@ -426,6 +432,42 @@ def train(config_name, config_dir, overrides):
     help="If True and `max_tracks` is not None with local queues candidate method, "
     "connects track breaks when exactly one track is lost and exactly"
     "one new track is spawned in the frame.",
+)
+@click.option(
+    "--tracking_target_instance_count",
+    type=int,
+    default=0,
+    help="Target number of instances to track per frame. (default: 0)",
+)
+@click.option(
+    "--tracking_pre_cull_to_target",
+    type=int,
+    default=0,
+    help=(
+        "If non-zero and target_instance_count is also non-zero, then cull instances "
+        "over target count per frame *before* tracking. (default: 0)"
+    ),
+)
+@click.option(
+    "--tracking_pre_cull_iou_threshold",
+    type=float,
+    default=0,
+    help=(
+        "If non-zero and pre_cull_to_target also set, then use IOU threshold to remove "
+        "overlapping instances over count *before* tracking. (default: 0)"
+    ),
+)
+@click.option(
+    "--tracking_clean_instance_count",
+    type=int,
+    default=0,
+    help="Target number of instances to clean *after* tracking. (default: 0)",
+)
+@click.option(
+    "--tracking_clean_iou_threshold",
+    type=float,
+    default=0,
+    help="IOU to use when culling instances *after* tracking. (default: 0)",
 )
 def track(**kwargs):
     """Run Inference and Tracking workflow.

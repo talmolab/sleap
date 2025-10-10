@@ -5,6 +5,7 @@ from omegaconf import OmegaConf
 import numpy as np
 from pathlib import Path
 from datetime import datetime
+from typing import Optional, List
 import time
 import logging
 
@@ -297,6 +298,25 @@ def train_command(
         )
 
 
+def frame_list(frame_str: str) -> Optional[List[int]]:
+    """Converts 'n-m' string to list of ints.
+
+    Args:
+        frame_str: string representing range
+
+    Returns:
+        List of ints, or None if string does not represent valid range.
+    """
+    # Handle ranges of frames. Must be of the form "1-200" (or "1,-200")
+    if "-" in frame_str:
+        min_max = frame_str.split("-")
+        min_frame = int(min_max[0].rstrip(","))
+        max_frame = int(min_max[1])
+        return list(range(min_frame, max_frame + 1))
+
+    return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
+
+
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.argument("data_path", required=True)
 @click.option(
@@ -322,6 +342,7 @@ def train_command(
     "--only-labeled-frames",
     "only_labeled_frames",
     is_flag=True,
+    default=False,
     help=(
         "Only run inference on user labeled frames when running on labels dataset. "
         "This is useful for generating predictions to compare against ground truth."
@@ -331,6 +352,7 @@ def train_command(
     "--only-suggested-frames",
     "only_suggested_frames",
     is_flag=True,
+    default=False,
     help=(
         "Only run inference on unlabeled suggested frames when running on labels "
         "dataset. This is useful for generating predictions for initialization during "
@@ -341,21 +363,31 @@ def train_command(
     "-o",
     "--output",
     "output",
+    default=None,
     help=(
         "The output filename or directory path to use for the predicted data. If not "
         "provided, defaults to '[data_path].predictions.slp'."
     ),
 )
+@click.option(
+    "--no-empty-frames",
+    "no_empty_frames",
+    is_flag=True,
+    default=False,
+    help=("Clear empty frames that did not have predictions before saving to output."),
+)
 @click.option("--video.dataset", "video_dataset", help="The dataset for HDF5 videos.")
 @click.option(
     "--video.input_format",
     "video_input_format",
+    default="channels_last",
     help="The input_format for HDF5 videos.",
 )
 @click.option(
     "--video.index",
     "video_index",
     type=int,
+    default=None,
     help=(
         "Integer index of video in .slp file to predict on. To be used with an .slp "
         "path as an alternative to specifying the video path."
@@ -365,18 +397,21 @@ def train_command(
     "--cpu",
     "cpu",
     is_flag=True,
+    default=False,
     help="Run inference only on CPU. If not specified, will use available GPU.",
 )
 @click.option(
     "--first-gpu",
     "first_gpu",
     is_flag=True,
+    default=False,
     help="Run inference on the first GPU, if available.",
 )
 @click.option(
     "--last-gpu",
     "last_gpu",
     is_flag=True,
+    default=False,
     help="Run inference on the last GPU, if available.",
 )
 @click.option(
@@ -391,6 +426,7 @@ def train_command(
     "--max_edge_length_ratio",
     "max_edge_length_ratio",
     type=float,
+    default=0.25,
     help=(
         "The maximum expected length of a connected pair of points as a fraction of "
         "the "
@@ -402,6 +438,7 @@ def train_command(
     "--dist_penalty_weight",
     "dist_penalty_weight",
     type=float,
+    default=1.0,
     help=(
         "A coefficient to scale weight of the distance penalty. Set to values greater "
         "than 1.0 to enforce the distance penalty more strictly. Only applies to "
@@ -412,6 +449,7 @@ def train_command(
     "--batch_size",
     "batch_size",
     type=int,
+    default=4,
     help=(
         "Number of frames to predict at a time. Larger values result in faster "
         "inference speeds, but require more memory."
@@ -421,12 +459,14 @@ def train_command(
     "--open-in-gui",
     "open_in_gui",
     is_flag=True,
+    default=False,
     help="Open the resulting predictions in the GUI when finished.",
 )
 @click.option(
     "--peak_threshold",
     "peak_threshold",
     type=float,
+    default=0.2,
     help="Minimum confidence map value to consider a peak as valid.",
 )
 @click.option(
@@ -434,6 +474,7 @@ def train_command(
     "--max_instances",
     "max_instances",
     type=int,
+    default=None,
     help=(
         "Limit maximum number of instances in multi-instance models. Not available for "
         "ID models. Defaults to None."
@@ -457,6 +498,33 @@ def train_command(
     help="Maximum number of tracks to be tracked by the tracker. (default: None)",
 )
 @click.option(
+    "--tracking.target_instance_count",
+    "tracking_target_instance_count",
+    type=int,
+    default=0,
+    help="Target number of instances to track per frame. (default: 0)",
+)
+@click.option(
+    "--tracking.pre_cull_to_target",
+    "tracking_pre_cull_to_target",
+    type=int,
+    default=0,
+    help=(
+        "If non-zero and target_instance_count is also non-zero, then cull instances "
+        "over target count per frame *before* tracking. (default: 0)"
+    ),
+)
+@click.option(
+    "--tracking.pre_cull_iou_threshold",
+    "tracking_pre_cull_iou_threshold",
+    type=float,
+    default=0,
+    help=(
+        "If non-zero and pre_cull_to_target also set, then use IOU threshold to remove "
+        "overlapping instances over count *before* tracking. (default: 0)"
+    ),
+)
+@click.option(
     "--tracking.post_connect_single_breaks",
     "tracking_post_connect_single_breaks",
     type=int,
@@ -465,6 +533,20 @@ def train_command(
         "breaks when exactly one track is lost and exactly one track is spawned in "
         "frame. (default: 0)"
     ),
+)
+@click.option(
+    "--tracking.clean_instance_count",
+    "tracking_clean_instance_count",
+    type=int,
+    default=0,
+    help="Target number of instances to clean *after* tracking. (default: 0)",
+)
+@click.option(
+    "--tracking.clean_iou_threshold",
+    "tracking_clean_iou_threshold",
+    type=float,
+    default=0,
+    help="IOU to use when culling instances *after* tracking. (default: 0)",
 )
 @click.option(
     "--tracking.similarity",
@@ -534,6 +616,7 @@ def track_command(
     only_labeled_frames,
     only_suggested_frames,
     output,
+    no_empty_frames,
     video_dataset,
     video_input_format,
     video_index,
@@ -550,7 +633,12 @@ def track_command(
     tracking_tracker,
     tracking_max_tracking,
     tracking_max_tracks,
+    tracking_target_instance_count,
+    tracking_pre_cull_to_target,
+    tracking_pre_cull_iou_threshold,
     tracking_post_connect_single_breaks,
+    tracking_clean_instance_count,
+    tracking_clean_iou_threshold,
     tracking_similarity,
     tracking_match,
     tracking_robust,
@@ -569,6 +657,12 @@ def track_command(
         # Build kwargs for the tracking function
         kwargs = {}
 
+        # Convert frames string to list
+        if frames is not None:
+            kwargs["frames"] = frame_list(frames)
+        else:
+            kwargs["frames"] = None
+
         if models is not None:
             kwargs["model_paths"] = models
         if frames is not None:
@@ -577,6 +671,8 @@ def track_command(
             kwargs["only_labeled_frames"] = True
         if only_suggested_frames is not None and only_suggested_frames:
             kwargs["only_suggested_frames"] = True
+        if no_empty_frames is not None and no_empty_frames:
+            kwargs["no_empty_frames"] = True
         kwargs["output_path"] = output
         if output is None:
             kwargs["output_path"] = f"{data_path}.predictions.slp"
@@ -610,6 +706,7 @@ def track_command(
             kwargs["max_instances"] = max_instances
 
         if tracking_tracker:
+            kwargs["tracking"] = True
             if "flow" in tracking_tracker:
                 kwargs["use_flow"] = True
 
@@ -617,6 +714,21 @@ def track_command(
         if tracking_max_tracking is not None and tracking_max_tracking == 1:
             kwargs["candidates_method"] = "local_queues"
             kwargs["max_tracks"] = tracking_max_tracks
+
+        if (
+            tracking_target_instance_count is not None
+            and tracking_target_instance_count > 0
+        ):
+            kwargs["tracking_target_instance_count"] = tracking_target_instance_count
+
+        if tracking_pre_cull_to_target is not None and tracking_pre_cull_to_target > 0:
+            kwargs["tracking_pre_cull_to_target"] = tracking_pre_cull_to_target
+
+        if (
+            tracking_pre_cull_iou_threshold is not None
+            and tracking_pre_cull_iou_threshold > 0
+        ):
+            kwargs["tracking_pre_cull_iou_threshold"] = tracking_pre_cull_iou_threshold
 
         if tracking_similarity is not None:
             if tracking_similarity == "oks":
@@ -633,6 +745,19 @@ def track_command(
             and tracking_post_connect_single_breaks
         ):
             kwargs["post_connect_single_breaks"] = tracking_post_connect_single_breaks
+
+        if (
+            tracking_clean_instance_count is not None
+            and tracking_clean_instance_count > 0
+        ):
+            kwargs["tracking_clean_instance_count"] = tracking_clean_instance_count
+
+        if (
+            tracking_clean_iou_threshold is not None
+            and tracking_clean_iou_threshold > 0
+        ):
+            kwargs["tracking_clean_iou_threshold"] = tracking_clean_iou_threshold
+
         if tracking_match is not None:
             kwargs["track_matching_method"] = tracking_match
         if tracking_robust is not None:
