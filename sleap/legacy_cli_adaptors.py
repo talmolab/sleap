@@ -5,6 +5,7 @@ from omegaconf import OmegaConf
 import numpy as np
 from pathlib import Path
 from datetime import datetime
+from typing import Optional, List
 import time
 import logging
 
@@ -297,6 +298,25 @@ def train_command(
         )
 
 
+def frame_list(frame_str: str) -> Optional[List[int]]:
+    """Converts 'n-m' string to list of ints.
+
+    Args:
+        frame_str: string representing range
+
+    Returns:
+        List of ints, or None if string does not represent valid range.
+    """
+    # Handle ranges of frames. Must be of the form "1-200" (or "1,-200")
+    if "-" in frame_str:
+        min_max = frame_str.split("-")
+        min_frame = int(min_max[0].rstrip(","))
+        max_frame = int(min_max[1])
+        return list(range(min_frame, max_frame + 1))
+
+    return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
+
+
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.argument("data_path", required=True)
 @click.option(
@@ -312,7 +332,6 @@ def train_command(
 @click.option(
     "--frames",
     "frames",
-    default="",
     help=(
         "List of frames to predict when running on a video. Can be specified as a "
         "comma separated list (e.g. 1,2,3) or a range separated by hyphen (e.g., 1-3, "
@@ -638,6 +657,12 @@ def track_command(
         # Build kwargs for the tracking function
         kwargs = {}
 
+        # Convert frames string to list
+        if frames is not None:
+            kwargs["frames"] = frame_list(frames)
+        else:
+            kwargs["frames"] = None
+
         if models is not None:
             kwargs["model_paths"] = models
         if frames is not None:
@@ -681,6 +706,7 @@ def track_command(
             kwargs["max_instances"] = max_instances
 
         if tracking_tracker:
+            kwargs["tracking"] = True
             if "flow" in tracking_tracker:
                 kwargs["use_flow"] = True
 
