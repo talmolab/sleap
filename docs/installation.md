@@ -4,17 +4,13 @@
     This documentation is for the **latest version of SLEAP**.  
     If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
 
-SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
+SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases). The SLEAP GUI for labeling can be installed and used on its own. For training and inference with neural networks, SLEAP uses the [**sleap-nn**](https://github.com/talmolab/sleap-nn) backend, which integrates seamlessly with the GUI (use `nn` extra dependency to train/ run inference).
+
 
 !!! note "GPU Support"
     SLEAP offers GPU-accelerated training on **NVIDIA GPUs** (Windows/Linux) and **Apple Silicon Macs** (macOS). Other GPU types (such as AMD GPUs or Intel graphics) are **not supported** for training and may result in errors or unexpected behavior. If you do not have a supported GPU, SLEAP will automatically use CPU mode—this works for all features, but training will be significantly slower.
 
     For more details on GPU, see the [GPU Support section](#gpu-support).
-
-!!! info "SLEAP GUI and Neural Network Backend"
-    The SLEAP GUI for labeling can be installed and used on its own. For training and inference with neural networks, SLEAP uses the **sleap-nn** backend, which integrates seamlessly with the GUI (use `nn` extra dependency to train/ run inference).
-
-    To learn more about sleap-nn and its capabilities, visit the [sleap-nn repository](https://github.com/talmolab/sleap-nn).
 
 ---
 
@@ -26,7 +22,17 @@ Python 3.11 (or) 3.12 (or) 3.13 (required for all installation methods)
     SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** If you have Python 3.14 installed, you must specify the Python version in all `uv` install commands by adding `--python 3.13`.  
     For example:
     ```bash
+    # for uv tool install
     uv tool install --python 3.13 "sleap[nn]"  ...
+
+    # for uvx
+    uvx --python 3.13 ...
+
+    # for uv add setup; specify version in uv init
+    uv init --python 3.13
+
+    # for uv sync
+    uv sync --python 3.13 ...
     ```
     Replace `...` with the rest of your install command as needed.
 
@@ -73,21 +79,13 @@ To install SLEAP, you'll need to enter commands in a terminal. Here's how to ope
 
 ### Platform-Specific Commands
 
-!!! warning "Python 3.14 is not yet supported"
-    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the installation command.  
-    For example:
-    ```bash
-    uv tool install --python 3.13 "sleap[nn]"  ...
-    ```
-    Replace `...` with the rest of your install command as needed.
-
 === "Windows/Linux (CUDA)"
     ```bash
     # CUDA 12.8
     uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
     !!! info "Other CUDA versions"
-        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--index` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cuda118` for CUDA 11.8, `https://download.pytorch.org/whl/cuda128` for CUDA 12.8, etc.).
+        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--index` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cu118` for CUDA 11.8, `https://download.pytorch.org/whl/cu128` for CUDA 12.8, etc.).
 
 === "Windows/Linux (CPU)"
     ```bash
@@ -128,7 +126,7 @@ sleap-label --help
     Install [`uv`](https://docs.astral.sh/uv/)- an ultra-fast Python package manager:
     ```bash
     # macOS/Linux
-    curl -LsSf http://astral.sh/uv/install.sh | sh
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 
     # Windows
     powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
@@ -136,21 +134,13 @@ sleap-label --help
 
 ### Platform-Specific Commands
 
-!!! warning "Python 3.14 is not yet supported"
-    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the installation command.  
-    For example:
-    ```bash
-    uvx --python 3.13 "sleap[nn]"  ...
-    ```
-    Replace `...` with the rest of your install command as needed.
-
 === "Windows/Linux (CUDA)"
     ```bash
     # CUDA 12.8
     uvx --from "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap-label
     ```
     !!! info "Other CUDA versions"
-        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--index` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cuda118` for CUDA 11.8, `https://download.pytorch.org/whl/cuda128` for CUDA 12.8, etc.).
+        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--index` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cu118` for CUDA 11.8, `https://download.pytorch.org/whl/cu128` for CUDA 12.8, etc.).
 
 === "Windows/Linux (CPU)"
     ```bash
@@ -178,15 +168,7 @@ sleap-label --help
 
 ## Installation with uv add
 
-This method creates a dedicated project environment using uv's modern Python project management. It initializes a new project with `uv init`, creates an isolated virtual environment with `uv venv`, and installs SLEAP using `uv add`.
-
-!!! warning "Python 3.14 is not yet supported"
-    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the venv command.  
-    For example:
-    ```bash
-    uv venv --python 3.13  ...
-    ```
-    Replace `...` with the rest of your install command as needed.
+This method creates a dedicated project environment using uv's modern Python project management. It initializes a new project with `uv init`, creates an isolated virtual environment with `uv venv`, and installs SLEAP using `uv add`. To use all installed packages, <u>**you must run commands with `uv run`**</u> (e.g., `uv run sleap-label ...` or `uv run pytest ...`).
 
 !!! note "Install and set-up uv"
     Step-1: Install [`uv`](https://github.com/astral-sh/uv) - an ultra-fast Python package manager:
@@ -209,12 +191,29 @@ This method creates a dedicated project environment using uv's modern Python pro
 !!! tip "How `uv add` works"
     - When you run `uv init`, it creates a `pyproject.toml` file in your working directory to manage your project's dependencies.
     - When you use `uv add "sleap[nn]"`, it adds `sleap` as a dependency in your `pyproject.toml` and installs it in your virtual environment.
-    - To add other packages, simply run `uv add <package>`. After adding new packages, you should run `uv sync` to update your environment with all dependencies specified in `pyproject.toml`.
-    - To install a local package (such as a local clone of sleap-nn) in editable mode, use:
+    - To add other packages, simply run `uv add <package>`. After adding new packages, you should run `uv sync` to update your environment with all dependencies specified in `pyproject.toml`. (or `uv sync --upgrade` to update all dependencies)
+    - To install a local package (such as a local clone of `./sleap`) in editable mode, use:
       ```bash
       uv add --editable "./sleap[nn]" ...
       ```
       This is useful for development, as changes to the code are immediately reflected in your environment.
+
+!!! warning "Windows: MarkupSafe Installation Issue"
+    On **Windows**, you may encounter errors when running `uv add "sleap[nn]" --index ...` due to an incompatibility with the MarkupSafe wheel (e.g., "failed to install MarkupSafe" or similar errors).  
+    Similar issues: [#11532](https://github.com/astral-sh/uv/issues/11532) and [#12620](https://github.com/astral-sh/uv/issues/12620).
+
+    **Workaround:**  
+    Before running `uv add "sleap[nn]" ...` on Windows, manually install a compatible version of MarkupSafe:
+
+    ```bash
+    uv add git+https://github.com/pallets/markupsafe@3.0.2
+    ```
+
+    Then proceed with:
+
+    ```bash
+    uv add "sleap[nn]" ...
+    ```
 
 === "Windows/Linux (CUDA)"
     ```bash
@@ -222,11 +221,10 @@ This method creates a dedicated project environment using uv's modern Python pro
     uv add "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
     !!! info "Other CUDA versions"
-        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--index` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cuda118` for CUDA 11.8, `https://download.pytorch.org/whl/cuda128` for CUDA 12.8, etc.).
+        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--index` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cu118` for CUDA 11.8, `https://download.pytorch.org/whl/cu128` for CUDA 12.8, etc.).
 
 === "Windows/Linux (CPU)"
     ```bash
-    # CUDA 12.8
     uv add "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
@@ -243,9 +241,6 @@ This method creates a dedicated project environment using uv's modern Python pro
     ```
     !!! warning "GUI <u>ONLY</u>"
         Installing this version of SLEAP will **NOT** include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for **labeling**.
-
-!!! info "Running With `uv run`"
-    `uv add` creates a `.venv` (virtual environment) inside your current working directory. To use all installed packages, <u>**you must run commands with `uv run`**</u> (e.g., `uv run sleap-label ...` or `uv run pytest ...`) with these installation methods.
 
 ### Verify Installation
 ```bash
@@ -287,7 +282,7 @@ conda activate sleap
     pip install "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cu128 --index-url https://pypi.org/simple
     ```
     !!! info "Other CUDA versions"
-        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--extra-index-url` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cuda118` for CUDA 11.8, `https://download.pytorch.org/whl/cuda128` for CUDA 12.8, etc.).
+        - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--extra-index-url` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cu118` for CUDA 11.8, `https://download.pytorch.org/whl/cu128` for CUDA 12.8, etc.).
 
 === "Windows/Linux (CPU)"
     ```bash
@@ -344,14 +339,6 @@ cd sleap
 
 **3. Install Dependencies**
 
-!!! warning "Python 3.14 is not yet supported"
-    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the installation command.  
-    For example:
-    ```bash
-    uv sync --python 3.13 ...
-    ```
-    Replace `...` with the rest of your install command as needed.
-
 === "Windows/Linux (CUDA)"
     ```bash
     # CUDA 12.8
@@ -391,6 +378,13 @@ cd sleap
     - **dev**: Installs all development tools for testing.
     - **docs**: Installs all documentation-related dependencies (e.g., mkdocs).
     - **jupyter**: Installs all Jupyter and JupyterLab dependencies.
+
+!!! tip "Upgrading All Dependencies"
+    To ensure you have the latest versions of all dependencies, use the `--upgrade` flag with `uv sync`:
+    ```bash
+    uv sync --extra dev --upgrade
+    ```
+    This will upgrade all installed packages in your environment to the latest available versions compatible with your `pyproject.toml`.
 
 
 ### Verify Installation
