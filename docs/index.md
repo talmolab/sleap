@@ -53,17 +53,14 @@ You can find the latest version of SLEAP in the [Releases](https://github.com/ta
 
 ### Quick start
 
-**`uv tool install` (any OS):**
+Install [`uv`](https://github.com/astral-sh/uv) first - an ultra-fast Python package manager:
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-!!! warning "First Time uv Setup"
-    Install [`uv`](https://github.com/astral-sh/uv) first - an ultra-fast Python package manager:
-    ```bash
-    # macOS/Linux
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    
-    # Windows
-    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-    ```
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
 
 !!! warning "Python 3.14 is not yet supported"
     SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the installation command.  
