@@ -1985,9 +1985,6 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 <p>SLEAP is installed as a Python package. We strongly recommend using <a href="https://docs.astral.sh/uv/">uv</a> or <a href="https://www.anaconda.com/docs/getting-started/miniconda/main">Miniconda</a> to install SLEAP in its own environment.</p>
 <p>You can find the latest version of SLEAP in the <a href="https://github.com/talmolab/sleap/releases">Releases</a> page.</p>
 <h3 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h3>
-<p><strong><code>uv tool install</code> (any OS):</strong></p>
-<div class="admonition warning">
-<p class="admonition-title">First Time uv Setup</p>
 <p>Install <a href="https://github.com/astral-sh/uv"><code>uv</code></a> first - an ultra-fast Python package manager:
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># macOS/Linux</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
@@ -1995,7 +1992,6 @@ If you are using <strong>SLEAP version 1.4.1 or earlier</strong>, please visit t
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Windows</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>powershell<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
 </span></code></pre></div></p>
-</div>
 <div class="admonition warning">
 <p class="admonition-title">Python 3.14 is not yet supported</p>
 <p>SLEAP currently supports <strong>Python 3.11, 3.12, and 3.13</strong>. <strong>Python 3.14 is not yet tested or supported.</strong> <code>uv</code> will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (&lt;=3.13) in the installation command.<br />
