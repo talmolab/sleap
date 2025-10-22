@@ -19,7 +19,7 @@ import yaml
 from sleap.util import get_config_file
 from sleap_io.model.instance import Instance, Track
 from sleap_io.model.skeleton import Node, Edge
-from sleap_io import Labels
+from sleap_io import Labels, LabeledFrame
 from sleap_io.model.skeleton import Skeleton
 from sleap.prefs import prefs
 from sleap.sleap_io_adaptors.skeleton_utils import node_to_index, edge_to_index
@@ -248,6 +248,7 @@ class ColorManager:
         item: Any,
         parent_instance: Optional[Instance] = None,
         parent_skeleton: Optional[Skeleton] = None,
+        frame: Optional[LabeledFrame] = None,
     ) -> ColorTupleType:
         """Gets (r, g, b) tuple of color to use for drawing item."""
 
@@ -276,7 +277,7 @@ class ColorManager:
 
             if track is None and parent_instance:
                 # Get an index for items without track
-                track = self.get_pseudo_track_index(parent_instance)
+                track = self.get_pseudo_track_index(parent_instance, frame=frame)
 
             return self.get_track_color(track=track)
 
