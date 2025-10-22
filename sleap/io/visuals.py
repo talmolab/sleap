@@ -17,7 +17,7 @@ import numpy as np
 
 from sleap.gui.color import ColorManager
 from sleap_io.model.instance import Instance
-from sleap_io import Video, Labels
+from sleap_io import Video, Labels, LabeledFrame
 from sleap.sleap_io_adaptors.video_utils import _sentinel
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     load_labels_video_search,
@@ -204,7 +204,7 @@ class VideoMarkerThread(Thread):
             img, offset = self._crop_frame(img, instances)
 
         for instance in instances:
-            self._plot_instance_cv(img, instance, offset)
+            self._plot_instance_cv(img, instance, offset, frame=lfs[0])
 
         return img
 
@@ -270,6 +270,7 @@ class VideoMarkerThread(Thread):
         instance: "Instance",
         offset: Optional[Tuple[int, int]] = None,
         fill: bool = True,
+        frame: Optional[LabeledFrame] = None,
     ):
         """
         Add visual annotations for single instance.
@@ -299,7 +300,9 @@ class VideoMarkerThread(Thread):
 
         for node_idx, (x, y) in enumerate(points_array):
             node = nodes[node_idx]
-            node_color_bgr = self.color_manager.get_item_color(node, instance)[::-1]
+            node_color_bgr = self.color_manager.get_item_color(
+                node, instance, frame=frame
+            )[::-1]
 
             # Make sure this is a valid and visible point
             if not has_nans(x, y):
@@ -323,7 +326,9 @@ class VideoMarkerThread(Thread):
                 dst_x, dst_y = points_array[dst]
 
                 edge = (nodes[src], nodes[dst])
-                edge_color_bgr = self.color_manager.get_item_color(edge, instance)[::-1]
+                edge_color_bgr = self.color_manager.get_item_color(
+                    edge, instance, frame=frame
+                )[::-1]
 
                 # Make sure that both nodes are present in this instance before
                 # drawing edge

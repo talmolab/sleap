@@ -500,11 +500,13 @@ def write_pipeline_files(
                 # Add a line to the script for training this model
                 train_script += (
                     f"sleap-nn-train --config-name {new_cfg_filename} "
-                    f"--config-dir {''} "
+                    f"--config-dir . "
                     f"trainer_config.ckpt_dir={Path(ckpt_path).parent.as_posix()} "
-                    f"trainer_config.run_name={Path(ckpt_path).name}"
-                    f"trainer_config.zmq.controller_port={cfg_info.config.trainer_config.zmq.controller_port}"
-                    f"trainer_config.zmq.publish_port={cfg_info.config.trainer_config.zmq.publish_port}"
+                    f"trainer_config.run_name={Path(ckpt_path).name} "
+                    f"trainer_config.zmq.controller_port="
+                    f"{cfg_info.config.trainer_config.zmq.controller_port} "
+                    f"trainer_config.zmq.publish_port="
+                    f"{cfg_info.config.trainer_config.zmq.publish_port} "
                     "\n"
                 )
 

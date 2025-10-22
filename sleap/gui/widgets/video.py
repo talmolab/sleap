@@ -60,7 +60,7 @@ from sleap.gui.widgets.slider import VideoSlider
 from sleap_io.model.instance import Instance, PredictedInstance
 from sleap.sleap_io_adaptors.instance_utils import fill_missing, node_points
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
-from sleap_io import Video
+from sleap_io import Video, LabeledFrame
 from sleap.prefs import prefs
 from sleap_io import Node
 
@@ -484,7 +484,7 @@ class QtVideoPlayer(QWidget):
         """Returns `QGraphicsScene` for viewer."""
         return self.view.scene
 
-    def addInstance(self, instance, **kwargs):
+    def addInstance(self, instance, frame: Optional[LabeledFrame] = None, **kwargs):
         """Add a skeleton instance to the video.
 
         Args:
@@ -494,7 +494,7 @@ class QtVideoPlayer(QWidget):
         """
         # Check if instance is an Instance (or subclass of Instance)
         if issubclass(type(instance), Instance):
-            instance = QtInstance(instance=instance, player=self, **kwargs)
+            instance = QtInstance(instance=instance, frame=frame, player=self, **kwargs)
         if type(instance) != QtInstance:
             return
         if instance.instance.n_visible > 0 or not isinstance(
@@ -1415,6 +1415,7 @@ class QtNode(QGraphicsEllipseItem):
         predicted=False,
         show_non_visible=True,
         callbacks=None,
+        frame: Optional[LabeledFrame] = None,
         *args,
         **kwargs,
     ):
@@ -1425,7 +1426,7 @@ class QtNode(QGraphicsEllipseItem):
         self.radius = radius
         self.color_manager = self.player.color_manager
         self.color = self.color_manager.get_item_color(
-            self.node, self._parent_instance.instance
+            self.node, self._parent_instance.instance, frame=frame
         )
         self.edges = []
         self.name = node.name
@@ -1676,6 +1677,7 @@ class QtEdge(QGraphicsPolygonItem):
         src: QtNode,
         dst: QtNode,
         show_non_visible: bool = True,
+        frame: Optional[LabeledFrame] = None,
         *args,
         **kwargs,
     ):
@@ -1702,7 +1704,9 @@ class QtEdge(QGraphicsPolygonItem):
         )
 
         edge_pair = (src.node, dst.node)
-        color = player.color_manager.get_item_color(edge_pair, parent.instance)
+        color = player.color_manager.get_item_color(
+            edge_pair, parent.instance, frame=frame
+        )
         pen_width = player.color_manager.get_item_pen_width(edge_pair, parent.instance)
         pen = QPen(QColor(*color), pen_width)
         pen.setCosmetic(True)
@@ -1834,6 +1838,7 @@ class QtInstance(QGraphicsObject):
         markerRadius=4,
         nodeLabelSize=12,
         show_non_visible=True,
+        frame: Optional[LabeledFrame] = None,
         *args,
         **kwargs,
     ):
@@ -1844,7 +1849,7 @@ class QtInstance(QGraphicsObject):
         self.predicted = hasattr(instance, "score")
 
         color_manager = self.player.color_manager
-        color = color_manager.get_item_color(self.instance)
+        color = color_manager.get_item_color(self.instance, frame=frame)
 
         self.show_non_visible = show_non_visible
         self.selectable = not self.predicted or color_manager.color_predicted
@@ -1875,7 +1880,9 @@ class QtInstance(QGraphicsObject):
         if self.predicted:
             self.box = QGraphicsRectItem(parent=self)
         else:
-            self.box = VisibleBoundingBox(rect=self._bounding_rect, parent=self)
+            self.box = VisibleBoundingBox(
+                rect=self._bounding_rect, parent=self, frame=frame
+            )
         box_pen_width = color_manager.get_item_pen_width(self.instance)
         box_pen = QPen(QColor(*color), box_pen_width)
         box_pen.setStyle(Qt.DashLine)
@@ -1924,6 +1931,7 @@ class QtInstance(QGraphicsObject):
                     predicted=self.predicted,
                     radius=self.markerRadius,
                     show_non_visible=self.show_non_visible,
+                    frame=frame,
                 )
 
                 self.nodes[node.name] = node_item
@@ -1938,6 +1946,7 @@ class QtInstance(QGraphicsObject):
                     src=self.nodes[src],
                     dst=self.nodes[dst],
                     show_non_visible=self.show_non_visible,
+                    frame=frame,
                 )
                 self.nodes[src].edges.append(edge_item)
                 self.nodes[dst].edges.append(edge_item)
@@ -2254,11 +2263,12 @@ class VisibleBoundingBox(QtWidgets.QGraphicsRectItem):
         parent: QtInstance,
         opacity: float = 0.8,
         scaling_padding: float = 10.0,
+        frame: Optional[LabeledFrame] = None,
     ):
         super().__init__(rect, parent)
         self.box_width = parent.markerRadius
         color_manager = parent.player.color_manager
-        int_color = color_manager.get_item_color(parent.instance)
+        int_color = color_manager.get_item_color(parent.instance, frame=frame)
         self.int_color = QColor(*int_color)
         self.corner_opacity = opacity
         self.scaling_padding = scaling_padding
@@ -2512,6 +2522,7 @@ def plot_instances(scene, frame_idx, labels, video=None, fixed=True):
             color=color_manager.get_track_color(pseudo_track),
             predicted=fixed,
             color_predicted=True,
+            frame=labeled_frame,
             show_non_visible=False,
         )
         inst.showLabels(False)
