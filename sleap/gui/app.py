@@ -407,7 +407,7 @@ class MainWindow(QMainWindow):
         # check and uncheck submenu items
         def _menu_check_single(menu, item_text):
             """Helper method to select exactly one submenu item."""
-            for menu_item in menu.children():
+            for menu_item in menu.actions():
                 if menu_item.text() == str(item_text):
                     menu_item.setChecked(True)
                 else:
