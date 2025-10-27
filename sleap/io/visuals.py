@@ -158,7 +158,7 @@ class VideoMarkerThread(Thread):
             frame_idx: Index of frame in video.
 
         Returns:
-            ndarray of frame image with visual annotations added.
+            ndarray of frame image with visual annotations added (in RGB format).
         """
         # Use OpenCV to convert to BGR color image
         video_frame = img_to_cv(video_frame)
@@ -171,9 +171,15 @@ class VideoMarkerThread(Thread):
             self._crop_frame(video_frame.copy())[0] if self.crop else video_frame
         )
 
-        return cv2.addWeighted(
+        result = cv2.addWeighted(
             overlay, self.alpha, video_frame_cropped, 1 - self.alpha, 0
         )
+
+        # Convert back to RGB for imageio/FFMPEG writes (which expect RGB, not BGR)
+        if result.shape[-1] == 3:
+            result = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
+
+        return result
 
     def _plot_instances_cv(
         self,
