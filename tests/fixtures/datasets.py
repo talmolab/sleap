@@ -77,20 +77,6 @@ def siv_robot():
 
 
 @pytest.fixture
-def siv_robot_caching():
-    """Created after caching attribute was added to `SingleImageVideo` backend.
-
-    The typehinting of the `caching` attribute (#1243) caused it to be used by cattrs to
-    determine which type of dataclass to use. However, the older datasets containing
-    `SingleImageVideo`s were now being read in as `NumpyVideo`s. Although removing the
-    typehinting from `caching` seems to do the trick (and never made it into an official
-    release), this is a fixture to test that datasets created while `caching` was added
-    into the serialization are read in correctly.
-    """
-    return sio.load_file(TEST_SLP_SIV_ROBOT_CACHING)
-
-
-@pytest.fixture
 def min_tracks_2node_labels():
     return sio.load_file(TEST_MIN_TRACKS_2NODE_LABELS)
 
