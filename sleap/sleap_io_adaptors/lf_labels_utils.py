@@ -7,7 +7,6 @@ import copy
 from typing import List, Dict, Optional, Text, Union
 
 from pathlib import Path
-import cattr
 import os
 
 from sleap import util
@@ -872,14 +871,6 @@ def make_video_callback(
         # Replace the video filenames with changes by user
         for i, item in enumerate(video_list):
             item.replace_filename(filenames[i])
-
-        if USE_DUMMY_FOR_MISSING_VIDEOS and sum(missing):
-            # Replace any video still missing with "dummy" video
-            for is_missing, item in zip(missing, video_list):
-                from sleap.io.video import DummyVideo
-
-                vid = DummyVideo(filename=item.filename)
-                item["backend"] = cattr.unstructure(vid)
 
     return video_callback
 
