@@ -66,16 +66,16 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
     SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the installation command.  
     For example:
     ```bash
-    uv tool install --python 3.13 "sleap[nn]"  ...
+    uv tool install --python 3.13 "sleap[nn]" --with sleap-nn ...
     ```
     Replace `...` with the rest of your install command as needed.
 
 ```bash
 # Windows/ Linux CUDA 12.8
-uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+uv tool install --python 3.13 "sleap[nn]" --with sleap-nn --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
 
 # MacOS / CPU-only
-uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+uv tool install --python 3.13 "sleap[nn]" --with sleap-nn --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
 ```
 
 Run the SLEAP GUI after installation!

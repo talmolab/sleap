@@ -19,11 +19,15 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The ne
 Python 3.11 (or) 3.12 (or) 3.13 (required for all installation methods)
 
 !!! warning "Python 3.14 is not yet supported"
-    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** If you have Python 3.14 installed, you must specify the Python version in all `uv` install commands by adding `--python 3.13`.  
+    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** 
+    
+    **Windows Users**: Python 3.14 will fail to install without Microsoft Visual C++ Build Tools due to missing pre-built wheels for some dependencies (`stringzilla`, `simsimd`).
+    
+    If you have Python 3.14 installed, you must specify the Python version in all `uv` install commands by adding `--python 3.13`.  
     For example:
     ```bash
     # for uv tool install
-    uv tool install --python 3.13 "sleap[nn]"  ...
+    uv tool install --python 3.13 "sleap[nn]" --with sleap-nn ...
 
     # for uvx
     uvx --python 3.13 ...
@@ -82,26 +86,26 @@ To install SLEAP, you'll need to enter commands in a terminal. Here's how to ope
 === "Windows/Linux (CUDA)"
     ```bash
     # CUDA 12.8
-    uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn]" --with sleap-nn --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
     !!! info "Other CUDA versions"
         - For more information on which CUDA version to use for your system, see the [PyTorch installation](https://pytorch.org/get-started/locally/) guide. The `--index` in the install command should match the CUDA version you need (e.g., `https://download.pytorch.org/whl/cu118` for CUDA 11.8, `https://download.pytorch.org/whl/cu128` for CUDA 12.8, etc.).
 
 === "Windows/Linux (CPU)"
     ```bash
-    uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn]" --with sleap-nn --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```bash
-    uv tool install "sleap[nn]"
+    uv tool install --python 3.13 "sleap[nn]" --with sleap-nn
     ```
     !!! info "Mac MPS support"
         - On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration.
 
 === "SLEAP GUI Only"
     ```bash
-    uv tool install "sleap"
+    uv tool install --python 3.13 "sleap"
     ```
     !!! warning "GUI <u>ONLY</u>"
         Installing this version of SLEAP will **NOT** include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for **labeling**.
@@ -111,6 +115,7 @@ To install SLEAP, you'll need to enter commands in a terminal. Here's how to ope
     - **Automatic Installation**: Downloads and installs SLEAP with dependencies
     - **No Conflicts**: Won't interfere with your existing Python packages/dependencies
     - **Uses Recent Packages**: Uses the latest version from PyPI
+    - **--with sleap-nn**: Ensures `sleap-nn` CLI commands are exposed (needed for training/inference)
 
 ### Verify Installation
 ```bash
