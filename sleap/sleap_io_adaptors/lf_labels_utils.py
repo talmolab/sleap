@@ -890,7 +890,7 @@ def make_video_callback(
         # Replace the video filenames with changes by user
         for i, item in enumerate(video_list):
             if is_image_sequence[i]:
-                # For image sequences, update all filenames in the list with the new directory
+                # For image sequences, update all filenames with new directory
                 original_filenames = item.filename
                 if filenames[i] != original_filenames[0]:
                     # The first filename changed, update the directory for all files
