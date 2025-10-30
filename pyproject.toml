@@ -57,7 +57,7 @@ dependencies = [
     "albumentations",
     "requests",
     "matplotlib",
-    "sleap-io[all]>=0.5.3",
+    "sleap-io[all]>=0.5.7",
 ]
 
 [tool.setuptools.dynamic]
@@ -90,19 +90,19 @@ jupyter = [
 ]
 
 nn = [
-    "sleap-nn[torch]>=0.0.2"
+    "sleap-nn[torch]>=0.0.4"
 ]
 
 nn-cpu = [
-    "sleap-nn[torch]>=0.0.2"
+    "sleap-nn[torch]>=0.0.4"
 ]
 
 nn-cuda128 = [
-    "sleap-nn[torch]>=0.0.2"
+    "sleap-nn[torch]>=0.0.4"
 ]
 
 nn-cuda118 = [
-    "sleap-nn[torch]>=0.0.2"
+    "sleap-nn[torch]>=0.0.4"
 ]
 
 [project.urls]
