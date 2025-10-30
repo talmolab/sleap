@@ -810,11 +810,30 @@ def make_video_callback(
             context: A dictionary containing a "changed_on_load" key with a boolean
                 value. Used externally to determine if any filenames were updated.
         """
-        filenames = [item.filename for item in video_list]
+        # Extract filenames, handling both single files and image sequences
+        # Video.filename can be either str or list[str] (for image sequences)
+        filenames = []
+        is_image_sequence = []  # Track which videos are image sequences
+        for item in video_list:
+            if isinstance(item.filename, (list, tuple)):
+                # For image sequences, use the first filename for checking existence
+                is_image_sequence.append(True)
+                filenames.append(item.filename[0] if item.filename else None)
+            else:
+                is_image_sequence.append(False)
+                filenames.append(item.filename)
+
         context = context or {"changed_on_load": False}
 
         # Equivalent to pathutils.list_file_missing(filenames)
-        missing = [not os.path.exists(filename) for filename in filenames]
+        # Convert Path objects to strings for os.path.exists()
+        missing = []
+        for filename in filenames:
+            if filename is None:
+                missing.append(True)
+            else:
+                filename_str = str(filename)
+                missing.append(not os.path.exists(filename_str))
 
         # Try changing the prefix using saved patterns
         if sum(missing):
@@ -870,7 +889,19 @@ def make_video_callback(
 
         # Replace the video filenames with changes by user
         for i, item in enumerate(video_list):
-            item.replace_filename(filenames[i])
+            if is_image_sequence[i]:
+                # For image sequences, update all filenames in the list with the new directory
+                original_filenames = item.filename
+                if filenames[i] != original_filenames[0]:
+                    # The first filename changed, update the directory for all files
+                    new_dir = os.path.dirname(filenames[i])
+                    updated_filenames = [
+                        os.path.join(new_dir, os.path.basename(str(f)))
+                        for f in original_filenames
+                    ]
+                    item.replace_filename(updated_filenames)
+            else:
+                item.replace_filename(filenames[i])
 
     return video_callback
 
