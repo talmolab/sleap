@@ -183,8 +183,6 @@ def test_nan_coordinates_handling(qtbot, small_robot_mp4_vid, centered_pair_labe
     caused the GUI to freeze on Linux systems with Qt 6.10+.
     """
     from sleap_io.model.instance import PredictedInstance
-    from sleap_io import LabeledFrame
-    import copy
 
     vp = QtVideoPlayer(small_robot_mp4_vid)
     qtbot.addWidget(vp)
@@ -193,22 +191,18 @@ def test_nan_coordinates_handling(qtbot, small_robot_mp4_vid, centered_pair_labe
     test_frame = centered_pair_labels.labeled_frames[0]
     original_instance = test_frame.instances[0]
 
-    # Create a predicted instance with NaN coordinates (failed keypoint detection)
-    predicted_instance = PredictedInstance.from_instance(
-        original_instance,
-        score=0.5
-    )
-
-    # Set some keypoints to NaN to simulate failed detections
-    points_array = predicted_instance.numpy()
-    points_array[0] = [np.nan, np.nan]  # First keypoint has NaN
-    points_array[1] = [np.nan, np.nan]  # Second keypoint has NaN
+    # Create a predicted instance with some NaN coordinates (failed keypoint detection)
+    # Copy points from original and set some to NaN
+    points_with_nan = original_instance.numpy().copy()
+    points_with_nan[0] = [np.nan, np.nan]  # First keypoint has NaN
+    points_with_nan[1] = [np.nan, np.nan]  # Second keypoint has NaN
     # Leave other keypoints with valid coordinates
 
-    # Update the instance with NaN coordinates
-    for i, point in enumerate(points_array):
-        if not np.all(np.isnan(point)):
-            predicted_instance[i] = point
+    predicted_instance = PredictedInstance(
+        points=points_with_nan,
+        skeleton=original_instance.skeleton,
+        score=0.5
+    )
 
     # Add instance to video player
     vp.addInstance(instance=predicted_instance)
@@ -252,21 +246,23 @@ def test_nan_coordinates_handling(qtbot, small_robot_mp4_vid, centered_pair_labe
     assert vp.close()
 
 
-def test_all_nan_coordinates(qtbot, small_robot_mp4_vid):
+def test_all_nan_coordinates(qtbot, small_robot_mp4_vid, centered_pair_labels):
     """Test instance with all NaN coordinates (completely failed prediction)."""
-    from sleap_io.model.instance import PredictedInstance, Point
-    from sleap_io import LabeledFrame
+    from sleap_io.model.instance import PredictedInstance
+    from sleap_io.model.skeleton import Skeleton, Node
 
     vp = QtVideoPlayer(small_robot_mp4_vid)
     qtbot.addWidget(vp)
 
-    # Create a skeleton from the video's default skeleton
-    from sleap_io.model.skeleton import Skeleton, Node
-    skeleton = Skeleton(nodes=[Node("node1"), Node("node2"), Node("node3")])
+    # Use skeleton from test fixtures
+    test_frame = centered_pair_labels.labeled_frames[0]
+    skeleton = test_frame.instances[0].skeleton
+    n_nodes = len(skeleton.nodes)
 
     # Create instance with all NaN coordinates
+    all_nan_points = np.full((n_nodes, 2), np.nan)
     predicted_instance = PredictedInstance(
-        points=np.array([[np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan]]),
+        points=all_nan_points,
         skeleton=skeleton,
         score=0.1
     )
