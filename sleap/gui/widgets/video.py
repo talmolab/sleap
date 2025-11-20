@@ -1725,6 +1725,17 @@ class QtEdge(QGraphicsPolygonItem):
 
     def setLine(self, line):
         self._line = line
+
+        # Skip rendering if either endpoint has NaN coordinates
+        # This prevents GUI freeze on Linux with Qt
+        src_pos = self.src.scenePos()
+        dst_pos = self.dst.scenePos()
+        if (np.isnan(src_pos.x()) or np.isnan(src_pos.y()) or
+            np.isnan(dst_pos.x()) or np.isnan(dst_pos.y())):
+            # Set empty polygon to avoid rendering issues
+            self.setPolygon(QPolygonF())
+            return
+
         polygon = QPolygonF()
 
         if self.player.state.get("edge style", default="").lower() == "wedge":
@@ -2032,15 +2043,23 @@ class QtInstance(QGraphicsObject):
             (node.scenePos().x(), node.scenePos().y()) for node in self.nodes.values()
         ]
 
-        if len(points) == 0:
-            # Check this condition with rect.isValid()
-            top_left, bottom_right = QPointF(np.nan, np.nan), QPointF(np.nan, np.nan)
+        # Filter out NaN coordinates (failed keypoint detections)
+        valid_points = [
+            (x, y) for x, y in points if not (np.isnan(x) or np.isnan(y))
+        ]
+
+        if len(valid_points) == 0:
+            # Return an invalid (null) rect if no valid points
+            # Qt handles null rects gracefully unlike NaN rects
+            return QRectF()
         else:
             top_left = QPointF(
-                min((point[0] for point in points)), min((point[1] for point in points))
+                min((point[0] for point in valid_points)),
+                min((point[1] for point in valid_points)),
             )
             bottom_right = QPointF(
-                max((point[0] for point in points)), max((point[1] for point in points))
+                max((point[0] for point in valid_points)),
+                max((point[1] for point in valid_points)),
             )
         rect = QRectF(top_left, bottom_right)
         return rect
