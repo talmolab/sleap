@@ -1730,8 +1730,12 @@ class QtEdge(QGraphicsPolygonItem):
         # This prevents GUI freeze on Linux with Qt
         src_pos = self.src.scenePos()
         dst_pos = self.dst.scenePos()
-        if (np.isnan(src_pos.x()) or np.isnan(src_pos.y()) or
-            np.isnan(dst_pos.x()) or np.isnan(dst_pos.y())):
+        if (
+            np.isnan(src_pos.x())
+            or np.isnan(src_pos.y())
+            or np.isnan(dst_pos.x())
+            or np.isnan(dst_pos.y())
+        ):
             # Set empty polygon to avoid rendering issues
             self.setPolygon(QPolygonF())
             return
@@ -2044,9 +2048,7 @@ class QtInstance(QGraphicsObject):
         ]
 
         # Filter out NaN coordinates (failed keypoint detections)
-        valid_points = [
-            (x, y) for x, y in points if not (np.isnan(x) or np.isnan(y))
-        ]
+        valid_points = [(x, y) for x, y in points if not (np.isnan(x) or np.isnan(y))]
 
         if len(valid_points) == 0:
             # Return an invalid (null) rect if no valid points

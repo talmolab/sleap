@@ -195,9 +195,7 @@ def test_nan_coordinates_bounding_rect(qtbot, centered_pair_labels):
     points_with_nan[1] = [np.nan, np.nan]  # Second keypoint has NaN
 
     predicted_instance = PredictedInstance(
-        points=points_with_nan,
-        skeleton=original_instance.skeleton,
-        score=0.5
+        points=points_with_nan, skeleton=original_instance.skeleton, score=0.5
     )
 
     # Create QtInstance directly to test bounding rect calculation
@@ -215,17 +213,16 @@ def test_nan_coordinates_bounding_rect(qtbot, centered_pair_labels):
     n_nodes = len(original_instance.skeleton.nodes)
     all_nan_points = np.full((n_nodes, 2), np.nan)
     all_nan_instance = PredictedInstance(
-        points=all_nan_points,
-        skeleton=original_instance.skeleton,
-        score=0.1
+        points=all_nan_points, skeleton=original_instance.skeleton, score=0.1
     )
 
     qt_instance_all_nan = QtInstance(instance=all_nan_instance, player=vp)
     bounding_rect_all_nan = qt_instance_all_nan.getPointsBoundingRect()
 
     # Should return a null rect (which Qt handles gracefully)
-    assert bounding_rect_all_nan.isNull() or bounding_rect_all_nan.isEmpty(), \
+    assert bounding_rect_all_nan.isNull() or bounding_rect_all_nan.isEmpty(), (
         "All-NaN instance should have null bounding rect"
+    )
 
     # Verify no NaN values in the rect
     assert not np.isnan(bounding_rect_all_nan.x()), "All-NaN rect x is NaN"
