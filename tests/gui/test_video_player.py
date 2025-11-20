@@ -249,7 +249,6 @@ def test_nan_coordinates_handling(qtbot, small_robot_mp4_vid, centered_pair_labe
 def test_all_nan_coordinates(qtbot, small_robot_mp4_vid, centered_pair_labels):
     """Test instance with all NaN coordinates (completely failed prediction)."""
     from sleap_io.model.instance import PredictedInstance
-    from sleap_io.model.skeleton import Skeleton, Node
 
     vp = QtVideoPlayer(small_robot_mp4_vid)
     qtbot.addWidget(vp)
