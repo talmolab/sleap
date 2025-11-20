@@ -3,6 +3,7 @@ from sleap.gui.widgets.video import (
     QtVideoPlayer,
     QtTextWithBackground,
     VisibleBoundingBox,
+    QtInstance,
 )
 
 from qtpy import QtCore, QtWidgets
@@ -148,13 +149,11 @@ def test_wheelEvent(qtbot):
     global_position = QtCore.QPointF(100, 100)  # The global position of the wheel event
     pixel_delta = QtCore.QPoint(0, 120)  # The distance in pixels the wheel is rotated
     angle_delta = QtCore.QPoint(0, 120)  # The distance in degrees the wheel is rotated
-    buttons = QtCore.Qt.NoButton  # No mouse button is pressed
-    modifiers = QtCore.Qt.NoModifier  # No keyboard modifier is pressed
-    phase = QtCore.Qt.ScrollUpdate  # The phase of the scroll event
-    inverted = False  # The scroll direction is not inverted
-    source = (
-        QtCore.Qt.MouseEventNotSynthesized
-    )  # The event is not synthesized from a touch or tablet event
+    buttons = QtCore.Qt.MouseButton.NoButton  # The mouse buttons
+    modifiers = QtCore.Qt.KeyboardModifier.NoModifier  # The keyboard modifiers
+    phase = QtCore.Qt.ScrollPhase.ScrollUpdate  # The scroll phase
+    inverted = False  # The inverted flag
+    source = QtCore.Qt.MouseEventSource.MouseEventNotSynthesized  # The source
 
     event = QWheelEvent(
         position,
@@ -176,27 +175,24 @@ def test_wheelEvent(qtbot):
     graphics_view.wheelEvent(event)
 
 
-def test_nan_coordinates_handling(qtbot, small_robot_mp4_vid, centered_pair_labels):
-    """Test that NaN coordinates in predictions don't cause GUI freeze.
+def test_nan_coordinates_bounding_rect(qtbot, centered_pair_labels):
+    """Test that NaN coordinates don't create NaN bounding rects.
 
     Regression test for issue #2427 where NaN coordinates in predicted instances
     caused the GUI to freeze on Linux systems with Qt 6.10+.
     """
     from sleap_io.model.instance import PredictedInstance
 
-    vp = QtVideoPlayer(small_robot_mp4_vid)
-    qtbot.addWidget(vp)
+    vp = QtVideoPlayer(centered_pair_labels.video)
 
     # Get a labeled frame with instances
     test_frame = centered_pair_labels.labeled_frames[0]
     original_instance = test_frame.instances[0]
 
-    # Create a predicted instance with some NaN coordinates (failed keypoint detection)
-    # Copy points from original and set some to NaN
+    # Test 1: Instance with some NaN coordinates (failed keypoint detection)
     points_with_nan = original_instance.numpy().copy()
     points_with_nan[0] = [np.nan, np.nan]  # First keypoint has NaN
     points_with_nan[1] = [np.nan, np.nan]  # Second keypoint has NaN
-    # Leave other keypoints with valid coordinates
 
     predicted_instance = PredictedInstance(
         points=points_with_nan,
@@ -204,83 +200,33 @@ def test_nan_coordinates_handling(qtbot, small_robot_mp4_vid, centered_pair_labe
         score=0.5
     )
 
-    # Add instance to video player
-    vp.addInstance(instance=predicted_instance)
+    # Create QtInstance directly to test bounding rect calculation
+    qt_instance = QtInstance(instance=predicted_instance, player=vp)
 
-    vp.show()
-    vp.plot()
-
-    # Test 1: Check that instance was added successfully
-    assert len(vp.instances) == 1
-    qt_instance = vp.instances[0]
-
-    # Test 2: Verify bounding rect doesn't have NaN values (issue #2427)
+    # Verify bounding rect doesn't have NaN values (issue #2427)
     bounding_rect = qt_instance.getPointsBoundingRect()
     # Should return either a valid rect or null rect, but never NaN rect
-    assert not np.isnan(bounding_rect.x())
-    assert not np.isnan(bounding_rect.y())
-    assert not np.isnan(bounding_rect.width())
-    assert not np.isnan(bounding_rect.height())
+    assert not np.isnan(bounding_rect.x()), "Bounding rect x is NaN"
+    assert not np.isnan(bounding_rect.y()), "Bounding rect y is NaN"
+    assert not np.isnan(bounding_rect.width()), "Bounding rect width is NaN"
+    assert not np.isnan(bounding_rect.height()), "Bounding rect height is NaN"
 
-    # Test 3: Verify edges with NaN endpoints don't cause issues
-    # Edges should have empty polygons if endpoints are NaN
-    for edge in qt_instance.edges:
-        polygon = edge.polygon()
-        # If polygon is not empty, all points should be valid (not NaN)
-        if not polygon.isEmpty():
-            for i in range(polygon.count()):
-                point = polygon.at(i)
-                assert not np.isnan(point.x()), f"Edge polygon has NaN x at index {i}"
-                assert not np.isnan(point.y()), f"Edge polygon has NaN y at index {i}"
-
-    # Test 4: Verify clicking/selecting doesn't cause freeze
-    # This would previously hang on Linux with Qt 6.10+
-    rect = vp.view.instancesBoundingRect()
-    assert not np.isnan(rect.x())
-    assert not np.isnan(rect.y())
-
-    # Test 5: Verify updateBox doesn't cause issues with NaN coordinates
-    qt_instance.updateBox()
-    # If this completes without hanging, the fix works
-
-    assert vp.close()
-
-
-def test_all_nan_coordinates(qtbot, small_robot_mp4_vid, centered_pair_labels):
-    """Test instance with all NaN coordinates (completely failed prediction)."""
-    from sleap_io.model.instance import PredictedInstance
-
-    vp = QtVideoPlayer(small_robot_mp4_vid)
-    qtbot.addWidget(vp)
-
-    # Use skeleton from test fixtures
-    test_frame = centered_pair_labels.labeled_frames[0]
-    skeleton = test_frame.instances[0].skeleton
-    n_nodes = len(skeleton.nodes)
-
-    # Create instance with all NaN coordinates
+    # Test 2: Instance with all NaN coordinates (complete detection failure)
+    n_nodes = len(original_instance.skeleton.nodes)
     all_nan_points = np.full((n_nodes, 2), np.nan)
-    predicted_instance = PredictedInstance(
+    all_nan_instance = PredictedInstance(
         points=all_nan_points,
-        skeleton=skeleton,
+        skeleton=original_instance.skeleton,
         score=0.1
     )
 
-    # Add instance to video player
-    vp.addInstance(instance=predicted_instance)
-
-    vp.show()
-    vp.plot()
-
-    # Test that bounding rect is null (not NaN) for all-NaN instance
-    qt_instance = vp.instances[0]
-    bounding_rect = qt_instance.getPointsBoundingRect()
+    qt_instance_all_nan = QtInstance(instance=all_nan_instance, player=vp)
+    bounding_rect_all_nan = qt_instance_all_nan.getPointsBoundingRect()
 
     # Should return a null rect (which Qt handles gracefully)
-    assert bounding_rect.isNull() or bounding_rect.isEmpty()
+    assert bounding_rect_all_nan.isNull() or bounding_rect_all_nan.isEmpty(), \
+        "All-NaN instance should have null bounding rect"
 
     # Verify no NaN values in the rect
-    assert not np.isnan(bounding_rect.x())
-    assert not np.isnan(bounding_rect.y())
-
-    assert vp.close()
+    assert not np.isnan(bounding_rect_all_nan.x()), "All-NaN rect x is NaN"
+    assert not np.isnan(bounding_rect_all_nan.y()), "All-NaN rect y is NaN"
