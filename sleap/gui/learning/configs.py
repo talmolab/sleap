@@ -304,8 +304,11 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
             if cfg_info.has_trained_model:
                 display_name += "[Trained] "
+                run_name = OmegaConf.select(cfg, "trainer_config.run_name", default="")
+            else:
+                display_name += f"[{filename.split('.yaml')[0]}] "
+                run_name = ""
 
-            run_name = OmegaConf.select(cfg, "trainer_config.run_name", default="")
             display_name += f"{run_name}({filename})"
 
             if select is not None:
