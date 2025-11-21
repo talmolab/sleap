@@ -53,9 +53,7 @@ def setup_new_run_folder(
             cfg_run_name = run_name
 
         # Build run path.
-        run_path = (
-            Path(config.trainer_config.ckpt_dir) / cfg_run_name
-        ).as_posix()
+        run_path = (Path(config.trainer_config.ckpt_dir) / cfg_run_name).as_posix()
 
     return run_path
 
@@ -444,10 +442,14 @@ def write_pipeline_files(
     for cfg_info in config_info_list:
         if not cfg_info.dont_retrain:
             # Update config.
-            cfg_run_name = OmegaConf.select(cfg_info.config, "trainer_config.run_name", default="")
+            cfg_run_name = OmegaConf.select(
+                cfg_info.config, "trainer_config.run_name", default=""
+            )
             # Append head_name to run_name if it exists and is valid
             if cfg_run_name and cfg_run_name != "None":
-                cfg_info.config.trainer_config.run_name = cfg_run_name + cfg_info.head_name
+                cfg_info.config.trainer_config.run_name = (
+                    cfg_run_name + cfg_info.head_name
+                )
             else:
                 cfg_info.config.trainer_config.run_name = cfg_info.head_name
 
