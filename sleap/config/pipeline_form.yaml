@@ -286,7 +286,7 @@ training:
 - type: text
   text: '<b>Output Options</b>'
 
-- default: null
+- default: ''
   help: String to set as the run name. ckpts are saved to {Runs folder}/{Run name}. If None, it will be auto-generated {trainer_config.ckpt_dir}/{time_stamp}_{head_name}_n={num_samples}.
   label: Run Name
   name: trainer_config.run_name
