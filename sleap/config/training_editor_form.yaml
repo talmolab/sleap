@@ -487,7 +487,7 @@ optimization:
   label: Stop Training on Plateau
   name: trainer_config.early_stopping.stop_training_on_plateau
   type: bool
-- default: 1e-6
+- default: 1e-8
   help: Minimum absolute decrease in the loss in order to consider an epoch as not in a plateau.
   label: Plateau Min. Delta
   name: trainer_config.early_stopping.min_delta

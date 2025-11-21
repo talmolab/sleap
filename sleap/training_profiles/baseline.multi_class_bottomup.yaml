@@ -122,7 +122,7 @@ trainer_config:
     step_lr: null
     reduce_lr_on_plateau:
       threshold: 1.0e-06
-      threshold_mode: rel
+      threshold_mode: abs
       cooldown: 3
       patience: 5
       factor: 0.5
