@@ -260,9 +260,20 @@ class InferenceTask:
 
             # Build filename with video name and timestamp
             timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+            video_name_prefix = ""
+            if "--video_index" in item_for_inference.cli_args:
+                video_index = int(
+                    item_for_inference.cli_args[
+                        item_for_inference.cli_args.index("--video_index") + 1
+                    ]
+                )
+                video_name_prefix = Path(self.labels.videos[video_index].filename).name
+            video_name_prefix = (
+                video_name_prefix + "_" if video_name_prefix != "" else ""
+            )
             output_path = os.path.join(
                 predictions_dir,
-                f"{os.path.basename(item_for_inference.path)}.{timestamp}."
+                f"{video_name_prefix}{os.path.basename(item_for_inference.path)}.{timestamp}."
                 "predictions.slp",
             )
 
