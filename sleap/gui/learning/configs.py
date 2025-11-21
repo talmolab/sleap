@@ -309,6 +309,9 @@ class TrainingConfigFilesWidget(FieldComboWidget):
                 display_name += f"[{filename.split('.yaml')[0]}] "
                 run_name = ""
 
+            # Normalize run_name: convert None or "None" to empty string
+            run_name = "" if run_name is None or run_name == "None" else run_name
+
             display_name += f"{run_name}({filename})"
 
             if select is not None:

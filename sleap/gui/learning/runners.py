@@ -46,18 +46,15 @@ def setup_new_run_folder(
         if isinstance(base_run_name, str):
             run_name = run_name + "." + base_run_name
 
-        cfg_run_name = (
-            config.trainer_config.run_name
-            if config.trainer_config.run_name is not None
-            else ""
-        )
-        cfg_run_name = cfg_run_name + "_" + run_name if cfg_run_name != "" else run_name
-
-        config.trainer_config.run_name = cfg_run_name
+        # Prepend existing run_name if it's valid (not None or "None")
+        if config.trainer_config.run_name and config.trainer_config.run_name != "None":
+            cfg_run_name = config.trainer_config.run_name + "_" + run_name
+        else:
+            cfg_run_name = run_name
 
         # Build run path.
         run_path = (
-            Path(config.trainer_config.ckpt_dir) / config.trainer_config.run_name
+            Path(config.trainer_config.ckpt_dir) / cfg_run_name
         ).as_posix()
 
     return run_path
@@ -447,10 +444,12 @@ def write_pipeline_files(
     for cfg_info in config_info_list:
         if not cfg_info.dont_retrain:
             # Update config.
-            cfg_info.config.trainer_config.run_name += (
-                OmegaConf.select(cfg_info.config, "trainer_config.run_name", default="")
-                + cfg_info.head_name
-            )
+            cfg_run_name = OmegaConf.select(cfg_info.config, "trainer_config.run_name", default="")
+            # Append head_name to run_name if it exists and is valid
+            if cfg_run_name and cfg_run_name != "None":
+                cfg_info.config.trainer_config.run_name = cfg_run_name + cfg_info.head_name
+            else:
+                cfg_info.config.trainer_config.run_name = cfg_info.head_name
 
     training_jobs = []
     for cfg_info in config_info_list:
@@ -470,6 +469,8 @@ def write_pipeline_files(
             # than just using normpath.
             # cfg_info.config.outputs.runs_folder = ""
             ckpt_path = setup_new_run_folder(cfg_info.config)
+            cfg_info.config.trainer_config.run_name = Path(ckpt_path).name
+            cfg_info.config.trainer_config.ckpt_dir = Path(ckpt_path).parent.as_posix()
             # training.setup_new_run_folder(
             #     cfg_info.config.outputs,
             #     # base_run_name=f"{model_type}.n={len(labels.user_labeled_frames)}",
@@ -725,10 +726,12 @@ def run_gui_training(
                 os.path.dirname(labels_filename), "models"
             )
             base_run_name = f"{model_type}.n={len(labels.user_labeled_frames)}"
-            setup_new_run_folder(
+            run_path = setup_new_run_folder(
                 job,
                 base_run_name=base_run_name,
             )
+            job.trainer_config.run_name = Path(run_path).name
+            job.trainer_config.ckpt_dir = Path(run_path).parent.as_posix()
 
             if gui:
                 print("Resetting monitor window.")
@@ -926,7 +929,7 @@ def train_subprocess(
             cfg.data_config.train_labels_path = [labels_filename]
 
             cfg.trainer_config.ckpt_dir = Path(run_path).parent.as_posix()
-            cfg.trainer_config.run_name = Path(run_path).name
+            cfg.trainer_config.run_name = Path(run_path).name or ""
             cfg.trainer_config.zmq.controller_port = inference_params["controller_port"]
             cfg.trainer_config.zmq.publish_port = inference_params["publish_port"]
 

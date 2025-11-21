@@ -522,7 +522,7 @@ optimization:
   name: trainer_config.online_hard_keypoint_mining.max_hard_keypoints
   type: optional_int
 outputs:
-- default: null
+- default: ''
   help: String to set as the run name. ckpts are saved to {trainer_config.ckpt_dir}/{run_name}. If None, it will be auto-generated {trainer_config.ckpt_dir}/{time_stamp}_{head_name}_n={num_samples}.
   label: Run Name
   name: trainer_config.run_name
