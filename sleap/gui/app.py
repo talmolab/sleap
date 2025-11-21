@@ -1311,6 +1311,7 @@ class MainWindow(QMainWindow):
         if message is None:
             message = ""
             if len(self.labels.videos) > 0 and current_video is not None:
+                index = None
                 for i, video in enumerate(self.labels.videos):
                     if video.filename == current_video.filename:
                         same_dataset = (
@@ -1322,9 +1323,10 @@ class MainWindow(QMainWindow):
                         if same_dataset:
                             index = i
                             break
-                message += f"Video {index + 1}/"
-                message += f"{len(self.labels.videos)}"
-                message += spacer
+                if index is not None:
+                    message += f"Video {index + 1}/"
+                    message += f"{len(self.labels.videos)}"
+                    message += spacer
 
             if current_video is not None:
                 message += f"Frame: {frame_idx + 1:,}/{len(current_video):,}"
