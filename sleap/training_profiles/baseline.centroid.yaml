@@ -126,15 +126,15 @@ trainer_config:
   lr_scheduler:
     step_lr: null
     reduce_lr_on_plateau:
-      threshold: 1.0e-08
-      threshold_mode: rel
+      threshold: 1.0e-06
+      threshold_mode: abs
       cooldown: 3
       patience: 5
       factor: 0.5
       min_lr: 1.0e-08
   early_stopping:
     min_delta: 1.0e-08
-    patience: 20
+    patience: 10
     stop_training_on_plateau: true
   online_hard_keypoint_mining:
     online_mining: false

@@ -670,7 +670,7 @@ class LossViewer(QtWidgets.QMainWindow):
                 corresponds to.
             plateau_patience: Number of epochs to wait in plateau before stopping.
             plateau_min_delta: Minimum change in validation loss to be considered
-                significant.
+                significant (absolute threshold).
         """
         self.canvas = LossPlot(
             width=5,
@@ -935,11 +935,10 @@ class LossViewer(QtWidgets.QMainWindow):
                                 self.best_epoch_loss = self.last_epoch_val_loss
 
                             if self.plateau_min_delta is not None:
-                                # plateau check according to `rel` thrsh mode in torch.
+                                # Plateau check using absolute threshold mode in torch
                                 is_better = (
                                     self.last_epoch_val_loss
-                                    < self.best_epoch_loss
-                                    * (1.0 - self.plateau_min_delta)
+                                    < self.best_epoch_loss - self.plateau_min_delta
                                 )
                             else:
                                 is_better = (
