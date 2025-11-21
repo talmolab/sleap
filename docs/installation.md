@@ -103,6 +103,18 @@ To install SLEAP, you'll need to enter commands in a terminal. Here's how to ope
 sleap-label --help
 ```
 
+### Updating Dependencies
+
+To update SLEAP and its dependencies (including `sleap-nn` and `sleap-io`):
+
+```bash
+# Update SLEAP to the latest version
+uv tool upgrade sleap
+```
+
+!!! note "Version Constraints"
+    `uv` respects any version constraints specified during installation. If you need to upgrade to a specific version or change platform-specific extras (e.g., switching CUDA versions), you may need to uninstall (`uv tool uninstall sleap`) and reinstall with the desired configuration.
+
 ---
 ## Installation with uvx
 `uvx` automatically installs sleap and runs your command inside a temporary virtual environment (venv). This means each run is fully isolated and leaves no trace on your system— perfect for trying out SLEAP without any **permanent** installation.
@@ -132,6 +144,10 @@ sleap-label --help
 
 !!! note "uvx Installation"
     Because `uvx` installs packages fresh on every run, it's ideal for quick one-off tests. For regular use, you could install with [`uv tool install`](#installation-with-uv-tool-install) or setting up a development environment with [`uv sync`](#installation-from-source) to avoid repeated downloads.
+
+### Updating Dependencies
+
+`uvx` automatically fetches and installs the latest version of SLEAP and its dependencies each time you run a command. No separate update step is needed—unless you've specified a version constraint in your command, you'll always get the most recent release.
 
 ---
 
@@ -213,6 +229,38 @@ uv run sleap-label --help
     - Another workaround **(not recommended)**:
       Check if you have any *empty* `pyproject.toml` or `uv.lock` files in `Users/<your-user-name>`. If you find empty files with these names, delete them, and try again (Empty files here can sometimes interfere with uv's environment resolution.)
 
+### Updating Dependencies
+
+To update SLEAP and specific dependencies like `sleap-nn` or `sleap-io`:
+
+```bash
+# Update only SLEAP
+uv add "sleap[nn]" --upgrade-package sleap
+
+# Update a specific dependency (e.g., sleap-nn)
+uv add "sleap[nn]" --upgrade-package sleap-nn
+
+# Update all dependencies to latest compatible versions
+uv sync --upgrade
+```
+
+!!! tip "Platform-Specific Upgrades"
+    When updating with platform-specific PyTorch requirements (CUDA/CPU), include the appropriate index URLs:
+
+    === "Windows/Linux (CUDA 12.8)"
+        ```bash
+        uv add "sleap[nn]" --upgrade-package sleap --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+        ```
+
+    === "Windows/Linux (CPU)"
+        ```bash
+        uv add "sleap[nn]" --upgrade-package sleap --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+        ```
+
+    === "macOS"
+        ```bash
+        uv add "sleap[nn]" --upgrade-package sleap
+        ```
 
 ---
 ## Installation with pip
@@ -253,7 +301,38 @@ conda activate sleap
 sleap-label --help
 ```
 
---- 
+### Updating Dependencies
+
+To update SLEAP and its dependencies in your conda environment:
+
+=== "Windows/Linux (CUDA 12.8)"
+    ```bash
+    pip install --upgrade "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cu128 --index-url https://pypi.org/simple
+    ```
+
+=== "Windows/Linux (CUDA 11.8)"
+    ```bash
+    pip install --upgrade "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cu118 --index-url https://pypi.org/simple
+    ```
+
+=== "Windows/Linux (CPU)"
+    ```bash
+    pip install --upgrade "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cpu --index-url https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```bash
+    pip install --upgrade "sleap[nn]"
+    ```
+
+!!! tip "Updating Specific Dependencies"
+    To update only a specific dependency like `sleap-nn` or `sleap-io`:
+    ```bash
+    pip install --upgrade sleap-nn
+    pip install --upgrade sleap-io
+    ```
+
+---
 
 ## Installation from source
 
@@ -325,6 +404,51 @@ uv run ruff check sleap tests
 # Run CLI command
 uv run sleap-label
 ```
+
+### Updating Dependencies
+
+To update all dependencies (including `sleap-nn` and `sleap-io`) when working from source, use the `--upgrade` flag with `uv sync`:
+
+=== "Windows/Linux (CUDA 12.8)"
+    ```bash
+    uv sync --extra dev --extra nn-cuda128 --upgrade --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    ```
+
+=== "Windows/Linux (CUDA 11.8)"
+    ```bash
+    uv sync --extra dev --extra nn-cuda118 --upgrade --index https://download.pytorch.org/whl/cu118 --index https://pypi.org/simple
+    ```
+
+=== "Windows/Linux (CPU)"
+    ```bash
+    uv sync --extra dev --extra nn-cpu --upgrade --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```bash
+    uv sync --extra dev --extra nn-cpu --upgrade --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "GUI Only"
+    ```bash
+    uv sync --extra dev --upgrade
+    ```
+
+!!! info "Updating Local Editable Dependencies"
+    If you're developing on multiple related packages (e.g., you have local clones of `sleap`, `sleap-nn`, and `sleap-io`), you can install them all in editable mode:
+
+    ```bash
+    # Install sleap-io in editable mode
+    uv add --editable "../sleap-io"
+
+    # Install sleap-nn in editable mode
+    uv add --editable "../sleap-nn[torch]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+
+    # Then sync with upgrade
+    uv sync --upgrade
+    ```
+
+    This allows you to make changes to any of these packages and see them reflected immediately in your development environment.
 
 ---
 
