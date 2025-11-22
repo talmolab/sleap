@@ -114,18 +114,16 @@ def remove_frames(labels: Labels, frames: List[LabeledFrame]):
 
 def remove_instance(labels: Labels, instance: Instance, lf: LabeledFrame):
     """Remove an instance from a labeled frame and update all related instances."""
-    import numpy as np
-
     lf_inst_to_remove = labels.find(video=lf.video, frame_idx=lf.frame_idx)[0]
     if lf_inst_to_remove:
         # Iterate backwards to safely remove from list
         for inst_idx in range(len(lf_inst_to_remove.instances) - 1, -1, -1):
             inst = lf_inst_to_remove.instances[inst_idx]
+            if type(inst) != type(instance):
+                continue
 
             # Compare instances using numpy arrays with NaN handling
-            points_match = np.array_equal(
-                inst.numpy(), instance.numpy(), equal_nan=True
-            )
+            points_match = inst.same_pose_as(instance)
 
             if points_match:
                 # Also check track matching
