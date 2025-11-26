@@ -7,6 +7,7 @@ from sleap.sleap_io_adaptors.instance_utils import bounding_box
 from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count
 from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
 from sleap.util import show_sleap_nn_installation_message
+from sleap.gui.learning.load_legacy_metrics import load_npz_extract_arrays
 
 
 def describe_labels(data_path, verbose=False):
@@ -119,20 +120,21 @@ def describe_model(model_path, verbose=False):
     def describe_metrics(metrics, legacy):
         if legacy:
             if isinstance(metrics, str):
-                metrics = np.load(metrics, allow_pickle=True)["metrics"].tolist()
+                metrics = load_npz_extract_arrays(metrics)
 
-            print(
-                f"Dist (90%/95%/99%): {metrics['dist.p90']} / {metrics['dist.p95']} / "
-                f"{metrics['dist.p99']}"
-            )
-            print(
-                f"OKS VOC (mAP / mAR): {metrics['oks_voc.mAP']} / "
-                f"{metrics['oks_voc.mAR']}"
-            )
-            print(
-                f"PCK (mean {metrics['pck.thresholds'][0]}-"
-                f"{metrics['pck.thresholds'][-1]} px): {metrics['pck.mPCK']}"
-            )
+            p90 = metrics.get("metrics[0].dist.p90").item()
+            p95 = metrics.get("metrics[0].dist.p95").item()
+            p99 = metrics.get("metrics[0].dist.p99").item()
+            print(f"Dist (90%/95%/99%): {p90} / {p95} / {p99}")
+
+            oks_map = metrics.get("metrics[0].oks_voc.mAP").item()
+            oks_mar = metrics.get("metrics[0].oks_voc.mAR").item()
+            print(f"OKS VOC (mAP / mAR): {oks_map} / {oks_mar}")
+
+            pck_min = metrics.get("metrics[0].pck.thresholds")[0]
+            pck_max = metrics.get("metrics[0].pck.thresholds")[-1]
+            mpck = metrics.get("metrics[0].pck.mPCK").item()
+            print(f"PCK (mean {pck_min}-{pck_max} px): {mpck}")
         else:
             if isinstance(metrics, str):
                 with np.load(metrics, allow_pickle=True) as data:
