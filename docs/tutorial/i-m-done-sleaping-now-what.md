@@ -15,11 +15,11 @@ We recommend that you finish off the tutorial by [checking out the notebooks](#n
 
 ## Notebooks
 
-- [Using exported data](../notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data.ipynb) <a href="https://colab.research.google.com/drive/1puzuhboHkgculSbL_i3HMaXhcHIPUW96?usp=sharing" target="_blank">![](https://colab.research.google.com/assets/colab-badge.svg)</a> → In this notebook, we demonstrate how to load and work with the different exported file formats from the rest of the tutorial.
+- [Using exported data](../notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data.ipynb) <a href="https://colab.research.google.com/github/talmolab/sleap/blob/develop/docs/notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data.ipynb" target="_blank">![](https://colab.research.google.com/assets/colab-badge.svg)</a> → In this notebook, we demonstrate how to load and work with the different exported file formats from the rest of the tutorial.
 
-- [Analysis examples](../notebooks/Analysis_examples.ipynb)  </a> <a href="https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Analysis_examples.ipynb" target="_blank">![](https://colab.research.google.com/assets/colab-badge.svg)</a> → In this notebook, we demonstrate how to conduct basic kinematic and behavioral analyses yourself in Python.
+- [Analysis examples](../notebooks/Analysis_examples.ipynb)  </a> <a href="https://colab.research.google.com/github/talmolab/sleap/blob/develop/docs/notebooks/Analysis_examples.ipynb" target="_blank">![](https://colab.research.google.com/assets/colab-badge.svg)</a> → In this notebook, we demonstrate how to conduct basic kinematic and behavioral analyses yourself in Python.
 
-- [Using idTracker.ai with SLEAP](../notebooks/sleap_io_idtracker_IDs.ipynb) <a href="https://colab.research.google.com/drive/1wnrimxvMSzs9jTrRAgSL7C65rziUCohL?usp=sharing" target="_blank">![](https://colab.research.google.com/assets/colab-badge.svg)</a> → In this notebook, we demonstrate how to use identities provided by idTracker to assign tracks to SLEAP poses.
+- [Using idTracker.ai with SLEAP](../notebooks/sleap_io_idtracker_IDs.ipynb) <a href="https://colab.research.google.com/github/talmolab/sleap/blob/develop/docs/notebooks/sleap_io_idtracker_IDs.ipynb" target="_blank">![](https://colab.research.google.com/assets/colab-badge.svg)</a> → In this notebook, we demonstrate how to use identities provided by idTracker to assign tracks to SLEAP poses.
 
 ## Integrations
 
