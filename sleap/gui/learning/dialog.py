@@ -1098,9 +1098,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                     skeleton.node_names,
                 )
 
-        # Determine if crop box should be shown (for centered_instance/multi_class_topdown)
+        # crop box should be shown for centered_instance/multi_class_topdown
         show_crop_box = head in ("centered_instance", "multi_class_topdown")
-        # Use labeled frame image for topdown pipeline heads (centroid + centered_instance)
+        # Use labeled frame image for topdown pipeline (centroid + centered_instance)
         use_labeled_frame = head in (
             "centroid",
             "centered_instance",
