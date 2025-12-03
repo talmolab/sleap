@@ -11,11 +11,9 @@ data:
   type: double
 - default: null
   help: Integer size of bounding box height and width to crop out of the full image.
-    This should be greater than the largest size of the instances in pixels. The crop
-    is applied after any input scaling, so be sure to adjust this to changes in the
-    input image scale. If set to None, this will be automatically detected from the
+    This should be greater than the largest size of the instances in pixels. If set to None, this will be automatically detected from the
     data during training or from the model input layer during inference. This must
-    be divisible by the model's max stride (typically 32).
+    be divisible by the model's max stride (typically 32). If input scaling is given, this crop size is resized to the input scale.
   label: Crop Size
   name: data_config.preprocessing.crop_size
   type: optional_int
