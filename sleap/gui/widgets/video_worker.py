@@ -99,6 +99,14 @@ class FrameLoaderThread(QThread):
             frame = video[frame_idx]
 
             if frame is not None:
+                # Handle 4-channel images (RGBA/BGRA)
+                # sleap-io's opencv backend loads 4-channel images as BGRA but
+                # doesn't convert to RGBA. Since we don't need alpha for display,
+                # strip it and convert BGR to RGB if needed.
+                if frame.ndim == 3 and frame.shape[-1] == 4:
+                    # Drop alpha and swap BGR to RGB (opencv loads as BGRA)
+                    frame = frame[..., 2::-1]  # BGRA -> RGB (takes channels 2,1,0)
+
                 # Convert to QImage
                 qimage = ndarray_to_qimage(frame, copy=True)
 
