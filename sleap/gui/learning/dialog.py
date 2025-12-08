@@ -336,6 +336,7 @@ class LearningDialog(QtWidgets.QDialog):
                 head=head_name,
                 cfg_getter=self._cfg_getter,
                 require_trained=(self.mode == "inference"),
+                labels=self.labels,
             )
 
     def adjust_data_to_update_other_tabs(self, source_data, updated_data=None):
@@ -937,7 +938,7 @@ class LearningDialog(QtWidgets.QDialog):
                 # TODO: Update this to more workflow-tailored notebook.
                 sleap.gui.commands.copy_to_clipboard(output_path)
                 sleap.gui.commands.open_website(
-                    "https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
+                    "https://colab.research.google.com/github/talmolab/sleap/blob/develop/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
                 )
 
         tmp_dir.cleanup()
@@ -1060,12 +1061,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         head: Optional[Text] = None,
         cfg_getter: Optional["TrainingConfigsGetter"] = None,
         require_trained: bool = False,
+        labels: Optional[Labels] = None,
         *args,
         **kwargs,
     ):
         super(TrainingEditorWidget, self).__init__()
 
         self._video = video
+        self._labels = labels
         self._cfg_getter = cfg_getter
         self._cfg_list_widget = None
         self._receptive_field_widget = None
@@ -1095,11 +1098,26 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                     skeleton.node_names,
                 )
 
-        if self._video:
+        # crop box should be shown for centered_instance/multi_class_topdown
+        show_crop_box = head in ("centered_instance", "multi_class_topdown")
+        # Use labeled frame image for topdown pipeline (centroid + centered_instance)
+        use_labeled_frame = head in (
+            "centroid",
+            "centered_instance",
+            "multi_class_topdown",
+        )
+
+        if self._video or (use_labeled_frame and labels):
             self._receptive_field_widget = receptivefield.ReceptiveFieldWidget(
-                self.head
+                self.head, show_crop_box=show_crop_box
             )
-            self._receptive_field_widget.setImage(self._video.backend.read_test_frame())
+            # For topdown heads, use labeled frame image for consistency
+            if use_labeled_frame and labels:
+                self._receptive_field_widget.setLabels(labels, self._video)
+            elif self._video:
+                self._receptive_field_widget.setImage(
+                    self._video.backend.read_test_frame()
+                )
 
         self._set_head()
 
@@ -1225,6 +1243,38 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         if self._receptive_field_widget:
             self._receptive_field_widget.setModelConfig(model_cfg, scale=rf_image_scale)
+
+            # Update crop box for centered_instance/multi_class_topdown heads
+            if (
+                self.head in ("centered_instance", "multi_class_topdown")
+                and self._labels
+            ):
+                # Get crop size from config
+                crop_size = receptivefield.compute_crop_size_from_cfg(
+                    data_form_data, model_cfg, self._labels
+                )
+
+                # Get anchor part from the model form data
+                anchor_part = None
+                if self.head == "centered_instance":
+                    anchor_part = OmegaConf.select(
+                        model_cfg,
+                        "model_config.head_configs.centered_instance.confmaps.anchor_part",
+                        default=None,
+                    )
+                elif self.head == "multi_class_topdown":
+                    anchor_part = OmegaConf.select(
+                        model_cfg,
+                        "model_config.head_configs.multi_class_topdown.confmaps.anchor_part",
+                        default=None,
+                    )
+
+                self._receptive_field_widget.setCropConfig(
+                    crop_size=crop_size,
+                    scale=rf_image_scale,
+                    anchor_part=anchor_part,
+                )
+
             self._receptive_field_widget.repaint()
 
     def update_file_list(self):

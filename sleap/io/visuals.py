@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 from collections import deque
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread
 from time import perf_counter
 from typing import List, Optional, Tuple
@@ -67,6 +67,7 @@ class VideoMarkerThread(Thread):
         self.scale = scale
         self.show_edges = show_edges
         self.edge_is_wedge = edge_is_wedge
+        self.exception = None  # Store any exception that occurs in the thread
 
         if color_manager is None:
             color_manager = ColorManager(labels=labels, palette=palette)
@@ -132,12 +133,13 @@ class VideoMarkerThread(Thread):
                 chunk_i += 1
                 self.out_q.put(imgs)
         except Exception as e:
+            # Store exception for main thread to check
+            self.exception = e
             # Stop receiving data
             self.in_q.put(_sentinel)
-            raise e
 
         finally:
-            # Send _sentinal object into queue to signal that we're done
+            # Send _sentinel object into queue to signal that we're done
             self.out_q.put(_sentinel)
 
     def _mark_images(self, frame_indices, frame_images):
@@ -379,6 +381,43 @@ class VideoMarkerThread(Thread):
                         )
 
 
+class VideoReaderThread(Thread):
+    """Thread for reading video frames without blocking the main thread.
+
+    Args:
+        video: The video to read frames from.
+        frames: List of frame indices to read.
+        out_q: Queue to send (frame_indices, frame_images) tuples.
+        chunk_size: Number of frames to read per chunk.
+    """
+
+    def __init__(
+        self,
+        video: Video,
+        frames: list[int],
+        out_q: Queue,
+        chunk_size: int = 64,
+    ):
+        super().__init__()
+        self.video = video
+        self.frames = frames
+        self.out_q = out_q
+        self.chunk_size = chunk_size
+        self.exception = None
+
+    def run(self):
+        try:
+            for i0 in range(0, len(self.frames), self.chunk_size):
+                i1 = min(i0 + self.chunk_size, len(self.frames))
+                frame_inds = self.frames[i0:i1]
+                frame_imgs = self.video[frame_inds]
+                self.out_q.put((frame_inds, frame_imgs))
+        except Exception as e:
+            self.exception = e
+        finally:
+            self.out_q.put(_sentinel)
+
+
 def save_labeled_video(
     filename: str,
     labels: Labels,
@@ -422,13 +461,42 @@ def save_labeled_video(
     Returns:
         None.
     """
-    # Create marker thread and queues.
-    in_q = Queue(maxsize=10)
-    out_q = Queue(maxsize=10)
+    # Set up GUI progress dialog if requested
+    progress_win = None
+    canceled = False
+    if gui_progress:
+        try:
+            from qtpy import QtWidgets
 
+            progress_win = QtWidgets.QProgressDialog(
+                "Exporting labeled video...", "Cancel", 0, len(frames)
+            )
+            progress_win.setWindowTitle("Export Progress")
+            progress_win.setMinimumDuration(0)
+            progress_win.setValue(0)
+            progress_win.show()
+            QtWidgets.QApplication.instance().processEvents()
+        except Exception:
+            # If Qt is not available, continue without progress dialog
+            progress_win = None
+
+    # Create queues for thread communication
+    reader_q = Queue(maxsize=10)  # Reader -> Marker
+    marker_q = Queue(maxsize=10)  # Marker -> Main
+
+    # Start video reader thread
+    reader_thread = VideoReaderThread(
+        video=video,
+        frames=frames,
+        out_q=reader_q,
+        chunk_size=chunk_size,
+    )
+    reader_thread.start()
+
+    # Start marker thread
     marker_thread = VideoMarkerThread(
-        in_q=in_q,
-        out_q=out_q,
+        in_q=reader_q,
+        out_q=marker_q,
         labels=labels,
         video_idx=labels.videos.index(video),
         scale=scale,
@@ -442,46 +510,82 @@ def save_labeled_video(
     )
     marker_thread.start()
 
-    # Send frames to marker thread via input queue
-    for i0 in range(0, len(frames), chunk_size):
-        i1 = min(i0 + chunk_size, len(frames))
-        frame_inds = frames[i0:i1]
-        frame_imgs = video[frame_inds]
-        in_q.put((frame_inds, frame_imgs))
-    in_q.put(_sentinel)  # Signal end of input
-
     # Collect annotated frames from the output queue
     annotated_frames = []
+    frames_processed = 0
     while True:
-        imgs = out_q.get()
+        # Use timeout to allow GUI event processing
+        try:
+            imgs = marker_q.get(timeout=0.1)
+        except Empty:
+            # Check for exceptions in worker threads
+            if reader_thread.exception is not None:
+                raise reader_thread.exception
+            if marker_thread.exception is not None:
+                raise marker_thread.exception
+            # Process GUI events while waiting
+            if progress_win is not None:
+                from qtpy import QtWidgets
+
+                QtWidgets.QApplication.instance().processEvents()
+                if progress_win.wasCanceled():
+                    canceled = True
+                    break
+            continue
+
         if imgs is _sentinel:
             break
+
         annotated_frames.extend(imgs)
+        frames_processed += len(imgs)
 
-    marker_thread.join()
+        # Update progress dialog
+        if progress_win is not None:
+            from qtpy import QtWidgets
 
-    # Pass marker thread in as intrmediate thread to write_video (and write video).
-    # intermediate_threads = [thread_mark]
+            progress_win.setValue(frames_processed)
+            progress_win.setLabelText(
+                f"Exporting labeled video...<br>"
+                f"{frames_processed}/{len(frames)} frames "
+                f"(<b>{(frames_processed / len(frames)) * 100:.1f}%</b>)"
+            )
+            QtWidgets.QApplication.instance().processEvents()
+            if progress_win.wasCanceled():
+                canceled = True
+                break
+
+    # Wait for threads to finish
+    reader_thread.join(timeout=5.0)
+    marker_thread.join(timeout=5.0)
+
+    # Check for exceptions in worker threads
+    if reader_thread.exception is not None:
+        raise reader_thread.exception
+    if marker_thread.exception is not None:
+        raise marker_thread.exception
+
+    # If canceled, clean up and return
+    if canceled:
+        if progress_win is not None:
+            progress_win.close()
+        return
 
     # Save video at end after getting annotated frames
+    if progress_win is not None:
+        progress_win.setLabelText("Writing video file...")
+        from qtpy import QtWidgets
+
+        QtWidgets.QApplication.instance().processEvents()
+
     save_video(
         frames=annotated_frames,
         filename=filename,
         fps=fps,
-    )  # TODO: add other parameters
+    )
 
-    # write_video(
-    #     filename=filename,
-    #     video=video,
-    #     frames=frames,
-    #     fps=fps,
-    #     scale=scale,
-    #     background=background,
-    #     gui_progress=gui_progress,
-    #     in_queue=q1,
-    #     out_queue=q2,
-    #     intermediate_threads=intermediate_threads,
-    # )
+    if progress_win is not None:
+        progress_win.setValue(len(frames))
+        progress_win.close()
 
 
 def has_nans(*vals):

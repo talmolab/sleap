@@ -984,7 +984,7 @@ class MainWindow(QMainWindow):
             "training on colab",
             "Train on Google Colab...",
             lambda: self.commands.openWebsite(
-                "https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
+                "https://colab.research.google.com/github/talmolab/sleap/blob/develop/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
             ),
         )
 

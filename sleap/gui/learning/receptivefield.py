@@ -2,10 +2,11 @@
 Widget for previewing receptive field on sample image using model hyperparams.
 """
 
-from typing import Optional, Text
+from typing import Optional, Text, Tuple
 
+import sleap_io as sio
 import numpy as np
-from qtpy import QtWidgets, QtGui
+from qtpy import QtWidgets, QtGui, QtCore
 from omegaconf import OmegaConf
 from sleap.gui.widgets.video import GraphicsView
 from sleap.gui.config_utils import get_head_from_omegaconf
@@ -98,6 +99,92 @@ def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
     return rf_info
 
 
+def compute_crop_size_from_cfg(
+    data_cfg: OmegaConf, model_cfg: OmegaConf, labels: Optional[sio.Labels] = None
+) -> int:
+    """Computes crop size from model configuration."""
+    crop_size = data_cfg.data_config.preprocessing.crop_size
+    if crop_size is None:
+        try:
+            from sleap_nn.data.instance_cropping import find_instance_crop_size
+
+            backbone = model_cfg["_backbone_name"]
+            max_stride = model_cfg.model_config.backbone_config[backbone].max_stride
+            crop_size = find_instance_crop_size(labels, maximum_stride=max_stride)
+        except ImportError:
+            crop_size = None
+    if crop_size is not None and data_cfg.data_config.preprocessing.scale is not None:
+        crop_size = int(crop_size * data_cfg.data_config.preprocessing.scale)
+    return crop_size
+
+
+def get_first_labeled_frame_and_instance(
+    labels: Optional[sio.Labels],
+) -> Tuple[Optional[np.ndarray], Optional[sio.Instance]]:
+    """Gets the first frame with ground truth labels and the first instance.
+
+    Args:
+        labels: The Labels object containing labeled frames.
+
+    Returns:
+        A tuple of (frame_image, instance) where frame_image is a numpy array
+        and instance is the first user instance. Returns (None, None) if no
+        labeled frames with user instances are found.
+    """
+    if labels is None:
+        return None, None
+
+    for lf in labels:
+        if lf.user_instances:
+            # Get the first user instance
+            instance = lf.user_instances[0]
+            # Get the frame image using sleap-io's Video indexing
+            try:
+                video = lf.video if hasattr(lf, "video") else labels.videos[0]
+                # sleap-io Video uses __getitem__ for frame access
+                frame_image = video[lf.frame_idx]
+                return frame_image, instance
+            except Exception:
+                # If we can't load the frame, still return the instance
+                # The caller will need to handle the None frame_image
+                return None, instance
+
+    return None, None
+
+
+def compute_anchor_point(
+    instance: Optional[sio.Instance], anchor_part: Optional[Text] = None
+) -> Optional[Tuple[float, float]]:
+    """Computes the anchor point for an instance.
+
+    Args:
+        instance: The instance to compute the anchor point for.
+        anchor_part: The name of the body part to use as anchor. If None,
+            the mean of all visible keypoints is used.
+
+    Returns:
+        A tuple (x, y) representing the anchor point coordinates, or None
+        if the anchor cannot be computed.
+    """
+    if instance is None:
+        return None
+
+    # If anchor_part is specified, try to use that node
+    if anchor_part:
+        for node, point in zip(instance.skeleton.nodes, instance.numpy()):
+            if node.name == anchor_part and not np.isnan(point).any():
+                return (float(point[0]), float(point[1]))
+
+    # Fall back to mean of all visible keypoints
+    points = instance.numpy()
+    visible_points = points[~np.isnan(points).any(axis=1)]
+    if len(visible_points) > 0:
+        mean_point = np.mean(visible_points, axis=0)
+        return (float(mean_point[0]), float(mean_point[1]))
+
+    return None
+
+
 class ReceptiveFieldWidget(QtWidgets.QWidget):
     """
     Widget for previewing receptive field on sample image, with caption.
@@ -105,27 +192,47 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
     Args:
         head_name: If given, then used in caption to show which model the
             preview is for.
+        show_crop_box: If True, shows a crop size box centered on anchor point.
+            This is intended for centered_instance and multi_class_topdown heads.
 
     Usage:
         Create, then call `setImage` and `setModelConfig` methods.
+        For crop box display, also call `setLabels` and `setCropConfig`.
     """
 
-    def __init__(self, head_name: Text = "", *args, **kwargs):
+    def __init__(
+        self, head_name: Text = "", show_crop_box: bool = False, *args, **kwargs
+    ):
         super(ReceptiveFieldWidget, self).__init__(*args, **kwargs)
+
+        self._show_crop_box = show_crop_box
+        self._labels = None
+        self._instance = None
+        self._anchor_part = None
+        self._crop_size = None
+        self._head_name = head_name
 
         self.layout = QtWidgets.QVBoxLayout()
 
         self._field_image_widget = ReceptiveFieldImageWidget()
 
-        self._info_text_header = (
-            f"<p>Receptive Field for {head_name}:</p>"
-            if head_name
-            else "<p>Receptive Field:</p>"
-        )
+        # Legend at the top (after image)
+        legend_text = '<p><span style="color: blue;">\u25a0</span> Receptive Field'
+        if show_crop_box:
+            legend_text += ' &nbsp; <span style="color: red;">\u25a1</span> Crop Size'
+        legend_text += "</p>"
+        self._legend_widget = QtWidgets.QLabel(legend_text)
 
+        # Crop size info (shown above receptive field info)
+        self._crop_info_widget = QtWidgets.QLabel("")
+
+        # Receptive field info
         self._info_widget = QtWidgets.QLabel("")
 
         self.layout.addWidget(self._field_image_widget)
+        self.layout.addWidget(self._legend_widget)
+        if show_crop_box:
+            self.layout.addWidget(self._crop_info_widget)
         self.layout.addWidget(self._info_widget)
         self.layout.addStretch()
 
@@ -135,7 +242,12 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         self, size, scale, max_stride, down_blocks, convs_per_block, kernel_size
     ) -> Text:
         """Returns text explaining how receptive field size is determined."""
-        result = self._info_text_header
+        header = (
+            f"<p>Receptive Field for {self._head_name}:</p>"
+            if self._head_name
+            else "<p>Receptive Field:</p>"
+        )
+        result = header
         if size:
             result += f"<p><i>{size} pixels</i></p>"
         else:
@@ -182,37 +294,104 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         """Sets image on which receptive field box will be drawn."""
         self._field_image_widget.setImage(*args, **kwargs)
 
+    def setLabels(self, labels: Optional[sio.Labels], fallback_video=None):
+        """Sets labels and displays the first labeled frame.
+
+        This finds the first frame with ground truth labels, displays that frame,
+        and stores the instance for crop box anchor point calculation (if enabled).
+
+        Args:
+            labels: The Labels object containing labeled frames.
+            fallback_video: Video to use for getting test frame if labeled frame
+                cannot be loaded.
+        """
+        self._labels = labels
+        frame_image, instance = get_first_labeled_frame_and_instance(labels)
+
+        # Store instance for crop box (only used if show_crop_box is True)
+        if self._show_crop_box:
+            self._instance = instance
+
+        # Set the image - prefer the labeled frame, fall back to video test frame
+        if frame_image is not None:
+            self._field_image_widget.setImage(frame_image)
+        elif fallback_video is not None:
+            self._field_image_widget.setImage(fallback_video.backend.read_test_frame())
+
+    def setCropConfig(
+        self,
+        crop_size: Optional[int],
+        scale: float,
+        anchor_part: Optional[Text] = None,
+    ):
+        """Sets crop box configuration.
+
+        Args:
+            crop_size: The crop size in pixels.
+            scale: The scale factor applied to the image during training.
+            anchor_part: The name of the body part to use as anchor.
+                If None, the mean of all keypoints is used.
+        """
+        if not self._show_crop_box:
+            return
+
+        self._anchor_part = anchor_part
+        self._crop_size = crop_size
+
+        # Compute anchor point from the instance
+        anchor = compute_anchor_point(self._instance, anchor_part)
+
+        # Update the crop info text (shown above receptive field info)
+        if crop_size:
+            self._crop_info_widget.setText(
+                f"<p>Crop Size: <i>{crop_size} pixels</i></p>"
+            )
+        else:
+            self._crop_info_widget.setText("")
+
+        if crop_size and anchor:
+            self._field_image_widget._set_crop_size(crop_size, scale, anchor)
+
 
 class ReceptiveFieldImageWidget(GraphicsView):
-    """Widget for showing image with receptive field."""
+    """Widget for showing image with receptive field and optional crop box."""
 
     def __init__(self, *args, **kwargs):
         self._widget_size = 200
         self._pen_width = 4
+        self._crop_pen_width = 2
         self._box_size = None
         self._scale = None
+        self._crop_size = None
+        self._crop_anchor = None  # (x, y) coordinates of anchor point
 
+        # Receptive field box (blue, solid)
         box_pen = QtGui.QPen(QtGui.QColor("blue"), self._pen_width)
         box_pen.setCosmetic(True)
 
         self.box = QtWidgets.QGraphicsRectItem()
         self.box.setPen(box_pen)
 
+        # Crop box (red, dotted, thinner line)
+        crop_pen = QtGui.QPen(QtGui.QColor("red"), self._crop_pen_width)
+        crop_pen.setCosmetic(True)
+        crop_pen.setStyle(QtCore.Qt.DotLine)
+
+        self.crop_box = QtWidgets.QGraphicsRectItem()
+        self.crop_box.setPen(crop_pen)
+
         super(ReceptiveFieldImageWidget, self).__init__(*args, **kwargs)
 
         self.setFixedSize(self._widget_size, self._widget_size)
         self.scene.addItem(self.box)
-
-        # TODO: zoom around bounding box for labeled instance
-        # self.zoomToRect(QtCore.QRectF(0, 0, 1, 1))
+        self.scene.addItem(self.crop_box)
 
     def viewportEvent(self, event):
-        """
-        Re-draw receptive field when needed by overriding QGraphicsView method.
-        """
+        """Re-draw receptive field and crop box when needed."""
         # Update the position and visible size of field
         if isinstance(event, QtGui.QPaintEvent):
             self._set_field_size()
+            self._set_crop_size()
 
         # Now draw the viewport
         return super(ReceptiveFieldImageWidget, self).viewportEvent(event)
@@ -221,13 +400,13 @@ class ReceptiveFieldImageWidget(GraphicsView):
         """Draws receptive field preview rect, updating size if needed."""
         if size is not None:
             self._box_size = size
-            self._scale = scale
+            self._scale = scale if scale else 1.0
 
-        if self._box_size:
-            self.box.show()
-        else:
+        if not self._box_size or not self._scale:
             self.box.hide()
             return
+
+        self.box.show()
 
         # Adjust box relative to scaling on image that will happen in training
         scaled_box_size = self._box_size // self._scale
@@ -243,4 +422,44 @@ class ReceptiveFieldImageWidget(GraphicsView):
 
         self.box.setRect(
             scene_center.x(), scene_center.y(), scaled_box_size, scaled_box_size
+        )
+
+    def _set_crop_size(
+        self,
+        size: Optional[int] = None,
+        scale: float = 1.0,
+        anchor: Optional[Tuple[float, float]] = None,
+    ):
+        """Draws crop size preview rect centered on anchor point.
+
+        Args:
+            size: The crop size in pixels. If None, uses previously set value.
+            scale: The scale factor applied to the image during training.
+            anchor: The (x, y) coordinates of the anchor point in scene coordinates.
+                If None, uses previously set value.
+        """
+        if size is not None:
+            self._crop_size = size
+            self._scale = scale if scale else 1.0
+        if anchor is not None:
+            self._crop_anchor = anchor
+
+        if not self._crop_size or not self._crop_anchor or not self._scale:
+            self.crop_box.hide()
+            return
+
+        self.crop_box.show()
+
+        # Adjust box relative to scaling on image that will happen in training
+        scaled_crop_size = self._crop_size // self._scale
+
+        # Center the crop box on the anchor point
+        anchor_x, anchor_y = self._crop_anchor
+        half_size = scaled_crop_size / 2
+
+        self.crop_box.setRect(
+            anchor_x - half_size,
+            anchor_y - half_size,
+            scaled_crop_size,
+            scaled_crop_size,
         )
