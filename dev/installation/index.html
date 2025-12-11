@@ -2105,15 +2105,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#installation-with-pip" class="md-nav__link">
+  <a href="#installation-with-condapip" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Installation with pip
+        Installation with conda/pip
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Installation with pip">
+    <nav class="md-nav" aria-label="Installation with conda/pip">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2294,7 +2294,7 @@
 <p><strong>Installation methods:</strong></p>
 <ul>
 <li><strong><a href="#installation-with-uv-tool-install">Installation as a system-wide tool with uv</a></strong>: Use <code>uv tool install</code> to install SLEAP globally as a tool (<strong>strongly recommended</strong>)</li>
-<li><strong><a href="#installation-with-pip">Installation with pip</a></strong>: Use <code>pip</code> to install from pypi in a conda env.</li>
+<li><strong><a href="#installation-with-conda/pip">Installation with conda/pip</a></strong>: Use <code>pip</code> to install from pypi in a conda env.</li>
 <li><strong><a href="#installation-from-source">Installation from source</a></strong>: Use <code>uv sync</code> to install from source. (For developmental purposes)</li>
 </ul>
 <p>If you need to import SLEAP as a library in your own scripts, add custom packages for analysis, or share reproducible environments with collaborators, see <strong><a href="../installation-uv-add/">Installation with uv add</a></strong>.</p>
@@ -2369,7 +2369,7 @@
 <div class="admonition tip">
 <p class="admonition-title">About uv tool install</p>
 <p>This method automatically downloads SLEAP with all dependencies, won't interfere with your existing Python packages, and always uses the latest version from PyPI.</p>
-<p><strong>Limitation:</strong> Unlike conda or virtual environments, this does not create an activatable environment. You cannot <code>import sleap</code> in Python scripts or access dependencies directly—only CLI commands (e.g., <code>sleap-label</code>, <code>sleap-track</code>) are available. If you need SLEAP as a library, use <a href="../installation-uv-add/">uv add</a> or <a href="#installation-with-pip">pip</a> instead.</p>
+<p><strong>Limitation:</strong> Unlike conda or virtual environments, this does not create an activatable environment. You cannot <code>import sleap</code> in Python scripts or access dependencies directly—only CLI commands (e.g., <code>sleap-label</code>, <code>sleap-track</code>) are available. If you need SLEAP as a library, use <a href="../installation-uv-add/">uv add</a> or <a href="#installation-with-conda/pip">conda/pip</a> instead.</p>
 </div>
 <h3 id="verify-installation">Verify Installation<a class="headerlink" href="#verify-installation" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Test the installation</span>
@@ -2385,7 +2385,11 @@
 <p><code>uv</code> respects any version constraints specified during installation. If you need to upgrade to a specific version or change platform-specific extras (e.g., switching CUDA versions), you may need to uninstall (<code>uv tool uninstall sleap</code>) and reinstall with the desired configuration.</p>
 </div>
 <hr />
-<h2 id="installation-with-pip">Installation with pip<a class="headerlink" href="#installation-with-pip" title="Permanent link">&para;</a></h2>
+<h2 id="installation-with-condapip">Installation with conda/pip<a class="headerlink" href="#installation-with-condapip" title="Permanent link">&para;</a></h2>
+<div class="admonition note">
+<p class="admonition-title">No conda package available</p>
+<p>Starting with SLEAP 1.5, we only distribute SLEAP via pip (PyPI). There is no <code>conda install sleap</code> package. However, we recommend using conda/mamba to manage your Python environment before installing SLEAP with pip.</p>
+</div>
 <p>We recommend creating a dedicated environment with <a href="https://docs.conda.io/en/latest/miniconda.html">conda</a> or <a href="https://github.com/conda-forge/miniforge">mamba/miniforge</a> before installing <code>sleap</code> with pip. This helps avoid dependency conflicts and keeps your Python setup clean. After installing Miniconda or Miniforge, create and activate an environment, then run the pip install commands below inside the activated environment.</p>
 <p>To create a conda environment, run:
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.13
