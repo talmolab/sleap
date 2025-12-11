@@ -2301,6 +2301,7 @@ class OpenSkeleton(EditCommand):
                 else skeleton_data
             )
         skel = SkeletonDecoder().decode(data=skeleton_data)
+        skel = skel[0] if isinstance(skel, list) else skel
         return skel
 
     @staticmethod
@@ -2498,12 +2499,7 @@ class OpenSkeleton(EditCommand):
             try_and_skip_if_error(skeleton.add_node, node)
 
         # Add edges
-        # skeleton.clear_edges()
-        if isinstance(skeleton, Skeleton):
-            skeleton.edges = []
-        elif isinstance(skeleton, List[Skeleton]):
-            for skl in skeleton:
-                skl.edges = []
+        skeleton.edges = []
         for src, dest in new_skeleton.edges:
             try_and_skip_if_error(skeleton.add_edge, src.name, dest.name)
 
