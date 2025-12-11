@@ -8,7 +8,7 @@ SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The ne
 **Installation methods:**
 
 - **[Installation as a system-wide tool with uv](#installation-with-uv-tool-install)**: Use `uv tool install` to install SLEAP globally as a tool (**strongly recommended**)
-- **[Installation with pip](#installation-with-pip)**: Use `pip` to install from pypi in a conda env.
+- **[Installation with conda/pip](#installation-with-conda/pip)**: Use `pip` to install from pypi in a conda env.
 - **[Installation from source](#installation-from-source)**: Use `uv sync` to install from source. (For developmental purposes)
 
 If you need to import SLEAP as a library in your own scripts, add custom packages for analysis, or share reproducible environments with collaborators, see **[Installation with uv add](installation-uv-add.md)**.
@@ -84,7 +84,7 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 !!! tip "About uv tool install"
     This method automatically downloads SLEAP with all dependencies, won't interfere with your existing Python packages, and always uses the latest version from PyPI.
 
-    **Limitation:** Unlike conda or virtual environments, this does not create an activatable environment. You cannot `import sleap` in Python scripts or access dependencies directly—only CLI commands (e.g., `sleap-label`, `sleap-track`) are available. If you need SLEAP as a library, use [uv add](installation-uv-add.md) or [pip](#installation-with-pip) instead.
+    **Limitation:** Unlike conda or virtual environments, this does not create an activatable environment. You cannot `import sleap` in Python scripts or access dependencies directly—only CLI commands (e.g., `sleap-label`, `sleap-track`) are available. If you need SLEAP as a library, use [uv add](installation-uv-add.md) or [conda/pip](#installation-with-conda/pip) instead.
 
 ### Verify Installation
 ```bash
@@ -106,7 +106,10 @@ uv tool upgrade sleap
 
 ---
 
-## Installation with pip
+## Installation with conda/pip
+
+!!! note "No conda package available"
+    Starting with SLEAP 1.5, we only distribute SLEAP via pip (PyPI). There is no `conda install sleap` package. However, we recommend using conda/mamba to manage your Python environment before installing SLEAP with pip.
 
 We recommend creating a dedicated environment with [conda](https://docs.conda.io/en/latest/miniconda.html) or [mamba/miniforge](https://github.com/conda-forge/miniforge) before installing `sleap` with pip. This helps avoid dependency conflicts and keeps your Python setup clean. After installing Miniconda or Miniforge, create and activate an environment, then run the pip install commands below inside the activated environment.
 
