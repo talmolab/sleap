@@ -11,11 +11,9 @@ data:
   type: double
 - default: null
   help: Integer size of bounding box height and width to crop out of the full image.
-    This should be greater than the largest size of the instances in pixels. The crop
-    is applied after any input scaling, so be sure to adjust this to changes in the
-    input image scale. If set to None, this will be automatically detected from the
+    This should be greater than the largest size of the instances in pixels. If set to None, this will be automatically detected from the
     data during training or from the model input layer during inference. This must
-    be divisible by the model's max stride (typically 32).
+    be divisible by the model's max stride (typically 32). If input scaling is provided, this crop size is resized to the input scale.
   label: Crop Size
   name: data_config.preprocessing.crop_size
   type: optional_int
@@ -487,7 +485,7 @@ optimization:
   label: Stop Training on Plateau
   name: trainer_config.early_stopping.stop_training_on_plateau
   type: bool
-- default: 1e-6
+- default: 1e-8
   help: Minimum absolute decrease in the loss in order to consider an epoch as not in a plateau.
   label: Plateau Min. Delta
   name: trainer_config.early_stopping.min_delta
@@ -522,7 +520,7 @@ optimization:
   name: trainer_config.online_hard_keypoint_mining.max_hard_keypoints
   type: optional_int
 outputs:
-- default: null
+- default: ''
   help: String to set as the run name. ckpts are saved to {trainer_config.ckpt_dir}/{run_name}. If None, it will be auto-generated {trainer_config.ckpt_dir}/{time_stamp}_{head_name}_n={num_samples}.
   label: Run Name
   name: trainer_config.run_name

@@ -21,6 +21,7 @@ from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import FieldComboWidget
 from omegaconf import OmegaConf
 from sleap.util import show_sleap_nn_installation_message
+from sleap.gui.learning.load_legacy_metrics import load_npz_extract_arrays
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -148,14 +149,38 @@ class ConfigFileInfo:
     @property
     def timestamp(self):
         """Timestamp on file; parsed from filename (not OS timestamp)."""
-        match = re.match(
-            r".*?(?<!\d)(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\b",
-            self.config.trainer_config.run_name,
-        )
-        if match:
-            year, month, day = int(match[1]), int(match[2]), int(match[3])
-            hour, minute, sec = int(match[4]), int(match[5]), int(match[6])
-            return datetime.datetime(2000 + year, month, day, hour, minute, sec)
+        timestamp_pattern = r".*?(?<!\d)(\d{2})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\b"
+
+        # Try to get run_name from config (handles both sleap-nn and legacy formats)
+        run_name = None
+        try:
+            # sleap-nn format
+            run_name = self.config.trainer_config.run_name
+        except (AttributeError, TypeError):
+            try:
+                # Legacy SLEAP format (OmegaConf or dict)
+                if hasattr(self.config, "outputs"):
+                    run_name = self.config.outputs.run_name
+                elif isinstance(self.config, dict):
+                    run_name = self.config.get("outputs", {}).get("run_name")
+            except (AttributeError, TypeError):
+                pass
+
+        # Try matching run_name first
+        if run_name:
+            match = re.match(timestamp_pattern, run_name)
+            if match:
+                year, month, day = int(match[1]), int(match[2]), int(match[3])
+                hour, minute, sec = int(match[4]), int(match[5]), int(match[6])
+                return datetime.datetime(2000 + year, month, day, hour, minute, sec)
+
+        # Fallback to parsing from path if run_name doesn't have timestamp
+        if self.path:
+            match = re.match(timestamp_pattern, self.path)
+            if match:
+                year, month, day = int(match[1]), int(match[2]), int(match[3])
+                hour, minute, sec = int(match[4]), int(match[5]), int(match[6])
+                return datetime.datetime(2000 + year, month, day, hour, minute, sec)
 
         return None
 
@@ -180,35 +205,61 @@ class ConfigFileInfo:
         metrics_path_nn = self._get_file_path(f"{split_name}_0_pred_metrics.npz")
 
         if metrics_path_nn is None:
+            # Loading legacy metrics from SLEAP <= v1.4.1
             metrics_path = self._get_file_path(f"metrics.{split_name}.npz")
+            if metrics_path is not None:
+                metric_data = load_npz_extract_arrays(metrics_path)
+                return_dict = {
+                    "vis.tp": metric_data.get("metrics[0].vis.tp").item(),
+                    "vis.fp": metric_data.get("metrics[0].vis.fp").item(),
+                    "vis.tn": metric_data.get("metrics[0].vis.tn").item(),
+                    "vis.fn": metric_data.get("metrics[0].vis.fn").item(),
+                    "vis.precision": metric_data.get("metrics[0].vis.precision").item(),
+                    "vis.recall": metric_data.get("metrics[0].vis.recall").item(),
+                    "dist.dists": metric_data.get("metrics[0].dist.dists"),
+                    "dist.avg": metric_data.get("metrics[0].dist.avg").item(),
+                    "dist.p50": metric_data.get("metrics[0].dist.p50").item(),
+                    "dist.p75": metric_data.get("metrics[0].dist.p75").item(),
+                    "dist.p90": metric_data.get("metrics[0].dist.p90").item(),
+                    "dist.p95": metric_data.get("metrics[0].dist.p95").item(),
+                    "dist.p99": metric_data.get("metrics[0].dist.p99").item(),
+                    "pck.mPCK": metric_data.get("metrics[0].pck.mPCK").item(),
+                    "oks.mOKS": metric_data.get("metrics[0].oks.mOKS").item(),
+                    "oks_voc.mAP": metric_data.get("metrics[0].oks_voc.mAP").item(),
+                    "oks_voc.mAR": metric_data.get("metrics[0].oks_voc.mAR").item(),
+                    "pck_voc.mAP": metric_data.get("metrics[0].pck_voc.mAP").item(),
+                    "pck_voc.mAR": metric_data.get("metrics[0].pck_voc.mAR").item(),
+                }
+                return return_dict
+
         else:
             metrics_path = metrics_path_nn
 
-        with np.load(metrics_path, allow_pickle=True) as data:
-            metric_data = data["metrics"].item()
+            with np.load(metrics_path, allow_pickle=True) as data:
+                metric_data = data["metrics"].item()
 
-            return_dict = {
-                "vis.tp": metric_data["visibility_metrics"].get("tp"),
-                "vis.fp": metric_data["visibility_metrics"].get("fp"),
-                "vis.tn": metric_data["visibility_metrics"].get("tn"),
-                "vis.fn": metric_data["visibility_metrics"].get("fn"),
-                "vis.precision": metric_data["visibility_metrics"].get("precision"),
-                "vis.recall": metric_data["visibility_metrics"].get("recall"),
-                "dist.dists": metric_data["distance_metrics"].get("dists"),
-                "dist.avg": metric_data["distance_metrics"].get("avg"),
-                "dist.p50": metric_data["distance_metrics"].get("p50"),
-                "dist.p75": metric_data["distance_metrics"].get("p75"),
-                "dist.p90": metric_data["distance_metrics"].get("p90"),
-                "dist.p95": metric_data["distance_metrics"].get("p95"),
-                "dist.p99": metric_data["distance_metrics"].get("p99"),
-                "pck.mPCK": metric_data["pck_metrics"].get("mPCK"),
-                "oks.mOKS": metric_data["mOKS"].get("mOKS"),
-                "oks_voc.mAP": metric_data["voc_metrics"].get("oks_voc.mAP"),
-                "oks_voc.mAR": metric_data["voc_metrics"].get("oks_voc.mAR"),
-                "pck_voc.mAP": metric_data["voc_metrics"].get("pck_voc.mAP"),
-                "pck_voc.mAR": metric_data["voc_metrics"].get("pck_voc.mAR"),
-            }
-            return return_dict
+                return_dict = {
+                    "vis.tp": metric_data["visibility_metrics"].get("tp"),
+                    "vis.fp": metric_data["visibility_metrics"].get("fp"),
+                    "vis.tn": metric_data["visibility_metrics"].get("tn"),
+                    "vis.fn": metric_data["visibility_metrics"].get("fn"),
+                    "vis.precision": metric_data["visibility_metrics"].get("precision"),
+                    "vis.recall": metric_data["visibility_metrics"].get("recall"),
+                    "dist.dists": metric_data["distance_metrics"].get("dists"),
+                    "dist.avg": metric_data["distance_metrics"].get("avg"),
+                    "dist.p50": metric_data["distance_metrics"].get("p50"),
+                    "dist.p75": metric_data["distance_metrics"].get("p75"),
+                    "dist.p90": metric_data["distance_metrics"].get("p90"),
+                    "dist.p95": metric_data["distance_metrics"].get("p95"),
+                    "dist.p99": metric_data["distance_metrics"].get("p99"),
+                    "pck.mPCK": metric_data["pck_metrics"].get("mPCK"),
+                    "oks.mOKS": metric_data["mOKS"].get("mOKS"),
+                    "oks_voc.mAP": metric_data["voc_metrics"].get("oks_voc.mAP"),
+                    "oks_voc.mAR": metric_data["voc_metrics"].get("oks_voc.mAR"),
+                    "pck_voc.mAP": metric_data["voc_metrics"].get("pck_voc.mAP"),
+                    "pck_voc.mAR": metric_data["voc_metrics"].get("pck_voc.mAR"),
+                }
+                return return_dict
 
     @classmethod
     def from_config_file(cls, path: Text) -> "ConfigFileInfo":
@@ -304,8 +355,14 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
             if cfg_info.has_trained_model:
                 display_name += "[Trained] "
+                run_name = OmegaConf.select(cfg, "trainer_config.run_name", default="")
+            else:
+                display_name += f"[{filename.split('.yaml')[0]}] "
+                run_name = ""
 
-            run_name = OmegaConf.select(cfg, "trainer_config.run_name", default="")
+            # Normalize run_name: convert None or "None" to empty string
+            run_name = "" if run_name is None or run_name == "None" else run_name
+
             display_name += f"{run_name}({filename})"
 
             if select is not None:
@@ -566,7 +623,7 @@ class TrainingConfigsGetter:
                 return None
             except Exception as e:
                 # Couldn't load so just ignore
-                print(f"Couldn't load config: {e}")
+                print(f"Couldn't load config from `{path}`: {e}")
                 pass
             else:
                 # Get the head from the model (i.e., what the model will predict)

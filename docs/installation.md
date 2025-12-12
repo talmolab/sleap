@@ -1,30 +1,47 @@
 # Installation
 
 !!! warning "Documentation for New SLEAP Versions"
-    This documentation is for the **latest version of SLEAP**.  
-    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
+    This documentation is for the **latest version of SLEAP**. If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
 
-SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases). The SLEAP GUI for labeling can be installed and used on its own. For training and inference with neural networks, SLEAP uses the [**sleap-nn**](https://github.com/talmolab/sleap-nn) backend, which integrates seamlessly with the GUI (use `nn` extra dependency to train/ run inference).
+SLEAP can be installed as a Python package on Windows, Linux, and Mac OS. The newest version of SLEAP can always be found in the [Releases page](https://github.com/talmolab/sleap/releases).
+
+**Installation methods:**
+
+- **[Installation as a system-wide tool with uv](#installation-with-uv-tool-install)**: Use `uv tool install` to install SLEAP globally as a tool (**strongly recommended**)
+- **[Installation with conda/pip](#installation-with-conda/pip)**: Use `pip` to install from pypi in a conda env.
+- **[Installation from source](#installation-from-source)**: Use `uv sync` to install from source. (For developmental purposes)
+
+If you need to import SLEAP as a library in your own scripts, add custom packages for analysis, or share reproducible environments with collaborators, see **[Installation with uv add](installation-uv-add.md)**.
+
+Each installation method above supports two modes:
+
+- **GUI-only**: Install the base package (`sleap`) for labeling and data management
+- **With training/inference**: Add the `nn` extra (`sleap[nn]`) to enable training and inference using the [**sleap-nn**](https://github.com/talmolab/sleap-nn) backend
 
 
-!!! note "GPU Support"
-    SLEAP offers GPU-accelerated training on **NVIDIA GPUs** (Windows/Linux) and **Apple Silicon Macs** (macOS). Other GPU types (such as AMD GPUs or Intel graphics) are **not supported** for training and may result in errors or unexpected behavior. If you do not have a supported GPU, SLEAP will automatically use CPU mode—this works for all features, but training will be significantly slower.
+!!! tip "How to open a terminal"
+    To install SLEAP, you'll need to enter commands in a terminal. Here's how to open one on your system:
 
-    For more details on GPU, see the [GPU Support section](#gpu-support).
+    === "Windows"
+        - Open the **Start menu** and search for **Command Prompt**.
+        - *Tip:* You may prefer alternative terminal apps like [Cmder](https://cmder.app) or [Windows Terminal](https://aka.ms/terminal).
+
+    === "Linux"
+        - Press <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> to launch a new terminal window.
+
+    === "macOS"
+        - Press <kbd>Cmd</kbd> + <kbd>Space</kbd>, type **Terminal**, and press <kbd>Enter</kbd> to open it.
 
 ---
 
 ## Prerequisites
 
-### Python Version Requirements
-Python 3.11, 3.12, or 3.13 is required for all installation methods.
+**Python Version Requirements:** Python 3.11, 3.12, or 3.13 is required for all installation methods.
 
 !!! warning "Python 3.14 is not yet supported"
     SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** If you have Python 3.14 installed, you must specify `--python 3.13` in your install commands.
 
-### Install uv (for uv-based methods)
-
-If you plan to use `uv tool install`, `uvx`, `uv add`, or install from source, you'll need to install [`uv`](https://github.com/astral-sh/uv) first:
+**Install uv (for uv-based methods):** If you plan to use `uv tool install`, `uv add`, or install from source, you'll need to install [`uv`](https://github.com/astral-sh/uv) first:
 
 ```bash
 # macOS/Linux
@@ -33,34 +50,6 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 # Windows
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
-
-!!! note "Skip this step if using pip"
-    If you're installing with pip in a conda environment, you don't need uv.
-
-
-## Installation methods
-
-
-!!! tip "Choose Your Installation Method"
-    - **[Installation as a system-wide tool with uv](#installation-with-uv-tool-install)**: Use `uv tool install` to install SLEAP globally as a tool (Installation needed, **strongly recommended**)
-    - **[Installation with uvx](#installation-with-uvx)**: Use `uvx` for one-off commands. (no installation needed!)
-    - **[Installation with uv add](#installation-with-uv-add)**: Use `uv add` to install sleap in a uv virtual env.
-    - **[Installation with pip](#installation-with-pip)**: Use `pip` to install from pypi in a conda env.
-    - **[Installation from source](#installation-from-source)**: Use `uv sync` to install from source. (For developmental purposes)
-
-**How to open a terminal**
-
-To install SLEAP, you'll need to enter commands in a terminal. Here's how to open one on your system:
-
-=== "Windows"
-    - Open the **Start menu** and search for **Command Prompt**.
-    - *Tip:* You may prefer alternative terminal apps like [Cmder](https://cmder.app) or [Windows Terminal](https://aka.ms/terminal).
-
-=== "Linux"
-    - Press <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> to launch a new terminal window.
-
-=== "macOS"
-    - Press <kbd>Cmd</kbd> + <kbd>Space</kbd>, type **Terminal**, and press <kbd>Enter</kbd> to open it.
 
 --- 
 
@@ -92,10 +81,10 @@ To install SLEAP, you'll need to enter commands in a terminal. Here's how to ope
     ```
 
 
-!!! tip "How uv tool install Works"
-    - **Automatic Installation**: Downloads and installs SLEAP with dependencies
-    - **No Conflicts**: Won't interfere with your existing Python packages/dependencies
-    - **Uses Recent Packages**: Uses the latest version from PyPI
+!!! tip "About uv tool install"
+    This method automatically downloads SLEAP with all dependencies, won't interfere with your existing Python packages, and always uses the latest version from PyPI.
+
+    **Limitation:** Unlike conda or virtual environments, this does not create an activatable environment. You cannot `import sleap` in Python scripts or access dependencies directly—only CLI commands (e.g., `sleap-label`, `sleap-track`) are available. If you need SLEAP as a library, use [uv add](installation-uv-add.md) or [conda/pip](#installation-with-conda/pip) instead.
 
 ### Verify Installation
 ```bash
@@ -103,119 +92,24 @@ To install SLEAP, you'll need to enter commands in a terminal. Here's how to ope
 sleap-label --help
 ```
 
----
-## Installation with uvx
-`uvx` automatically installs sleap and runs your command inside a temporary virtual environment (venv). This means each run is fully isolated and leaves no trace on your system— perfect for trying out SLEAP without any **permanent** installation.
+### Updating Dependencies
 
-### Platform-Specific Commands
+To update SLEAP and its dependencies (including `sleap-nn` and `sleap-io`):
 
-=== "Windows/Linux (CUDA)"
-    ```bash
-    # CUDA 12.8
-    uvx --from "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap-label
-    ```
-
-=== "Windows/Linux (CPU)"
-    ```bash
-    uvx --from "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple sleap-label
-    ```
-
-=== "macOS"
-    ```bash
-    uvx --from "sleap[nn]" sleap-label
-    ```
-
-=== "SLEAP GUI Only"
-    ```bash
-    uvx --from "sleap" sleap-label
-    ```
-
-!!! note "uvx Installation"
-    Because `uvx` installs packages fresh on every run, it's ideal for quick one-off tests. For regular use, you could install with [`uv tool install`](#installation-with-uv-tool-install) or setting up a development environment with [`uv sync`](#installation-from-source) to avoid repeated downloads.
-
----
-
-## Installation with uv add
-
-This method creates a dedicated project environment using uv's modern Python project management. It initializes a new project with `uv init`, creates an isolated virtual environment with `uv venv`, and installs SLEAP using `uv add`. To use all installed packages, <u>**you must run commands with `uv run`**</u> (e.g., `uv run sleap-label ...` or `uv run pytest ...`).
-
-!!! note "Set up your project environment"
-    Move to your project directory and initialize the virtual env:
-    ```bash
-    uv init
-    uv venv
-    ```
-
-### Platform-Specific Commands
-
-!!! tip "How `uv add` works"
-    - When you run `uv init`, it creates a `pyproject.toml` file in your working directory to manage your project's dependencies.
-    - When you use `uv add "sleap[nn]"`, it adds `sleap` as a dependency in your `pyproject.toml` and installs it in your virtual environment.
-    - To add other packages, simply run `uv add <package>`. After adding new packages, you should run `uv sync` to update your environment with all dependencies specified in `pyproject.toml`. (or `uv sync --upgrade` to update all dependencies)
-    - To install a local package (such as a local clone of `./sleap`) in editable mode, use:
-      ```bash
-      uv add --editable "./sleap[nn]" ...
-      ```
-      This is useful for development, as changes to the code are immediately reflected in your environment.
-
-!!! warning "Windows: MarkupSafe Installation Issue"
-    On **Windows**, you may encounter errors when running `uv add "sleap[nn]" --index ...` due to an incompatibility with the MarkupSafe wheel (e.g., "failed to install MarkupSafe" or similar errors).  
-    Similar issues: [#11532](https://github.com/astral-sh/uv/issues/11532) and [#12620](https://github.com/astral-sh/uv/issues/12620).
-
-    **Workaround:**  
-    Before running `uv add "sleap[nn]" ...` on Windows, manually install a compatible version of MarkupSafe:
-
-    ```bash
-    uv add git+https://github.com/pallets/markupsafe@3.0.2
-    ```
-
-    Then proceed with:
-
-    ```bash
-    uv add "sleap[nn]" ...
-    ```
-
-=== "Windows/Linux (CUDA)"
-    ```bash
-    # CUDA 12.8
-    uv add "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
-    ```
-
-=== "Windows/Linux (CPU)"
-    ```bash
-    uv add "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
-    ```
-
-=== "macOS"
-    ```bash
-    uv add "sleap[nn]"
-    ```
-
-=== "SLEAP GUI Only"
-    ```bash
-    uv add "sleap"
-    ```
-
-### Verify Installation
 ```bash
-# Test the installation
-uv run sleap-label --help
+# Update SLEAP to the latest version
+uv tool upgrade sleap
 ```
 
-!!! warning "SLEAP not recognized after installation?"
-    If running the verification step above gives an error like `command not found` or `not recognized as an internal or external command`, try the following workarounds:
-
-    - Activate your virtual environment (the venv name should be the same as your current working dir name). If you used `uv`, activate it and then run:
-    ```bash
-    uv run --active sleap-label --help
-    ```
-    This ensures the command runs in the correct environment.
-    - Another workaround **(not recommended)**:
-      Check if you have any *empty* `pyproject.toml` or `uv.lock` files in `Users/<your-user-name>`. If you find empty files with these names, delete them, and try again (Empty files here can sometimes interfere with uv's environment resolution.)
-
+!!! note "Version Constraints"
+    `uv` respects any version constraints specified during installation. If you need to upgrade to a specific version or change platform-specific extras (e.g., switching CUDA versions), you may need to uninstall (`uv tool uninstall sleap`) and reinstall with the desired configuration.
 
 ---
-## Installation with pip
+
+## Installation with conda/pip
+
+!!! note "No conda package available"
+    Starting with SLEAP 1.5, we only distribute SLEAP via pip (PyPI). There is no `conda install sleap` package. However, we recommend using conda/mamba to manage your Python environment before installing SLEAP with pip.
 
 We recommend creating a dedicated environment with [conda](https://docs.conda.io/en/latest/miniconda.html) or [mamba/miniforge](https://github.com/conda-forge/miniforge) before installing `sleap` with pip. This helps avoid dependency conflicts and keeps your Python setup clean. After installing Miniconda or Miniforge, create and activate an environment, then run the pip install commands below inside the activated environment.
 
@@ -253,7 +147,38 @@ conda activate sleap
 sleap-label --help
 ```
 
---- 
+### Updating Dependencies
+
+To update SLEAP and its dependencies in your conda environment:
+
+=== "Windows/Linux (CUDA 12.8)"
+    ```bash
+    pip install --upgrade "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cu128 --index-url https://pypi.org/simple
+    ```
+
+=== "Windows/Linux (CUDA 11.8)"
+    ```bash
+    pip install --upgrade "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cu118 --index-url https://pypi.org/simple
+    ```
+
+=== "Windows/Linux (CPU)"
+    ```bash
+    pip install --upgrade "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cpu --index-url https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```bash
+    pip install --upgrade "sleap[nn]"
+    ```
+
+!!! tip "Updating Specific Dependencies"
+    To update only a specific dependency like `sleap-nn` or `sleap-io`:
+    ```bash
+    pip install --upgrade sleap-nn
+    pip install --upgrade sleap-io
+    ```
+
+---
 
 ## Installation from source
 
@@ -326,118 +251,95 @@ uv run ruff check sleap tests
 uv run sleap-label
 ```
 
----
+### Updating Dependencies
 
-## Installation Notes
+To update all dependencies (including `sleap-nn` and `sleap-io`) when working from source, use the `--upgrade` flag with `uv sync`:
 
-### CUDA Version Selection
-
-For Windows/Linux systems with NVIDIA GPUs, the installation commands above use CUDA 12.8 by default. To use a different CUDA version:
-
-- **CUDA 11.8**: Replace `cu128` with `cu118` in the index URL
-- **CUDA 12.8**: Use `cu128` (default in examples above)
-
-For more information on which CUDA version to use for your system, see the [PyTorch installation guide](https://pytorch.org/get-started/locally/).
-
-### macOS GPU Support
-
-On macOS, MPS (Metal Performance Shaders) is automatically enabled for Apple Silicon acceleration. No additional configuration is needed.
-
-### GUI-Only Installation
-
-Installing `sleap` (without the `[nn]` extra) will **NOT** include any training/inference capabilities, as it will not include the sleap-nn backend. This should primarily be used for **labeling only**.
-
-To get full functionality including training and inference, install with `sleap[nn]`.
-
----
-
-
-## Testing that things are working
-
-**If you installed using `conda`**, first activate the `sleap` environment by opening a terminal and typing:
-
-```
-conda activate sleap
-```
-!!! hint "Not sure what `conda` environments you already installed?"
-    You can get a list of the environments on your system with:
-    ```
-    conda env list
+=== "Windows/Linux (CUDA 12.8)"
+    ```bash
+    uv sync --extra dev --extra nn-cuda128 --upgrade --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
-### GUI support
+=== "Windows/Linux (CUDA 11.8)"
+    ```bash
+    uv sync --extra dev --extra nn-cuda118 --upgrade --index https://download.pytorch.org/whl/cu118 --index https://pypi.org/simple
+    ```
 
-To check that the GUI is working, simply type:
+=== "Windows/Linux (CPU)"
+    ```bash
+    uv sync --extra dev --extra nn-cpu --upgrade --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
 
-```
+=== "macOS"
+    ```bash
+    uv sync --extra dev --extra nn-cpu --upgrade --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "GUI Only"
+    ```bash
+    uv sync --extra dev --upgrade
+    ```
+
+!!! info "Updating Local Editable Dependencies"
+    If you're developing on multiple related packages (e.g., you have local clones of `sleap`, `sleap-nn`, and `sleap-io`), you can install them all in editable mode:
+
+    ```bash
+    # Install sleap-io in editable mode
+    uv add --editable "../sleap-io"
+
+    # Install sleap-nn in editable mode
+    uv add --editable "../sleap-nn[torch]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+
+    # Then sync with upgrade
+    uv sync --upgrade
+    ```
+
+    This allows you to make changes to any of these packages and see them reflected immediately in your development environment.
+
+---
+
+## Verifying Your Installation
+
+### Running the GUI
+
+```bash
 sleap-label
 ```
 
-
 You should see the SLEAP labeling interface pop up within a few moments.
 
-!!! note "Using `uv run` with virtual environments"
-    If you installed SLEAP using `uv add` or `uv sync`, you must prefix commands with `uv run` to ensure they run inside the correct virtual environment. For example:
+!!! note "Environment-specific commands"
+    - **conda**: Activate first with `conda activate sleap`
+    - **uv add / uv sync**: Prefix with `uv run`, e.g., `uv run sleap-label`
+    - **uv tool install**: Commands work directly from any terminal
+
+### GPU Support
+
+SLEAP supports GPU-accelerated training on **NVIDIA GPUs** (Windows/Linux via CUDA) and **Apple Silicon Macs** (via MPS). Other GPU types are not supported. Without a supported GPU, SLEAP uses CPU mode automatically.
+
+To verify GPU detection (for `uv add`/`pip`/`conda` installs):
+
+=== "Windows/Linux (CUDA)"
+    ```bash
+    python -c "import torch; print(torch.cuda.is_available())"
     ```
-    uv run sleap-label
+
+=== "macOS (MPS)"
+    ```bash
+    python -c "import torch; print(torch.backends.mps.is_available())"
     ```
-    instead of just `sleap-label`.
 
+!!! note "uv tool install"
+    GPU verification commands are not available with `uv tool install` since there's no activatable environment. GPU support will be detected automatically when you run training.
 
-### Importing
+!!! tip "CUDA version selection"
+    The examples above use CUDA 12.8 (`cu128`). For CUDA 11.8, replace `cu128` with `cu118` in the index URL. See the [PyTorch installation guide](https://pytorch.org/get-started/locally/) for details.
 
-To check if SLEAP is installed correctly in non-interactive environments, such as remote servers, confirm that you can import it with:
+### GUI-Only Mode
 
-```
-python -c "import sleap; sleap.versions()"
-```
-<small>Output:</small>
+Installing `sleap` without the `[nn]` extra provides labeling functionality only—no training or inference. Install with `sleap[nn]` for full functionality.
 
-```
-(sleap) λ python -c "import sleap; sleap.versions()"
-SLEAP: 1.5.0
-Numpy: 2.3.2
-Python: 3.12.1
-OS: macOS-14.4.1-arm64-arm-64bit
-```
-
-
-### GPU support
-
-Assuming you installed using either `uv` or the `pip`-based methods, SLEAP should automatically have GPU support enabled.
-
-<!-- To check, verify that SLEAP can detect the GPUs on your system:
-
-```bash
-python -c "import sleap; sleap.system_summary()"
-```
-
-<small>**Output:**</small>
-
-    (sleap_develop) λ python -c "import sleap; sleap.system_summary()"
-    GPUs: 2/2 available
-      Device: /physical_device:GPU:0
-             Available: True
-            Initalized: False
-         Memory growth: None
-      Device: /physical_device:GPU:1
-             Available: True
-            Initalized: False
-         Memory growth: None -->
-
-SLEAP uses PyTorch for GPU acceleration. To directly check if PyTorch is detecting your GPUs:
-
-```bash
-# for windows/ linux
-python -c "import torch; print(torch.cuda.is_available())"
-
-# for mac
-python -c "import torch; print(torch.backends.mps.is_available())"
-```
-
-## Upgrading and uninstalling
-
-We **strongly recommend** installing SLEAP in a fresh environment when updating. This is because dependency versions might change, and depending on the state of your previous environment, directly updating might break compatibility with some of them.
+## Uninstalling
 
 To uninstall SLEAP (if installed with `uv tool`):
 
