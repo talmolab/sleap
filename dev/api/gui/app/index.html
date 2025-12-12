@@ -2139,39 +2139,39 @@
     <div class="doc doc-contents first">
 
         <p>Main GUI application for labeling, training/inference, and proofreading.</p>
-<p>Each open project is an instance of <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>MainWindow</code>.</p>
-<p>The main window contains a <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>QtVideoPlayer</code> widget for showing
+<p>Each open project is an instance of <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>MainWindow</code>.</p>
+<p>The main window contains a <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>QtVideoPlayer</code> widget for showing
 video frames (the video player widget contains both a graphics view widget
 that shows the frame image and a seekbar widget for navigation). The main
 window also contains various "data views"--tables which can be docked
 in the window as well as a status bar.</p>
-<p>When a new instance of <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>MainWindow</code> is created, it creates
+<p>When a new instance of <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>MainWindow</code> is created, it creates
 all of these widgets, sets up the menus, and also creates</p>
 <ul>
-<li>single <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>GuiState</code> object</li>
-<li>single <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>CommandContext</code> object</li>
-<li>single <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>ColorManager</code> object</li>
-<li>multiple overlay objects (subclasses of <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>BaseOverlay</code>)</li>
+<li>single <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>GuiState</code> object</li>
+<li>single <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>CommandContext</code> object</li>
+<li>single <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>ColorManager</code> object</li>
+<li>multiple overlay objects (subclasses of <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>BaseOverlay</code>)</li>
 </ul>
 <p>A timer is started (runs via Qt event loop) which enables/disables
 various menu items and buttons based on current state (e.g., you
 can't delete an instance if no instance is selected).</p>
-<p>Shortcuts are loaded using <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>Shortcuts</code> class. Preferences
+<p>Shortcuts are loaded using <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>Shortcuts</code> class. Preferences
 are loaded by importing <code>prefs</code>, a singleton instance of
-<img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>Preferences</code>.</p>
-<p><img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>GuiState</code> is used for storing "global" state for the project
-(e.g., <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>Labels</code> object, the current frame, current instance,
+<img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>Preferences</code>.</p>
+<p><img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>GuiState</code> is used for storing "global" state for the project
+(e.g., <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>Labels</code> object, the current frame, current instance,
 whether to show track trails, etc.). every menu command with state
 (e.g., check/uncheck) should be connected to a state variable.</p>
-<p><img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>CommandContext</code> has methods which can be triggered
+<p><img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>CommandContext</code> has methods which can be triggered
 by menu items/buttons/etc in the GUI to perform various actions. The
 command context enforces a pattern for implementing each command in
 its own class, it keeps track of whether there are unsaved changes
 (and in the future would make it easier to implement undo/redo), and
 it handles triggering the relevant updates in the GUI based on the
 effects of the command (these are passed using <code>UpdateTopic</code> enum and
-handed by <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />method:<code>MainWindow.on_data_update()</code>).</p>
-<p><img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>ColorManager</code> loads color palettes, keeps track of current
+handed by <img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />method:<code>MainWindow.on_data_update()</code>).</p>
+<p><img alt="🇵🇾" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/svg/1f1f5-1f1fe.svg" title=":py:" />class:<code>ColorManager</code> loads color palettes, keeps track of current
 palette, and should always be queried for how to draw instances--this
 ensures consistency (e.g.) between color of instances drawn on video
 frame and instances listed in data view table.</p>
