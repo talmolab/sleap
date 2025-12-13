@@ -857,9 +857,28 @@ def make_video_callback(
                 # then don't require user to find everything.
                 allow_incomplete = USE_DUMMY_FOR_MISSING_VIDEOS
 
+                # Convert image sequences to displayable strings for the dialog
+                # MissingFilesDialog expects List[str], not List[Union[str, List[str]]]
+                display_filenames = []
+                for fn in filenames:
+                    if isinstance(fn, list):
+                        # Show first image path for image sequences
+                        display_filenames.append(fn[0] if fn else "")
+                    else:
+                        display_filenames.append(fn)
+
                 okay = MissingFilesDialog(
-                    filenames, missing, allow_incomplete=allow_incomplete
+                    display_filenames, missing, allow_incomplete=allow_incomplete
                 ).exec_()
+
+                # Copy any user-provided paths back to filenames
+                for i, (orig, disp) in enumerate(zip(filenames, display_filenames)):
+                    if isinstance(orig, list):
+                        # For image sequences, if user provided a new path,
+                        # we can't easily remap the whole sequence - skip for now
+                        pass
+                    else:
+                        filenames[i] = display_filenames[i]
 
                 if not okay:
                     return True  # True for stop
@@ -870,11 +889,16 @@ def make_video_callback(
             # If we got the same number of paths as there are videos
             if len(filenames) == len(new_paths):
                 # and the file extensions match
+
+                def get_extension(path: Union[str, List[str]]) -> str:
+                    """Get file extension, handling both strings and image sequences."""
+                    if isinstance(path, list):
+                        return path[0].split(".")[-1] if path else ""
+                    return path.split(".")[-1]
+
                 exts_match = all(
-                    (
-                        old.split(".")[-1] == new.split(".")[-1]
-                        for old, new in zip(filenames, new_paths)
-                    )
+                    get_extension(old) == get_extension(new)
+                    for old, new in zip(filenames, new_paths)
                 )
 
                 if exts_match:
@@ -882,7 +906,8 @@ def make_video_callback(
                     # video paths, so we can get the new path for the missing
                     # old path.
                     for i, filename in enumerate(filenames):
-                        if missing[i]:
+                        if missing[i] and not isinstance(filename, list):
+                            # Skip image sequences - can't easily remap
                             filenames[i] = new_paths[i]
                             missing[i] = False
 
