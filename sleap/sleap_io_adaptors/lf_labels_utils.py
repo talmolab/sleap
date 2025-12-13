@@ -41,16 +41,24 @@ class SimpleRange:
         return len(self.list) == 0
 
 
-def find_path_using_paths(filename: str, search_paths: List[str]) -> str:
+def find_path_using_paths(
+    filename: Union[str, List[str]], search_paths: List[str]
+) -> Union[str, List[str]]:
     """Find a file in the given search paths.
 
     Args:
-        filename: The filename to search for.
+        filename: The filename to search for. Can be a string path or a list
+            of paths (for image sequences).
         search_paths: List of directories to search in.
 
     Returns:
         The found path or the original filename if not found.
+        For image sequences (lists), returns the original list unchanged.
     """
+    # Image sequences need special handling - return unchanged for now
+    if isinstance(filename, list):
+        return filename
+
     filename_path = Path(filename)
 
     for search_path in search_paths:
@@ -753,7 +761,15 @@ def fix_paths_with_saved_prefix(
         if missing is not None:
             if not missing[i]:
                 continue
-        elif os.path.exists(filename):
+        elif isinstance(filename, list):
+            # Image sequence - check if first frame exists
+            if len(filename) > 0 and Path(filename[0]).exists():
+                continue
+        elif Path(filename).exists():
+            continue
+
+        # Skip image sequences for prefix conversion - they need special handling
+        if isinstance(filename, list):
             continue
 
         for old_prefix, new_prefix in path_prefix_conversions.items():
@@ -763,10 +779,10 @@ def fix_paths_with_saved_prefix(
                 # Equivalent to fix_path_separator(try_filename)
                 try_filename = try_filename.replace("\\", "/")
 
-                if os.path.exists(try_filename):
+                if Path(try_filename).exists():
                     filenames[i] = try_filename
                     if missing is not None:
-                        missing[i]
+                        missing[i] = False
                     continue
 
 
@@ -812,7 +828,14 @@ def make_video_callback(
         context = context or {"changed_on_load": False}
 
         # Equivalent to pathutils.list_file_missing(filenames)
-        missing = [not os.path.exists(filename) for filename in filenames]
+        # Handle both single paths and image sequences (lists of paths)
+        missing = []
+        for filename in filenames:
+            if isinstance(filename, list):
+                # ImageVideo backend (list of images) - check if first frame exists
+                missing.append(len(filename) == 0 or not Path(filename[0]).exists())
+            else:
+                missing.append(not Path(filename).exists())
 
         # Try changing the prefix using saved patterns
         if sum(missing):
