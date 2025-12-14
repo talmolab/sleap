@@ -827,21 +827,23 @@ def make_video_callback(
         filenames = [item.filename for item in video_list]
         context = context or {"changed_on_load": False}
 
-        # Equivalent to pathutils.list_file_missing(filenames)
-        # Handle both single paths and image sequences (lists of paths)
+        # Track which entries are image sequences (list of frame paths vs single path)
+        is_sequence = [isinstance(fn, list) for fn in filenames]
+
+        # Build missing list - handle both single paths and image sequences
         missing = []
-        for filename in filenames:
-            if isinstance(filename, list):
+        for i, filename in enumerate(filenames):
+            if is_sequence[i]:
                 # ImageVideo backend (list of images) - check if first frame exists
                 missing.append(len(filename) == 0 or not Path(filename[0]).exists())
             else:
                 missing.append(not Path(filename).exists())
 
-        # Try changing the prefix using saved patterns
+        # Try changing the prefix using saved patterns (skip sequences)
         if sum(missing):
             fix_paths_with_saved_prefix(filenames, missing)
 
-        # Check for file in search_path dirctories
+        # Check for file in search_path directories
         if sum(missing) and new_paths:
             for i, filename in enumerate(filenames):
                 fixed_path = find_path_using_paths(filename, new_paths)
@@ -857,31 +859,45 @@ def make_video_callback(
                 # then don't require user to find everything.
                 allow_incomplete = USE_DUMMY_FOR_MISSING_VIDEOS
 
-                # Convert image sequences to displayable strings for the dialog
+                # Create display-friendly paths for the dialog
+                # For sequences: show the parent directory of the first frame
                 # MissingFilesDialog expects List[str], not List[Union[str, List[str]]]
                 display_filenames = []
-                for fn in filenames:
-                    if isinstance(fn, list):
-                        # Show first image path for image sequences
-                        display_filenames.append(fn[0] if fn else "")
+                for i, fn in enumerate(filenames):
+                    if is_sequence[i]:
+                        # Show directory containing the images
+                        display_filenames.append(
+                            str(Path(fn[0]).parent) if fn else ""
+                        )
                     else:
                         display_filenames.append(fn)
 
                 okay = MissingFilesDialog(
-                    display_filenames, missing, allow_incomplete=allow_incomplete
+                    display_filenames,
+                    missing,
+                    is_sequence=is_sequence,
+                    allow_incomplete=allow_incomplete,
                 ).exec_()
-
-                # Copy any user-provided paths back to filenames
-                for i, (orig, disp) in enumerate(zip(filenames, display_filenames)):
-                    if isinstance(orig, list):
-                        # For image sequences, if user provided a new path,
-                        # we can't easily remap the whole sequence - skip for now
-                        pass
-                    else:
-                        filenames[i] = display_filenames[i]
 
                 if not okay:
                     return True  # True for stop
+
+                # After dialog: remap sequence paths using new directory
+                for i, fn in enumerate(filenames):
+                    if is_sequence[i]:
+                        # Check if user found a new directory
+                        if fn and not missing[i]:
+                            old_dir = str(Path(fn[0]).parent)
+                            new_dir = display_filenames[i]
+                            if old_dir != new_dir:
+                                # Remap all frame paths to new directory
+                                filenames[i] = [
+                                    str(Path(new_dir) / Path(frame).name)
+                                    for frame in fn
+                                ]
+                    else:
+                        # Regular video - just copy the potentially updated path
+                        filenames[i] = display_filenames[i]
 
                 context["changed_on_load"] = True
 
@@ -906,7 +922,7 @@ def make_video_callback(
                     # video paths, so we can get the new path for the missing
                     # old path.
                     for i, filename in enumerate(filenames):
-                        if missing[i] and not isinstance(filename, list):
+                        if missing[i] and not is_sequence[i]:
                             # Skip image sequences - can't easily remap
                             filenames[i] = new_paths[i]
                             missing[i] = False

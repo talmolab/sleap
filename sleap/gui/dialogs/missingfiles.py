@@ -18,6 +18,7 @@ class MissingFilesDialog(QtWidgets.QDialog):
         self,
         filenames: List[str],
         missing: List[bool] = None,
+        is_sequence: List[bool] = None,
         replace: bool = False,
         allow_incomplete: bool = False,
         *args,
@@ -30,8 +31,13 @@ class MissingFilesDialog(QtWidgets.QDialog):
 
         Args:
             filenames: List of filenames to find, needn't all be missing.
+                For image sequences, this should be the directory path.
             missing: Corresponding list, whether each file is missing. If
                 not given, then we'll check whether each file exists.
+            is_sequence: Corresponding list indicating whether each entry is
+                an image sequence (True) or a regular video file (False).
+                If True, the user will be prompted to select a directory
+                instead of a file.
             replace: Whether we are replacing files (already found) or
                 locating files (not already found). Affects text in dialog.
             allow_incomplete: Whether to enable "accept" button when there
@@ -48,6 +54,7 @@ class MissingFilesDialog(QtWidgets.QDialog):
 
         self.filenames = filenames
         self.missing = missing
+        self.is_sequence = is_sequence or [False] * len(filenames)
         self.replace = replace
 
         missing_count = sum(missing)
@@ -57,10 +64,18 @@ class MissingFilesDialog(QtWidgets.QDialog):
         if replace:
             info_text = "Double-click on a file to replace it..."
         else:
-            info_text = (
-                f"{missing_count} file(s) which could not be found. "
-                "Please double-click on a file to locate it..."
-            )
+            # Check if any entries are image sequences
+            has_sequences = any(self.is_sequence)
+            if has_sequences:
+                info_text = (
+                    f"{missing_count} file(s)/folder(s) which could not be found. "
+                    "Please double-click to locate (directories for image sequences)..."
+                )
+            else:
+                info_text = (
+                    f"{missing_count} file(s) which could not be found. "
+                    "Please double-click on a file to locate it..."
+                )
         info_label = QtWidgets.QLabel(info_text)
         layout.addWidget(info_label)
 
@@ -84,33 +99,55 @@ class MissingFilesDialog(QtWidgets.QDialog):
         self.setLayout(layout)
 
     def locateFile(self, idx: int):
-        """Shows dialog for user to locate a specific missing file."""
+        """Shows dialog for user to locate a specific missing file or directory."""
         old_filename = self.filenames[idx]
-        _, old_ext = os.path.splitext(old_filename)
 
-        caption = f"Please locate {old_filename}..."
-        filters = [f"Missing file type (*{old_ext})", "Any File (*.*)"]
-        filters = [filters[0]] if self.replace else filters
-        new_filename, _ = FileDialog.open(
-            None, dir=None, caption=caption, filter=";;".join(filters)
-        )
+        if self.is_sequence[idx]:
+            # Image sequence: ask for directory instead of file
+            dir_name = Path(old_filename).name if old_filename else "images"
+            caption = f"Please locate directory containing {dir_name}..."
+            new_filename = FileDialog.openDir(None, caption=caption)
 
-        path_new_filename = Path(new_filename)
-        paths = [str(PurePath(fn)) for fn in self.filenames]
-        if str(path_new_filename) in paths:
-            # Do not allow same video to be imported more than once.
-            QtWidgets.QMessageBox(
-                text=(
-                    f"The file <b>{path_new_filename.name}</b> cannot be added to "
-                    "the project multiple times."
-                )
-            ).exec_()
-        elif new_filename:
-            # Try using this change to find other missing files
-            self.setFilename(idx, new_filename)
+            if new_filename and Path(new_filename).is_dir():
+                # Check for duplicate
+                paths = [str(PurePath(fn)) for fn in self.filenames]
+                if str(Path(new_filename)) in paths:
+                    QtWidgets.QMessageBox(
+                        text=(
+                            f"The directory <b>{Path(new_filename).name}</b> cannot "
+                            "be added to the project multiple times."
+                        )
+                    ).exec_()
+                else:
+                    self.setFilename(idx, new_filename)
+                    self.file_table.reset()
+        else:
+            # Regular video file: use file picker
+            _, old_ext = os.path.splitext(old_filename)
 
-            # Redraw the table
-            self.file_table.reset()
+            caption = f"Please locate {old_filename}..."
+            filters = [f"Missing file type (*{old_ext})", "Any File (*.*)"]
+            filters = [filters[0]] if self.replace else filters
+            new_filename, _ = FileDialog.open(
+                None, dir=None, caption=caption, filter=";;".join(filters)
+            )
+
+            path_new_filename = Path(new_filename)
+            paths = [str(PurePath(fn)) for fn in self.filenames]
+            if str(path_new_filename) in paths:
+                # Do not allow same video to be imported more than once.
+                QtWidgets.QMessageBox(
+                    text=(
+                        f"The file <b>{path_new_filename.name}</b> cannot be added to "
+                        "the project multiple times."
+                    )
+                ).exec_()
+            elif new_filename:
+                # Try using this change to find other missing files
+                self.setFilename(idx, new_filename)
+
+                # Redraw the table
+                self.file_table.reset()
 
     def setFilename(self, idx: int, filename: str, confirm: bool = True):
         """Applies change after user finds missing file."""
