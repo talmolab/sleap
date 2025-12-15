@@ -1,3 +1,4 @@
+from unittest.mock import patch, MagicMock
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 
 
@@ -99,3 +100,187 @@ def test_missing_gui_info_text_with_sequences(qtbot):
     # The dialog with sequences should have different info text
     # (We can't easily check the text content in unit tests, but we verify
     # the dialog creates without error)
+
+
+def test_locate_file_regular_video(qtbot):
+    """Test locateFile for regular video files."""
+    filenames = ["m:\\missing_video.mp4"]
+    missing = [True]
+    is_sequence = [False]
+
+    win = MissingFilesDialog(filenames, missing=missing, is_sequence=is_sequence)
+    win.show()
+    qtbot.addWidget(win)
+
+    # Mock the FileDialog.open to return a found file
+    with patch("sleap.gui.dialogs.missingfiles.FileDialog") as MockFileDialog:
+        MockFileDialog.open.return_value = (
+            "tests/data/videos/small_robot.mp4",
+            "filter",
+        )
+
+        win.locateFile(0)
+
+        # FileDialog.open should be called (not openDir)
+        MockFileDialog.open.assert_called_once()
+        MockFileDialog.openDir.assert_not_called()
+
+        # Filename should be updated
+        assert filenames[0] == "tests/data/videos/small_robot.mp4"
+        assert missing[0] is False
+
+
+def test_locate_file_image_sequence_directory(qtbot):
+    """Test locateFile for image sequence (directory selection)."""
+    filenames = ["m:\\missing_images_dir"]
+    missing = [True]
+    is_sequence = [True]
+
+    win = MissingFilesDialog(filenames, missing=missing, is_sequence=is_sequence)
+    win.show()
+    qtbot.addWidget(win)
+
+    # Mock the FileDialog.openDir to return a found directory
+    with patch("sleap.gui.dialogs.missingfiles.FileDialog") as MockFileDialog:
+        MockFileDialog.openDir.return_value = "tests/data/videos"
+
+        # Mock Path.is_dir to return True
+        with patch("sleap.gui.dialogs.missingfiles.Path") as MockPath:
+            mock_path_instance = MagicMock()
+            mock_path_instance.is_dir.return_value = True
+            mock_path_instance.name = "missing_images_dir"
+            mock_path_instance.__str__ = lambda self: "tests/data/videos"
+            MockPath.return_value = mock_path_instance
+
+            win.locateFile(0)
+
+            # FileDialog.openDir should be called (not open)
+            MockFileDialog.openDir.assert_called_once()
+            MockFileDialog.open.assert_not_called()
+
+
+def test_locate_file_duplicate_prevention(qtbot):
+    """Test that duplicate files are prevented."""
+    filenames = [
+        "m:\\video1.mp4",
+        "tests/data/videos/small_robot.mp4",  # Already in list
+    ]
+    missing = [True, False]
+    is_sequence = [False, False]
+
+    win = MissingFilesDialog(filenames, missing=missing, is_sequence=is_sequence)
+    win.show()
+    qtbot.addWidget(win)
+
+    # Mock the FileDialog.open to return a file already in the list
+    with patch("sleap.gui.dialogs.missingfiles.FileDialog") as MockFileDialog:
+        MockFileDialog.open.return_value = (
+            "tests/data/videos/small_robot.mp4",  # Duplicate
+            "filter",
+        )
+
+        # Mock QMessageBox to capture the warning
+        with patch(
+            "sleap.gui.dialogs.missingfiles.QtWidgets.QMessageBox"
+        ) as MockMsgBox:
+            mock_msgbox_instance = MagicMock()
+            MockMsgBox.return_value = mock_msgbox_instance
+
+            win.locateFile(0)
+
+            # Message box should be shown for duplicate
+            MockMsgBox.assert_called_once()
+            mock_msgbox_instance.exec_.assert_called_once()
+
+            # Filename should NOT be updated (still missing)
+            assert filenames[0] == "m:\\video1.mp4"
+            assert missing[0] is True
+
+
+def test_locate_file_duplicate_directory_prevention(qtbot):
+    """Test that duplicate directories are prevented for sequences."""
+    filenames = [
+        "m:\\missing_dir",
+        "tests/data/videos",  # Already in list
+    ]
+    missing = [True, False]
+    is_sequence = [True, True]
+
+    win = MissingFilesDialog(filenames, missing=missing, is_sequence=is_sequence)
+    win.show()
+    qtbot.addWidget(win)
+
+    # Mock the FileDialog.openDir to return a directory already in the list
+    with patch("sleap.gui.dialogs.missingfiles.FileDialog") as MockFileDialog:
+        MockFileDialog.openDir.return_value = "tests/data/videos"  # Duplicate
+
+        # Mock Path for both is_dir check and string comparison
+        with patch("sleap.gui.dialogs.missingfiles.Path") as MockPath:
+            mock_path_instance = MagicMock()
+            mock_path_instance.is_dir.return_value = True
+            mock_path_instance.name = "videos"
+            mock_path_instance.__str__ = lambda self: "tests/data/videos"
+            MockPath.return_value = mock_path_instance
+
+            # Mock QMessageBox to capture the warning
+            with patch(
+                "sleap.gui.dialogs.missingfiles.QtWidgets.QMessageBox"
+            ) as MockMsgBox:
+                mock_msgbox_instance = MagicMock()
+                MockMsgBox.return_value = mock_msgbox_instance
+
+                win.locateFile(0)
+
+                # Message box should be shown for duplicate
+                MockMsgBox.assert_called_once()
+
+                # Filename should NOT be updated (still missing)
+                assert filenames[0] == "m:\\missing_dir"
+                assert missing[0] is True
+
+
+def test_locate_file_empty_selection(qtbot):
+    """Test that empty selection is handled gracefully."""
+    filenames = ["m:\\missing_video.mp4"]
+    missing = [True]
+    is_sequence = [False]
+
+    win = MissingFilesDialog(filenames, missing=missing, is_sequence=is_sequence)
+    win.show()
+    qtbot.addWidget(win)
+
+    # Mock the FileDialog.open to return empty string (user cancelled)
+    with patch("sleap.gui.dialogs.missingfiles.FileDialog") as MockFileDialog:
+        MockFileDialog.open.return_value = ("", "filter")
+
+        win.locateFile(0)
+
+        # Filename should NOT be updated
+        assert filenames[0] == "m:\\missing_video.mp4"
+        assert missing[0] is True
+
+
+def test_replace_mode_dialog(qtbot):
+    """Test dialog in replace mode."""
+    filenames = ["tests/data/videos/small_robot.mp4"]
+    missing = [False]  # Not missing, but we want to replace
+
+    win = MissingFilesDialog(filenames, missing=missing, replace=True)
+    win.show()
+    qtbot.addWidget(win)
+
+    # In replace mode, accept button should be enabled (files found)
+    assert win.replace is True
+
+
+def test_allow_incomplete_mode(qtbot):
+    """Test dialog with allow_incomplete=True."""
+    filenames = ["m:\\missing_video.mp4"]
+    missing = [True]
+
+    win = MissingFilesDialog(filenames, missing=missing, allow_incomplete=True)
+    win.show()
+    qtbot.addWidget(win)
+
+    # Accept button should be enabled even with missing files
+    assert win.accept_button.isEnabled() is True
