@@ -73,6 +73,7 @@ def centered_pair_vid() -> Video:
 TEST_SMALL_ROBOT_SIV_FILE0 = "tests/data/videos/robot0.jpg"
 TEST_SMALL_ROBOT_SIV_FILE1 = "tests/data/videos/robot1.jpg"
 TEST_SMALL_ROBOT_SIV_FILE2 = "tests/data/videos/robot2.jpg"
+TEST_SMALL_ROBOT_SIV_DIR = "tests/data/videos"
 TEST_SMALL_ROBOT_VID = "tests/data/videos/small_robot_3_frame.mp4"
 
 
@@ -84,6 +85,22 @@ def small_robot_single_image_vid():
         TEST_SMALL_ROBOT_SIV_FILE2,
     ]
     return Video.from_filename(filenames)
+
+
+@pytest.fixture
+def small_robot_image_sequence_paths():
+    """Returns the list of image paths for an image sequence (ImageVideo backend)."""
+    return [
+        TEST_SMALL_ROBOT_SIV_FILE0,
+        TEST_SMALL_ROBOT_SIV_FILE1,
+        TEST_SMALL_ROBOT_SIV_FILE2,
+    ]
+
+
+@pytest.fixture
+def small_robot_image_sequence_dir():
+    """Returns the directory containing the image sequence."""
+    return TEST_SMALL_ROBOT_SIV_DIR
 
 
 @pytest.fixture
