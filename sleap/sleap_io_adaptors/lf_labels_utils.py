@@ -929,10 +929,8 @@ def make_video_callback(
                     context["changed_on_load"] = True
 
         # Replace the video filenames with changes by user
-        # Use open=False to prevent sleap-io from trying to validate/read the video
-        # immediately, which would cause OpenCV warnings for the old cached paths
         for i, item in enumerate(video_list):
-            item.replace_filename(filenames[i], open=False)
+            item.replace_filename(filenames[i])
 
     return video_callback
 
