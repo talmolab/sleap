@@ -1,6 +1,5 @@
 """Tests for sleap.sleap_io_adaptors.lf_labels_utils module."""
 
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -51,9 +50,7 @@ class TestVideoCallbackImageSequences:
         video_list = [mock_video]
         context = {"changed_on_load": False}
 
-        callback = make_video_callback(
-            search_paths=[], use_gui=False, context=context
-        )
+        callback = make_video_callback(search_paths=[], use_gui=False, context=context)
         callback(video_list)
 
         # The video should still have its original filename since no replacement found
@@ -75,9 +72,7 @@ class TestVideoCallbackImageSequences:
         video_list = [mock_video]
         context = {"changed_on_load": False}
 
-        callback = make_video_callback(
-            search_paths=[], use_gui=False, context=context
-        )
+        callback = make_video_callback(search_paths=[], use_gui=False, context=context)
         callback(video_list)
 
         # The filename should remain unchanged
@@ -101,9 +96,7 @@ class TestVideoCallbackImageSequences:
         video_list = [mock_regular, mock_sequence]
         context = {"changed_on_load": False}
 
-        callback = make_video_callback(
-            search_paths=[], use_gui=False, context=context
-        )
+        callback = make_video_callback(search_paths=[], use_gui=False, context=context)
         callback(video_list)
 
         # Both should retain their original format

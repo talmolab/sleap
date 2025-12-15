@@ -866,9 +866,7 @@ def make_video_callback(
                 for i, fn in enumerate(filenames):
                     if is_sequence[i]:
                         # Show directory containing the images
-                        display_filenames.append(
-                            str(Path(fn[0]).parent) if fn else ""
-                        )
+                        display_filenames.append(str(Path(fn[0]).parent) if fn else "")
                     else:
                         display_filenames.append(fn)
 

@@ -93,9 +93,7 @@ def test_missing_gui_info_text_with_sequences(qtbot):
 
     # With sequences
     filenames_seq = ["m:\\images_dir"]
-    win_seq = MissingFilesDialog(
-        filenames_seq, missing=[True], is_sequence=[True]
-    )
+    win_seq = MissingFilesDialog(filenames_seq, missing=[True], is_sequence=[True])
     qtbot.addWidget(win_seq)
 
     # The dialog with sequences should have different info text
