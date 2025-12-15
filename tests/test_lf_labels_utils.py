@@ -463,7 +463,8 @@ class TestVideoCallbackGUI:
             call_args = MockDialog.call_args
             display_filenames = call_args[0][0]
             # Should show "/nonexistent/images" (parent dir)
-            assert display_filenames[0] == "/nonexistent/images"
+            # Use Path for cross-platform comparison
+            assert Path(display_filenames[0]) == Path("/nonexistent/images")
             assert call_args[1]["is_sequence"] == [True]
 
     def test_gui_dialog_remaps_sequence_paths(self):
@@ -504,7 +505,12 @@ class TestVideoCallbackGUI:
             # The replace_filename should be called with remapped paths
             mock_sequence.replace_filename.assert_called_once()
             new_paths = mock_sequence.replace_filename.call_args[0][0]
-            assert new_paths == ["/new/images/frame0.jpg", "/new/images/frame1.jpg"]
+            # Use Path for cross-platform comparison
+            expected_paths = [
+                Path("/new/images/frame0.jpg"),
+                Path("/new/images/frame1.jpg"),
+            ]
+            assert [Path(p) for p in new_paths] == expected_paths
 
     def test_gui_not_shown_when_no_missing(self):
         """Test that GUI dialog is not shown when all files exist."""
@@ -554,8 +560,9 @@ class TestVideoCallbackGUI:
             call_args = MockDialog.call_args
             display_filenames = call_args[0][0]
             # Regular video shows full path, sequence shows directory
-            assert display_filenames[0] == "/nonexistent/video.mp4"
-            assert display_filenames[1] == "/nonexistent/images"
+            # Use Path for cross-platform comparison
+            assert Path(display_filenames[0]) == Path("/nonexistent/video.mp4")
+            assert Path(display_filenames[1]) == Path("/nonexistent/images")
             assert call_args[1]["is_sequence"] == [False, True]
 
 

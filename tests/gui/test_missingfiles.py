@@ -199,9 +199,13 @@ def test_locate_file_duplicate_prevention(qtbot):
 
 def test_locate_file_duplicate_directory_prevention(qtbot):
     """Test that duplicate directories are prevented for sequences."""
+    from pathlib import PurePath
+
+    # Use a path that exists and normalize it to platform format
+    existing_path = str(PurePath("tests/data/videos"))
     filenames = [
         "m:\\missing_dir",
-        "tests/data/videos",  # Already in list
+        existing_path,  # Already in list (normalized)
     ]
     missing = [True, False]
     is_sequence = [True, True]
@@ -210,33 +214,26 @@ def test_locate_file_duplicate_directory_prevention(qtbot):
     win.show()
     qtbot.addWidget(win)
 
-    # Mock the FileDialog.openDir to return a directory already in the list
+    # Mock the FileDialog.openDir to return the same directory (duplicate)
     with patch("sleap.gui.dialogs.missingfiles.FileDialog") as MockFileDialog:
-        MockFileDialog.openDir.return_value = "tests/data/videos"  # Duplicate
+        # Return the same path that's already in the list
+        MockFileDialog.openDir.return_value = existing_path
 
-        # Mock Path for both is_dir check and string comparison
-        with patch("sleap.gui.dialogs.missingfiles.Path") as MockPath:
-            mock_path_instance = MagicMock()
-            mock_path_instance.is_dir.return_value = True
-            mock_path_instance.name = "videos"
-            mock_path_instance.__str__ = lambda self: "tests/data/videos"
-            MockPath.return_value = mock_path_instance
+        # Mock QMessageBox to capture the warning
+        with patch(
+            "sleap.gui.dialogs.missingfiles.QtWidgets.QMessageBox"
+        ) as MockMsgBox:
+            mock_msgbox_instance = MagicMock()
+            MockMsgBox.return_value = mock_msgbox_instance
 
-            # Mock QMessageBox to capture the warning
-            with patch(
-                "sleap.gui.dialogs.missingfiles.QtWidgets.QMessageBox"
-            ) as MockMsgBox:
-                mock_msgbox_instance = MagicMock()
-                MockMsgBox.return_value = mock_msgbox_instance
+            win.locateFile(0)
 
-                win.locateFile(0)
+            # Message box should be shown for duplicate
+            MockMsgBox.assert_called_once()
 
-                # Message box should be shown for duplicate
-                MockMsgBox.assert_called_once()
-
-                # Filename should NOT be updated (still missing)
-                assert filenames[0] == "m:\\missing_dir"
-                assert missing[0] is True
+            # Filename should NOT be updated (still missing)
+            assert filenames[0] == "m:\\missing_dir"
+            assert missing[0] is True
 
 
 def test_locate_file_empty_selection(qtbot):
