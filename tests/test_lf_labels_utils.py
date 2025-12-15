@@ -132,7 +132,8 @@ class TestFindPathUsingPaths:
         result = find_path_using_paths(filename, ["tests/data/videos"])
 
         # Should find the file in the search path
-        assert result == "tests/data/videos/small_robot.mp4"
+        # Use Path for comparison to handle Windows vs Unix path separators
+        assert Path(result) == Path("tests/data/videos/small_robot.mp4")
 
     def test_returns_original_if_not_found(self):
         """Test that original filename is returned if not found."""
