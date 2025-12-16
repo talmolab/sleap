@@ -864,9 +864,11 @@ def make_video_callback(
         for i, filename in enumerate(filenames):
             if is_sequence[i]:
                 # ImageVideo backend (list of images) - check if first frame exists
-                missing.append(len(filename) == 0 or not Path(filename[0]).exists())
+                # Convert to string in case filename[0] is a Path object
+                first_frame = str(filename[0]) if filename else ""
+                missing.append(len(filename) == 0 or not Path(first_frame).exists())
             else:
-                missing.append(not Path(filename).exists())
+                missing.append(not Path(str(filename)).exists())
 
         # Try changing the prefix using saved patterns (skips sequences)
         if sum(missing):
