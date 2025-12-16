@@ -899,9 +899,10 @@ def make_video_callback(
                 for i, fn in enumerate(filenames):
                     if is_sequence[i]:
                         # Show first frame path for distinguishability
-                        display_filenames.append(fn[0] if fn else "")
+                        # Convert to string in case it's a Path object
+                        display_filenames.append(str(fn[0]) if fn else "")
                     else:
-                        display_filenames.append(fn)
+                        display_filenames.append(str(fn))
 
                 okay = MissingFilesDialog(
                     display_filenames,
