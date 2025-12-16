@@ -771,7 +771,7 @@ def fix_paths_with_saved_prefix(
         if isinstance(filename, list):
             if not filename:
                 continue
-            first_frame = filename[0]
+            first_frame = str(filename[0])
             if not first_frame:
                 continue
 
@@ -780,8 +780,9 @@ def fix_paths_with_saved_prefix(
                     # Verify ALL frames exist with the new prefix
                     all_frames_exist = True
                     for frame_path in filename:
-                        if frame_path.startswith(old_prefix):
-                            try_frame = frame_path.replace(old_prefix, new_prefix)
+                        frame_str = str(frame_path)
+                        if frame_str.startswith(old_prefix):
+                            try_frame = frame_str.replace(old_prefix, new_prefix)
                             try_frame = try_frame.replace("\\", "/")
                             if not Path(try_frame).exists():
                                 all_frames_exist = False
@@ -790,7 +791,7 @@ def fix_paths_with_saved_prefix(
                     if all_frames_exist:
                         # Apply prefix to all frames
                         filenames[i] = [
-                            frame.replace(old_prefix, new_prefix).replace("\\", "/")
+                            str(frame).replace(old_prefix, new_prefix).replace("\\", "/")
                             for frame in filename
                         ]
                         if missing is not None:
@@ -798,12 +799,13 @@ def fix_paths_with_saved_prefix(
                         break
         else:
             # Regular video file
-            if missing is None and Path(filename).exists():
+            filename_str = str(filename)
+            if missing is None and Path(filename_str).exists():
                 continue
 
             for old_prefix, new_prefix in path_prefix_conversions.items():
-                if filename.startswith(old_prefix):
-                    try_filename = filename.replace(old_prefix, new_prefix)
+                if filename_str.startswith(old_prefix):
+                    try_filename = filename_str.replace(old_prefix, new_prefix)
                     try_filename = try_filename.replace("\\", "/")
 
                     if Path(try_filename).exists():
