@@ -8,36 +8,9 @@ from pathlib import Path, PurePath
 from typing import Callable, List
 
 from qtpy import QtWidgets, QtCore, QtGui
-from sleap_io.io.video_reading import ImageVideo
 
 from sleap.io import pathutils
 from sleap.gui.dialogs.filedialog import FileDialog
-
-
-def verify_sequence_frames(frame_paths: List[str], new_dir: str) -> List[str]:
-    """Verify which frames from a sequence exist in a new directory.
-
-    Uses ImageVideo.find_images() to efficiently find available images
-    in the target directory.
-
-    Args:
-        frame_paths: Original list of frame file paths.
-        new_dir: Directory to check for frames.
-
-    Returns:
-        List of frame filenames that are missing from the new directory.
-    """
-    # Get all images available in the new directory
-    available_images = set(Path(p).name for p in ImageVideo.find_images(new_dir))
-
-    # Check which frames are missing
-    missing_frames = []
-    for frame_path in frame_paths:
-        frame_name = Path(frame_path).name
-        if frame_name not in available_images:
-            missing_frames.append(frame_name)
-
-    return missing_frames
 
 
 class MissingFilesDialog(QtWidgets.QDialog):
@@ -126,8 +99,7 @@ class MissingFilesDialog(QtWidgets.QDialog):
         """Shows dialog for user to locate a specific missing file.
 
         For image sequences, the user selects the first frame file.
-        The directory is extracted and all frames are remapped to that directory.
-        All frames are verified to exist before marking as found.
+        The path prefix change is then applied to other missing files.
         """
         old_filename = self.filenames[idx]
         _, old_ext = os.path.splitext(old_filename)
@@ -150,43 +122,10 @@ class MissingFilesDialog(QtWidgets.QDialog):
 
         path_new_filename = Path(new_filename)
 
-        if self.is_sequence[idx]:
-            # Image sequence: verify all frames exist in the new directory
-            new_dir = path_new_filename.parent
-            original_frames = self.original_filenames[idx]
-
-            if not isinstance(original_frames, list):
-                original_frames = [original_frames]
-
-            # Use ImageVideo.find_images() to efficiently verify frames
-            missing_frames = verify_sequence_frames(original_frames, str(new_dir))
-
-            if missing_frames:
-                # Warn user that not all frames were found
-                total_frames = len(original_frames)
-                missing_count = len(missing_frames)
-                sample_missing = missing_frames[:3]
-                sample_str = ", ".join(sample_missing)
-                if missing_count > 3:
-                    sample_str += f"... and {missing_count - 3} more"
-
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Missing Frames",
-                    f"Not all frames found in directory.\n\n"
-                    f"Missing {missing_count} of {total_frames} frames:\n"
-                    f"{sample_str}\n\n"
-                    f"Please select a directory containing all frames.",
-                )
-                return
-
-            # All frames found - update the display filename (first frame path)
-            self.setFilename(idx, str(new_dir / Path(old_filename).name))
-        else:
-            # Regular video file
+        # Check for duplicate (regular videos only)
+        if not self.is_sequence[idx]:
             paths = [str(PurePath(fn)) for fn in self.filenames]
             if str(path_new_filename) in paths:
-                # Do not allow same video to be imported more than once.
                 QtWidgets.QMessageBox(
                     text=(
                         f"The file <b>{path_new_filename.name}</b> cannot be added to "
@@ -195,8 +134,9 @@ class MissingFilesDialog(QtWidgets.QDialog):
                 ).exec_()
                 return
 
-            # Try using this change to find other missing files
-            self.setFilename(idx, new_filename)
+        # Apply the change - works for both regular videos and sequences
+        # For sequences, the selected file represents the first frame
+        self.setFilename(idx, new_filename)
 
         # Redraw the table
         self.file_table.reset()

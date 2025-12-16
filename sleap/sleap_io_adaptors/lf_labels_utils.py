@@ -777,18 +777,11 @@ def fix_paths_with_saved_prefix(
 
             for old_prefix, new_prefix in path_prefix_conversions.items():
                 if first_frame.startswith(old_prefix):
-                    # Verify ALL frames exist with the new prefix
-                    all_frames_exist = True
-                    for frame_path in filename:
-                        frame_str = str(frame_path)
-                        if frame_str.startswith(old_prefix):
-                            try_frame = frame_str.replace(old_prefix, new_prefix)
-                            try_frame = try_frame.replace("\\", "/")
-                            if not Path(try_frame).exists():
-                                all_frames_exist = False
-                                break
+                    # Check if first frame exists with the new prefix
+                    try_first = first_frame.replace(old_prefix, new_prefix)
+                    try_first = try_first.replace("\\", "/")
 
-                    if all_frames_exist:
+                    if Path(try_first).exists():
                         # Apply prefix to all frames
                         filenames[i] = [
                             str(frame).replace(old_prefix, new_prefix).replace("\\", "/")

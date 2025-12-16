@@ -69,24 +69,20 @@ def filenames_prefix_change(
                 try_filename = filename.replace(old_prefix, new_prefix)
                 try_filename = fix_path_separator(try_filename)
 
-                # For image sequences, verify ALL frames exist at new location
+                # For image sequences, check if first frame exists at new location
                 if is_sequence[i]:
                     frames = original_filenames[i]
                     if not isinstance(frames, list):
                         frames = [frames]
 
-                    # Check if all frames exist with the prefix change
-                    all_frames_exist = True
-                    for frame_path in frames:
-                        if frame_path.startswith(old_prefix):
-                            try_frame = frame_path.replace(old_prefix, new_prefix)
+                    # Check if first frame exists with the prefix change
+                    if frames:
+                        first_frame = str(frames[0])
+                        if first_frame.startswith(old_prefix):
+                            try_frame = first_frame.replace(old_prefix, new_prefix)
                             try_frame = fix_path_separator(try_frame)
                             if not Path(try_frame).exists():
-                                all_frames_exist = False
-                                break
-
-                    if not all_frames_exist:
-                        continue  # Skip this sequence - not all frames found
+                                continue  # Skip - first frame not found
                 else:
                     # Regular video - just check if file exists
                     if not Path(try_filename).exists():
