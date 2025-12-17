@@ -30,6 +30,31 @@ from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 USE_DUMMY_FOR_MISSING_VIDEOS = os.getenv("SLEAP_USE_DUMMY_VIDEOS", default="")
 
 
+def _prepopulate_backend_shape_cache(video: Video):
+    """Pre-populate the backend's cached shape from backend_metadata.
+
+    For ImageVideo backends, accessing backend.shape triggers cv2.imread() to read
+    a frame and determine dimensions. On network filesystems, this is very slow.
+
+    The .slp file stores shape in backend_metadata, so we can use that to
+    pre-populate the backend's _cached_shape, avoiding the imread entirely.
+
+    Args:
+        video: Video object to optimize.
+    """
+    if video.backend is None:
+        return
+
+    # Only pre-populate if shape is in metadata and not already cached
+    if (
+        hasattr(video.backend, "_cached_shape")
+        and video.backend._cached_shape is None
+        and "shape" in video.backend_metadata
+        and video.backend_metadata["shape"] is not None
+    ):
+        video.backend._cached_shape = tuple(video.backend_metadata["shape"])
+
+
 # Create a simple range object with start, end, and list properties
 class SimpleRange:
     def __init__(self, ranges_list):
@@ -967,6 +992,10 @@ def make_video_callback(
                 item.backend = None
             item.replace_filename(filenames[i])
 
+            # Pre-populate backend's shape cache from metadata to avoid imread
+            # on network filesystems (very slow for ImageVideo)
+            _prepopulate_backend_shape_cache(item)
+
     return video_callback
 
 
@@ -994,6 +1023,11 @@ def load_labels_video_search(filename, video_search):
 
         if abort:
             raise FileNotFoundError
+
+    # Pre-populate backend shape cache for all videos to avoid imread
+    # on network filesystems (very slow for ImageVideo backends)
+    for video in labels.videos:
+        _prepopulate_backend_shape_cache(video)
 
     return labels
 

@@ -44,6 +44,25 @@ class FrameLoaderThread(QThread):
     def set_debug_mode(self, value: bool):
         self.debug_mode = value
 
+    def _prepopulate_shape_cache(self, video: sio.Video):
+        """Pre-populate the backend's cached shape from backend_metadata.
+
+        For ImageVideo backends, accessing backend.shape triggers cv2.imread()
+        to read a frame and determine dimensions. On network filesystems, this
+        is very slow. The .slp file stores shape in backend_metadata, so we can
+        use that to pre-populate the backend's _cached_shape.
+        """
+        if video.backend is None:
+            return
+
+        if (
+            hasattr(video.backend, "_cached_shape")
+            and video.backend._cached_shape is None
+            and "shape" in video.backend_metadata
+            and video.backend_metadata["shape"] is not None
+        ):
+            video.backend._cached_shape = tuple(video.backend_metadata["shape"])
+
     def run(self):
         """Main thread loop - processes frame requests from the queue."""
 
@@ -146,8 +165,12 @@ class FrameLoaderThread(QThread):
             reopen = video.is_open
             open_backend = video.open_backend
 
-            # Close the backend
-            video.close()
+            # Clear backend directly instead of calling close() to avoid
+            # triggering imread on network filesystems. close() tries to
+            # access backend.shape to save metadata, which for ImageVideo
+            # triggers cv2.imread() - very slow on network drives.
+            if video.backend is not None:
+                video.backend = None
             video.open_backend = False
 
             # Update the reference
@@ -156,13 +179,19 @@ class FrameLoaderThread(QThread):
             # Make a thread-local copy
             self.local_video_copy = deepcopy(video)
 
-            # Set it to open the backend on first read
+            # Open the backend immediately and pre-populate shape cache
+            # to avoid imread on network filesystems when reading frames
             self.local_video_copy.open_backend = True
+            if self.local_video_copy.exists():
+                self.local_video_copy.open()
+                self._prepopulate_shape_cache(self.local_video_copy)
 
             # Restore the original state in the incoming video
             self.current_video.open_backend = open_backend
             if reopen:
                 self.current_video.open()
+                # Pre-populate shape cache to avoid imread on network filesystems
+                self._prepopulate_shape_cache(self.current_video)
 
         self.request_queue.put((self.local_video_copy, frame_idx))
 
