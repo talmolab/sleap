@@ -165,12 +165,12 @@ class FrameLoaderThread(QThread):
             reopen = video.is_open
             open_backend = video.open_backend
 
-            # Clear backend directly instead of calling close() to avoid
-            # triggering imread on network filesystems. close() tries to
-            # access backend.shape to save metadata, which for ImageVideo
-            # triggers cv2.imread() - very slow on network drives.
-            if video.backend is not None:
-                video.backend = None
+            # Pre-populate shape cache before close() to avoid imread.
+            # close() accesses backend.shape to save metadata, which for
+            # ImageVideo triggers cv2.imread() - slow on network drives.
+            # By pre-populating the cache first, close() uses the cached value.
+            self._prepopulate_shape_cache(video)
+            video.close()
             video.open_backend = False
 
             # Update the reference
