@@ -979,20 +979,30 @@ def make_video_callback(
                     # Solely for testing since only gui will have a `CommandContext`
                     context["changed_on_load"] = True
 
-        # Replace the video filenames with changes by user
+        # Replace the video filenames only if they changed
+        # Calling replace_filename() triggers exists() which opens the file
+        # over the network (is_file_accessible reads 1 byte). This is slow
+        # on network filesystems, so we only do it when necessary.
         for i, item in enumerate(video_list):
-            # Pre-populate shape cache before replace_filename to avoid imread
-            # on old (missing) paths. replace_filename() calls open() which first
-            # calls close(). close() accesses backend.shape to save metadata,
-            # which for ImageVideo triggers imread on the OLD paths - causing
-            # slow network timeouts and OpenCV warnings.
-            # By pre-populating the cache first, close() uses the cached value.
-            _prepopulate_backend_shape_cache(item)
-            item.replace_filename(filenames[i])
+            old_filename = item.filename
+            new_filename = filenames[i]
 
-            # Pre-populate the NEW backend's shape cache from metadata to avoid
-            # imread on network filesystems (very slow for ImageVideo)
-            _prepopulate_backend_shape_cache(item)
+            # Check if filename actually changed (handle both str and list)
+            filename_changed = old_filename != new_filename
+
+            if filename_changed:
+                # Pre-populate shape cache before replace_filename to avoid imread
+                # on old (missing) paths. replace_filename() calls open() which first
+                # calls close(). close() accesses backend.shape to save metadata,
+                # which for ImageVideo triggers imread on the OLD paths - causing
+                # slow network timeouts and OpenCV warnings.
+                # By pre-populating the cache first, close() uses the cached value.
+                _prepopulate_backend_shape_cache(item)
+                item.replace_filename(new_filename)
+
+                # Pre-populate the NEW backend's shape cache from metadata to avoid
+                # imread on network filesystems (very slow for ImageVideo)
+                _prepopulate_backend_shape_cache(item)
 
     return video_callback
 
