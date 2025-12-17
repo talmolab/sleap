@@ -956,6 +956,15 @@ def make_video_callback(
 
         # Replace the video filenames with changes by user
         for i, item in enumerate(video_list):
+            # Clear the old backend before replace_filename to avoid triggering
+            # imread on old (missing) paths. When replace_filename() calls open(),
+            # it first calls close() which tries to access backend.shape to save
+            # metadata. For ImageVideo backends, accessing shape triggers imread
+            # on the OLD paths, causing slow network timeouts and OpenCV warnings.
+            # Setting backend to None bypasses this while preserving backend_metadata
+            # (which already has shape info from the .slp file).
+            if item.backend is not None:
+                item.backend = None
             item.replace_filename(filenames[i])
 
     return video_callback
