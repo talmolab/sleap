@@ -409,19 +409,19 @@ class VideosTableModel(GenericTableModel):
         # filesystems. Instead, try to get shape from cached sources.
         # If no cached shape is available, just show "N/A" - don't block the GUI.
         img_shape = None
+        # First try: use _cached_shape if backend is available (format: frames, h, w, c)
         if item is not None:
-            # First try: use _cached_shape if available (format: frames, h, w, c)
             if hasattr(item, "_cached_shape") and item._cached_shape is not None:
                 img_shape = item._cached_shape[1:]  # Skip frames dimension
-            # Second try: use backend_metadata from the Video object
-            elif (
-                original_video is not None
-                and "shape" in original_video.backend_metadata
+        # Second try: backend_metadata from Video (works even if backend is None)
+        if img_shape is None and original_video is not None:
+            if (
+                "shape" in original_video.backend_metadata
                 and original_video.backend_metadata["shape"] is not None
             ):
                 shape = original_video.backend_metadata["shape"]
                 img_shape = tuple(shape[1:]) if len(shape) > 1 else None
-            # SKIP the slow fallback - don't call img_shape which triggers imread
+        # SKIP the slow fallback - don't call img_shape which triggers imread
 
         for property in self.properties:
             if property == "name":
@@ -453,25 +453,23 @@ class VideosTableModel(GenericTableModel):
             elif property == "frames":
                 # PERFORMANCE FIX: Avoid accessing backend.frames directly as it may
                 # trigger slow operations. Get frame count from cached shape/filename.
-                if item is None:
-                    data[property] = "N/A"
-                elif hasattr(item, "_cached_shape") and item._cached_shape is not None:
-                    # Frame count is first element of shape tuple
-                    data[property] = item._cached_shape[0]
-                elif (
-                    original_video is not None
-                    and "shape" in original_video.backend_metadata
-                    and original_video.backend_metadata["shape"] is not None
-                ):
-                    data[property] = original_video.backend_metadata["shape"][0]
-                elif hasattr(item, "filename"):
-                    # For ImageVideo, frame count is len(filename)
-                    if isinstance(item.filename, list):
-                        data[property] = len(item.filename)
-                    else:
-                        data[property] = "N/A"
-                else:
-                    data[property] = "N/A"
+                frames_val = None
+                # First try: _cached_shape from backend
+                if item is not None:
+                    has_cached = hasattr(item, "_cached_shape")
+                    if has_cached and item._cached_shape is not None:
+                        frames_val = item._cached_shape[0]
+                    elif hasattr(item, "filename") and isinstance(item.filename, list):
+                        # For ImageVideo, frame count is len(filename)
+                        frames_val = len(item.filename)
+                # Second try: backend_metadata (works even if backend is None)
+                if frames_val is None and original_video is not None:
+                    if (
+                        "shape" in original_video.backend_metadata
+                        and original_video.backend_metadata["shape"] is not None
+                    ):
+                        frames_val = original_video.backend_metadata["shape"][0]
+                data[property] = frames_val if frames_val is not None else "N/A"
             else:
                 data[property] = getattr(item, property) if item else "N/A"
         return data
