@@ -399,30 +399,79 @@ class VideosTableModel(GenericTableModel):
 
     def item_to_data(self, obj, item: "VideoBackend"):
         data = {}
+        # Keep reference to original Video to access backend_metadata
+        original_video = item if isinstance(item, Video) else None
         if isinstance(item, Video):
             item = item.backend
 
+        # PERFORMANCE FIX: Avoid accessing img_shape directly as it triggers
+        # cv2.imread() for ImageVideo backends, which is very slow on network
+        # filesystems. Instead, try to get shape from cached sources.
+        # If no cached shape is available, just show "N/A" - don't block the GUI.
+        img_shape = None
+        if item is not None:
+            # First try: use _cached_shape if available (format: frames, h, w, c)
+            if hasattr(item, "_cached_shape") and item._cached_shape is not None:
+                img_shape = item._cached_shape[1:]  # Skip frames dimension
+            # Second try: use backend_metadata from the Video object
+            elif (
+                original_video is not None
+                and "shape" in original_video.backend_metadata
+                and original_video.backend_metadata["shape"] is not None
+            ):
+                shape = original_video.backend_metadata["shape"]
+                img_shape = tuple(shape[1:]) if len(shape) > 1 else None
+            # SKIP the slow fallback - don't call img_shape which triggers imread
+
         for property in self.properties:
             if property == "name":
-                data[property] = (
-                    Path(item.filename).name
-                    if isinstance(item.filename, str)
-                    else item.filename[0]
-                )
+                if item is None:
+                    data[property] = "N/A"
+                else:
+                    data[property] = (
+                        Path(item.filename).name
+                        if isinstance(item.filename, str)
+                        else item.filename[0]
+                    )
             elif property == "filepath":
-                data[property] = (
-                    str(Path(item.filename).parent)
-                    if isinstance(item.filename, str)
-                    else item.filename[0]
-                )
+                if item is None:
+                    data[property] = "N/A"
+                else:
+                    data[property] = (
+                        str(Path(item.filename).parent)
+                        if isinstance(item.filename, str)
+                        else item.filename[0]
+                    )
             elif property == "height":
-                data[property] = item.img_shape[0]
+                data[property] = img_shape[0] if img_shape else "N/A"
             elif property == "width":
-                data[property] = item.img_shape[1]
+                data[property] = img_shape[1] if img_shape else "N/A"
             elif property == "channels":
-                data[property] = item.img_shape[2]
+                data[property] = img_shape[2] if img_shape and len(img_shape) > 2 else "N/A"
+            elif property == "frames":
+                # PERFORMANCE FIX: Avoid accessing backend.frames directly as it may
+                # trigger slow operations. Get frame count from cached shape or filename.
+                if item is None:
+                    data[property] = "N/A"
+                elif hasattr(item, "_cached_shape") and item._cached_shape is not None:
+                    # Frame count is first element of shape tuple
+                    data[property] = item._cached_shape[0]
+                elif (
+                    original_video is not None
+                    and "shape" in original_video.backend_metadata
+                    and original_video.backend_metadata["shape"] is not None
+                ):
+                    data[property] = original_video.backend_metadata["shape"][0]
+                elif hasattr(item, "filename"):
+                    # For ImageVideo, frame count is len(filename)
+                    if isinstance(item.filename, list):
+                        data[property] = len(item.filename)
+                    else:
+                        data[property] = "N/A"
+                else:
+                    data[property] = "N/A"
             else:
-                data[property] = getattr(item, property)
+                data[property] = getattr(item, property) if item else "N/A"
         return data
 
 

@@ -1008,6 +1008,16 @@ def make_video_callback(
 
 
 def load_labels_video_search(filename, video_search):
+    """Load labels file with video path search/resolution.
+
+    Args:
+        filename: Path to the .slp labels file.
+        video_search: Either a callback function, list of search paths, or
+            a single search path string for finding missing video files.
+
+    Returns:
+        Labels object with videos resolved.
+    """
     labels = load_file(filename)
 
     if isinstance(video_search, str):
@@ -1032,9 +1042,10 @@ def load_labels_video_search(filename, video_search):
         if abort:
             raise FileNotFoundError
 
-    # Pre-populate backend shape cache for all videos to avoid imread
-    # on network filesystems (very slow for ImageVideo backends)
+    # Ensure videos will auto-open backends when accessed
     for video in labels.videos:
+        video.open_backend = True
+        # Pre-populate shape cache to avoid imread on shape access
         _prepopulate_backend_shape_cache(video)
 
     return labels
