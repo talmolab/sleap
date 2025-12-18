@@ -809,7 +809,9 @@ def fix_paths_with_saved_prefix(
                     if Path(try_first).exists():
                         # Apply prefix to all frames
                         filenames[i] = [
-                            str(frame).replace(old_prefix, new_prefix).replace("\\", "/")
+                            str(frame)
+                            .replace(old_prefix, new_prefix)
+                            .replace("\\", "/")
                             for frame in filename
                         ]
                         if missing is not None:
@@ -942,8 +944,7 @@ def make_video_callback(
                             new_dir = str(Path(display_filenames[i]).parent)
                             # Remap all frame paths to new directory
                             filenames[i] = [
-                                str(Path(new_dir) / Path(frame).name)
-                                for frame in fn
+                                str(Path(new_dir) / Path(frame).name) for frame in fn
                             ]
                     else:
                         # Regular video - just copy the potentially updated path

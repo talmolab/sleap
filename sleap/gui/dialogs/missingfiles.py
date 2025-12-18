@@ -151,9 +151,7 @@ class MissingFilesDialog(QtWidgets.QDialog):
         self.filenames[idx] = filename
         self.missing[idx] = False
 
-        old_prefix, new_prefix = pathutils.find_changed_subpath(
-            old_filename, filename
-        )
+        old_prefix, new_prefix = pathutils.find_changed_subpath(old_filename, filename)
 
         # See if we can apply same change to find other missing files.
         # We'll ask for confirmation for making these changes.
