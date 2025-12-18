@@ -414,13 +414,15 @@ class VideosTableModel(GenericTableModel):
             if hasattr(item, "_cached_shape") and item._cached_shape is not None:
                 img_shape = item._cached_shape[1:]  # Skip frames dimension
         # Second try: backend_metadata from Video (works even if backend is None)
+        # sleap-io stores shape as separate height_, width_, channels_ keys
         if img_shape is None and original_video is not None:
-            if (
-                "shape" in original_video.backend_metadata
-                and original_video.backend_metadata["shape"] is not None
-            ):
-                shape = original_video.backend_metadata["shape"]
-                img_shape = tuple(shape[1:]) if len(shape) > 1 else None
+            meta = original_video.backend_metadata
+            if "height_" in meta and "width_" in meta:
+                h = meta.get("height_")
+                w = meta.get("width_")
+                c = meta.get("channels_", 1)
+                if h is not None and w is not None:
+                    img_shape = (h, w, c)
         # SKIP the slow fallback - don't call img_shape which triggers imread
 
         for property in self.properties:
@@ -463,12 +465,11 @@ class VideosTableModel(GenericTableModel):
                         # For ImageVideo, frame count is len(filename)
                         frames_val = len(item.filename)
                 # Second try: backend_metadata (works even if backend is None)
+                # sleap-io stores filenames list for ImageVideo
                 if frames_val is None and original_video is not None:
-                    if (
-                        "shape" in original_video.backend_metadata
-                        and original_video.backend_metadata["shape"] is not None
-                    ):
-                        frames_val = original_video.backend_metadata["shape"][0]
+                    meta = original_video.backend_metadata
+                    if "filenames" in meta and meta["filenames"]:
+                        frames_val = len(meta["filenames"])
                 data[property] = frames_val if frames_val is not None else "N/A"
             else:
                 data[property] = getattr(item, property) if item else "N/A"

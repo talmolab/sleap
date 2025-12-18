@@ -874,9 +874,7 @@ class TestMissingFilesDialogSequences:
         ):
             with patch.object(dialog, "setFilename") as mock_set:
                 dialog.locateFile(0)
-                mock_set.assert_called_once_with(
-                    0, "tests/data/videos/small_robot.mp4"
-                )
+                mock_set.assert_called_once_with(0, "tests/data/videos/small_robot.mp4")
 
     def test_locate_file_duplicate_prevention(self, qtbot):
         """Test that locateFile prevents duplicate file selection."""
