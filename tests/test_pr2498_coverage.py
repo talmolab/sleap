@@ -588,7 +588,7 @@ class TestVideosTableModelItemToData:
         assert data["frames"] == 10
 
     def test_item_to_data_with_backend_metadata_shape(self, qtbot):
-        """Test fallback to backend_metadata shape."""
+        """Test fallback to backend_metadata for dimensions."""
         from sleap.gui.dataviews import VideosTableModel
 
         mock_video = MagicMock(spec=Video)
@@ -596,7 +596,13 @@ class TestVideosTableModelItemToData:
         mock_backend._cached_shape = None  # Not cached
         mock_backend.filename = "test.mp4"
         mock_video.backend = mock_backend
-        mock_video.backend_metadata = {"shape": [20, 720, 1280, 3]}
+        # sleap-io uses height_, width_, channels_, filenames keys
+        mock_video.backend_metadata = {
+            "height_": 720,
+            "width_": 1280,
+            "channels_": 3,
+            "filenames": ["frame1.jpg"] * 20,  # 20 frames
+        }
 
         model = VideosTableModel(items=[mock_video])
         data = model.item_to_data(mock_video, mock_video)
@@ -607,7 +613,7 @@ class TestVideosTableModelItemToData:
         assert data["frames"] == 20
 
     def test_item_to_data_with_none_backend(self, qtbot):
-        """Test handling of None backend."""
+        """Test handling of None backend with empty metadata."""
         from sleap.gui.dataviews import VideosTableModel
 
         mock_video = MagicMock(spec=Video)
@@ -623,6 +629,32 @@ class TestVideosTableModelItemToData:
         assert data["width"] == "N/A"
         assert data["channels"] == "N/A"
         assert data["frames"] == "N/A"
+
+    def test_item_to_data_with_none_backend_but_metadata(self, qtbot):
+        """Test that metadata is used when backend is None but metadata exists."""
+        from sleap.gui.dataviews import VideosTableModel
+
+        mock_video = MagicMock(spec=Video)
+        mock_video.backend = None
+        # sleap-io stores dimensions even when backend not yet opened
+        mock_video.backend_metadata = {
+            "height_": 1080,
+            "width_": 1920,
+            "channels_": 3,
+            "filenames": ["frame1.tif", "frame2.tif", "frame3.tif"],
+        }
+
+        model = VideosTableModel(items=[mock_video])
+        data = model.item_to_data(mock_video, mock_video)
+
+        # Should get dimensions from metadata even with None backend
+        assert data["height"] == 1080
+        assert data["width"] == 1920
+        assert data["channels"] == 3
+        assert data["frames"] == 3
+        # name/filepath still N/A since backend is needed for filename
+        assert data["name"] == "N/A"
+        assert data["filepath"] == "N/A"
 
     def test_item_to_data_with_image_sequence(self, qtbot):
         """Test handling of ImageVideo (list filename)."""
@@ -670,7 +702,8 @@ class TestVideosTableModelItemToData:
         mock_backend = MagicMock(spec=["filename"])  # No _cached_shape
         mock_backend.filename = "test.mp4"
         mock_video.backend = mock_backend
-        mock_video.backend_metadata = {"shape": [10, 480, 640, 3]}
+        # sleap-io uses height_, width_, channels_ keys
+        mock_video.backend_metadata = {"height_": 480, "width_": 640, "channels_": 3}
 
         model = VideosTableModel(items=[mock_video])
         data = model.item_to_data(mock_video, mock_video)
