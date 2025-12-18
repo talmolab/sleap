@@ -9,10 +9,8 @@ This module provides comprehensive test coverage for changes in:
 - sleap/io/pathutils.py
 """
 
-import os
-import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import sleap_io as sio
 from sleap_io import Video
@@ -147,8 +145,9 @@ class TestFindPathUsingPaths:
 
         result = find_path_using_paths(filename, search_paths)
 
-        # Should find the file in search path
-        assert result == "tests/data/videos/small_robot.mp4"
+        # Should find the file in search path (use Path for cross-platform)
+        expected = str(Path("tests/data/videos/small_robot.mp4"))
+        assert result == expected
 
     def test_find_path_returns_original_if_not_found(self):
         """Test that original path is returned if file not found."""
@@ -445,7 +444,7 @@ class TestVideoCallbackSequences:
         video_list = [mock_video]
         callback = make_video_callback(use_gui=False)
 
-        result = callback(video_list)
+        callback(video_list)
 
         # replace_filename should NOT be called since path didn't change
         mock_video.replace_filename.assert_not_called()
@@ -504,7 +503,7 @@ class TestFilenamesPrefixChangeSequences:
         assert missing[0] is False
 
     def test_prefix_change_sequence_first_frame_not_found(self):
-        """Test that sequence is skipped if first frame doesn't exist at new location."""
+        """Test sequence skipped if first frame doesn't exist at new location."""
         from sleap.io.pathutils import filenames_prefix_change
 
         filenames = ["foo/missing.jpg"]
@@ -693,7 +692,8 @@ class TestVideosTableModelItemToData:
         model = VideosTableModel(items=[mock_video])
         data = model.item_to_data(mock_video, mock_video)
 
-        assert data["filepath"] == "/path/to/videos"
+        # Use Path for cross-platform comparison
+        assert Path(data["filepath"]) == Path("/path/to/videos")
         assert data["name"] == "test.mp4"
 
     def test_item_to_data_filepath_with_list(self, qtbot):
