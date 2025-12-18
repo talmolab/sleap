@@ -447,10 +447,12 @@ class VideosTableModel(GenericTableModel):
             elif property == "width":
                 data[property] = img_shape[1] if img_shape else "N/A"
             elif property == "channels":
-                data[property] = img_shape[2] if img_shape and len(img_shape) > 2 else "N/A"
+                data[property] = (
+                    img_shape[2] if img_shape and len(img_shape) > 2 else "N/A"
+                )
             elif property == "frames":
                 # PERFORMANCE FIX: Avoid accessing backend.frames directly as it may
-                # trigger slow operations. Get frame count from cached shape or filename.
+                # trigger slow operations. Get frame count from cached shape/filename.
                 if item is None:
                     data[property] = "N/A"
                 elif hasattr(item, "_cached_shape") and item._cached_shape is not None:
