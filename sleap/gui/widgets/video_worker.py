@@ -13,6 +13,7 @@ from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QImage
 
 from sleap.gui.widgets.video import ndarray_to_qimage
+from copy import deepcopy
 import sleap_io as sio
 
 
@@ -31,6 +32,7 @@ class FrameLoaderThread(QThread):
         self.request_queue = queue.Queue()
         self.stop_flag = threading.Event()
         self.current_video = None
+        self.local_video_copy = None
 
         # Performance tracking
         self._frame_load_times = deque(maxlen=100)
@@ -41,25 +43,6 @@ class FrameLoaderThread(QThread):
 
     def set_debug_mode(self, value: bool):
         self.debug_mode = value
-
-    def _prepopulate_shape_cache(self, video: sio.Video):
-        """Pre-populate the backend's cached shape from backend_metadata.
-
-        For ImageVideo backends, accessing backend.shape triggers cv2.imread()
-        to read a frame and determine dimensions. On network filesystems, this
-        is very slow. The .slp file stores shape in backend_metadata, so we can
-        use that to pre-populate the backend's _cached_shape.
-        """
-        if video.backend is None:
-            return
-
-        if (
-            hasattr(video.backend, "_cached_shape")
-            and video.backend._cached_shape is None
-            and "shape" in video.backend_metadata
-            and video.backend_metadata["shape"] is not None
-        ):
-            video.backend._cached_shape = tuple(video.backend_metadata["shape"])
 
     def run(self):
         """Main thread loop - processes frame requests from the queue."""
@@ -159,20 +142,29 @@ class FrameLoaderThread(QThread):
             if self.debug_mode:
                 print("[MAIN] Switching to new video")
 
-            # Use direct video reference like old SLEAP v1.4.1a2 to avoid
-            # slow deepcopy and exists() checks on network filesystems
+            # Retain original state
+            reopen = video.is_open
+            open_backend = video.open_backend
+
+            # Close the backend
+            video.close()
+            video.open_backend = False
+
+            # Update the reference
             self.current_video = video
 
-            # Pre-populate shape cache to avoid imread for shape computation
-            self._prepopulate_shape_cache(video)
+            # Make a thread-local copy
+            self.local_video_copy = deepcopy(video)
 
-            # Ensure backend is open
-            if not video.is_open:
-                video.open_backend = True
-                video.open()
-                self._prepopulate_shape_cache(video)
+            # Set it to open the backend on first read
+            self.local_video_copy.open_backend = True
 
-        self.request_queue.put((self.current_video, frame_idx))
+            # Restore the original state in the incoming video
+            self.current_video.open_backend = open_backend
+            if reopen:
+                self.current_video.open()
+
+        self.request_queue.put((self.local_video_copy, frame_idx))
 
         if self.debug_mode:
             queue_size = self.request_queue.qsize()

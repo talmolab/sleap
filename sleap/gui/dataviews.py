@@ -399,80 +399,30 @@ class VideosTableModel(GenericTableModel):
 
     def item_to_data(self, obj, item: "VideoBackend"):
         data = {}
-        # Keep reference to original Video to access backend_metadata
-        original_video = item if isinstance(item, Video) else None
         if isinstance(item, Video):
             item = item.backend
 
-        # PERFORMANCE FIX: Avoid accessing img_shape directly as it triggers
-        # cv2.imread() for ImageVideo backends, which is very slow on network
-        # filesystems. Instead, try to get shape from cached sources.
-        # If no cached shape is available, just show "N/A" - don't block the GUI.
-        img_shape = None
-        # First try: use _cached_shape if backend is available (format: frames, h, w, c)
-        if item is not None:
-            if hasattr(item, "_cached_shape") and item._cached_shape is not None:
-                img_shape = item._cached_shape[1:]  # Skip frames dimension
-        # Second try: backend_metadata from Video (works even if backend is None)
-        # sleap-io stores shape as separate height_, width_, channels_ keys
-        if img_shape is None and original_video is not None:
-            meta = original_video.backend_metadata
-            if "height_" in meta and "width_" in meta:
-                h = meta.get("height_")
-                w = meta.get("width_")
-                c = meta.get("channels_", 1)
-                if h is not None and w is not None:
-                    img_shape = (h, w, c)
-        # SKIP the slow fallback - don't call img_shape which triggers imread
-
         for property in self.properties:
             if property == "name":
-                if item is None:
-                    data[property] = "N/A"
-                else:
-                    data[property] = (
-                        Path(item.filename).name
-                        if isinstance(item.filename, str)
-                        else item.filename[0]
-                    )
-            elif property == "filepath":
-                if item is None:
-                    data[property] = "N/A"
-                else:
-                    data[property] = (
-                        str(Path(item.filename).parent)
-                        if isinstance(item.filename, str)
-                        else item.filename[0]
-                    )
-            elif property == "height":
-                data[property] = img_shape[0] if img_shape else "N/A"
-            elif property == "width":
-                data[property] = img_shape[1] if img_shape else "N/A"
-            elif property == "channels":
                 data[property] = (
-                    img_shape[2] if img_shape and len(img_shape) > 2 else "N/A"
+                    Path(item.filename).name
+                    if isinstance(item.filename, str)
+                    else item.filename[0]
                 )
-            elif property == "frames":
-                # PERFORMANCE FIX: Avoid accessing backend.frames directly as it may
-                # trigger slow operations. Get frame count from cached shape/filename.
-                frames_val = None
-                # First try: _cached_shape from backend
-                if item is not None:
-                    has_cached = hasattr(item, "_cached_shape")
-                    if has_cached and item._cached_shape is not None:
-                        frames_val = item._cached_shape[0]
-                    elif hasattr(item, "filename") and isinstance(item.filename, list):
-                        # For ImageVideo, frame count is len(filename)
-                        frames_val = len(item.filename)
-                # Second try: backend_metadata (works even if backend is None)
-                # sleap-io stores filenames list for ImageVideo
-                if frames_val is None and original_video is not None:
-                    meta = original_video.backend_metadata
-                    if "filenames" in meta and meta["filenames"]:
-                        frames_val = len(meta["filenames"])
-                data[property] = frames_val if frames_val is not None else "N/A"
+            elif property == "filepath":
+                data[property] = (
+                    str(Path(item.filename).parent)
+                    if isinstance(item.filename, str)
+                    else item.filename[0]
+                )
+            elif property == "height":
+                data[property] = item.img_shape[0]
+            elif property == "width":
+                data[property] = item.img_shape[1]
+            elif property == "channels":
+                data[property] = item.img_shape[2]
             else:
-                data[property] = getattr(item, property) if item else "N/A"
+                data[property] = getattr(item, property)
         return data
 
 
