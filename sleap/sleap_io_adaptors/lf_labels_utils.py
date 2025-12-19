@@ -41,16 +41,24 @@ class SimpleRange:
         return len(self.list) == 0
 
 
-def find_path_using_paths(filename: str, search_paths: List[str]) -> str:
+def find_path_using_paths(
+    filename: Union[str, List[str]], search_paths: List[str]
+) -> Union[str, List[str]]:
     """Find a file in the given search paths.
 
     Args:
-        filename: The filename to search for.
+        filename: The filename to search for. Can be a string path or a list
+            of paths (for image sequences).
         search_paths: List of directories to search in.
 
     Returns:
         The found path or the original filename if not found.
+        For image sequences (lists), returns the original list unchanged.
     """
+    # Image sequences need special handling - return unchanged for now
+    if isinstance(filename, list):
+        return filename
+
     filename_path = Path(filename)
 
     for search_path in search_paths:
@@ -743,6 +751,11 @@ def fix_paths_with_saved_prefix(
     missing: Optional[List[bool]] = None,
     path_prefix_conversions: Optional[List[Dict[Text, Text]]] = None,
 ):
+    """Try to fix missing file paths using saved prefix conversions.
+
+    For image sequences (list of frame paths), ALL frames must exist at the
+    new location for the prefix change to be applied.
+    """
     if path_prefix_conversions is None:
         path_prefix_conversions = util.get_config_yaml("path_prefixes.yaml")
 
@@ -753,21 +766,48 @@ def fix_paths_with_saved_prefix(
         if missing is not None:
             if not missing[i]:
                 continue
-        elif os.path.exists(filename):
-            continue
 
-        for old_prefix, new_prefix in path_prefix_conversions.items():
-            if filename.startswith(old_prefix):
-                try_filename = filename.replace(old_prefix, new_prefix)
+        # Handle image sequences (list of frame paths)
+        if isinstance(filename, list):
+            if not filename:
+                continue
+            first_frame = str(filename[0])
+            if not first_frame:
+                continue
 
-                # Equivalent to fix_path_separator(try_filename)
-                try_filename = try_filename.replace("\\", "/")
+            for old_prefix, new_prefix in path_prefix_conversions.items():
+                if first_frame.startswith(old_prefix):
+                    # Check if first frame exists with the new prefix
+                    try_first = first_frame.replace(old_prefix, new_prefix)
+                    try_first = try_first.replace("\\", "/")
 
-                if os.path.exists(try_filename):
-                    filenames[i] = try_filename
-                    if missing is not None:
-                        missing[i]
-                    continue
+                    if Path(try_first).exists():
+                        # Apply prefix to all frames
+                        filenames[i] = [
+                            str(frame)
+                            .replace(old_prefix, new_prefix)
+                            .replace("\\", "/")
+                            for frame in filename
+                        ]
+                        if missing is not None:
+                            missing[i] = False
+                        break
+        else:
+            # Regular video file
+            filename_str = str(filename)
+            if missing is None and Path(filename_str).exists():
+                continue
+
+            for old_prefix, new_prefix in path_prefix_conversions.items():
+                if filename_str.startswith(old_prefix):
+                    try_filename = filename_str.replace(old_prefix, new_prefix)
+                    try_filename = try_filename.replace("\\", "/")
+
+                    if Path(try_filename).exists():
+                        filenames[i] = try_filename
+                        if missing is not None:
+                            missing[i] = False
+                        break
 
 
 def make_video_callback(
@@ -811,16 +851,29 @@ def make_video_callback(
         filenames = [item.filename for item in video_list]
         context = context or {"changed_on_load": False}
 
-        # Equivalent to pathutils.list_file_missing(filenames)
-        missing = [not os.path.exists(filename) for filename in filenames]
+        # Track which entries are image sequences (list of frame paths vs single path)
+        is_sequence = [isinstance(fn, list) for fn in filenames]
 
-        # Try changing the prefix using saved patterns
+        # Build missing list - handle both single paths and image sequences
+        missing = []
+        for i, filename in enumerate(filenames):
+            if is_sequence[i]:
+                # ImageVideo backend (list of images) - check if first frame exists
+                # Convert to string in case filename[0] is a Path object
+                first_frame = str(filename[0]) if filename else ""
+                missing.append(len(filename) == 0 or not Path(first_frame).exists())
+            else:
+                missing.append(not Path(str(filename)).exists())
+
+        # Try changing the prefix using saved patterns (skips sequences)
         if sum(missing):
             fix_paths_with_saved_prefix(filenames, missing)
 
-        # Check for file in search_path dirctories
+        # Check for file in search_path directories (skips sequences)
         if sum(missing) and new_paths:
             for i, filename in enumerate(filenames):
+                if is_sequence[i]:
+                    continue  # Skip sequences for simple path search
                 fixed_path = find_path_using_paths(filename, new_paths)
                 if fixed_path != filename:
                     filenames[i] = fixed_path
@@ -834,12 +887,43 @@ def make_video_callback(
                 # then don't require user to find everything.
                 allow_incomplete = USE_DUMMY_FOR_MISSING_VIDEOS
 
+                # Create display-friendly paths for the dialog
+                # For sequences: show the first frame path (distinguishable)
+                # MissingFilesDialog expects List[str], not List[Union[str, List[str]]]
+                display_filenames = []
+                for i, fn in enumerate(filenames):
+                    if is_sequence[i]:
+                        # Show first frame path for distinguishability
+                        # Convert to string in case it's a Path object
+                        display_filenames.append(str(fn[0]) if fn else "")
+                    else:
+                        display_filenames.append(str(fn))
+
                 okay = MissingFilesDialog(
-                    filenames, missing, allow_incomplete=allow_incomplete
+                    display_filenames,
+                    missing,
+                    is_sequence=is_sequence,
+                    original_filenames=filenames,
+                    allow_incomplete=allow_incomplete,
                 ).exec_()
 
                 if not okay:
                     return True  # True for stop
+
+                # After dialog: update filenames from display_filenames
+                for i, fn in enumerate(filenames):
+                    if is_sequence[i]:
+                        # Check if user found a new location
+                        if fn and not missing[i]:
+                            # Extract directory from the new first frame path
+                            new_dir = str(Path(display_filenames[i]).parent)
+                            # Remap all frame paths to new directory
+                            filenames[i] = [
+                                str(Path(new_dir) / Path(frame).name) for frame in fn
+                            ]
+                    else:
+                        # Regular video - just copy the potentially updated path
+                        filenames[i] = display_filenames[i]
 
                 context["changed_on_load"] = True
 
@@ -847,11 +931,15 @@ def make_video_callback(
             # If we got the same number of paths as there are videos
             if len(filenames) == len(new_paths):
                 # and the file extensions match
+                def get_extension(path: Union[str, List[str]]) -> str:
+                    """Get file extension, handling both strings and image sequences."""
+                    if isinstance(path, list):
+                        return path[0].split(".")[-1] if path else ""
+                    return path.split(".")[-1]
+
                 exts_match = all(
-                    (
-                        old.split(".")[-1] == new.split(".")[-1]
-                        for old, new in zip(filenames, new_paths)
-                    )
+                    get_extension(old) == get_extension(new)
+                    for old, new in zip(filenames, new_paths)
                 )
 
                 if exts_match:
@@ -859,21 +947,42 @@ def make_video_callback(
                     # video paths, so we can get the new path for the missing
                     # old path.
                     for i, filename in enumerate(filenames):
-                        if missing[i]:
+                        if missing[i] and not is_sequence[i]:
+                            # Skip image sequences - can't easily remap
                             filenames[i] = new_paths[i]
                             missing[i] = False
 
                     # Solely for testing since only gui will have a `CommandContext`
                     context["changed_on_load"] = True
 
-        # Replace the video filenames with changes by user
+        # Replace the video filenames only if they changed
+        # Calling replace_filename() triggers exists() which opens the file
+        # over the network (is_file_accessible reads 1 byte). This is slow
+        # on network filesystems, so we only do it when necessary.
         for i, item in enumerate(video_list):
-            item.replace_filename(filenames[i])
+            old_filename = item.filename
+            new_filename = filenames[i]
+
+            # Check if filename actually changed (handle both str and list)
+            filename_changed = old_filename != new_filename
+
+            if filename_changed:
+                item.replace_filename(new_filename)
 
     return video_callback
 
 
 def load_labels_video_search(filename, video_search):
+    """Load labels file with video path search/resolution.
+
+    Args:
+        filename: Path to the .slp labels file.
+        video_search: Either a callback function, list of search paths, or
+            a single search path string for finding missing video files.
+
+    Returns:
+        Labels object with videos resolved.
+    """
     labels = load_file(filename)
 
     if isinstance(video_search, str):
@@ -897,6 +1006,14 @@ def load_labels_video_search(filename, video_search):
 
         if abort:
             raise FileNotFoundError
+
+    # === PERFORMANCE FEATURE (commented out for testing) ===
+    # # Ensure videos will auto-open backends when accessed
+    # for video in labels.videos:
+    #     video.open_backend = True
+    #     # Pre-populate shape cache to avoid imread on shape access
+    #     _prepopulate_backend_shape_cache(video)
+    # === END PERFORMANCE FEATURE ===
 
     return labels
 
