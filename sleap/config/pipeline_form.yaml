@@ -214,13 +214,11 @@ training:
 - type: text
   text: '<b>Data Pipeline framework options</b>'
 
-- default: 'torch_dataset'
-  help: Framework to create the data loaders. (When using torch_dataset,
-    num_workers in trainer_config should be set to 0 as multiprocessing
-    doesn't work with pickling video backends.)
+- default: 'Standard'
+  help: 'Framework for loading training data. Standard: Loads images directly from video (use num_workers=0). Cache in Memory: Pre-loads images into RAM for faster training. Cache to Disk: Saves images to disk for reuse across runs.'
   label: Data Pipeline Framework
-  name: data_config.data_pipeline_fw
-  options: 'torch_dataset,torch_dataset_cache_img_memory,torch_dataset_cache_img_disk'
+  name: _data_pipeline_fw
+  options: 'Standard,Cache in Memory,Cache to Disk'
   type: list
 
 - type: text
@@ -262,6 +260,12 @@ training:
   type: optional_string
   default: null
   help: Grouping within the project.
+
+- name: trainer_config.wandb.save_viz_imgs_wandb
+  label: Upload Visualization Images to WandB
+  type: bool
+  default: false
+  help: If True, sample predictions saved during training will also be uploaded to WandB. Requires both "Enable WandB for logging" and "Visualize Predictions During Training" to be enabled.
 
 
 - type: text
