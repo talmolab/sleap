@@ -122,6 +122,18 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         key_val_dict["data_config.preprocessing.ensure_rgb"] = ensure_rgb
         key_val_dict["data_config.preprocessing.ensure_grayscale"] = ensure_grayscale
 
+    # Map friendly data pipeline names to sleap-nn enum values
+    if "_data_pipeline_fw" in key_val_dict:
+        pipeline_map = {
+            "Standard": "torch_dataset",
+            "Cache in Memory": "torch_dataset_cache_img_memory",
+            "Cache to Disk": "torch_dataset_cache_img_disk",
+        }
+        friendly_name = key_val_dict["_data_pipeline_fw"]
+        key_val_dict["data_config.data_pipeline_fw"] = pipeline_map.get(
+            friendly_name, "torch_dataset"
+        )
+
     # Overwrite backbone strides with stride from head.
     backbone_name = find_backbone_name_from_key_val_dict(key_val_dict)
     if backbone_name is not None:
