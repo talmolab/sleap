@@ -1187,6 +1187,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         col1_layout.addWidget(self.form_widgets["data"])
         col1_layout.addWidget(self.form_widgets["optimization"])
+        self.form_widgets["augmentation"].setMaximumWidth(255)
         col2_layout.addWidget(self.form_widgets["augmentation"])
         col3_layout.addWidget(self.form_widgets["model"])
 
@@ -1198,10 +1199,19 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         col_layout = QtWidgets.QHBoxLayout()
         if col0_layout:
-            col_layout.addWidget(self._layout_widget(col0_layout))
-        col_layout.addWidget(self._layout_widget(col1_layout))
-        col_layout.addWidget(self._layout_widget(col2_layout))
-        col_layout.addWidget(self._layout_widget(col3_layout))
+            col_layout.addWidget(
+                self._layout_widget(col0_layout), stretch=0, alignment=QtCore.Qt.AlignTop
+            )
+        col_layout.addWidget(
+            self._layout_widget(col1_layout), stretch=0, alignment=QtCore.Qt.AlignTop
+        )
+        col_layout.addWidget(
+            self._layout_widget(col2_layout), stretch=0, alignment=QtCore.Qt.AlignTop
+        )
+        col_layout.addWidget(
+            self._layout_widget(col3_layout), stretch=0, alignment=QtCore.Qt.AlignTop
+        )
+        col_layout.addStretch(1)  # Push columns left, absorb extra space
 
         # If we have an object which gets a list of config files,
         # then we'll show a menu to allow selection from the list.
