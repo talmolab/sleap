@@ -400,6 +400,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             val = int(val)
         elif widget.property("field_data_type").startswith("file_"):
             val = None if val == "None" else val
+        elif widget.property("field_data_type") == "optional_string":
+            val = None if val == "" else val
         return val
 
     def build_form(self, items_to_create: List[Dict[Text, Any]]):
