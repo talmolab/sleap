@@ -22,6 +22,11 @@ from sleap.gui.config_utils import (
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import receptivefield, runners, configs
+from sleap.gui.learning.wandb_utils import (
+    check_wandb_login_status,
+    get_wandb_api_key_help_text,
+)
+from sleap.prefs import prefs
 from sleap.gui.learning.configs import TrainingConfigsGetter
 from sleap.sleap_io_adaptors.skeleton_utils import (
     cycles,
@@ -976,6 +981,10 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
         self.setLayout(self.form_widget.form_layout)
 
+        # Load saved WandB preferences and update API key help text
+        if mode == "training":
+            self._init_wandb_settings()
+
     @property
     def fields(self):
         return self.form_widget.fields
@@ -988,7 +997,9 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         self.form_widget.set_message()
 
     def get_form_data(self):
-        return self.form_widget.get_form_data()
+        data = self.form_widget.get_form_data()
+        self._save_wandb_preferences(data)
+        return data
 
     def set_form_data(self, data):
         self.form_widget.set_form_data(data)
@@ -1033,6 +1044,51 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
         self.pipeline_field.setValue(val)
         self.emitPipeline()
+
+    def _init_wandb_settings(self):
+        """Initialize WandB settings from preferences and update API key help text."""
+        # Load saved WandB preferences
+        wandb_prefs = {
+            "trainer_config.wandb.entity": prefs["wandb entity"],
+            "trainer_config.wandb.project": prefs["wandb project"],
+            "trainer_config.wandb.group": prefs["wandb group"],
+        }
+        # Only set values that are not None
+        wandb_prefs = {k: v for k, v in wandb_prefs.items() if v is not None}
+        if wandb_prefs:
+            self.form_widget.set_form_data(wandb_prefs)
+
+        # Update API key help text based on login status
+        try:
+            is_logged_in, auth_source = check_wandb_login_status()
+            if is_logged_in:
+                api_key_field = self.form_widget.fields.get(
+                    "trainer_config.wandb.api_key"
+                )
+                if api_key_field is not None:
+                    help_text = get_wandb_api_key_help_text(is_logged_in, auth_source)
+                    api_key_field.setToolTip(help_text)
+        except Exception:
+            # Don't fail if wandb check fails
+            pass
+
+    def _save_wandb_preferences(self, form_data: dict):
+        """Save WandB settings to preferences for persistence across sessions."""
+        # Map form field names to preference keys
+        pref_mapping = {
+            "trainer_config.wandb.entity": "wandb entity",
+            "trainer_config.wandb.project": "wandb project",
+            "trainer_config.wandb.group": "wandb group",
+        }
+        changed = False
+        for form_key, pref_key in pref_mapping.items():
+            if form_key in form_data:
+                value = form_data[form_key]
+                if prefs[pref_key] != value:
+                    prefs[pref_key] = value
+                    changed = True
+        if changed:
+            prefs.save()
 
 
 class TrainingEditorWidget(QtWidgets.QWidget):

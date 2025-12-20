@@ -30,6 +30,10 @@ class Preferences(object):
         "share usage data": True,
         "node marker sizes": (1, 2, 3, 4, 6, 8, 12),
         "node label sizes": (6, 9, 12, 18, 24, 36),
+        # WandB settings (persisted across sessions, API key excluded for security)
+        "wandb entity": None,
+        "wandb project": None,
+        "wandb group": None,
     }
     _filename = "preferences.yaml"
 
