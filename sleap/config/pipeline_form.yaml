@@ -234,38 +234,34 @@ training:
 
 - name: trainer_config.wandb.entity
   label:  Entity Name
-  type: string
+  type: optional_string
   default: null
+  help: Account name (username or organization).
 
 - name: trainer_config.wandb.project
   label:  Project Name
-  type: string
+  type: optional_string
   default: null
-
-- name: trainer_config.wandb.name
-  label:  Run Name
-  type: string
-  default: null
+  help: Name for the group of runs.
 
 - name: trainer_config.wandb.api_key
-  label: WandBAPI Key
-  type: string
+  label: WandB API Key
+  type: optional_string
   default: null
-  help: WandB API Key. You could also set it in your terminal by exporting the WANDB_API_KEY environment variable.
-    Or `wandb.login()` in your Python shell.
+  help: WandB API Key. From https://wandb.ai/authorize. You could also set it in your terminal by exporting the WANDB_API_KEY environment variable or `wandb.login()` in your Python shell.
   hidden: true
 
 - name: trainer_config.wandb.prv_runid
   label: Previous Run ID
-  type: string
+  type: optional_string
   default: null
-  help: Previous run ID if you want to resume training from a previous run. If None, a new run will be created.
+  help: Previous run ID if this is a continuation of a previous run that was stopped.
 
 - name: trainer_config.wandb.group
   label: Group Name
-  type: string
+  type: optional_string
   default: null
-  help: Group name if you want to group runs together.
+  help: Grouping within the project.
 
 
 - type: text
@@ -286,11 +282,11 @@ training:
 - type: text
   text: '<b>Output Options</b>'
 
-- default: ''
+- default: null
   help: String to set as the run name. ckpts are saved to {Runs folder}/{Run name}. If None, it will be auto-generated {trainer_config.ckpt_dir}/{time_stamp}_{head_name}_n={num_samples}.
   label: Run Name
   name: trainer_config.run_name
-  type: string
+  type: optional_string
 - default: models
   help: 'Path to the folder that run data should be stored in. All the data for a
     single run are stored in the path: "{Runs folder}/{Run name}". Non-existing folders will be created
