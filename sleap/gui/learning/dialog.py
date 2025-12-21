@@ -1312,6 +1312,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Connect overfit mode checkbox to disable validation fraction
         self._setup_overfit_mode_toggle()
 
+        # Connect rotation preset dropdown to enable/disable custom angle field
+        self._setup_rotation_preset_toggle()
+
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
                 form_name = field_name.split(".")[0]
@@ -1465,6 +1468,25 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             overfit_checkbox.stateChanged.connect(update_state)
             update_state()
 
+    def _setup_rotation_preset_toggle(self):
+        """Connect rotation preset dropdown to enable/disable custom angle field.
+
+        When a preset (Off, ±15°, ±180°) is selected, the custom angle field is
+        disabled. When "Custom" is selected, the field is enabled.
+        """
+        aug_form = self.form_widgets["augmentation"]
+        preset_field = aug_form.fields.get("_rotation_preset")
+        custom_field = aug_form.fields.get("_rotation_custom_angle")
+
+        if preset_field is not None and custom_field is not None:
+
+            def update_state():
+                is_custom = preset_field.value() == "Custom"
+                custom_field.setEnabled(is_custom)
+
+            preset_field.valueChanged.connect(update_state)
+            update_state()  # Set initial state
+
     def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
         self._load_config(cfg_info)
 
@@ -1552,6 +1574,31 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Clear run_name - it should be auto-generated for new training runs.
         # This prevents old run_name from base config from leaking through.
         key_val_dict["trainer_config.run_name"] = None
+
+        # Reverse-map rotation_min/rotation_max to _rotation_preset dropdown
+        rot_min = key_val_dict.get(
+            "data_config.augmentation_config.geometric.rotation_min"
+        )
+        rot_max = key_val_dict.get(
+            "data_config.augmentation_config.geometric.rotation_max"
+        )
+        rot_p = key_val_dict.get("data_config.augmentation_config.geometric.rotation_p")
+        if rot_p is None or rot_p == 0:
+            key_val_dict["_rotation_preset"] = "Off"
+        elif rot_min is not None and rot_max is not None:
+            # Check for symmetric presets
+            if rot_min == -15 and rot_max == 15:
+                key_val_dict["_rotation_preset"] = "±15°"
+            elif rot_min == -180 and rot_max == 180:
+                key_val_dict["_rotation_preset"] = "±180°"
+            elif rot_min == -rot_max:
+                # Symmetric but custom angle
+                key_val_dict["_rotation_preset"] = "Custom"
+                key_val_dict["_rotation_custom_angle"] = rot_max
+            else:
+                # Asymmetric (rare) - use Custom with max as angle
+                key_val_dict["_rotation_preset"] = "Custom"
+                key_val_dict["_rotation_custom_angle"] = max(abs(rot_min), abs(rot_max))
 
         self.set_fields_from_key_val_dict(key_val_dict)
 

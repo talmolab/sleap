@@ -66,7 +66,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     ):
         super(YamlFormWidget, self).__init__(*args, **kwargs)
 
-        with open(yaml_file, "r") as form_yaml:
+        with open(yaml_file, "r", encoding="utf-8") as form_yaml:
             items_to_create = yaml.load(form_yaml, Loader=yaml.SafeLoader)
 
         self.which_form = which_form
