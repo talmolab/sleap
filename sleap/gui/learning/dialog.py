@@ -1172,9 +1172,7 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         # Update API key field based on login status
         is_logged_in, auth_source = check_wandb_login_status()
         if is_logged_in:
-            api_key_field = self.form_widget.fields.get(
-                "trainer_config.wandb.api_key"
-            )
+            api_key_field = self.form_widget.fields.get("trainer_config.wandb.api_key")
             if api_key_field is not None:
                 # Set placeholder to indicate already authenticated
                 placeholder = f"(using {auth_source})"
@@ -1211,7 +1209,17 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         # dynamic options and precedence rules (suggestions > saved pref)
         training_prefs = {
             "_ensure_channels": prefs["training image conversion"],
+            "_data_pipeline_fw": prefs["training data pipeline framework"],
+            "trainer_config.train_data_loader.num_workers": prefs[
+                "training num workers"
+            ],
+            "trainer_config.trainer_accelerator": prefs["training accelerator"],
         }
+        # trainer_devices is optional_int - only set if not None
+        if prefs["training num devices"] is not None:
+            training_prefs["trainer_config.trainer_devices"] = prefs[
+                "training num devices"
+            ]
         self.form_widget.set_form_data(training_prefs)
 
     def _save_training_preferences(self, form_data: dict):
@@ -1219,6 +1227,10 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         # Note: _predict_frames is handled at LearningDialog level
         pref_mapping = {
             "_ensure_channels": "training image conversion",
+            "_data_pipeline_fw": "training data pipeline framework",
+            "trainer_config.train_data_loader.num_workers": "training num workers",
+            "trainer_config.trainer_devices": "training num devices",
+            "trainer_config.trainer_accelerator": "training accelerator",
         }
         changed = False
         for form_key, pref_key in pref_mapping.items():
