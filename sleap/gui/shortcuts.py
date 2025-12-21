@@ -2,9 +2,15 @@
 Class for accessing/setting keyboard shortcuts.
 """
 
+import logging
 from typing import Dict, Union
+
+import yaml
 from qtpy.QtGui import QKeySequence
+
 from sleap import util
+
+logger = logging.getLogger(__name__)
 
 
 class Shortcuts(object):
@@ -62,11 +68,24 @@ class Shortcuts(object):
     )
 
     def __init__(self):
-        shortcuts = util.get_config_yaml("shortcuts.yaml")
+        # Load defaults from package (should always work)
         defaults = util.get_config_yaml("shortcuts.yaml", get_defaults=True)
-
-        self._shortcuts = self._process_shortcut_dict(shortcuts)
         self._defaults = self._process_shortcut_dict(defaults)
+
+        # Load user shortcuts with error handling
+        try:
+            shortcuts = util.get_config_yaml("shortcuts.yaml")
+            self._shortcuts = self._process_shortcut_dict(shortcuts)
+            logger.debug("Loaded keyboard shortcuts")
+        except yaml.YAMLError as e:
+            logger.warning(
+                f"Invalid shortcuts.yaml file: {e}\n"
+                f"Using default shortcuts. Delete the file or fix the YAML syntax."
+            )
+            self._shortcuts = self._defaults.copy()
+        except Exception as e:
+            logger.warning(f"Error loading shortcuts: {e}. Using defaults.")
+            self._shortcuts = self._defaults.copy()
 
     def _process_shortcut_dict(self, shortcuts: dict) -> dict:
         for action in shortcuts.keys():
@@ -99,11 +118,14 @@ class Shortcuts(object):
             data[key] = val.toString() if isinstance(val, QKeySequence) else val
 
         util.save_config_yaml("shortcuts.yaml", data)
+        logger.debug("Saved keyboard shortcuts")
 
     def reset_to_default(self):
         """Reset shortcuts to default and save."""
         self._shortcuts = util.get_config_yaml("shortcuts.yaml", get_defaults=True)
+        self._shortcuts = self._process_shortcut_dict(self._shortcuts)
         self.save()
+        logger.info("Reset keyboard shortcuts to defaults")
 
     def __getitem__(self, idx: Union[slice, int, str]) -> Union[str, Dict[str, str]]:
         """
