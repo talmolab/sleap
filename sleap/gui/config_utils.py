@@ -125,13 +125,13 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
     # Map friendly data pipeline names to sleap-nn enum values
     if "_data_pipeline_fw" in key_val_dict:
         pipeline_map = {
-            "Standard": "torch_dataset",
+            "Stream (no caching)": "torch_dataset",
             "Cache in Memory": "torch_dataset_cache_img_memory",
             "Cache to Disk": "torch_dataset_cache_img_disk",
         }
         friendly_name = key_val_dict["_data_pipeline_fw"]
         key_val_dict["data_config.data_pipeline_fw"] = pipeline_map.get(
-            friendly_name, "torch_dataset"
+            friendly_name, "torch_dataset_cache_img_memory"
         )
 
     # Overwrite backbone strides with stride from head.
@@ -155,8 +155,8 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         "trainer_config.train_data_loader.num_workers"
     ]
 
-    # Transform augmentation checkboxes to probability values
-    # Geometric augmentations use new independent probability params (rotation_p, scale_p)
+    # Transform augmentation checkboxes to probability values.
+    # Geometric augmentations use new independent probability params from sleap-nn.
     if "_rotation_enabled" in key_val_dict:
         rotation_enabled = key_val_dict["_rotation_enabled"]
         key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = (

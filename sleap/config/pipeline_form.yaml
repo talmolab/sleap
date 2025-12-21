@@ -212,14 +212,35 @@ training:
   type: list
 
 - type: text
-  text: '<b>Data Pipeline framework options</b>'
+  text: '<b>Data Pipeline and Hardware Options</b>'
 
-- default: 'Standard'
-  help: 'Framework for loading training data. Standard: Loads images directly from video (use num_workers=0). Cache in Memory: Pre-loads images into RAM for faster training. Cache to Disk: Saves images to disk for reuse across runs.'
+- default: 'Cache in Memory'
+  help: 'Data loading strategy. Stream: Reads frames directly from video as needed (set workers=0). Cache in Memory: Pre-loads all frames into RAM for faster training (recommended). Cache to Disk: Saves frames to disk for reuse across training runs.'
   label: Data Pipeline Framework
   name: _data_pipeline_fw
-  options: 'Standard,Cache in Memory,Cache to Disk'
+  options: 'Stream (no caching),Cache in Memory,Cache to Disk'
   type: list
+
+- name: trainer_config.train_data_loader.num_workers
+  label: Data Loader Workers
+  type: int
+  default: 0
+  range: 0,16
+  help: Number of subprocesses for data loading. Use 0 for "Stream" mode to avoid race conditions. Use 2-4 with caching modes for faster loading.
+
+- name: trainer_config.trainer_devices
+  label: Number of GPU Devices
+  type: optional_int
+  default: null
+  none_label: Auto
+  help: Number of GPU devices to train on. "Auto" detects available GPUs.
+
+- name: trainer_config.trainer_accelerator
+  label: Device Accelerator
+  type: list
+  default: "auto"
+  options: auto,cuda,cpu,mps
+  help: Hardware accelerator for training. "auto" uses CUDA if available, otherwise CPU. Use "mps" for Apple Silicon Macs.
 
 - type: text
   text: '<b>WandB options</b>'
