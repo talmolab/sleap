@@ -90,6 +90,7 @@ class LearningDialog(QtWidgets.QDialog):
         self.skeleton = skeleton
 
         self._frame_selection = None
+        self._predict_frames_user_changed = False  # Track if user changed this session
 
         self.current_pipeline = ""
 
@@ -172,6 +173,12 @@ class LearningDialog(QtWidgets.QDialog):
         self.pipeline_form_widget.emitPipeline()
 
         self.connect_signals()
+
+        # Track when user explicitly changes predict frames option
+        if "_predict_frames" in self.pipeline_form_widget.fields:
+            self.pipeline_form_widget.fields["_predict_frames"].valueChanged.connect(
+                self._on_predict_frames_changed
+            )
 
         # Connect actions for buttons
         self.copy_button.clicked.connect(self.copy)
@@ -270,15 +277,9 @@ class LearningDialog(QtWidgets.QDialog):
                 )
 
             # Build list of options
-            # Priority for default (lowest to highest):
-            #   "nothing" (if training)
-            #   "current frame" (if inference)
-            #   "suggested frames" (if available)
-            #   "selected clip" (if available)
             if self.mode != "inference":
                 prediction_options.append("nothing")
             prediction_options.append("current frame")
-            default_option = "nothing" if self.mode != "inference" else "current frame"
 
             option = f"random frames ({total_random} total frames)"
             prediction_options.append(option)
@@ -287,10 +288,10 @@ class LearningDialog(QtWidgets.QDialog):
                 option = f"random frames in current video ({random_video} frames)"
                 prediction_options.append(option)
 
-            if total_suggestions > 0:
+            has_suggestions = total_suggestions > 0
+            if has_suggestions:
                 option = f"suggested frames ({total_suggestions} total frames)"
                 prediction_options.append(option)
-                default_option = option
 
             if total_user > 0:
                 option = f"user labeled frames ({total_user} total frames)"
@@ -299,16 +300,108 @@ class LearningDialog(QtWidgets.QDialog):
             if clip_length > 0:
                 option = f"selected clip ({clip_length} frames)"
                 prediction_options.append(option)
-                default_option = option
 
             prediction_options.append(f"entire current video ({video_length} frames)")
 
             if len(self.labels.videos) > 1:
                 prediction_options.append(f"all videos ({all_videos_length} frames)")
 
+            # Determine default based on precedence rules:
+            # 1. If user changed this session -> preserve current selection
+            # 2. If suggestions exist -> default to "suggested frames"
+            # 3. If no suggestions -> use persisted preference (fallback if invalid)
+            if self._predict_frames_user_changed:
+                # Try to preserve user's current selection
+                current = self.pipeline_form_widget.fields["_predict_frames"].value()
+                current_normalized = self._normalize_predict_option(current)
+                # Find matching option in new list
+                default_option = None
+                for opt in prediction_options:
+                    if self._normalize_predict_option(opt) == current_normalized:
+                        default_option = opt
+                        break
+                if default_option is None:
+                    # Current selection no longer available, use precedence rules
+                    default_option = self._get_predict_frames_default(
+                        has_suggestions, prediction_options
+                    )
+            else:
+                default_option = self._get_predict_frames_default(
+                    has_suggestions, prediction_options
+                )
+
             self.pipeline_form_widget.fields["_predict_frames"].set_options(
                 prediction_options, default_option
             )
+
+    def _on_predict_frames_changed(self):
+        """Track when user explicitly changes the predict frames option."""
+        self._predict_frames_user_changed = True
+
+    @staticmethod
+    def _normalize_predict_option(option: str) -> str:
+        """Extract base option type from dynamic option string.
+
+        E.g., "random frames (123 total frames)" -> "random frames"
+        """
+        if option.startswith("nothing"):
+            return "nothing"
+        elif option.startswith("current frame"):
+            return "current frame"
+        elif option.startswith("random frames in current video"):
+            return "random frames in current video"
+        elif option.startswith("random frames"):
+            return "random frames"
+        elif option.startswith("suggested frames"):
+            return "suggested frames"
+        elif option.startswith("user labeled frames"):
+            return "user labeled frames"
+        elif option.startswith("selected clip"):
+            return "selected clip"
+        elif option.startswith("entire current video"):
+            return "entire current video"
+        elif option.startswith("all videos"):
+            return "all videos"
+        return option
+
+    def _get_predict_frames_default(
+        self, has_suggestions: bool, prediction_options: list
+    ) -> str:
+        """Determine default predict frames option based on precedence rules.
+
+        Precedence:
+        1. If user explicitly changed this session -> keep their choice (elsewhere)
+        2. If suggestions exist -> "suggested frames"
+        3. If no suggestions -> use persisted pref (fallback if invalid)
+        """
+        # If suggestions exist, always default to suggested frames
+        if has_suggestions:
+            for opt in prediction_options:
+                if opt.startswith("suggested frames"):
+                    return opt
+
+        # No suggestions: use persisted preference
+        saved_pref = prefs["training predict on"]
+
+        # Find matching option in available options
+        for opt in prediction_options:
+            if self._normalize_predict_option(opt) == saved_pref:
+                return opt
+
+        # Fallback: "nothing" for training, "current frame" for inference
+        return "nothing" if self.mode != "inference" else "current frame"
+
+    def _save_predict_frames_preference(self):
+        """Save the current predict frames selection to preferences."""
+        if "_predict_frames" not in self.pipeline_form_widget.fields:
+            return
+
+        current = self.pipeline_form_widget.fields["_predict_frames"].value()
+        normalized = self._normalize_predict_option(current)
+
+        if prefs["training predict on"] != normalized:
+            prefs["training predict on"] = normalized
+            prefs.save()
 
     def connect_signals(self):
         self.pipeline_form_widget.valueChanged.connect(self.on_tab_data_change)
@@ -755,6 +848,8 @@ class LearningDialog(QtWidgets.QDialog):
 
     def run(self):
         """Run with current dialog settings."""
+        # Save predict frames preference before running
+        self._save_predict_frames_preference()
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
 
@@ -985,6 +1080,7 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         self._wandb_api_key_placeholder = None
         if mode == "training":
             self._init_wandb_settings()
+            self._init_training_settings()
 
     @property
     def fields(self):
@@ -1005,6 +1101,7 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
             if api_key == self._wandb_api_key_placeholder:
                 data["trainer_config.wandb.api_key"] = None
         self._save_wandb_preferences(data)
+        self._save_training_preferences(data)
         return data
 
     def set_form_data(self, data):
@@ -1097,6 +1194,31 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
             "trainer_config.wandb.project": "wandb project",
             "trainer_config.wandb.group": "wandb group",
             "trainer_config.wandb.save_viz_imgs_wandb": "wandb save viz images",
+        }
+        changed = False
+        for form_key, pref_key in pref_mapping.items():
+            if form_key in form_data:
+                value = form_data[form_key]
+                if prefs[pref_key] != value:
+                    prefs[pref_key] = value
+                    changed = True
+        if changed:
+            prefs.save()
+
+    def _init_training_settings(self):
+        """Initialize training pipeline settings from preferences."""
+        # Note: _predict_frames is handled at LearningDialog level due to
+        # dynamic options and precedence rules (suggestions > saved pref)
+        training_prefs = {
+            "_ensure_channels": prefs["training image conversion"],
+        }
+        self.form_widget.set_form_data(training_prefs)
+
+    def _save_training_preferences(self, form_data: dict):
+        """Save training pipeline settings to preferences."""
+        # Note: _predict_frames is handled at LearningDialog level
+        pref_mapping = {
+            "_ensure_channels": "training image conversion",
         }
         changed = False
         for form_key, pref_key in pref_mapping.items():
