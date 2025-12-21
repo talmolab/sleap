@@ -1073,24 +1073,20 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
             self.form_widget.set_form_data(wandb_prefs)
 
         # Update API key field based on login status
-        try:
-            is_logged_in, auth_source = check_wandb_login_status()
-            if is_logged_in:
-                api_key_field = self.form_widget.fields.get(
-                    "trainer_config.wandb.api_key"
+        is_logged_in, auth_source = check_wandb_login_status()
+        if is_logged_in:
+            api_key_field = self.form_widget.fields.get(
+                "trainer_config.wandb.api_key"
+            )
+            if api_key_field is not None:
+                # Set placeholder to indicate already authenticated
+                placeholder = f"(using {auth_source})"
+                api_key_field.setText(placeholder)
+                api_key_field.setToolTip(
+                    get_wandb_api_key_help_text(is_logged_in, auth_source)
                 )
-                if api_key_field is not None:
-                    # Set placeholder to indicate already authenticated
-                    placeholder = f"(using {auth_source})"
-                    api_key_field.setText(placeholder)
-                    api_key_field.setToolTip(
-                        get_wandb_api_key_help_text(is_logged_in, auth_source)
-                    )
-                    # Store placeholder so we can strip it on form read
-                    self._wandb_api_key_placeholder = placeholder
-        except Exception:
-            # Don't fail if wandb check fails
-            pass
+                # Store placeholder so we can strip it on form read
+                self._wandb_api_key_placeholder = placeholder
 
     def _save_wandb_preferences(self, form_data: dict):
         """Save WandB settings to preferences for persistence across sessions."""
