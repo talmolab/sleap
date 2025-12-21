@@ -156,7 +156,8 @@ def remove_unused_tracks(labels: Labels):
     used_tracks = set()
     for lf in labels:
         for inst in lf.instances:
-            used_tracks.add(inst.track.name)
+            if inst.track is not None:
+                used_tracks.add(inst.track.name)
 
     # Remove set difference from tracks in Labels
     tracks_to_remove = all_tracks - used_tracks
