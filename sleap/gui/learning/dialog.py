@@ -981,7 +981,8 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
         self.setLayout(self.form_widget.form_layout)
 
-        # Load saved WandB preferences and update API key help text
+        # Load saved WandB preferences and update API key field
+        self._wandb_api_key_placeholder = None
         if mode == "training":
             self._init_wandb_settings()
 
@@ -998,6 +999,11 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
     def get_form_data(self):
         data = self.form_widget.get_form_data()
+        # Strip placeholder from API key if user didn't change it
+        api_key = data.get("trainer_config.wandb.api_key")
+        if api_key and self._wandb_api_key_placeholder:
+            if api_key == self._wandb_api_key_placeholder:
+                data["trainer_config.wandb.api_key"] = None
         self._save_wandb_preferences(data)
         return data
 
@@ -1047,18 +1053,26 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
     def _init_wandb_settings(self):
         """Initialize WandB settings from preferences and update API key help text."""
-        # Load saved WandB preferences
+        # Load saved WandB preferences (bools always set, strings only if not None)
         wandb_prefs = {
+            "trainer_config.use_wandb": prefs["wandb enabled"],
             "trainer_config.wandb.entity": prefs["wandb entity"],
             "trainer_config.wandb.project": prefs["wandb project"],
             "trainer_config.wandb.group": prefs["wandb group"],
+            "trainer_config.wandb.save_viz_imgs_wandb": prefs["wandb save viz images"],
         }
-        # Only set values that are not None
-        wandb_prefs = {k: v for k, v in wandb_prefs.items() if v is not None}
+        # Filter out None values for optional string fields
+        wandb_prefs = {
+            k: v
+            for k, v in wandb_prefs.items()
+            if v is not None
+            or k
+            in ("trainer_config.use_wandb", "trainer_config.wandb.save_viz_imgs_wandb")
+        }
         if wandb_prefs:
             self.form_widget.set_form_data(wandb_prefs)
 
-        # Update API key help text based on login status
+        # Update API key field based on login status
         try:
             is_logged_in, auth_source = check_wandb_login_status()
             if is_logged_in:
@@ -1066,19 +1080,27 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
                     "trainer_config.wandb.api_key"
                 )
                 if api_key_field is not None:
-                    help_text = get_wandb_api_key_help_text(is_logged_in, auth_source)
-                    api_key_field.setToolTip(help_text)
+                    # Set placeholder to indicate already authenticated
+                    placeholder = f"(using {auth_source})"
+                    api_key_field.setText(placeholder)
+                    api_key_field.setToolTip(
+                        get_wandb_api_key_help_text(is_logged_in, auth_source)
+                    )
+                    # Store placeholder so we can strip it on form read
+                    self._wandb_api_key_placeholder = placeholder
         except Exception:
             # Don't fail if wandb check fails
             pass
 
     def _save_wandb_preferences(self, form_data: dict):
         """Save WandB settings to preferences for persistence across sessions."""
-        # Map form field names to preference keys
+        # Map form field names to preference keys (API key excluded for security)
         pref_mapping = {
+            "trainer_config.use_wandb": "wandb enabled",
             "trainer_config.wandb.entity": "wandb entity",
             "trainer_config.wandb.project": "wandb project",
             "trainer_config.wandb.group": "wandb group",
+            "trainer_config.wandb.save_viz_imgs_wandb": "wandb save viz images",
         }
         changed = False
         for form_key, pref_key in pref_mapping.items():
@@ -1200,7 +1222,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         col_layout = QtWidgets.QHBoxLayout()
         if col0_layout:
             col_layout.addWidget(
-                self._layout_widget(col0_layout), stretch=0, alignment=QtCore.Qt.AlignTop
+                self._layout_widget(col0_layout),
+                stretch=0,
+                alignment=QtCore.Qt.AlignTop,
             )
         col_layout.addWidget(
             self._layout_widget(col1_layout), stretch=0, alignment=QtCore.Qt.AlignTop
