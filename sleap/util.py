@@ -9,6 +9,7 @@ Try not to put things in here unless they really have no other place.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import shutil
@@ -37,6 +38,8 @@ import seaborn as sns
 import yaml
 
 import sleap.version as sleap_version
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from rich.progress import Task
@@ -340,6 +343,7 @@ def get_config_file(
 
         # Copy package version of config file into user config directory.
         shutil.copy(package_path, desired_path)
+        logger.info(f"Created {shortname} from package defaults at {desired_path}")
 
     return desired_path
 
