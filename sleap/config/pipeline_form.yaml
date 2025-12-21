@@ -283,26 +283,10 @@ training:
   help: Grouping within the project.
 
 - name: trainer_config.wandb.save_viz_imgs_wandb
-  label: Upload Visualization Images to WandB
+  label: Upload Viz to WandB
   type: bool
   default: false
   help: If True, sample predictions saved during training will also be uploaded to WandB. Requires both "Enable WandB for logging" and "Visualize Predictions During Training" to be enabled.
-
-
-- type: text
-  text: '<b>ZMQ Options</b>'
-
-- name: trainer_config.zmq.controller_port
-  label: Controller Port
-  type: int
-  default: 9000
-  range: 1024,65535
-
-- name: trainer_config.zmq.publish_port
-  label: Publish Port
-  type: int
-  default: 9001
-  range: 1024,65535
 
 - type: text
   text: '<b>Output Options</b>'
@@ -335,14 +319,16 @@ training:
   type: bool
 
 - name: trainer_config.visualize_preds_during_training
-  label: Visualize Predictions During Training
+  label: Visualize Predictions
   type: bool
   default: true
+  help: If True, sample predictions will be saved during training for visual inspection.
 
 - name: trainer_config.keep_viz
-  label: Keep Prediction Visualization Images After Training
+  label: Keep Viz Images
   type: bool
   default: false
+  help: If True, keep prediction visualization images after training completes. Otherwise they are deleted.
 
 - name: _predict_frames
   label: Predict On

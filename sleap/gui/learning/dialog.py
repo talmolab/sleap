@@ -145,23 +145,23 @@ class LearningDialog(QtWidgets.QDialog):
         self.message_widget = QtWidgets.QLabel("")
 
         # Layout for entire dialog
+        # Tabs and message go inside scroll area
         content_widget = QtWidgets.QWidget()
         content_layout = QtWidgets.QVBoxLayout(content_widget)
-
         content_layout.addWidget(self.tab_widget)
         content_layout.addWidget(self.message_widget)
-        content_layout.addWidget(buttons_layout_widget)
 
-        # Create the QScrollArea.
+        # Create the QScrollArea for tabs only
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(content_widget)
-
         scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
 
+        # Main layout: scroll area + buttons (buttons always visible at bottom)
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(scroll_area)
+        layout.addWidget(buttons_layout_widget)
 
         self.adjust_initial_size()
 
@@ -191,8 +191,9 @@ class LearningDialog(QtWidgets.QDialog):
         # Get screen size
         screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
 
-        max_width = 1860
-        max_height = 1150
+        # Reduced from 1860x1150 to fit compact layout better
+        max_width = 1130
+        max_height = 860
         margin = 0.10
 
         # Calculate target width and height
@@ -1063,6 +1064,20 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     updatePipeline = QtCore.Signal(str)
     valueChanged = QtCore.Signal()
 
+    # Fields to place in the right column (WandB options)
+    RIGHT_COLUMN_FIELDS = {
+        "trainer_config.use_wandb",
+        "trainer_config.wandb.entity",
+        "trainer_config.wandb.project",
+        "trainer_config.wandb.api_key",
+        "trainer_config.wandb.prv_runid",
+        "trainer_config.wandb.group",
+        "trainer_config.wandb.save_viz_imgs_wandb",
+    }
+
+    # Section headers to place in right column
+    RIGHT_COLUMN_HEADERS = {"WandB options"}
+
     def __init__(
         self, mode: Text, skeleton: Optional["Skeleton"] = None, *args, **kwargs
     ):
@@ -1085,13 +1100,120 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
         self.form_widget.form_layout.valueChanged.connect(self.valueChanged)
 
-        self.setLayout(self.form_widget.form_layout)
+        # Build two-column layout for training mode
+        if mode == "training":
+            self._build_two_column_layout()
+        else:
+            self.setLayout(self.form_widget.form_layout)
 
         # Load saved WandB preferences and update API key field
         self._wandb_api_key_placeholder = None
         if mode == "training":
             self._init_wandb_settings()
             self._init_training_settings()
+
+    def _build_two_column_layout(self):
+        """Reorganize the pipeline form into a two-column layout.
+
+        The pipeline stacked widget stays at the top (full width).
+        Left column: Input Data, Data Pipeline/Hardware, Output options
+        Right column: WandB options, ZMQ options
+        """
+        form_layout = self.form_widget.form_layout
+
+        # Create main layout
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Create two-column layout for settings
+        columns_layout = QtWidgets.QHBoxLayout()
+        left_column = QtWidgets.QFormLayout()
+        right_column = QtWidgets.QFormLayout()
+        left_column.setVerticalSpacing(6)
+        right_column.setVerticalSpacing(6)
+
+        # Track which column we're adding to based on section headers
+        current_column = left_column
+        pipeline_widget = None
+
+        # Iterate through all rows in the form
+        row_count = form_layout.rowCount()
+        for i in range(row_count):
+            # Get the label and field for this row
+            label_item = form_layout.itemAt(i, QtWidgets.QFormLayout.LabelRole)
+            field_item = form_layout.itemAt(i, QtWidgets.QFormLayout.FieldRole)
+
+            if field_item is None:
+                continue
+
+            field_widget = field_item.widget()
+            if field_widget is None:
+                continue
+
+            # Check if this is the pipeline stacked widget
+            field_name = field_widget.objectName()
+            if field_name == "_pipeline":
+                pipeline_widget = field_widget
+                continue
+
+            # Check if this is a section header (QLabel with bold text)
+            if isinstance(field_widget, QtWidgets.QLabel):
+                header_text = field_widget.text()
+                # Check for section headers and switch columns if needed
+                for header in self.RIGHT_COLUMN_HEADERS:
+                    if header in header_text:
+                        current_column = right_column
+                        break
+                else:
+                    # Not a right column header
+                    if "Input Data" in header_text or "Data Pipeline" in header_text or "Output" in header_text:
+                        current_column = left_column
+
+                # Add the header to the current column
+                current_column.addRow(field_widget)
+                continue
+
+            # Check if this field belongs in right column
+            if field_name in self.RIGHT_COLUMN_FIELDS:
+                target_column = right_column
+            else:
+                target_column = current_column
+
+            # Get the label text
+            label_text = ""
+            if label_item:
+                label_widget = label_item.widget()
+                if label_widget:
+                    label_text = label_widget.text()
+
+            # Add to target column
+            if label_text:
+                target_column.addRow(label_text, field_widget)
+            else:
+                target_column.addRow(field_widget)
+
+        # Wrap columns in widgets for alignment
+        left_widget = QtWidgets.QWidget()
+        left_widget.setLayout(left_column)
+        right_widget = QtWidgets.QWidget()
+        right_widget.setLayout(right_column)
+
+        columns_layout.addWidget(left_widget, stretch=1, alignment=QtCore.Qt.AlignTop)
+        columns_layout.addWidget(right_widget, stretch=1, alignment=QtCore.Qt.AlignTop)
+
+        # Add pipeline widget at top if found (no stretch - only takes needed space)
+        if pipeline_widget:
+            main_layout.addWidget(pipeline_widget, stretch=0)
+
+        # Add columns (no stretch - only takes needed space)
+        columns_widget = QtWidgets.QWidget()
+        columns_widget.setLayout(columns_layout)
+        main_layout.addWidget(columns_widget, stretch=0)
+
+        # Push everything to top, extra space goes to bottom
+        main_layout.addStretch(1)
+
+        self.setLayout(main_layout)
 
     @property
     def fields(self):
@@ -1315,6 +1437,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Connect rotation preset dropdown to enable/disable custom angle field
         self._setup_rotation_preset_toggle()
 
+        # Connect augmentation checkboxes to show/hide their parameter fields
+        self._setup_augmentation_param_toggles()
+
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
                 form_name = field_name.split(".")[0]
@@ -1486,6 +1611,70 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
             preset_field.valueChanged.connect(update_state)
             update_state()  # Set initial state
+
+    def _setup_augmentation_param_toggles(self):
+        """Connect augmentation checkboxes to show/hide their parameter fields.
+
+        When an augmentation checkbox is unchecked, its parameter fields are hidden
+        to reduce visual clutter. The fields are shown when the checkbox is checked.
+        """
+        aug_form = self.form_widgets["augmentation"]
+        form_layout = aug_form.form_layout
+
+        # Define which checkbox controls which parameter fields
+        toggle_groups = {
+            "_scale_enabled": [
+                "data_config.augmentation_config.geometric.scale_min",
+                "data_config.augmentation_config.geometric.scale_max",
+            ],
+            "_uniform_noise_enabled": [
+                "data_config.augmentation_config.intensity.uniform_noise_min",
+                "data_config.augmentation_config.intensity.uniform_noise_max",
+            ],
+            "_gaussian_noise_enabled": [
+                "data_config.augmentation_config.intensity.gaussian_noise_mean",
+                "data_config.augmentation_config.intensity.gaussian_noise_std",
+            ],
+            "_contrast_enabled": [
+                "data_config.augmentation_config.intensity.contrast_min",
+                "data_config.augmentation_config.intensity.contrast_max",
+            ],
+            "_brightness_enabled": [
+                "data_config.augmentation_config.intensity.brightness_min",
+                "data_config.augmentation_config.intensity.brightness_max",
+            ],
+        }
+
+        for checkbox_name, param_fields in toggle_groups.items():
+            checkbox = aug_form.fields.get(checkbox_name)
+            if checkbox is None:
+                continue
+
+            # Collect the parameter field widgets and their labels
+            param_widgets = []
+            for field_name in param_fields:
+                field = aug_form.fields.get(field_name)
+                if field is not None:
+                    # Get the label for this field from the form layout
+                    label = form_layout.labelForField(field)
+                    param_widgets.append((field, label))
+
+            if not param_widgets:
+                continue
+
+            # Create update function that captures the widgets
+            def make_update_visibility(widgets):
+                def update_visibility(state):
+                    visible = bool(state)
+                    for field, label in widgets:
+                        field.setVisible(visible)
+                        if label is not None:
+                            label.setVisible(visible)
+                return update_visibility
+
+            update_fn = make_update_visibility(param_widgets)
+            checkbox.stateChanged.connect(update_fn)
+            update_fn(checkbox.isChecked())  # Set initial state
 
     def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
         self._load_config(cfg_info)
