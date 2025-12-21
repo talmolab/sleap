@@ -1,33 +1,67 @@
 ---
 name: investigation
-description: Scaffolds a template for a small investigation for empirical experimentation. Use when the user asks for an investigation, experiment or research to support making design decisions, assess performance or try out a new idea that requires data or an MVP.
+description: >
+  Scaffolds a structured investigation in scratch/ for empirical research and documentation.
+  Use when the user says "start an investigation" or wants to: trace code paths or data flow
+  ("trace from X to Y", "what touches X", "follow the wiring"), document system architecture
+  comprehensively ("document how the system works", "archeology"), investigate bugs
+  ("figure out why X happens"), explore technical feasibility ("can we do X?"), or explore
+  design options ("explore the API", "gather context", "design alternatives").
+  Creates dated folder with README. NOT for simple code questions or single-file searches.
 ---
 
 # Set up an investigation
 
 ## Instructions
 
-1. Create a folder in `{REPO_ROOT}/scratch/` with the format `{YYYY-MM-DD}-{descriptive-name}`. You will mainly work inside this folder.
-2. Create a `README.md` in this folder where you will:
-   1. Describe the task.
-   2. Take background notes for context.
-   3. Create a task list for progress tracking.
-   4. Summarize results and outcomes.
-3. Create scripts and testing data files in this folder to conduct an empirical investigation.
-4. For multi-step investigations with sub-experiments, consider generating individual markdown files to take interediate notes.
-5. The `README.md` should contain actionable findings to support a subsequent implementation or design decision.
+1. Create a folder in `{REPO_ROOT}/scratch/` with the format `{YYYY-MM-DD}-{descriptive-name}`.
+2. Create a `README.md` in this folder with: task description, background context, task checklist. Update with findings as you progress.
+3. Create scripts and data files as needed for empirical work.
+4. For complex investigations, split into sub-documents as patterns emerge.
 
-## Best practices
-- Both for this library and other ones, it's worth writing a simple script or calling the library interactively to list its members or try out different constructions to explore the API and document it in a markdown file called `API.md`.
-- Generate figures when applicable (e.g., plots, data visualizations) and reference them inline in the markdown files.
-- Always use `uv` with self-contained dependencies when using Python.
-- When you need a local web server, use `npx serve -p 8080 --cors --no-clipboard &` (run in background to avoid blocking).
-- Prefer self-contained HTML+JS pages (without React if possible) and use Playwright MCP for rendering screenshots.
-- Use subagents whenever possible to save context and delegate tasks in parallel.
+## Investigation Patterns
 
-## Important: Scratch work is gitignored
-The `scratch/` directory is in `.gitignore` and will NOT be committed. When distilling findings into PRs:
-- Do NOT assume local scratch notes will be checked in
-- Include all relevant information inline in PR descriptions or code comments
-- Copy key findings, code snippets, benchmark results, or data directly into the PR
-- The PR should be self-contained and not rely on scratch files for context
+These are common patterns, not rigid categories. Most investigations blend multiple patterns.
+
+**Tracing** - "trace from X to Y", "what touches X", "follow the wiring"
+- Follow call stack or data flow from a focal component to its connections
+- Can trace forward (X → where does it go?) or backward (what leads to X?)
+- Useful for: assessing impact of changes, understanding coupling
+
+**System Architecture Archeology** - "document how the system works", "archeology"
+- Comprehensive documentation of an entire system or flow for reusable reference
+- Start from entry points, trace through all layers, document relationships exhaustively
+- For complex systems, consider numbered sub-documents (01-cli.md, 02-data.md, etc.)
+
+**Bug Investigation** - "figure out why X happens", "this is broken"
+- Reproduce → trace root cause → propose fix
+- For cross-repo bugs, consider per-repo task breakdowns
+
+**Technical Exploration** - "can we do X?", "is this possible?", "figure out how to"
+- Feasibility testing with proof-of-concept scripts
+- Document what works AND what doesn't
+
+**Design Research** - "explore the API", "gather context", "design alternatives"
+- Understand systems and constraints before building
+- Compare alternatives, document trade-offs
+- Include visual artifacts (mockups, screenshots) when relevant
+- For iterative decisions, use numbered "Design Questions" (DQ1, DQ2...) to structure review
+
+## Best Practices
+
+- Use `uv` with inline dependencies for standalone scripts; for scripts importing local project code, use `python` directly (or `uv run python` if env not activated)
+- Use subagents for parallel exploration to save context
+- Write small scripts to explore APIs interactively
+- Generate figures/diagrams and reference inline in markdown
+- For web servers: `npx serve -p 8080 --cors --no-clipboard &`
+- For screenshots: use Playwright MCP for web, Qt's grab() for GUI
+- For external package API review: clone to `scratch/repos/` for direct source access
+
+## Important: Scratch is Gitignored
+
+The `scratch/` directory is in `.gitignore` and will NOT be committed.
+
+- NEVER delete anything from scratch - it doesn't need cleanup
+- When distilling findings into PRs, include all relevant info inline
+- Copy key findings, code, and data directly into PR descriptions
+- PRs must be self-contained; don't reference scratch files
