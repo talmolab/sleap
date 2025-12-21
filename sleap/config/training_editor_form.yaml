@@ -340,11 +340,12 @@ model:
     options: 1,2,4,8,16,32,64
   type: stacked
 augmentation:
-- default: 0.0
-  help: Probabibility to apply rotational and scale augmentation.
-  label: Affine probability
-  name: data_config.augmentation_config.geometric.affine_p
-  type: float
+# Geometric augmentations
+- default: true
+  help: Enable random rotation augmentation. Rotation is applied independently with 100% probability when enabled.
+  label: Rotation
+  name: _rotation_enabled
+  type: bool
 - default: -180
   help: Minimum rotation angle in degrees in [-180, 180].
   label: Rotation Min Angle
@@ -357,6 +358,11 @@ augmentation:
   name: data_config.augmentation_config.geometric.rotation_max
   range: -180,180
   type: double
+- default: false
+  help: Enable random scaling augmentation. Scaling is applied independently with 100% probability when enabled.
+  label: Scale
+  name: _scale_enabled
+  type: bool
 - default: 0.9
   help: Minimum scaling factor.
   label: Scale Min
@@ -367,45 +373,44 @@ augmentation:
   label: Scale Max
   name: data_config.augmentation_config.geometric.scale_max
   type: double
-- default: 0.0
-  help: Probabibility to apply uniformly distributed noise augmentation.
-  label: Uniform Noise probability
-  name: data_config.augmentation_config.intensity.uniform_noise_p
-  type: float
+# Intensity augmentations
+- default: false
+  help: Enable uniformly distributed noise augmentation.
+  label: Uniform Noise
+  name: _uniform_noise_enabled
+  type: bool
 - default: 0.0
   help: Minimum value to add.
   range: 0.0, 1.0
   label: Uniform Noise Min Val
   name: data_config.augmentation_config.intensity.uniform_noise_min
   type: double
-- default: 1.0
+- default: 0.1
   range: 0.0, 1.0
   help: Maximum value to add.
   label: Uniform Noise Max Val
   name: data_config.augmentation_config.intensity.uniform_noise_max
   type: double
+- default: false
+  help: Enable normally distributed noise augmentation. This is applied independently to each pixel.
+  label: Gaussian Noise
+  name: _gaussian_noise_enabled
+  type: bool
 - default: 0.0
-  help: Probabibility to apply normally distributed noise augmentation.
-    This is applied independently to each pixel.
-  label: Gaussian Noise probability
-  name: data_config.augmentation_config.intensity.gaussian_noise_p
-  type: float
-- default: 5.0
   help: Mean of the distribution to sample from.
   label: Gaussian Noise Mean
   name: data_config.augmentation_config.intensity.gaussian_noise_mean
   type: double
-- default: 1.0
+- default: 0.04
   help: Standard deviation of the distribution to sample from.
   label: Gaussian Noise Stddev
   name: data_config.augmentation_config.intensity.gaussian_noise_std
   type: double
-- default: 0.0
-  help: Probabibility to apply gamma constrast adjustment to the image. This scales
-    all pixel values by `x ** gamma` where `x` is the pixel value in the [0, 1] range.
-  label: Contrast probability
-  name: data_config.augmentation_config.intensity.contrast_p
-  type: float
+- default: false
+  help: Enable gamma contrast adjustment. This scales all pixel values by x^gamma where x is in [0, 1].
+  label: Contrast
+  name: _contrast_enabled
+  type: bool
 - default: 0.5
   help: Minimum gamma to use for augmentation. Reasonable values are in [0.5, 2.0].
   label: Contrast Min Gamma
@@ -416,19 +421,17 @@ augmentation:
   label: Contrast Max Gamma
   name: data_config.augmentation_config.intensity.contrast_max
   type: double
-- default: 0.0
-  help: If True, the image brightness will be augmented. This adjustment simply adds
-      the same value to all pixels in the image to simulate broadfield illumination
-      change.
-  label: Brightness probability
-  name: data_config.augmentation_config.intensity.brightness_p
-  type: float
+- default: false
+  help: Enable brightness augmentation. This adds the same value to all pixels to simulate illumination change.
+  label: Brightness
+  name: _brightness_enabled
+  type: bool
 - default: 0.0
   help: Minimum value to add to all pixels.
   label: Brightness Min Val
   name: data_config.augmentation_config.intensity.brightness_min
   type: double
-- default: 1.0
+- default: 0.2
   help: Maximum value to add to all pixels.
   label: Brightness Max Val
   name: data_config.augmentation_config.intensity.brightness_max
