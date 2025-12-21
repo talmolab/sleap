@@ -363,9 +363,9 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         elif hasattr(widget, "setValue"):
             widget.setValue(val)
         elif hasattr(widget, "currentText"):
-            widget.setCurrentText(str(val))
+            widget.setCurrentText(str(val) if val is not None else "")
         elif hasattr(widget, "text"):
-            widget.setText(str(val))
+            widget.setText(str(val) if val is not None else "")
         else:
             print(f"don't know how to set value for {widget}")
         # for macOS we need to call repaint (bug in Qt?)
