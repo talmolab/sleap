@@ -23,12 +23,14 @@ def check_wandb_login_status() -> Tuple[bool, Optional[str]]:
     try:
         import netrc
 
-        netrc_path = Path.home() / ("_netrc" if os.name == "nt" else ".netrc")
-        if netrc_path.exists():
-            nrc = netrc.netrc(str(netrc_path))
-            auth = nrc.authenticators("api.wandb.ai")
-            if auth and auth[2]:  # (login, account, password) - password is API key
-                return True, "cached credentials (~/.netrc)"
+        # Try both .netrc and _netrc (Windows can use either)
+        for netrc_name in (".netrc", "_netrc"):
+            netrc_path = Path.home() / netrc_name
+            if netrc_path.exists():
+                nrc = netrc.netrc(str(netrc_path))
+                auth = nrc.authenticators("api.wandb.ai")
+                if auth and auth[2]:  # (login, account, password) - password is API key
+                    return True, "cached credentials (~/.netrc)"
     except Exception:
         pass
 

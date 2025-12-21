@@ -804,6 +804,7 @@ def run_gui_training(
                         "the error."
                     ).exec_()
                 trained_job_paths[model_type] = None
+                break  # Don't continue to next model if this one failed
 
     if gui:
         # close training monitor window
