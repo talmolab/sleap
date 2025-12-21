@@ -1,9 +1,14 @@
 data:
 - default: 0.1
-  help: Fraction of labeled frames to use as a validation set.
+  help: Fraction of labeled frames to use as a validation set. Ignored if "Overfit Mode" is enabled.
   label: Validation fraction
   name: data_config.validation_fraction
   type: double
+- default: false
+  help: If enabled, the same data will be used for both training and validation (train = val). This is useful for intentional overfitting on small datasets (fewer than 10 labeled frames) to test model capacity.
+  label: Overfit Mode (train=val)
+  name: data_config.use_same_data_for_val
+  type: bool
 - default: 1.0
   help: ''
   label: Input Scaling
