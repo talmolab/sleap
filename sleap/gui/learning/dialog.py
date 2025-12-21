@@ -1164,6 +1164,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self.form_widgets["model"].valueChanged.connect(self.update_receptive_field)
         self.form_widgets["data"].valueChanged.connect(self.update_receptive_field)
 
+        # Connect overfit mode checkbox to disable validation fraction
+        self._setup_overfit_mode_toggle()
+
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
                 form_name = field_name.split(".")[0]
@@ -1296,6 +1299,26 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # has changed so that it can activate/update the "user" config
         # if self._cfg_list_widget:
         #     self._set_user_config()
+
+    def _setup_overfit_mode_toggle(self):
+        """Connect overfit mode checkbox to disable validation fraction.
+
+        Follows the same pattern as OptionalSpinWidget.updateState().
+        """
+        data_form = self.form_widgets["data"]
+        overfit_field_name = "data_config.use_same_data_for_val"
+        val_frac_field_name = "data_config.validation_fraction"
+
+        overfit_checkbox = data_form.fields.get(overfit_field_name)
+        val_frac_widget = data_form.fields.get(val_frac_field_name)
+
+        if overfit_checkbox is not None and val_frac_widget is not None:
+
+            def update_state():
+                val_frac_widget.setDisabled(overfit_checkbox.isChecked())
+
+            overfit_checkbox.stateChanged.connect(update_state)
+            update_state()
 
     def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
         self._load_config(cfg_info)
