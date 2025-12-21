@@ -1,29 +1,34 @@
 """Utilities for WandB integration in SLEAP GUI."""
 
 import os
+from pathlib import Path
 from typing import Optional, Tuple
 
 
 def check_wandb_login_status() -> Tuple[bool, Optional[str]]:
     """Check if wandb is logged in and return status info.
 
+    This function checks for cached credentials without calling wandb.login(),
+    which would be slow and print messages to stdout.
+
     Returns:
-        Tuple of (is_logged_in, status_message).
-        status_message describes how the user is authenticated (env var, cached, etc.)
+        Tuple of (is_logged_in, auth_source).
+        auth_source describes how the user is authenticated (env var, netrc, etc.)
     """
-    # Check environment variable first
-    env_key = os.environ.get("WANDB_API_KEY")
-    if env_key:
+    # Check environment variable first (fastest)
+    if os.environ.get("WANDB_API_KEY"):
         return True, "WANDB_API_KEY environment variable"
 
-    # Try to check wandb cached credentials
+    # Check netrc file for cached credentials (wandb stores keys here)
     try:
-        import wandb
+        import netrc
 
-        # wandb.login(verify=True) returns True if already logged in
-        # This checks cached credentials without prompting
-        if wandb.login(verify=True):
-            return True, "cached wandb credentials"
+        netrc_path = Path.home() / ("_netrc" if os.name == "nt" else ".netrc")
+        if netrc_path.exists():
+            nrc = netrc.netrc(str(netrc_path))
+            auth = nrc.authenticators("api.wandb.ai")
+            if auth and auth[2]:  # (login, account, password) - password is API key
+                return True, "cached credentials (~/.netrc)"
     except Exception:
         pass
 
@@ -47,6 +52,8 @@ def get_wandb_api_key_help_text(is_logged_in: bool, auth_source: Optional[str]) 
     )
 
     if is_logged_in and auth_source:
-        return f"{base_help} (Already authenticated via {auth_source} - can leave blank)"
+        return (
+            f"{base_help} (Already authenticated via {auth_source} - can leave blank)"
+        )
 
     return base_help
