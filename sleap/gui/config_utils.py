@@ -155,6 +155,45 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         "trainer_config.train_data_loader.num_workers"
     ]
 
+    # Transform augmentation checkboxes to probability values
+    # Geometric augmentations use new independent probability params (rotation_p, scale_p)
+    if "_rotation_enabled" in key_val_dict:
+        rotation_enabled = key_val_dict["_rotation_enabled"]
+        key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = (
+            1.0 if rotation_enabled else None
+        )
+
+    if "_scale_enabled" in key_val_dict:
+        scale_enabled = key_val_dict["_scale_enabled"]
+        key_val_dict["data_config.augmentation_config.geometric.scale_p"] = (
+            1.0 if scale_enabled else None
+        )
+
+    # Intensity augmentations use legacy probability params
+    if "_uniform_noise_enabled" in key_val_dict:
+        uniform_noise_enabled = key_val_dict["_uniform_noise_enabled"]
+        key_val_dict["data_config.augmentation_config.intensity.uniform_noise_p"] = (
+            1.0 if uniform_noise_enabled else 0.0
+        )
+
+    if "_gaussian_noise_enabled" in key_val_dict:
+        gaussian_noise_enabled = key_val_dict["_gaussian_noise_enabled"]
+        key_val_dict["data_config.augmentation_config.intensity.gaussian_noise_p"] = (
+            1.0 if gaussian_noise_enabled else 0.0
+        )
+
+    if "_contrast_enabled" in key_val_dict:
+        contrast_enabled = key_val_dict["_contrast_enabled"]
+        key_val_dict["data_config.augmentation_config.intensity.contrast_p"] = (
+            1.0 if contrast_enabled else 0.0
+        )
+
+    if "_brightness_enabled" in key_val_dict:
+        brightness_enabled = key_val_dict["_brightness_enabled"]
+        key_val_dict["data_config.augmentation_config.intensity.brightness_p"] = (
+            1.0 if brightness_enabled else 0.0
+        )
+
 
 def get_skeleton_from_config(skeleton_config: OmegaConf):
     """Create Sleap-io Skeleton objects from config.
