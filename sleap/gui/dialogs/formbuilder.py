@@ -253,6 +253,9 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
     ):
         super(FormBuilderLayout, self).__init__(*args, **kwargs)
 
+        # Reduce vertical spacing between form rows for more compact layout
+        self.setVerticalSpacing(6)
+
         self.form_text_widget = None
 
         self.buttons = dict()
@@ -524,6 +527,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         # string
         elif item["type"] in ("string", "optional_string"):
             field = QtWidgets.QLineEdit()
+            field.setMaximumWidth(400)  # Prevent text fields from stretching too wide
             val = item.get("default", "")
             val = "" if val is None else val
             field.setText(str(val))
@@ -631,6 +635,10 @@ class StackBuilderWidget(QtWidgets.QWidget):
         multi_layout.setFormAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.combo_box = QtWidgets.QComboBox()
         self.stacked_widget = ResizingStackedWidget()
+        # Prevent stacked widget from expanding vertically
+        self.stacked_widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+        )
 
         self.combo_box.activated.connect(self.switch_to_idx)
 
@@ -646,6 +654,10 @@ class StackBuilderWidget(QtWidgets.QWidget):
 
             page_widget = QtWidgets.QGroupBox()
             page_widget.setLayout(self.page_layouts[page])
+            # Prevent vertical expansion - only take space needed for content
+            page_widget.setSizePolicy(
+                QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+            )
 
             self.stacked_widget.addWidget(page_widget)
 
