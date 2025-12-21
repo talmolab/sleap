@@ -341,22 +341,17 @@ model:
   type: stacked
 augmentation:
 # Geometric augmentations
-- default: true
-  help: Enable random rotation augmentation. Rotation is applied independently with 100% probability when enabled.
+- default: "±180°"
+  help: "Rotation augmentation range. Off: disabled. ±15°: for side-view cameras where upside-down would be unnatural. ±180°: for top-view/overhead cameras where all orientations are valid."
   label: Rotation
-  name: _rotation_enabled
-  type: bool
-- default: -180
-  help: Minimum rotation angle in degrees in [-180, 180].
-  label: Rotation Min Angle
-  name: data_config.augmentation_config.geometric.rotation_min
-  range: -180,180
-  type: double
-- default: 180
-  help: Maximum rotation angle in degrees in [-180, 180].
-  label: Rotation Max Angle
-  name: data_config.augmentation_config.geometric.rotation_max
-  range: -180,180
+  name: _rotation_preset
+  type: list
+  options: "Off,±15°,±180°,Custom"
+- default: 45
+  help: Custom symmetric rotation range in degrees. Images will be rotated randomly between -X and +X degrees. Only used when "Custom" is selected above.
+  label: Custom Rotation (±)
+  name: _rotation_custom_angle
+  range: 1,180
   type: double
 - default: false
   help: Enable random scaling augmentation. Scaling is applied independently with 100% probability when enabled.

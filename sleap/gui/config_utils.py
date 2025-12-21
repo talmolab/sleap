@@ -155,13 +155,28 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         "trainer_config.train_data_loader.num_workers"
     ]
 
-    # Transform augmentation checkboxes to probability values.
+    # Transform augmentation checkboxes/presets to probability values.
     # Geometric augmentations use new independent probability params from sleap-nn.
-    if "_rotation_enabled" in key_val_dict:
-        rotation_enabled = key_val_dict["_rotation_enabled"]
-        key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = (
-            1.0 if rotation_enabled else None
-        )
+
+    # Handle rotation preset dropdown
+    if "_rotation_preset" in key_val_dict:
+        preset = key_val_dict["_rotation_preset"]
+        if preset == "Off":
+            key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = None
+        else:
+            key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = 1.0
+            # Determine angle from preset or custom value
+            preset_angles = {"±15°": 15, "±180°": 180}
+            if preset in preset_angles:
+                angle = preset_angles[preset]
+            else:  # Custom
+                angle = key_val_dict.get("_rotation_custom_angle", 45)
+            key_val_dict[
+                "data_config.augmentation_config.geometric.rotation_min"
+            ] = -angle
+            key_val_dict["data_config.augmentation_config.geometric.rotation_max"] = (
+                angle
+            )
 
     if "_scale_enabled" in key_val_dict:
         scale_enabled = key_val_dict["_scale_enabled"]
