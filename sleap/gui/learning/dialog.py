@@ -507,8 +507,13 @@ class LearningDialog(QtWidgets.QDialog):
 
             self.update_tabs_from_tab(source_data)
 
-            # Update pipeline tab
-            self.pipeline_form_widget.set_form_data(source_data)
+            # Update pipeline tab, but filter out run_name to prevent cross-tab
+            # contamination (each head has its own run_name from its base config,
+            # but the pipeline run_name should remain independent)
+            pipeline_data = {
+                k: v for k, v in source_data.items() if k != "trainer_config.run_name"
+            }
+            self.pipeline_form_widget.set_form_data(pipeline_data)
 
         self._validate_pipeline()
 
@@ -648,6 +653,12 @@ class LearningDialog(QtWidgets.QDialog):
                         get_keyval_dict_from_omegaconf(trained_cfg_info.config),
                         tab_cfg_key_val_dict,
                     )
+
+                # Clear wandb.name for new training runs (not resume) so sleap-nn
+                # will default it to the new run_name. The wandb.name field is not
+                # in the GUI form, so old values from base configs would persist.
+                if not self.tabs[tab_name].resume_training:
+                    loaded_cfg_scoped["trainer_config.wandb.name"] = None
 
                 # Deserialize merged dict to object
                 cfg = get_omegaconf_from_gui_form(loaded_cfg_scoped)
@@ -1537,6 +1548,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         key_val_dict = get_keyval_dict_from_omegaconf(cfg)
         if key_val_dict.get("trainer_config.trainer_devices") == "auto":
             key_val_dict["trainer_config.trainer_devices"] = None
+
+        # Clear run_name - it should be auto-generated for new training runs.
+        # This prevents old run_name from base config from leaking through.
+        key_val_dict["trainer_config.run_name"] = None
+
         self.set_fields_from_key_val_dict(key_val_dict)
 
     # def _set_user_config(self):
@@ -1697,6 +1713,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         else:
             trained_config_info.config.model_config.pretrained_backbone_weights = None
             trained_config_info.config.model_config.pretrained_head_weights = None
+
+        # Always clear wandb.name so sleap-nn will default it to the new run_name.
+        # "Use Trained Model Weights" means use pretrained weights for initialization,
+        # not resume the same wandb logging run.
+        trained_config_info.config.trainer_config.wandb.name = None
 
         return trained_config_info
 
