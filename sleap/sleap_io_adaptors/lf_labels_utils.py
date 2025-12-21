@@ -1502,3 +1502,69 @@ def labels_add_instance(labels: Labels, frame: LabeledFrame, instance):
     else:
         # Fallback if instances is not a list
         frame.instances = list(frame.instances) + [instance]
+
+
+def get_predictions_on_user_frames(
+    labels: Labels,
+    video: Optional[Video] = None,
+    unlinked_only: bool = True,
+) -> List[tuple]:
+    """Find predictions on frames that have user instances.
+
+    This is useful for cleaning up predictions that were merged into frames
+    that already have user labels, which causes both to be displayed in the GUI.
+
+    Args:
+        labels: The Labels object to search.
+        video: Optional video to limit search. If None, searches all videos.
+        unlinked_only: If True (default), only return predictions not linked
+            via any user instance's `from_predicted` attribute. These are the
+            "orphan" predictions that cause duplicate display in the GUI.
+            If False, return all predictions on user-labeled frames.
+
+    Returns:
+        List of (LabeledFrame, PredictedInstance) tuples for predictions
+        that match the criteria.
+    """
+    result = []
+
+    for lf in labels:
+        # Skip if filtering by video and this isn't the target video
+        if video is not None and lf.video != video:
+            continue
+
+        # Skip frames without user instances
+        if not hasattr(lf, "has_user_instances") or not lf.has_user_instances:
+            continue
+
+        # Separate user instances and predictions
+        user_instances = []
+        predictions = []
+        for inst in lf.instances:
+            if isinstance(inst, PredictedInstance):
+                predictions.append(inst)
+            else:
+                user_instances.append(inst)
+
+        # Skip if no predictions on this frame
+        if not predictions:
+            continue
+
+        if unlinked_only:
+            # Find predictions that are linked (referenced by from_predicted)
+            linked_predictions = {
+                inst.from_predicted
+                for inst in user_instances
+                if getattr(inst, "from_predicted", None) is not None
+            }
+
+            # Only include unlinked predictions
+            for pred in predictions:
+                if pred not in linked_predictions:
+                    result.append((lf, pred))
+        else:
+            # Include all predictions on user-labeled frames
+            for pred in predictions:
+                result.append((lf, pred))
+
+    return result

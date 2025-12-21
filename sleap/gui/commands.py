@@ -97,6 +97,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     load_labels_video_search,
     clear_suggestion,
     get_instances_to_show,
+    get_predictions_on_user_frames,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
@@ -543,6 +544,10 @@ class CommandContext:
     def deleteFrameLimitPredictions(self):
         """Gui for deleting instances beyond some frame number."""
         self.execute(DeleteFrameLimitPredictions)
+
+    def deleteUserFramePredictions(self):
+        """Gui for deleting predictions on frames with user instances."""
+        self.execute(DeleteUserFramePredictions)
 
     def completeInstanceNodes(self, instance: Instance):
         """Adds missing nodes to given instance."""
@@ -2885,6 +2890,56 @@ class DeleteFrameLimitPredictions(InstanceDeleteCommand):
             params["min_frame_idx"] = results["min_frame_idx"]
             params["max_frame_idx"] = results["max_frame_idx"]
             return super().ask(context, params)
+
+
+class DeleteUserFramePredictions(InstanceDeleteCommand):
+    """Delete predictions on frames that have user instances.
+
+    This command cleans up predictions that were merged into frames that already
+    have user labels, which causes both to be displayed in the GUI (confusing UX).
+
+    Two modes are supported:
+    - Unlinked only (default): Delete predictions not linked via any user instance's
+      `from_predicted` attribute. These are the "orphan" predictions causing duplicates.
+    - All predictions: Delete all predictions on user-labeled frames.
+    """
+
+    @staticmethod
+    def get_frame_instance_list(context: CommandContext, params: dict):
+        video = (
+            context.state["video"] if params.get("current_video_only", True) else None
+        )
+        unlinked_only = params.get("unlinked_only", True)
+
+        return get_predictions_on_user_frames(
+            labels=context.labels,
+            video=video,
+            unlinked_only=unlinked_only,
+        )
+
+    @classmethod
+    def ask(cls, context: CommandContext, params: dict) -> bool:
+        from sleap.gui.dialogs.delete import DeleteUserFramePredictionsDialog
+
+        dialog = DeleteUserFramePredictionsDialog(context)
+        if not dialog.exec_():
+            return False
+
+        params["current_video_only"] = dialog.current_video_only
+        params["unlinked_only"] = dialog.unlinked_only
+
+        lf_inst_list = cls.get_frame_instance_list(context, params)
+        params["lf_instance_list"] = lf_inst_list
+
+        if len(lf_inst_list) == 0:
+            QtWidgets.QMessageBox.information(
+                context.app,
+                "No predictions to delete",
+                "No predictions found on user-labeled frames matching the criteria.",
+            )
+            return False
+
+        return cls._confirm_deletion(context, lf_inst_list)
 
 
 class TransposeInstances(EditCommand):
