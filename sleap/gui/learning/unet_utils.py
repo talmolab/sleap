@@ -40,7 +40,8 @@ def compute_unet_channels(
         Keys are strides (e.g., 16, 8, 4, 2), values are channel counts.
 
     Example:
-        >>> compute_unet_channels(filters=32, filters_rate=1.5, max_stride=16, output_stride=2)
+        >>> compute_unet_channels(
+        ...     filters=32, filters_rate=1.5, max_stride=16, output_stride=2)
         {16: 162, 8: 108, 4: 72, 2: 48}
     """
     # Compute derived parameters (matches UNet.from_config)
@@ -60,7 +61,6 @@ def compute_unet_channels(
 
     # Final pool layer in encoder
     current_stride *= 2
-    computed_max_stride = current_stride
 
     # Compute bottleneck channels (x_in_shape for decoder)
     if block_contraction:
@@ -129,7 +129,8 @@ def compute_unet_params(
         stem_kernel_size: Kernel size for stem convs. Default 7.
         convs_per_block: Number of convolutions per block. Default 2.
         middle_block: Whether to include middle block. Default True.
-        up_interpolate: If True, use bilinear (0 params). If False, transposed conv. Default True.
+        up_interpolate: If True, use bilinear (0 params). If False, transposed
+            conv. Default True.
         in_channels: Number of input channels. Default 1.
         block_contraction: If True, reduces channels at bottleneck. Default False.
 
@@ -137,7 +138,8 @@ def compute_unet_params(
         Estimated total trainable parameter count.
 
     Example:
-        >>> compute_unet_params(filters=32, filters_rate=1.5, max_stride=16, output_stride=2)
+        >>> compute_unet_params(
+        ...     filters=32, filters_rate=1.5, max_stride=16, output_stride=2)
         1295032
     """
     # Compute derived parameters
@@ -173,10 +175,7 @@ def compute_unet_params(
         encoder_channels_at_stride[2**stem_blocks] = stem_out_channels
 
     # After stem, input to encoder
-    if stem_blocks > 0:
-        encoder_in_channels = int(filters * (filters_rate ** (stem_blocks - 1)))
-    else:
-        encoder_in_channels = in_channels
+    # Stem blocks affect initial encoder channels (unused in param calculation)
 
     # =========================================================================
     # ENCODER

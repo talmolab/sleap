@@ -35,7 +35,7 @@ import psutil
 import rapidjson
 import rich.progress
 
-# seaborn imported lazily in plot_instance/plot_instances for faster startup (~1.3s saved)
+# seaborn imported lazily in plot_instance/plot_instances for faster startup
 import yaml
 
 import sleap.version as sleap_version
