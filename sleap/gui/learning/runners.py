@@ -327,6 +327,14 @@ class InferenceTask:
 
             if self.inference_params["tracking.post_connect_single_breaks"] == 1:
                 cli_args.extend(["--post_connect_single_breaks"])
+                # post_connect_single_breaks requires tracking_target_instance_count
+                if self.inference_params["tracking.max_tracks"] is not None:
+                    cli_args.extend(
+                        [
+                            "--tracking_target_instance_count",
+                            str(self.inference_params["tracking.max_tracks"]),
+                        ]
+                    )
 
             if self.inference_params["tracking.robust"] != 1.0:
                 cli_args.extend(["--scoring_reduction", "robust_quantile"])
