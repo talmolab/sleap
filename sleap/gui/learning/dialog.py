@@ -1166,7 +1166,11 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
                         break
                 else:
                     # Not a right column header
-                    if "Input Data" in header_text or "Data Pipeline" in header_text or "Output" in header_text:
+                    if (
+                        "Input Data" in header_text
+                        or "Data Pipeline" in header_text
+                        or "Output" in header_text
+                    ):
                         current_column = left_column
 
                 # Add the header to the current column
@@ -1670,6 +1674,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                         field.setVisible(visible)
                         if label is not None:
                             label.setVisible(visible)
+
                 return update_visibility
 
             update_fn = make_update_visibility(param_widgets)
