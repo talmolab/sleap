@@ -195,7 +195,9 @@ def compute_unet_params(
             else:
                 prev_filters = in_channels
         else:
-            prev_filters = int(filters * (filters_rate ** (block_idx + stem_blocks - 1)))
+            prev_filters = int(
+                filters * (filters_rate ** (block_idx + stem_blocks - 1))
+            )
 
         for j in range(convs_per_block):
             conv_in = prev_filters if j == 0 else block_filters
@@ -203,7 +205,9 @@ def compute_unet_params(
 
         encoder_channels_at_stride[current_stride] = block_filters
 
-    last_encoder_filters = int(filters * (filters_rate ** (down_blocks + stem_blocks - 1)))
+    last_encoder_filters = int(
+        filters * (filters_rate ** (down_blocks + stem_blocks - 1))
+    )
     current_stride *= 2  # Final pool
 
     # =========================================================================
@@ -211,7 +215,9 @@ def compute_unet_params(
     # =========================================================================
     if middle_block:
         if convs_per_block > 1:
-            expand_filters = int(filters * (filters_rate ** (down_blocks + stem_blocks)))
+            expand_filters = int(
+                filters * (filters_rate ** (down_blocks + stem_blocks))
+            )
             for j in range(convs_per_block - 1):
                 conv_in = last_encoder_filters if j == 0 else expand_filters
                 total_params += _conv2d_params(conv_in, expand_filters, kernel_size)
@@ -259,7 +265,9 @@ def compute_unet_params(
 
         # Transposed conv (if not using bilinear)
         if not up_interpolate:
-            total_params += _conv2d_params(prev_block_out, block_filters_out, kernel_size)
+            total_params += _conv2d_params(
+                prev_block_out, block_filters_out, kernel_size
+            )
             upsampled_channels = block_filters_out
         else:
             upsampled_channels = prev_block_out
@@ -270,7 +278,10 @@ def compute_unet_params(
             if skip_channels == 0:
                 skip_channels = int(
                     filters
-                    * (filters_rate ** max(0, down_blocks + stem_blocks - 1 - block_idx))
+                    * (
+                        filters_rate
+                        ** max(0, down_blocks + stem_blocks - 1 - block_idx)
+                    )
                 )
             refine_in_channels = upsampled_channels + skip_channels
         else:
