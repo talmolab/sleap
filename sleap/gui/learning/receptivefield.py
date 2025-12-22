@@ -3,6 +3,7 @@ Widget for previewing receptive field on sample image using model hyperparams.
 """
 
 from typing import Optional, Text, Tuple
+import math
 
 import sleap_io as sio
 import numpy as np
@@ -78,7 +79,9 @@ def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
     head_output_strides = []  # List of (sub_head_name, output_stride)
     for k, head_cfg in model_cfg.head_configs[head_type].items():
         if k == "class_vectors":
-            head_output_strides.append((k, int(model_cfg.backbone_config.unet.max_stride)))
+            head_output_strides.append(
+                (k, int(model_cfg.backbone_config.unet.max_stride))
+            )
         else:
             head_output_strides.append((k, int(head_cfg.output_stride)))
 
@@ -173,19 +176,115 @@ def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
     return rf_info
 
 
+def find_max_instance_bbox_size(labels: sio.Labels) -> float:
+    """Find the maximum bounding box dimension across all instances in labels.
+
+    This is a local implementation that avoids importing sleap_nn (which would
+    trigger importing torch, adding ~2s to startup time).
+
+    Args:
+        labels: A `sio.Labels` containing user-labeled instances.
+
+    Returns:
+        The maximum bounding box dimension (max of width or height) across all
+        instances.
+    """
+    max_length = 0.0
+    for lf in labels:
+        for inst in lf.instances:
+            if not inst.is_empty:
+                pts = inst.numpy()
+                diff_x = np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0])
+                diff_x = 0 if np.isnan(diff_x) else diff_x
+                max_length = np.maximum(max_length, diff_x)
+                diff_y = np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1])
+                diff_y = 0 if np.isnan(diff_y) else diff_y
+                max_length = np.maximum(max_length, diff_y)
+    return float(max_length)
+
+
+def find_instance_crop_size(
+    labels: sio.Labels,
+    padding: int = 0,
+    maximum_stride: int = 2,
+    min_crop_size: Optional[int] = None,
+) -> int:
+    """Compute the size of the largest instance bounding box from labels.
+
+    This is a local implementation that avoids importing sleap_nn (which would
+    trigger importing torch, adding ~2s to startup time).
+
+    Args:
+        labels: A `sio.Labels` containing user-labeled instances.
+        padding: Integer number of pixels to add to the bounds as margin padding.
+        maximum_stride: Ensure that the returned crop size is divisible by this
+            value. Useful for ensuring that the crop size will not be truncated
+            in a given architecture.
+        min_crop_size: The minimum crop size to return. If this value is already
+            divisible by maximum_stride, it is returned directly.
+
+    Returns:
+        An integer crop size denoting the length of the side of the bounding
+        boxes that will contain the instances when cropped. The returned crop
+        size will be larger or equal to the input `min_crop_size`.
+    """
+    # Check if user-specified crop size is divisible by max stride
+    min_crop_size = 0 if min_crop_size is None else min_crop_size
+    if (min_crop_size > 0) and (min_crop_size % maximum_stride == 0):
+        return min_crop_size
+
+    # Calculate crop size by iterating over all instances
+    min_crop_size_no_pad = min_crop_size - padding
+    max_length = 0.0
+    for lf in labels:
+        for inst in lf.instances:
+            if not inst.is_empty:
+                pts = inst.numpy()
+                diff_x = np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0])
+                diff_x = 0 if np.isnan(diff_x) else diff_x
+                max_length = np.maximum(max_length, diff_x)
+                diff_y = np.nanmax(pts[:, 1]) - np.nanmin(pts[:, 1])
+                diff_y = 0 if np.isnan(diff_y) else diff_y
+                max_length = np.maximum(max_length, diff_y)
+                max_length = np.maximum(max_length, min_crop_size_no_pad)
+
+    max_length += float(padding)
+    crop_size = math.ceil(max_length / float(maximum_stride)) * maximum_stride
+
+    return int(crop_size)
+
+
+# Cache for find_instance_crop_size results to avoid expensive recomputation.
+# Key: (labels_id, max_stride), Value: computed crop_size (unscaled)
+_crop_size_cache: dict = {}
+
+
 def compute_crop_size_from_cfg(
     data_cfg: OmegaConf, model_cfg: OmegaConf, labels: Optional[sio.Labels] = None
 ) -> int:
-    """Computes crop size from model configuration."""
+    """Computes crop size from model configuration.
+
+    Uses a cache to avoid expensive recomputation of find_instance_crop_size(),
+    which iterates over all instances in the labels.
+    """
     crop_size = data_cfg.data_config.preprocessing.crop_size
     if crop_size is None:
         try:
-            from sleap_nn.data.instance_cropping import find_instance_crop_size
-
             backbone = model_cfg["_backbone_name"]
-            max_stride = model_cfg.model_config.backbone_config[backbone].max_stride
-            crop_size = find_instance_crop_size(labels, maximum_stride=max_stride)
-        except ImportError:
+            max_stride = int(
+                model_cfg.model_config.backbone_config[backbone].max_stride
+            )
+
+            # Check cache first (keyed by labels identity and max_stride)
+            cache_key = (id(labels), max_stride)
+            if cache_key in _crop_size_cache:
+                crop_size = _crop_size_cache[cache_key]
+            else:
+                # Use local implementation (avoids importing sleap_nn/torch)
+                crop_size = find_instance_crop_size(labels, maximum_stride=max_stride)
+                _crop_size_cache[cache_key] = crop_size
+        except Exception:
+            # Handle any errors (e.g., missing backbone config)
             crop_size = None
     if crop_size is not None and data_cfg.data_config.preprocessing.scale is not None:
         crop_size = int(crop_size * data_cfg.data_config.preprocessing.scale)
@@ -315,12 +414,18 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         # Header with blue square and size (crop size legend added if applicable)
         result = ""
         if self._show_crop_box:
-            result += f'<span style="color: red;">\u25a1</span> Crop Size<br/>'
+            result += '<span style="color: red;">\u25a1</span> Crop Size<br/>'
 
         if size:
-            result += f'<span style="color: blue;">\u25a0</span> <b>Receptive Field:</b> {size} pixels'
+            result += (
+                f'<span style="color: blue;">\u25a0</span> '
+                f"<b>Receptive Field:</b> {size} pixels"
+            )
         else:
-            result += f'<span style="color: blue;">\u25a0</span> <b>Receptive Field:</b> <i>Unable to determine</i>'
+            result += (
+                '<span style="color: blue;">\u25a0</span> '
+                "<b>Receptive Field:</b> <i>Unable to determine</i>"
+            )
 
         result += f"""
         <p>Receptive field size is a function<br />
@@ -377,13 +482,14 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         Args:
             params_formatted: Human-readable param count (e.g., "1.30M")
             head_features: List of (head_name, output_stride, channels) tuples
-            backbone_type: Type of backbone (e.g., "unet"). Only renders for supported types.
+            backbone_type: Type of backbone (e.g., "unet"). Only renders for
+                supported types.
         """
         # Only render for supported backbone types
         if backbone_type != "unet" or params_formatted is None:
             return ""
 
-        result = f"<p><b>UNet:</b><br/>"
+        result = "<p><b>UNet:</b><br/>"
         result += f"<b>Parameters:</b> ~{params_formatted}<br/>"
 
         # Show features for each head with validation
@@ -395,17 +501,22 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
                     # Good: backbone has enough channels
                     result += (
                         f"<b>Features ({head_name} @ stride {stride}):</b> "
-                        f'<span style="color: green;">{backbone_channels}\u2192{head_output} \u2713</span>'
+                        f'<span style="color: green;">'
+                        f"{backbone_channels}\u2192{head_output} \u2713</span>"
                     )
                 else:
                     # Warning: backbone channels less than head output
                     result += (
                         f"<b>Features ({head_name} @ stride {stride}):</b> "
-                        f'<span style="color: red;">{backbone_channels}\u2192{head_output} \u26a0</span>'
+                        f'<span style="color: red;">'
+                        f"{backbone_channels}\u2192{head_output} \u26a0</span>"
                     )
             else:
                 # Can't determine head output, just show backbone channels
-                result += f"<b>Features ({head_name} @ stride {stride}):</b> {backbone_channels} ch"
+                result += (
+                    f"<b>Features ({head_name} @ stride {stride}):</b> "
+                    f"{backbone_channels} ch"
+                )
 
             if i < len(head_features) - 1:
                 result += "<br/>"
