@@ -9,6 +9,7 @@ Try not to put things in here unless they really have no other place.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 import shutil
@@ -39,6 +40,8 @@ import rich.progress
 import yaml
 
 import sleap.version as sleap_version
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from rich.progress import Task
