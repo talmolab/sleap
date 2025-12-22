@@ -66,7 +66,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     ):
         super(YamlFormWidget, self).__init__(*args, **kwargs)
 
-        with open(yaml_file, "r") as form_yaml:
+        with open(yaml_file, "r", encoding="utf-8") as form_yaml:
             items_to_create = yaml.load(form_yaml, Loader=yaml.SafeLoader)
 
         self.which_form = which_form
@@ -253,6 +253,9 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
     ):
         super(FormBuilderLayout, self).__init__(*args, **kwargs)
 
+        # Reduce vertical spacing between form rows for more compact layout
+        self.setVerticalSpacing(6)
+
         self.form_text_widget = None
 
         self.buttons = dict()
@@ -363,9 +366,9 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         elif hasattr(widget, "setValue"):
             widget.setValue(val)
         elif hasattr(widget, "currentText"):
-            widget.setCurrentText(str(val))
+            widget.setCurrentText(str(val) if val is not None else "")
         elif hasattr(widget, "text"):
-            widget.setText(str(val))
+            widget.setText(str(val) if val is not None else "")
         else:
             print(f"don't know how to set value for {widget}")
         # for macOS we need to call repaint (bug in Qt?)
@@ -400,6 +403,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             val = int(val)
         elif widget.property("field_data_type").startswith("file_"):
             val = None if val == "None" else val
+        elif widget.property("field_data_type") == "optional_string":
+            val = None if val == "" else val
         return val
 
     def build_form(self, items_to_create: List[Dict[Text, Any]]):
@@ -522,6 +527,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         # string
         elif item["type"] in ("string", "optional_string"):
             field = QtWidgets.QLineEdit()
+            field.setMaximumWidth(400)  # Prevent text fields from stretching too wide
             val = item.get("default", "")
             val = "" if val is None else val
             field.setText(str(val))
@@ -629,6 +635,10 @@ class StackBuilderWidget(QtWidgets.QWidget):
         multi_layout.setFormAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.combo_box = QtWidgets.QComboBox()
         self.stacked_widget = ResizingStackedWidget()
+        # Prevent stacked widget from expanding vertically
+        self.stacked_widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+        )
 
         self.combo_box.activated.connect(self.switch_to_idx)
 
@@ -644,6 +654,10 @@ class StackBuilderWidget(QtWidgets.QWidget):
 
             page_widget = QtWidgets.QGroupBox()
             page_widget.setLayout(self.page_layouts[page])
+            # Prevent vertical expansion - only take space needed for content
+            page_widget.setSizePolicy(
+                QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+            )
 
             self.stacked_widget.addWidget(page_widget)
 

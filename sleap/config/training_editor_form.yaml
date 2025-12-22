@@ -1,9 +1,14 @@
 data:
 - default: 0.1
-  help: Fraction of labeled frames to use as a validation set.
+  help: Fraction of labeled frames to use as a validation set. Ignored if "Overfit Mode" is enabled.
   label: Validation fraction
   name: data_config.validation_fraction
   type: double
+- default: false
+  help: If enabled, the same data will be used for both training and validation (train = val). This is useful for intentional overfitting on small datasets (fewer than 10 labeled frames) to test model capacity.
+  label: Overfit Mode (train=val)
+  name: data_config.use_same_data_for_val
+  type: bool
 - default: 1.0
   help: ''
   label: Input Scaling
@@ -335,23 +340,24 @@ model:
     options: 1,2,4,8,16,32,64
   type: stacked
 augmentation:
-- default: 0.0
-  help: Probabibility to apply rotational and scale augmentation.
-  label: Affine probability
-  name: data_config.augmentation_config.geometric.affine_p
-  type: float
-- default: -180
-  help: Minimum rotation angle in degrees in [-180, 180].
-  label: Rotation Min Angle
-  name: data_config.augmentation_config.geometric.rotation_min
-  range: -180,180
+# Geometric augmentations
+- default: "±180°"
+  help: "Rotation augmentation range. Off: disabled. ±15°: for side-view cameras where upside-down would be unnatural. ±180°: for top-view/overhead cameras where all orientations are valid."
+  label: Rotation
+  name: _rotation_preset
+  type: list
+  options: "Off,±15°,±180°,Custom"
+- default: 45
+  help: Custom symmetric rotation range in degrees. Images will be rotated randomly between -X and +X degrees. Only used when "Custom" is selected above.
+  label: Custom Rotation (±)
+  name: _rotation_custom_angle
+  range: 1,180
   type: double
-- default: 180
-  help: Maximum rotation angle in degrees in [-180, 180].
-  label: Rotation Max Angle
-  name: data_config.augmentation_config.geometric.rotation_max
-  range: -180,180
-  type: double
+- default: false
+  help: Enable random scaling augmentation. Scaling is applied independently with 100% probability when enabled.
+  label: Scale
+  name: _scale_enabled
+  type: bool
 - default: 0.9
   help: Minimum scaling factor.
   label: Scale Min
@@ -362,45 +368,44 @@ augmentation:
   label: Scale Max
   name: data_config.augmentation_config.geometric.scale_max
   type: double
-- default: 0.0
-  help: Probabibility to apply uniformly distributed noise augmentation.
-  label: Uniform Noise probability
-  name: data_config.augmentation_config.intensity.uniform_noise_p
-  type: float
+# Intensity augmentations
+- default: false
+  help: Enable uniformly distributed noise augmentation.
+  label: Uniform Noise
+  name: _uniform_noise_enabled
+  type: bool
 - default: 0.0
   help: Minimum value to add.
   range: 0.0, 1.0
   label: Uniform Noise Min Val
   name: data_config.augmentation_config.intensity.uniform_noise_min
   type: double
-- default: 1.0
+- default: 0.1
   range: 0.0, 1.0
   help: Maximum value to add.
   label: Uniform Noise Max Val
   name: data_config.augmentation_config.intensity.uniform_noise_max
   type: double
+- default: false
+  help: Enable normally distributed noise augmentation. This is applied independently to each pixel.
+  label: Gaussian Noise
+  name: _gaussian_noise_enabled
+  type: bool
 - default: 0.0
-  help: Probabibility to apply normally distributed noise augmentation.
-    This is applied independently to each pixel.
-  label: Gaussian Noise probability
-  name: data_config.augmentation_config.intensity.gaussian_noise_p
-  type: float
-- default: 5.0
   help: Mean of the distribution to sample from.
   label: Gaussian Noise Mean
   name: data_config.augmentation_config.intensity.gaussian_noise_mean
   type: double
-- default: 1.0
+- default: 0.04
   help: Standard deviation of the distribution to sample from.
   label: Gaussian Noise Stddev
   name: data_config.augmentation_config.intensity.gaussian_noise_std
   type: double
-- default: 0.0
-  help: Probabibility to apply gamma constrast adjustment to the image. This scales
-    all pixel values by `x ** gamma` where `x` is the pixel value in the [0, 1] range.
-  label: Contrast probability
-  name: data_config.augmentation_config.intensity.contrast_p
-  type: float
+- default: false
+  help: Enable gamma contrast adjustment. This scales all pixel values by x^gamma where x is in [0, 1].
+  label: Contrast
+  name: _contrast_enabled
+  type: bool
 - default: 0.5
   help: Minimum gamma to use for augmentation. Reasonable values are in [0.5, 2.0].
   label: Contrast Min Gamma
@@ -411,19 +416,17 @@ augmentation:
   label: Contrast Max Gamma
   name: data_config.augmentation_config.intensity.contrast_max
   type: double
-- default: 0.0
-  help: If True, the image brightness will be augmented. This adjustment simply adds
-      the same value to all pixels in the image to simulate broadfield illumination
-      change.
-  label: Brightness probability
-  name: data_config.augmentation_config.intensity.brightness_p
-  type: float
+- default: false
+  help: Enable brightness augmentation. This adds the same value to all pixels to simulate illumination change.
+  label: Brightness
+  name: _brightness_enabled
+  type: bool
 - default: 0.0
   help: Minimum value to add to all pixels.
   label: Brightness Min Val
   name: data_config.augmentation_config.intensity.brightness_min
   type: double
-- default: 1.0
+- default: 0.2
   help: Maximum value to add to all pixels.
   label: Brightness Max Val
   name: data_config.augmentation_config.intensity.brightness_max
@@ -441,28 +444,6 @@ optimization:
   name: trainer_config.train_data_loader.batch_size
   type: int
   range: 1,512
-- default: 0
-  help: Number of subprocesses to use for data loading. 0 means that the data will be loaded in the main process.
-    This can help improve data loading speed. However, when using `data_pipeline_fw` as `torch_dataset`, i.e., when
-    not caching the data samples, then the number of workers should be set to 0 to avoid race conditions. If using caching,
-    then set number of workers to a value greater than 0. (Start with 2 and increase if needed)
-  label: Number of workers
-  name: trainer_config.train_data_loader.num_workers
-  type: int
-  range: 0,16
-- default: null
-  help: Number of devices to train on (int), or "auto" to select automatically. 
-  label: Number of GPU devices
-  name: trainer_config.trainer_devices
-  type: optional_int
-  none_label: Auto
-- default: "auto"
-  help: Accelerator to use for training. "auto" means "cuda" if GPUs are available, otherwise "cpu".
-    For mac, "mps" can be used for Apple Silicon.
-  label: Device Accelerator
-  name: trainer_config.trainer_accelerator
-  type: list
-  options: auto,cuda,cpu,mps
 - default: 100
   help: Maximum number of epochs to train for. Training can be stopped manually or automatically if early stopping is enabled and a plateau is detected.
   label: Epochs

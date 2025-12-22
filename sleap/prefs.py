@@ -43,6 +43,13 @@ class Preferences(object):
         "wandb project": None,
         "wandb group": None,
         "wandb save viz images": False,
+        # Training pipeline settings
+        "training image conversion": "",  # '', 'RGB', or 'grayscale'
+        "training predict on": "current frame",  # 'current frame' or 'random frames'
+        "training data pipeline framework": "Cache in Memory",
+        "training num workers": 0,
+        "training num devices": None,  # None = auto-detect
+        "training accelerator": "auto",
     }
     _filename = "preferences.yaml"
 

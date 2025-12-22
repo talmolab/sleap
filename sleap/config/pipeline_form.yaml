@@ -212,16 +212,35 @@ training:
   type: list
 
 - type: text
-  text: '<b>Data Pipeline framework options</b>'
+  text: '<b>Data Pipeline and Hardware Options</b>'
 
-- default: 'torch_dataset'
-  help: Framework to create the data loaders. (When using torch_dataset,
-    num_workers in trainer_config should be set to 0 as multiprocessing
-    doesn't work with pickling video backends.)
+- default: 'Cache in Memory'
+  help: 'Data loading strategy. Stream: Reads frames directly from video as needed (set workers=0). Cache in Memory: Pre-loads all frames into RAM for faster training (recommended). Cache to Disk: Saves frames to disk for reuse across training runs.'
   label: Data Pipeline Framework
-  name: data_config.data_pipeline_fw
-  options: 'torch_dataset,torch_dataset_cache_img_memory,torch_dataset_cache_img_disk'
+  name: _data_pipeline_fw
+  options: 'Stream (no caching),Cache in Memory,Cache to Disk'
   type: list
+
+- name: trainer_config.train_data_loader.num_workers
+  label: Data Loader Workers
+  type: int
+  default: 0
+  range: 0,16
+  help: Number of subprocesses for data loading. Use 0 for "Stream" mode to avoid race conditions. Use 2-4 with caching modes for faster loading.
+
+- name: trainer_config.trainer_devices
+  label: Number of GPU Devices
+  type: optional_int
+  default: null
+  none_label: Auto
+  help: Number of GPU devices to train on. "Auto" detects available GPUs.
+
+- name: trainer_config.trainer_accelerator
+  label: Device Accelerator
+  type: list
+  default: "auto"
+  options: auto,cuda,cpu,mps
+  help: Hardware accelerator for training. "auto" uses CUDA if available, otherwise CPU. Use "mps" for Apple Silicon Macs.
 
 - type: text
   text: '<b>WandB options</b>'
@@ -234,63 +253,49 @@ training:
 
 - name: trainer_config.wandb.entity
   label:  Entity Name
-  type: string
+  type: optional_string
   default: null
+  help: Account name (username or organization).
 
 - name: trainer_config.wandb.project
   label:  Project Name
-  type: string
+  type: optional_string
   default: null
-
-- name: trainer_config.wandb.name
-  label:  Run Name
-  type: string
-  default: null
+  help: Name for the group of runs.
 
 - name: trainer_config.wandb.api_key
-  label: WandBAPI Key
-  type: string
+  label: WandB API Key
+  type: optional_string
   default: null
-  help: WandB API Key. You could also set it in your terminal by exporting the WANDB_API_KEY environment variable.
-    Or `wandb.login()` in your Python shell.
+  help: WandB API Key. From https://wandb.ai/authorize. You could also set it in your terminal by exporting the WANDB_API_KEY environment variable or `wandb.login()` in your Python shell.
   hidden: true
 
 - name: trainer_config.wandb.prv_runid
   label: Previous Run ID
-  type: string
+  type: optional_string
   default: null
-  help: Previous run ID if you want to resume training from a previous run. If None, a new run will be created.
+  help: Previous run ID if this is a continuation of a previous run that was stopped.
 
 - name: trainer_config.wandb.group
   label: Group Name
-  type: string
+  type: optional_string
   default: null
-  help: Group name if you want to group runs together.
+  help: Grouping within the project.
 
-
-- type: text
-  text: '<b>ZMQ Options</b>'
-
-- name: trainer_config.zmq.controller_port
-  label: Controller Port
-  type: int
-  default: 9000
-  range: 1024,65535
-
-- name: trainer_config.zmq.publish_port
-  label: Publish Port
-  type: int
-  default: 9001
-  range: 1024,65535
+- name: trainer_config.wandb.save_viz_imgs_wandb
+  label: Upload Viz to WandB
+  type: bool
+  default: false
+  help: If True, sample predictions saved during training will also be uploaded to WandB. Requires both "Enable WandB for logging" and "Visualize Predictions During Training" to be enabled.
 
 - type: text
   text: '<b>Output Options</b>'
 
-- default: ''
+- default: null
   help: String to set as the run name. ckpts are saved to {Runs folder}/{Run name}. If None, it will be auto-generated {trainer_config.ckpt_dir}/{time_stamp}_{head_name}_n={num_samples}.
   label: Run Name
   name: trainer_config.run_name
-  type: string
+  type: optional_string
 - default: models
   help: 'Path to the folder that run data should be stored in. All the data for a
     single run are stored in the path: "{Runs folder}/{Run name}". Non-existing folders will be created
@@ -314,14 +319,16 @@ training:
   type: bool
 
 - name: trainer_config.visualize_preds_during_training
-  label: Visualize Predictions During Training
+  label: Visualize Predictions
   type: bool
   default: true
+  help: If True, sample predictions will be saved during training for visual inspection.
 
 - name: trainer_config.keep_viz
-  label: Keep Prediction Visualization Images After Training
+  label: Keep Viz Images
   type: bool
   default: false
+  help: If True, keep prediction visualization images after training completes. Otherwise they are deleted.
 
 - name: _predict_frames
   label: Predict On

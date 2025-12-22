@@ -122,6 +122,18 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         key_val_dict["data_config.preprocessing.ensure_rgb"] = ensure_rgb
         key_val_dict["data_config.preprocessing.ensure_grayscale"] = ensure_grayscale
 
+    # Map friendly data pipeline names to sleap-nn enum values
+    if "_data_pipeline_fw" in key_val_dict:
+        pipeline_map = {
+            "Stream (no caching)": "torch_dataset",
+            "Cache in Memory": "torch_dataset_cache_img_memory",
+            "Cache to Disk": "torch_dataset_cache_img_disk",
+        }
+        friendly_name = key_val_dict["_data_pipeline_fw"]
+        key_val_dict["data_config.data_pipeline_fw"] = pipeline_map.get(
+            friendly_name, "torch_dataset_cache_img_memory"
+        )
+
     # Overwrite backbone strides with stride from head.
     backbone_name = find_backbone_name_from_key_val_dict(key_val_dict)
     if backbone_name is not None:
@@ -142,6 +154,60 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
     key_val_dict["trainer_config.val_data_loader.num_workers"] = key_val_dict[
         "trainer_config.train_data_loader.num_workers"
     ]
+
+    # Transform augmentation checkboxes/presets to probability values.
+    # Geometric augmentations use new independent probability params from sleap-nn.
+
+    # Handle rotation preset dropdown
+    if "_rotation_preset" in key_val_dict:
+        preset = key_val_dict["_rotation_preset"]
+        if preset == "Off":
+            key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = None
+        else:
+            key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = 1.0
+            # Determine angle from preset or custom value
+            preset_angles = {"±15°": 15, "±180°": 180}
+            if preset in preset_angles:
+                angle = preset_angles[preset]
+            else:  # Custom
+                angle = key_val_dict.get("_rotation_custom_angle", 45)
+            key_val_dict[
+                "data_config.augmentation_config.geometric.rotation_min"
+            ] = -angle
+            key_val_dict["data_config.augmentation_config.geometric.rotation_max"] = (
+                angle
+            )
+
+    if "_scale_enabled" in key_val_dict:
+        scale_enabled = key_val_dict["_scale_enabled"]
+        key_val_dict["data_config.augmentation_config.geometric.scale_p"] = (
+            1.0 if scale_enabled else None
+        )
+
+    # Intensity augmentations use legacy probability params
+    if "_uniform_noise_enabled" in key_val_dict:
+        uniform_noise_enabled = key_val_dict["_uniform_noise_enabled"]
+        key_val_dict["data_config.augmentation_config.intensity.uniform_noise_p"] = (
+            1.0 if uniform_noise_enabled else 0.0
+        )
+
+    if "_gaussian_noise_enabled" in key_val_dict:
+        gaussian_noise_enabled = key_val_dict["_gaussian_noise_enabled"]
+        key_val_dict["data_config.augmentation_config.intensity.gaussian_noise_p"] = (
+            1.0 if gaussian_noise_enabled else 0.0
+        )
+
+    if "_contrast_enabled" in key_val_dict:
+        contrast_enabled = key_val_dict["_contrast_enabled"]
+        key_val_dict["data_config.augmentation_config.intensity.contrast_p"] = (
+            1.0 if contrast_enabled else 0.0
+        )
+
+    if "_brightness_enabled" in key_val_dict:
+        brightness_enabled = key_val_dict["_brightness_enabled"]
+        key_val_dict["data_config.augmentation_config.intensity.brightness_p"] = (
+            1.0 if brightness_enabled else 0.0
+        )
 
 
 def get_skeleton_from_config(skeleton_config: OmegaConf):

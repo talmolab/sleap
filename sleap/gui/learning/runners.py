@@ -38,22 +38,24 @@ def get_timestamp() -> Text:
 def setup_new_run_folder(
     config: OmegaConf, base_run_name: Optional[Text] = None
 ) -> Text:
-    """Create a new run folder from config."""
+    """Create a new run folder from config.
+
+    Args:
+        config: Training configuration with trainer_config.save_ckpt and ckpt_dir.
+        base_run_name: Optional suffix to append (e.g., "centroid.n=10").
+
+    Returns:
+        Path to the new run folder, or None if save_ckpt is False.
+    """
     run_path = None
     if config.trainer_config.save_ckpt:
-        # Auto-generate run name suffix.
+        # Generate fresh run name: YYMMDD_HHMMSS.{base_run_name}
         run_name = get_timestamp()
         if isinstance(base_run_name, str):
             run_name = run_name + "." + base_run_name
 
-        # Prepend existing run_name if it's valid (not None or "None")
-        if config.trainer_config.run_name and config.trainer_config.run_name != "None":
-            cfg_run_name = config.trainer_config.run_name + "_" + run_name
-        else:
-            cfg_run_name = run_name
-
-        # Build run path.
-        run_path = (Path(config.trainer_config.ckpt_dir) / cfg_run_name).as_posix()
+        # Build run path (always use fresh name, don't prepend old run_name)
+        run_path = (Path(config.trainer_config.ckpt_dir) / run_name).as_posix()
 
     return run_path
 
@@ -812,6 +814,7 @@ def run_gui_training(
                         "the error."
                     ).exec_()
                 trained_job_paths[model_type] = None
+                break  # Don't continue to next model if this one failed
 
     if gui:
         # close training monitor window

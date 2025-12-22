@@ -22,6 +22,11 @@ from sleap.gui.config_utils import (
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import receptivefield, runners, configs
+from sleap.gui.learning.wandb_utils import (
+    check_wandb_login_status,
+    get_wandb_api_key_help_text,
+)
+from sleap.prefs import prefs
 from sleap.gui.learning.configs import TrainingConfigsGetter
 from sleap.sleap_io_adaptors.skeleton_utils import (
     cycles,
@@ -85,6 +90,7 @@ class LearningDialog(QtWidgets.QDialog):
         self.skeleton = skeleton
 
         self._frame_selection = None
+        self._predict_frames_user_changed = False  # Track if user changed this session
 
         self.current_pipeline = ""
 
@@ -139,23 +145,23 @@ class LearningDialog(QtWidgets.QDialog):
         self.message_widget = QtWidgets.QLabel("")
 
         # Layout for entire dialog
+        # Tabs and message go inside scroll area
         content_widget = QtWidgets.QWidget()
         content_layout = QtWidgets.QVBoxLayout(content_widget)
-
         content_layout.addWidget(self.tab_widget)
         content_layout.addWidget(self.message_widget)
-        content_layout.addWidget(buttons_layout_widget)
 
-        # Create the QScrollArea.
+        # Create the QScrollArea for tabs only
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(content_widget)
-
         scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
 
+        # Main layout: scroll area + buttons (buttons always visible at bottom)
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(scroll_area)
+        layout.addWidget(buttons_layout_widget)
 
         self.adjust_initial_size()
 
@@ -168,6 +174,12 @@ class LearningDialog(QtWidgets.QDialog):
 
         self.connect_signals()
 
+        # Track when user explicitly changes predict frames option
+        if "_predict_frames" in self.pipeline_form_widget.fields:
+            self.pipeline_form_widget.fields["_predict_frames"].valueChanged.connect(
+                self._on_predict_frames_changed
+            )
+
         # Connect actions for buttons
         self.copy_button.clicked.connect(self.copy)
         self.save_button.clicked.connect(lambda: self.save())
@@ -179,8 +191,9 @@ class LearningDialog(QtWidgets.QDialog):
         # Get screen size
         screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
 
-        max_width = 1860
-        max_height = 1150
+        # Reduced from 1860x1150 to fit compact layout better
+        max_width = 1130
+        max_height = 860
         margin = 0.10
 
         # Calculate target width and height
@@ -265,15 +278,9 @@ class LearningDialog(QtWidgets.QDialog):
                 )
 
             # Build list of options
-            # Priority for default (lowest to highest):
-            #   "nothing" (if training)
-            #   "current frame" (if inference)
-            #   "suggested frames" (if available)
-            #   "selected clip" (if available)
             if self.mode != "inference":
                 prediction_options.append("nothing")
             prediction_options.append("current frame")
-            default_option = "nothing" if self.mode != "inference" else "current frame"
 
             option = f"random frames ({total_random} total frames)"
             prediction_options.append(option)
@@ -282,10 +289,10 @@ class LearningDialog(QtWidgets.QDialog):
                 option = f"random frames in current video ({random_video} frames)"
                 prediction_options.append(option)
 
-            if total_suggestions > 0:
+            has_suggestions = total_suggestions > 0
+            if has_suggestions:
                 option = f"suggested frames ({total_suggestions} total frames)"
                 prediction_options.append(option)
-                default_option = option
 
             if total_user > 0:
                 option = f"user labeled frames ({total_user} total frames)"
@@ -294,16 +301,108 @@ class LearningDialog(QtWidgets.QDialog):
             if clip_length > 0:
                 option = f"selected clip ({clip_length} frames)"
                 prediction_options.append(option)
-                default_option = option
 
             prediction_options.append(f"entire current video ({video_length} frames)")
 
             if len(self.labels.videos) > 1:
                 prediction_options.append(f"all videos ({all_videos_length} frames)")
 
+            # Determine default based on precedence rules:
+            # 1. If user changed this session -> preserve current selection
+            # 2. If suggestions exist -> default to "suggested frames"
+            # 3. If no suggestions -> use persisted preference (fallback if invalid)
+            if self._predict_frames_user_changed:
+                # Try to preserve user's current selection
+                current = self.pipeline_form_widget.fields["_predict_frames"].value()
+                current_normalized = self._normalize_predict_option(current)
+                # Find matching option in new list
+                default_option = None
+                for opt in prediction_options:
+                    if self._normalize_predict_option(opt) == current_normalized:
+                        default_option = opt
+                        break
+                if default_option is None:
+                    # Current selection no longer available, use precedence rules
+                    default_option = self._get_predict_frames_default(
+                        has_suggestions, prediction_options
+                    )
+            else:
+                default_option = self._get_predict_frames_default(
+                    has_suggestions, prediction_options
+                )
+
             self.pipeline_form_widget.fields["_predict_frames"].set_options(
                 prediction_options, default_option
             )
+
+    def _on_predict_frames_changed(self):
+        """Track when user explicitly changes the predict frames option."""
+        self._predict_frames_user_changed = True
+
+    @staticmethod
+    def _normalize_predict_option(option: str) -> str:
+        """Extract base option type from dynamic option string.
+
+        E.g., "random frames (123 total frames)" -> "random frames"
+        """
+        if option.startswith("nothing"):
+            return "nothing"
+        elif option.startswith("current frame"):
+            return "current frame"
+        elif option.startswith("random frames in current video"):
+            return "random frames in current video"
+        elif option.startswith("random frames"):
+            return "random frames"
+        elif option.startswith("suggested frames"):
+            return "suggested frames"
+        elif option.startswith("user labeled frames"):
+            return "user labeled frames"
+        elif option.startswith("selected clip"):
+            return "selected clip"
+        elif option.startswith("entire current video"):
+            return "entire current video"
+        elif option.startswith("all videos"):
+            return "all videos"
+        return option
+
+    def _get_predict_frames_default(
+        self, has_suggestions: bool, prediction_options: list
+    ) -> str:
+        """Determine default predict frames option based on precedence rules.
+
+        Precedence:
+        1. If user explicitly changed this session -> keep their choice (elsewhere)
+        2. If suggestions exist -> "suggested frames"
+        3. If no suggestions -> use persisted pref (fallback if invalid)
+        """
+        # If suggestions exist, always default to suggested frames
+        if has_suggestions:
+            for opt in prediction_options:
+                if opt.startswith("suggested frames"):
+                    return opt
+
+        # No suggestions: use persisted preference
+        saved_pref = prefs["training predict on"]
+
+        # Find matching option in available options
+        for opt in prediction_options:
+            if self._normalize_predict_option(opt) == saved_pref:
+                return opt
+
+        # Fallback: "nothing" for training, "current frame" for inference
+        return "nothing" if self.mode != "inference" else "current frame"
+
+    def _save_predict_frames_preference(self):
+        """Save the current predict frames selection to preferences."""
+        if "_predict_frames" not in self.pipeline_form_widget.fields:
+            return
+
+        current = self.pipeline_form_widget.fields["_predict_frames"].value()
+        normalized = self._normalize_predict_option(current)
+
+        if prefs["training predict on"] != normalized:
+            prefs["training predict on"] = normalized
+            prefs.save()
 
     def connect_signals(self):
         self.pipeline_form_widget.valueChanged.connect(self.on_tab_data_change)
@@ -409,8 +508,13 @@ class LearningDialog(QtWidgets.QDialog):
 
             self.update_tabs_from_tab(source_data)
 
-            # Update pipeline tab
-            self.pipeline_form_widget.set_form_data(source_data)
+            # Update pipeline tab, but filter out run_name to prevent cross-tab
+            # contamination (each head has its own run_name from its base config,
+            # but the pipeline run_name should remain independent)
+            pipeline_data = {
+                k: v for k, v in source_data.items() if k != "trainer_config.run_name"
+            }
+            self.pipeline_form_widget.set_form_data(pipeline_data)
 
         self._validate_pipeline()
 
@@ -550,6 +654,12 @@ class LearningDialog(QtWidgets.QDialog):
                         get_keyval_dict_from_omegaconf(trained_cfg_info.config),
                         tab_cfg_key_val_dict,
                     )
+
+                # Clear wandb.name for new training runs (not resume) so sleap-nn
+                # will default it to the new run_name. The wandb.name field is not
+                # in the GUI form, so old values from base configs would persist.
+                if not self.tabs[tab_name].resume_training:
+                    loaded_cfg_scoped["trainer_config.wandb.name"] = None
 
                 # Deserialize merged dict to object
                 cfg = get_omegaconf_from_gui_form(loaded_cfg_scoped)
@@ -750,6 +860,8 @@ class LearningDialog(QtWidgets.QDialog):
 
     def run(self):
         """Run with current dialog settings."""
+        # Save predict frames preference before running
+        self._save_predict_frames_preference()
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
 
@@ -952,6 +1064,20 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     updatePipeline = QtCore.Signal(str)
     valueChanged = QtCore.Signal()
 
+    # Fields to place in the right column (WandB options)
+    RIGHT_COLUMN_FIELDS = {
+        "trainer_config.use_wandb",
+        "trainer_config.wandb.entity",
+        "trainer_config.wandb.project",
+        "trainer_config.wandb.api_key",
+        "trainer_config.wandb.prv_runid",
+        "trainer_config.wandb.group",
+        "trainer_config.wandb.save_viz_imgs_wandb",
+    }
+
+    # Section headers to place in right column
+    RIGHT_COLUMN_HEADERS = {"WandB options"}
+
     def __init__(
         self, mode: Text, skeleton: Optional["Skeleton"] = None, *args, **kwargs
     ):
@@ -974,7 +1100,124 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
         self.form_widget.form_layout.valueChanged.connect(self.valueChanged)
 
-        self.setLayout(self.form_widget.form_layout)
+        # Build two-column layout for training mode
+        if mode == "training":
+            self._build_two_column_layout()
+        else:
+            self.setLayout(self.form_widget.form_layout)
+
+        # Load saved WandB preferences and update API key field
+        self._wandb_api_key_placeholder = None
+        if mode == "training":
+            self._init_wandb_settings()
+            self._init_training_settings()
+
+    def _build_two_column_layout(self):
+        """Reorganize the pipeline form into a two-column layout.
+
+        The pipeline stacked widget stays at the top (full width).
+        Left column: Input Data, Data Pipeline/Hardware, Output options
+        Right column: WandB options, ZMQ options
+        """
+        form_layout = self.form_widget.form_layout
+
+        # Create main layout
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Create two-column layout for settings
+        columns_layout = QtWidgets.QHBoxLayout()
+        left_column = QtWidgets.QFormLayout()
+        right_column = QtWidgets.QFormLayout()
+        left_column.setVerticalSpacing(6)
+        right_column.setVerticalSpacing(6)
+
+        # Track which column we're adding to based on section headers
+        current_column = left_column
+        pipeline_widget = None
+
+        # Iterate through all rows in the form
+        row_count = form_layout.rowCount()
+        for i in range(row_count):
+            # Get the label and field for this row
+            label_item = form_layout.itemAt(i, QtWidgets.QFormLayout.LabelRole)
+            field_item = form_layout.itemAt(i, QtWidgets.QFormLayout.FieldRole)
+
+            if field_item is None:
+                continue
+
+            field_widget = field_item.widget()
+            if field_widget is None:
+                continue
+
+            # Check if this is the pipeline stacked widget
+            field_name = field_widget.objectName()
+            if field_name == "_pipeline":
+                pipeline_widget = field_widget
+                continue
+
+            # Check if this is a section header (QLabel with bold text)
+            if isinstance(field_widget, QtWidgets.QLabel):
+                header_text = field_widget.text()
+                # Check for section headers and switch columns if needed
+                for header in self.RIGHT_COLUMN_HEADERS:
+                    if header in header_text:
+                        current_column = right_column
+                        break
+                else:
+                    # Not a right column header
+                    if (
+                        "Input Data" in header_text
+                        or "Data Pipeline" in header_text
+                        or "Output" in header_text
+                    ):
+                        current_column = left_column
+
+                # Add the header to the current column
+                current_column.addRow(field_widget)
+                continue
+
+            # Check if this field belongs in right column
+            if field_name in self.RIGHT_COLUMN_FIELDS:
+                target_column = right_column
+            else:
+                target_column = current_column
+
+            # Get the label text
+            label_text = ""
+            if label_item:
+                label_widget = label_item.widget()
+                if label_widget:
+                    label_text = label_widget.text()
+
+            # Add to target column
+            if label_text:
+                target_column.addRow(label_text, field_widget)
+            else:
+                target_column.addRow(field_widget)
+
+        # Wrap columns in widgets for alignment
+        left_widget = QtWidgets.QWidget()
+        left_widget.setLayout(left_column)
+        right_widget = QtWidgets.QWidget()
+        right_widget.setLayout(right_column)
+
+        columns_layout.addWidget(left_widget, stretch=1, alignment=QtCore.Qt.AlignTop)
+        columns_layout.addWidget(right_widget, stretch=1, alignment=QtCore.Qt.AlignTop)
+
+        # Add pipeline widget at top if found (no stretch - only takes needed space)
+        if pipeline_widget:
+            main_layout.addWidget(pipeline_widget, stretch=0)
+
+        # Add columns (no stretch - only takes needed space)
+        columns_widget = QtWidgets.QWidget()
+        columns_widget.setLayout(columns_layout)
+        main_layout.addWidget(columns_widget, stretch=0)
+
+        # Push everything to top, extra space goes to bottom
+        main_layout.addStretch(1)
+
+        self.setLayout(main_layout)
 
     @property
     def fields(self):
@@ -988,7 +1231,15 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         self.form_widget.set_message()
 
     def get_form_data(self):
-        return self.form_widget.get_form_data()
+        data = self.form_widget.get_form_data()
+        # Strip placeholder from API key if user didn't change it
+        api_key = data.get("trainer_config.wandb.api_key")
+        if api_key and self._wandb_api_key_placeholder:
+            if api_key == self._wandb_api_key_placeholder:
+                data["trainer_config.wandb.api_key"] = None
+        self._save_wandb_preferences(data)
+        self._save_training_preferences(data)
+        return data
 
     def set_form_data(self, data):
         self.form_widget.set_form_data(data)
@@ -1033,6 +1284,100 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
         self.pipeline_field.setValue(val)
         self.emitPipeline()
+
+    def _init_wandb_settings(self):
+        """Initialize WandB settings from preferences and update API key help text."""
+        # Load saved WandB preferences (bools always set, strings only if not None)
+        wandb_prefs = {
+            "trainer_config.use_wandb": prefs["wandb enabled"],
+            "trainer_config.wandb.entity": prefs["wandb entity"],
+            "trainer_config.wandb.project": prefs["wandb project"],
+            "trainer_config.wandb.group": prefs["wandb group"],
+            "trainer_config.wandb.save_viz_imgs_wandb": prefs["wandb save viz images"],
+        }
+        # Filter out None values for optional string fields
+        wandb_prefs = {
+            k: v
+            for k, v in wandb_prefs.items()
+            if v is not None
+            or k
+            in ("trainer_config.use_wandb", "trainer_config.wandb.save_viz_imgs_wandb")
+        }
+        if wandb_prefs:
+            self.form_widget.set_form_data(wandb_prefs)
+
+        # Update API key field based on login status
+        is_logged_in, auth_source = check_wandb_login_status()
+        if is_logged_in:
+            api_key_field = self.form_widget.fields.get("trainer_config.wandb.api_key")
+            if api_key_field is not None:
+                # Set placeholder to indicate already authenticated
+                placeholder = f"(using {auth_source})"
+                api_key_field.setText(placeholder)
+                api_key_field.setToolTip(
+                    get_wandb_api_key_help_text(is_logged_in, auth_source)
+                )
+                # Store placeholder so we can strip it on form read
+                self._wandb_api_key_placeholder = placeholder
+
+    def _save_wandb_preferences(self, form_data: dict):
+        """Save WandB settings to preferences for persistence across sessions."""
+        # Map form field names to preference keys (API key excluded for security)
+        pref_mapping = {
+            "trainer_config.use_wandb": "wandb enabled",
+            "trainer_config.wandb.entity": "wandb entity",
+            "trainer_config.wandb.project": "wandb project",
+            "trainer_config.wandb.group": "wandb group",
+            "trainer_config.wandb.save_viz_imgs_wandb": "wandb save viz images",
+        }
+        changed = False
+        for form_key, pref_key in pref_mapping.items():
+            if form_key in form_data:
+                value = form_data[form_key]
+                if prefs[pref_key] != value:
+                    prefs[pref_key] = value
+                    changed = True
+        if changed:
+            prefs.save()
+
+    def _init_training_settings(self):
+        """Initialize training pipeline settings from preferences."""
+        # Note: _predict_frames is handled at LearningDialog level due to
+        # dynamic options and precedence rules (suggestions > saved pref)
+        training_prefs = {
+            "_ensure_channels": prefs["training image conversion"],
+            "_data_pipeline_fw": prefs["training data pipeline framework"],
+            "trainer_config.train_data_loader.num_workers": prefs[
+                "training num workers"
+            ],
+            "trainer_config.trainer_accelerator": prefs["training accelerator"],
+        }
+        # trainer_devices is optional_int - only set if not None
+        if prefs["training num devices"] is not None:
+            training_prefs["trainer_config.trainer_devices"] = prefs[
+                "training num devices"
+            ]
+        self.form_widget.set_form_data(training_prefs)
+
+    def _save_training_preferences(self, form_data: dict):
+        """Save training pipeline settings to preferences."""
+        # Note: _predict_frames is handled at LearningDialog level
+        pref_mapping = {
+            "_ensure_channels": "training image conversion",
+            "_data_pipeline_fw": "training data pipeline framework",
+            "trainer_config.train_data_loader.num_workers": "training num workers",
+            "trainer_config.trainer_devices": "training num devices",
+            "trainer_config.trainer_accelerator": "training accelerator",
+        }
+        changed = False
+        for form_key, pref_key in pref_mapping.items():
+            if form_key in form_data:
+                value = form_data[form_key]
+                if prefs[pref_key] != value:
+                    prefs[pref_key] = value
+                    changed = True
+        if changed:
+            prefs.save()
 
 
 class TrainingEditorWidget(QtWidgets.QWidget):
@@ -1090,6 +1435,15 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self.form_widgets["model"].valueChanged.connect(self.update_receptive_field)
         self.form_widgets["data"].valueChanged.connect(self.update_receptive_field)
 
+        # Connect overfit mode checkbox to disable validation fraction
+        self._setup_overfit_mode_toggle()
+
+        # Connect rotation preset dropdown to enable/disable custom angle field
+        self._setup_rotation_preset_toggle()
+
+        # Connect augmentation checkboxes to show/hide their parameter fields
+        self._setup_augmentation_param_toggles()
+
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
                 form_name = field_name.split(".")[0]
@@ -1131,6 +1485,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         col1_layout.addWidget(self.form_widgets["data"])
         col1_layout.addWidget(self.form_widgets["optimization"])
+        self.form_widgets["augmentation"].setMaximumWidth(255)
         col2_layout.addWidget(self.form_widgets["augmentation"])
         col3_layout.addWidget(self.form_widgets["model"])
 
@@ -1142,10 +1497,21 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         col_layout = QtWidgets.QHBoxLayout()
         if col0_layout:
-            col_layout.addWidget(self._layout_widget(col0_layout))
-        col_layout.addWidget(self._layout_widget(col1_layout))
-        col_layout.addWidget(self._layout_widget(col2_layout))
-        col_layout.addWidget(self._layout_widget(col3_layout))
+            col_layout.addWidget(
+                self._layout_widget(col0_layout),
+                stretch=0,
+                alignment=QtCore.Qt.AlignTop,
+            )
+        col_layout.addWidget(
+            self._layout_widget(col1_layout), stretch=0, alignment=QtCore.Qt.AlignTop
+        )
+        col_layout.addWidget(
+            self._layout_widget(col2_layout), stretch=0, alignment=QtCore.Qt.AlignTop
+        )
+        col_layout.addWidget(
+            self._layout_widget(col3_layout), stretch=0, alignment=QtCore.Qt.AlignTop
+        )
+        col_layout.addStretch(1)  # Push columns left, absorb extra space
 
         # If we have an object which gets a list of config files,
         # then we'll show a menu to allow selection from the list.
@@ -1210,6 +1576,110 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # has changed so that it can activate/update the "user" config
         # if self._cfg_list_widget:
         #     self._set_user_config()
+
+    def _setup_overfit_mode_toggle(self):
+        """Connect overfit mode checkbox to disable validation fraction.
+
+        Follows the same pattern as OptionalSpinWidget.updateState().
+        """
+        data_form = self.form_widgets["data"]
+        overfit_field_name = "data_config.use_same_data_for_val"
+        val_frac_field_name = "data_config.validation_fraction"
+
+        overfit_checkbox = data_form.fields.get(overfit_field_name)
+        val_frac_widget = data_form.fields.get(val_frac_field_name)
+
+        if overfit_checkbox is not None and val_frac_widget is not None:
+
+            def update_state():
+                val_frac_widget.setDisabled(overfit_checkbox.isChecked())
+
+            overfit_checkbox.stateChanged.connect(update_state)
+            update_state()
+
+    def _setup_rotation_preset_toggle(self):
+        """Connect rotation preset dropdown to enable/disable custom angle field.
+
+        When a preset (Off, ±15°, ±180°) is selected, the custom angle field is
+        disabled. When "Custom" is selected, the field is enabled.
+        """
+        aug_form = self.form_widgets["augmentation"]
+        preset_field = aug_form.fields.get("_rotation_preset")
+        custom_field = aug_form.fields.get("_rotation_custom_angle")
+
+        if preset_field is not None and custom_field is not None:
+
+            def update_state():
+                is_custom = preset_field.value() == "Custom"
+                custom_field.setEnabled(is_custom)
+
+            preset_field.valueChanged.connect(update_state)
+            update_state()  # Set initial state
+
+    def _setup_augmentation_param_toggles(self):
+        """Connect augmentation checkboxes to show/hide their parameter fields.
+
+        When an augmentation checkbox is unchecked, its parameter fields are hidden
+        to reduce visual clutter. The fields are shown when the checkbox is checked.
+        """
+        aug_form = self.form_widgets["augmentation"]
+        form_layout = aug_form.form_layout
+
+        # Define which checkbox controls which parameter fields
+        toggle_groups = {
+            "_scale_enabled": [
+                "data_config.augmentation_config.geometric.scale_min",
+                "data_config.augmentation_config.geometric.scale_max",
+            ],
+            "_uniform_noise_enabled": [
+                "data_config.augmentation_config.intensity.uniform_noise_min",
+                "data_config.augmentation_config.intensity.uniform_noise_max",
+            ],
+            "_gaussian_noise_enabled": [
+                "data_config.augmentation_config.intensity.gaussian_noise_mean",
+                "data_config.augmentation_config.intensity.gaussian_noise_std",
+            ],
+            "_contrast_enabled": [
+                "data_config.augmentation_config.intensity.contrast_min",
+                "data_config.augmentation_config.intensity.contrast_max",
+            ],
+            "_brightness_enabled": [
+                "data_config.augmentation_config.intensity.brightness_min",
+                "data_config.augmentation_config.intensity.brightness_max",
+            ],
+        }
+
+        for checkbox_name, param_fields in toggle_groups.items():
+            checkbox = aug_form.fields.get(checkbox_name)
+            if checkbox is None:
+                continue
+
+            # Collect the parameter field widgets and their labels
+            param_widgets = []
+            for field_name in param_fields:
+                field = aug_form.fields.get(field_name)
+                if field is not None:
+                    # Get the label for this field from the form layout
+                    label = form_layout.labelForField(field)
+                    param_widgets.append((field, label))
+
+            if not param_widgets:
+                continue
+
+            # Create update function that captures the widgets
+            def make_update_visibility(widgets):
+                def update_visibility(state):
+                    visible = bool(state)
+                    for field, label in widgets:
+                        field.setVisible(visible)
+                        if label is not None:
+                            label.setVisible(visible)
+
+                return update_visibility
+
+            update_fn = make_update_visibility(param_widgets)
+            checkbox.stateChanged.connect(update_fn)
+            update_fn(checkbox.isChecked())  # Set initial state
 
     def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
         self._load_config(cfg_info)
@@ -1294,6 +1764,36 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         key_val_dict = get_keyval_dict_from_omegaconf(cfg)
         if key_val_dict.get("trainer_config.trainer_devices") == "auto":
             key_val_dict["trainer_config.trainer_devices"] = None
+
+        # Clear run_name - it should be auto-generated for new training runs.
+        # This prevents old run_name from base config from leaking through.
+        key_val_dict["trainer_config.run_name"] = None
+
+        # Reverse-map rotation_min/rotation_max to _rotation_preset dropdown
+        rot_min = key_val_dict.get(
+            "data_config.augmentation_config.geometric.rotation_min"
+        )
+        rot_max = key_val_dict.get(
+            "data_config.augmentation_config.geometric.rotation_max"
+        )
+        rot_p = key_val_dict.get("data_config.augmentation_config.geometric.rotation_p")
+        if rot_p is None or rot_p == 0:
+            key_val_dict["_rotation_preset"] = "Off"
+        elif rot_min is not None and rot_max is not None:
+            # Check for symmetric presets
+            if rot_min == -15 and rot_max == 15:
+                key_val_dict["_rotation_preset"] = "±15°"
+            elif rot_min == -180 and rot_max == 180:
+                key_val_dict["_rotation_preset"] = "±180°"
+            elif rot_min == -rot_max:
+                # Symmetric but custom angle
+                key_val_dict["_rotation_preset"] = "Custom"
+                key_val_dict["_rotation_custom_angle"] = rot_max
+            else:
+                # Asymmetric (rare) - use Custom with max as angle
+                key_val_dict["_rotation_preset"] = "Custom"
+                key_val_dict["_rotation_custom_angle"] = max(abs(rot_min), abs(rot_max))
+
         self.set_fields_from_key_val_dict(key_val_dict)
 
     # def _set_user_config(self):
@@ -1454,6 +1954,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         else:
             trained_config_info.config.model_config.pretrained_backbone_weights = None
             trained_config_info.config.model_config.pretrained_head_weights = None
+
+        # Always clear wandb.name so sleap-nn will default it to the new run_name.
+        # "Use Trained Model Weights" means use pretrained weights for initialization,
+        # not resume the same wandb logging run.
+        trained_config_info.config.trainer_config.wandb.name = None
 
         return trained_config_info
 
