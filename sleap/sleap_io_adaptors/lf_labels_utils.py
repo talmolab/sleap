@@ -109,23 +109,28 @@ def remove_all_tracks(labels: Labels):
 
 
 def videos_match(video1: Video, video2: Video) -> bool:
-    """Check if two videos are the same video object.
+    """Check if two videos represent the same video.
 
-    This uses object identity instead of video.matches_content() because
-    matches_content() only compares shape and backend type, which can cause
-    different videos with the same dimensions to incorrectly match.
+    This combines matches_content() (shape and backend type) with matches_path()
+    (filename comparison) to correctly identify matching videos while handling:
 
-    For operations within a single Labels object, we should use object identity
-    to ensure we're comparing the exact same video object.
+    1. Different video files with same dimensions (e.g., 1-frame .tif files)
+       -> Returns False (different paths)
+    2. Same video file with different object IDs (e.g., after deserialization)
+       -> Returns True (same content AND same path)
+
+    Using matches_content() alone would incorrectly match different videos
+    with the same shape. Using object identity alone would fail to match
+    the same video after deserialization.
 
     Args:
         video1: First video to compare
         video2: Second video to compare
 
     Returns:
-        True if the videos are the same object
+        True if the videos have matching content AND matching file paths
     """
-    return video1 is video2
+    return video1.matches_content(video2) and video1.matches_path(video2, strict=True)
 
 
 def remove_frames(labels: Labels, frames: List[LabeledFrame]):
