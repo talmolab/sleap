@@ -108,12 +108,32 @@ def remove_all_tracks(labels: Labels):
     return labels
 
 
+def videos_match(video1: Video, video2: Video) -> bool:
+    """Check if two videos are the same video object.
+
+    This uses object identity instead of video.matches_content() because
+    matches_content() only compares shape and backend type, which can cause
+    different videos with the same dimensions to incorrectly match.
+
+    For operations within a single Labels object, we should use object identity
+    to ensure we're comparing the exact same video object.
+
+    Args:
+        video1: First video to compare
+        video2: Second video to compare
+
+    Returns:
+        True if the videos are the same object
+    """
+    return video1 is video2
+
+
 def remove_frames(labels: Labels, frames: List[LabeledFrame]):
     """Remove a list of frames from the labels dataset."""
     for lf in frames:
         for lf_idx, lab_fr in enumerate(labels):
             if (
-                lab_fr.video.matches_content(lf.video)
+                videos_match(lab_fr.video, lf.video)
                 and lab_fr.frame_idx == lf.frame_idx
             ):
                 labels_pop(labels, lf_idx)
@@ -172,19 +192,19 @@ def remove_video(labels: Labels, video: Video):
     # Remove labeled frames for this video (iterate backwards to avoid index issues)
     for lf_idx in reversed(range(len(labels.labeled_frames))):
         lf = labels.labeled_frames[lf_idx]
-        if lf.video.matches_content(video):
+        if videos_match(lf.video, video):
             labels_pop(labels, lf_idx)
 
     # Remove video from videos list (iterate backwards to avoid index issues)
     for vid_idx in reversed(range(len(labels.videos))):
         vid = labels.videos[vid_idx]
-        if video == vid:
+        if videos_match(video, vid):
             labels.videos.pop(vid_idx)
 
         # Remove any suggestions for this video
         if hasattr(labels, "suggestions"):
             labels.suggestions = [
-                s for s in labels.suggestions if not s.video.matches_content(video)
+                s for s in labels.suggestions if not videos_match(s.video, video)
             ]
 
 

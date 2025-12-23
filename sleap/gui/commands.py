@@ -118,6 +118,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     remove_track,
     remove_video,
     remove_all_tracks,
+    videos_match,
 )
 
 # Indicates whether we support multiple project windows (i.e., "open" opens new window)
@@ -3274,7 +3275,7 @@ class RemoveSuggestion(EditCommand):
         if selected_frame is not None:
             for sug_idx, suggestion in enumerate(context.labels.suggestions):
                 if (
-                    suggestion.video.matches_content(selected_frame.video)
+                    videos_match(suggestion.video, selected_frame.video)
                     and suggestion.frame_idx == selected_frame.frame_idx
                 ):
                     context.labels.suggestions.pop(sug_idx)
