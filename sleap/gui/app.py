@@ -1693,6 +1693,14 @@ def create_sleap_label_parser():
         const=True,
         default=False,
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Show detailed version info including PyTorch and GPU status.",
+        action="store_const",
+        const=True,
+        default=False,
+    )
 
     return parser
 
@@ -1713,6 +1721,12 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     parser = create_sleap_label_parser()
     args = parser.parse_args(args)
 
+    # Print startup banner immediately for user feedback
+    from sleap.system_info import print_startup_banner
+
+    print_startup_banner(verbose=args.verbose)
+    print("Launching GUI...")
+
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
 
@@ -1725,13 +1739,6 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         no_usage_data=args.no_usage_data,
     )
     window.showMaximized()
-
-    # Print versions.
-    print()
-    print("Software versions:")
-    sleap.versions()
-    print()
-    print("Happy SLEAPing! :)")
 
     if args.profiling:
         import cProfile

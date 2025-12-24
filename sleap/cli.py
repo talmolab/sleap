@@ -1,9 +1,10 @@
-"""Unified CLI for SLEAP-NN using Click."""
+"""CLI commands for SLEAP-NN training and inference."""
+
+import logging
+from pathlib import Path
 
 import click
-from pathlib import Path
 from click import Command
-import logging
 
 logger = logging.getLogger(__name__)
 
