@@ -6389,21 +6389,21 @@ of stored preferences.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>sleap/gui/app.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1700">1700</a></span>
-<span class="normal"><a href="#__codelineno-0-1701">1701</a></span>
-<span class="normal"><a href="#__codelineno-0-1702">1702</a></span>
-<span class="normal"><a href="#__codelineno-0-1703">1703</a></span>
-<span class="normal"><a href="#__codelineno-0-1704">1704</a></span>
-<span class="normal"><a href="#__codelineno-0-1705">1705</a></span>
-<span class="normal"><a href="#__codelineno-0-1706">1706</a></span>
-<span class="normal"><a href="#__codelineno-0-1707">1707</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1700"><a id="__codelineno-0-1700" name="__codelineno-0-1700"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_app</span><span class="p">():</span>
-</span><span id="__span-0-1701"><a id="__codelineno-0-1701" name="__codelineno-0-1701"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates Qt application.&quot;&quot;&quot;</span>
-</span><span id="__span-0-1702"><a id="__codelineno-0-1702" name="__codelineno-0-1702"></a>
-</span><span id="__span-0-1703"><a id="__codelineno-0-1703" name="__codelineno-0-1703"></a>    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
-</span><span id="__span-0-1704"><a id="__codelineno-0-1704" name="__codelineno-0-1704"></a>    <span class="n">app</span><span class="o">.</span><span class="n">setApplicationName</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SLEAP v</span><span class="si">{</span><span class="n">sleap</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-0-1705"><a id="__codelineno-0-1705" name="__codelineno-0-1705"></a>    <span class="n">app</span><span class="o">.</span><span class="n">setWindowIcon</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">sleap</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">get_package_file</span><span class="p">(</span><span class="s2">&quot;gui/icon.png&quot;</span><span class="p">)))</span>
-</span><span id="__span-0-1706"><a id="__codelineno-0-1706" name="__codelineno-0-1706"></a>
-</span><span id="__span-0-1707"><a id="__codelineno-0-1707" name="__codelineno-0-1707"></a>    <span class="k">return</span> <span class="n">app</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1708">1708</a></span>
+<span class="normal"><a href="#__codelineno-0-1709">1709</a></span>
+<span class="normal"><a href="#__codelineno-0-1710">1710</a></span>
+<span class="normal"><a href="#__codelineno-0-1711">1711</a></span>
+<span class="normal"><a href="#__codelineno-0-1712">1712</a></span>
+<span class="normal"><a href="#__codelineno-0-1713">1713</a></span>
+<span class="normal"><a href="#__codelineno-0-1714">1714</a></span>
+<span class="normal"><a href="#__codelineno-0-1715">1715</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1708"><a id="__codelineno-0-1708" name="__codelineno-0-1708"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_app</span><span class="p">():</span>
+</span><span id="__span-0-1709"><a id="__codelineno-0-1709" name="__codelineno-0-1709"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates Qt application.&quot;&quot;&quot;</span>
+</span><span id="__span-0-1710"><a id="__codelineno-0-1710" name="__codelineno-0-1710"></a>
+</span><span id="__span-0-1711"><a id="__codelineno-0-1711" name="__codelineno-0-1711"></a>    <span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">([])</span>
+</span><span id="__span-0-1712"><a id="__codelineno-0-1712" name="__codelineno-0-1712"></a>    <span class="n">app</span><span class="o">.</span><span class="n">setApplicationName</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SLEAP v</span><span class="si">{</span><span class="n">sleap</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-0-1713"><a id="__codelineno-0-1713" name="__codelineno-0-1713"></a>    <span class="n">app</span><span class="o">.</span><span class="n">setWindowIcon</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">sleap</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">get_package_file</span><span class="p">(</span><span class="s2">&quot;gui/icon.png&quot;</span><span class="p">)))</span>
+</span><span id="__span-0-1714"><a id="__codelineno-0-1714" name="__codelineno-0-1714"></a>
+</span><span id="__span-0-1715"><a id="__codelineno-0-1715" name="__codelineno-0-1715"></a>    <span class="k">return</span> <span class="n">app</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6493,7 +6493,15 @@ of stored preferences.</p>
 <span class="normal"><a href="#__codelineno-0-1694">1694</a></span>
 <span class="normal"><a href="#__codelineno-0-1695">1695</a></span>
 <span class="normal"><a href="#__codelineno-0-1696">1696</a></span>
-<span class="normal"><a href="#__codelineno-0-1697">1697</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1652"><a id="__codelineno-0-1652" name="__codelineno-0-1652"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_sleap_label_parser</span><span class="p">():</span>
+<span class="normal"><a href="#__codelineno-0-1697">1697</a></span>
+<span class="normal"><a href="#__codelineno-0-1698">1698</a></span>
+<span class="normal"><a href="#__codelineno-0-1699">1699</a></span>
+<span class="normal"><a href="#__codelineno-0-1700">1700</a></span>
+<span class="normal"><a href="#__codelineno-0-1701">1701</a></span>
+<span class="normal"><a href="#__codelineno-0-1702">1702</a></span>
+<span class="normal"><a href="#__codelineno-0-1703">1703</a></span>
+<span class="normal"><a href="#__codelineno-0-1704">1704</a></span>
+<span class="normal"><a href="#__codelineno-0-1705">1705</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1652"><a id="__codelineno-0-1652" name="__codelineno-0-1652"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_sleap_label_parser</span><span class="p">():</span>
 </span><span id="__span-0-1653"><a id="__codelineno-0-1653" name="__codelineno-0-1653"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates parser for `sleap-label` command line arguments.</span>
 </span><span id="__span-0-1654"><a id="__codelineno-0-1654" name="__codelineno-0-1654"></a>
 </span><span id="__span-0-1655"><a id="__codelineno-0-1655" name="__codelineno-0-1655"></a><span class="sd">    Returns:</span>
@@ -6537,8 +6545,16 @@ of stored preferences.</p>
 </span><span id="__span-0-1693"><a id="__codelineno-0-1693" name="__codelineno-0-1693"></a>        <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span id="__span-0-1694"><a id="__codelineno-0-1694" name="__codelineno-0-1694"></a>        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 </span><span id="__span-0-1695"><a id="__codelineno-0-1695" name="__codelineno-0-1695"></a>    <span class="p">)</span>
-</span><span id="__span-0-1696"><a id="__codelineno-0-1696" name="__codelineno-0-1696"></a>
-</span><span id="__span-0-1697"><a id="__codelineno-0-1697" name="__codelineno-0-1697"></a>    <span class="k">return</span> <span class="n">parser</span>
+</span><span id="__span-0-1696"><a id="__codelineno-0-1696" name="__codelineno-0-1696"></a>    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+</span><span id="__span-0-1697"><a id="__codelineno-0-1697" name="__codelineno-0-1697"></a>        <span class="s2">&quot;-v&quot;</span><span class="p">,</span>
+</span><span id="__span-0-1698"><a id="__codelineno-0-1698" name="__codelineno-0-1698"></a>        <span class="s2">&quot;--verbose&quot;</span><span class="p">,</span>
+</span><span id="__span-0-1699"><a id="__codelineno-0-1699" name="__codelineno-0-1699"></a>        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Show detailed version info including PyTorch and GPU status.&quot;</span><span class="p">,</span>
+</span><span id="__span-0-1700"><a id="__codelineno-0-1700" name="__codelineno-0-1700"></a>        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_const&quot;</span><span class="p">,</span>
+</span><span id="__span-0-1701"><a id="__codelineno-0-1701" name="__codelineno-0-1701"></a>        <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-0-1702"><a id="__codelineno-0-1702" name="__codelineno-0-1702"></a>        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-0-1703"><a id="__codelineno-0-1703" name="__codelineno-0-1703"></a>    <span class="p">)</span>
+</span><span id="__span-0-1704"><a id="__codelineno-0-1704" name="__codelineno-0-1704"></a>
+</span><span id="__span-0-1705"><a id="__codelineno-0-1705" name="__codelineno-0-1705"></a>    <span class="k">return</span> <span class="n">parser</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -6561,15 +6577,7 @@ of stored preferences.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>sleap/gui/app.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1710">1710</a></span>
-<span class="normal"><a href="#__codelineno-0-1711">1711</a></span>
-<span class="normal"><a href="#__codelineno-0-1712">1712</a></span>
-<span class="normal"><a href="#__codelineno-0-1713">1713</a></span>
-<span class="normal"><a href="#__codelineno-0-1714">1714</a></span>
-<span class="normal"><a href="#__codelineno-0-1715">1715</a></span>
-<span class="normal"><a href="#__codelineno-0-1716">1716</a></span>
-<span class="normal"><a href="#__codelineno-0-1717">1717</a></span>
-<span class="normal"><a href="#__codelineno-0-1718">1718</a></span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1718">1718</a></span>
 <span class="normal"><a href="#__codelineno-0-1719">1719</a></span>
 <span class="normal"><a href="#__codelineno-0-1720">1720</a></span>
 <span class="normal"><a href="#__codelineno-0-1721">1721</a></span>
@@ -6594,40 +6602,46 @@ of stored preferences.</p>
 <span class="normal"><a href="#__codelineno-0-1740">1740</a></span>
 <span class="normal"><a href="#__codelineno-0-1741">1741</a></span>
 <span class="normal"><a href="#__codelineno-0-1742">1742</a></span>
-<span class="normal"><a href="#__codelineno-0-1743">1743</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1710"><a id="__codelineno-0-1710" name="__codelineno-0-1710"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Labels</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-</span><span id="__span-0-1711"><a id="__codelineno-0-1711" name="__codelineno-0-1711"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Starts new instance of app.&quot;&quot;&quot;</span>
-</span><span id="__span-0-1712"><a id="__codelineno-0-1712" name="__codelineno-0-1712"></a>
-</span><span id="__span-0-1713"><a id="__codelineno-0-1713" name="__codelineno-0-1713"></a>    <span class="n">parser</span> <span class="o">=</span> <span class="n">create_sleap_label_parser</span><span class="p">()</span>
-</span><span id="__span-0-1714"><a id="__codelineno-0-1714" name="__codelineno-0-1714"></a>    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-</span><span id="__span-0-1715"><a id="__codelineno-0-1715" name="__codelineno-0-1715"></a>
-</span><span id="__span-0-1716"><a id="__codelineno-0-1716" name="__codelineno-0-1716"></a>    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">nonnative</span><span class="p">:</span>
-</span><span id="__span-0-1717"><a id="__codelineno-0-1717" name="__codelineno-0-1717"></a>        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;USE_NON_NATIVE_FILE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
-</span><span id="__span-0-1718"><a id="__codelineno-0-1718" name="__codelineno-0-1718"></a>
-</span><span id="__span-0-1719"><a id="__codelineno-0-1719" name="__codelineno-0-1719"></a>    <span class="n">app</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-1743">1743</a></span>
+<span class="normal"><a href="#__codelineno-0-1744">1744</a></span>
+<span class="normal"><a href="#__codelineno-0-1745">1745</a></span>
+<span class="normal"><a href="#__codelineno-0-1746">1746</a></span>
+<span class="normal"><a href="#__codelineno-0-1747">1747</a></span>
+<span class="normal"><a href="#__codelineno-0-1748">1748</a></span>
+<span class="normal"><a href="#__codelineno-0-1749">1749</a></span>
+<span class="normal"><a href="#__codelineno-0-1750">1750</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1718"><a id="__codelineno-0-1718" name="__codelineno-0-1718"></a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Labels</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+</span><span id="__span-0-1719"><a id="__codelineno-0-1719" name="__codelineno-0-1719"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Starts new instance of app.&quot;&quot;&quot;</span>
 </span><span id="__span-0-1720"><a id="__codelineno-0-1720" name="__codelineno-0-1720"></a>
-</span><span id="__span-0-1721"><a id="__codelineno-0-1721" name="__codelineno-0-1721"></a>    <span class="n">window</span> <span class="o">=</span> <span class="n">MainWindow</span><span class="p">(</span>
-</span><span id="__span-0-1722"><a id="__codelineno-0-1722" name="__codelineno-0-1722"></a>        <span class="n">labels_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">labels_path</span><span class="p">,</span>
-</span><span id="__span-0-1723"><a id="__codelineno-0-1723" name="__codelineno-0-1723"></a>        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
-</span><span id="__span-0-1724"><a id="__codelineno-0-1724" name="__codelineno-0-1724"></a>        <span class="n">reset</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">reset</span><span class="p">,</span>
-</span><span id="__span-0-1725"><a id="__codelineno-0-1725" name="__codelineno-0-1725"></a>        <span class="n">no_usage_data</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">no_usage_data</span><span class="p">,</span>
-</span><span id="__span-0-1726"><a id="__codelineno-0-1726" name="__codelineno-0-1726"></a>    <span class="p">)</span>
-</span><span id="__span-0-1727"><a id="__codelineno-0-1727" name="__codelineno-0-1727"></a>    <span class="n">window</span><span class="o">.</span><span class="n">showMaximized</span><span class="p">()</span>
-</span><span id="__span-0-1728"><a id="__codelineno-0-1728" name="__codelineno-0-1728"></a>
-</span><span id="__span-0-1729"><a id="__codelineno-0-1729" name="__codelineno-0-1729"></a>    <span class="c1"># Print versions.</span>
-</span><span id="__span-0-1730"><a id="__codelineno-0-1730" name="__codelineno-0-1730"></a>    <span class="nb">print</span><span class="p">()</span>
-</span><span id="__span-0-1731"><a id="__codelineno-0-1731" name="__codelineno-0-1731"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Software versions:&quot;</span><span class="p">)</span>
-</span><span id="__span-0-1732"><a id="__codelineno-0-1732" name="__codelineno-0-1732"></a>    <span class="n">sleap</span><span class="o">.</span><span class="n">versions</span><span class="p">()</span>
-</span><span id="__span-0-1733"><a id="__codelineno-0-1733" name="__codelineno-0-1733"></a>    <span class="nb">print</span><span class="p">()</span>
-</span><span id="__span-0-1734"><a id="__codelineno-0-1734" name="__codelineno-0-1734"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Happy SLEAPing! :)&quot;</span><span class="p">)</span>
-</span><span id="__span-0-1735"><a id="__codelineno-0-1735" name="__codelineno-0-1735"></a>
-</span><span id="__span-0-1736"><a id="__codelineno-0-1736" name="__codelineno-0-1736"></a>    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">profiling</span><span class="p">:</span>
-</span><span id="__span-0-1737"><a id="__codelineno-0-1737" name="__codelineno-0-1737"></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">cProfile</span>
-</span><span id="__span-0-1738"><a id="__codelineno-0-1738" name="__codelineno-0-1738"></a>
-</span><span id="__span-0-1739"><a id="__codelineno-0-1739" name="__codelineno-0-1739"></a>        <span class="n">cProfile</span><span class="o">.</span><span class="n">runctx</span><span class="p">(</span><span class="s2">&quot;app.exec_()&quot;</span><span class="p">,</span> <span class="nb">globals</span><span class="o">=</span><span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="o">=</span><span class="nb">locals</span><span class="p">())</span>
-</span><span id="__span-0-1740"><a id="__codelineno-0-1740" name="__codelineno-0-1740"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-1741"><a id="__codelineno-0-1741" name="__codelineno-0-1741"></a>        <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+</span><span id="__span-0-1721"><a id="__codelineno-0-1721" name="__codelineno-0-1721"></a>    <span class="n">parser</span> <span class="o">=</span> <span class="n">create_sleap_label_parser</span><span class="p">()</span>
+</span><span id="__span-0-1722"><a id="__codelineno-0-1722" name="__codelineno-0-1722"></a>    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+</span><span id="__span-0-1723"><a id="__codelineno-0-1723" name="__codelineno-0-1723"></a>
+</span><span id="__span-0-1724"><a id="__codelineno-0-1724" name="__codelineno-0-1724"></a>    <span class="c1"># Print startup banner immediately for user feedback</span>
+</span><span id="__span-0-1725"><a id="__codelineno-0-1725" name="__codelineno-0-1725"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">sleap.system_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_startup_banner</span>
+</span><span id="__span-0-1726"><a id="__codelineno-0-1726" name="__codelineno-0-1726"></a>
+</span><span id="__span-0-1727"><a id="__codelineno-0-1727" name="__codelineno-0-1727"></a>    <span class="n">print_startup_banner</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+</span><span id="__span-0-1728"><a id="__codelineno-0-1728" name="__codelineno-0-1728"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Launching GUI...&quot;</span><span class="p">)</span>
+</span><span id="__span-0-1729"><a id="__codelineno-0-1729" name="__codelineno-0-1729"></a>
+</span><span id="__span-0-1730"><a id="__codelineno-0-1730" name="__codelineno-0-1730"></a>    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">nonnative</span><span class="p">:</span>
+</span><span id="__span-0-1731"><a id="__codelineno-0-1731" name="__codelineno-0-1731"></a>        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;USE_NON_NATIVE_FILE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+</span><span id="__span-0-1732"><a id="__codelineno-0-1732" name="__codelineno-0-1732"></a>
+</span><span id="__span-0-1733"><a id="__codelineno-0-1733" name="__codelineno-0-1733"></a>    <span class="n">app</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">()</span>
+</span><span id="__span-0-1734"><a id="__codelineno-0-1734" name="__codelineno-0-1734"></a>
+</span><span id="__span-0-1735"><a id="__codelineno-0-1735" name="__codelineno-0-1735"></a>    <span class="n">window</span> <span class="o">=</span> <span class="n">MainWindow</span><span class="p">(</span>
+</span><span id="__span-0-1736"><a id="__codelineno-0-1736" name="__codelineno-0-1736"></a>        <span class="n">labels_path</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">labels_path</span><span class="p">,</span>
+</span><span id="__span-0-1737"><a id="__codelineno-0-1737" name="__codelineno-0-1737"></a>        <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+</span><span id="__span-0-1738"><a id="__codelineno-0-1738" name="__codelineno-0-1738"></a>        <span class="n">reset</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">reset</span><span class="p">,</span>
+</span><span id="__span-0-1739"><a id="__codelineno-0-1739" name="__codelineno-0-1739"></a>        <span class="n">no_usage_data</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">no_usage_data</span><span class="p">,</span>
+</span><span id="__span-0-1740"><a id="__codelineno-0-1740" name="__codelineno-0-1740"></a>    <span class="p">)</span>
+</span><span id="__span-0-1741"><a id="__codelineno-0-1741" name="__codelineno-0-1741"></a>    <span class="n">window</span><span class="o">.</span><span class="n">showMaximized</span><span class="p">()</span>
 </span><span id="__span-0-1742"><a id="__codelineno-0-1742" name="__codelineno-0-1742"></a>
-</span><span id="__span-0-1743"><a id="__codelineno-0-1743" name="__codelineno-0-1743"></a>    <span class="k">pass</span>
+</span><span id="__span-0-1743"><a id="__codelineno-0-1743" name="__codelineno-0-1743"></a>    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">profiling</span><span class="p">:</span>
+</span><span id="__span-0-1744"><a id="__codelineno-0-1744" name="__codelineno-0-1744"></a>        <span class="kn">import</span><span class="w"> </span><span class="nn">cProfile</span>
+</span><span id="__span-0-1745"><a id="__codelineno-0-1745" name="__codelineno-0-1745"></a>
+</span><span id="__span-0-1746"><a id="__codelineno-0-1746" name="__codelineno-0-1746"></a>        <span class="n">cProfile</span><span class="o">.</span><span class="n">runctx</span><span class="p">(</span><span class="s2">&quot;app.exec_()&quot;</span><span class="p">,</span> <span class="nb">globals</span><span class="o">=</span><span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="o">=</span><span class="nb">locals</span><span class="p">())</span>
+</span><span id="__span-0-1747"><a id="__codelineno-0-1747" name="__codelineno-0-1747"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-1748"><a id="__codelineno-0-1748" name="__codelineno-0-1748"></a>        <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+</span><span id="__span-0-1749"><a id="__codelineno-0-1749" name="__codelineno-0-1749"></a>
+</span><span id="__span-0-1750"><a id="__codelineno-0-1750" name="__codelineno-0-1750"></a>    <span class="k">pass</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
