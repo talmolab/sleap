@@ -1444,6 +1444,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Connect augmentation checkboxes to show/hide their parameter fields
         self._setup_augmentation_param_toggles()
 
+        # Hide crop size for non-cropping model types
+        self._setup_crop_size_visibility()
+
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
                 form_name = field_name.split(".")[0]
@@ -1685,6 +1688,27 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             update_fn = make_update_visibility(param_widgets)
             checkbox.stateChanged.connect(update_fn)
             update_fn(checkbox.isChecked())  # Set initial state
+
+    def _setup_crop_size_visibility(self):
+        """Hide crop size field for model types that don't use cropping.
+
+        Crop size is only relevant for centered_instance and multi_class_topdown
+        models which crop around detected centroids. Other model types (centroid,
+        bottomup, single_instance, multi_class_bottomup) process full images.
+        """
+        # Only show for models that use instance cropping
+        if self.head in ("centered_instance", "multi_class_topdown"):
+            return  # Keep visible (default state)
+
+        data_form = self.form_widgets["data"]
+        form_layout = data_form.form_layout
+        crop_field = data_form.fields.get("data_config.preprocessing.crop_size")
+
+        if crop_field is not None:
+            crop_label = form_layout.labelForField(crop_field)
+            crop_field.setVisible(False)
+            if crop_label is not None:
+                crop_label.setVisible(False)
 
     def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
         self._load_config(cfg_info)
