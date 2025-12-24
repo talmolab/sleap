@@ -516,6 +516,12 @@ class TrainingConfigFilesWidget(FieldComboWidget):
         finally:
             self.blockSignals(False)
 
+        # After update completes, trigger config load for the selected item.
+        # This ensures the form is populated with the selected config's values.
+        selected = self.getSelectedConfigInfo()
+        if selected is not None:
+            self.onConfigSelection.emit(selected)
+
     @property
     def _menu_cfg_idx_offset(self):
         if (
