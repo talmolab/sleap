@@ -1598,20 +1598,25 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             update_state()
 
     def _setup_rotation_preset_toggle(self):
-        """Connect rotation preset dropdown to enable/disable custom angle field.
+        """Connect rotation preset dropdown to show/hide custom angle field.
 
         When a preset (Off, ±15°, ±180°) is selected, the custom angle field is
-        disabled. When "Custom" is selected, the field is enabled.
+        hidden. When "Custom" is selected, the field is shown.
         """
         aug_form = self.form_widgets["augmentation"]
+        form_layout = aug_form.form_layout
         preset_field = aug_form.fields.get("_rotation_preset")
         custom_field = aug_form.fields.get("_rotation_custom_angle")
 
         if preset_field is not None and custom_field is not None:
+            # Get the label for the custom field
+            custom_label = form_layout.labelForField(custom_field)
 
             def update_state():
                 is_custom = preset_field.value() == "Custom"
-                custom_field.setEnabled(is_custom)
+                custom_field.setVisible(is_custom)
+                if custom_label is not None:
+                    custom_label.setVisible(is_custom)
 
             preset_field.valueChanged.connect(update_state)
             update_state()  # Set initial state
