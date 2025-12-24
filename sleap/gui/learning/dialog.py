@@ -203,9 +203,17 @@ class LearningDialog(QtWidgets.QDialog):
         self.resize(target_width, target_height)
 
     def update_file_lists(self):
+        """Update config file lists for all currently shown tabs.
+
+        With lazy tab creation, we only update tabs that are currently visible.
+        Tabs that haven't been created yet will get their file lists updated
+        when they're first initialized in _ensure_tab_initialized().
+        """
         self._cfg_getter.update()
-        for tab in self.tabs.values():
-            tab.update_file_list()
+        # Only update tabs that are currently shown (and thus initialized)
+        for tab_name in self.shown_tab_names:
+            if tab_name in self.tabs:
+                self.tabs[tab_name].update_file_list()
 
     @staticmethod
     def count_total_frames_for_selection_option(
@@ -405,19 +413,49 @@ class LearningDialog(QtWidgets.QDialog):
             prefs.save()
 
     def connect_signals(self):
+        """Connect valueChanged signals for pipeline and any existing tabs.
+
+        Note: With lazy tab creation, tabs may not exist yet at dialog startup.
+        Signals for lazily-created tabs are connected in _ensure_tab_initialized().
+        """
         self.pipeline_form_widget.valueChanged.connect(self.on_tab_data_change)
 
+        # Only connect signals for tabs that already exist
         for head_name, tab in self.tabs.items():
             tab.valueChanged.connect(lambda n=head_name: self.on_tab_data_change(n))
 
     def disconnect_signals(self):
-        self.pipeline_form_widget.valueChanged.disconnect()
+        """Disconnect valueChanged signals from pipeline and tabs.
 
-        for head_name, tab in self.tabs.items():
-            tab.valueChanged.disconnect()
+        Uses try/except to handle cases where signals may not be connected
+        (e.g., with lazy tab creation, some tabs may not exist yet).
+        Warnings are suppressed since Qt prints RuntimeWarning before the
+        exception can be caught.
+        """
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            try:
+                self.pipeline_form_widget.valueChanged.disconnect()
+            except (TypeError, RuntimeError):
+                pass  # Signal was not connected
+
+            for head_name, tab in self.tabs.items():
+                try:
+                    tab.valueChanged.disconnect()
+                except (TypeError, RuntimeError):
+                    pass  # Signal was not connected
 
     def make_tabs(self):
-        heads = (
+        """Initialize tab tracking without creating widgets yet (lazy loading).
+
+        TrainingEditorWidget instances are created on-demand when tabs are first
+        shown via add_tab(). This significantly reduces dialog startup time by
+        avoiding creation of ~6 complex widgets upfront (~200-230ms each).
+        """
+        # Define available head types - widgets created lazily in add_tab()
+        self._head_types = (
             "single_instance",
             "centroid",
             "centered_instance",
@@ -425,11 +463,23 @@ class LearningDialog(QtWidgets.QDialog):
             "multi_class_topdown",
             "multi_class_bottomup",
         )
+        # tabs dict will be populated lazily as tabs are added
 
-        video = self.labels.videos[0] if self.labels else None
+    def _ensure_tab_initialized(self, head_name: str) -> "TrainingEditorWidget":
+        """Create TrainingEditorWidget for a head type if not already created.
 
-        for head_name in heads:
-            self.tabs[head_name] = TrainingEditorWidget(
+        This implements lazy tab creation - widgets are only created when the
+        tab is first added to the UI, not at dialog startup.
+
+        Args:
+            head_name: The head type (e.g., "centroid", "centered_instance")
+
+        Returns:
+            The TrainingEditorWidget for this head type.
+        """
+        if head_name not in self.tabs:
+            video = self.labels.videos[0] if self.labels else None
+            widget = TrainingEditorWidget(
                 video=video,
                 skeleton=self.skeleton,
                 head=head_name,
@@ -437,6 +487,15 @@ class LearningDialog(QtWidgets.QDialog):
                 require_trained=(self.mode == "inference"),
                 labels=self.labels,
             )
+            self.tabs[head_name] = widget
+
+            # Connect signals for the newly created tab
+            widget.valueChanged.connect(lambda n=head_name: self.on_tab_data_change(n))
+
+            # Update file list for the newly created tab
+            widget.update_file_list()
+
+        return self.tabs[head_name]
 
     def adjust_data_to_update_other_tabs(self, source_data, updated_data=None):
         if updated_data is None:
@@ -552,6 +611,16 @@ class LearningDialog(QtWidgets.QDialog):
                 self.pipeline_form_widget.current_pipeline = "top-down"
 
     def add_tab(self, tab_name):
+        """Add a tab to the dialog, creating the widget lazily if needed.
+
+        This method is idempotent - calling it multiple times with the same
+        tab_name will only add the tab once (prevents issues with signal
+        re-entrancy during widget construction).
+        """
+        # Prevent duplicate additions (can happen due to signal re-entrancy)
+        if tab_name in self.shown_tab_names:
+            return
+
         tab_labels = {
             "single_instance": "Single Instance Model Configuration",
             "centroid": "Centroid Model Configuration",
@@ -560,8 +629,11 @@ class LearningDialog(QtWidgets.QDialog):
             "multi_class_topdown": "Top-Down-Id Model Configuration",
             "multi_class_bottomup": "Bottom-Up-Id Model Configuration",
         }
-        self.tab_widget.addTab(self.tabs[tab_name], tab_labels[tab_name])
+        # Mark as shown first to prevent re-entrancy issues
         self.shown_tab_names.append(tab_name)
+        # Lazily create the widget if it doesn't exist yet
+        widget = self._ensure_tab_initialized(tab_name)
+        self.tab_widget.addTab(widget, tab_labels[tab_name])
 
     def remove_tabs(self):
         while self.tab_widget.count() > 1:
