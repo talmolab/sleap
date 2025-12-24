@@ -72,8 +72,10 @@ def _quick_scan_yaml_metadata(path: Text) -> Tuple[Optional[Text], Optional[Text
                 child_id = tree.first_child(head_configs_id)
                 while child_id != ryml.NONE:
                     if tree.has_children(child_id):
-                        head_type = bytes(tree.key(child_id)).decode()
-                        break
+                        key = tree.key(child_id)
+                        if key is not None:
+                            head_type = bytes(key).decode()
+                            break
                     child_id = tree.next_sibling(child_id)
 
         # Extract run_name from trainer_config.run_name
@@ -82,9 +84,11 @@ def _quick_scan_yaml_metadata(path: Text) -> Tuple[Optional[Text], Optional[Text
         if trainer_config_id != ryml.NONE:
             run_name_id = tree.find_child(trainer_config_id, b"run_name")
             if run_name_id != ryml.NONE and tree.has_val(run_name_id):
-                run_name = bytes(tree.val(run_name_id)).decode()
-                if run_name in ("null", "~", "None", ""):
-                    run_name = None
+                val = tree.val(run_name_id)
+                if val is not None:
+                    run_name = bytes(val).decode()
+                    if run_name in ("null", "~", "None", ""):
+                        run_name = None
 
         return head_type, run_name
     except Exception:
@@ -124,6 +128,7 @@ class ConfigFileInfo:
     _tried_finding_skeleton: bool = False
     _dset_len_cache: dict = attr.ib(factory=dict)
     _run_name_cache: Optional[Text] = None
+    _has_trained_model_cache: Optional[bool] = None
 
     @property
     def config(self) -> OmegaConf:
@@ -163,18 +168,29 @@ class ConfigFileInfo:
 
     @property
     def has_trained_model(self) -> bool:
-        # TODO: inference only checks for the best model, so that's also
-        #  what we'll do here, but both should check for other models
-        #  depending on the training config settings.
+        """Check if this config has a trained model (best.ckpt or best_model.h5).
 
-        # allow to run inference on both torch weights (`.ckpt`) and keras weights
-        # (`.h5`). sleap-nn supports running inference on the keras weights
-        # (Note: currently only for unet models).
-        # TODO: add support for running inference on the keras weights for other models.
-        return (
-            self._get_file_path("best.ckpt") is not None
-            or self._get_file_path("best_model.h5") is not None
-        )
+        This method is optimized to avoid loading the full config. It only checks
+        path_dir (the directory containing the config file), which is where
+        checkpoints are saved by sleap-nn training. The result is cached.
+
+        Note: This does not check ckpt_dir from the config because:
+        1. sleap-nn saves best.ckpt to the model directory (path_dir)
+        2. Baseline configs don't have ckpt_dir set
+        3. Loading config just for this check is too slow (~30-40ms per file)
+        """
+        if self._has_trained_model_cache is not None:
+            return self._has_trained_model_cache
+
+        # Check path_dir for checkpoint files (no config load needed)
+        path_dir = self.path_dir
+        for filename in ("best.ckpt", "best_model.h5"):
+            if os.path.exists(os.path.join(path_dir, filename)):
+                self._has_trained_model_cache = True
+                return True
+
+        self._has_trained_model_cache = False
+        return False
 
     @property
     def path_dir(self):
@@ -771,12 +787,12 @@ class TrainingConfigsGetter:
             # Use quick scan for metadata extraction (~500x faster)
             try:
                 head_type, run_name = _quick_scan_yaml_metadata(path)
+                filename = os.path.basename(path)
 
                 if head_type is None:
                     # Quick scan failed, skip this file
                     return None
 
-                filename = os.path.basename(path)
                 logging.debug(f"Quick-scanned YAML config file: {filename}")
 
                 # If filter isn't set or matches head name, add config to list
