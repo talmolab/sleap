@@ -72,8 +72,10 @@ def _quick_scan_yaml_metadata(path: Text) -> Tuple[Optional[Text], Optional[Text
                 child_id = tree.first_child(head_configs_id)
                 while child_id != ryml.NONE:
                     if tree.has_children(child_id):
-                        head_type = bytes(tree.key(child_id)).decode()
-                        break
+                        key = tree.key(child_id)
+                        if key is not None:
+                            head_type = bytes(key).decode()
+                            break
                     child_id = tree.next_sibling(child_id)
 
         # Extract run_name from trainer_config.run_name
@@ -82,9 +84,11 @@ def _quick_scan_yaml_metadata(path: Text) -> Tuple[Optional[Text], Optional[Text
         if trainer_config_id != ryml.NONE:
             run_name_id = tree.find_child(trainer_config_id, b"run_name")
             if run_name_id != ryml.NONE and tree.has_val(run_name_id):
-                run_name = bytes(tree.val(run_name_id)).decode()
-                if run_name in ("null", "~", "None", ""):
-                    run_name = None
+                val = tree.val(run_name_id)
+                if val is not None:
+                    run_name = bytes(val).decode()
+                    if run_name in ("null", "~", "None", ""):
+                        run_name = None
 
         return head_type, run_name
     except Exception:
@@ -771,12 +775,12 @@ class TrainingConfigsGetter:
             # Use quick scan for metadata extraction (~500x faster)
             try:
                 head_type, run_name = _quick_scan_yaml_metadata(path)
+                filename = os.path.basename(path)
 
                 if head_type is None:
                     # Quick scan failed, skip this file
                     return None
 
-                filename = os.path.basename(path)
                 logging.debug(f"Quick-scanned YAML config file: {filename}")
 
                 # If filter isn't set or matches head name, add config to list
