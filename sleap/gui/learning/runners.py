@@ -673,10 +673,48 @@ def run_learning_pipeline(
         inference_params=inference_params,
     )
 
+    # Handle prediction mode: "replace" deletes existing predictions on target frames
+    prediction_mode = inference_params.get("_prediction_mode", "add")
+    if prediction_mode == "replace":
+        _delete_predictions_on_frames(labels, items_for_inference)
+
     # Run the Predictor for suggested frames
     new_labeled_frame_count = run_gui_inference(inference_task, items_for_inference)
 
     return new_labeled_frame_count
+
+
+def _delete_predictions_on_frames(
+    labels: Labels, items_for_inference: ItemsForInference
+):
+    """Delete predicted instances on frames that will be re-predicted.
+
+    This is used when prediction mode is "replace" to clear existing
+    predictions before adding new ones.
+
+    Args:
+        labels: The Labels object to modify.
+        items_for_inference: Information about which frames will be predicted.
+    """
+    for item in items_for_inference.items:
+        video = item.video
+        if video is None:
+            continue
+
+        # Get frame indices for this video
+        frame_indices = set()
+        if item.frame_idxs:
+            frame_indices.update(item.frame_idxs)
+        elif item.frame_range:
+            start, end = item.frame_range
+            frame_indices.update(range(start, end))
+
+        # Delete predicted instances on these frames
+        for frame_idx in frame_indices:
+            lf = labels.find_first(video, frame_idx)
+            if lf:
+                for inst in list(lf.predicted_instances):
+                    lf.instances.remove(inst)
 
 
 def run_gui_training(

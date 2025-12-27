@@ -36,6 +36,11 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
 )
 from sleap.sleap_io_adaptors.lf_labels_utils import instances
 from sleap.util import show_sleap_nn_installation_message
+from sleap.gui.widgets.frame_target_selector import (
+    FrameTargetSelector,
+    FrameTargetOption,
+    FrameTargetSelection,
+)
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -144,8 +149,30 @@ class LearningDialog(QtWidgets.QDialog):
 
         self.message_widget = QtWidgets.QLabel("")
 
-        # Layout for entire dialog
-        # Tabs and message go inside scroll area
+        # Create frame target selector widget (replaces _predict_frames dropdown)
+        # V6 Layout: Frame target selector is a SIDE PANEL, not inside the tab
+        self.frame_target_selector = FrameTargetSelector(mode=mode)
+        self._target_selection_user_changed = False
+
+        # Configure selector for side panel layout (compact styling, no height limit)
+        self.frame_target_selector.setup_for_side_panel()
+
+        # Hide the old _predict_frames field if it exists (we're replacing it)
+        if "_predict_frames" in self.pipeline_form_widget.fields:
+            field = self.pipeline_form_widget.fields["_predict_frames"]
+            field.hide()
+            # Also hide its label in the form layout
+            form_layout = self.pipeline_form_widget.form_widget.form_layout
+            for i in range(form_layout.rowCount()):
+                field_item = form_layout.itemAt(i, QtWidgets.QFormLayout.FieldRole)
+                if field_item and field_item.widget() == field:
+                    label_item = form_layout.itemAt(i, QtWidgets.QFormLayout.LabelRole)
+                    if label_item and label_item.widget():
+                        label_item.widget().hide()
+                    break
+
+        # Layout for entire dialog - V6: Side panel layout
+        # Tabs and message go inside scroll area on the LEFT
         content_widget = QtWidgets.QWidget()
         content_layout = QtWidgets.QVBoxLayout(content_widget)
         content_layout.addWidget(self.tab_widget)
@@ -156,11 +183,32 @@ class LearningDialog(QtWidgets.QDialog):
         scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(content_widget)
         scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        # V7: Disable horizontal scrollbar - single column layout should fit
+        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        # Main layout: scroll area + buttons (buttons always visible at bottom)
+        # Create horizontal container: [scroll_area (tabs)] | [frame_target_selector]
+        h_container = QtWidgets.QWidget()
+        h_layout = QtWidgets.QHBoxLayout(h_container)
+        h_layout.setContentsMargins(0, 0, 0, 0)
+        h_layout.setSpacing(12)
+
+        # Left: scrollable tabs area (stretch=3 for training, =1 for inference)
+        tabs_stretch = 3 if mode == "training" else 1
+        h_layout.addWidget(scroll_area, stretch=tabs_stretch)
+
+        # Right: frame target selector as side panel
+        right_panel = QtWidgets.QWidget()
+        right_layout = QtWidgets.QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(4, 0, 4, 0)
+        right_layout.setSpacing(4)
+        right_layout.addWidget(self.frame_target_selector)
+
+        selector_stretch = 2 if mode == "training" else 1
+        h_layout.addWidget(right_panel, stretch=selector_stretch)
+
+        # Main layout: horizontal container + buttons (buttons always visible at bottom)
         layout = QtWidgets.QVBoxLayout(self)
-        layout.addWidget(scroll_area)
+        layout.addWidget(h_container)
         layout.addWidget(buttons_layout_widget)
 
         self.adjust_initial_size()
@@ -175,10 +223,16 @@ class LearningDialog(QtWidgets.QDialog):
         self.connect_signals()
 
         # Track when user explicitly changes predict frames option
+        # (legacy _predict_frames support - can be removed when YAML field is removed)
         if "_predict_frames" in self.pipeline_form_widget.fields:
             self.pipeline_form_widget.fields["_predict_frames"].valueChanged.connect(
                 self._on_predict_frames_changed
             )
+
+        # Track when user changes the new frame target selector
+        self.frame_target_selector.valueChanged.connect(
+            self._on_target_selection_changed
+        )
 
         # Connect actions for buttons
         self.copy_button.clicked.connect(self.copy)
@@ -188,19 +242,29 @@ class LearningDialog(QtWidgets.QDialog):
         self.run_button.clicked.connect(self.run)
 
     def adjust_initial_size(self):
-        # Get screen size
+        """Set initial dialog size based on mode and screen size.
+
+        V6 Layout: Side panel requires larger dimensions to fit all options.
+        - Training: 1400x900 (9 target options, WandB settings, model config)
+        - Inference: 1250x850 (8 target options, simpler settings)
+        """
         screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
 
-        # Reduced from 1860x1150 to fit compact layout better
-        max_width = 1130
-        max_height = 860
-        margin = 0.10
+        # V6: Larger dimensions to accommodate side panel layout
+        if self.mode == "training":
+            max_width = 1400
+            max_height = 900
+        else:  # inference
+            max_width = 1250
+            max_height = 850
+
+        margin = 0.05  # 5% margin from screen edge
 
         # Calculate target width and height
         target_width = min(screen.width() - screen.width() * margin, max_width)
         target_height = min(screen.height() - screen.height() * margin, max_height)
         # Set the dialog's dimensions
-        self.resize(target_width, target_height)
+        self.resize(int(target_width), int(target_height))
 
     def update_file_lists(self):
         """Update config file lists for all currently shown tabs.
@@ -343,9 +407,177 @@ class LearningDialog(QtWidgets.QDialog):
                 prediction_options, default_option
             )
 
+        # Update frame target selector with options
+        self._update_frame_target_selector()
+
+    def _update_frame_target_selector(self):
+        """Update frame target selector widget with current frame selection options."""
+        if self._frame_selection is None:
+            return
+
+        # Build options for the new selector
+        options = {}
+
+        # Calculate frame counts for each option
+        frame_count = self.count_total_frames_for_selection_option(
+            self._frame_selection.get("frame", {})
+        )
+        options["frame"] = FrameTargetOption(
+            key="frame",
+            label="Current frame",
+            description="Predict on just this frame",
+            frame_count=frame_count,
+        )
+
+        if "clip" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["clip"]
+            )
+            options["clip"] = FrameTargetOption(
+                key="clip",
+                label="Selected clip",
+                description="Predict on the frame range you selected",
+                frame_count=frame_count,
+                available=frame_count > 0,
+            )
+
+        if "video" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["video"]
+            )
+            options["video"] = FrameTargetOption(
+                key="video",
+                label="Entire video",
+                description="Predict on all frames in current video",
+                frame_count=frame_count,
+            )
+
+        if "all_videos" in self._frame_selection and len(self.labels.videos) > 1:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["all_videos"]
+            )
+            options["all_videos"] = FrameTargetOption(
+                key="all_videos",
+                label="All videos",
+                description="Predict on every frame across all videos",
+                frame_count=frame_count,
+            )
+
+        if "random" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["random"]
+            )
+            options["random"] = FrameTargetOption(
+                key="random",
+                label="Random sample",
+                description="Random frames for quick model check",
+                frame_count=frame_count,
+            )
+
+        if "suggestions" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["suggestions"]
+            )
+            if frame_count > 0:
+                options["suggestions"] = FrameTargetOption(
+                    key="suggestions",
+                    label="Suggested frames",
+                    description="AI-selected frames good for labeling",
+                    frame_count=frame_count,
+                )
+
+        if "user" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["user"]
+            )
+            if frame_count > 0:
+                options["user_labeled"] = FrameTargetOption(
+                    key="user_labeled",
+                    label="User labeled",
+                    description="Frames you've annotated (for evaluation)",
+                    frame_count=frame_count,
+                )
+
+        if "predicted" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["predicted"]
+            )
+            if frame_count > 0:
+                options["predicted"] = FrameTargetOption(
+                    key="predicted",
+                    label="Frames with predictions",
+                    description="Only frames that already have predictions",
+                    frame_count=frame_count,
+                )
+
+        # Add "nothing" option for training mode only
+        if self.mode == "training":
+            options = {
+                "nothing": FrameTargetOption(
+                    key="nothing",
+                    label="Nothing",
+                    description="Skip predictions, training only",
+                    frame_count=0,
+                    training_only=True,
+                ),
+                **options,
+            }
+
+        self.frame_target_selector.set_options(options)
+
+        # Set default selection based on precedence rules
+        self._set_frame_target_default(options)
+
+    def _set_frame_target_default(self, options: Dict[str, FrameTargetOption]):
+        """Set default frame target selection based on precedence rules."""
+        if self._target_selection_user_changed:
+            # User already made a selection - keep it if still available
+            current = self.frame_target_selector.get_selection()
+            if current.target_key in options:
+                return  # Keep current selection
+
+        # Check for suggestions (highest priority heuristic)
+        if "suggestions" in options and options["suggestions"].frame_count > 0:
+            self.frame_target_selector.set_selection(
+                FrameTargetSelection(target_key="suggestions")
+            )
+            return
+
+        # Use persisted preference or fallback
+        saved_pref = prefs.get("training predict on", None)
+        if saved_pref:
+            # Map old preference values to new keys
+            pref_map = {
+                "nothing": "nothing",
+                "current frame": "frame",
+                "random frames": "random",
+                "suggested frames": "suggestions",
+                "user labeled frames": "user_labeled",
+                "selected clip": "clip",
+                "entire current video": "video",
+                "all videos": "all_videos",
+            }
+            mapped_key = pref_map.get(saved_pref, saved_pref)
+            if mapped_key in options:
+                self.frame_target_selector.set_selection(
+                    FrameTargetSelection(target_key=mapped_key)
+                )
+                return
+
+        # Fallback: "nothing" for training, "frame" for inference
+        fallback = "nothing" if self.mode == "training" else "frame"
+        if fallback in options:
+            self.frame_target_selector.set_selection(
+                FrameTargetSelection(target_key=fallback)
+            )
+
     def _on_predict_frames_changed(self):
         """Track when user explicitly changes the predict frames option."""
         self._predict_frames_user_changed = True
+
+    def _on_target_selection_changed(self):
+        """Track when user explicitly changes the frame target selection."""
+        self._target_selection_user_changed = True
 
     @staticmethod
     def _normalize_predict_option(option: str) -> str:
@@ -411,6 +643,36 @@ class LearningDialog(QtWidgets.QDialog):
         if prefs["training predict on"] != normalized:
             prefs["training predict on"] = normalized
             prefs.save()
+
+    def _save_target_selection_preference(self):
+        """Save the current target selection to preferences."""
+        selection = self.frame_target_selector.get_selection()
+
+        # Map new keys back to old preference format for backward compatibility
+        key_to_pref = {
+            "nothing": "nothing",
+            "frame": "current frame",
+            "random": "random frames",
+            "suggestions": "suggested frames",
+            "user_labeled": "user labeled frames",
+            "clip": "selected clip",
+            "video": "entire current video",
+            "all_videos": "all videos",
+            "predicted": "predicted frames",
+        }
+
+        pref_value = key_to_pref.get(selection.target_key, selection.target_key)
+
+        if prefs.get("training predict on") != pref_value:
+            prefs["training predict on"] = pref_value
+            prefs.save()
+
+    def _clear_all_predictions(self):
+        """Clear all predicted instances from labels."""
+        for lf in self.labels:
+            # Remove all predicted instances
+            for inst in list(lf.predicted_instances):
+                lf.instances.remove(inst)
 
     def connect_signals(self):
         """Connect valueChanged signals for pipeline and any existing tabs.
@@ -783,37 +1045,53 @@ class LearningDialog(QtWidgets.QDialog):
     def get_selected_frames_to_predict(
         self, pipeline_form_data
     ) -> Dict[Video, List[int]]:
+        """Get frames to predict based on user selection.
+
+        Uses the new FrameTargetSelector widget for selection.
+        """
         frames_to_predict = dict()
 
-        if self._frame_selection is not None:
-            predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
-            if predict_frames_choice.startswith("current frame"):
-                frames_to_predict = self._frame_selection["frame"]
-            elif predict_frames_choice.startswith("random frames in current video"):
-                frames_to_predict = self._frame_selection["random_video"]
-            elif predict_frames_choice.startswith("random"):
-                frames_to_predict = self._frame_selection["random"]
-            elif predict_frames_choice.startswith("selected clip"):
-                frames_to_predict = self._frame_selection["clip"]
-            elif predict_frames_choice.startswith("suggested"):
-                frames_to_predict = self._frame_selection["suggestions"]
-            elif predict_frames_choice.startswith("entire current video"):
-                frames_to_predict = self._frame_selection["video"]
-            elif predict_frames_choice.startswith("all videos"):
-                frames_to_predict = self._frame_selection["all_videos"]
-            elif predict_frames_choice.startswith("user"):
-                frames_to_predict = self._frame_selection["user"]
+        if self._frame_selection is None:
+            return frames_to_predict
+
+        # Get selection from new frame target selector
+        selection = self.frame_target_selector.get_selection()
+        target_key = selection.target_key
+
+        # Map widget keys to frame_selection keys
+        key_map = {
+            "frame": "frame",
+            "clip": "clip",
+            "video": "video",
+            "all_videos": "all_videos",
+            "random": "random",
+            "suggestions": "suggestions",
+            "user_labeled": "user",
+            "predicted": "predicted",
+            "nothing": None,  # No frames to predict
+        }
+
+        frame_selection_key = key_map.get(target_key)
+        if frame_selection_key and frame_selection_key in self._frame_selection:
+            frames_to_predict = self._frame_selection[frame_selection_key].copy()
 
         return frames_to_predict
 
     def get_items_for_inference(self, pipeline_form_data) -> runners.ItemsForInference:
-        predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
+        """Build inference items from current selection.
+
+        Uses the new FrameTargetSelector widget for selection.
+        """
         batch_size = pipeline_form_data.get("batch_size")
 
         frame_selection = self.get_selected_frames_to_predict(pipeline_form_data)
         frame_count = self.count_total_frames_for_selection_option(frame_selection)
 
-        if predict_frames_choice.startswith("user"):
+        # Get target key from new widget
+        selection = self.frame_target_selector.get_selection()
+        target_key = selection.target_key
+
+        if target_key == "user_labeled":
             items_for_inference = runners.ItemsForInference(
                 items=[
                     runners.DatasetItemForInference(
@@ -823,7 +1101,7 @@ class LearningDialog(QtWidgets.QDialog):
                 total_frame_count=frame_count,
                 batch_size=batch_size,
             )
-        elif predict_frames_choice.startswith("suggested"):
+        elif target_key == "suggestions":
             items_for_inference = runners.ItemsForInference(
                 items=[
                     runners.DatasetItemForInference(
@@ -934,8 +1212,29 @@ class LearningDialog(QtWidgets.QDialog):
         """Run with current dialog settings."""
         # Save predict frames preference before running
         self._save_predict_frames_preference()
+        self._save_target_selection_preference()
+
+        # Get selection from new widget
+        selection = self.frame_target_selector.get_selection()
+
+        # Handle pre-action: clear all predictions first
+        if selection.clear_all_first:
+            confirm = QtWidgets.QMessageBox.question(
+                self,
+                "Clear All Predictions",
+                "This will delete ALL existing predictions.\n\n"
+                "Are you sure you want to continue?",
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No,
+            )
+            if confirm != QtWidgets.QMessageBox.Yes:
+                return
+            self._clear_all_predictions()
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
+
+        # Add prediction mode to pipeline form data for the runner
+        pipeline_form_data["_prediction_mode"] = selection.prediction_mode
 
         items_for_inference = self.get_items_for_inference(pipeline_form_data)
 
@@ -1150,6 +1449,9 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
     # Section headers to place in right column
     RIGHT_COLUMN_HEADERS = {"WandB options"}
 
+    # Fields to skip entirely (replaced by new widgets)
+    SKIP_FIELDS = {"_predict_frames"}
+
     def __init__(
         self, mode: Text, skeleton: Optional["Skeleton"] = None, *args, **kwargs
     ):
@@ -1169,12 +1471,14 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         # Connect actions for change to pipeline
         self.pipeline_field = self.form_widget.form_layout.find_field("_pipeline")[0]
         self.pipeline_field.valueChanged.connect(self.emitPipeline)
+        # V6: Compact pipeline description - doesn't need full dialog width
+        self.pipeline_field.setMaximumWidth(550)
 
         self.form_widget.form_layout.valueChanged.connect(self.valueChanged)
 
-        # Build two-column layout for training mode
+        # Build single-column layout for training mode (V7: avoids horizontal scrollbar)
         if mode == "training":
-            self._build_two_column_layout()
+            self._build_single_column_layout()
         else:
             self.setLayout(self.form_widget.form_layout)
 
@@ -1184,34 +1488,87 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
             self._init_wandb_settings()
             self._init_training_settings()
 
-    def _build_two_column_layout(self):
-        """Reorganize the pipeline form into a two-column layout.
+    def set_frame_target_selector(self, selector: "FrameTargetSelector"):
+        """Add the frame target selector widget to the pipeline layout.
 
-        The pipeline stacked widget stays at the top (full width).
-        Left column: Input Data, Data Pipeline/Hardware, Output options
-        Right column: WandB options, ZMQ options
+        This integrates the target selection into the pipeline tab for a
+        natural flow: configure pipeline → configure prediction targets.
+
+        Args:
+            selector: The FrameTargetSelector widget to integrate.
+        """
+        self._frame_target_selector = selector
+
+        # Get the current layout
+        current_layout = self.layout()
+
+        if current_layout is None:
+            # Layout not yet set (shouldn't happen)
+            return
+
+        # For two-column layout (training mode), insert before the stretch
+        # For form layout (inference mode), need to wrap and add
+        if isinstance(current_layout, QtWidgets.QVBoxLayout):
+            # Training mode: has VBoxLayout with stretch at end
+            # Insert the selector before the stretch (which is the last item)
+            stretch_index = current_layout.count() - 1
+            if stretch_index >= 0:
+                current_layout.insertWidget(stretch_index, selector)
+            else:
+                current_layout.addWidget(selector)
+        else:
+            # Inference mode: wrap in VBox and add selector
+            # Remove current layout's parent
+            wrapper = QtWidgets.QWidget()
+            old_layout = current_layout
+
+            # Create new layout
+            new_layout = QtWidgets.QVBoxLayout()
+            new_layout.setContentsMargins(0, 0, 0, 0)
+
+            # Move form to wrapper
+            wrapper.setLayout(old_layout)
+            new_layout.addWidget(wrapper)
+            new_layout.addWidget(selector)
+            new_layout.addStretch(1)
+
+            # Clear old layout from self and set new one
+            QtWidgets.QWidget().setLayout(self.layout())  # Orphan old layout
+            self.setLayout(new_layout)
+
+    def _build_single_column_layout(self):
+        """Reorganize the pipeline form into grouped box containers.
+
+        V7: Single-column layout with each section in a QGroupBox.
+        - Input Data Options
+        - Data Pipeline and Hardware Options
+        - WandB Options
+        - Output Options
         """
         form_layout = self.form_widget.form_layout
 
-        # Create main layout
+        # Create main layout with tight spacing
         main_layout = QtWidgets.QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(6)
 
-        # Create two-column layout for settings
-        columns_layout = QtWidgets.QHBoxLayout()
-        left_column = QtWidgets.QFormLayout()
-        right_column = QtWidgets.QFormLayout()
-        left_column.setVerticalSpacing(6)
-        right_column.setVerticalSpacing(6)
-
-        # Track which column we're adding to based on section headers
-        current_column = left_column
         pipeline_widget = None
+
+        # Section headers that define group boxes
+        section_headers = {
+            "Input Data Options": "Input Data",
+            "Data Pipeline and Hardware Options": "Hardware",
+            "WandB options": "WandB",
+            "Output Options": "Output",
+        }
+
+        # Collect fields by section
+        current_section = None
+        sections = {}  # section_name -> [(label_text, field_widget), ...]
 
         # Iterate through all rows in the form
         row_count = form_layout.rowCount()
         for i in range(row_count):
-            # Get the label and field for this row
             label_item = form_layout.itemAt(i, QtWidgets.QFormLayout.LabelRole)
             field_item = form_layout.itemAt(i, QtWidgets.QFormLayout.FieldRole)
 
@@ -1222,71 +1579,71 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
             if field_widget is None:
                 continue
 
-            # Check if this is the pipeline stacked widget
             field_name = field_widget.objectName()
+
+            # Check if this is the pipeline stacked widget
             if field_name == "_pipeline":
                 pipeline_widget = field_widget
                 continue
 
-            # Check if this is a section header (QLabel with bold text)
-            if isinstance(field_widget, QtWidgets.QLabel):
-                header_text = field_widget.text()
-                # Check for section headers and switch columns if needed
-                for header in self.RIGHT_COLUMN_HEADERS:
-                    if header in header_text:
-                        current_column = right_column
-                        break
-                else:
-                    # Not a right column header
-                    if (
-                        "Input Data" in header_text
-                        or "Data Pipeline" in header_text
-                        or "Output" in header_text
-                    ):
-                        current_column = left_column
-
-                # Add the header to the current column
-                current_column.addRow(field_widget)
+            # Skip fields that are replaced by new widgets
+            if field_name in self.SKIP_FIELDS:
+                field_widget.hide()
+                if label_item and label_item.widget():
+                    label_item.widget().hide()
                 continue
 
-            # Check if this field belongs in right column
-            if field_name in self.RIGHT_COLUMN_FIELDS:
-                target_column = right_column
-            else:
-                target_column = current_column
+            # Check if this is a section header
+            if isinstance(field_widget, QtWidgets.QLabel):
+                header_text = field_widget.text()
+                for full_header, short_name in section_headers.items():
+                    if full_header in header_text:
+                        current_section = short_name
+                        if current_section not in sections:
+                            sections[current_section] = []
+                        # Hide the original header label (we'll use QGroupBox title)
+                        field_widget.hide()
+                        break
+                continue
 
-            # Get the label text
+            # Get label text
             label_text = ""
-            if label_item:
-                label_widget = label_item.widget()
-                if label_widget:
-                    label_text = label_widget.text()
+            if label_item and label_item.widget():
+                label_text = label_item.widget().text()
 
-            # Add to target column
-            if label_text:
-                target_column.addRow(label_text, field_widget)
-            else:
-                target_column.addRow(field_widget)
+            # Add to current section
+            if current_section and current_section in sections:
+                sections[current_section].append((label_text, field_widget))
 
-        # Wrap columns in widgets for alignment
-        left_widget = QtWidgets.QWidget()
-        left_widget.setLayout(left_column)
-        right_widget = QtWidgets.QWidget()
-        right_widget.setLayout(right_column)
-
-        columns_layout.addWidget(left_widget, stretch=1, alignment=QtCore.Qt.AlignTop)
-        columns_layout.addWidget(right_widget, stretch=1, alignment=QtCore.Qt.AlignTop)
-
-        # Add pipeline widget at top if found (no stretch - only takes needed space)
+        # Add pipeline widget at top
         if pipeline_widget:
+            pipeline_widget.setMaximumWidth(550)
             main_layout.addWidget(pipeline_widget, stretch=0)
 
-        # Add columns (no stretch - only takes needed space)
-        columns_widget = QtWidgets.QWidget()
-        columns_widget.setLayout(columns_layout)
-        main_layout.addWidget(columns_widget, stretch=0)
+        # Create group boxes for each section in order
+        section_order = ["Input Data", "Hardware", "WandB", "Output"]
+        for section_name in section_order:
+            if section_name not in sections or not sections[section_name]:
+                continue
 
-        # Push everything to top, extra space goes to bottom
+            # Create group box with section title
+            group_box = QtWidgets.QGroupBox(section_name)
+            group_layout = QtWidgets.QFormLayout(group_box)
+            group_layout.setVerticalSpacing(4)
+            group_layout.setHorizontalSpacing(8)
+            group_layout.setContentsMargins(8, 4, 8, 8)
+
+            # Add fields to group box
+            for label_text, field_widget in sections[section_name]:
+                if label_text:
+                    group_layout.addRow(label_text, field_widget)
+                else:
+                    group_layout.addRow(field_widget)
+
+            group_box.setMaximumWidth(550)
+            main_layout.addWidget(group_box, stretch=0)
+
+        # Push everything to top
         main_layout.addStretch(1)
 
         self.setLayout(main_layout)

@@ -49,7 +49,7 @@ import random
 import re
 from logging import getLogger
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 import sys
 import subprocess
 
@@ -77,7 +77,7 @@ from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.info.summary import StatisticSeries
 from sleap_io.model.instance import Instance
-from sleap_io import Labels
+from sleap_io import Labels, Video
 from sleap.sleap_io_adaptors.video_utils import available_video_exts
 from sleap.prefs import prefs
 from sleap_io.model.skeleton import Skeleton
@@ -1543,7 +1543,66 @@ class MainWindow(QMainWindow):
                 for video in self.labels.videos
             }
 
+        # Frames with predictions (for UC2: Refresh Predictions)
+        selection["predicted"] = {
+            video: [
+                lf.frame_idx
+                for lf in self.labels.find(video)
+                if lf.has_predicted_instances
+            ]
+            for video in self.labels.videos
+        }
+
         return selection
+
+    def apply_frame_exclusions(
+        self,
+        frame_selection: Dict[Video, List[int]],
+        exclude_user_labeled: bool = False,
+        exclude_predicted: bool = False,
+    ) -> Dict[Video, List[int]]:
+        """Apply exclusion filters to a frame selection.
+
+        Args:
+            frame_selection: Dictionary mapping videos to lists of frame indices.
+            exclude_user_labeled: If True, exclude frames with user-labeled instances.
+            exclude_predicted: If True, exclude frames with predicted instances.
+
+        Returns:
+            Filtered dictionary with excluded frames removed.
+        """
+        result = {}
+        for video, frames in frame_selection.items():
+            # Handle range-encoded frames (negative second value means range)
+            if isinstance(frames, tuple) and len(frames) == 2:
+                start, end = frames
+                if end < 0:
+                    # Decode range to list
+                    frames = list(range(start, -end))
+                else:
+                    frames = [start, end]
+
+            filtered = set(frames)
+
+            if exclude_user_labeled:
+                user_labeled = {
+                    lf.frame_idx
+                    for lf in self.labels.user_labeled_frames
+                    if lf.video == video
+                }
+                filtered -= user_labeled
+
+            if exclude_predicted:
+                predicted = {
+                    lf.frame_idx
+                    for lf in self.labels.find(video)
+                    if lf.has_predicted_instances
+                }
+                filtered -= predicted
+
+            result[video] = sorted(filtered)
+
+        return result
 
     def _show_learning_dialog(self, mode: str):
         """Helper function to show learning dialog in given mode.
