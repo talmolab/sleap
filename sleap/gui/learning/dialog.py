@@ -956,8 +956,9 @@ class LearningDialog(QtWidgets.QDialog):
                     "arborescence."
                 )
 
-                root_names = [n.name for n in root_nodes(skeleton)]
-                over_max_in_degree = [n.name for n in in_degree_over_one(skeleton)]
+                # These functions return node names (strings), not Node objects
+                root_names = root_nodes(skeleton)
+                over_max_in_degree = in_degree_over_one(skeleton)
                 cycles_var = cycles(skeleton)
 
                 if len(root_names) > 1:
@@ -976,9 +977,8 @@ class LearningDialog(QtWidgets.QDialog):
                 if cycles_var:
                     cycle_strings = []
                     for cycle in cycles_var:
-                        cycle_strings.append(
-                            " &ndash;&gt; ".join((node.name for node in cycle))
-                        )
+                        # cycles returns node names (strings), not Node objects
+                        cycle_strings.append(" &ndash;&gt; ".join(cycle))
 
                     message += (
                         f" There are cycles in graph: {'; '.join(cycle_strings)}."
