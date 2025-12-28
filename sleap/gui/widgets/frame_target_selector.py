@@ -15,7 +15,7 @@ Example::
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
-from qtpy.QtCore import Qt, Signal
+from qtpy.QtCore import Signal
 from qtpy.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -24,7 +24,6 @@ from qtpy.QtWidgets import (
     QGroupBox,
     QRadioButton,
     QButtonGroup,
-    QFrame,
     QComboBox,
 )
 
@@ -242,8 +241,12 @@ class FrameTargetSelector(QWidget):
     def _connect_signals(self):
         """Connect internal signals."""
         self.target_dropdown.currentIndexChanged.connect(self._on_target_changed)
-        self.predictions_button_group.buttonClicked.connect(self._on_predictions_changed)
-        self.skip_user_labeled_cb.stateChanged.connect(self._on_skip_user_labeled_changed)
+        self.predictions_button_group.buttonClicked.connect(
+            self._on_predictions_changed
+        )
+        self.skip_user_labeled_cb.stateChanged.connect(
+            self._on_skip_user_labeled_changed
+        )
 
     def _on_skip_user_labeled_changed(self, state):
         """Handle skip user labeled checkbox change."""
@@ -445,7 +448,10 @@ class FrameTargetSelector(QWidget):
         pass  # No-op for dropdown design
 
     def apply_compact_styling(self):
-        """Apply compact styling (no-op for dropdown design, kept for API compatibility)."""
+        """Apply compact styling.
+
+        No-op for dropdown design, kept for API compatibility.
+        """
         pass  # No-op for dropdown design
 
     def setup_for_side_panel(self, min_height: Optional[int] = None):
