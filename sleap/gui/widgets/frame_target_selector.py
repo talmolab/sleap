@@ -128,8 +128,8 @@ class FrameTargetSelector(QWidget):
         ),
         FrameTargetOption(
             key="suggestions",
-            label="Suggested frames",
-            description="Frames selected for labeling",
+            label="Suggestions",
+            description="Selected frames for labeling",
             frame_count=0,
         ),
         FrameTargetOption(

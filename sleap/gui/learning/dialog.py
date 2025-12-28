@@ -79,6 +79,12 @@ class LearningDialog(QtWidgets.QDialog):
     ):
         super(LearningDialog, self).__init__()
 
+        # Set window title based on mode
+        mode_title = "Training" if mode == "training" else "Inference"
+        self.setWindowTitle(
+            f"{mode_title} Configuration - SLEAP v{sleap.version.__version__}"
+        )
+
         if labels is None:
             labels = load_file(labels_filename)
 

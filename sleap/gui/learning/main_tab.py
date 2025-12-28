@@ -229,8 +229,8 @@ class MainTabWidget(QWidget):
     updatePipeline = Signal(str)
     valueChanged = Signal()
 
-    # Width for main content boxes
-    BOX_WIDTH = 550
+    # Minimum width for main content boxes
+    BOX_MIN_WIDTH = 550
 
     def __init__(
         self,
@@ -286,10 +286,9 @@ class MainTabWidget(QWidget):
         # Section 2: Frame Target Selector
         self.frame_target_selector = FrameTargetSelector(mode=self._mode)
         self.frame_target_selector.set_compact_mode(True)
-        self.frame_target_selector.setMinimumWidth(self.BOX_WIDTH)
-        self.frame_target_selector.setMaximumWidth(self.BOX_WIDTH)
+        self.frame_target_selector.setMinimumWidth(self.BOX_MIN_WIDTH)
         self.frame_target_selector.setSizePolicy(
-            QSizePolicy.Preferred, QSizePolicy.Fixed
+            QSizePolicy.Expanding, QSizePolicy.Fixed
         )
         main_layout.addWidget(self.frame_target_selector)
 
@@ -352,8 +351,7 @@ class MainTabWidget(QWidget):
     def _create_pipeline_section(self) -> QGroupBox:
         """Create the Pipeline Type section."""
         group = QGroupBox("Pipeline Type")
-        group.setMinimumWidth(self.BOX_WIDTH)
-        group.setMaximumWidth(self.BOX_WIDTH)
+        group.setMinimumWidth(self.BOX_MIN_WIDTH)
 
         layout = QVBoxLayout(group)
         layout.setSpacing(8)
@@ -393,10 +391,10 @@ class MainTabWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
 
-        # Description - set fixed width so word wrap height is calculated correctly
+        # Description
         desc_label = QLabel(opt.description)
         desc_label.setWordWrap(True)
-        desc_label.setFixedWidth(self.BOX_WIDTH - 24)  # Account for group box margins
+        desc_label.setMinimumWidth(self.BOX_MIN_WIDTH - 24)  # Account for group box margins
         desc_label.setStyleSheet("color: #666;")
         layout.addWidget(desc_label)
 
@@ -455,8 +453,7 @@ class MainTabWidget(QWidget):
     def _create_preprocessing_section(self) -> QGroupBox:
         """Create the Preprocessing / Postprocessing section."""
         group = QGroupBox("Preprocessing / Postprocessing")
-        group.setMinimumWidth(self.BOX_WIDTH)
-        group.setMaximumWidth(self.BOX_WIDTH)
+        group.setMinimumWidth(self.BOX_MIN_WIDTH)
 
         layout = QHBoxLayout(group)
         layout.setSpacing(8)
@@ -504,8 +501,7 @@ class MainTabWidget(QWidget):
     def _create_tracker_section(self) -> QGroupBox:
         """Create the Tracker section (inference only)."""
         group = QGroupBox("Tracker")
-        group.setMinimumWidth(self.BOX_WIDTH)
-        group.setMaximumWidth(self.BOX_WIDTH)
+        group.setMinimumWidth(self.BOX_MIN_WIDTH)
 
         layout = QVBoxLayout(group)
         layout.setSpacing(6)
@@ -581,7 +577,7 @@ class MainTabWidget(QWidget):
 
         desc_label = QLabel(desc)
         desc_label.setWordWrap(True)
-        desc_label.setFixedWidth(self.BOX_WIDTH - 24)
+        desc_label.setMinimumWidth(self.BOX_MIN_WIDTH - 24)
         desc_label.setStyleSheet("color: #666; font-size: 11px;")
         layout.addWidget(desc_label)
 
@@ -667,8 +663,7 @@ class MainTabWidget(QWidget):
     def _create_performance_section(self) -> QGroupBox:
         """Create the Performance section."""
         group = QGroupBox("Performance")
-        group.setMinimumWidth(self.BOX_WIDTH)
-        group.setMaximumWidth(self.BOX_WIDTH)
+        group.setMinimumWidth(self.BOX_MIN_WIDTH)
 
         layout = QVBoxLayout(group)
         layout.setSpacing(8)
@@ -761,8 +756,7 @@ class MainTabWidget(QWidget):
     def _create_wandb_section(self) -> QGroupBox:
         """Create the WandB section (training only)."""
         group = QGroupBox("WandB")
-        group.setMinimumWidth(self.BOX_WIDTH)
-        group.setMaximumWidth(self.BOX_WIDTH)
+        group.setMinimumWidth(self.BOX_MIN_WIDTH)
 
         layout = QVBoxLayout(group)
         layout.setSpacing(8)
@@ -866,8 +860,7 @@ class MainTabWidget(QWidget):
     def _create_output_section(self) -> QGroupBox:
         """Create the Output section."""
         group = QGroupBox("Output")
-        group.setMinimumWidth(self.BOX_WIDTH)
-        group.setMaximumWidth(self.BOX_WIDTH)
+        group.setMinimumWidth(self.BOX_MIN_WIDTH)
 
         layout = QVBoxLayout(group)
         layout.setSpacing(8)
