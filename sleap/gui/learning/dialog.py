@@ -191,16 +191,16 @@ class LearningDialog(QtWidgets.QDialog):
         """Set initial dialog size based on mode and screen size.
 
         V9 Layout: Both modes use single-column layout (no side panel)
-        - Training: 650x900 (more sections, needs more height)
-        - Inference: 650x850
+        - Training: 880x900 (more sections, needs more height)
+        - Inference: 880x850
         """
         screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
 
         if self.mode == "training":
-            max_width = 650
+            max_width = 880
             max_height = 900
         else:  # inference
-            max_width = 650
+            max_width = 880
             max_height = 850
 
         margin = 0.05  # 5% margin from screen edge
@@ -327,8 +327,8 @@ class LearningDialog(QtWidgets.QDialog):
             if frame_count > 0:
                 options["suggestions"] = FrameTargetOption(
                     key="suggestions",
-                    label="Suggested frames",
-                    description="AI-selected frames good for labeling",
+                    label="Selected frames for labeling",
+                    description="Frames selected via suggestion methods",
                     frame_count=frame_count,
                 )
 
@@ -1304,16 +1304,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Layout for header and columns
         layout = QtWidgets.QVBoxLayout()
 
-        # Two column layout for config parameters
+        # Two column layout: Data+Augmentation+Optimization | Model
         col1_layout = QtWidgets.QVBoxLayout()
         col2_layout = QtWidgets.QVBoxLayout()
-        col3_layout = QtWidgets.QVBoxLayout()
 
         col1_layout.addWidget(self.form_widgets["data"])
+        col1_layout.addWidget(self.form_widgets["augmentation"])
         col1_layout.addWidget(self.form_widgets["optimization"])
-        self.form_widgets["augmentation"].setMaximumWidth(255)
-        col2_layout.addWidget(self.form_widgets["augmentation"])
-        col3_layout.addWidget(self.form_widgets["model"])
+        col2_layout.addWidget(self.form_widgets["model"])
 
         if self._receptive_field_widget:
             col0_layout = QtWidgets.QVBoxLayout()
@@ -1333,9 +1331,6 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         )
         col_layout.addWidget(
             self._layout_widget(col2_layout), stretch=0, alignment=QtCore.Qt.AlignTop
-        )
-        col_layout.addWidget(
-            self._layout_widget(col3_layout), stretch=0, alignment=QtCore.Qt.AlignTop
         )
         col_layout.addStretch(1)  # Push columns left, absorb extra space
 

@@ -10,7 +10,7 @@ Layout sections:
 - Tracker: tracker method + options (inference only)
 - Performance: paired fields layout
 - WandB: paired fields layout (training only)
-- Output: grouped checkboxes
+- Output: grouped checkboxes (training only)
 """
 
 from dataclasses import dataclass
@@ -307,8 +307,8 @@ class MainTabWidget(QWidget):
         if self._mode == "training":
             main_layout.addWidget(self._create_wandb_section())
 
-        # Section 7: Output
-        main_layout.addWidget(self._create_output_section())
+            # Section 7: Output (training only)
+            main_layout.addWidget(self._create_output_section())
 
         main_layout.addStretch()
         scroll_area.setWidget(scroll_content)
@@ -340,9 +340,9 @@ class MainTabWidget(QWidget):
     def _on_pipeline_changed(self, index: int):
         """Handle pipeline selection change."""
         if index >= 0:
-            key = self._pipeline_combo.itemData(index)
             self._pipeline_stack.setCurrentIndex(index)
-            self.updatePipeline.emit(key)
+            # Emit normalized short name (e.g., "top-down" not "multi-animal top-down")
+            self.updatePipeline.emit(self.current_pipeline)
             self.valueChanged.emit()
 
     # -------------------------------------------------------------------------
@@ -366,18 +366,21 @@ class MainTabWidget(QWidget):
 
         # Stacked widget for pipeline-specific content
         self._pipeline_stack = QStackedWidget()
+        self._pipeline_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         for opt in self._pipeline_options:
             page = self._create_pipeline_page(opt)
             self._pipeline_stack.addWidget(page)
 
-        # Set minimum height to accommodate the tallest page
+        # Calculate and set fixed height based on tallest page
+        # Force layout first so word-wrapped labels calculate correct heights
         max_height = 0
         for i in range(self._pipeline_stack.count()):
             page = self._pipeline_stack.widget(i)
+            page.adjustSize()
             page_height = page.sizeHint().height()
             max_height = max(max_height, page_height)
-        self._pipeline_stack.setMinimumHeight(max_height)
+        self._pipeline_stack.setFixedHeight(max_height)
 
         layout.addWidget(self._pipeline_stack)
 
@@ -505,7 +508,8 @@ class MainTabWidget(QWidget):
         group.setMaximumWidth(self.BOX_WIDTH)
 
         layout = QVBoxLayout(group)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
+        layout.setContentsMargins(9, 6, 9, 9)
 
         # Tracker method row
         method_row = QHBoxLayout()
@@ -526,9 +530,11 @@ class MainTabWidget(QWidget):
 
         # Stacked widget for tracker-specific options
         self._tracker_stack = QStackedWidget()
+        self._tracker_stack.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
-        # None page (empty)
+        # None page (empty - minimal height)
         none_page = QWidget()
+        none_page.setFixedHeight(0)
         self._tracker_stack.addWidget(none_page)
 
         # Flow page
@@ -539,7 +545,15 @@ class MainTabWidget(QWidget):
         simple_page = self._create_tracker_options_page("simple")
         self._tracker_stack.addWidget(simple_page)
 
-        tracker_combo.currentIndexChanged.connect(self._tracker_stack.setCurrentIndex)
+        def on_tracker_changed(index):
+            self._tracker_stack.setCurrentIndex(index)
+            # Resize stacked widget to fit current page
+            current = self._tracker_stack.currentWidget()
+            self._tracker_stack.setFixedHeight(current.sizeHint().height())
+
+        tracker_combo.currentIndexChanged.connect(on_tracker_changed)
+        # Initialize with current page height
+        on_tracker_changed(0)
 
         layout.addWidget(self._tracker_stack)
 
@@ -549,8 +563,8 @@ class MainTabWidget(QWidget):
         """Create options page for a tracker type."""
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(0, 8, 0, 0)
-        layout.setSpacing(6)
+        layout.setContentsMargins(0, 4, 0, 0)
+        layout.setSpacing(4)
 
         # Description
         if tracker_type == "flow":
@@ -567,20 +581,24 @@ class MainTabWidget(QWidget):
 
         desc_label = QLabel(desc)
         desc_label.setWordWrap(True)
-        desc_label.setStyleSheet("color: #666;")
+        desc_label.setFixedWidth(self.BOX_WIDTH - 24)
+        desc_label.setStyleSheet("color: #666; font-size: 11px;")
         layout.addWidget(desc_label)
 
-        # Form for tracker options
+        # Form for tracker options - compact layout
         form = QFormLayout()
-        form.setSpacing(6)
+        form.setSpacing(4)
+        form.setContentsMargins(0, 4, 0, 0)
         form.setLabelAlignment(Qt.AlignRight)
+        form.setFieldGrowthPolicy(QFormLayout.FieldsStayAtSizeHint)
 
         # Max tracks
         max_tracks_row = QHBoxLayout()
+        max_tracks_row.setSpacing(6)
         max_tracks = QSpinBox()
         max_tracks.setRange(1, 100)
         max_tracks.setValue(1)
-        max_tracks.setMinimumWidth(80)
+        max_tracks.setFixedWidth(60)
         self._fields[f"tracking.max_tracks.{tracker_type}"] = max_tracks
         max_tracks_row.addWidget(max_tracks)
 
@@ -623,22 +641,27 @@ class MainTabWidget(QWidget):
         track_window = QSpinBox()
         track_window.setRange(1, 100)
         track_window.setValue(5)
+        track_window.setFixedWidth(60)
         self._fields[f"tracking.track_window.{tracker_type}"] = track_window
         form.addRow("Elapsed Frame Window:", track_window)
 
-        # Post-tracker options
         layout.addLayout(form)
 
-        post_label = QLabel("<b>Post-tracker data cleaning</b>:")
-        layout.addWidget(post_label)
+        # Post-tracker options - compact
+        post_row = QHBoxLayout()
+        post_row.setContentsMargins(0, 2, 0, 0)
+        post_label = QLabel("Post-tracking:")
+        post_label.setStyleSheet("font-weight: bold;")
+        post_row.addWidget(post_label)
 
         connect_breaks = QCheckBox("Connect Single Track Breaks")
         self._fields[f"tracking.post_connect_single_breaks.{tracker_type}"] = (
             connect_breaks
         )
-        layout.addWidget(connect_breaks)
+        post_row.addWidget(connect_breaks)
+        post_row.addStretch()
+        layout.addLayout(post_row)
 
-        layout.addStretch()
         return page
 
     def _create_performance_section(self) -> QGroupBox:
