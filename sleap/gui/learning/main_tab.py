@@ -54,7 +54,6 @@ class PipelineOption:
     key: str
     label: str
     description: str
-    has_max_instances: bool = False
     fields: List[Tuple[str, str, Any]] = None  # (key, label, default_value)
 
     def __post_init__(self):
@@ -72,7 +71,6 @@ PIPELINE_OPTIONS_TRAINING = [
             'and a "part affinity field" head to group the nodes into distinct '
             "animal instances."
         ),
-        has_max_instances=True,
         fields=[
             (
                 "model_config.head_configs.bottomup.confmaps.sigma",
@@ -95,7 +93,6 @@ PIPELINE_OPTIONS_TRAINING = [
             'confidence map" model for predicted node locations for each '
             "individual animal predicted by the centroid model."
         ),
-        has_max_instances=True,
         fields=[
             (
                 "model_config.head_configs.centroid.confmaps.sigma",
@@ -123,7 +120,6 @@ PIPELINE_OPTIONS_TRAINING = [
             'affinity field" head to group the nodes into distinct animal '
             "instances. It also handles classification and tracking."
         ),
-        has_max_instances=False,
         fields=[
             (
                 "model_config.head_configs.multi_class_bottomup.confmaps.sigma",
@@ -147,7 +143,6 @@ PIPELINE_OPTIONS_TRAINING = [
             "predicted by the centroid model. It also handles classification and "
             "tracking."
         ),
-        has_max_instances=False,
         fields=[
             (
                 "model_config.head_configs.centroid.confmaps.sigma",
@@ -171,13 +166,8 @@ PIPELINE_OPTIONS_TRAINING = [
         label="single animal",
         description=(
             'This pipeline uses a single "confidence map" model to predict the '
-            "nodes for an entire image and then groups all of these nodes into a "
-            "single animal instance.\n\n"
-            "For predicting on videos with more than one animal per frame, use a "
-            "multi-animal pipeline (even if your training data has one instance per "
-            "frame)."
+            "nodes for an entire image. It cannot be used for multi-animal data."
         ),
-        has_max_instances=False,
         fields=[
             (
                 "model_config.head_configs.single_instance.confmaps.sigma",
@@ -199,8 +189,6 @@ PIPELINE_OPTIONS_INFERENCE = PIPELINE_OPTIONS_TRAINING + [
             "Note that this model is intended for human pose estimation. There is no "
             "support for videos containing more than one instance."
         ),
-        has_max_instances=False,
-        fields=[],
     ),
     PipelineOption(
         key="movenet-thunder",
@@ -212,16 +200,12 @@ PIPELINE_OPTIONS_INFERENCE = PIPELINE_OPTIONS_TRAINING + [
             "accuracy. Note that this model is intended for human pose estimation. "
             "There is no support for videos containing more than one instance."
         ),
-        has_max_instances=False,
-        fields=[],
     ),
     PipelineOption(
         key="tracking-only",
         label="tracking-only",
         description="Run tracking on existing predictions without running pose "
         "estimation.",
-        has_max_instances=False,
-        fields=[],
     ),
 ]
 
@@ -290,6 +274,8 @@ class MainTabWidget(QWidget):
         scroll_area.setFrameShape(QScrollArea.NoFrame)
 
         scroll_content = QWidget()
+        scroll_content.setObjectName("mainTabScrollContent")
+        scroll_content.setStyleSheet("#mainTabScrollContent { background-color: white; }")
         main_layout = QVBoxLayout(scroll_content)
         main_layout.setSpacing(12)
         main_layout.setContentsMargins(12, 12, 12, 12)
@@ -307,9 +293,8 @@ class MainTabWidget(QWidget):
         )
         main_layout.addWidget(self.frame_target_selector)
 
-        # Section 3: Input Data (training only)
-        if self._mode == "training":
-            main_layout.addWidget(self._create_input_data_section())
+        # Section 3: Preprocessing / Postprocessing (both modes)
+        main_layout.addWidget(self._create_preprocessing_section())
 
         # Section 4: Tracker (inference only)
         if self._mode == "inference":
@@ -386,6 +371,14 @@ class MainTabWidget(QWidget):
             page = self._create_pipeline_page(opt)
             self._pipeline_stack.addWidget(page)
 
+        # Set minimum height to accommodate the tallest page
+        max_height = 0
+        for i in range(self._pipeline_stack.count()):
+            page = self._pipeline_stack.widget(i)
+            page_height = page.sizeHint().height()
+            max_height = max(max_height, page_height)
+        self._pipeline_stack.setMinimumHeight(max_height)
+
         layout.addWidget(self._pipeline_stack)
 
         return group
@@ -397,64 +390,43 @@ class MainTabWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
 
-        # Description
+        # Description - set fixed width so word wrap height is calculated correctly
         desc_label = QLabel(opt.description)
         desc_label.setWordWrap(True)
+        desc_label.setFixedWidth(self.BOX_WIDTH - 24)  # Account for group box margins
         desc_label.setStyleSheet("color: #666;")
         layout.addWidget(desc_label)
 
-        # Max Instances (if applicable)
-        if opt.has_max_instances:
-            max_row = QHBoxLayout()
-            max_row.setSpacing(8)
-
-            max_label = QLabel("Max Instances:")
-            max_row.addWidget(max_label)
-
-            max_spinbox = QSpinBox()
-            max_spinbox.setRange(1, 100)
-            max_spinbox.setValue(1)
-            max_spinbox.setMinimumWidth(80)
-            self._fields[f"_max_instances.{opt.key}"] = max_spinbox
-            max_row.addWidget(max_spinbox)
-
-            no_max_cb = QCheckBox("No max")
-            no_max_cb.setChecked(True)  # Default to no max
-            self._fields[f"_max_instances_disabled.{opt.key}"] = no_max_cb
-            max_row.addWidget(no_max_cb)
-
-            # Connect checkbox to enable/disable spinbox
-            no_max_cb.stateChanged.connect(
-                lambda state, sb=max_spinbox: sb.setEnabled(not state)
-            )
-            max_spinbox.setEnabled(False)  # Start disabled since "No max" is checked
-
-            max_row.addStretch()
-            layout.addLayout(max_row)
-
-        # Pipeline-specific fields
+        # Pipeline-specific fields - all on one row
         if opt.fields:
-            form_layout = QFormLayout()
-            form_layout.setSpacing(6)
-            form_layout.setLabelAlignment(Qt.AlignRight)
-            form_layout.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+            fields_row = QHBoxLayout()
+            fields_row.setSpacing(8)
 
             for field_key, field_label, default_value in opt.fields:
+                label = QLabel(field_label + ":")
+                fields_row.addWidget(label)
+
                 widget = self._create_field_widget(field_key, default_value)
-                form_layout.addRow(field_label + ":", widget)
-                # Use the full key for storage
+                fields_row.addWidget(widget)
                 self._fields[field_key] = widget
 
-            layout.addLayout(form_layout)
+                fields_row.addSpacing(12)
+
+            fields_row.addStretch()
+            layout.addLayout(fields_row)
 
         layout.addStretch()
         return page
+
+    # Standard height for form field widgets (spinboxes, dropdowns)
+    FIELD_HEIGHT = 22
 
     def _create_field_widget(self, key: str, default_value: Any) -> QWidget:
         """Create a widget for a field based on its key and default value."""
         if "anchor_part" in key:
             # Optional list (dropdown populated later or from skeleton)
             widget = QComboBox()
+            widget.setFixedHeight(self.FIELD_HEIGHT)
             widget.addItem("", None)  # Empty = use bounding box midpoint
             # Populate with skeleton node names if available
             if self._skeleton and hasattr(self._skeleton, "node_names"):
@@ -464,6 +436,7 @@ class MainTabWidget(QWidget):
         elif "sigma" in key:
             # Double spin box
             widget = QDoubleSpinBox()
+            widget.setFixedHeight(self.FIELD_HEIGHT)
             widget.setRange(0.1, 100.0)
             widget.setSingleStep(0.5)
             widget.setDecimals(2)
@@ -476,24 +449,50 @@ class MainTabWidget(QWidget):
                 widget.setText(str(default_value))
             return widget
 
-    def _create_input_data_section(self) -> QGroupBox:
-        """Create the Input Data section (training only)."""
-        group = QGroupBox("Input Data")
+    def _create_preprocessing_section(self) -> QGroupBox:
+        """Create the Preprocessing / Postprocessing section."""
+        group = QGroupBox("Preprocessing / Postprocessing")
         group.setMinimumWidth(self.BOX_WIDTH)
         group.setMaximumWidth(self.BOX_WIDTH)
 
         layout = QHBoxLayout(group)
         layout.setSpacing(8)
 
-        label = QLabel("Convert Image To:")
-        layout.addWidget(label)
+        # Convert Colors (training only shows this)
+        if self._mode == "training":
+            label = QLabel("Convert Colors:")
+            layout.addWidget(label)
 
-        convert_combo = QComboBox()
-        convert_combo.addItem("", "")  # No conversion
-        convert_combo.addItem("RGB", "RGB")
-        convert_combo.addItem("grayscale", "grayscale")
-        self._fields["_ensure_channels"] = convert_combo
-        layout.addWidget(convert_combo)
+            convert_combo = QComboBox()
+            convert_combo.addItem("", "")  # No conversion
+            convert_combo.addItem("RGB", "RGB")
+            convert_combo.addItem("grayscale", "grayscale")
+            self._fields["_ensure_channels"] = convert_combo
+            layout.addWidget(convert_combo)
+
+            layout.addSpacing(20)
+
+        # Max Instances
+        max_label = QLabel("Max Instances:")
+        layout.addWidget(max_label)
+
+        max_spinbox = QSpinBox()
+        max_spinbox.setRange(1, 100)
+        max_spinbox.setValue(1)
+        max_spinbox.setMinimumWidth(80)
+        self._fields["_max_instances"] = max_spinbox
+        layout.addWidget(max_spinbox)
+
+        no_max_cb = QCheckBox("No max")
+        no_max_cb.setChecked(True)  # Default to no max
+        self._fields["_max_instances_disabled"] = no_max_cb
+        layout.addWidget(no_max_cb)
+
+        # Connect checkbox to enable/disable spinbox
+        no_max_cb.stateChanged.connect(
+            lambda state, sb=max_spinbox: sb.setEnabled(not state)
+        )
+        max_spinbox.setEnabled(False)  # Start disabled since "No max" is checked
 
         layout.addStretch()
 
@@ -656,38 +655,39 @@ class MainTabWidget(QWidget):
         DROPDOWN_WIDTH = 140  # Dropdown width for alignment
         LABEL_WIDTH_COL2 = 115  # "Data Loader Workers:" is longest
 
-        # Row 1: Data Pipeline + Workers
-        row1 = QHBoxLayout()
-        row1.setSpacing(8)
+        # Row 1: Data Pipeline + Workers (training only)
+        if self._mode == "training":
+            row1 = QHBoxLayout()
+            row1.setSpacing(8)
 
-        pipeline_label = QLabel("Data Pipeline:")
-        pipeline_label.setFixedWidth(LABEL_WIDTH_COL1)
-        row1.addWidget(pipeline_label)
+            pipeline_label = QLabel("Data Pipeline:")
+            pipeline_label.setFixedWidth(LABEL_WIDTH_COL1)
+            row1.addWidget(pipeline_label)
 
-        data_pipeline = QComboBox()
-        data_pipeline.addItem("Stream (no caching)", "stream")
-        data_pipeline.addItem("Cache in Memory", "cache_memory")
-        data_pipeline.addItem("Cache to Disk", "cache_disk")
-        data_pipeline.setCurrentIndex(1)  # Default: Cache in Memory
-        data_pipeline.setFixedWidth(DROPDOWN_WIDTH)
-        self._fields["_data_pipeline_fw"] = data_pipeline
-        row1.addWidget(data_pipeline)
+            data_pipeline = QComboBox()
+            data_pipeline.addItem("Stream (no caching)", "stream")
+            data_pipeline.addItem("Cache in Memory", "cache_memory")
+            data_pipeline.addItem("Cache to Disk", "cache_disk")
+            data_pipeline.setCurrentIndex(1)  # Default: Cache in Memory
+            data_pipeline.setFixedWidth(DROPDOWN_WIDTH)
+            self._fields["_data_pipeline_fw"] = data_pipeline
+            row1.addWidget(data_pipeline)
 
-        row1.addSpacing(20)
+            row1.addSpacing(20)
 
-        workers_label = QLabel("Data Loader Workers:")
-        workers_label.setFixedWidth(LABEL_WIDTH_COL2)
-        row1.addWidget(workers_label)
+            workers_label = QLabel("Data Loader Workers:")
+            workers_label.setFixedWidth(LABEL_WIDTH_COL2)
+            row1.addWidget(workers_label)
 
-        workers = QSpinBox()
-        workers.setRange(0, 16)
-        workers.setValue(0)
-        workers.setMinimumWidth(60)
-        self._fields["trainer_config.train_data_loader.num_workers"] = workers
-        row1.addWidget(workers)
+            workers = QSpinBox()
+            workers.setRange(0, 16)
+            workers.setValue(0)
+            workers.setMinimumWidth(60)
+            self._fields["trainer_config.train_data_loader.num_workers"] = workers
+            row1.addWidget(workers)
 
-        row1.addStretch()
-        layout.addLayout(row1)
+            row1.addStretch()
+            layout.addLayout(row1)
 
         # Row 2: Accelerator + Devices
         row2 = QHBoxLayout()
@@ -744,19 +744,17 @@ class MainTabWidget(QWidget):
         layout = QVBoxLayout(group)
         layout.setSpacing(8)
 
-        # Row 1: Enable + Upload Viz (with labels in front)
+        # Row 1: Enable + Upload Viz checkboxes
         row1 = QHBoxLayout()
         row1.setSpacing(12)
 
-        row1.addWidget(QLabel("Enable WandB for logging:"))
-        enable_wandb = QCheckBox()
+        enable_wandb = QCheckBox("Enable WandB for logging")
         self._fields["trainer_config.use_wandb"] = enable_wandb
         row1.addWidget(enable_wandb)
 
         row1.addSpacing(20)
 
-        row1.addWidget(QLabel("Upload Viz to WandB:"))
-        upload_viz = QCheckBox()
+        upload_viz = QCheckBox("Upload Viz to WandB")
         self._fields["trainer_config.wandb.save_viz_imgs_wandb"] = upload_viz
         row1.addWidget(upload_viz)
 
