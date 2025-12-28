@@ -2,6 +2,7 @@
 Dialogs for running training and/or inference in GUI.
 """
 
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -150,12 +151,8 @@ class LearningDialog(QtWidgets.QDialog):
         self.message_widget = QtWidgets.QLabel("")
 
         # Create frame target selector widget (replaces _predict_frames dropdown)
-        # V6 Layout: Frame target selector is a SIDE PANEL, not inside the tab
         self.frame_target_selector = FrameTargetSelector(mode=mode)
         self._target_selection_user_changed = False
-
-        # Configure selector for side panel layout (compact styling, no height limit)
-        self.frame_target_selector.setup_for_side_panel()
 
         # Hide the old _predict_frames field if it exists (we're replacing it)
         if "_predict_frames" in self.pipeline_form_widget.fields:
@@ -171,44 +168,30 @@ class LearningDialog(QtWidgets.QDialog):
                         label_item.widget().hide()
                     break
 
-        # Layout for entire dialog - V6: Side panel layout
-        # Tabs and message go inside scroll area on the LEFT
+        # V9: Both training and inference use single-column layout with embedded
+        # frame_target_selector (no side panel)
+        if mode == "inference":
+            # Inference: build inference-specific layout
+            self.pipeline_form_widget._build_inference_layout(self.frame_target_selector)
+        else:
+            # Training: build training layout with frame_target_selector embedded
+            self.pipeline_form_widget._build_single_column_layout(self.frame_target_selector)
+
+        # Layout for entire dialog - single scrollable area (same for both modes)
         content_widget = QtWidgets.QWidget()
         content_layout = QtWidgets.QVBoxLayout(content_widget)
         content_layout.addWidget(self.tab_widget)
         content_layout.addWidget(self.message_widget)
 
-        # Create the QScrollArea for tabs only
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(content_widget)
         scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        # V7: Disable horizontal scrollbar - single column layout should fit
         scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        # Create horizontal container: [scroll_area (tabs)] | [frame_target_selector]
-        h_container = QtWidgets.QWidget()
-        h_layout = QtWidgets.QHBoxLayout(h_container)
-        h_layout.setContentsMargins(0, 0, 0, 0)
-        h_layout.setSpacing(12)
-
-        # Left: scrollable tabs area (stretch=3 for training, =1 for inference)
-        tabs_stretch = 3 if mode == "training" else 1
-        h_layout.addWidget(scroll_area, stretch=tabs_stretch)
-
-        # Right: frame target selector as side panel
-        right_panel = QtWidgets.QWidget()
-        right_layout = QtWidgets.QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(4, 0, 4, 0)
-        right_layout.setSpacing(4)
-        right_layout.addWidget(self.frame_target_selector)
-
-        selector_stretch = 2 if mode == "training" else 1
-        h_layout.addWidget(right_panel, stretch=selector_stretch)
-
-        # Main layout: horizontal container + buttons (buttons always visible at bottom)
+        # Main layout: scrollable content + buttons
         layout = QtWidgets.QVBoxLayout(self)
-        layout.addWidget(h_container)
+        layout.addWidget(scroll_area)
         layout.addWidget(buttons_layout_widget)
 
         self.adjust_initial_size()
@@ -224,10 +207,14 @@ class LearningDialog(QtWidgets.QDialog):
 
         # Track when user explicitly changes predict frames option
         # (legacy _predict_frames support - can be removed when YAML field is removed)
-        if "_predict_frames" in self.pipeline_form_widget.fields:
-            self.pipeline_form_widget.fields["_predict_frames"].valueChanged.connect(
-                self._on_predict_frames_changed
-            )
+        # Note: Skip for inference mode where the field has been moved to the new layout
+        if "_predict_frames" in self.pipeline_form_widget.fields and mode == "training":
+            try:
+                self.pipeline_form_widget.fields["_predict_frames"].valueChanged.connect(
+                    self._on_predict_frames_changed
+                )
+            except RuntimeError:
+                pass  # Widget was deleted during layout reorganization
 
         # Track when user changes the new frame target selector
         self.frame_target_selector.valueChanged.connect(
@@ -244,18 +231,17 @@ class LearningDialog(QtWidgets.QDialog):
     def adjust_initial_size(self):
         """Set initial dialog size based on mode and screen size.
 
-        V6 Layout: Side panel requires larger dimensions to fit all options.
-        - Training: 1400x900 (9 target options, WandB settings, model config)
-        - Inference: 1250x850 (8 target options, simpler settings)
+        V9 Layout: Both modes use single-column layout (no side panel)
+        - Training: 650x900 (more sections, needs more height)
+        - Inference: 650x850
         """
         screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
 
-        # V6: Larger dimensions to accommodate side panel layout
         if self.mode == "training":
-            max_width = 1400
+            max_width = 650
             max_height = 900
         else:  # inference
-            max_width = 1250
+            max_width = 650
             max_height = 850
 
         margin = 0.05  # 5% margin from screen edge
@@ -308,7 +294,8 @@ class LearningDialog(QtWidgets.QDialog):
         """Sets options of frames on which to run learning."""
         self._frame_selection = frame_selection
 
-        if "_predict_frames" in self.pipeline_form_widget.fields.keys():
+        # Skip legacy _predict_frames handling for inference mode (uses FrameTargetSelector)
+        if self.mode == "training" and "_predict_frames" in self.pipeline_form_widget.fields.keys():
             prediction_options = []
 
             total_random = 0
@@ -1476,11 +1463,11 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
 
         self.form_widget.form_layout.valueChanged.connect(self.valueChanged)
 
-        # Build single-column layout for training mode (V7: avoids horizontal scrollbar)
-        if mode == "training":
-            self._build_single_column_layout()
-        else:
-            self.setLayout(self.form_widget.form_layout)
+        # V9: Both training and inference layouts are built later
+        # after the frame_target_selector is available in LearningDialog
+        self._mode = mode
+        # Don't set layout here - it will be built in _build_single_column_layout
+        # or _build_inference_layout with the frame_target_selector
 
         # Load saved WandB preferences and update API key field
         self._wandb_api_key_placeholder = None
@@ -1536,15 +1523,19 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
             QtWidgets.QWidget().setLayout(self.layout())  # Orphan old layout
             self.setLayout(new_layout)
 
-    def _build_single_column_layout(self):
+    def _build_single_column_layout(self, frame_target_selector: "FrameTargetSelector" = None):
         """Reorganize the pipeline form into grouped box containers.
 
-        V7: Single-column layout with each section in a QGroupBox.
+        V9: Single-column layout with Pipeline Type and Inference Target at top,
+        followed by training-specific sections.
+        - Pipeline Type (group box)
+        - Inference Target (group box, from frame_target_selector)
         - Input Data Options
         - Data Pipeline and Hardware Options
         - WandB Options
         - Output Options
         """
+        BOX_WIDTH = 550
         form_layout = self.form_widget.form_layout
 
         # Create main layout with tight spacing
@@ -1557,7 +1548,7 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         # Section headers that define group boxes
         section_headers = {
             "Input Data Options": "Input Data",
-            "Data Pipeline and Hardware Options": "Hardware",
+            "Data Pipeline and Hardware Options": "Performance",
             "WandB options": "WandB",
             "Output Options": "Output",
         }
@@ -1615,30 +1606,253 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
             if current_section and current_section in sections:
                 sections[current_section].append((label_text, field_widget))
 
-        # Add pipeline widget at top
+        # === V9: Pipeline Type Group Box ===
         if pipeline_widget:
-            pipeline_widget.setMaximumWidth(550)
-            main_layout.addWidget(pipeline_widget, stretch=0)
+            pipeline_group = QtWidgets.QGroupBox("Pipeline Type")
+            pipeline_layout = QtWidgets.QVBoxLayout(pipeline_group)
+            pipeline_layout.setSpacing(6)
+            pipeline_layout.setContentsMargins(8, 8, 8, 8)
+
+            # Hide the "Training/Inference Pipeline Type:" label from the dropdown
+            combo_box = getattr(pipeline_widget, "combo_box", None)
+            if combo_box:
+                # Find and hide the label in the form layout
+                multi_layout = pipeline_widget.layout()
+                if multi_layout and isinstance(multi_layout, QtWidgets.QFormLayout):
+                    for i in range(multi_layout.rowCount()):
+                        label_item = multi_layout.itemAt(i, QtWidgets.QFormLayout.LabelRole)
+                        if label_item and label_item.widget():
+                            label_item.widget().hide()
+                            break
+
+            # Move widget to new layout (addWidget handles reparenting)
+            pipeline_layout.addWidget(pipeline_widget)
+
+            # Make description text gray and remove bold pipeline title
+            stacked = getattr(pipeline_widget, "stacked_widget", None)
+            if stacked:
+                for i in range(stacked.count()):
+                    page = stacked.widget(i)
+                    if page:
+                        for child in page.findChildren(QtWidgets.QLabel):
+                            if child.wordWrap():
+                                child.setStyleSheet("color: #666;")
+                                # Remove bold pipeline title from description
+                                # e.g., "<b>Multi-Animal Top-Down Pipeline</b>:<br />" -> ""
+                                text = child.text()
+                                text = re.sub(r"<b>[^<]*Pipeline</b>:\s*<br\s*/?>", "", text)
+                                child.setText(text)
+
+            pipeline_group.setMinimumWidth(BOX_WIDTH)
+            pipeline_group.setMaximumWidth(BOX_WIDTH)
+            main_layout.addWidget(pipeline_group, stretch=0)
+
+        # === V9: Inference Target (from frame_target_selector) ===
+        if frame_target_selector:
+            # Enable compact mode (descriptions inline with title)
+            frame_target_selector.set_compact_mode(True)
+            frame_target_selector.setMinimumWidth(BOX_WIDTH)
+            frame_target_selector.setMaximumWidth(BOX_WIDTH)
+            main_layout.addWidget(frame_target_selector, stretch=0)
+
+        # Define which fields should be grouped on the same row
+        # Format: {section: [(left_label, right_label, left_rename, right_rename), ...]}
+        # Renames are optional - if not None, the label text will be replaced
+        grouped_fields = {
+            "Performance": [
+                ("Data Pipeline Framework:", "Data Loader Workers:", "Data Pipeline:", None),
+                ("Device Accelerator:", "Number of GPU Devices:", None, "Number of Devices:"),
+            ],
+            "WandB": [
+                ("Enable WandB for logging:", "Upload Viz to WandB:", None, None),
+                ("WandB API Key:", None, None, None),  # API Key row alone, after checkboxes
+                ("Entity Name:", "Project Name:", None, None),  # Labels may have leading space in YAML
+                ("Previous Run ID:", "Group Name:", None, None),  # Previous Run ID left-aligns with Entity Name
+            ],
+        }
 
         # Create group boxes for each section in order
-        section_order = ["Input Data", "Hardware", "WandB", "Output"]
+        section_order = ["Input Data", "Performance", "WandB", "Output"]
         for section_name in section_order:
             if section_name not in sections or not sections[section_name]:
                 continue
 
             # Create group box with section title
             group_box = QtWidgets.QGroupBox(section_name)
-            group_layout = QtWidgets.QFormLayout(group_box)
-            group_layout.setVerticalSpacing(4)
-            group_layout.setHorizontalSpacing(8)
+            group_layout = QtWidgets.QVBoxLayout(group_box)
+            group_layout.setSpacing(4)
             group_layout.setContentsMargins(8, 4, 8, 8)
 
-            # Add fields to group box
-            for label_text, field_widget in sections[section_name]:
-                if label_text:
-                    group_layout.addRow(label_text, field_widget)
+            # Build a dict for quick lookup (strip whitespace for robust matching)
+            fields_by_label = {label.strip(): widget for label, widget in sections[section_name]}
+            # Also keep original labels for iteration
+            original_fields = sections[section_name]
+
+            # Track which fields have been added
+            added_labels = set()
+
+            # Special handling for Output section - checkboxes with labels to the right
+            if section_name == "Output":
+                # Define checkbox groupings for Output section
+                # Format: (row_label, [(original_label, display_label), ...])
+                output_groups = [
+                    ("Checkpoint:", [("Best Model:", "Best Model"), ("Latest Model:", "Latest Model")]),
+                    ("Visualization:", [("Visualize Predictions:", "Visualize Predictions"), ("Keep Viz Images:", "Keep Viz Images")]),
+                ]
+
+                output_checkbox_labels = set()
+                for _, checkboxes in output_groups:
+                    for orig_label, _ in checkboxes:
+                        output_checkbox_labels.add(orig_label.strip())
+
+                # Add non-checkbox fields first (Run Name, Runs Folder)
+                for label_text, field_widget in original_fields:
+                    label_stripped = label_text.strip() if label_text else ""
+                    if label_stripped in output_checkbox_labels:
+                        continue
+                    if label_stripped in added_labels:
+                        continue
+
+                    row_layout = QtWidgets.QHBoxLayout()
+                    row_layout.setSpacing(8)
+                    if label_text:
+                        label_widget = QtWidgets.QLabel(label_stripped)
+                        row_layout.addWidget(label_widget)
+                    row_layout.addWidget(field_widget)
+                    row_layout.addStretch()
+                    group_layout.addLayout(row_layout)
+                    added_labels.add(label_stripped)
+
+                # Add grouped checkbox rows
+                for row_label, checkboxes in output_groups:
+                    row_layout = QtWidgets.QHBoxLayout()
+                    row_layout.setSpacing(16)
+
+                    # Row label
+                    row_label_widget = QtWidgets.QLabel(row_label)
+                    row_layout.addWidget(row_label_widget)
+
+                    # Add each checkbox with label to the right
+                    for orig_label, display_label in checkboxes:
+                        orig_stripped = orig_label.strip()
+                        if orig_stripped in fields_by_label:
+                            cb_widget = fields_by_label[orig_stripped]
+                            # Create checkbox with label to the right
+                            cb_container = QtWidgets.QHBoxLayout()
+                            cb_container.setSpacing(4)
+                            cb_container.addWidget(cb_widget)
+                            cb_label = QtWidgets.QLabel(display_label)
+                            cb_label.setStyleSheet("font-size: 11px;")
+                            cb_container.addWidget(cb_label)
+                            row_layout.addLayout(cb_container)
+                            added_labels.add(orig_stripped)
+
+                    row_layout.addStretch()
+                    group_layout.addLayout(row_layout)
+
+            else:
+                # Get groupings for this section
+                section_groups = grouped_fields.get(section_name, [])
+
+                if section_groups:
+                    # Use grouped_fields order for iteration
+                    # Build maps for groupings (handle tuples of 2 or 4 elements)
+                    # Strip labels for matching (YAML may have leading spaces)
+                    grouped_left = set()
+                    grouped_right = set()
+                    for g in section_groups:
+                        grouped_left.add(g[0].strip())
+                        if len(g) > 1 and g[1]:
+                            grouped_right.add(g[1].strip())
+
+                    # First, add fields in the order defined by grouped_fields
+                    for g in section_groups:
+                        left_label = g[0].strip()
+                        right_label = g[1].strip() if len(g) > 1 and g[1] else None
+                        left_rename = g[2] if len(g) > 2 else None
+                        right_rename = g[3] if len(g) > 3 else None
+
+                        if left_label not in fields_by_label:
+                            continue
+                        if left_label in added_labels:
+                            continue
+
+                        field_widget = fields_by_label[left_label]
+                        display_left = left_rename if left_rename else left_label
+
+                        if right_label and right_label in fields_by_label:
+                            # Create horizontal row with both fields
+                            row_layout = QtWidgets.QHBoxLayout()
+                            row_layout.setSpacing(16)
+
+                            # Left field
+                            left_container = QtWidgets.QHBoxLayout()
+                            left_label_widget = QtWidgets.QLabel(display_left)
+                            left_container.addWidget(left_label_widget)
+                            left_container.addWidget(field_widget)
+                            row_layout.addLayout(left_container)
+
+                            # Right field
+                            right_widget = fields_by_label[right_label]
+                            display_right = right_rename if right_rename else right_label
+                            right_container = QtWidgets.QHBoxLayout()
+                            right_label_widget = QtWidgets.QLabel(display_right)
+                            right_container.addWidget(right_label_widget)
+                            right_container.addWidget(right_widget)
+                            row_layout.addLayout(right_container)
+
+                            row_layout.addStretch()
+                            group_layout.addLayout(row_layout)
+                            added_labels.add(left_label)
+                            added_labels.add(right_label)
+                        else:
+                            # Single field row (e.g., API Key alone)
+                            row_layout = QtWidgets.QHBoxLayout()
+                            row_layout.setSpacing(8)
+                            label_widget = QtWidgets.QLabel(display_left)
+                            row_layout.addWidget(label_widget)
+                            row_layout.addWidget(field_widget)
+                            row_layout.addStretch()
+                            group_layout.addLayout(row_layout)
+                            added_labels.add(left_label)
+
+                    # Then add any remaining ungrouped fields
+                    for label_text, field_widget in original_fields:
+                        label_stripped = label_text.strip() if label_text else ""
+                        if label_stripped in added_labels:
+                            continue
+                        if label_stripped in grouped_right:
+                            continue
+
+                        if label_text:
+                            row_layout = QtWidgets.QHBoxLayout()
+                            row_layout.setSpacing(8)
+                            label_widget = QtWidgets.QLabel(label_stripped)
+                            row_layout.addWidget(label_widget)
+                            row_layout.addWidget(field_widget)
+                            row_layout.addStretch()
+                            group_layout.addLayout(row_layout)
+                        else:
+                            group_layout.addWidget(field_widget)
+                        added_labels.add(label_stripped)
                 else:
-                    group_layout.addRow(field_widget)
+                    # No groupings defined - add fields in order
+                    for label_text, field_widget in original_fields:
+                        label_stripped = label_text.strip() if label_text else ""
+                        if label_stripped in added_labels:
+                            continue
+
+                        if label_text:
+                            row_layout = QtWidgets.QHBoxLayout()
+                            row_layout.setSpacing(8)
+                            label_widget = QtWidgets.QLabel(label_stripped)
+                            row_layout.addWidget(label_widget)
+                            row_layout.addWidget(field_widget)
+                            row_layout.addStretch()
+                            group_layout.addLayout(row_layout)
+                        else:
+                            group_layout.addWidget(field_widget)
+                        added_labels.add(label_stripped)
 
             group_box.setMaximumWidth(550)
             main_layout.addWidget(group_box, stretch=0)
@@ -1646,6 +1860,171 @@ class TrainingPipelineWidget(QtWidgets.QWidget):
         # Push everything to top
         main_layout.addStretch(1)
 
+        self.setLayout(main_layout)
+
+    def _build_inference_layout(self, frame_target_selector: "FrameTargetSelector"):
+        """Reorganize the inference form into grouped box containers.
+
+        V9: Creates grouped boxes for Pipeline Type, Inference Target, Tracker,
+        and Performance sections.
+
+        Args:
+            frame_target_selector: The FrameTargetSelector widget to embed.
+        """
+        BOX_WIDTH = 550
+
+        form_layout = self.form_widget.form_layout
+
+        # Create main layout with tight spacing
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(8)
+
+        # === Pipeline Type Group Box ===
+        pipeline_group = QtWidgets.QGroupBox("Pipeline Type")
+        pipeline_layout = QtWidgets.QVBoxLayout(pipeline_group)
+        pipeline_layout.setSpacing(6)
+        pipeline_layout.setContentsMargins(8, 8, 8, 8)
+
+        # Find and move pipeline dropdown
+        pipeline_widget = None
+        for i in range(form_layout.rowCount()):
+            field_item = form_layout.itemAt(i, QtWidgets.QFormLayout.FieldRole)
+            if field_item and field_item.widget():
+                if field_item.widget().objectName() == "_pipeline":
+                    pipeline_widget = field_item.widget()
+                    break
+
+        if pipeline_widget:
+            # Hide the "Training/Inference Pipeline Type:" label from the dropdown
+            combo_box = getattr(pipeline_widget, "combo_box", None)
+            if combo_box:
+                # Find and hide the label in the form layout
+                multi_layout = pipeline_widget.layout()
+                if multi_layout and isinstance(multi_layout, QtWidgets.QFormLayout):
+                    for i in range(multi_layout.rowCount()):
+                        label_item = multi_layout.itemAt(i, QtWidgets.QFormLayout.LabelRole)
+                        if label_item and label_item.widget():
+                            label_item.widget().hide()
+                            break
+
+            # Add pipeline widget (includes dropdown and stacked content)
+            pipeline_widget.setParent(None)
+            pipeline_layout.addWidget(pipeline_widget)
+
+            # Make the description text gray and remove bold pipeline title
+            # The pipeline_widget is a StackBuilderWidget with stacked_widget inside
+            stacked = getattr(pipeline_widget, "stacked_widget", None)
+            if stacked:
+                for i in range(stacked.count()):
+                    page = stacked.widget(i)
+                    if page:
+                        for child in page.findChildren(QtWidgets.QLabel):
+                            if child.wordWrap():  # Description labels have word wrap
+                                child.setStyleSheet("color: #666;")
+                                # Remove bold pipeline title from description
+                                text = child.text()
+                                text = re.sub(r"<b>[^<]*Pipeline</b>:\s*<br\s*/?>", "", text)
+                                child.setText(text)
+
+        pipeline_group.setMinimumWidth(BOX_WIDTH)
+        pipeline_group.setMaximumWidth(BOX_WIDTH)
+        main_layout.addWidget(pipeline_group, stretch=0)
+
+        # === Inference Target Group Box (from FrameTargetSelector) ===
+        # Configure selector for compact mode and embed it
+        frame_target_selector.set_compact_mode(True)
+        frame_target_selector.setMinimumWidth(BOX_WIDTH)
+        frame_target_selector.setMaximumWidth(BOX_WIDTH)
+        # The selector already has a QGroupBox with title "Inference Target"
+        main_layout.addWidget(frame_target_selector, stretch=0)
+
+        # === Collect remaining fields by section ===
+        tracker_fields = []
+        performance_fields = []
+
+        # Map field names to sections
+        tracker_field_names = {"tracking.tracker"}
+        performance_field_names = {
+            "_batch_size",  # Inference batch size
+        }
+
+        for i in range(form_layout.rowCount()):
+            label_item = form_layout.itemAt(i, QtWidgets.QFormLayout.LabelRole)
+            field_item = form_layout.itemAt(i, QtWidgets.QFormLayout.FieldRole)
+
+            if field_item is None:
+                continue
+
+            field_widget = field_item.widget()
+            if field_widget is None:
+                continue
+
+            field_name = field_widget.objectName()
+
+            # Skip pipeline (already handled) and predict_frames (replaced)
+            if field_name in ("_pipeline", "_predict_frames"):
+                continue
+
+            # Skip section header labels
+            if isinstance(field_widget, QtWidgets.QLabel):
+                continue
+
+            # Get label text
+            label_text = ""
+            if label_item and label_item.widget():
+                label_text = label_item.widget().text()
+
+            # Categorize fields
+            if field_name in tracker_field_names:
+                tracker_fields.append((label_text, field_widget))
+            elif field_name in performance_field_names:
+                performance_fields.append((label_text, field_widget))
+
+        # === Tracker Group Box ===
+        if tracker_fields:
+            tracker_group = QtWidgets.QGroupBox("Tracker")
+            tracker_layout = QtWidgets.QFormLayout(tracker_group)
+            tracker_layout.setVerticalSpacing(4)
+            tracker_layout.setHorizontalSpacing(8)
+            tracker_layout.setContentsMargins(8, 8, 8, 8)
+
+            for label_text, field_widget in tracker_fields:
+                field_widget.setParent(None)
+                if label_text:
+                    tracker_layout.addRow(label_text, field_widget)
+                else:
+                    tracker_layout.addRow(field_widget)
+
+            tracker_group.setMinimumWidth(BOX_WIDTH)
+            tracker_group.setMaximumWidth(BOX_WIDTH)
+            main_layout.addWidget(tracker_group, stretch=0)
+
+        # === Performance Group Box ===
+        if performance_fields:
+            perf_group = QtWidgets.QGroupBox("Performance")
+            perf_layout = QtWidgets.QFormLayout(perf_group)
+            perf_layout.setVerticalSpacing(4)
+            perf_layout.setHorizontalSpacing(8)
+            perf_layout.setContentsMargins(8, 8, 8, 8)
+
+            for label_text, field_widget in performance_fields:
+                field_widget.setParent(None)
+                if label_text:
+                    perf_layout.addRow(label_text, field_widget)
+                else:
+                    perf_layout.addRow(field_widget)
+
+            perf_group.setMinimumWidth(BOX_WIDTH)
+            perf_group.setMaximumWidth(BOX_WIDTH)
+            main_layout.addWidget(perf_group, stretch=0)
+
+        # Push everything to top
+        main_layout.addStretch(1)
+
+        # Clear old layout and set new one
+        if self.layout():
+            QtWidgets.QWidget().setLayout(self.layout())  # Orphan old layout
         self.setLayout(main_layout)
 
     @property
