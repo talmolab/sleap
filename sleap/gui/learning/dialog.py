@@ -148,6 +148,7 @@ class LearningDialog(QtWidgets.QDialog):
         self.make_tabs()
 
         self.message_widget = QtWidgets.QLabel("")
+        self.message_widget.setWordWrap(True)
 
         # Frame target selector is now owned by MainTabWidget
         self.frame_target_selector = self.pipeline_form_widget.frame_target_selector
@@ -1246,8 +1247,10 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self._cfg_getter = cfg_getter
         self._cfg_list_widget = None
         self._receptive_field_widget = None
-        self._use_trained_model = None
-        self._resume_training = None
+        self._training_mode_group = None
+        self._radio_train_scratch = None
+        self._radio_use_trained = None
+        self._radio_resume = None
         self._require_trained = require_trained
         self.head = head
 
@@ -1360,21 +1363,50 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self._require_trained:
             self._update_use_trained()
         elif self._cfg_list_widget is not None:
-            # Add option for using trained model from selected config file
-            self._use_trained_model = QtWidgets.QCheckBox(
-                "Use Existing Training Config"
+            # Add radio buttons for training mode selection
+            # Three mutually exclusive options for how to use the selected config
+            self._training_mode_group = QtWidgets.QButtonGroup(self)
+
+            self._radio_train_scratch = QtWidgets.QRadioButton(
+                "Reuse config (train from scratch)"
             )
-            self._use_trained_model.setEnabled(False)
-            self._use_trained_model.setVisible(False)
-            self._resume_training = QtWidgets.QCheckBox("Use Trained Model Weights")
-            self._resume_training.setEnabled(False)
-            self._resume_training.setVisible(False)
+            self._radio_resume = QtWidgets.QRadioButton(
+                "Resume training (fine-tune)"
+            )
+            self._radio_use_trained = QtWidgets.QRadioButton(
+                "Reuse model (don't retrain)"
+            )
 
-            self._use_trained_model.stateChanged.connect(self._update_use_trained)
-            self._resume_training.stateChanged.connect(self._update_use_trained)
+            # Set IDs for easier identification
+            self._training_mode_group.addButton(self._radio_train_scratch, 0)
+            self._training_mode_group.addButton(self._radio_resume, 1)
+            self._training_mode_group.addButton(self._radio_use_trained, 2)
 
-            layout.addWidget(self._use_trained_model)
-            layout.addWidget(self._resume_training)
+            # Default to training from scratch
+            self._radio_train_scratch.setChecked(True)
+
+            # Last two options only enabled when trained model is available
+            self._radio_resume.setEnabled(False)
+            self._radio_use_trained.setEnabled(False)
+
+            # Layout radio buttons horizontally with minimal spacing
+            radio_layout = QtWidgets.QHBoxLayout()
+            radio_layout.setContentsMargins(0, 0, 0, 0)
+            radio_layout.setSpacing(12)
+            radio_layout.addWidget(self._radio_train_scratch)
+            radio_layout.addWidget(self._radio_resume)
+            radio_layout.addWidget(self._radio_use_trained)
+            radio_layout.addStretch()
+
+            radio_widget = QtWidgets.QWidget()
+            radio_widget.setLayout(radio_layout)
+            radio_widget.setSizePolicy(
+                QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed
+            )
+
+            self._training_mode_group.buttonClicked.connect(self._update_use_trained)
+
+            layout.addWidget(radio_widget)
 
         layout.addWidget(self._layout_widget(col_layout))
         self.setLayout(layout)
@@ -1538,16 +1570,16 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self._load_config(cfg_info)
 
         has_trained_model = cfg_info.has_trained_model
-        if self._use_trained_model is not None:
-            self._use_trained_model.setChecked(self._require_trained)
-            self._use_trained_model.setVisible(has_trained_model)
-            self._use_trained_model.setEnabled(has_trained_model)
-        # Redundant check (for readability) since this checkbox exists if the
-        # above does
-        if self._resume_training is not None:
-            self._use_trained_model.setChecked(False)
-            self._resume_training.setVisible(has_trained_model)
-            self._resume_training.setEnabled(has_trained_model)
+
+        # Update radio button states based on whether selected config has trained model
+        if self._radio_use_trained is not None:
+            # Enable/disable trained model options based on availability
+            self._radio_use_trained.setEnabled(has_trained_model)
+            self._radio_resume.setEnabled(has_trained_model)
+
+            # If no trained model available, reset to "train from scratch"
+            if not has_trained_model:
+                self._radio_train_scratch.setChecked(True)
 
         self.update_receptive_field()
 
@@ -1653,54 +1685,42 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     #     cfg_form_data_dict = self.get_all_form_data()
     #     self._cfg_list_widget.setUserConfigData(cfg_form_data_dict)
 
-    def _update_use_trained(self, check_state=0):
-        """Update config GUI based on _use_trained_model & _resume_training checkboxes.
+    def _update_use_trained(self, button=None):
+        """Update config GUI based on training mode radio button selection.
 
-        This function is called when either _use_trained_model or _resume_training
-        checkbox is checked/unchecked or when _require_trained is changed.
+        This function is called when a radio button is clicked or when
+        _require_trained is set (inference mode).
 
-        If _require_trained is True, then we'll disable all fields.
-        If _use_trained_model is checked, then we'll disable all fields.
-        If _resume_training is checked, then we'll disable only the model field.
+        Training modes:
+        - Train from scratch: All forms editable, train new model
+        - Use same model (don't retrain): All forms disabled, use trained model as-is
+        - Resume training (fine-tune): Model form disabled, other forms editable
 
         Args:
-            check_state (int, optional): Check state of checkbox. Defaults to 0. Unused.
+            button: The clicked radio button (unused, we check button group state).
 
         Returns:
             None
 
         Side Effects:
-            Disables/Enables fields based on checkbox values
-            (and _required_training).
+            Disables/Enables fields based on selected training mode.
         """
-
-        # Check which checkbox changed its value (if any)
-        sender = self.sender()
-
-        if sender is None:  # If sender is None, then _required_training is True
-            pass
-        # Uncheck _resume_training checkbox if _use_trained_model is unchecked
-        elif (
-            sender == self._use_trained_model
-            and not self._use_trained_model.isChecked()
-        ):
-            self._resume_training.setChecked(False)
-
-        # Check _use_trained_model checkbox if _resume_training is checked
-        elif sender == self._resume_training and self._resume_training.isChecked():
-            self._use_trained_model.setChecked(True)
-
-        # Update form widgets
+        # Get current training mode
         use_trained_params = self.use_trained
-        use_model_params = self.resume_training
+        resume_training_params = self.resume_training
+
+        # Enable/disable all form widgets based on mode
         for form in self.form_widgets.values():
             form.set_enabled(not use_trained_params)
 
-        if use_trained_params or use_model_params:
-            cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
+        # Get config info if we need to load trained config/model
+        cfg_info = None
+        if use_trained_params or resume_training_params:
+            if self._cfg_list_widget is not None:
+                cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
 
-        # If user wants to resume training, then reset only model form to match config
-        if use_model_params:
+        # Resume training: model form disabled, load model config
+        if resume_training_params and cfg_info is not None:
             self.form_widgets["model"].set_enabled(False)
 
             # Set model form to match config
@@ -1708,8 +1728,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             key_val_dict = get_keyval_dict_from_omegaconf(cfg)
             self.set_fields_from_key_val_dict({"model": key_val_dict})
 
-        # If user wants to use trained model, then reset entire form to match config
-        if use_trained_params:
+        # Use trained model: all forms disabled, load full config
+        if use_trained_params and cfg_info is not None:
             self._load_config(cfg_info)
 
         self._set_head()
@@ -1742,18 +1762,27 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     @property
     def use_trained(self) -> bool:
-        if self._require_trained or (
-            (self._use_trained_model is not None)
-            and self._use_trained_model.isChecked()
-            and (not self.resume_training)
-        ):
+        """Check if user wants to use trained model without retraining.
+
+        Returns True when:
+        - _require_trained is True (inference mode), OR
+        - "Use same model (don't retrain)" radio button is selected
+        """
+        if self._require_trained:
+            return True
+
+        if self._radio_use_trained is not None and self._radio_use_trained.isChecked():
             return True
 
         return False
 
     @property
     def resume_training(self) -> bool:
-        if (self._resume_training is not None) and self._resume_training.isChecked():
+        """Check if user wants to resume/fine-tune training.
+
+        Returns True when "Resume training (fine-tune)" radio button is selected.
+        """
+        if self._radio_resume is not None and self._radio_resume.isChecked():
             return True
         return False
 

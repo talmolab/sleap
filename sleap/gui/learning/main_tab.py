@@ -95,14 +95,14 @@ PIPELINE_OPTIONS_TRAINING = [
         ),
         fields=[
             (
-                "model_config.head_configs.centroid.confmaps.sigma",
-                "Sigma for Centroids",
-                5.0,
-            ),
-            (
                 "model_config.head_configs.centered_instance.confmaps.anchor_part",
                 "Anchor Part",
                 None,
+            ),
+            (
+                "model_config.head_configs.centroid.confmaps.sigma",
+                "Sigma for Centroids",
+                5.0,
             ),
             (
                 "model_config.head_configs.centered_instance.confmaps.sigma",
@@ -145,14 +145,14 @@ PIPELINE_OPTIONS_TRAINING = [
         ),
         fields=[
             (
-                "model_config.head_configs.centroid.confmaps.sigma",
-                "Sigma for Centroids",
-                5.0,
-            ),
-            (
                 "model_config.head_configs.multi_class_topdown.confmaps.anchor_part",
                 "Anchor Part",
                 None,
+            ),
+            (
+                "model_config.head_configs.centroid.confmaps.sigma",
+                "Sigma for Centroids",
+                5.0,
             ),
             (
                 "model_config.head_configs.multi_class_topdown.confmaps.sigma",
