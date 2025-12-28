@@ -583,6 +583,85 @@ class TestAnchorPartSync:
 
 
 # =============================================================================
+# Sigma Sync Tests
+# =============================================================================
+
+
+class TestSigmaSync:
+    """Tests for sigma field synchronization between Pipeline tab and config tabs.
+
+    The centroid sigma appears in both 'multi-animal top-down' and
+    'multi-animal top-down-id' pipelines. When reading form data, we must
+    read from the currently selected pipeline's widget, not from a
+    potentially overwritten reference.
+    """
+
+    def test_centroid_sigma_reads_from_current_pipeline(
+        self, training_dialog, qtbot
+    ):
+        """Centroid sigma should be read from the current pipeline's widget.
+
+        This tests the fix for a bug where centroid sigma was read from the
+        wrong widget because 'multi-animal top-down-id' overwrote the
+        reference in _fields.
+        """
+        main_tab = training_dialog.pipeline_form_widget
+
+        # Set to multi-animal top-down pipeline
+        main_tab.current_pipeline = "top-down"
+
+        # Get the centroid sigma field from the current pipeline
+        pipeline_key = main_tab.current_pipeline_key
+        assert "top-down" in pipeline_key
+        assert "id" not in pipeline_key
+
+        # The centroid sigma should be accessible
+        centroid_sigma_key = "model_config.head_configs.centroid.confmaps.sigma"
+        assert pipeline_key in main_tab._pipeline_fields
+        assert centroid_sigma_key in main_tab._pipeline_fields[pipeline_key]
+
+        # Change the sigma value in the current pipeline's widget
+        widget = main_tab._pipeline_fields[pipeline_key][centroid_sigma_key]
+        widget.setValue(7.5)
+
+        # get_form_data should return the value from the CURRENT pipeline
+        form_data = main_tab.get_form_data()
+        assert form_data[centroid_sigma_key] == 7.5
+
+    def test_pipeline_fields_stored_separately(self, training_dialog):
+        """Each pipeline should have its own dict of field widgets."""
+        main_tab = training_dialog.pipeline_form_widget
+
+        # Check that pipeline fields are stored separately
+        assert "multi-animal top-down" in main_tab._pipeline_fields
+        assert "multi-animal top-down-id" in main_tab._pipeline_fields
+
+        # Both pipelines have centroid sigma
+        centroid_sigma_key = "model_config.head_configs.centroid.confmaps.sigma"
+        assert centroid_sigma_key in main_tab._pipeline_fields["multi-animal top-down"]
+        assert centroid_sigma_key in main_tab._pipeline_fields["multi-animal top-down-id"]
+
+        # They should be DIFFERENT widget instances
+        widget1 = main_tab._pipeline_fields["multi-animal top-down"][centroid_sigma_key]
+        widget2 = main_tab._pipeline_fields["multi-animal top-down-id"][centroid_sigma_key]
+        assert widget1 is not widget2
+
+    def test_set_form_data_updates_all_pipelines(self, training_dialog):
+        """set_form_data should update sigma in all pipelines that have it."""
+        main_tab = training_dialog.pipeline_form_widget
+        centroid_sigma_key = "model_config.head_configs.centroid.confmaps.sigma"
+
+        # Set the sigma value via set_form_data
+        main_tab.set_form_data({centroid_sigma_key: 8.0})
+
+        # Both pipeline widgets should be updated
+        widget1 = main_tab._pipeline_fields["multi-animal top-down"][centroid_sigma_key]
+        widget2 = main_tab._pipeline_fields["multi-animal top-down-id"][centroid_sigma_key]
+        assert widget1.value() == 8.0
+        assert widget2.value() == 8.0
+
+
+# =============================================================================
 # Button State Tests
 # =============================================================================
 

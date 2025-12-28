@@ -249,6 +249,9 @@ class MainTabWidget(QWidget):
         self._mode = mode
         self._skeleton = skeleton
         self._fields: Dict[str, QWidget] = {}
+        # Store pipeline-specific fields separately to handle duplicate keys
+        # across pipelines (e.g., centroid.sigma appears in both top-down and top-down-id)
+        self._pipeline_fields: Dict[str, Dict[str, QWidget]] = {}
         self._pipeline_options = (
             PIPELINE_OPTIONS_TRAINING
             if mode == "training"
@@ -321,9 +324,19 @@ class MainTabWidget(QWidget):
         # Frame target selector
         self.frame_target_selector.valueChanged.connect(self.valueChanged.emit)
 
-        # Connect all tracked fields
-        for key, widget in self._fields.items():
-            self._connect_field_signal(widget)
+        # Connect all pipeline-specific fields (from all pipelines)
+        connected_widgets = set()
+        for pipeline_fields in self._pipeline_fields.values():
+            for widget in pipeline_fields.values():
+                if id(widget) not in connected_widgets:
+                    self._connect_field_signal(widget)
+                    connected_widgets.add(id(widget))
+
+        # Connect non-pipeline fields
+        for widget in self._fields.values():
+            if id(widget) not in connected_widgets:
+                self._connect_field_signal(widget)
+                connected_widgets.add(id(widget))
 
     def _connect_field_signal(self, widget: QWidget):
         """Connect a field widget's change signal to valueChanged."""
@@ -400,6 +413,9 @@ class MainTabWidget(QWidget):
 
         # Pipeline-specific fields - all on one row
         if opt.fields:
+            # Initialize dict for this pipeline's fields
+            self._pipeline_fields[opt.key] = {}
+
             fields_row = QHBoxLayout()
             fields_row.setSpacing(8)
 
@@ -409,6 +425,9 @@ class MainTabWidget(QWidget):
 
                 widget = self._create_field_widget(field_key, default_value)
                 fields_row.addWidget(widget)
+                # Store in pipeline-specific dict (prevents overwrites)
+                self._pipeline_fields[opt.key][field_key] = widget
+                # Also store in _fields for backward compatibility with set_form_data
                 self._fields[field_key] = widget
 
                 fields_row.addSpacing(12)
@@ -936,6 +955,15 @@ class MainTabWidget(QWidget):
         return self._fields
 
     @property
+    def current_pipeline_key(self) -> str:
+        """Get current pipeline selection key (full name for internal use).
+
+        Returns:
+            Full pipeline key like "multi-animal top-down", "single animal", etc.
+        """
+        return self._pipeline_combo.currentData() or ""
+
+    @property
     def current_pipeline(self) -> str:
         """Get current pipeline selection (normalized short name).
 
@@ -985,8 +1013,17 @@ class MainTabWidget(QWidget):
         """Return all field values as dotted key-value dict."""
         data = {"_pipeline": self.current_pipeline}
 
+        # Get values from pipeline-specific fields (read from current pipeline's widgets)
+        pipeline_key = self.current_pipeline_key
+        if pipeline_key in self._pipeline_fields:
+            for key, widget in self._pipeline_fields[pipeline_key].items():
+                data[key] = self._get_widget_value(widget)
+
+        # Get values from non-pipeline fields (shared across all pipelines)
         for key, widget in self._fields.items():
-            data[key] = self._get_widget_value(widget)
+            # Skip if already added from pipeline-specific fields
+            if key not in data:
+                data[key] = self._get_widget_value(widget)
 
         # Add frame target data
         data.update(self.frame_target_selector.get_form_data())
@@ -1011,8 +1048,19 @@ class MainTabWidget(QWidget):
             self.current_pipeline = data["_pipeline"]
 
         for key, value in data.items():
+            # Set in pipeline-specific fields (update ALL pipelines that have this key)
+            for pipeline_key, fields in self._pipeline_fields.items():
+                if key in fields:
+                    self._set_widget_value(fields[key], value)
+
+            # Also set in _fields for non-pipeline fields
             if key in self._fields:
-                self._set_widget_value(self._fields[key], value)
+                # Only set if not a pipeline-specific field (avoid double-set)
+                is_pipeline_field = any(
+                    key in fields for fields in self._pipeline_fields.values()
+                )
+                if not is_pipeline_field:
+                    self._set_widget_value(self._fields[key], value)
 
     def _get_widget_value(self, widget: QWidget) -> Any:
         """Get value from a widget."""
