@@ -334,8 +334,8 @@ class LearningDialog(QtWidgets.QDialog):
             if frame_count > 0:
                 options["suggestions"] = FrameTargetOption(
                     key="suggestions",
-                    label="Selected frames for labeling",
-                    description="Frames selected via suggestion methods",
+                    label="Suggestions",
+                    description="Frames in the Labeling Suggestions list",
                     frame_count=frame_count,
                 )
 
@@ -447,16 +447,9 @@ class LearningDialog(QtWidgets.QDialog):
 
         pref_value = key_to_pref.get(selection.target_key, selection.target_key)
 
-        if prefs.get("training predict on") != pref_value:
+        if prefs["training predict on"] != pref_value:
             prefs["training predict on"] = pref_value
             prefs.save()
-
-    def _clear_all_predictions(self):
-        """Clear all predicted instances from labels."""
-        for lf in self.labels:
-            # Remove all predicted instances
-            for inst in list(lf.predicted_instances):
-                lf.instances.remove(inst)
 
     def connect_signals(self):
         """Connect valueChanged signals for pipeline and any existing tabs.
@@ -895,6 +888,16 @@ class LearningDialog(QtWidgets.QDialog):
                 total_frame_count=frame_count,
                 batch_size=batch_size,
             )
+        elif target_key == "predicted":
+            items_for_inference = runners.ItemsForInference(
+                items=[
+                    runners.DatasetItemForInference(
+                        labels_path=self.labels_filename, frame_filter="predicted"
+                    )
+                ],
+                total_frame_count=frame_count,
+                batch_size=batch_size,
+            )
         else:
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
                 video_frames_dict=frame_selection,
@@ -999,20 +1002,6 @@ class LearningDialog(QtWidgets.QDialog):
 
         # Get selection from new widget
         selection = self.frame_target_selector.get_selection()
-
-        # Handle pre-action: clear all predictions first
-        if selection.clear_all_first:
-            confirm = QtWidgets.QMessageBox.question(
-                self,
-                "Clear All Predictions",
-                "This will delete ALL existing predictions.\n\n"
-                "Are you sure you want to continue?",
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                QtWidgets.QMessageBox.No,
-            )
-            if confirm != QtWidgets.QMessageBox.Yes:
-                return
-            self._clear_all_predictions()
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
 
@@ -1370,9 +1359,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self._radio_train_scratch = QtWidgets.QRadioButton(
                 "Reuse config (train from scratch)"
             )
-            self._radio_resume = QtWidgets.QRadioButton(
-                "Resume training (fine-tune)"
-            )
+            self._radio_resume = QtWidgets.QRadioButton("Resume training (fine-tune)")
             self._radio_use_trained = QtWidgets.QRadioButton(
                 "Reuse model (don't retrain)"
             )

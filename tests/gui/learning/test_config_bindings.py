@@ -9,8 +9,6 @@ from unittest.mock import patch
 
 from sleap.gui.learning.main_tab import (
     MainTabWidget,
-    PIPELINE_OPTIONS_TRAINING,
-    PIPELINE_OPTIONS_INFERENCE,
 )
 from sleap.gui.config_utils import (
     apply_cfg_transforms_to_key_val_dict,
@@ -46,7 +44,7 @@ def training_widget(qtbot):
     with patch("sleap.gui.learning.main_tab.prefs", CLEAN_PREFS):
         with patch(
             "sleap.gui.learning.main_tab.check_wandb_login_status",
-            return_value=(False, None),
+            return_value=(False, None, None),
         ):
             widget = MainTabWidget(mode="training")
             qtbot.addWidget(widget)
@@ -197,7 +195,7 @@ class TestPerformanceFieldMapping:
     def test_devices_mapping(self, training_widget):
         """Devices spinbox should map to trainer_config.trainer_devices."""
         # Uncheck auto first
-        training_widget._fields["trainer_config.trainer_devices_auto"].setChecked(False)
+        training_widget._fields["_trainer_devices_auto"].setChecked(False)
         training_widget._fields["trainer_config.trainer_devices"].setValue(2)
 
         data = training_widget.get_form_data()
@@ -205,12 +203,12 @@ class TestPerformanceFieldMapping:
         assert data["trainer_config.trainer_devices"] == 2
 
     def test_devices_auto_mapping(self, training_widget):
-        """Devices auto checkbox should map to trainer_config.trainer_devices_auto."""
-        training_widget._fields["trainer_config.trainer_devices_auto"].setChecked(True)
+        """Devices auto checkbox should map to _trainer_devices_auto."""
+        training_widget._fields["_trainer_devices_auto"].setChecked(True)
 
         data = training_widget.get_form_data()
 
-        assert data["trainer_config.trainer_devices_auto"] is True
+        assert data["_trainer_devices_auto"] is True
 
     def test_num_workers_mapping(self, training_widget):
         """Num workers should map to trainer_config.train_data_loader.num_workers."""
@@ -341,7 +339,7 @@ class TestOutputFieldMapping:
         assert data["trainer_config.model_ckpt.save_last"] is True
 
     def test_visualize_mapping(self, training_widget):
-        """Visualize checkbox should map to trainer_config.visualize_preds_during_training."""
+        """Visualize checkbox maps to visualize_preds_during_training."""
         training_widget._fields[
             "trainer_config.visualize_preds_during_training"
         ].setChecked(False)
@@ -461,7 +459,9 @@ class TestTrackerFieldMapping:
     def test_simple_tracker_fields_mapping(self, inference_widget):
         """Simple tracker fields should map correctly."""
         # Disable the "No limit" checkbox
-        inference_widget._fields["tracking.max_tracks_disabled.simple"].setChecked(False)
+        inference_widget._fields["tracking.max_tracks_disabled.simple"].setChecked(
+            False
+        )
         inference_widget._fields["tracking.max_tracks.simple"].setValue(3)
         inference_widget._fields["tracking.track_window.simple"].setValue(15)
 
@@ -588,6 +588,37 @@ class TestConfigTransforms:
         apply_cfg_transforms_to_key_val_dict(data)
 
         assert data["data_config.data_pipeline_fw"] == "torch_dataset_cache_img_disk"
+
+    def test_trainer_devices_auto_checked_sets_none(self):
+        """When auto checkbox is checked, trainer_devices should be set to None."""
+        data = self._make_data(
+            **{
+                "_trainer_devices_auto": True,
+                "trainer_config.trainer_devices": 0,  # Spinbox value (ignored when auto)
+            }
+        )
+        apply_cfg_transforms_to_key_val_dict(data)
+
+        assert data["trainer_config.trainer_devices"] is None
+
+    def test_trainer_devices_auto_unchecked_preserves_value(self):
+        """When auto checkbox is unchecked, trainer_devices should be preserved."""
+        data = self._make_data(
+            **{
+                "_trainer_devices_auto": False,
+                "trainer_config.trainer_devices": 2,
+            }
+        )
+        apply_cfg_transforms_to_key_val_dict(data)
+
+        assert data["trainer_config.trainer_devices"] == 2
+
+    def test_trainer_devices_auto_not_present_preserves_value(self):
+        """When auto checkbox is not in data, trainer_devices should be preserved."""
+        data = self._make_data(**{"trainer_config.trainer_devices": 1})
+        apply_cfg_transforms_to_key_val_dict(data)
+
+        assert data["trainer_config.trainer_devices"] == 1
 
     def test_rotation_preset_off_transform(self):
         """Rotation preset Off should set rotation_p to None."""
@@ -798,8 +829,8 @@ class TestOmegaConfConversion:
 class TestFullConfigPipeline:
     """Tests for complete config generation pipeline.
 
-    Note: MainTabWidget doesn't include all fields needed for apply_cfg_transforms_to_key_val_dict
-    (like trainer_config.train_data_loader.batch_size which is in TrainingEditorWidget).
+    Note: MainTabWidget doesn't include all fields for cfg_transforms (like
+    trainer_config.train_data_loader.batch_size in TrainingEditorWidget).
     These tests add required fields or skip transforms where appropriate.
     """
 
@@ -855,8 +886,10 @@ class TestFullConfigPipeline:
         cfg = get_omegaconf_from_gui_form(data)
 
         # Verify tracking config
+        # Note: tracking params are consolidated from suffixed keys (tracking.track_window.flow)
+        # to unsuffixed keys (tracking.track_window) based on selected tracker
         assert cfg.tracking.tracker == "flow"
-        assert cfg.tracking.track_window.flow == 20
+        assert cfg.tracking.track_window == 20
 
     def test_filtered_config_ready_for_sleap_nn(self, training_widget):
         """Config should be properly filtered for sleap-nn after full pipeline."""
@@ -884,4 +917,6 @@ class TestFullConfigPipeline:
         )
 
         # Verify essential config is preserved
-        assert filtered_cfg.model_config.head_configs.single_instance.confmaps.sigma == 4.0
+        assert (
+            filtered_cfg.model_config.head_configs.single_instance.confmaps.sigma == 4.0
+        )

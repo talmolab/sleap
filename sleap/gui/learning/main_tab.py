@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from qtpy.QtCore import Qt, Signal
+from qtpy.QtGui import QGuiApplication
 from qtpy.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -26,6 +27,7 @@ from qtpy.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPushButton,
     QScrollArea,
     QSizePolicy,
     QSpinBox,
@@ -250,7 +252,7 @@ class MainTabWidget(QWidget):
         self._skeleton = skeleton
         self._fields: Dict[str, QWidget] = {}
         # Store pipeline-specific fields separately to handle duplicate keys
-        # across pipelines (e.g., centroid.sigma appears in both top-down and top-down-id)
+        # across pipelines (e.g., centroid.sigma in top-down and top-down-id)
         self._pipeline_fields: Dict[str, Dict[str, QWidget]] = {}
         self._pipeline_options = (
             PIPELINE_OPTIONS_TRAINING
@@ -278,7 +280,9 @@ class MainTabWidget(QWidget):
 
         scroll_content = QWidget()
         scroll_content.setObjectName("mainTabScrollContent")
-        scroll_content.setStyleSheet("#mainTabScrollContent { background-color: white; }")
+        scroll_content.setStyleSheet(
+            "#mainTabScrollContent { background-color: white; }"
+        )
         main_layout = QVBoxLayout(scroll_content)
         main_layout.setSpacing(12)
         main_layout.setContentsMargins(12, 12, 12, 12)
@@ -407,7 +411,9 @@ class MainTabWidget(QWidget):
         # Description
         desc_label = QLabel(opt.description)
         desc_label.setWordWrap(True)
-        desc_label.setMinimumWidth(self.BOX_MIN_WIDTH - 24)  # Account for group box margins
+        desc_label.setMinimumWidth(
+            self.BOX_MIN_WIDTH - 24
+        )  # Account for group box margins
         desc_label.setStyleSheet("color: #666;")
         layout.addWidget(desc_label)
 
@@ -750,15 +756,15 @@ class MainTabWidget(QWidget):
         row2.addWidget(devices_label)
 
         devices = QSpinBox()
-        devices.setRange(0, 8)
-        devices.setValue(0)
+        devices.setRange(1, 8)
+        devices.setValue(1)
         devices.setMinimumWidth(60)
         self._fields["trainer_config.trainer_devices"] = devices
         row2.addWidget(devices)
 
         auto_devices = QCheckBox("Auto")
         auto_devices.setChecked(True)
-        self._fields["trainer_config.trainer_devices_auto"] = auto_devices
+        self._fields["_trainer_devices_auto"] = auto_devices
         row2.addWidget(auto_devices)
 
         # Connect checkbox to enable/disable spinbox
@@ -780,15 +786,43 @@ class MainTabWidget(QWidget):
         layout = QVBoxLayout(group)
         layout.setSpacing(8)
 
-        # Row 1: Enable + Upload Viz checkboxes
+        # Row 1: Status + buttons + Enable + Upload Viz
         row1 = QHBoxLayout()
-        row1.setSpacing(12)
+        row1.setSpacing(8)
+
+        row1.addWidget(QLabel("Status:"))
+
+        # Status label (will be updated by _update_wandb_status)
+        api_key_status = QLabel()
+        api_key_status.setStyleSheet("color: #666;")
+        self._api_key_status_label = api_key_status
+        row1.addWidget(api_key_status)
+
+        # Copy button (only visible when not logged in)
+        copy_btn = QPushButton("📋")
+        copy_btn.setFixedSize(24, 24)
+        copy_btn.setToolTip("Copy login command to clipboard")
+        copy_btn.setFlat(True)
+        copy_btn.clicked.connect(self._copy_wandb_login_command)
+        self._wandb_copy_btn = copy_btn
+        row1.addWidget(copy_btn)
+
+        # Refresh button (only visible when not logged in)
+        refresh_btn = QPushButton("🔄")
+        refresh_btn.setFixedSize(24, 24)
+        refresh_btn.setToolTip("Check WandB login status")
+        refresh_btn.setFlat(True)
+        refresh_btn.clicked.connect(self._update_wandb_status)
+        self._wandb_refresh_btn = refresh_btn
+        row1.addWidget(refresh_btn)
+
+        row1.addSpacing(20)
 
         enable_wandb = QCheckBox("Enable WandB for logging")
         self._fields["trainer_config.use_wandb"] = enable_wandb
         row1.addWidget(enable_wandb)
 
-        row1.addSpacing(20)
+        row1.addSpacing(12)
 
         upload_viz = QCheckBox("Upload Viz to WandB")
         self._fields["trainer_config.wandb.save_viz_imgs_wandb"] = upload_viz
@@ -797,24 +831,11 @@ class MainTabWidget(QWidget):
         row1.addStretch()
         layout.addLayout(row1)
 
-        # Row 2: API Key status
-        row2 = QHBoxLayout()
-        row2.setSpacing(8)
-
-        row2.addWidget(QLabel("WandB API Key:"))
-        api_key_status = QLabel("(using cached credentials (~/.netrc))")
-        api_key_status.setStyleSheet("color: #666;")
-        self._api_key_status_label = api_key_status
-        row2.addWidget(api_key_status)
-        row2.addStretch()
-
-        # Hidden actual API key field
+        # Hidden actual API key field (for form data)
         api_key = QLineEdit()
         api_key.setEchoMode(QLineEdit.Password)
         api_key.setVisible(False)
         self._fields["trainer_config.wandb.api_key"] = api_key
-
-        layout.addLayout(row2)
 
         # Fixed-width labels for alignment
         LABEL_WIDTH_COL1 = 95  # "Previous Run ID:" is longest
@@ -1013,7 +1034,7 @@ class MainTabWidget(QWidget):
         """Return all field values as dotted key-value dict."""
         data = {"_pipeline": self.current_pipeline}
 
-        # Get values from pipeline-specific fields (read from current pipeline's widgets)
+        # Get values from pipeline-specific fields (from current pipeline's widgets)
         pipeline_key = self.current_pipeline_key
         if pipeline_key in self._pipeline_fields:
             for key, widget in self._pipeline_fields[pipeline_key].items():
@@ -1027,6 +1048,29 @@ class MainTabWidget(QWidget):
 
         # Add frame target data
         data.update(self.frame_target_selector.get_form_data())
+
+        # Consolidate tracking parameters based on selected tracker
+        # The form stores tracker-specific fields with suffixes (e.g., tracking.match.flow)
+        # but runners.py expects unsuffixed keys (e.g., tracking.match)
+        tracker = data.get("tracking.tracker", "none")
+        if tracker in ("flow", "simple"):
+            tracking_fields = [
+                "tracking.match",
+                "tracking.similarity",
+                "tracking.track_window",
+                "tracking.max_tracks",
+                "tracking.max_tracks_disabled",
+                "tracking.post_connect_single_breaks",
+                "tracking.robust",
+            ]
+            for field in tracking_fields:
+                suffixed_key = f"{field}.{tracker}"
+                if suffixed_key in data:
+                    data[field] = data[suffixed_key]
+
+            # Handle max_tracks: if "no limit" is checked, set to None
+            if data.get("tracking.max_tracks_disabled", True):
+                data["tracking.max_tracks"] = None
 
         # Strip placeholder from API key if user didn't change it
         api_key = data.get("trainer_config.wandb.api_key")
@@ -1136,23 +1180,63 @@ class MainTabWidget(QWidget):
             if value is not None and key in self._fields:
                 self._set_widget_value(self._fields[key], value)
 
-        # Update API key field based on login status
-        is_logged_in, auth_source = check_wandb_login_status()
+        # Update the status display
+        self._update_wandb_status()
+
+    def _update_wandb_status(self):
+        """Check and update the WandB login status display."""
+        is_logged_in, auth_source, username = check_wandb_login_status()
+
+        if not hasattr(self, "_api_key_status_label"):
+            return
+
         if is_logged_in:
+            # Show logged in status
+            if auth_source == "WANDB_API_KEY environment variable":
+                status_text = "Logged in via env var ✓"
+            else:
+                status_text = "Logged in ✓"
+
+            self._api_key_status_label.setText(status_text)
+            self._api_key_status_label.setStyleSheet("color: #2e7d32;")  # Green
+
+            # Hide copy and refresh buttons when logged in
+            if hasattr(self, "_wandb_copy_btn"):
+                self._wandb_copy_btn.setVisible(False)
+            if hasattr(self, "_wandb_refresh_btn"):
+                self._wandb_refresh_btn.setVisible(False)
+
+            # Update hidden API key field
             api_key_field = self._fields.get("trainer_config.wandb.api_key")
             if api_key_field is not None:
-                # Set placeholder to indicate already authenticated
                 placeholder = f"(using {auth_source})"
                 api_key_field.setText(placeholder)
                 api_key_field.setToolTip(
                     get_wandb_api_key_help_text(is_logged_in, auth_source)
                 )
-                # Store placeholder so we can strip it on form read
                 self._wandb_api_key_placeholder = placeholder
+        else:
+            # Show login instructions
+            self._api_key_status_label.setText("Login with: uvx wandb login")
+            self._api_key_status_label.setStyleSheet("color: #666;")
 
-            # Update visible status label
-            if hasattr(self, "_api_key_status_label"):
-                self._api_key_status_label.setText(f"(using {auth_source})")
+            # Show copy and refresh buttons when not logged in
+            if hasattr(self, "_wandb_copy_btn"):
+                self._wandb_copy_btn.setVisible(True)
+            if hasattr(self, "_wandb_refresh_btn"):
+                self._wandb_refresh_btn.setVisible(True)
+
+            # Clear any placeholder
+            self._wandb_api_key_placeholder = None
+            api_key_field = self._fields.get("trainer_config.wandb.api_key")
+            if api_key_field is not None:
+                api_key_field.clear()
+                api_key_field.setToolTip(get_wandb_api_key_help_text(False, None))
+
+    def _copy_wandb_login_command(self):
+        """Copy the WandB login command to clipboard."""
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText("uvx wandb login")
 
     def _save_wandb_preferences(self, form_data: dict):
         """Save WandB settings to preferences for persistence across sessions."""
@@ -1189,9 +1273,9 @@ class MainTabWidget(QWidget):
                 "training num devices"
             ]
             # Uncheck Auto if we have a saved devices value
-            if "trainer_config.trainer_devices_auto" in self._fields:
+            if "_trainer_devices_auto" in self._fields:
                 self._set_widget_value(
-                    self._fields["trainer_config.trainer_devices_auto"], False
+                    self._fields["_trainer_devices_auto"], False
                 )
 
         for key, value in training_prefs.items():

@@ -206,9 +206,9 @@ class FrameTargetSelector(QWidget):
         options_layout.addSpacing(16)
 
         # Existing predictions label and radios
-        predictions_label = QLabel("Existing predictions:")
-        predictions_label.setStyleSheet("font-size: 11px;")
-        options_layout.addWidget(predictions_label)
+        self.predictions_label = QLabel("Existing predictions:")
+        self.predictions_label.setStyleSheet("font-size: 11px;")
+        options_layout.addWidget(self.predictions_label)
 
         self.predictions_button_group = QButtonGroup(self)
 
@@ -287,12 +287,60 @@ class FrameTargetSelector(QWidget):
 
         self.target_dropdown.blockSignals(False)
 
+        # Apply auto-configuration for initial selection
+        self._apply_target_auto_configuration()
+
     def _on_target_changed(self, index: int):
         """Handle target selection change from dropdown."""
         if 0 <= index < len(self._option_keys):
             self._selected_key = self._option_keys[index]
             self._update_description()
+            self._apply_target_auto_configuration()
             self.valueChanged.emit()
+
+    def _apply_target_auto_configuration(self):
+        """Apply sensible defaults and enable/disable widgets based on target.
+
+        Different targets have different valid filter combinations:
+        - "suggestions": Already excludes user-labeled frames (sleap-nn behavior),
+          so "Skip user labeled" is redundant and should be forced on + disabled.
+        - "user_labeled": Predicting on user-labeled frames, so "Skip user labeled"
+          would result in zero frames. Force off + disabled.
+        - "nothing": No inference runs, so all filters are irrelevant. Disable all
+          and force "Keep" for predictions.
+        - All other targets: All filter combinations are valid.
+        """
+        # Default: enable everything
+        self.skip_user_labeled_cb.setEnabled(True)
+        self.predictions_label.setEnabled(True)
+        self.predictions_clear_radio.setEnabled(True)
+        self.predictions_replace_radio.setEnabled(True)
+        self.predictions_keep_radio.setEnabled(True)
+
+        if self._selected_key == "suggestions":
+            # Suggestions already excludes user-labeled frames in sleap-nn
+            # Force checked and disable to indicate this is automatic
+            self.skip_user_labeled_cb.setChecked(True)
+            self.skip_user_labeled_cb.setEnabled(False)
+            # Default to Replace for suggestions (common workflow)
+            self.predictions_replace_radio.setChecked(True)
+
+        elif self._selected_key == "user_labeled":
+            # Can't skip user-labeled when targeting user-labeled frames
+            self.skip_user_labeled_cb.setChecked(False)
+            self.skip_user_labeled_cb.setEnabled(False)
+
+        elif self._selected_key == "nothing":
+            # No inference runs, so filters are irrelevant
+            # Disable everything and force "Keep" (no changes to predictions)
+            self.skip_user_labeled_cb.setChecked(False)
+            self.skip_user_labeled_cb.setEnabled(False)
+            self.predictions_label.setEnabled(False)
+            self.predictions_clear_radio.setEnabled(False)
+            self.predictions_replace_radio.setEnabled(False)
+            self.predictions_keep_radio.setEnabled(False)
+            # Force "Keep" so no predictions are accidentally cleared
+            self.predictions_keep_radio.setChecked(True)
 
     def _on_predictions_changed(self, button):
         """Handle predictions mode change."""
