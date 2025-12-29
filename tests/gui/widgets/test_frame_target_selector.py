@@ -4,7 +4,6 @@ This module tests the dropdown-based target selector for training/inference dial
 """
 
 import pytest
-from qtpy.QtWidgets import QRadioButton
 
 from sleap.gui.widgets.frame_target_selector import (
     FrameTargetSelector,
@@ -611,6 +610,35 @@ class TestEdgeCases:
         desc2 = training_selector.description_label.text()
 
         assert desc1 != desc2
+
+    def test_suggestions_auto_configures_replace_and_skip(self, inference_selector):
+        """Selecting 'Suggestions' should auto-select Replace and enable Skip user labeled."""
+        # Verify initial state - Keep is selected and skip is unchecked
+        assert inference_selector.predictions_keep_radio.isChecked()
+        assert not inference_selector.skip_user_labeled_cb.isChecked()
+
+        # Select Suggestions
+        suggestions_index = inference_selector._option_keys.index("suggestions")
+        inference_selector.target_dropdown.setCurrentIndex(suggestions_index)
+
+        # Verify auto-configuration
+        assert inference_selector.predictions_replace_radio.isChecked()
+        assert inference_selector.skip_user_labeled_cb.isChecked()
+        assert not inference_selector.predictions_keep_radio.isChecked()
+        assert not inference_selector.predictions_clear_radio.isChecked()
+
+    def test_user_labeled_auto_unchecks_skip(self, inference_selector):
+        """Selecting 'User labeled' should uncheck Skip user labeled frames."""
+        # First enable skip user labeled
+        inference_selector.skip_user_labeled_cb.setChecked(True)
+        assert inference_selector.skip_user_labeled_cb.isChecked()
+
+        # Select User labeled
+        user_labeled_index = inference_selector._option_keys.index("user_labeled")
+        inference_selector.target_dropdown.setCurrentIndex(user_labeled_index)
+
+        # Verify skip is unchecked
+        assert not inference_selector.skip_user_labeled_cb.isChecked()
 
 
 # =============================================================================
