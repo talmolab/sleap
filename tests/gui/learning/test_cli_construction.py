@@ -9,9 +9,8 @@ from unittest.mock import MagicMock, patch
 from pathlib import Path
 import tempfile
 
-from omegaconf import OmegaConf
 
-from sleap_io import Video, Labels, Skeleton
+from sleap_io import Video, Labels
 
 from sleap.gui.learning.runners import (
     VideoItemForInference,
@@ -408,9 +407,7 @@ class TestTrackerCLI:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         assert "--tracking" not in cli_args
 
@@ -446,9 +443,7 @@ class TestTrackerCLI:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         assert "--tracking" in cli_args
         assert "--use_flow" not in cli_args
@@ -470,9 +465,7 @@ class TestTrackerCLI:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         assert "--candidates_method" in cli_args
         cand_idx = cli_args.index("--candidates_method") + 1
@@ -498,9 +491,7 @@ class TestTrackerCLI:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         assert "--post_connect_single_breaks" in cli_args
         assert "--tracking_target_instance_count" in cli_args
@@ -537,9 +528,7 @@ class TestTrackerCLI:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         assert "--features" in cli_args
         feat_idx = cli_args.index("--features") + 1
@@ -565,9 +554,7 @@ class TestTrackerCLI:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         assert "--features" in cli_args
         feat_idx = cli_args.index("--features") + 1
@@ -593,9 +580,7 @@ class TestTrackerCLI:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         assert "--scoring_reduction" in cli_args
         red_idx = cli_args.index("--scoring_reduction") + 1
@@ -632,9 +617,7 @@ class TestModelPathHandling:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         model_idx = cli_args.index("--model_paths") + 1
         # Should be parent dir, not the yaml file
@@ -650,9 +633,7 @@ class TestModelPathHandling:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         model_idx = cli_args.index("--model_paths") + 1
         # Normalize for cross-platform
@@ -667,9 +648,7 @@ class TestModelPathHandling:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         model_idx = cli_args.index("--model_paths") + 1
         assert cli_args[model_idx] == "/path/to/model"
@@ -686,9 +665,7 @@ class TestModelPathHandling:
             labels_filename="/path/to/labels.slp",
         )
 
-        cli_args, _ = task.make_predict_cli_call(
-            video_item, output_path="/tmp/out.slp"
-        )
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
         # Count --model_paths occurrences
         model_paths_count = cli_args.count("--model_paths")

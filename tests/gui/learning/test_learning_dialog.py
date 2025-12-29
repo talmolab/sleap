@@ -5,16 +5,13 @@ This module tests the main dialog for training/inference configuration.
 
 import pytest
 from unittest.mock import patch, MagicMock
-from pathlib import Path
 
-from qtpy.QtWidgets import QTabWidget
 
 from sleap_io import Labels, Skeleton, Video
 
 from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
 from sleap.gui.learning.main_tab import MainTabWidget
 from sleap.gui.widgets.frame_target_selector import (
-    FrameTargetOption,
     FrameTargetSelection,
 )
 
@@ -74,7 +71,9 @@ def training_dialog(qtbot, minimal_labels, minimal_skeleton, tmp_path, mock_cfg_
 
 
 @pytest.fixture
-def inference_dialog(qtbot, minimal_labels, minimal_skeleton, tmp_path, mock_cfg_getter):
+def inference_dialog(
+    qtbot, minimal_labels, minimal_skeleton, tmp_path, mock_cfg_getter
+):
     """Create a LearningDialog in inference mode with mocked dependencies."""
     # Create a temporary labels file
     labels_file = tmp_path / "test.slp"
@@ -182,7 +181,7 @@ class TestPipelineSwitching:
         assert "single_instance" in training_dialog.shown_tab_names
 
     def test_set_pipeline_top_down_id(self, training_dialog):
-        """Setting top-down-id pipeline should add centroid and multi_class_topdown tabs."""
+        """Top-down-id pipeline should add centroid and multi_class_topdown."""
         training_dialog.set_pipeline("top-down-id")
         assert training_dialog.current_pipeline == "top-down-id"
         assert "centroid" in training_dialog.shown_tab_names
@@ -214,7 +213,9 @@ class TestPipelineSwitching:
         training_dialog.remove_tabs()
         assert training_dialog.tab_widget.count() == 1
         # First tab should still be pipeline tab
-        assert training_dialog.tab_widget.widget(0) is training_dialog.pipeline_form_widget
+        assert (
+            training_dialog.tab_widget.widget(0) is training_dialog.pipeline_form_widget
+        )
 
 
 # =============================================================================
@@ -411,7 +412,9 @@ class TestGetFormData:
 class TestDefaultPipeline:
     """Tests for default pipeline selection."""
 
-    def test_get_most_recent_pipeline_trained_none(self, training_dialog, mock_cfg_getter):
+    def test_get_most_recent_pipeline_trained_none(
+        self, training_dialog, mock_cfg_getter
+    ):
         """get_most_recent_pipeline_trained should return empty if no trained."""
         mock_cfg_getter.get_first.return_value = None
         result = training_dialog.get_most_recent_pipeline_trained()
@@ -556,7 +559,9 @@ class TestAnchorPartSync:
 
         # All anchor part fields should be synced
         assert (
-            updated_data["model_config.head_configs.centered_instance.confmaps.anchor_part"]
+            updated_data[
+                "model_config.head_configs.centered_instance.confmaps.anchor_part"
+            ]
             == "head"
         )
         assert (
@@ -564,7 +569,9 @@ class TestAnchorPartSync:
             == "head"
         )
         assert (
-            updated_data["model_config.head_configs.multi_class_topdown.confmaps.anchor_part"]
+            updated_data[
+                "model_config.head_configs.multi_class_topdown.confmaps.anchor_part"
+            ]
             == "head"
         )
 
@@ -577,7 +584,9 @@ class TestAnchorPartSync:
         training_dialog.adjust_data_to_update_other_tabs(source_data, updated_data)
 
         assert (
-            updated_data["model_config.head_configs.centered_instance.confmaps.anchor_part"]
+            updated_data[
+                "model_config.head_configs.centered_instance.confmaps.anchor_part"
+            ]
             is None
         )
 
@@ -596,9 +605,7 @@ class TestSigmaSync:
     potentially overwritten reference.
     """
 
-    def test_centroid_sigma_reads_from_current_pipeline(
-        self, training_dialog, qtbot
-    ):
+    def test_centroid_sigma_reads_from_current_pipeline(self, training_dialog, qtbot):
         """Centroid sigma should be read from the current pipeline's widget.
 
         This tests the fix for a bug where centroid sigma was read from the
@@ -639,11 +646,15 @@ class TestSigmaSync:
         # Both pipelines have centroid sigma
         centroid_sigma_key = "model_config.head_configs.centroid.confmaps.sigma"
         assert centroid_sigma_key in main_tab._pipeline_fields["multi-animal top-down"]
-        assert centroid_sigma_key in main_tab._pipeline_fields["multi-animal top-down-id"]
+        assert (
+            centroid_sigma_key in main_tab._pipeline_fields["multi-animal top-down-id"]
+        )
 
         # They should be DIFFERENT widget instances
         widget1 = main_tab._pipeline_fields["multi-animal top-down"][centroid_sigma_key]
-        widget2 = main_tab._pipeline_fields["multi-animal top-down-id"][centroid_sigma_key]
+        widget2 = main_tab._pipeline_fields["multi-animal top-down-id"][
+            centroid_sigma_key
+        ]
         assert widget1 is not widget2
 
     def test_set_form_data_updates_all_pipelines(self, training_dialog):
@@ -656,7 +667,9 @@ class TestSigmaSync:
 
         # Both pipeline widgets should be updated
         widget1 = main_tab._pipeline_fields["multi-animal top-down"][centroid_sigma_key]
-        widget2 = main_tab._pipeline_fields["multi-animal top-down-id"][centroid_sigma_key]
+        widget2 = main_tab._pipeline_fields["multi-animal top-down-id"][
+            centroid_sigma_key
+        ]
         assert widget1.value() == 8.0
         assert widget2.value() == 8.0
 

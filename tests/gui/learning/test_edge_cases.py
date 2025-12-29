@@ -7,14 +7,11 @@ This module tests error handling scenarios including:
 """
 
 import pytest
-from unittest.mock import patch, MagicMock, PropertyMock
-from pathlib import Path
-import tempfile
-import os
+from unittest.mock import patch, MagicMock
 
 from omegaconf import OmegaConf, DictConfig
 
-from sleap_io import Skeleton, Labels, Node
+from sleap_io import Skeleton, Labels
 
 from sleap.sleap_io_adaptors.skeleton_utils import (
     is_arborescence,
@@ -380,7 +377,9 @@ class TestSubprocessErrorHandling:
         mock_item.cli_args = ["--data_path", "/path/to/data"]
         mock_item.path = "/path/to/data"
 
-        with patch("sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc):
+        with patch(
+            "sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc
+        ):
             output_path, result = task.predict_subprocess(
                 mock_item, append_results=False
             )
@@ -398,7 +397,10 @@ class TestSubprocessErrorHandling:
 
         # Mock subprocess.Popen with failure
         mock_proc = MagicMock()
-        mock_proc.poll.side_effect = [None, 1]  # First poll returns None, then 1 (error)
+        mock_proc.poll.side_effect = [
+            None,
+            1,
+        ]  # First poll returns None, then 1 (error)
         mock_proc.returncode = 1
         mock_proc.stdout.readline.return_value = b""
         mock_proc.__enter__ = MagicMock(return_value=mock_proc)
@@ -408,7 +410,9 @@ class TestSubprocessErrorHandling:
         mock_item.cli_args = ["--data_path", "/path/to/data"]
         mock_item.path = "/path/to/data"
 
-        with patch("sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc):
+        with patch(
+            "sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc
+        ):
             output_path, result = task.predict_subprocess(
                 mock_item, append_results=False
             )
@@ -441,7 +445,9 @@ class TestSubprocessErrorHandling:
         def cancel_callback(**kwargs):
             return "cancel"
 
-        with patch("sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc):
+        with patch(
+            "sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc
+        ):
             with patch("sleap.gui.learning.runners.kill_process"):
                 output_path, result = task.predict_subprocess(
                     mock_item, append_results=False, waiting_callback=cancel_callback
@@ -505,7 +511,9 @@ class TestSubprocessErrorHandling:
         mock_item.cli_args = ["--data_path", "/path/to/data"]
         mock_item.path = "/path/to/data"
 
-        with patch("sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc):
+        with patch(
+            "sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc
+        ):
             # Should not raise, should handle invalid JSON gracefully
             output_path, result = task.predict_subprocess(
                 mock_item, append_results=False

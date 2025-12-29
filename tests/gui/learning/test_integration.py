@@ -7,20 +7,13 @@ This module tests the integration between components including:
 """
 
 import pytest
-from unittest.mock import patch, MagicMock, PropertyMock
-from pathlib import Path
+from unittest.mock import patch, MagicMock
 
-from omegaconf import OmegaConf
 
 from sleap_io import Labels, Skeleton, Video
 
 from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
 from sleap.gui.learning.main_tab import MainTabWidget
-from sleap.gui.learning import configs
-from sleap.gui.config_utils import (
-    apply_cfg_transforms_to_key_val_dict,
-    get_omegaconf_from_gui_form,
-)
 from sleap.gui.widgets.frame_target_selector import FrameTargetSelection
 
 
@@ -157,7 +150,9 @@ class TestConfigAssembly:
 
         # All anchor part fields should be synced
         assert (
-            updated_data["model_config.head_configs.centered_instance.confmaps.anchor_part"]
+            updated_data[
+                "model_config.head_configs.centered_instance.confmaps.anchor_part"
+            ]
             == "thorax"
         )
         assert (
@@ -165,7 +160,9 @@ class TestConfigAssembly:
             == "thorax"
         )
         assert (
-            updated_data["model_config.head_configs.multi_class_topdown.confmaps.anchor_part"]
+            updated_data[
+                "model_config.head_configs.multi_class_topdown.confmaps.anchor_part"
+            ]
             == "thorax"
         )
 
@@ -179,7 +176,9 @@ class TestConfigAssembly:
         training_dialog.adjust_data_to_update_other_tabs(source_data, updated_data)
 
         assert (
-            updated_data["model_config.head_configs.centered_instance.confmaps.anchor_part"]
+            updated_data[
+                "model_config.head_configs.centered_instance.confmaps.anchor_part"
+            ]
             == "head"
         )
 
@@ -268,7 +267,7 @@ class TestWandBPreferences:
         with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
             with patch(
                 "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None),
+                return_value=(False, None, None),
             ):
                 widget = MainTabWidget(mode="training")
                 qtbot.addWidget(widget)
@@ -283,7 +282,7 @@ class TestWandBPreferences:
         with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
             with patch(
                 "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None),
+                return_value=(False, None, None),
             ):
                 widget = MainTabWidget(mode="training")
                 qtbot.addWidget(widget)
@@ -311,7 +310,7 @@ class TestWandBPreferences:
         with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
             with patch(
                 "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None),
+                return_value=(False, None, None),
             ):
                 widget = MainTabWidget(mode="training")
                 qtbot.addWidget(widget)
@@ -337,24 +336,30 @@ class TestTrainingPreferences:
         with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
             with patch(
                 "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None),
+                return_value=(False, None, None),
             ):
                 widget = MainTabWidget(mode="training")
                 qtbot.addWidget(widget)
 
         # Check that values were loaded
-        assert widget._fields["trainer_config.trainer_accelerator"].currentData() == "cuda"
-        assert widget._fields["trainer_config.train_data_loader.num_workers"].value() == 8
+        assert (
+            widget._fields["trainer_config.trainer_accelerator"].currentData() == "cuda"
+        )
+        assert (
+            widget._fields["trainer_config.train_data_loader.num_workers"].value() == 8
+        )
         assert widget._fields["trainer_config.trainer_devices"].value() == 2
         # Auto should be unchecked when specific device count is loaded
-        assert widget._fields["trainer_config.trainer_devices_auto"].isChecked() is False
+        assert (
+            widget._fields["_trainer_devices_auto"].isChecked() is False
+        )
 
     def test_save_training_preferences(self, qtbot, mock_prefs):
         """Training settings should be saved to preferences."""
         with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
             with patch(
                 "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None),
+                return_value=(False, None, None),
             ):
                 widget = MainTabWidget(mode="training")
                 qtbot.addWidget(widget)
@@ -364,9 +369,9 @@ class TestTrainingPreferences:
                 idx = accel_combo.findData("cuda")
                 accel_combo.setCurrentIndex(idx)
 
-                widget._fields[
-                    "trainer_config.train_data_loader.num_workers"
-                ].setValue(4)
+                widget._fields["trainer_config.train_data_loader.num_workers"].setValue(
+                    4
+                )
 
                 # Save preferences
                 form_data = widget.get_form_data()
@@ -392,7 +397,13 @@ class TestTargetSelectionPreferences:
     """Tests for target selection preference persistence."""
 
     def test_save_target_selection_preference(
-        self, qtbot, minimal_labels, minimal_skeleton, tmp_path, mock_cfg_getter, mock_prefs
+        self,
+        qtbot,
+        minimal_labels,
+        minimal_skeleton,
+        tmp_path,
+        mock_cfg_getter,
+        mock_prefs,
     ):
         """Target selection should be saved to preferences."""
         labels_file = tmp_path / "test.slp"
@@ -423,7 +434,13 @@ class TestTargetSelectionPreferences:
         assert mock_prefs["training predict on"] == "entire current video"
 
     def test_target_selection_key_mapping(
-        self, qtbot, minimal_labels, minimal_skeleton, tmp_path, mock_cfg_getter, mock_prefs
+        self,
+        qtbot,
+        minimal_labels,
+        minimal_skeleton,
+        tmp_path,
+        mock_cfg_getter,
+        mock_prefs,
     ):
         """Target selection keys should be mapped correctly for preferences."""
         labels_file = tmp_path / "test.slp"
@@ -610,7 +627,7 @@ class TestDataPipelinePreferences:
         with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
             with patch(
                 "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None),
+                return_value=(False, None, None),
             ):
                 widget = MainTabWidget(mode="training")
                 qtbot.addWidget(widget)
@@ -629,7 +646,7 @@ class TestDataPipelinePreferences:
         with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
             with patch(
                 "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None),
+                return_value=(False, None, None),
             ):
                 widget = MainTabWidget(mode="training")
                 qtbot.addWidget(widget)
@@ -652,7 +669,7 @@ class TestColorConversionIntegration:
         with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
             with patch(
                 "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None),
+                return_value=(False, None, None),
             ):
                 widget = MainTabWidget(mode="training")
                 qtbot.addWidget(widget)
@@ -664,7 +681,7 @@ class TestColorConversionIntegration:
         with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
             with patch(
                 "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None),
+                return_value=(False, None, None),
             ):
                 widget = MainTabWidget(mode="training")
                 qtbot.addWidget(widget)

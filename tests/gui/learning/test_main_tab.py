@@ -10,13 +10,10 @@ from qtpy.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
-    QLineEdit,
-    QSpinBox,
 )
 
 from sleap.gui.learning.main_tab import (
     MainTabWidget,
-    PipelineOption,
     PIPELINE_OPTIONS_TRAINING,
     PIPELINE_OPTIONS_INFERENCE,
 )
@@ -56,7 +53,7 @@ def training_widget_clean(qtbot):
     with patch("sleap.gui.learning.main_tab.prefs", CLEAN_PREFS):
         with patch(
             "sleap.gui.learning.main_tab.check_wandb_login_status",
-            return_value=(False, None),
+            return_value=(False, None, None),
         ):
             widget = MainTabWidget(mode="training")
             qtbot.addWidget(widget)
@@ -107,7 +104,7 @@ class TestMainTabWidgetInstantiation:
         assert len(PIPELINE_OPTIONS_TRAINING) == 5
 
     def test_inference_mode_has_correct_pipeline_count(self, inference_widget):
-        """Inference mode should have 8 pipeline options (5 + movenet + tracking-only)."""
+        """Inference mode should have 8 pipeline options."""
         assert inference_widget._pipeline_combo.count() == 8
         assert len(PIPELINE_OPTIONS_INFERENCE) == 8
 
@@ -142,7 +139,8 @@ class TestMainTabWidgetInstantiation:
         """Inference mode should NOT have data pipeline fields."""
         assert "_data_pipeline_fw" not in inference_widget._fields
         assert (
-            "trainer_config.train_data_loader.num_workers" not in inference_widget._fields
+            "trainer_config.train_data_loader.num_workers"
+            not in inference_widget._fields
         )
 
     def test_inference_mode_has_tracker_section(self, inference_widget):
@@ -351,7 +349,9 @@ class TestFormData:
         training_widget.set_form_data(
             {"trainer_config.train_data_loader.num_workers": 4}
         )
-        spinbox = training_widget._fields["trainer_config.train_data_loader.num_workers"]
+        spinbox = training_widget._fields[
+            "trainer_config.train_data_loader.num_workers"
+        ]
         assert spinbox.value() == 4
 
     def test_set_form_data_double_spinbox(self, training_widget):
@@ -474,9 +474,9 @@ class TestCoupledFields:
         assert spinbox.isEnabled() is True
 
     def test_devices_auto_disabled_by_default(self, training_widget_clean):
-        """Devices spinbox should be disabled when 'Auto' is checked (no saved prefs)."""
+        """Devices spinbox should be disabled when 'Auto' is checked."""
         spinbox = training_widget_clean._fields["trainer_config.trainer_devices"]
-        checkbox = training_widget_clean._fields["trainer_config.trainer_devices_auto"]
+        checkbox = training_widget_clean._fields["_trainer_devices_auto"]
 
         # Default (without saved preferences): Auto is checked, spinbox is disabled
         assert checkbox.isChecked() is True
@@ -485,7 +485,7 @@ class TestCoupledFields:
     def test_devices_enabled_when_auto_unchecked(self, training_widget):
         """Devices spinbox should be enabled when 'Auto' is unchecked."""
         spinbox = training_widget._fields["trainer_config.trainer_devices"]
-        checkbox = training_widget._fields["trainer_config.trainer_devices_auto"]
+        checkbox = training_widget._fields["_trainer_devices_auto"]
 
         checkbox.setChecked(False)
         assert spinbox.isEnabled() is True
