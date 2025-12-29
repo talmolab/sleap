@@ -666,6 +666,31 @@ class MainTabWidget(QWidget):
         self._fields[f"tracking.track_window.{tracker_type}"] = track_window
         form.addRow("Elapsed Frame Window:", track_window)
 
+        # Robust quantile of similarity scores
+        robust_row = QHBoxLayout()
+        robust_row.setSpacing(6)
+        robust_spinbox = QDoubleSpinBox()
+        robust_spinbox.setRange(0.0, 1.0)
+        robust_spinbox.setSingleStep(0.05)
+        robust_spinbox.setValue(0.95)
+        robust_spinbox.setFixedWidth(60)
+        robust_spinbox.setDecimals(2)
+        self._fields[f"tracking.robust.{tracker_type}"] = robust_spinbox
+        robust_row.addWidget(robust_spinbox)
+
+        use_max_cb = QCheckBox("Use max (non-robust)")
+        use_max_cb.setChecked(True)  # Default: disabled (use max)
+        self._fields[f"tracking.robust_disabled.{tracker_type}"] = use_max_cb
+        robust_row.addWidget(use_max_cb)
+        robust_row.addStretch()
+
+        use_max_cb.stateChanged.connect(
+            lambda state, sb=robust_spinbox: sb.setEnabled(not state)
+        )
+        robust_spinbox.setEnabled(False)  # Disabled by default
+
+        form.addRow("Robust Quantile:", robust_row)
+
         layout.addLayout(form)
 
         # Post-tracker options - compact
@@ -1062,6 +1087,7 @@ class MainTabWidget(QWidget):
                 "tracking.max_tracks_disabled",
                 "tracking.post_connect_single_breaks",
                 "tracking.robust",
+                "tracking.robust_disabled",
             ]
             for field in tracking_fields:
                 suffixed_key = f"{field}.{tracker}"
@@ -1071,6 +1097,10 @@ class MainTabWidget(QWidget):
             # Handle max_tracks: if "no limit" is checked, set to None
             if data.get("tracking.max_tracks_disabled", True):
                 data["tracking.max_tracks"] = None
+
+            # Handle robust: if "use max" is checked, set to 1.0 (non-robust)
+            if data.get("tracking.robust_disabled", True):
+                data["tracking.robust"] = 1.0
 
         # Strip placeholder from API key if user didn't change it
         api_key = data.get("trainer_config.wandb.api_key")

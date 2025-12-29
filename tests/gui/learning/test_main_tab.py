@@ -551,6 +551,51 @@ class TestTrackerSection:
             assert checkbox.isChecked() is True
             assert spinbox.isEnabled() is False
 
+    def test_robust_fields_exist(self, inference_widget):
+        """Robust quantile fields should exist for flow and simple trackers."""
+        for tracker_type in ["flow", "simple"]:
+            assert f"tracking.robust.{tracker_type}" in inference_widget._fields
+            assert f"tracking.robust_disabled.{tracker_type}" in inference_widget._fields
+
+    def test_robust_disabled_by_default(self, inference_widget):
+        """Robust quantile should be disabled by default (Use max checked)."""
+        for tracker_type in ["flow", "simple"]:
+            spinbox = inference_widget._fields[f"tracking.robust.{tracker_type}"]
+            checkbox = inference_widget._fields[
+                f"tracking.robust_disabled.{tracker_type}"
+            ]
+            assert checkbox.isChecked() is True
+            assert spinbox.isEnabled() is False
+
+    def test_robust_default_value(self, inference_widget):
+        """Robust quantile default value should be 0.95."""
+        for tracker_type in ["flow", "simple"]:
+            spinbox = inference_widget._fields[f"tracking.robust.{tracker_type}"]
+            assert spinbox.value() == 0.95
+
+    def test_robust_consolidation_in_form_data(self, inference_widget):
+        """Form data should consolidate robust field from tracker-specific key."""
+        # Select flow tracker
+        inference_widget._fields["tracking.tracker"].setCurrentIndex(1)
+        # Enable robust and set a value
+        inference_widget._fields["tracking.robust_disabled.flow"].setChecked(False)
+        inference_widget._fields["tracking.robust.flow"].setValue(0.75)
+
+        data = inference_widget.get_form_data()
+
+        assert data["tracking.robust"] == 0.75
+        assert data["tracking.robust_disabled"] is False
+
+    def test_robust_disabled_sets_value_to_1(self, inference_widget):
+        """When robust is disabled, form data should set it to 1.0."""
+        # Select flow tracker (robust is disabled by default)
+        inference_widget._fields["tracking.tracker"].setCurrentIndex(1)
+
+        data = inference_widget.get_form_data()
+
+        assert data["tracking.robust"] == 1.0
+        assert data["tracking.robust_disabled"] is True
+
 
 # =============================================================================
 # Performance Section Tests
