@@ -5,19 +5,20 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 
-def check_wandb_login_status() -> Tuple[bool, Optional[str]]:
+def check_wandb_login_status() -> Tuple[bool, Optional[str], Optional[str]]:
     """Check if wandb is logged in and return status info.
 
     This function checks for cached credentials without calling wandb.login(),
     which would be slow and print messages to stdout.
 
     Returns:
-        Tuple of (is_logged_in, auth_source).
+        Tuple of (is_logged_in, auth_source, username).
         auth_source describes how the user is authenticated (env var, netrc, etc.)
+        username is the logged-in username if available, else None.
     """
     # Check environment variable first (fastest)
     if os.environ.get("WANDB_API_KEY"):
-        return True, "WANDB_API_KEY environment variable"
+        return True, "WANDB_API_KEY environment variable", None
 
     # Check netrc file for cached credentials (wandb stores keys here)
     try:
@@ -30,11 +31,12 @@ def check_wandb_login_status() -> Tuple[bool, Optional[str]]:
                 nrc = netrc.netrc(str(netrc_path))
                 auth = nrc.authenticators("api.wandb.ai")
                 if auth and auth[2]:  # (login, account, password) - password is API key
-                    return True, "cached credentials (~/.netrc)"
+                    username = auth[0] if auth[0] else None
+                    return True, "cached credentials", username
     except Exception:
         pass
 
-    return False, None
+    return False, None, None
 
 
 def get_wandb_api_key_help_text(is_logged_in: bool, auth_source: Optional[str]) -> str:
