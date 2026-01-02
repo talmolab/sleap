@@ -449,7 +449,13 @@ class InferenceTask:
             self.labels.remove_predictions()
 
         # Merge pred results into base labels
-        self.labels.merge(new_labels)  # , frame_strategy="keep_both")
+        # Use replace_predictions when replacing, keep_both when adding
+        # See: https://sleap.ai/develop/api/sleap_io.model.labels.html#sleap_io.model.labels.Labels.merge
+        prediction_mode = self.inference_params.get("_prediction_mode", "add")
+        if prediction_mode == "replace":
+            self.labels.merge(new_labels, frame_strategy="replace_predictions")
+        else:
+            self.labels.merge(new_labels, frame_strategy="keep_both")
 
 
 def write_pipeline_files(
@@ -686,71 +692,10 @@ def run_learning_pipeline(
         inference_params=inference_params,
     )
 
-    # Handle prediction mode: "replace" deletes existing predictions on target frames
-    # Skip if target is "nothing" (no inference will run, so don't modify predictions)
-    target_key = inference_params.get("_predict_target", "")
-    prediction_mode = inference_params.get("_prediction_mode", "add")
-    if prediction_mode == "replace" and target_key != "nothing":
-        _delete_predictions_on_frames(labels, items_for_inference)
-
     # Run the Predictor for suggested frames
     new_labeled_frame_count = run_gui_inference(inference_task, items_for_inference)
 
     return new_labeled_frame_count
-
-
-def _delete_predictions_on_frames(
-    labels: Labels, items_for_inference: ItemsForInference
-):
-    """Delete predicted instances on frames that will be re-predicted.
-
-    This is used when prediction mode is "replace" to clear existing
-    predictions before adding new ones.
-
-    Args:
-        labels: The Labels object to modify.
-        items_for_inference: Information about which frames will be predicted.
-    """
-    for item in items_for_inference.items:
-        if isinstance(item, DatasetItemForInference):
-            # Dataset-based items: resolve frames from Labels based on filter
-            if item.frame_filter == "user":
-                # Get all user-labeled frames
-                for lf in labels.user_labeled_frames:
-                    for inst in list(lf.predicted_instances):
-                        lf.instances.remove(inst)
-            elif item.frame_filter == "suggested":
-                # Get all suggested frames
-                for suggestion in labels.suggestions:
-                    matches = labels.find(suggestion.video, suggestion.frame_idx)
-                    if matches:
-                        lf = matches[0]
-                        for inst in list(lf.predicted_instances):
-                            lf.instances.remove(inst)
-            elif item.frame_filter == "predicted":
-                # Get all frames with predictions
-                for lf in labels.labeled_frames:
-                    if lf.has_predicted_instances:
-                        for inst in list(lf.predicted_instances):
-                            lf.instances.remove(inst)
-        elif isinstance(item, VideoItemForInference):
-            # Video-based items: use video and frames directly
-            video = item.video
-            if video is None:
-                continue
-
-            # Get frame indices for this video
-            frame_indices = set()
-            if item.frames:
-                frame_indices.update(item.frames)
-
-            # Delete predicted instances on these frames
-            for frame_idx in frame_indices:
-                matches = labels.find(video, frame_idx)
-                if matches:
-                    lf = matches[0]
-                    for inst in list(lf.predicted_instances):
-                        lf.instances.remove(inst)
 
 
 def run_gui_training(
