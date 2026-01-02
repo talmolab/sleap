@@ -22,7 +22,6 @@ from sleap.gui.config_utils import (
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import receptivefield, runners, configs
-from sleap.prefs import prefs
 from sleap.gui.learning.configs import TrainingConfigsGetter
 from sleap.sleap_io_adaptors.skeleton_utils import (
     cycles,
@@ -382,74 +381,43 @@ class LearningDialog(QtWidgets.QDialog):
         self._set_frame_target_default(options)
 
     def _set_frame_target_default(self, options: Dict[str, FrameTargetOption]):
-        """Set default frame target selection based on precedence rules."""
+        """Set default frame target selection based on precedence rules.
+
+        Priority order:
+        1. User selection this session - preserve user's explicit choice
+        2. Selected clip - if a clip is selected in the timeline
+        3. Suggestions - if there are suggested frames available
+        4. Current frame - fallback for both training and inference
+        """
         if self._target_selection_user_changed:
             # User already made a selection - keep it if still available
             current = self.frame_target_selector.get_selection()
             if current.target_key in options:
                 return  # Keep current selection
 
-        # Check for suggestions (highest priority heuristic)
+        # Check for selected clip (highest priority after user selection)
+        if "clip" in options and options["clip"].frame_count > 0:
+            self.frame_target_selector.set_selection(
+                FrameTargetSelection(target_key="clip")
+            )
+            return
+
+        # Check for suggestions
         if "suggestions" in options and options["suggestions"].frame_count > 0:
             self.frame_target_selector.set_selection(
                 FrameTargetSelection(target_key="suggestions")
             )
             return
 
-        # Use persisted preference or fallback
-        saved_pref = prefs["training predict on"]
-        if saved_pref:
-            # Map old preference values to new keys
-            pref_map = {
-                "nothing": "nothing",
-                "current frame": "frame",
-                "random frames": "random",
-                "suggested frames": "suggestions",
-                "user labeled frames": "user_labeled",
-                "selected clip": "clip",
-                "entire current video": "video",
-                "all videos": "all_videos",
-            }
-            mapped_key = pref_map.get(saved_pref, saved_pref)
-            if mapped_key in options:
-                self.frame_target_selector.set_selection(
-                    FrameTargetSelection(target_key=mapped_key)
-                )
-                return
-
-        # Fallback: "nothing" for training, "frame" for inference
-        fallback = "nothing" if self.mode == "training" else "frame"
-        if fallback in options:
+        # Fallback: current frame for both training and inference
+        if "frame" in options:
             self.frame_target_selector.set_selection(
-                FrameTargetSelection(target_key=fallback)
+                FrameTargetSelection(target_key="frame")
             )
 
     def _on_target_selection_changed(self):
         """Track when user explicitly changes the frame target selection."""
         self._target_selection_user_changed = True
-
-    def _save_target_selection_preference(self):
-        """Save the current target selection to preferences."""
-        selection = self.frame_target_selector.get_selection()
-
-        # Map new keys back to old preference format for backward compatibility
-        key_to_pref = {
-            "nothing": "nothing",
-            "frame": "current frame",
-            "random": "random frames",
-            "suggestions": "suggested frames",
-            "user_labeled": "user labeled frames",
-            "clip": "selected clip",
-            "video": "entire current video",
-            "all_videos": "all videos",
-            "predicted": "predicted frames",
-        }
-
-        pref_value = key_to_pref.get(selection.target_key, selection.target_key)
-
-        if prefs["training predict on"] != pref_value:
-            prefs["training predict on"] = pref_value
-            prefs.save()
 
     def connect_signals(self):
         """Connect valueChanged signals for pipeline and any existing tabs.
@@ -634,6 +602,155 @@ class LearningDialog(QtWidgets.QDialog):
                 return "bottom-up-id"
         return ""
 
+    def _get_head_names_for_pipeline(self, pipeline: str) -> List[str]:
+        """Get the head name(s) associated with a pipeline.
+
+        Args:
+            pipeline: Pipeline name (e.g., "top-down", "bottom-up").
+
+        Returns:
+            List of head names for this pipeline.
+        """
+        pipeline_to_heads = {
+            "top-down": ["centroid", "centered_instance"],
+            "bottom-up": ["bottomup"],
+            "top-down-id": ["centroid", "multi_class_topdown"],
+            "bottom-up-id": ["multi_class_bottomup"],
+            "single": ["single_instance"],
+        }
+        return pipeline_to_heads.get(pipeline, [])
+
+    def _get_trained_config_for_pipeline(
+        self, pipeline: str
+    ) -> Optional[configs.ConfigFileInfo]:
+        """Get the most recent trained config for a pipeline.
+
+        Args:
+            pipeline: Pipeline name (e.g., "top-down", "bottom-up").
+
+        Returns:
+            ConfigFileInfo if a trained config exists, None otherwise.
+        """
+        head_names = self._get_head_names_for_pipeline(pipeline)
+        for head_name in head_names:
+            trained_cfgs = self._cfg_getter.get_filtered_configs(
+                head_filter=head_name, only_trained=True
+            )
+            if trained_cfgs:
+                return trained_cfgs[0]
+        return None
+
+    def _get_video_channels_default(self) -> str:
+        """Determine default image conversion based on video channels.
+
+        Returns:
+            "RGB" if all videos are RGB, "grayscale" if all are grayscale,
+            empty string if mixed or unknown.
+        """
+        if not self.labels or not self.labels.videos:
+            return ""
+
+        from sleap.sleap_io_adaptors.video_utils import video_get_channels
+
+        channels_set = set()
+        for video in self.labels.videos:
+            try:
+                channels = video_get_channels(video)
+                channels_set.add(channels)
+            except Exception:
+                # If we can't determine channels, skip this video
+                pass
+
+        if len(channels_set) == 1:
+            channels = channels_set.pop()
+            if channels == 1:
+                return "grayscale"
+            elif channels == 3:
+                return "RGB"
+
+        return ""
+
+    def _apply_pipeline_defaults(self, pipeline: str):
+        """Apply defaults from previously trained config or video analysis.
+
+        This sets image conversion and WandB defaults based on:
+        1. Previously trained config for this pipeline (if exists)
+        2. Video channel analysis (for image conversion only)
+
+        Args:
+            pipeline: Pipeline name being switched to.
+        """
+        if self.mode != "training":
+            return
+
+        # Try to get a trained config for this pipeline
+        trained_cfg = self._get_trained_config_for_pipeline(pipeline)
+
+        defaults_to_apply = {}
+        used_trained_config = False
+
+        if trained_cfg and trained_cfg.config:
+            cfg = trained_cfg.config
+
+            # Only use OmegaConf if cfg is actually an OmegaConf object
+            if OmegaConf.is_config(cfg):
+                used_trained_config = True
+
+                # Image conversion from previous config
+                ensure_rgb = OmegaConf.select(
+                    cfg, "data_config.preprocessing.ensure_rgb", default=None
+                )
+                ensure_grayscale = OmegaConf.select(
+                    cfg, "data_config.preprocessing.ensure_grayscale", default=None
+                )
+                if ensure_rgb:
+                    defaults_to_apply["_ensure_channels"] = "RGB"
+                elif ensure_grayscale:
+                    defaults_to_apply["_ensure_channels"] = "grayscale"
+
+                # WandB settings from previous config (except run_name)
+                use_wandb = OmegaConf.select(
+                    cfg, "trainer_config.use_wandb", default=None
+                )
+                if use_wandb is not None:
+                    defaults_to_apply["trainer_config.use_wandb"] = use_wandb
+
+                wandb_entity = OmegaConf.select(
+                    cfg, "trainer_config.wandb.entity", default=None
+                )
+                if wandb_entity:
+                    defaults_to_apply["trainer_config.wandb.entity"] = wandb_entity
+
+                wandb_project = OmegaConf.select(
+                    cfg, "trainer_config.wandb.project", default=None
+                )
+                if wandb_project:
+                    defaults_to_apply["trainer_config.wandb.project"] = wandb_project
+
+                wandb_group = OmegaConf.select(
+                    cfg, "trainer_config.wandb.group", default=None
+                )
+                if wandb_group:
+                    defaults_to_apply["trainer_config.wandb.group"] = wandb_group
+
+                save_viz = OmegaConf.select(
+                    cfg, "trainer_config.wandb.save_viz_imgs_wandb", default=None
+                )
+                if save_viz is not None:
+                    defaults_to_apply["trainer_config.wandb.save_viz_imgs_wandb"] = (
+                        save_viz
+                    )
+
+        if not used_trained_config:
+            # No trained config - use video channel analysis for image conversion
+            video_default = self._get_video_channels_default()
+            if video_default:
+                defaults_to_apply["_ensure_channels"] = video_default
+
+        # Apply the defaults
+        if defaults_to_apply:
+            self.pipeline_form_widget.set_form_data(defaults_to_apply)
+
     def set_default_pipeline_tab(self):
         recent_pipeline_name = self.get_most_recent_pipeline_trained()
         if recent_pipeline_name:
@@ -680,7 +797,8 @@ class LearningDialog(QtWidgets.QDialog):
         self.shown_tab_names = []
 
     def set_pipeline(self, pipeline: str):
-        if pipeline != self.current_pipeline:
+        pipeline_changed = pipeline != self.current_pipeline
+        if pipeline_changed:
             self.remove_tabs()
             if pipeline == "top-down":
                 self.add_tab("centroid")
@@ -694,6 +812,10 @@ class LearningDialog(QtWidgets.QDialog):
                 self.add_tab("multi_class_bottomup")
             elif pipeline == "single":
                 self.add_tab("single_instance")
+
+            # Apply defaults from previous trained config or video analysis
+            self._apply_pipeline_defaults(pipeline)
+
         self.current_pipeline = pipeline
 
         self._validate_pipeline()
@@ -997,9 +1119,6 @@ class LearningDialog(QtWidgets.QDialog):
 
     def run(self):
         """Run with current dialog settings."""
-        # Save target selection preference before running
-        self._save_target_selection_preference()
-
         # Get selection from new widget
         selection = self.frame_target_selector.get_selection()
 

@@ -51,17 +51,10 @@ def mock_cfg_getter():
 def mock_prefs():
     """Create a mock preferences object."""
     prefs_data = {
-        "wandb enabled": None,
-        "wandb entity": None,
-        "wandb project": None,
-        "wandb group": None,
-        "wandb save viz images": None,
-        "training image conversion": None,
         "training data pipeline framework": None,
         "training num workers": None,
         "training accelerator": None,
         "training num devices": None,
-        "training predict on": None,
     }
 
     class MockPrefs:
@@ -254,76 +247,6 @@ class TestConfigAssemblyWithTabs:
 # =============================================================================
 
 
-class TestWandBPreferences:
-    """Tests for WandB preference persistence."""
-
-    def test_init_wandb_settings_loads_prefs(self, qtbot, mock_prefs):
-        """WandB settings should be loaded from preferences on init."""
-        # Set up preferences with values
-        mock_prefs["wandb enabled"] = True
-        mock_prefs["wandb entity"] = "test-team"
-        mock_prefs["wandb project"] = "test-project"
-
-        with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
-            with patch(
-                "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None, None),
-            ):
-                widget = MainTabWidget(mode="training")
-                qtbot.addWidget(widget)
-
-        # Check that values were loaded
-        assert widget._fields["trainer_config.use_wandb"].isChecked() is True
-        assert widget._fields["trainer_config.wandb.entity"].text() == "test-team"
-        assert widget._fields["trainer_config.wandb.project"].text() == "test-project"
-
-    def test_save_wandb_preferences(self, qtbot, mock_prefs):
-        """WandB settings should be saved to preferences."""
-        with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
-            with patch(
-                "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None, None),
-            ):
-                widget = MainTabWidget(mode="training")
-                qtbot.addWidget(widget)
-
-                # Set values
-                widget._fields["trainer_config.use_wandb"].setChecked(True)
-                widget._fields["trainer_config.wandb.entity"].setText("my-team")
-                widget._fields["trainer_config.wandb.project"].setText("my-project")
-
-                # Save preferences
-                form_data = widget.get_form_data()
-                widget._save_wandb_preferences(form_data)
-
-        # Check preferences were saved
-        assert mock_prefs["wandb enabled"] is True
-        assert mock_prefs["wandb entity"] == "my-team"
-        assert mock_prefs["wandb project"] == "my-project"
-        assert mock_prefs._saved is True
-
-    def test_wandb_prefs_only_saved_when_changed(self, qtbot, mock_prefs):
-        """Preferences should only be saved when values change."""
-        mock_prefs["wandb enabled"] = True
-        mock_prefs["wandb entity"] = "existing-team"
-
-        with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
-            with patch(
-                "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None, None),
-            ):
-                widget = MainTabWidget(mode="training")
-                qtbot.addWidget(widget)
-
-                # Get form data without changing values
-                form_data = widget.get_form_data()
-                mock_prefs._saved = False  # Reset flag
-                widget._save_wandb_preferences(form_data)
-
-        # Save should not have been called (no changes)
-        assert mock_prefs._saved is False
-
-
 class TestTrainingPreferences:
     """Tests for training settings preference persistence."""
 
@@ -391,99 +314,6 @@ class TestTrainingPreferences:
         # Training-only fields should not exist
         assert "_data_pipeline_fw" not in widget._fields
         assert "trainer_config.train_data_loader.num_workers" not in widget._fields
-
-
-class TestTargetSelectionPreferences:
-    """Tests for target selection preference persistence."""
-
-    def test_save_target_selection_preference(
-        self,
-        qtbot,
-        minimal_labels,
-        minimal_skeleton,
-        tmp_path,
-        mock_cfg_getter,
-        mock_prefs,
-    ):
-        """Target selection should be saved to preferences."""
-        labels_file = tmp_path / "test.slp"
-        labels_file.touch()
-
-        with patch(
-            "sleap.gui.learning.dialog.configs.TrainingConfigsGetter.make_from_labels_filename",
-            return_value=mock_cfg_getter,
-        ):
-            with patch("sleap.gui.learning.dialog.prefs", mock_prefs):
-                dialog = LearningDialog(
-                    mode="training",
-                    labels_filename=str(labels_file),
-                    labels=minimal_labels,
-                    skeleton=minimal_skeleton,
-                )
-                qtbot.addWidget(dialog)
-
-                # Set selection
-                dialog.frame_target_selector.set_selection(
-                    FrameTargetSelection(target_key="video")
-                )
-
-                # Save preference
-                dialog._save_target_selection_preference()
-
-        # Check preference was saved with mapped value
-        assert mock_prefs["training predict on"] == "entire current video"
-
-    def test_target_selection_key_mapping(
-        self,
-        qtbot,
-        minimal_labels,
-        minimal_skeleton,
-        tmp_path,
-        mock_cfg_getter,
-        mock_prefs,
-    ):
-        """Target selection keys should be mapped correctly for preferences."""
-        labels_file = tmp_path / "test.slp"
-        labels_file.touch()
-
-        key_to_pref = {
-            "nothing": "nothing",
-            "frame": "current frame",
-            "random": "random frames",
-            "suggestions": "suggested frames",
-            "user_labeled": "user labeled frames",
-            "clip": "selected clip",
-            "video": "entire current video",
-            "all_videos": "all videos",
-        }
-
-        for target_key, expected_pref in key_to_pref.items():
-            mock_prefs["training predict on"] = None
-
-            with patch(
-                "sleap.gui.learning.dialog.configs.TrainingConfigsGetter.make_from_labels_filename",
-                return_value=mock_cfg_getter,
-            ):
-                with patch("sleap.gui.learning.dialog.prefs", mock_prefs):
-                    dialog = LearningDialog(
-                        mode="training",
-                        labels_filename=str(labels_file),
-                        labels=minimal_labels,
-                        skeleton=minimal_skeleton,
-                    )
-                    qtbot.addWidget(dialog)
-
-                    # Set selection
-                    dialog.frame_target_selector.set_selection(
-                        FrameTargetSelection(target_key=target_key)
-                    )
-
-                    # Save preference
-                    dialog._save_target_selection_preference()
-
-            assert mock_prefs["training predict on"] == expected_pref, (
-                f"Key {target_key} should map to {expected_pref}"
-            )
 
 
 # =============================================================================
@@ -661,20 +491,6 @@ class TestDataPipelinePreferences:
 
 class TestColorConversionIntegration:
     """Tests for color conversion field integration."""
-
-    def test_ensure_channels_preference_loaded(self, qtbot, mock_prefs):
-        """Saved color conversion preference should be loaded."""
-        mock_prefs["training image conversion"] = "RGB"
-
-        with patch("sleap.gui.learning.main_tab.prefs", mock_prefs):
-            with patch(
-                "sleap.gui.learning.main_tab.check_wandb_login_status",
-                return_value=(False, None, None),
-            ):
-                widget = MainTabWidget(mode="training")
-                qtbot.addWidget(widget)
-
-        assert widget._fields["_ensure_channels"].currentData() == "RGB"
 
     def test_ensure_channels_in_form_data(self, qtbot, mock_prefs):
         """Color conversion should be in form data."""

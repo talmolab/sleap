@@ -26,12 +26,6 @@ from sleap.gui.learning.main_tab import (
 
 # Mock preferences that return None/default for all training settings
 CLEAN_PREFS = {
-    "wandb enabled": None,
-    "wandb entity": None,
-    "wandb project": None,
-    "wandb group": None,
-    "wandb save viz images": None,
-    "training image conversion": None,
     "training data pipeline framework": None,
     "training num workers": None,
     "training accelerator": None,

@@ -25,12 +25,6 @@ from sleap.gui.widgets.frame_target_selector import FrameTargetSelection
 
 # Mock preferences for clean state
 CLEAN_PREFS = {
-    "wandb enabled": None,
-    "wandb entity": None,
-    "wandb project": None,
-    "wandb group": None,
-    "wandb save viz images": None,
-    "training image conversion": None,
     "training data pipeline framework": None,
     "training num workers": None,
     "training accelerator": None,

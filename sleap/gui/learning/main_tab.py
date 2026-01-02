@@ -263,10 +263,10 @@ class MainTabWidget(QWidget):
         self._setup_ui()
         self._connect_signals()
 
-        # Initialize preferences
+        # Initialize preferences and status displays
         if mode == "training":
-            self._init_wandb_settings()
             self._init_training_settings()
+            self._update_wandb_status()
 
     def _setup_ui(self):
         """Build the complete main tab layout."""
@@ -1110,7 +1110,6 @@ class MainTabWidget(QWidget):
 
         # Save preferences
         if self._mode == "training":
-            self._save_wandb_preferences(data)
             self._save_training_preferences(data)
 
         return data
@@ -1195,24 +1194,6 @@ class MainTabWidget(QWidget):
     # Preferences Management
     # -------------------------------------------------------------------------
 
-    def _init_wandb_settings(self):
-        """Initialize WandB settings from preferences and update API key help text."""
-        # Load saved WandB preferences
-        wandb_prefs = {
-            "trainer_config.use_wandb": prefs["wandb enabled"],
-            "trainer_config.wandb.entity": prefs["wandb entity"],
-            "trainer_config.wandb.project": prefs["wandb project"],
-            "trainer_config.wandb.group": prefs["wandb group"],
-            "trainer_config.wandb.save_viz_imgs_wandb": prefs["wandb save viz images"],
-        }
-        # Apply non-None values
-        for key, value in wandb_prefs.items():
-            if value is not None and key in self._fields:
-                self._set_widget_value(self._fields[key], value)
-
-        # Update the status display
-        self._update_wandb_status()
-
     def _update_wandb_status(self):
         """Check and update the WandB login status display."""
         is_logged_in, auth_source, username = check_wandb_login_status()
@@ -1268,29 +1249,9 @@ class MainTabWidget(QWidget):
         clipboard = QGuiApplication.clipboard()
         clipboard.setText("uvx wandb login")
 
-    def _save_wandb_preferences(self, form_data: dict):
-        """Save WandB settings to preferences for persistence across sessions."""
-        pref_mapping = {
-            "trainer_config.use_wandb": "wandb enabled",
-            "trainer_config.wandb.entity": "wandb entity",
-            "trainer_config.wandb.project": "wandb project",
-            "trainer_config.wandb.group": "wandb group",
-            "trainer_config.wandb.save_viz_imgs_wandb": "wandb save viz images",
-        }
-        changed = False
-        for form_key, pref_key in pref_mapping.items():
-            if form_key in form_data:
-                value = form_data[form_key]
-                if prefs[pref_key] != value:
-                    prefs[pref_key] = value
-                    changed = True
-        if changed:
-            prefs.save()
-
     def _init_training_settings(self):
         """Initialize training pipeline settings from preferences."""
         training_prefs = {
-            "_ensure_channels": prefs["training image conversion"],
             "_data_pipeline_fw": prefs["training data pipeline framework"],
             "trainer_config.train_data_loader.num_workers": prefs[
                 "training num workers"
@@ -1315,7 +1276,6 @@ class MainTabWidget(QWidget):
     def _save_training_preferences(self, form_data: dict):
         """Save training pipeline settings to preferences."""
         pref_mapping = {
-            "_ensure_channels": "training image conversion",
             "_data_pipeline_fw": "training data pipeline framework",
             "trainer_config.train_data_loader.num_workers": "training num workers",
             "trainer_config.trainer_devices": "training num devices",
