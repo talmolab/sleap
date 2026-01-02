@@ -397,7 +397,7 @@ class LearningDialog(QtWidgets.QDialog):
             return
 
         # Use persisted preference or fallback
-        saved_pref = prefs.get("training predict on", None)
+        saved_pref = prefs["training predict on"]
         if saved_pref:
             # Map old preference values to new keys
             pref_map = {

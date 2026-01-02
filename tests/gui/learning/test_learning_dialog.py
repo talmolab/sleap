@@ -282,10 +282,9 @@ class TestFrameSelection:
             "frame": {mock_video: [0]},
             "video": {mock_video: [0, 1, 2, 3, 4]},
         }
-        # Mock prefs to avoid AttributeError with prefs.get()
+        # Mock prefs to isolate test from user preferences
         with patch("sleap.gui.learning.dialog.prefs") as mock_prefs:
             mock_prefs.__getitem__ = MagicMock(return_value=None)
-            mock_prefs.get = MagicMock(return_value=None)
             training_dialog.frame_selection = frame_selection
         assert training_dialog._frame_selection == frame_selection
 
