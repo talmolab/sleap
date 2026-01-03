@@ -22,11 +22,6 @@ from sleap.gui.config_utils import (
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.learning import receptivefield, runners, configs
-from sleap.gui.learning.wandb_utils import (
-    check_wandb_login_status,
-    get_wandb_api_key_help_text,
-)
-from sleap.prefs import prefs
 from sleap.gui.learning.configs import TrainingConfigsGetter
 from sleap.sleap_io_adaptors.skeleton_utils import (
     cycles,
@@ -36,6 +31,11 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
 )
 from sleap.sleap_io_adaptors.lf_labels_utils import instances
 from sleap.util import show_sleap_nn_installation_message
+from sleap.gui.widgets.frame_target_selector import (
+    FrameTargetOption,
+    FrameTargetSelection,
+)
+from sleap.gui.learning.main_tab import MainTabWidget
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -50,7 +50,7 @@ class LearningDialog(QtWidgets.QDialog):
     Dialog for running training and/or inference.
 
     The dialog shows tabs for configuring the pipeline (
-    :py:class:`TrainingPipelineWidget`) and, depending on the pipeline, for
+    :py:class:`MainTabWidget`) and, depending on the pipeline, for
     each specific model (:py:class:`TrainingEditorWidget`).
 
     In training mode, the model hyperpameters are editable unless you're using
@@ -78,6 +78,12 @@ class LearningDialog(QtWidgets.QDialog):
     ):
         super(LearningDialog, self).__init__()
 
+        # Set window title based on mode
+        mode_title = "Training" if mode == "training" else "Inference"
+        self.setWindowTitle(
+            f"{mode_title} Configuration - SLEAP v{sleap.version.__version__}"
+        )
+
         if labels is None:
             labels = load_file(labels_filename)
 
@@ -90,7 +96,6 @@ class LearningDialog(QtWidgets.QDialog):
         self.skeleton = skeleton
 
         self._frame_selection = None
-        self._predict_frames_user_changed = False  # Track if user changed this session
 
         self.current_pipeline = ""
 
@@ -128,11 +133,10 @@ class LearningDialog(QtWidgets.QDialog):
         buttons_layout_widget = QtWidgets.QWidget()
         buttons_layout_widget.setLayout(buttons_layout)
 
-        self.pipeline_form_widget = TrainingPipelineWidget(mode=mode, skeleton=skeleton)
+        self.pipeline_form_widget = MainTabWidget(mode=mode, skeleton=skeleton)
         if mode == "training":
             tab_label = "Training Pipeline"
         elif mode == "inference":
-            # self.pipeline_form_widget = InferencePipelineWidget()
             tab_label = "Inference Pipeline"
         else:
             raise ValueError(f"Invalid LearningDialog mode: {mode}")
@@ -143,22 +147,25 @@ class LearningDialog(QtWidgets.QDialog):
         self.make_tabs()
 
         self.message_widget = QtWidgets.QLabel("")
+        self.message_widget.setWordWrap(True)
 
-        # Layout for entire dialog
-        # Tabs and message go inside scroll area
+        # Frame target selector is now owned by MainTabWidget
+        self.frame_target_selector = self.pipeline_form_widget.frame_target_selector
+        self._target_selection_user_changed = False
+
+        # Layout for entire dialog - single scrollable area (same for both modes)
         content_widget = QtWidgets.QWidget()
         content_layout = QtWidgets.QVBoxLayout(content_widget)
         content_layout.addWidget(self.tab_widget)
         content_layout.addWidget(self.message_widget)
 
-        # Create the QScrollArea for tabs only
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(content_widget)
         scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        # Main layout: scroll area + buttons (buttons always visible at bottom)
+        # Main layout: scrollable content + buttons
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(scroll_area)
         layout.addWidget(buttons_layout_widget)
@@ -174,11 +181,10 @@ class LearningDialog(QtWidgets.QDialog):
 
         self.connect_signals()
 
-        # Track when user explicitly changes predict frames option
-        if "_predict_frames" in self.pipeline_form_widget.fields:
-            self.pipeline_form_widget.fields["_predict_frames"].valueChanged.connect(
-                self._on_predict_frames_changed
-            )
+        # Track when user changes the frame target selector
+        self.frame_target_selector.valueChanged.connect(
+            self._on_target_selection_changed
+        )
 
         # Connect actions for buttons
         self.copy_button.clicked.connect(self.copy)
@@ -188,19 +194,28 @@ class LearningDialog(QtWidgets.QDialog):
         self.run_button.clicked.connect(self.run)
 
     def adjust_initial_size(self):
-        # Get screen size
+        """Set initial dialog size based on mode and screen size.
+
+        V9 Layout: Both modes use single-column layout (no side panel)
+        - Training: 880x900 (more sections, needs more height)
+        - Inference: 880x850
+        """
         screen = QtGui.QGuiApplication.primaryScreen().availableGeometry()
 
-        # Reduced from 1860x1150 to fit compact layout better
-        max_width = 1130
-        max_height = 860
-        margin = 0.10
+        if self.mode == "training":
+            max_width = 880
+            max_height = 900
+        else:  # inference
+            max_width = 880
+            max_height = 850
+
+        margin = 0.05  # 5% margin from screen edge
 
         # Calculate target width and height
         target_width = min(screen.width() - screen.width() * margin, max_width)
         target_height = min(screen.height() - screen.height() * margin, max_height)
         # Set the dialog's dimensions
-        self.resize(target_width, target_height)
+        self.resize(int(target_width), int(target_height))
 
     def update_file_lists(self):
         """Update config file lists for all currently shown tabs.
@@ -244,173 +259,165 @@ class LearningDialog(QtWidgets.QDialog):
         """Sets options of frames on which to run learning."""
         self._frame_selection = frame_selection
 
-        if "_predict_frames" in self.pipeline_form_widget.fields.keys():
-            prediction_options = []
+        # Update frame target selector with options
+        self._update_frame_target_selector()
 
-            total_random = 0
-            total_suggestions = 0
-            total_user = 0
-            random_video = 0
-            clip_length = 0
-            video_length = 0
-            all_videos_length = 0
-
-            # Determine which options are available given _frame_selection
-            if "random" in self._frame_selection:
-                total_random = self.count_total_frames_for_selection_option(
-                    self._frame_selection["random"]
-                )
-            if "random_video" in self._frame_selection:
-                random_video = self.count_total_frames_for_selection_option(
-                    self._frame_selection["random_video"]
-                )
-            if "suggestions" in self._frame_selection:
-                total_suggestions = self.count_total_frames_for_selection_option(
-                    self._frame_selection["suggestions"]
-                )
-            if "user" in self._frame_selection:
-                total_user = self.count_total_frames_for_selection_option(
-                    self._frame_selection["user"]
-                )
-            if "clip" in self._frame_selection:
-                clip_length = self.count_total_frames_for_selection_option(
-                    self._frame_selection["clip"]
-                )
-            if "video" in self._frame_selection:
-                video_length = self.count_total_frames_for_selection_option(
-                    self._frame_selection["video"]
-                )
-            if "all_videos" in self._frame_selection:
-                all_videos_length = self.count_total_frames_for_selection_option(
-                    self._frame_selection["all_videos"]
-                )
-
-            # Build list of options
-            if self.mode != "inference":
-                prediction_options.append("nothing")
-            prediction_options.append("current frame")
-
-            option = f"random frames ({total_random} total frames)"
-            prediction_options.append(option)
-
-            if random_video > 0:
-                option = f"random frames in current video ({random_video} frames)"
-                prediction_options.append(option)
-
-            has_suggestions = total_suggestions > 0
-            if has_suggestions:
-                option = f"suggested frames ({total_suggestions} total frames)"
-                prediction_options.append(option)
-
-            if total_user > 0:
-                option = f"user labeled frames ({total_user} total frames)"
-                prediction_options.append(option)
-
-            if clip_length > 0:
-                option = f"selected clip ({clip_length} frames)"
-                prediction_options.append(option)
-
-            prediction_options.append(f"entire current video ({video_length} frames)")
-
-            if len(self.labels.videos) > 1:
-                prediction_options.append(f"all videos ({all_videos_length} frames)")
-
-            # Determine default based on precedence rules:
-            # 1. If user changed this session -> preserve current selection
-            # 2. If suggestions exist -> default to "suggested frames"
-            # 3. If no suggestions -> use persisted preference (fallback if invalid)
-            if self._predict_frames_user_changed:
-                # Try to preserve user's current selection
-                current = self.pipeline_form_widget.fields["_predict_frames"].value()
-                current_normalized = self._normalize_predict_option(current)
-                # Find matching option in new list
-                default_option = None
-                for opt in prediction_options:
-                    if self._normalize_predict_option(opt) == current_normalized:
-                        default_option = opt
-                        break
-                if default_option is None:
-                    # Current selection no longer available, use precedence rules
-                    default_option = self._get_predict_frames_default(
-                        has_suggestions, prediction_options
-                    )
-            else:
-                default_option = self._get_predict_frames_default(
-                    has_suggestions, prediction_options
-                )
-
-            self.pipeline_form_widget.fields["_predict_frames"].set_options(
-                prediction_options, default_option
-            )
-
-    def _on_predict_frames_changed(self):
-        """Track when user explicitly changes the predict frames option."""
-        self._predict_frames_user_changed = True
-
-    @staticmethod
-    def _normalize_predict_option(option: str) -> str:
-        """Extract base option type from dynamic option string.
-
-        E.g., "random frames (123 total frames)" -> "random frames"
-        """
-        if option.startswith("nothing"):
-            return "nothing"
-        elif option.startswith("current frame"):
-            return "current frame"
-        elif option.startswith("random frames in current video"):
-            return "random frames in current video"
-        elif option.startswith("random frames"):
-            return "random frames"
-        elif option.startswith("suggested frames"):
-            return "suggested frames"
-        elif option.startswith("user labeled frames"):
-            return "user labeled frames"
-        elif option.startswith("selected clip"):
-            return "selected clip"
-        elif option.startswith("entire current video"):
-            return "entire current video"
-        elif option.startswith("all videos"):
-            return "all videos"
-        return option
-
-    def _get_predict_frames_default(
-        self, has_suggestions: bool, prediction_options: list
-    ) -> str:
-        """Determine default predict frames option based on precedence rules.
-
-        Precedence:
-        1. If user explicitly changed this session -> keep their choice (elsewhere)
-        2. If suggestions exist -> "suggested frames"
-        3. If no suggestions -> use persisted pref (fallback if invalid)
-        """
-        # If suggestions exist, always default to suggested frames
-        if has_suggestions:
-            for opt in prediction_options:
-                if opt.startswith("suggested frames"):
-                    return opt
-
-        # No suggestions: use persisted preference
-        saved_pref = prefs["training predict on"]
-
-        # Find matching option in available options
-        for opt in prediction_options:
-            if self._normalize_predict_option(opt) == saved_pref:
-                return opt
-
-        # Fallback: "nothing" for training, "current frame" for inference
-        return "nothing" if self.mode != "inference" else "current frame"
-
-    def _save_predict_frames_preference(self):
-        """Save the current predict frames selection to preferences."""
-        if "_predict_frames" not in self.pipeline_form_widget.fields:
+    def _update_frame_target_selector(self):
+        """Update frame target selector widget with current frame selection options."""
+        if self._frame_selection is None:
             return
 
-        current = self.pipeline_form_widget.fields["_predict_frames"].value()
-        normalized = self._normalize_predict_option(current)
+        # Build options for the new selector
+        options = {}
 
-        if prefs["training predict on"] != normalized:
-            prefs["training predict on"] = normalized
-            prefs.save()
+        # Calculate frame counts for each option
+        frame_count = self.count_total_frames_for_selection_option(
+            self._frame_selection.get("frame", {})
+        )
+        options["frame"] = FrameTargetOption(
+            key="frame",
+            label="Current frame",
+            description="Predict on just this frame",
+            frame_count=frame_count,
+        )
+
+        if "clip" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["clip"]
+            )
+            options["clip"] = FrameTargetOption(
+                key="clip",
+                label="Selected clip",
+                description="Predict on the frame range you selected",
+                frame_count=frame_count,
+                available=frame_count > 0,
+            )
+
+        if "video" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["video"]
+            )
+            options["video"] = FrameTargetOption(
+                key="video",
+                label="Entire video",
+                description="Predict on all frames in current video",
+                frame_count=frame_count,
+            )
+
+        if "all_videos" in self._frame_selection and len(self.labels.videos) > 1:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["all_videos"]
+            )
+            options["all_videos"] = FrameTargetOption(
+                key="all_videos",
+                label="All videos",
+                description="Predict on every frame across all videos",
+                frame_count=frame_count,
+            )
+
+        if "random" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["random"]
+            )
+            options["random"] = FrameTargetOption(
+                key="random",
+                label="Random sample",
+                description="Random frames for quick model check",
+                frame_count=frame_count,
+            )
+
+        if "suggestions" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["suggestions"]
+            )
+            if frame_count > 0:
+                options["suggestions"] = FrameTargetOption(
+                    key="suggestions",
+                    label="Suggestions",
+                    description="Frames in the Labeling Suggestions list",
+                    frame_count=frame_count,
+                )
+
+        if "user" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["user"]
+            )
+            if frame_count > 0:
+                options["user_labeled"] = FrameTargetOption(
+                    key="user_labeled",
+                    label="User labeled",
+                    description="Frames you've annotated (for evaluation)",
+                    frame_count=frame_count,
+                )
+
+        if "predicted" in self._frame_selection:
+            frame_count = self.count_total_frames_for_selection_option(
+                self._frame_selection["predicted"]
+            )
+            if frame_count > 0:
+                options["predicted"] = FrameTargetOption(
+                    key="predicted",
+                    label="Frames with predictions",
+                    description="Only frames that already have predictions",
+                    frame_count=frame_count,
+                )
+
+        # Add "nothing" option for training mode only
+        if self.mode == "training":
+            options = {
+                "nothing": FrameTargetOption(
+                    key="nothing",
+                    label="Nothing",
+                    description="Skip predictions, training only",
+                    frame_count=0,
+                    training_only=True,
+                ),
+                **options,
+            }
+
+        self.frame_target_selector.set_options(options)
+
+        # Set default selection based on precedence rules
+        self._set_frame_target_default(options)
+
+    def _set_frame_target_default(self, options: Dict[str, FrameTargetOption]):
+        """Set default frame target selection based on precedence rules.
+
+        Priority order:
+        1. User selection this session - preserve user's explicit choice
+        2. Selected clip - if a clip is selected in the timeline
+        3. Suggestions - if there are suggested frames available
+        4. Current frame - fallback for both training and inference
+        """
+        if self._target_selection_user_changed:
+            # User already made a selection - keep it if still available
+            current = self.frame_target_selector.get_selection()
+            if current.target_key in options:
+                return  # Keep current selection
+
+        # Check for selected clip (highest priority after user selection)
+        if "clip" in options and options["clip"].frame_count > 0:
+            self.frame_target_selector.set_selection(
+                FrameTargetSelection(target_key="clip")
+            )
+            return
+
+        # Check for suggestions
+        if "suggestions" in options and options["suggestions"].frame_count > 0:
+            self.frame_target_selector.set_selection(
+                FrameTargetSelection(target_key="suggestions")
+            )
+            return
+
+        # Fallback: current frame for both training and inference
+        if "frame" in options:
+            self.frame_target_selector.set_selection(
+                FrameTargetSelection(target_key="frame")
+            )
+
+    def _on_target_selection_changed(self):
+        """Track when user explicitly changes the frame target selection."""
+        self._target_selection_user_changed = True
 
     def connect_signals(self):
         """Connect valueChanged signals for pipeline and any existing tabs.
@@ -595,6 +602,155 @@ class LearningDialog(QtWidgets.QDialog):
                 return "bottom-up-id"
         return ""
 
+    def _get_head_names_for_pipeline(self, pipeline: str) -> List[str]:
+        """Get the head name(s) associated with a pipeline.
+
+        Args:
+            pipeline: Pipeline name (e.g., "top-down", "bottom-up").
+
+        Returns:
+            List of head names for this pipeline.
+        """
+        pipeline_to_heads = {
+            "top-down": ["centroid", "centered_instance"],
+            "bottom-up": ["bottomup"],
+            "top-down-id": ["centroid", "multi_class_topdown"],
+            "bottom-up-id": ["multi_class_bottomup"],
+            "single": ["single_instance"],
+        }
+        return pipeline_to_heads.get(pipeline, [])
+
+    def _get_trained_config_for_pipeline(
+        self, pipeline: str
+    ) -> Optional[configs.ConfigFileInfo]:
+        """Get the most recent trained config for a pipeline.
+
+        Args:
+            pipeline: Pipeline name (e.g., "top-down", "bottom-up").
+
+        Returns:
+            ConfigFileInfo if a trained config exists, None otherwise.
+        """
+        head_names = self._get_head_names_for_pipeline(pipeline)
+        for head_name in head_names:
+            trained_cfgs = self._cfg_getter.get_filtered_configs(
+                head_filter=head_name, only_trained=True
+            )
+            if trained_cfgs:
+                return trained_cfgs[0]
+        return None
+
+    def _get_video_channels_default(self) -> str:
+        """Determine default image conversion based on video channels.
+
+        Returns:
+            "RGB" if all videos are RGB, "grayscale" if all are grayscale,
+            empty string if mixed or unknown.
+        """
+        if not self.labels or not self.labels.videos:
+            return ""
+
+        from sleap.sleap_io_adaptors.video_utils import video_get_channels
+
+        channels_set = set()
+        for video in self.labels.videos:
+            try:
+                channels = video_get_channels(video)
+                channels_set.add(channels)
+            except Exception:
+                # If we can't determine channels, skip this video
+                pass
+
+        if len(channels_set) == 1:
+            channels = channels_set.pop()
+            if channels == 1:
+                return "grayscale"
+            elif channels == 3:
+                return "RGB"
+
+        return ""
+
+    def _apply_pipeline_defaults(self, pipeline: str):
+        """Apply defaults from previously trained config or video analysis.
+
+        This sets image conversion and WandB defaults based on:
+        1. Previously trained config for this pipeline (if exists)
+        2. Video channel analysis (for image conversion only)
+
+        Args:
+            pipeline: Pipeline name being switched to.
+        """
+        if self.mode != "training":
+            return
+
+        # Try to get a trained config for this pipeline
+        trained_cfg = self._get_trained_config_for_pipeline(pipeline)
+
+        defaults_to_apply = {}
+        used_trained_config = False
+
+        if trained_cfg and trained_cfg.config:
+            cfg = trained_cfg.config
+
+            # Only use OmegaConf if cfg is actually an OmegaConf object
+            if OmegaConf.is_config(cfg):
+                used_trained_config = True
+
+                # Image conversion from previous config
+                ensure_rgb = OmegaConf.select(
+                    cfg, "data_config.preprocessing.ensure_rgb", default=None
+                )
+                ensure_grayscale = OmegaConf.select(
+                    cfg, "data_config.preprocessing.ensure_grayscale", default=None
+                )
+                if ensure_rgb:
+                    defaults_to_apply["_ensure_channels"] = "RGB"
+                elif ensure_grayscale:
+                    defaults_to_apply["_ensure_channels"] = "grayscale"
+
+                # WandB settings from previous config (except run_name)
+                use_wandb = OmegaConf.select(
+                    cfg, "trainer_config.use_wandb", default=None
+                )
+                if use_wandb is not None:
+                    defaults_to_apply["trainer_config.use_wandb"] = use_wandb
+
+                wandb_entity = OmegaConf.select(
+                    cfg, "trainer_config.wandb.entity", default=None
+                )
+                if wandb_entity:
+                    defaults_to_apply["trainer_config.wandb.entity"] = wandb_entity
+
+                wandb_project = OmegaConf.select(
+                    cfg, "trainer_config.wandb.project", default=None
+                )
+                if wandb_project:
+                    defaults_to_apply["trainer_config.wandb.project"] = wandb_project
+
+                wandb_group = OmegaConf.select(
+                    cfg, "trainer_config.wandb.group", default=None
+                )
+                if wandb_group:
+                    defaults_to_apply["trainer_config.wandb.group"] = wandb_group
+
+                save_viz = OmegaConf.select(
+                    cfg, "trainer_config.wandb.save_viz_imgs_wandb", default=None
+                )
+                if save_viz is not None:
+                    defaults_to_apply["trainer_config.wandb.save_viz_imgs_wandb"] = (
+                        save_viz
+                    )
+
+        if not used_trained_config:
+            # No trained config - use video channel analysis for image conversion
+            video_default = self._get_video_channels_default()
+            if video_default:
+                defaults_to_apply["_ensure_channels"] = video_default
+
+        # Apply the defaults
+        if defaults_to_apply:
+            self.pipeline_form_widget.set_form_data(defaults_to_apply)
+
     def set_default_pipeline_tab(self):
         recent_pipeline_name = self.get_most_recent_pipeline_trained()
         if recent_pipeline_name:
@@ -641,7 +797,8 @@ class LearningDialog(QtWidgets.QDialog):
         self.shown_tab_names = []
 
     def set_pipeline(self, pipeline: str):
-        if pipeline != self.current_pipeline:
+        pipeline_changed = pipeline != self.current_pipeline
+        if pipeline_changed:
             self.remove_tabs()
             if pipeline == "top-down":
                 self.add_tab("centroid")
@@ -655,6 +812,10 @@ class LearningDialog(QtWidgets.QDialog):
                 self.add_tab("multi_class_bottomup")
             elif pipeline == "single":
                 self.add_tab("single_instance")
+
+            # Apply defaults from previous trained config or video analysis
+            self._apply_pipeline_defaults(pipeline)
+
         self.current_pipeline = pipeline
 
         self._validate_pipeline()
@@ -783,37 +944,51 @@ class LearningDialog(QtWidgets.QDialog):
     def get_selected_frames_to_predict(
         self, pipeline_form_data
     ) -> Dict[Video, List[int]]:
+        """Get frames to predict based on user selection.
+
+        Uses the new FrameTargetSelector widget for selection.
+        """
         frames_to_predict = dict()
 
-        if self._frame_selection is not None:
-            predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
-            if predict_frames_choice.startswith("current frame"):
-                frames_to_predict = self._frame_selection["frame"]
-            elif predict_frames_choice.startswith("random frames in current video"):
-                frames_to_predict = self._frame_selection["random_video"]
-            elif predict_frames_choice.startswith("random"):
-                frames_to_predict = self._frame_selection["random"]
-            elif predict_frames_choice.startswith("selected clip"):
-                frames_to_predict = self._frame_selection["clip"]
-            elif predict_frames_choice.startswith("suggested"):
-                frames_to_predict = self._frame_selection["suggestions"]
-            elif predict_frames_choice.startswith("entire current video"):
-                frames_to_predict = self._frame_selection["video"]
-            elif predict_frames_choice.startswith("all videos"):
-                frames_to_predict = self._frame_selection["all_videos"]
-            elif predict_frames_choice.startswith("user"):
-                frames_to_predict = self._frame_selection["user"]
+        if self._frame_selection is None:
+            return frames_to_predict
+
+        # Get selection from new frame target selector
+        selection = self.frame_target_selector.get_selection()
+        target_key = selection.target_key
+
+        # Map widget keys to frame_selection keys
+        key_map = {
+            "frame": "frame",
+            "clip": "clip",
+            "video": "video",
+            "all_videos": "all_videos",
+            "random": "random",
+            "suggestions": "suggestions",
+            "user_labeled": "user",
+            "predicted": "predicted",
+            "nothing": None,  # No frames to predict
+        }
+
+        frame_selection_key = key_map.get(target_key)
+        if frame_selection_key and frame_selection_key in self._frame_selection:
+            frames_to_predict = self._frame_selection[frame_selection_key].copy()
 
         return frames_to_predict
 
     def get_items_for_inference(self, pipeline_form_data) -> runners.ItemsForInference:
-        predict_frames_choice = pipeline_form_data.get("_predict_frames", "")
-        batch_size = pipeline_form_data.get("batch_size")
+        """Build inference items from current selection.
 
+        Uses the new FrameTargetSelector widget for selection.
+        """
         frame_selection = self.get_selected_frames_to_predict(pipeline_form_data)
         frame_count = self.count_total_frames_for_selection_option(frame_selection)
 
-        if predict_frames_choice.startswith("user"):
+        # Get target key from new widget
+        selection = self.frame_target_selector.get_selection()
+        target_key = selection.target_key
+
+        if target_key == "user_labeled":
             items_for_inference = runners.ItemsForInference(
                 items=[
                     runners.DatasetItemForInference(
@@ -821,9 +996,8 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
-                batch_size=batch_size,
             )
-        elif predict_frames_choice.startswith("suggested"):
+        elif target_key == "suggestions":
             items_for_inference = runners.ItemsForInference(
                 items=[
                     runners.DatasetItemForInference(
@@ -831,7 +1005,15 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
-                batch_size=batch_size,
+            )
+        elif target_key == "predicted":
+            items_for_inference = runners.ItemsForInference(
+                items=[
+                    runners.DatasetItemForInference(
+                        labels_path=self.labels_filename, frame_filter="predicted"
+                    )
+                ],
+                total_frame_count=frame_count,
             )
         else:
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
@@ -839,7 +1021,6 @@ class LearningDialog(QtWidgets.QDialog):
                 total_frame_count=frame_count,
                 labels_path=self.labels_filename,
                 labels=self.labels,
-                batch_size=batch_size,
             )
         return items_for_inference
 
@@ -894,8 +1075,9 @@ class LearningDialog(QtWidgets.QDialog):
                     "arborescence."
                 )
 
-                root_names = [n.name for n in root_nodes(skeleton)]
-                over_max_in_degree = [n.name for n in in_degree_over_one(skeleton)]
+                # These functions return node names (strings), not Node objects
+                root_names = root_nodes(skeleton)
+                over_max_in_degree = in_degree_over_one(skeleton)
                 cycles_var = cycles(skeleton)
 
                 if len(root_names) > 1:
@@ -914,9 +1096,8 @@ class LearningDialog(QtWidgets.QDialog):
                 if cycles_var:
                     cycle_strings = []
                     for cycle in cycles_var:
-                        cycle_strings.append(
-                            " &ndash;&gt; ".join((node.name for node in cycle))
-                        )
+                        # cycles returns node names (strings), not Node objects
+                        cycle_strings.append(" &ndash;&gt; ".join(cycle))
 
                     message += (
                         f" There are cycles in graph: {'; '.join(cycle_strings)}."
@@ -932,10 +1113,13 @@ class LearningDialog(QtWidgets.QDialog):
 
     def run(self):
         """Run with current dialog settings."""
-        # Save predict frames preference before running
-        self._save_predict_frames_preference()
+        # Get selection from new widget
+        selection = self.frame_target_selector.get_selection()
 
         pipeline_form_data = self.pipeline_form_widget.get_form_data()
+
+        # Add prediction mode to pipeline form data for the runner
+        pipeline_form_data["_prediction_mode"] = selection.prediction_mode
 
         items_for_inference = self.get_items_for_inference(pipeline_form_data)
 
@@ -1128,330 +1312,6 @@ class LearningDialog(QtWidgets.QDialog):
         tmp_dir.cleanup()
 
 
-class TrainingPipelineWidget(QtWidgets.QWidget):
-    """
-    Widget used in :py:class:`LearningDialog` for configuring pipeline.
-    """
-
-    updatePipeline = QtCore.Signal(str)
-    valueChanged = QtCore.Signal()
-
-    # Fields to place in the right column (WandB options)
-    RIGHT_COLUMN_FIELDS = {
-        "trainer_config.use_wandb",
-        "trainer_config.wandb.entity",
-        "trainer_config.wandb.project",
-        "trainer_config.wandb.api_key",
-        "trainer_config.wandb.prv_runid",
-        "trainer_config.wandb.group",
-        "trainer_config.wandb.save_viz_imgs_wandb",
-    }
-
-    # Section headers to place in right column
-    RIGHT_COLUMN_HEADERS = {"WandB options"}
-
-    def __init__(
-        self, mode: Text, skeleton: Optional["Skeleton"] = None, *args, **kwargs
-    ):
-        super(TrainingPipelineWidget, self).__init__(*args, **kwargs)
-
-        self.form_widget = YamlFormWidget.from_name(
-            "pipeline_form", which_form=mode, title="Training Pipeline"
-        )
-
-        if hasattr(skeleton, "node_names"):
-            for field_name in NODE_LIST_FIELDS:
-                self.form_widget.set_field_options(
-                    ".".join(field_name.split(".")[1:]),
-                    skeleton.node_names,
-                )
-
-        # Connect actions for change to pipeline
-        self.pipeline_field = self.form_widget.form_layout.find_field("_pipeline")[0]
-        self.pipeline_field.valueChanged.connect(self.emitPipeline)
-
-        self.form_widget.form_layout.valueChanged.connect(self.valueChanged)
-
-        # Build two-column layout for training mode
-        if mode == "training":
-            self._build_two_column_layout()
-        else:
-            self.setLayout(self.form_widget.form_layout)
-
-        # Load saved WandB preferences and update API key field
-        self._wandb_api_key_placeholder = None
-        if mode == "training":
-            self._init_wandb_settings()
-            self._init_training_settings()
-
-    def _build_two_column_layout(self):
-        """Reorganize the pipeline form into a two-column layout.
-
-        The pipeline stacked widget stays at the top (full width).
-        Left column: Input Data, Data Pipeline/Hardware, Output options
-        Right column: WandB options, ZMQ options
-        """
-        form_layout = self.form_widget.form_layout
-
-        # Create main layout
-        main_layout = QtWidgets.QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-
-        # Create two-column layout for settings
-        columns_layout = QtWidgets.QHBoxLayout()
-        left_column = QtWidgets.QFormLayout()
-        right_column = QtWidgets.QFormLayout()
-        left_column.setVerticalSpacing(6)
-        right_column.setVerticalSpacing(6)
-
-        # Track which column we're adding to based on section headers
-        current_column = left_column
-        pipeline_widget = None
-
-        # Iterate through all rows in the form
-        row_count = form_layout.rowCount()
-        for i in range(row_count):
-            # Get the label and field for this row
-            label_item = form_layout.itemAt(i, QtWidgets.QFormLayout.LabelRole)
-            field_item = form_layout.itemAt(i, QtWidgets.QFormLayout.FieldRole)
-
-            if field_item is None:
-                continue
-
-            field_widget = field_item.widget()
-            if field_widget is None:
-                continue
-
-            # Check if this is the pipeline stacked widget
-            field_name = field_widget.objectName()
-            if field_name == "_pipeline":
-                pipeline_widget = field_widget
-                continue
-
-            # Check if this is a section header (QLabel with bold text)
-            if isinstance(field_widget, QtWidgets.QLabel):
-                header_text = field_widget.text()
-                # Check for section headers and switch columns if needed
-                for header in self.RIGHT_COLUMN_HEADERS:
-                    if header in header_text:
-                        current_column = right_column
-                        break
-                else:
-                    # Not a right column header
-                    if (
-                        "Input Data" in header_text
-                        or "Data Pipeline" in header_text
-                        or "Output" in header_text
-                    ):
-                        current_column = left_column
-
-                # Add the header to the current column
-                current_column.addRow(field_widget)
-                continue
-
-            # Check if this field belongs in right column
-            if field_name in self.RIGHT_COLUMN_FIELDS:
-                target_column = right_column
-            else:
-                target_column = current_column
-
-            # Get the label text
-            label_text = ""
-            if label_item:
-                label_widget = label_item.widget()
-                if label_widget:
-                    label_text = label_widget.text()
-
-            # Add to target column
-            if label_text:
-                target_column.addRow(label_text, field_widget)
-            else:
-                target_column.addRow(field_widget)
-
-        # Wrap columns in widgets for alignment
-        left_widget = QtWidgets.QWidget()
-        left_widget.setLayout(left_column)
-        right_widget = QtWidgets.QWidget()
-        right_widget.setLayout(right_column)
-
-        columns_layout.addWidget(left_widget, stretch=1, alignment=QtCore.Qt.AlignTop)
-        columns_layout.addWidget(right_widget, stretch=1, alignment=QtCore.Qt.AlignTop)
-
-        # Add pipeline widget at top if found (no stretch - only takes needed space)
-        if pipeline_widget:
-            main_layout.addWidget(pipeline_widget, stretch=0)
-
-        # Add columns (no stretch - only takes needed space)
-        columns_widget = QtWidgets.QWidget()
-        columns_widget.setLayout(columns_layout)
-        main_layout.addWidget(columns_widget, stretch=0)
-
-        # Push everything to top, extra space goes to bottom
-        main_layout.addStretch(1)
-
-        self.setLayout(main_layout)
-
-    @property
-    def fields(self):
-        return self.form_widget.fields
-
-    @property
-    def buttons(self):
-        return self.form_widget.buttons
-
-    def set_message(self, message: Text):
-        self.form_widget.set_message()
-
-    def get_form_data(self):
-        data = self.form_widget.get_form_data()
-        # Strip placeholder from API key if user didn't change it
-        api_key = data.get("trainer_config.wandb.api_key")
-        if api_key and self._wandb_api_key_placeholder:
-            if api_key == self._wandb_api_key_placeholder:
-                data["trainer_config.wandb.api_key"] = None
-        self._save_wandb_preferences(data)
-        self._save_training_preferences(data)
-        return data
-
-    def set_form_data(self, data):
-        self.form_widget.set_form_data(data)
-
-    def emitPipeline(self):
-        val = self.current_pipeline
-        self.updatePipeline.emit(val)
-
-    @property
-    def current_pipeline(self):
-        pipeline_selected_label = self.pipeline_field.value()
-        if "top-down" in pipeline_selected_label:
-            if "id" not in pipeline_selected_label:
-                return "top-down"
-            else:
-                return "top-down-id"
-        if "bottom-up" in pipeline_selected_label:
-            if "id" not in pipeline_selected_label:
-                return "bottom-up"
-            else:
-                return "bottom-up-id"
-        if "single" in pipeline_selected_label:
-            return "single"
-        return ""
-
-    @current_pipeline.setter
-    def current_pipeline(self, val):
-        if val not in (
-            "top-down",
-            "bottom-up",
-            "single",
-            "top-down-id",
-            "bottom-up-id",
-        ):
-            raise ValueError(f"Cannot set pipeline to {val}")
-
-        # Match short name to full pipeline name shown in menu
-        for full_option_name in self.pipeline_field.option_list:
-            if val in full_option_name:
-                val = full_option_name
-                break
-
-        self.pipeline_field.setValue(val)
-        self.emitPipeline()
-
-    def _init_wandb_settings(self):
-        """Initialize WandB settings from preferences and update API key help text."""
-        # Load saved WandB preferences (bools always set, strings only if not None)
-        wandb_prefs = {
-            "trainer_config.use_wandb": prefs["wandb enabled"],
-            "trainer_config.wandb.entity": prefs["wandb entity"],
-            "trainer_config.wandb.project": prefs["wandb project"],
-            "trainer_config.wandb.group": prefs["wandb group"],
-            "trainer_config.wandb.save_viz_imgs_wandb": prefs["wandb save viz images"],
-        }
-        # Filter out None values for optional string fields
-        wandb_prefs = {
-            k: v
-            for k, v in wandb_prefs.items()
-            if v is not None
-            or k
-            in ("trainer_config.use_wandb", "trainer_config.wandb.save_viz_imgs_wandb")
-        }
-        if wandb_prefs:
-            self.form_widget.set_form_data(wandb_prefs)
-
-        # Update API key field based on login status
-        is_logged_in, auth_source = check_wandb_login_status()
-        if is_logged_in:
-            api_key_field = self.form_widget.fields.get("trainer_config.wandb.api_key")
-            if api_key_field is not None:
-                # Set placeholder to indicate already authenticated
-                placeholder = f"(using {auth_source})"
-                api_key_field.setText(placeholder)
-                api_key_field.setToolTip(
-                    get_wandb_api_key_help_text(is_logged_in, auth_source)
-                )
-                # Store placeholder so we can strip it on form read
-                self._wandb_api_key_placeholder = placeholder
-
-    def _save_wandb_preferences(self, form_data: dict):
-        """Save WandB settings to preferences for persistence across sessions."""
-        # Map form field names to preference keys (API key excluded for security)
-        pref_mapping = {
-            "trainer_config.use_wandb": "wandb enabled",
-            "trainer_config.wandb.entity": "wandb entity",
-            "trainer_config.wandb.project": "wandb project",
-            "trainer_config.wandb.group": "wandb group",
-            "trainer_config.wandb.save_viz_imgs_wandb": "wandb save viz images",
-        }
-        changed = False
-        for form_key, pref_key in pref_mapping.items():
-            if form_key in form_data:
-                value = form_data[form_key]
-                if prefs[pref_key] != value:
-                    prefs[pref_key] = value
-                    changed = True
-        if changed:
-            prefs.save()
-
-    def _init_training_settings(self):
-        """Initialize training pipeline settings from preferences."""
-        # Note: _predict_frames is handled at LearningDialog level due to
-        # dynamic options and precedence rules (suggestions > saved pref)
-        training_prefs = {
-            "_ensure_channels": prefs["training image conversion"],
-            "_data_pipeline_fw": prefs["training data pipeline framework"],
-            "trainer_config.train_data_loader.num_workers": prefs[
-                "training num workers"
-            ],
-            "trainer_config.trainer_accelerator": prefs["training accelerator"],
-        }
-        # trainer_devices is optional_int - only set if not None
-        if prefs["training num devices"] is not None:
-            training_prefs["trainer_config.trainer_devices"] = prefs[
-                "training num devices"
-            ]
-        self.form_widget.set_form_data(training_prefs)
-
-    def _save_training_preferences(self, form_data: dict):
-        """Save training pipeline settings to preferences."""
-        # Note: _predict_frames is handled at LearningDialog level
-        pref_mapping = {
-            "_ensure_channels": "training image conversion",
-            "_data_pipeline_fw": "training data pipeline framework",
-            "trainer_config.train_data_loader.num_workers": "training num workers",
-            "trainer_config.trainer_devices": "training num devices",
-            "trainer_config.trainer_accelerator": "training accelerator",
-        }
-        changed = False
-        for form_key, pref_key in pref_mapping.items():
-            if form_key in form_data:
-                value = form_data[form_key]
-                if prefs[pref_key] != value:
-                    prefs[pref_key] = value
-                    changed = True
-        if changed:
-            prefs.save()
-
-
 class TrainingEditorWidget(QtWidgets.QWidget):
     """
     Dialog for viewing and modifying training profiles (model hyperparameters).
@@ -1489,8 +1349,10 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self._cfg_getter = cfg_getter
         self._cfg_list_widget = None
         self._receptive_field_widget = None
-        self._use_trained_model = None
-        self._resume_training = None
+        self._training_mode_group = None
+        self._radio_train_scratch = None
+        self._radio_use_trained = None
+        self._radio_resume = None
         self._require_trained = require_trained
         self.head = head
 
@@ -1553,16 +1415,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Layout for header and columns
         layout = QtWidgets.QVBoxLayout()
 
-        # Two column layout for config parameters
+        # Two column layout: Data+Augmentation+Optimization | Model
         col1_layout = QtWidgets.QVBoxLayout()
         col2_layout = QtWidgets.QVBoxLayout()
-        col3_layout = QtWidgets.QVBoxLayout()
 
         col1_layout.addWidget(self.form_widgets["data"])
+        col1_layout.addWidget(self.form_widgets["augmentation"])
         col1_layout.addWidget(self.form_widgets["optimization"])
-        self.form_widgets["augmentation"].setMaximumWidth(255)
-        col2_layout.addWidget(self.form_widgets["augmentation"])
-        col3_layout.addWidget(self.form_widgets["model"])
+        col2_layout.addWidget(self.form_widgets["model"])
 
         if self._receptive_field_widget:
             col0_layout = QtWidgets.QVBoxLayout()
@@ -1582,9 +1442,6 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         )
         col_layout.addWidget(
             self._layout_widget(col2_layout), stretch=0, alignment=QtCore.Qt.AlignTop
-        )
-        col_layout.addWidget(
-            self._layout_widget(col3_layout), stretch=0, alignment=QtCore.Qt.AlignTop
         )
         col_layout.addStretch(1)  # Push columns left, absorb extra space
 
@@ -1608,21 +1465,48 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self._require_trained:
             self._update_use_trained()
         elif self._cfg_list_widget is not None:
-            # Add option for using trained model from selected config file
-            self._use_trained_model = QtWidgets.QCheckBox(
-                "Use Existing Training Config"
+            # Add radio buttons for training mode selection
+            # Three mutually exclusive options for how to use the selected config
+            self._training_mode_group = QtWidgets.QButtonGroup(self)
+
+            self._radio_train_scratch = QtWidgets.QRadioButton(
+                "Reuse config (train from scratch)"
             )
-            self._use_trained_model.setEnabled(False)
-            self._use_trained_model.setVisible(False)
-            self._resume_training = QtWidgets.QCheckBox("Use Trained Model Weights")
-            self._resume_training.setEnabled(False)
-            self._resume_training.setVisible(False)
+            self._radio_resume = QtWidgets.QRadioButton("Resume training (fine-tune)")
+            self._radio_use_trained = QtWidgets.QRadioButton(
+                "Reuse model (don't retrain)"
+            )
 
-            self._use_trained_model.stateChanged.connect(self._update_use_trained)
-            self._resume_training.stateChanged.connect(self._update_use_trained)
+            # Set IDs for easier identification
+            self._training_mode_group.addButton(self._radio_train_scratch, 0)
+            self._training_mode_group.addButton(self._radio_resume, 1)
+            self._training_mode_group.addButton(self._radio_use_trained, 2)
 
-            layout.addWidget(self._use_trained_model)
-            layout.addWidget(self._resume_training)
+            # Default to training from scratch
+            self._radio_train_scratch.setChecked(True)
+
+            # Last two options only enabled when trained model is available
+            self._radio_resume.setEnabled(False)
+            self._radio_use_trained.setEnabled(False)
+
+            # Layout radio buttons horizontally with minimal spacing
+            radio_layout = QtWidgets.QHBoxLayout()
+            radio_layout.setContentsMargins(0, 0, 0, 0)
+            radio_layout.setSpacing(12)
+            radio_layout.addWidget(self._radio_train_scratch)
+            radio_layout.addWidget(self._radio_resume)
+            radio_layout.addWidget(self._radio_use_trained)
+            radio_layout.addStretch()
+
+            radio_widget = QtWidgets.QWidget()
+            radio_widget.setLayout(radio_layout)
+            radio_widget.setSizePolicy(
+                QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed
+            )
+
+            self._training_mode_group.buttonClicked.connect(self._update_use_trained)
+
+            layout.addWidget(radio_widget)
 
         layout.addWidget(self._layout_widget(col_layout))
         self.setLayout(layout)
@@ -1786,16 +1670,16 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self._load_config(cfg_info)
 
         has_trained_model = cfg_info.has_trained_model
-        if self._use_trained_model is not None:
-            self._use_trained_model.setChecked(self._require_trained)
-            self._use_trained_model.setVisible(has_trained_model)
-            self._use_trained_model.setEnabled(has_trained_model)
-        # Redundant check (for readability) since this checkbox exists if the
-        # above does
-        if self._resume_training is not None:
-            self._use_trained_model.setChecked(False)
-            self._resume_training.setVisible(has_trained_model)
-            self._resume_training.setEnabled(has_trained_model)
+
+        # Update radio button states based on whether selected config has trained model
+        if self._radio_use_trained is not None:
+            # Enable/disable trained model options based on availability
+            self._radio_use_trained.setEnabled(has_trained_model)
+            self._radio_resume.setEnabled(has_trained_model)
+
+            # If no trained model available, reset to "train from scratch"
+            if not has_trained_model:
+                self._radio_train_scratch.setChecked(True)
 
         self.update_receptive_field()
 
@@ -1901,54 +1785,42 @@ class TrainingEditorWidget(QtWidgets.QWidget):
     #     cfg_form_data_dict = self.get_all_form_data()
     #     self._cfg_list_widget.setUserConfigData(cfg_form_data_dict)
 
-    def _update_use_trained(self, check_state=0):
-        """Update config GUI based on _use_trained_model & _resume_training checkboxes.
+    def _update_use_trained(self, button=None):
+        """Update config GUI based on training mode radio button selection.
 
-        This function is called when either _use_trained_model or _resume_training
-        checkbox is checked/unchecked or when _require_trained is changed.
+        This function is called when a radio button is clicked or when
+        _require_trained is set (inference mode).
 
-        If _require_trained is True, then we'll disable all fields.
-        If _use_trained_model is checked, then we'll disable all fields.
-        If _resume_training is checked, then we'll disable only the model field.
+        Training modes:
+        - Train from scratch: All forms editable, train new model
+        - Use same model (don't retrain): All forms disabled, use trained model as-is
+        - Resume training (fine-tune): Model form disabled, other forms editable
 
         Args:
-            check_state (int, optional): Check state of checkbox. Defaults to 0. Unused.
+            button: The clicked radio button (unused, we check button group state).
 
         Returns:
             None
 
         Side Effects:
-            Disables/Enables fields based on checkbox values
-            (and _required_training).
+            Disables/Enables fields based on selected training mode.
         """
-
-        # Check which checkbox changed its value (if any)
-        sender = self.sender()
-
-        if sender is None:  # If sender is None, then _required_training is True
-            pass
-        # Uncheck _resume_training checkbox if _use_trained_model is unchecked
-        elif (
-            sender == self._use_trained_model
-            and not self._use_trained_model.isChecked()
-        ):
-            self._resume_training.setChecked(False)
-
-        # Check _use_trained_model checkbox if _resume_training is checked
-        elif sender == self._resume_training and self._resume_training.isChecked():
-            self._use_trained_model.setChecked(True)
-
-        # Update form widgets
+        # Get current training mode
         use_trained_params = self.use_trained
-        use_model_params = self.resume_training
+        resume_training_params = self.resume_training
+
+        # Enable/disable all form widgets based on mode
         for form in self.form_widgets.values():
             form.set_enabled(not use_trained_params)
 
-        if use_trained_params or use_model_params:
-            cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
+        # Get config info if we need to load trained config/model
+        cfg_info = None
+        if use_trained_params or resume_training_params:
+            if self._cfg_list_widget is not None:
+                cfg_info = self._cfg_list_widget.getSelectedConfigInfo()
 
-        # If user wants to resume training, then reset only model form to match config
-        if use_model_params:
+        # Resume training: model form disabled, load model config
+        if resume_training_params and cfg_info is not None:
             self.form_widgets["model"].set_enabled(False)
 
             # Set model form to match config
@@ -1956,8 +1828,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             key_val_dict = get_keyval_dict_from_omegaconf(cfg)
             self.set_fields_from_key_val_dict({"model": key_val_dict})
 
-        # If user wants to use trained model, then reset entire form to match config
-        if use_trained_params:
+        # Use trained model: all forms disabled, load full config
+        if use_trained_params and cfg_info is not None:
             self._load_config(cfg_info)
 
         self._set_head()
@@ -1990,18 +1862,27 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
     @property
     def use_trained(self) -> bool:
-        if self._require_trained or (
-            (self._use_trained_model is not None)
-            and self._use_trained_model.isChecked()
-            and (not self.resume_training)
-        ):
+        """Check if user wants to use trained model without retraining.
+
+        Returns True when:
+        - _require_trained is True (inference mode), OR
+        - "Use same model (don't retrain)" radio button is selected
+        """
+        if self._require_trained:
+            return True
+
+        if self._radio_use_trained is not None and self._radio_use_trained.isChecked():
             return True
 
         return False
 
     @property
     def resume_training(self) -> bool:
-        if (self._resume_training is not None) and self._resume_training.isChecked():
+        """Check if user wants to resume/fine-tune training.
+
+        Returns True when "Resume training (fine-tune)" radio button is selected.
+        """
+        if self._radio_resume is not None and self._radio_resume.isChecked():
             return True
         return False
 
@@ -2035,23 +1916,28 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             trained_config.trainer_config.run_name = None
 
         if self.resume_training:
-            # Get the folder path of trained config and set it as the output
-            # folder
-            file_list = list(Path(cast(str, trained_config_info.path)).parent.iterdir())
-            if (
-                Path(cast(str, trained_config_info.path)).parent / "best.ckpt"
-            ) in file_list:
+            # Get the folder path of trained config and find checkpoint file
+            model_dir = Path(cast(str, trained_config_info.path)).parent
+            file_list = list(model_dir.iterdir())
+            ckpt = None
+            if (model_dir / "best.ckpt") in file_list:
                 ckpt = "best.ckpt"
-            elif (
-                Path(cast(str, trained_config_info.path)).parent / "best_model.h5"
-            ) in file_list:
+            elif (model_dir / "best_model.h5") in file_list:
                 ckpt = "best_model.h5"
-            trained_config_info.config.model_config.pretrained_backbone_weights = (
-                Path(cast(str, trained_config_info.path)).parent / ckpt
-            ).as_posix()
-            trained_config_info.config.model_config.pretrained_head_weights = (
-                trained_config_info.config.model_config.pretrained_backbone_weights
-            )
+
+            if ckpt is not None:
+                trained_config_info.config.model_config.pretrained_backbone_weights = (
+                    model_dir / ckpt
+                ).as_posix()
+                trained_config_info.config.model_config.pretrained_head_weights = (
+                    trained_config_info.config.model_config.pretrained_backbone_weights
+                )
+            else:
+                # No checkpoint found - proceed without pretrained weights
+                trained_config_info.config.model_config.pretrained_backbone_weights = (
+                    None
+                )
+                trained_config_info.config.model_config.pretrained_head_weights = None
         else:
             trained_config_info.config.model_config.pretrained_backbone_weights = None
             trained_config_info.config.model_config.pretrained_head_weights = None

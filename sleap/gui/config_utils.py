@@ -134,6 +134,12 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
             friendly_name, "torch_dataset_cache_img_memory"
         )
 
+    # Handle trainer devices auto-selection
+    # When auto checkbox is checked, set trainer_devices to None so sleap-nn
+    # will auto-detect the device count
+    if key_val_dict.get("_trainer_devices_auto", False):
+        key_val_dict["trainer_config.trainer_devices"] = None
+
     # Overwrite backbone strides with stride from head.
     backbone_name = find_backbone_name_from_key_val_dict(key_val_dict)
     if backbone_name is not None:

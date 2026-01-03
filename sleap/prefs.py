@@ -37,15 +37,7 @@ class Preferences(object):
         "share usage data": True,
         "node marker sizes": (1, 2, 3, 4, 6, 8, 12),
         "node label sizes": (6, 9, 12, 18, 24, 36),
-        # WandB settings (persisted across sessions, API key excluded for security)
-        "wandb enabled": False,
-        "wandb entity": None,
-        "wandb project": None,
-        "wandb group": None,
-        "wandb save viz images": False,
-        # Training pipeline settings
-        "training image conversion": "",  # '', 'RGB', or 'grayscale'
-        "training predict on": "current frame",  # 'current frame' or 'random frames'
+        # Training pipeline settings (system-level, persist across projects)
         "training data pipeline framework": "Cache in Memory",
         "training num workers": 0,
         "training num devices": None,  # None = auto-detect
@@ -117,7 +109,7 @@ class Preferences(object):
     def reset_to_default(self):
         """Reset preferences to default."""
         util.save_config_yaml(self._filename, self._defaults)
-        self.load()
+        self.reload()
 
     def _validate_key(self, key):
         if key not in self._defaults:

@@ -160,8 +160,9 @@ class DatasetItemForInference(ItemForInference):
     Attributes:
         labels_path: path to the saved :py:class:`Labels` dataset.
         frame_filter: which subset of frames to get from dataset, supports
-            * "user"
-            * "suggested"
+            * "user" - frames with user-labeled instances
+            * "suggested" - frames marked as suggestions (without user labels)
+            * "predicted" - frames with predicted instances
         use_absolute_path: whether to use absolute path for inference cli call.
     """
 
@@ -177,12 +178,13 @@ class DatasetItemForInference(ItemForInference):
 
     @property
     def cli_args(self):
-        args_list = [self.path]
         args_list = ["--data_path", self.path]
         if self.frame_filter == "user":
             args_list.append("--only_labeled_frames")
         elif self.frame_filter == "suggested":
             args_list.append("--only_suggested_frames")
+        elif self.frame_filter == "predicted":
+            args_list.append("--only_predicted_frames")
         return args_list
 
 
@@ -192,7 +194,6 @@ class ItemsForInference:
 
     items: List[ItemForInference]
     total_frame_count: int
-    batch_size: int
 
     def __len__(self):
         return len(self.items)
@@ -202,7 +203,6 @@ class ItemsForInference:
         cls,
         video_frames_dict: Dict[Video, List[int]],
         total_frame_count: int,
-        batch_size: int,
         labels: Labels,
         labels_path: Optional[str] = None,
     ):
@@ -217,9 +217,7 @@ class ItemsForInference:
                         video_idx=labels.videos.index(video),
                     )
                 )
-        return cls(
-            items=items, total_frame_count=total_frame_count, batch_size=batch_size
-        )
+        return cls(items=items, total_frame_count=total_frame_count)
 
 
 @attr.s(auto_attribs=True)
@@ -303,6 +301,11 @@ class InferenceTask:
             cli_args.extend(
                 ["--max_instances", str(self.inference_params["_max_instances"])]
             )
+
+        # Add exclude user labeled flag if set
+        # This tells sleap-nn to skip frames that have user labels
+        if self.inference_params.get("_exclude_user_labeled", False):
+            cli_args.append("--exclude_user_labeled")
 
         # add tracking args
         if (
@@ -435,8 +438,21 @@ class InferenceTask:
         )
         new_labels = Labels(self.results)
 
+        # Handle clear all predictions before merging.
+        # Skip if target is "nothing" (no inference ran, so don't clear predictions).
+        target_key = self.inference_params.get("_predict_target", "")
+        clear_all = self.inference_params.get("_clear_all_first", False)
+        if clear_all and target_key != "nothing":
+            self.labels.remove_predictions()
+
         # Merge pred results into base labels
-        self.labels.merge(new_labels)  # , frame_strategy="keep_both")
+        # Use replace_predictions when replacing, keep_both when adding
+        # See: https://sleap.ai/develop/api/sleap_io.model.labels.html#sleap_io.model.labels.Labels.merge
+        prediction_mode = self.inference_params.get("_prediction_mode", "add")
+        if prediction_mode == "replace":
+            self.labels.merge(new_labels, frame_strategy="replace_predictions")
+        else:
+            self.labels.merge(new_labels, frame_strategy="keep_both")
 
 
 def write_pipeline_files(
