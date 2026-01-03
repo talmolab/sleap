@@ -27,6 +27,7 @@ classifiers = [
 dynamic = ["version", "readme"]
 dependencies = [
     "attrs",
+    "click>=8.0",
     "omegaconf",
     "imageio",
     "imageio-ffmpeg",
@@ -44,6 +45,7 @@ dependencies = [
     "pyzmq",
     "qtpy",
     "rich",
+    "rich-click>=1.8",
     "scikit-image",
     "scikit-learn",
     "scipy",
@@ -105,6 +107,7 @@ Documentation = "https://sleap.ai/"
 "Source Code" = "https://github.com/talmolab/sleap"
 
 [project.scripts]
+sleap = "sleap.cli:cli"
 sleap-convert = "sleap.io.convert:main"
 sleap-render = "sleap.io.visuals:main"
 sleap-label = "sleap.gui.app:main"
@@ -112,8 +115,8 @@ sleap-inspect = "sleap.info.labels:main"
 sleap-diagnostic = "sleap.diagnostic:main"
 sleap-train = "sleap.legacy_cli_adaptors:train_command"
 sleap-track = "sleap.legacy_cli_adaptors:track_command"
-sleap-nn-train = "sleap.cli:train"
-sleap-nn-track = "sleap.cli:track"
+sleap-nn-train = "sleap.nn_cli:train"
+sleap-nn-track = "sleap.nn_cli:track"
 # sleap-export = "sleap.legacy_cli_adaptors:export_cli"
 
 [tool.uv]
