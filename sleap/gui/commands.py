@@ -70,6 +70,12 @@ from sleap.gui.dialogs.frame_range import FrameRangeDialog
 from sleap.gui.state import GuiState
 from sleap.gui.suggestions import VideoFrameSuggestions
 from sleap_io import LabeledFrame, Labels, save_file, SuggestionFrame
+
+try:
+    from sleap_io.io.slp import ExportCancelled
+except ImportError:
+    # Fallback for older sleap-io versions without ExportCancelled
+    ExportCancelled = None
 from sleap_io.model.instance import (
     Instance,
     PredictedInstance,
@@ -1530,6 +1536,112 @@ class ExportLabeledClip(ExportVideoClip):
         )
 
 
+class ExportPackageThread(QtCore.QThread):
+    """Background thread for exporting labels package without freezing GUI."""
+
+    progress = QtCore.Signal(int, int)  # (current, total)
+    finished = QtCore.Signal(str)  # filename
+    error = QtCore.Signal(str)  # error message
+    cancelled = QtCore.Signal()
+
+    def __init__(
+        self,
+        labels: Labels,
+        filename: str,
+        embed_option: str,
+        parent=None,
+    ):
+        super().__init__(parent)
+        self.labels = labels
+        self.filename = filename
+        self.embed_option = embed_option
+        self._cancelled = False
+
+    def cancel(self):
+        """Request cancellation of the export."""
+        self._cancelled = True
+
+    def _needs_temp_file(self) -> bool:
+        """Check if we need to use a temp file to avoid overwriting source.
+
+        Returns True if any video in the labels references the output filename,
+        which would cause errors if we delete the file before reading frames.
+        """
+        output_path = Path(self.filename).resolve()
+        if not output_path.exists():
+            return False
+
+        for video in self.labels.videos:
+            video_path = Path(video.filename).resolve()
+            if video_path == output_path:
+                return True
+        return False
+
+    def run(self):
+        """Run the export in background thread."""
+
+        def on_progress(current, total):
+            self.progress.emit(current, total)
+            return not self._cancelled
+
+        # Check if we need to use a temp file to avoid overwriting source
+        use_temp = self._needs_temp_file()
+        if use_temp:
+            # Write to temp file first, then rename
+            temp_filename = self.filename + ".tmp"
+            export_target = temp_filename
+        else:
+            export_target = self.filename
+
+        # Deep copy labels to avoid mutation by sleap-io's embed_frames().
+        # sleap-io replaces video references in-place with embedded versions,
+        # which would break subsequent exports from the same Labels object.
+        labels_copy = deepcopy(self.labels)
+
+        try:
+            save_file(
+                labels_copy,
+                export_target,
+                format="slp",
+                embed=self.embed_option,
+                progress_callback=on_progress,
+            )
+
+            if self._cancelled:
+                # Clean up on cancellation
+                if Path(export_target).exists():
+                    os.remove(export_target)
+                self.cancelled.emit()
+                return
+
+            # If we used a temp file, replace the original
+            if use_temp:
+                if Path(self.filename).exists():
+                    os.remove(self.filename)
+                os.rename(export_target, self.filename)
+
+            self.finished.emit(self.filename)
+
+        except Exception as e:
+            # Clean up temp file if it exists
+            if use_temp and Path(export_target).exists():
+                os.remove(export_target)
+
+            # Check if this was a cancellation
+            is_cancelled = (
+                (ExportCancelled is not None and isinstance(e, ExportCancelled))
+                or "cancel" in str(e).lower()
+                or self._cancelled
+            )
+            if is_cancelled:
+                # Clean up partial file
+                if Path(self.filename).exists():
+                    os.remove(self.filename)
+                self.cancelled.emit()
+            else:
+                self.error.emit(str(e))
+
+
 def export_dataset_gui(
     labels: Labels,
     filename: str,
@@ -1550,42 +1662,159 @@ def export_dataset_gui(
         verbose: If `True`, display progress dialog. Defaults to `True`.
         as_package: If `True`, save as a package (saves image data instead of
             referencing video). Defaults to `True`.
+
+    Returns:
+        The filename if successful, "canceled" if canceled by user.
     """
-    if verbose:
-        win = QtWidgets.QProgressDialog(
-            "Exporting dataset with frame images...", "Cancel", 0, 1
-        )
-
-    def update_progress(n, n_total):
-        if win.wasCanceled():
-            return False
-        win.setMaximum(n_total)
-        win.setValue(n)
-        win.setLabelText(
-            f"Exporting dataset with frame images...<br>{n}/{n_total} "
-            f"(<b>{(n / n_total) * 100:.1f}%</b>)"
-        )
-        QtWidgets.QApplication.instance().processEvents()
-        return True
-
     embed_option = "all" if all_labeled else "user+suggestions" if suggested else "user"
-    save_file(
-        labels,
-        filename,
-        format="slp",
-        embed=embed_option if as_package else False,
-        # progress_callback=update_progress if verbose else None, #TODO
+
+    if not verbose:
+        # Non-verbose mode: run synchronously without GUI
+        save_file(
+            labels,
+            filename,
+            format="slp",
+            embed=embed_option if as_package else False,
+        )
+        return filename
+
+    # Create progress dialog
+    win = QtWidgets.QProgressDialog(
+        "Exporting dataset with frame images...", "Cancel", 0, 1
+    )
+    win.setWindowModality(QtCore.Qt.WindowModal)
+    win.setMinimumDuration(0)
+    win.setAutoClose(False)
+    win.setAutoReset(False)
+    win.show()
+    QtWidgets.QApplication.instance().processEvents()
+
+    # Track result
+    result = {"status": None, "filename": None, "error": None}
+
+    # Create worker thread
+    worker = ExportPackageThread(
+        labels=labels,
+        filename=filename,
+        embed_option=embed_option if as_package else False,
     )
 
-    if verbose:
-        if win.wasCanceled():
-            # Delete output if saving was canceled.
-            os.remove(filename)
-            return "canceled"
+    def on_progress(current, total):
+        win.setMaximum(total)
+        win.setValue(current)
+        win.setLabelText(
+            f"Exporting dataset with frame images...<br>{current}/{total} "
+            f"(<b>{(current / total) * 100:.1f}%</b>)"
+        )
 
-        win.hide()
+    def on_finished(fname):
+        result["status"] = "finished"
+        result["filename"] = fname
+
+    def on_cancelled():
+        result["status"] = "canceled"
+
+    def on_error(msg):
+        result["status"] = "error"
+        result["error"] = msg
+
+    # Connect signals
+    worker.progress.connect(on_progress)
+    worker.finished.connect(on_finished)
+    worker.cancelled.connect(on_cancelled)
+    worker.error.connect(on_error)
+
+    # Handle cancel button
+    win.canceled.connect(worker.cancel)
+
+    # Start the worker
+    worker.start()
+
+    # Process events while worker is running (keeps GUI responsive)
+    while worker.isRunning():
+        QtWidgets.QApplication.instance().processEvents()
+        worker.wait(10)  # Wait up to 10ms
+
+    # Ensure thread is fully terminated
+    worker.wait()
+
+    # Process any remaining events (including final signals from worker)
+    QtWidgets.QApplication.instance().processEvents()
+
+    # Clean up: disconnect signals and delete worker to prevent dangling references
+    worker.progress.disconnect()
+    worker.finished.disconnect()
+    worker.cancelled.disconnect()
+    worker.error.disconnect()
+    worker.deleteLater()
+
+    win.close()
+
+    # Handle result
+    if result["status"] == "finished":
+        _show_export_complete_dialog(result["filename"])
+        return result["filename"]
+    elif result["status"] == "canceled":
+        return "canceled"
+    elif result["status"] == "error":
+        QtWidgets.QMessageBox.critical(
+            None,
+            "Export Error",
+            f"Failed to export labels package:\n{result['error']}",
+        )
+        raise RuntimeError(result["error"])
 
     return filename
+
+
+def _show_export_complete_dialog(filepath: str):
+    """Show a dialog after export completes with options to open folder or copy path.
+
+    Args:
+        filepath: The path to the exported file.
+    """
+    msg = QtWidgets.QMessageBox()
+    msg.setWindowTitle("Export Complete")
+    msg.setIcon(QtWidgets.QMessageBox.Information)
+    msg.setText("Labels package exported successfully.")
+    msg.setInformativeText(filepath)
+
+    # Add custom buttons
+    open_folder_btn = msg.addButton("Open Folder", QtWidgets.QMessageBox.ActionRole)
+    copy_path_btn = msg.addButton("Copy Path", QtWidgets.QMessageBox.ActionRole)
+    ok_btn = msg.addButton(QtWidgets.QMessageBox.Ok)
+
+    msg.setDefaultButton(ok_btn)
+    msg.exec()
+
+    clicked = msg.clickedButton()
+    if clicked == open_folder_btn:
+        reveal_file(filepath)
+    elif clicked == copy_path_btn:
+        QtWidgets.QApplication.clipboard().setText(filepath)
+
+
+def reveal_file(filepath: str):
+    """Open the file explorer with the given file selected/revealed.
+
+    Similar to `open_file()` but reveals the file in its containing folder
+    rather than opening it with the default application.
+
+    Args:
+        filepath: The path to the file to reveal.
+    """
+    filepath = Path(filepath).resolve()
+
+    if sys.platform == "win32":
+        # Windows: use explorer /select, to highlight the file
+        # Note: the comma after /select is required
+        subprocess.Popen(["explorer", "/select,", str(filepath)])
+    elif sys.platform == "darwin":
+        # macOS: use open -R to reveal in Finder
+        subprocess.Popen(["open", "-R", str(filepath)])
+    else:
+        # Linux: xdg-open doesn't support file selection, open parent folder
+        subprocess.Popen(["xdg-open", str(filepath.parent)])
 
 
 class ExportDatasetWithImages(AppCommand):
