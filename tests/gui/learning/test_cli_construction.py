@@ -228,14 +228,12 @@ class TestItemsForInference:
         items = ItemsForInference.from_video_frames_dict(
             video_frames_dict=video_frames_dict,
             total_frame_count=5,
-            batch_size=4,
             labels=mock_labels,
             labels_path="/path/to/labels.slp",
         )
 
         assert len(items) == 1
         assert items.total_frame_count == 5
-        assert items.batch_size == 4
         assert isinstance(items.items[0], VideoItemForInference)
 
     def test_from_video_frames_dict_multiple_videos(self, mock_labels):
@@ -262,7 +260,6 @@ class TestItemsForInference:
         items = ItemsForInference.from_video_frames_dict(
             video_frames_dict=video_frames_dict,
             total_frame_count=8,
-            batch_size=4,
             labels=mock_labels,
             labels_path="/path/to/labels.slp",
         )
@@ -276,7 +273,6 @@ class TestItemsForInference:
         items = ItemsForInference.from_video_frames_dict(
             video_frames_dict=video_frames_dict,
             total_frame_count=0,
-            batch_size=4,
             labels=mock_labels,
             labels_path="/path/to/labels.slp",
         )

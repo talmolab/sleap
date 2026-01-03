@@ -194,7 +194,6 @@ class ItemsForInference:
 
     items: List[ItemForInference]
     total_frame_count: int
-    batch_size: int
 
     def __len__(self):
         return len(self.items)
@@ -204,7 +203,6 @@ class ItemsForInference:
         cls,
         video_frames_dict: Dict[Video, List[int]],
         total_frame_count: int,
-        batch_size: int,
         labels: Labels,
         labels_path: Optional[str] = None,
     ):
@@ -219,9 +217,7 @@ class ItemsForInference:
                         video_idx=labels.videos.index(video),
                     )
                 )
-        return cls(
-            items=items, total_frame_count=total_frame_count, batch_size=batch_size
-        )
+        return cls(items=items, total_frame_count=total_frame_count)
 
 
 @attr.s(auto_attribs=True)

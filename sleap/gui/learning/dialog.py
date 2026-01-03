@@ -981,8 +981,6 @@ class LearningDialog(QtWidgets.QDialog):
 
         Uses the new FrameTargetSelector widget for selection.
         """
-        batch_size = pipeline_form_data.get("batch_size")
-
         frame_selection = self.get_selected_frames_to_predict(pipeline_form_data)
         frame_count = self.count_total_frames_for_selection_option(frame_selection)
 
@@ -998,7 +996,6 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
-                batch_size=batch_size,
             )
         elif target_key == "suggestions":
             items_for_inference = runners.ItemsForInference(
@@ -1008,7 +1005,6 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
-                batch_size=batch_size,
             )
         elif target_key == "predicted":
             items_for_inference = runners.ItemsForInference(
@@ -1018,7 +1014,6 @@ class LearningDialog(QtWidgets.QDialog):
                     )
                 ],
                 total_frame_count=frame_count,
-                batch_size=batch_size,
             )
         else:
             items_for_inference = runners.ItemsForInference.from_video_frames_dict(
@@ -1026,7 +1021,6 @@ class LearningDialog(QtWidgets.QDialog):
                 total_frame_count=frame_count,
                 labels_path=self.labels_filename,
                 labels=self.labels,
-                batch_size=batch_size,
             )
         return items_for_inference
 

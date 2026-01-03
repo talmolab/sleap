@@ -626,6 +626,51 @@ class TestPerformanceSection:
         combo = training_widget._fields["_data_pipeline_fw"]
         assert combo.currentData() == "cache_memory"
 
+    def test_batch_size_exists_in_inference(self, inference_widget):
+        """Batch size field should exist in inference mode."""
+        assert "_batch_size" in inference_widget._fields
+        assert "_batch_size_default" in inference_widget._fields
+
+    def test_batch_size_not_in_training(self, training_widget):
+        """Batch size field should NOT exist in training mode."""
+        assert "_batch_size" not in training_widget._fields
+        assert "_batch_size_default" not in training_widget._fields
+
+    def test_batch_size_default_checkbox_checked(self, inference_widget):
+        """Default checkbox should be checked by default."""
+        cb = inference_widget._fields["_batch_size_default"]
+        assert cb.isChecked()
+
+    def test_batch_size_spinbox_disabled_when_default(self, inference_widget):
+        """Batch size spinbox should be disabled when default is checked."""
+        spinbox = inference_widget._fields["_batch_size"]
+        assert not spinbox.isEnabled()
+
+    def test_batch_size_spinbox_enabled_when_unchecked(self, inference_widget):
+        """Batch size spinbox should be enabled when default is unchecked."""
+        cb = inference_widget._fields["_batch_size_default"]
+        spinbox = inference_widget._fields["_batch_size"]
+
+        cb.setChecked(False)
+        assert spinbox.isEnabled()
+
+    def test_batch_size_not_in_form_data_when_default(self, inference_widget):
+        """Batch size should NOT be in form data when default is checked."""
+        data = inference_widget.get_form_data()
+        assert "_batch_size" not in data
+
+    def test_batch_size_in_form_data_when_specified(self, inference_widget):
+        """Batch size should be in form data when default is unchecked."""
+        cb = inference_widget._fields["_batch_size_default"]
+        spinbox = inference_widget._fields["_batch_size"]
+
+        cb.setChecked(False)
+        spinbox.setValue(16)
+
+        data = inference_widget.get_form_data()
+        assert "_batch_size" in data
+        assert data["_batch_size"] == 16
+
 
 # =============================================================================
 # WandB Section Tests (Training Only)

@@ -757,6 +757,36 @@ class MainTabWidget(QWidget):
             row1.addStretch()
             layout.addLayout(row1)
 
+        # Row 1 for inference: Batch Size
+        elif self._mode == "inference":
+            row1 = QHBoxLayout()
+            row1.setSpacing(8)
+
+            batch_label = QLabel("Batch Size:")
+            batch_label.setFixedWidth(LABEL_WIDTH_COL1)
+            row1.addWidget(batch_label)
+
+            batch_size = QSpinBox()
+            batch_size.setRange(1, 128)
+            batch_size.setValue(4)
+            batch_size.setMinimumWidth(60)
+            self._fields["_batch_size"] = batch_size
+            row1.addWidget(batch_size)
+
+            default_batch_cb = QCheckBox("Default")
+            default_batch_cb.setChecked(True)  # Default to using model's batch size
+            self._fields["_batch_size_default"] = default_batch_cb
+            row1.addWidget(default_batch_cb)
+
+            # Connect checkbox to enable/disable spinbox
+            default_batch_cb.stateChanged.connect(
+                lambda state, sb=batch_size: sb.setEnabled(not state)
+            )
+            batch_size.setEnabled(False)  # Start disabled since "Default" is checked
+
+            row1.addStretch()
+            layout.addLayout(row1)
+
         # Row 2: Accelerator + Devices
         row2 = QHBoxLayout()
         row2.setSpacing(8)
@@ -1101,6 +1131,14 @@ class MainTabWidget(QWidget):
             # Handle robust: if "use max" is checked, set to 1.0 (non-robust)
             if data.get("tracking.robust_disabled", True):
                 data["tracking.robust"] = 1.0
+
+        # Handle max_instances: if "no max" is checked, set to None
+        if data.get("_max_instances_disabled", False):
+            data["_max_instances"] = None
+
+        # Handle batch_size: if "Default" is checked, remove _batch_size so CLI uses model default
+        if data.get("_batch_size_default", True):
+            data.pop("_batch_size", None)
 
         # Strip placeholder from API key if user didn't change it
         api_key = data.get("trainer_config.wandb.api_key")
