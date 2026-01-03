@@ -109,7 +109,7 @@ class Preferences(object):
     def reset_to_default(self):
         """Reset preferences to default."""
         util.save_config_yaml(self._filename, self._defaults)
-        self.load()
+        self.reload()
 
     def _validate_key(self, key):
         if key not in self._defaults:
