@@ -1238,6 +1238,16 @@ class MainTabWidget(QWidget):
         if not hasattr(self, "_api_key_status_label"):
             return
 
+        # WandB option fields to enable/disable based on login status
+        wandb_option_fields = [
+            "trainer_config.use_wandb",
+            "trainer_config.wandb.save_viz_imgs_wandb",
+            "trainer_config.wandb.entity",
+            "trainer_config.wandb.project",
+            "trainer_config.wandb.prv_runid",
+            "trainer_config.wandb.group",
+        ]
+
         if is_logged_in:
             # Show logged in status
             if auth_source == "WANDB_API_KEY environment variable":
@@ -1253,6 +1263,12 @@ class MainTabWidget(QWidget):
                 self._wandb_copy_btn.setVisible(False)
             if hasattr(self, "_wandb_refresh_btn"):
                 self._wandb_refresh_btn.setVisible(False)
+
+            # Enable WandB option fields when logged in
+            for field_name in wandb_option_fields:
+                field = self._fields.get(field_name)
+                if field is not None:
+                    field.setEnabled(True)
 
             # Update hidden API key field
             api_key_field = self._fields.get("trainer_config.wandb.api_key")
@@ -1273,6 +1289,12 @@ class MainTabWidget(QWidget):
                 self._wandb_copy_btn.setVisible(True)
             if hasattr(self, "_wandb_refresh_btn"):
                 self._wandb_refresh_btn.setVisible(True)
+
+            # Disable WandB option fields when not logged in
+            for field_name in wandb_option_fields:
+                field = self._fields.get(field_name)
+                if field is not None:
+                    field.setEnabled(False)
 
             # Clear any placeholder
             self._wandb_api_key_placeholder = None
