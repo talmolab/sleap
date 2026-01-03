@@ -1922,23 +1922,28 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             trained_config.trainer_config.run_name = None
 
         if self.resume_training:
-            # Get the folder path of trained config and set it as the output
-            # folder
-            file_list = list(Path(cast(str, trained_config_info.path)).parent.iterdir())
-            if (
-                Path(cast(str, trained_config_info.path)).parent / "best.ckpt"
-            ) in file_list:
+            # Get the folder path of trained config and find checkpoint file
+            model_dir = Path(cast(str, trained_config_info.path)).parent
+            file_list = list(model_dir.iterdir())
+            ckpt = None
+            if (model_dir / "best.ckpt") in file_list:
                 ckpt = "best.ckpt"
-            elif (
-                Path(cast(str, trained_config_info.path)).parent / "best_model.h5"
-            ) in file_list:
+            elif (model_dir / "best_model.h5") in file_list:
                 ckpt = "best_model.h5"
-            trained_config_info.config.model_config.pretrained_backbone_weights = (
-                Path(cast(str, trained_config_info.path)).parent / ckpt
-            ).as_posix()
-            trained_config_info.config.model_config.pretrained_head_weights = (
-                trained_config_info.config.model_config.pretrained_backbone_weights
-            )
+
+            if ckpt is not None:
+                trained_config_info.config.model_config.pretrained_backbone_weights = (
+                    model_dir / ckpt
+                ).as_posix()
+                trained_config_info.config.model_config.pretrained_head_weights = (
+                    trained_config_info.config.model_config.pretrained_backbone_weights
+                )
+            else:
+                # No checkpoint found - proceed without pretrained weights
+                trained_config_info.config.model_config.pretrained_backbone_weights = (
+                    None
+                )
+                trained_config_info.config.model_config.pretrained_head_weights = None
         else:
             trained_config_info.config.model_config.pretrained_backbone_weights = None
             trained_config_info.config.model_config.pretrained_head_weights = None
