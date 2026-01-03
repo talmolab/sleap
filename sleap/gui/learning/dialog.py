@@ -217,6 +217,42 @@ class LearningDialog(QtWidgets.QDialog):
         # Set the dialog's dimensions
         self.resize(int(target_width), int(target_height))
 
+        # Note: minimum width is set dynamically in _update_minimum_width()
+        # after tabs are added, since TrainingEditorWidget tabs may be wider
+        # than the main tab.
+
+    def _update_minimum_width(self):
+        """Update dialog minimum width based on tab content.
+
+        Called after tabs are added/changed to ensure the dialog cannot be
+        resized smaller than its content requires. This is especially important
+        on Windows 11 where Qt doesn't always propagate minimum size constraints
+        from child widgets through scroll areas.
+        """
+        # Get minimum width from the tab widget which accounts for all tabs
+        # Use sizeHint as it reflects the preferred size including all content
+        tab_width = self.tab_widget.sizeHint().width()
+
+        # Add margins for dialog layout and window frame decorations
+        # The scroll area and content layout add some padding
+        min_width = tab_width + 40
+
+        # Floor at the main tab's requirement as a safety minimum
+        min_width = max(min_width, MainTabWidget.BOX_MIN_WIDTH + 50)
+
+        self.setMinimumWidth(min_width)
+
+    def showEvent(self, event):
+        """Handle dialog show event.
+
+        Updates minimum width after the dialog is shown and layout is computed.
+        This ensures accurate size calculations on all platforms.
+        """
+        super().showEvent(event)
+        # Defer minimum width update to after event processing completes
+        # to ensure layout is fully computed
+        QtCore.QTimer.singleShot(0, self._update_minimum_width)
+
     def update_file_lists(self):
         """Update config file lists for all currently shown tabs.
 
@@ -815,6 +851,10 @@ class LearningDialog(QtWidgets.QDialog):
 
             # Apply defaults from previous trained config or video analysis
             self._apply_pipeline_defaults(pipeline)
+
+            # Update minimum width after tabs change (if dialog is visible)
+            if self.isVisible():
+                self._update_minimum_width()
 
         self.current_pipeline = pipeline
 
