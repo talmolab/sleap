@@ -1302,9 +1302,7 @@ class MainTabWidget(QWidget):
             ]
             # Uncheck Auto if we have a saved devices value
             if "_trainer_devices_auto" in self._fields:
-                self._set_widget_value(
-                    self._fields["_trainer_devices_auto"], False
-                )
+                self._set_widget_value(self._fields["_trainer_devices_auto"], False)
 
         for key, value in training_prefs.items():
             if value is not None and key in self._fields:

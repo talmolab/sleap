@@ -273,9 +273,7 @@ class TestTrainingPreferences:
         )
         assert widget._fields["trainer_config.trainer_devices"].value() == 2
         # Auto should be unchecked when specific device count is loaded
-        assert (
-            widget._fields["_trainer_devices_auto"].isChecked() is False
-        )
+        assert widget._fields["_trainer_devices_auto"].isChecked() is False
 
     def test_save_training_preferences(self, qtbot, mock_prefs):
         """Training settings should be saved to preferences."""
