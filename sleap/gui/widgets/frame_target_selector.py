@@ -440,6 +440,7 @@ class FrameTargetSelector(QWidget):
             self.predictions_keep_radio.setChecked(True)
 
         self._update_description()
+        self._apply_target_auto_configuration()
 
     def get_form_data(self) -> Dict[str, Any]:
         """Return data with underscore-prefixed keys for GUI-only fields.
