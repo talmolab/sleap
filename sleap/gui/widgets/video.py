@@ -453,7 +453,7 @@ class QtVideoPlayer(QWidget):
         # Reset view and video
         self.video = None
         self.view.clear()
-        self.view.setImage(QImage(sleap.util.get_package_file("gui/background.png")))
+        self.view.setImage(QImage(sleap.util.get_package_file("gui/background.jpg")))
 
         # Handle overlays and gui state in callback
         frame_idx = None
@@ -843,7 +843,7 @@ class GraphicsView(QGraphicsView):
         self.setTransformationAnchor(anchor_mode)
 
         # Set icon as default background.
-        self.setImage(QImage(sleap.util.get_package_file("gui/background.png")))
+        self.setImage(QImage(sleap.util.get_package_file("gui/background.jpg")))
 
         self.grabGesture(Qt.GestureType.PinchGesture)
 
