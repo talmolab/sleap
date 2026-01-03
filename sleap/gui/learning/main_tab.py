@@ -1104,9 +1104,8 @@ class MainTabWidget(QWidget):
         # Add frame target data
         data.update(self.frame_target_selector.get_form_data())
 
-        # Consolidate tracking parameters based on selected tracker
-        # The form stores tracker-specific fields with suffixes (e.g., tracking.match.flow)
-        # but runners.py expects unsuffixed keys (e.g., tracking.match)
+        # Consolidate tracking parameters based on selected tracker.
+        # Form stores suffixed keys (tracking.match.flow), runners expects unsuffixed.
         tracker = data.get("tracking.tracker", "none")
         if tracker in ("flow", "simple"):
             tracking_fields = [
@@ -1136,7 +1135,7 @@ class MainTabWidget(QWidget):
         if data.get("_max_instances_disabled", False):
             data["_max_instances"] = None
 
-        # Handle batch_size: if "Default" is checked, remove _batch_size so CLI uses model default
+        # Handle batch_size: if "Default" is checked, omit so CLI uses model default
         if data.get("_batch_size_default", True):
             data.pop("_batch_size", None)
 

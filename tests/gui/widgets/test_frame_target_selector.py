@@ -612,7 +612,7 @@ class TestEdgeCases:
         assert desc1 != desc2
 
     def test_suggestions_auto_configures_replace_and_skip(self, inference_selector):
-        """Selecting 'Suggestions' should auto-select Replace and enable Skip user labeled."""
+        """Selecting 'Suggestions' should auto-select Replace and enable Skip."""
         # Verify initial state - Keep is selected and skip is unchecked
         assert inference_selector.predictions_keep_radio.isChecked()
         assert not inference_selector.skip_user_labeled_cb.isChecked()

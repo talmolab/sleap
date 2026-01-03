@@ -356,13 +356,14 @@ class TestSubprocessErrorHandling:
         labels.videos = []
         return labels
 
-    def test_predict_subprocess_success(self, mock_labels):
+    def test_predict_subprocess_success(self, mock_labels, tmp_path):
         """Successful subprocess should return 'success'."""
+        labels_file = tmp_path / "labels.slp"
         task = InferenceTask(
-            trained_job_paths=["/path/to/model"],
+            trained_job_paths=[str(tmp_path / "model")],
             inference_params={},
             labels=mock_labels,
-            labels_filename="/path/to/labels.slp",
+            labels_filename=str(labels_file),
         )
 
         # Mock subprocess.Popen
@@ -374,8 +375,8 @@ class TestSubprocessErrorHandling:
         mock_proc.__exit__ = MagicMock(return_value=False)
 
         mock_item = MagicMock()
-        mock_item.cli_args = ["--data_path", "/path/to/data"]
-        mock_item.path = "/path/to/data"
+        mock_item.cli_args = ["--data_path", str(tmp_path / "data")]
+        mock_item.path = str(tmp_path / "data")
 
         with patch(
             "sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc
@@ -386,13 +387,14 @@ class TestSubprocessErrorHandling:
 
         assert result == "success"
 
-    def test_predict_subprocess_failure(self, mock_labels):
+    def test_predict_subprocess_failure(self, mock_labels, tmp_path):
         """Failed subprocess should return error code."""
+        labels_file = tmp_path / "labels.slp"
         task = InferenceTask(
-            trained_job_paths=["/path/to/model"],
+            trained_job_paths=[str(tmp_path / "model")],
             inference_params={},
             labels=mock_labels,
-            labels_filename="/path/to/labels.slp",
+            labels_filename=str(labels_file),
         )
 
         # Mock subprocess.Popen with failure
@@ -407,8 +409,8 @@ class TestSubprocessErrorHandling:
         mock_proc.__exit__ = MagicMock(return_value=False)
 
         mock_item = MagicMock()
-        mock_item.cli_args = ["--data_path", "/path/to/data"]
-        mock_item.path = "/path/to/data"
+        mock_item.cli_args = ["--data_path", str(tmp_path / "data")]
+        mock_item.path = str(tmp_path / "data")
 
         with patch(
             "sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc
@@ -420,13 +422,14 @@ class TestSubprocessErrorHandling:
         # Should return the error code
         assert result == 1
 
-    def test_predict_subprocess_canceled(self, mock_labels):
+    def test_predict_subprocess_canceled(self, mock_labels, tmp_path):
         """Canceled subprocess should return 'canceled'."""
+        labels_file = tmp_path / "labels.slp"
         task = InferenceTask(
-            trained_job_paths=["/path/to/model"],
+            trained_job_paths=[str(tmp_path / "model")],
             inference_params={},
             labels=mock_labels,
-            labels_filename="/path/to/labels.slp",
+            labels_filename=str(labels_file),
         )
 
         # Mock subprocess.Popen
@@ -438,8 +441,8 @@ class TestSubprocessErrorHandling:
         mock_proc.__exit__ = MagicMock(return_value=False)
 
         mock_item = MagicMock()
-        mock_item.cli_args = ["--data_path", "/path/to/data"]
-        mock_item.path = "/path/to/data"
+        mock_item.cli_args = ["--data_path", str(tmp_path / "data")]
+        mock_item.path = str(tmp_path / "data")
 
         # Callback that returns cancel
         def cancel_callback(**kwargs):
@@ -485,13 +488,14 @@ class TestSubprocessErrorHandling:
 
         assert result == "error"
 
-    def test_inference_task_json_parsing_error_handled(self, mock_labels):
+    def test_inference_task_json_parsing_error_handled(self, mock_labels, tmp_path):
         """JSON parsing errors in subprocess output should be handled."""
+        labels_file = tmp_path / "labels.slp"
         task = InferenceTask(
-            trained_job_paths=["/path/to/model"],
+            trained_job_paths=[str(tmp_path / "model")],
             inference_params={},
             labels=mock_labels,
-            labels_filename="/path/to/labels.slp",
+            labels_filename=str(labels_file),
         )
 
         # Mock subprocess with invalid JSON output
@@ -508,8 +512,8 @@ class TestSubprocessErrorHandling:
         mock_proc.__exit__ = MagicMock(return_value=False)
 
         mock_item = MagicMock()
-        mock_item.cli_args = ["--data_path", "/path/to/data"]
-        mock_item.path = "/path/to/data"
+        mock_item.cli_args = ["--data_path", str(tmp_path / "data")]
+        mock_item.path = str(tmp_path / "data")
 
         with patch(
             "sleap.gui.learning.runners.subprocess.Popen", return_value=mock_proc

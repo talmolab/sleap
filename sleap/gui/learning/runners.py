@@ -438,10 +438,11 @@ class InferenceTask:
         )
         new_labels = Labels(self.results)
 
-        # Handle clear all predictions before merging
-        # Skip if target is "nothing" (no inference ran, so don't clear predictions)
+        # Handle clear all predictions before merging.
+        # Skip if target is "nothing" (no inference ran, so don't clear predictions).
         target_key = self.inference_params.get("_predict_target", "")
-        if self.inference_params.get("_clear_all_first", False) and target_key != "nothing":
+        clear_all = self.inference_params.get("_clear_all_first", False)
+        if clear_all and target_key != "nothing":
             self.labels.remove_predictions()
 
         # Merge pred results into base labels

@@ -588,7 +588,7 @@ class TestConfigTransforms:
         data = self._make_data(
             **{
                 "_trainer_devices_auto": True,
-                "trainer_config.trainer_devices": 0,  # Spinbox value (ignored when auto)
+                "trainer_config.trainer_devices": 0,  # Ignored when auto
             }
         )
         apply_cfg_transforms_to_key_val_dict(data)
@@ -879,9 +879,7 @@ class TestFullConfigPipeline:
         # Convert to OmegaConf (no transforms needed for inference-only fields)
         cfg = get_omegaconf_from_gui_form(data)
 
-        # Verify tracking config
-        # Note: tracking params are consolidated from suffixed keys (tracking.track_window.flow)
-        # to unsuffixed keys (tracking.track_window) based on selected tracker
+        # Verify tracking config (suffixed keys consolidated to unsuffixed)
         assert cfg.tracking.tracker == "flow"
         assert cfg.tracking.track_window == 20
 

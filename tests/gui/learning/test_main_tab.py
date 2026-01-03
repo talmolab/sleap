@@ -548,8 +548,10 @@ class TestTrackerSection:
     def test_robust_fields_exist(self, inference_widget):
         """Robust quantile fields should exist for flow and simple trackers."""
         for tracker_type in ["flow", "simple"]:
-            assert f"tracking.robust.{tracker_type}" in inference_widget._fields
-            assert f"tracking.robust_disabled.{tracker_type}" in inference_widget._fields
+            robust_key = f"tracking.robust.{tracker_type}"
+            disabled_key = f"tracking.robust_disabled.{tracker_type}"
+            assert robust_key in inference_widget._fields
+            assert disabled_key in inference_widget._fields
 
     def test_robust_disabled_by_default(self, inference_widget):
         """Robust quantile should be disabled by default (Use max checked)."""
