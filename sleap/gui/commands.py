@@ -1593,9 +1593,14 @@ class ExportPackageThread(QtCore.QThread):
         else:
             export_target = self.filename
 
+        # Deep copy labels to avoid mutation by sleap-io's embed_frames().
+        # sleap-io replaces video references in-place with embedded versions,
+        # which would break subsequent exports from the same Labels object.
+        labels_copy = deepcopy(self.labels)
+
         try:
             save_file(
-                self.labels,
+                labels_copy,
                 export_target,
                 format="slp",
                 embed=self.embed_option,
