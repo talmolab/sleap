@@ -1296,6 +1296,17 @@ class MainTabWidget(QWidget):
                 if field is not None:
                     field.setEnabled(False)
 
+            # Also uncheck the wandb-related checkboxes to prevent
+            # wandb being enabled in config when not logged in
+            checkbox_fields = [
+                "trainer_config.use_wandb",
+                "trainer_config.wandb.save_viz_imgs_wandb",
+            ]
+            for field_name in checkbox_fields:
+                field = self._fields.get(field_name)
+                if field is not None and isinstance(field, QCheckBox):
+                    field.setChecked(False)
+
             # Clear any placeholder
             self._wandb_api_key_placeholder = None
             api_key_field = self._fields.get("trainer_config.wandb.api_key")
