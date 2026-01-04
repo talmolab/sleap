@@ -833,6 +833,13 @@ class MainWindow(QMainWindow):
             self.commands.deleteUserFramePredictions,
         )
 
+        labelMenu.addSeparator()
+
+        analyzeMenu = labelMenu.addMenu("Analyze")
+        analyzeMenu.addAction(
+            "Crop Size Distribution...", self._open_crop_size_distribution
+        )
+
         ### Tracks Menu ###
 
         tracksMenu = self.menuBar().addMenu("Tracks")
@@ -1706,6 +1713,31 @@ class MainWindow(QMainWindow):
     def _show_keyboard_shortcuts_window(self):
         """Shows gui for viewing/modifying keyboard shortucts."""
         ShortcutDialog().exec_()
+
+    def _open_crop_size_distribution(self):
+        """Opens the crop size distribution analysis dialog."""
+        if self.labels is None or len(self.labels) == 0:
+            QMessageBox.warning(
+                self,
+                "No Labels",
+                "Please load labels with user-labeled instances first.",
+            )
+            return
+
+        from sleap.gui.dialogs.crop_distribution import CropSizeDistributionDialog
+
+        def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
+            """Navigate to the specified frame when user clicks 'Go to Frame'."""
+            if video_idx < len(self.labels.videos):
+                video = self.labels.videos[video_idx]
+                self.commands.gotoVideoAndFrame(video, frame_idx)
+
+        dialog = CropSizeDistributionDialog(
+            labels=self.labels,
+            navigate_callback=navigate_callback,
+            parent=self,
+        )
+        dialog.show()
 
 
 def create_sleap_label_parser():

@@ -1468,6 +1468,17 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self._receptive_field_widget:
             col0_layout = QtWidgets.QVBoxLayout()
             col0_layout.addWidget(self._receptive_field_widget)
+
+            # Add "Analyze Crop Sizes" button for cropping model types
+            if show_crop_box and labels is not None:
+                self._analyze_crop_button = QtWidgets.QPushButton(
+                    "Analyze Crop Sizes..."
+                )
+                self._analyze_crop_button.setToolTip(
+                    "View the distribution of instance crop sizes and identify outliers"
+                )
+                self._analyze_crop_button.clicked.connect(self._open_crop_distribution)
+                col0_layout.addWidget(self._analyze_crop_button)
         else:
             col0_layout = None
 
@@ -2006,6 +2017,32 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         for form in self.form_widgets.values():
             form_data.update(form.get_form_data())
         return form_data
+
+    def _open_crop_distribution(self):
+        """Opens the crop size distribution analysis dialog."""
+        if self._labels is None:
+            return
+
+        from sleap.gui.dialogs.crop_distribution import CropSizeDistributionDialog
+
+        dialog = CropSizeDistributionDialog(
+            labels=self._labels,
+            navigate_callback=None,  # No navigation from training dialog
+            parent=self,
+        )
+
+        # Sync rotation preset with augmentation settings
+        try:
+            aug_data = self.form_widgets["augmentation"].get_form_data()
+            rotation_preset = aug_data.get(
+                "data.data_config.augmentation_config.geometric.rotation", "Off"
+            )
+            if rotation_preset in ("Off", "+/-15", "+/-180", "Custom"):
+                dialog.set_rotation_preset(rotation_preset)
+        except Exception:
+            pass  # Use default if we can't read augmentation settings
+
+        dialog.exec_()
 
 
 def demo_training_dialog():
