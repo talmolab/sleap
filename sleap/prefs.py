@@ -59,7 +59,7 @@ class Preferences(object):
 
         if file_existed:
             try:
-                self._prefs = util.get_config_yaml(self._filename)
+                self._prefs = util.get_config_yaml(self._filename) or {}
                 logger.debug(f"Loaded preferences from {file_path}")
             except yaml.YAMLError as e:
                 logger.warning(
