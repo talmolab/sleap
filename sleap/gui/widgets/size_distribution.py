@@ -498,14 +498,12 @@ class SizeDistributionWidget(QtWidgets.QWidget):
         info_layout = QtWidgets.QVBoxLayout(info_group)
         info_layout.setContentsMargins(8, 8, 8, 8)
 
-        self._info_label = QtWidgets.QLabel("Click on a point to select an instance")
+        self._info_label = QtWidgets.QLabel(
+            "Click on a point to select and navigate to instance"
+        )
         self._info_label.setWordWrap(True)
         self._info_label.setMinimumHeight(80)
         info_layout.addWidget(self._info_label)
-
-        self._goto_button = QtWidgets.QPushButton("Go to Frame")
-        self._goto_button.setEnabled(False)
-        info_layout.addWidget(self._goto_button)
 
         bottom_layout.addWidget(info_group)
 
@@ -528,7 +526,6 @@ class SizeDistributionWidget(QtWidgets.QWidget):
         self._custom_angle_spin.valueChanged.connect(self._on_custom_angle_changed)
         self._scatter_radio.toggled.connect(self._on_view_mode_changed)
         self._canvas.point_clicked.connect(self._on_point_clicked)
-        self._goto_button.clicked.connect(self._on_goto_clicked)
         self._recompute_button.clicked.connect(self._on_recompute)
 
         # Histogram controls
@@ -601,12 +598,21 @@ class SizeDistributionWidget(QtWidgets.QWidget):
                 break
 
         self._update_selected_info()
-        self._goto_button.setEnabled(self._selected_info is not None)
+
+        # Navigate directly to the frame
+        if self._selected_info is not None:
+            self.navigate_to_frame.emit(
+                self._selected_info.video_idx,
+                self._selected_info.frame_idx,
+                self._selected_info.instance_idx,
+            )
 
     def _update_selected_info(self):
         """Update the selected instance info label."""
         if self._selected_info is None:
-            self._info_label.setText("Click on a point to select an instance")
+            self._info_label.setText(
+                "Click on a point to select and navigate to instance"
+            )
             return
 
         angle = self._get_rotation_angle()
@@ -621,15 +627,6 @@ class SizeDistributionWidget(QtWidgets.QWidget):
             f"<b>Raw Size:</b> {info.raw_size:.1f}px {raw_dims}<br/>"
             f"<b>Rotated Size:</b> {rotated_size:.1f}px"
         )
-
-    def _on_goto_clicked(self):
-        """Handle go-to-frame button click."""
-        if self._selected_info:
-            self.navigate_to_frame.emit(
-                self._selected_info.video_idx,
-                self._selected_info.frame_idx,
-                self._selected_info.instance_idx,
-            )
 
     def _on_recompute(self):
         """Handle recompute button click."""
@@ -646,8 +643,7 @@ class SizeDistributionWidget(QtWidgets.QWidget):
 
         self._data = compute_instance_sizes(self._labels, user_instances_only=True)
         self._selected_info = None
-        self._info_label.setText("Click on a point to select an instance")
-        self._goto_button.setEnabled(False)
+        self._info_label.setText("Click on a point to select and navigate to instance")
 
         self._canvas.set_data(self._data)
         self._update_statistics()
