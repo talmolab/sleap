@@ -691,13 +691,18 @@ class ReceptiveFieldImageWidget(GraphicsView):
         scale: float = 1.0,
         anchor: Optional[Tuple[float, float]] = None,
     ):
-        """Draws crop size preview rect centered on anchor point.
+        """Draws crop size preview rect centered in the view.
+
+        The crop box tracks the view center (like the receptive field box) so both
+        overlays move together when the view changes. The anchor parameter is stored
+        but not used for positioning since this is a size comparison preview.
 
         Args:
             size: The crop size in pixels. If None, uses previously set value.
             scale: The scale factor applied to the image during training.
             anchor: The (x, y) coordinates of the anchor point in scene coordinates.
-                If None, uses previously set value.
+                If None, uses previously set value. Stored for reference but not
+                used for positioning.
         """
         if size is not None:
             self._crop_size = size
@@ -705,7 +710,7 @@ class ReceptiveFieldImageWidget(GraphicsView):
         if anchor is not None:
             self._crop_anchor = anchor
 
-        if not self._crop_size or not self._crop_anchor or not self._scale:
+        if not self._crop_size or not self._scale:
             self.crop_box.hide()
             return
 
@@ -714,13 +719,19 @@ class ReceptiveFieldImageWidget(GraphicsView):
         # Adjust box relative to scaling on image that will happen in training
         scaled_crop_size = self._crop_size // self._scale
 
-        # Center the crop box on the anchor point
-        anchor_x, anchor_y = self._crop_anchor
-        half_size = scaled_crop_size / 2
+        # Calculate offset so that box stays centered in the view
+        # (same logic as _set_field_size for consistency)
+        vis_box_rect = self.mapFromScene(
+            0, 0, scaled_crop_size, scaled_crop_size
+        ).boundingRect()
+        offset = self._widget_size / 2
+        scene_center = self.mapToScene(
+            offset - (vis_box_rect.width() / 2), offset - (vis_box_rect.height() / 2)
+        )
 
         self.crop_box.setRect(
-            anchor_x - half_size,
-            anchor_y - half_size,
+            scene_center.x(),
+            scene_center.y(),
             scaled_crop_size,
             scaled_crop_size,
         )
