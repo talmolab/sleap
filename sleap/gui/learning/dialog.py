@@ -2032,11 +2032,25 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Sync rotation preset with augmentation settings
         try:
             aug_data = self.form_widgets["augmentation"].get_form_data()
-            rotation_preset = aug_data.get(
-                "data.data_config.augmentation_config.geometric.rotation", "Off"
-            )
-            if rotation_preset in ("Off", "+/-15", "+/-180", "Custom"):
-                dialog.set_rotation_preset(rotation_preset)
+            rotation_preset = aug_data.get("_rotation_preset", "Off")
+
+            # Map form values to widget values
+            # Form uses: "Off", "±15°", "±180°", "Custom"
+            # Widget expects: "Off", "+/-15", "+/-180", "Custom"
+            preset_map = {
+                "Off": "Off",
+                "±15°": "+/-15",
+                "±180°": "+/-180",
+                "Custom": "Custom",
+            }
+            widget_preset = preset_map.get(rotation_preset, "Off")
+            dialog.set_rotation_preset(widget_preset)
+
+            # Also sync custom angle if applicable
+            if widget_preset == "Custom":
+                custom_angle = aug_data.get("_rotation_custom_angle")
+                if custom_angle is not None:
+                    dialog.set_custom_angle(int(custom_angle))
         except Exception:
             pass  # Use default if we can't read augmentation settings
 

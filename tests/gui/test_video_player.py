@@ -227,3 +227,61 @@ def test_nan_coordinates_bounding_rect(qtbot, centered_pair_labels):
     # Verify no NaN values in the rect
     assert not np.isnan(bounding_rect_all_nan.x()), "All-NaN rect x is NaN"
     assert not np.isnan(bounding_rect_all_nan.y()), "All-NaN rect y is NaN"
+
+
+def test_navigate_highlight(qtbot, small_robot_mp4_vid, centered_pair_labels):
+    """Test the navigation highlight feature for Size Distribution click-to-navigate."""
+    vp = QtVideoPlayer(small_robot_mp4_vid)
+    qtbot.addWidget(vp)
+
+    test_frame_idx = 63
+    labeled_frames = centered_pair_labels.labeled_frames
+    frame_instances = labeled_frames[test_frame_idx].instances
+
+    def plot_instances(vp, idx):
+        for instance in frame_instances:
+            vp.addInstance(instance=instance)
+
+    vp.changedPlot.connect(plot_instances)
+    vp.view.updatedViewer.emit()
+    vp.show()
+    vp.plot()
+
+    # Ensure we have instances
+    assert len(vp.instances) >= 2
+
+    # Initially, no instances should have navigation highlight
+    for inst in vp.instances:
+        assert not inst.navigate_highlight
+
+    # Highlight the second instance via player method (using Instance object)
+    vp.highlightNavigatedInstance(frame_instances[1])
+
+    # Check that only the second instance is highlighted
+    assert not vp.instances[0].navigate_highlight
+    assert vp.instances[1].navigate_highlight
+    assert vp.instances[1].navigate_box.opacity() == 0.5
+
+    # Highlight a different instance (first)
+    vp.highlightNavigatedInstance(frame_instances[0])
+
+    # Check that now only the first instance is highlighted
+    assert vp.instances[0].navigate_highlight
+    assert not vp.instances[1].navigate_highlight
+
+    # Clear all highlights via player method (pass None)
+    vp.highlightNavigatedInstance(None)
+
+    # All instances should now have no highlight
+    for inst in vp.instances:
+        assert not inst.navigate_highlight
+        assert inst.navigate_box.opacity() == 0
+
+    # Test via GraphicsView directly
+    vp.view.highlightNavigatedInstance(frame_instances[0])
+    assert vp.instances[0].navigate_highlight
+
+    vp.view.clearNavigateHighlight()
+    assert not vp.instances[0].navigate_highlight
+
+    assert vp.close()

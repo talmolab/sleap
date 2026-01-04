@@ -1727,10 +1727,12 @@ class MainWindow(QMainWindow):
         from sleap.gui.dialogs.size_distribution import SizeDistributionDialog
 
         def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
-            """Navigate to the specified frame when user clicks 'Go to Frame'."""
+            """Navigate to the specified frame and highlight instance."""
             if video_idx < len(self.labels.videos):
                 video = self.labels.videos[video_idx]
-                self.commands.gotoVideoAndFrame(video, frame_idx)
+                self.commands.gotoVideoAndFrameAndInstance(
+                    video, frame_idx, instance_idx
+                )
 
         dialog = SizeDistributionDialog(
             labels=self.labels,

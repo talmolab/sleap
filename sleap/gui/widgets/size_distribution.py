@@ -176,9 +176,7 @@ class SizeHistogramCanvas(Canvas):
             return
 
         # Calculate sizes with rotation
-        sizes = np.array(
-            [d.get_rotated_size(self._rotation_angle) for d in self._data]
-        )
+        sizes = np.array([d.get_rotated_size(self._rotation_angle) for d in self._data])
 
         if self._view_mode == "scatter":
             self._draw_scatter(sizes)

@@ -461,6 +461,40 @@ class CommandContext:
         """Activates video and goes to frame."""
         NavCommand.go_to(self, frame_idx, video)
 
+    def gotoVideoAndFrameAndInstance(
+        self, video: Video, frame_idx: int, instance_idx: int
+    ):
+        """Activates video, goes to frame, and highlights instance.
+
+        This is used when navigating from the Size Distribution widget to
+        highlight which specific instance was clicked.
+
+        Args:
+            video: Video to navigate to.
+            frame_idx: Frame index to navigate to.
+            instance_idx: Index of user instance within the frame to highlight.
+        """
+        NavCommand.go_to(self, frame_idx, video)
+
+        # Look up the actual Instance object from labels
+        # instance_idx is the index within user_instances (not all instances)
+        instance_to_highlight = None
+        lfs = self.labels.find(video, frame_idx)
+        if lfs:
+            lf = lfs[0]
+            user_instances = lf.user_instances if hasattr(lf, "user_instances") else []
+            if 0 <= instance_idx < len(user_instances):
+                instance_to_highlight = user_instances[instance_idx]
+
+        # Use a timer to highlight after the frame is redrawn
+        # (state changes trigger plot() which recreates instances via overlay)
+        player = getattr(self.app, "player", None)
+        if player is not None and instance_to_highlight is not None:
+            # Small delay to ensure overlay has added instances to scene
+            QtCore.QTimer.singleShot(
+                50, lambda: player.highlightNavigatedInstance(instance_to_highlight)
+            )
+
     # Editing Commands
 
     def toggleGrayscale(self):
