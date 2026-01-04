@@ -177,6 +177,10 @@
          <lastmod>2026-01-04</lastmod>
     </url>
     <url>
+         <loc>https://docs.sleap.ai/dev/api/gui/dialogs/size_distribution/</loc>
+         <lastmod>2026-01-04</lastmod>
+    </url>
+    <url>
          <loc>https://docs.sleap.ai/dev/api/gui/learning/</loc>
          <lastmod>2026-01-04</lastmod>
     </url>
@@ -202,6 +206,10 @@
     </url>
     <url>
          <loc>https://docs.sleap.ai/dev/api/gui/learning/runners/</loc>
+         <lastmod>2026-01-04</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.sleap.ai/dev/api/gui/learning/size/</loc>
          <lastmod>2026-01-04</lastmod>
     </url>
     <url>
@@ -262,6 +270,10 @@
     </url>
     <url>
          <loc>https://docs.sleap.ai/dev/api/gui/widgets/multicheck/</loc>
+         <lastmod>2026-01-04</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.sleap.ai/dev/api/gui/widgets/size_distribution/</loc>
          <lastmod>2026-01-04</lastmod>
     </url>
     <url>
