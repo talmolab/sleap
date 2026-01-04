@@ -865,8 +865,9 @@ class LearningDialog(QtWidgets.QDialog):
 
     def merge_pipeline_and_head_config_data(self, head_name, head_data, pipeline_data):
         for key, val in pipeline_data.items():
-            # if key.starts_with("_"):
-            #     continue
+            # Skip GUI-only fields (not part of sleap-nn config schema)
+            if key.startswith("gui."):
+                continue
             if key.startswith("model_config.head_configs."):
                 key_scope = key.split(".")
                 if key_scope[2] != head_name:
