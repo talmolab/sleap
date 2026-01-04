@@ -2480,7 +2480,18 @@
 <span class="normal"><a href="#__codelineno-0-723">723</a></span>
 <span class="normal"><a href="#__codelineno-0-724">724</a></span>
 <span class="normal"><a href="#__codelineno-0-725">725</a></span>
-<span class="normal"><a href="#__codelineno-0-726">726</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-617"><a id="__codelineno-0-617" name="__codelineno-0-617"></a><span class="k">class</span><span class="w"> </span><span class="nc">ReceptiveFieldImageWidget</span><span class="p">(</span><span class="n">GraphicsView</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-726">726</a></span>
+<span class="normal"><a href="#__codelineno-0-727">727</a></span>
+<span class="normal"><a href="#__codelineno-0-728">728</a></span>
+<span class="normal"><a href="#__codelineno-0-729">729</a></span>
+<span class="normal"><a href="#__codelineno-0-730">730</a></span>
+<span class="normal"><a href="#__codelineno-0-731">731</a></span>
+<span class="normal"><a href="#__codelineno-0-732">732</a></span>
+<span class="normal"><a href="#__codelineno-0-733">733</a></span>
+<span class="normal"><a href="#__codelineno-0-734">734</a></span>
+<span class="normal"><a href="#__codelineno-0-735">735</a></span>
+<span class="normal"><a href="#__codelineno-0-736">736</a></span>
+<span class="normal"><a href="#__codelineno-0-737">737</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-617"><a id="__codelineno-0-617" name="__codelineno-0-617"></a><span class="k">class</span><span class="w"> </span><span class="nc">ReceptiveFieldImageWidget</span><span class="p">(</span><span class="n">GraphicsView</span><span class="p">):</span>
 </span><span id="__span-0-618"><a id="__codelineno-0-618" name="__codelineno-0-618"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Widget for showing image with receptive field and optional crop box.&quot;&quot;&quot;</span>
 </span><span id="__span-0-619"><a id="__codelineno-0-619" name="__codelineno-0-619"></a>
 </span><span id="__span-0-620"><a id="__codelineno-0-620" name="__codelineno-0-620"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -2557,39 +2568,50 @@
 </span><span id="__span-0-691"><a id="__codelineno-0-691" name="__codelineno-0-691"></a>        <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
 </span><span id="__span-0-692"><a id="__codelineno-0-692" name="__codelineno-0-692"></a>        <span class="n">anchor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-693"><a id="__codelineno-0-693" name="__codelineno-0-693"></a>    <span class="p">):</span>
-</span><span id="__span-0-694"><a id="__codelineno-0-694" name="__codelineno-0-694"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Draws crop size preview rect centered on anchor point.</span>
+</span><span id="__span-0-694"><a id="__codelineno-0-694" name="__codelineno-0-694"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Draws crop size preview rect centered in the view.</span>
 </span><span id="__span-0-695"><a id="__codelineno-0-695" name="__codelineno-0-695"></a>
-</span><span id="__span-0-696"><a id="__codelineno-0-696" name="__codelineno-0-696"></a><span class="sd">        Args:</span>
-</span><span id="__span-0-697"><a id="__codelineno-0-697" name="__codelineno-0-697"></a><span class="sd">            size: The crop size in pixels. If None, uses previously set value.</span>
-</span><span id="__span-0-698"><a id="__codelineno-0-698" name="__codelineno-0-698"></a><span class="sd">            scale: The scale factor applied to the image during training.</span>
-</span><span id="__span-0-699"><a id="__codelineno-0-699" name="__codelineno-0-699"></a><span class="sd">            anchor: The (x, y) coordinates of the anchor point in scene coordinates.</span>
-</span><span id="__span-0-700"><a id="__codelineno-0-700" name="__codelineno-0-700"></a><span class="sd">                If None, uses previously set value.</span>
-</span><span id="__span-0-701"><a id="__codelineno-0-701" name="__codelineno-0-701"></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="__span-0-702"><a id="__codelineno-0-702" name="__codelineno-0-702"></a>        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-703"><a id="__codelineno-0-703" name="__codelineno-0-703"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_crop_size</span> <span class="o">=</span> <span class="n">size</span>
-</span><span id="__span-0-704"><a id="__codelineno-0-704" name="__codelineno-0-704"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">scale</span> <span class="k">if</span> <span class="n">scale</span> <span class="k">else</span> <span class="mf">1.0</span>
-</span><span id="__span-0-705"><a id="__codelineno-0-705" name="__codelineno-0-705"></a>        <span class="k">if</span> <span class="n">anchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-706"><a id="__codelineno-0-706" name="__codelineno-0-706"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_crop_anchor</span> <span class="o">=</span> <span class="n">anchor</span>
-</span><span id="__span-0-707"><a id="__codelineno-0-707" name="__codelineno-0-707"></a>
-</span><span id="__span-0-708"><a id="__codelineno-0-708" name="__codelineno-0-708"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crop_size</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crop_anchor</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">:</span>
-</span><span id="__span-0-709"><a id="__codelineno-0-709" name="__codelineno-0-709"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">crop_box</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
-</span><span id="__span-0-710"><a id="__codelineno-0-710" name="__codelineno-0-710"></a>            <span class="k">return</span>
-</span><span id="__span-0-711"><a id="__codelineno-0-711" name="__codelineno-0-711"></a>
-</span><span id="__span-0-712"><a id="__codelineno-0-712" name="__codelineno-0-712"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">crop_box</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</span><span id="__span-0-713"><a id="__codelineno-0-713" name="__codelineno-0-713"></a>
-</span><span id="__span-0-714"><a id="__codelineno-0-714" name="__codelineno-0-714"></a>        <span class="c1"># Adjust box relative to scaling on image that will happen in training</span>
-</span><span id="__span-0-715"><a id="__codelineno-0-715" name="__codelineno-0-715"></a>        <span class="n">scaled_crop_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crop_size</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+</span><span id="__span-0-696"><a id="__codelineno-0-696" name="__codelineno-0-696"></a><span class="sd">        The crop box tracks the view center (like the receptive field box) so both</span>
+</span><span id="__span-0-697"><a id="__codelineno-0-697" name="__codelineno-0-697"></a><span class="sd">        overlays move together when the view changes. The anchor parameter is stored</span>
+</span><span id="__span-0-698"><a id="__codelineno-0-698" name="__codelineno-0-698"></a><span class="sd">        but not used for positioning since this is a size comparison preview.</span>
+</span><span id="__span-0-699"><a id="__codelineno-0-699" name="__codelineno-0-699"></a>
+</span><span id="__span-0-700"><a id="__codelineno-0-700" name="__codelineno-0-700"></a><span class="sd">        Args:</span>
+</span><span id="__span-0-701"><a id="__codelineno-0-701" name="__codelineno-0-701"></a><span class="sd">            size: The crop size in pixels. If None, uses previously set value.</span>
+</span><span id="__span-0-702"><a id="__codelineno-0-702" name="__codelineno-0-702"></a><span class="sd">            scale: The scale factor applied to the image during training.</span>
+</span><span id="__span-0-703"><a id="__codelineno-0-703" name="__codelineno-0-703"></a><span class="sd">            anchor: The (x, y) coordinates of the anchor point in scene coordinates.</span>
+</span><span id="__span-0-704"><a id="__codelineno-0-704" name="__codelineno-0-704"></a><span class="sd">                If None, uses previously set value. Stored for reference but not</span>
+</span><span id="__span-0-705"><a id="__codelineno-0-705" name="__codelineno-0-705"></a><span class="sd">                used for positioning.</span>
+</span><span id="__span-0-706"><a id="__codelineno-0-706" name="__codelineno-0-706"></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="__span-0-707"><a id="__codelineno-0-707" name="__codelineno-0-707"></a>        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-708"><a id="__codelineno-0-708" name="__codelineno-0-708"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_crop_size</span> <span class="o">=</span> <span class="n">size</span>
+</span><span id="__span-0-709"><a id="__codelineno-0-709" name="__codelineno-0-709"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">scale</span> <span class="k">if</span> <span class="n">scale</span> <span class="k">else</span> <span class="mf">1.0</span>
+</span><span id="__span-0-710"><a id="__codelineno-0-710" name="__codelineno-0-710"></a>        <span class="k">if</span> <span class="n">anchor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-711"><a id="__codelineno-0-711" name="__codelineno-0-711"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_crop_anchor</span> <span class="o">=</span> <span class="n">anchor</span>
+</span><span id="__span-0-712"><a id="__codelineno-0-712" name="__codelineno-0-712"></a>
+</span><span id="__span-0-713"><a id="__codelineno-0-713" name="__codelineno-0-713"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crop_size</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">:</span>
+</span><span id="__span-0-714"><a id="__codelineno-0-714" name="__codelineno-0-714"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">crop_box</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+</span><span id="__span-0-715"><a id="__codelineno-0-715" name="__codelineno-0-715"></a>            <span class="k">return</span>
 </span><span id="__span-0-716"><a id="__codelineno-0-716" name="__codelineno-0-716"></a>
-</span><span id="__span-0-717"><a id="__codelineno-0-717" name="__codelineno-0-717"></a>        <span class="c1"># Center the crop box on the anchor point</span>
-</span><span id="__span-0-718"><a id="__codelineno-0-718" name="__codelineno-0-718"></a>        <span class="n">anchor_x</span><span class="p">,</span> <span class="n">anchor_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crop_anchor</span>
-</span><span id="__span-0-719"><a id="__codelineno-0-719" name="__codelineno-0-719"></a>        <span class="n">half_size</span> <span class="o">=</span> <span class="n">scaled_crop_size</span> <span class="o">/</span> <span class="mi">2</span>
-</span><span id="__span-0-720"><a id="__codelineno-0-720" name="__codelineno-0-720"></a>
-</span><span id="__span-0-721"><a id="__codelineno-0-721" name="__codelineno-0-721"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">crop_box</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span>
-</span><span id="__span-0-722"><a id="__codelineno-0-722" name="__codelineno-0-722"></a>            <span class="n">anchor_x</span> <span class="o">-</span> <span class="n">half_size</span><span class="p">,</span>
-</span><span id="__span-0-723"><a id="__codelineno-0-723" name="__codelineno-0-723"></a>            <span class="n">anchor_y</span> <span class="o">-</span> <span class="n">half_size</span><span class="p">,</span>
-</span><span id="__span-0-724"><a id="__codelineno-0-724" name="__codelineno-0-724"></a>            <span class="n">scaled_crop_size</span><span class="p">,</span>
-</span><span id="__span-0-725"><a id="__codelineno-0-725" name="__codelineno-0-725"></a>            <span class="n">scaled_crop_size</span><span class="p">,</span>
-</span><span id="__span-0-726"><a id="__codelineno-0-726" name="__codelineno-0-726"></a>        <span class="p">)</span>
+</span><span id="__span-0-717"><a id="__codelineno-0-717" name="__codelineno-0-717"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">crop_box</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</span><span id="__span-0-718"><a id="__codelineno-0-718" name="__codelineno-0-718"></a>
+</span><span id="__span-0-719"><a id="__codelineno-0-719" name="__codelineno-0-719"></a>        <span class="c1"># Adjust box relative to scaling on image that will happen in training</span>
+</span><span id="__span-0-720"><a id="__codelineno-0-720" name="__codelineno-0-720"></a>        <span class="n">scaled_crop_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_crop_size</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+</span><span id="__span-0-721"><a id="__codelineno-0-721" name="__codelineno-0-721"></a>
+</span><span id="__span-0-722"><a id="__codelineno-0-722" name="__codelineno-0-722"></a>        <span class="c1"># Calculate offset so that box stays centered in the view</span>
+</span><span id="__span-0-723"><a id="__codelineno-0-723" name="__codelineno-0-723"></a>        <span class="c1"># (same logic as _set_field_size for consistency)</span>
+</span><span id="__span-0-724"><a id="__codelineno-0-724" name="__codelineno-0-724"></a>        <span class="n">vis_box_rect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapFromScene</span><span class="p">(</span>
+</span><span id="__span-0-725"><a id="__codelineno-0-725" name="__codelineno-0-725"></a>            <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">scaled_crop_size</span><span class="p">,</span> <span class="n">scaled_crop_size</span>
+</span><span id="__span-0-726"><a id="__codelineno-0-726" name="__codelineno-0-726"></a>        <span class="p">)</span><span class="o">.</span><span class="n">boundingRect</span><span class="p">()</span>
+</span><span id="__span-0-727"><a id="__codelineno-0-727" name="__codelineno-0-727"></a>        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widget_size</span> <span class="o">/</span> <span class="mi">2</span>
+</span><span id="__span-0-728"><a id="__codelineno-0-728" name="__codelineno-0-728"></a>        <span class="n">scene_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mapToScene</span><span class="p">(</span>
+</span><span id="__span-0-729"><a id="__codelineno-0-729" name="__codelineno-0-729"></a>            <span class="n">offset</span> <span class="o">-</span> <span class="p">(</span><span class="n">vis_box_rect</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="n">offset</span> <span class="o">-</span> <span class="p">(</span><span class="n">vis_box_rect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-0-730"><a id="__codelineno-0-730" name="__codelineno-0-730"></a>        <span class="p">)</span>
+</span><span id="__span-0-731"><a id="__codelineno-0-731" name="__codelineno-0-731"></a>
+</span><span id="__span-0-732"><a id="__codelineno-0-732" name="__codelineno-0-732"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">crop_box</span><span class="o">.</span><span class="n">setRect</span><span class="p">(</span>
+</span><span id="__span-0-733"><a id="__codelineno-0-733" name="__codelineno-0-733"></a>            <span class="n">scene_center</span><span class="o">.</span><span class="n">x</span><span class="p">(),</span>
+</span><span id="__span-0-734"><a id="__codelineno-0-734" name="__codelineno-0-734"></a>            <span class="n">scene_center</span><span class="o">.</span><span class="n">y</span><span class="p">(),</span>
+</span><span id="__span-0-735"><a id="__codelineno-0-735" name="__codelineno-0-735"></a>            <span class="n">scaled_crop_size</span><span class="p">,</span>
+</span><span id="__span-0-736"><a id="__codelineno-0-736" name="__codelineno-0-736"></a>            <span class="n">scaled_crop_size</span><span class="p">,</span>
+</span><span id="__span-0-737"><a id="__codelineno-0-737" name="__codelineno-0-737"></a>        <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
 
