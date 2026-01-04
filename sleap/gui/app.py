@@ -833,6 +833,13 @@ class MainWindow(QMainWindow):
             self.commands.deleteUserFramePredictions,
         )
 
+        ### Analyze Menu ###
+
+        analyzeMenu = self.menuBar().addMenu("Analyze")
+        analyzeMenu.addAction(
+            "Instance Size Distribution...", self._open_size_distribution
+        )
+
         ### Tracks Menu ###
 
         tracksMenu = self.menuBar().addMenu("Tracks")
@@ -1644,6 +1651,9 @@ class MainWindow(QMainWindow):
             self._child_windows[mode]._handle_learning_finished.connect(
                 self._handle_learning_finished
             )
+            self._child_windows[mode].navigate_to_instance.connect(
+                self._handle_navigate_to_instance
+            )
         else:
             # Update data in existing dialog widget.
             self._child_windows[mode].labels = self.labels
@@ -1670,6 +1680,14 @@ class MainWindow(QMainWindow):
         self.on_data_update([UpdateTopic.all])
         if new_count > 0:
             self.commands.changestack_push("new predictions")
+
+    def _handle_navigate_to_instance(
+        self, video_idx: int, frame_idx: int, instance_idx: int
+    ):
+        """Handle navigation request from training dialog's Size Distribution widget."""
+        if video_idx < len(self.labels.videos):
+            video = self.labels.videos[video_idx]
+            self.commands.gotoVideoAndFrameAndInstance(video, frame_idx, instance_idx)
 
     def _show_metrics_dialog(self):
         self._child_windows["metrics"] = MetricsTableDialog(self.state["filename"])
@@ -1706,6 +1724,33 @@ class MainWindow(QMainWindow):
     def _show_keyboard_shortcuts_window(self):
         """Shows gui for viewing/modifying keyboard shortucts."""
         ShortcutDialog().exec_()
+
+    def _open_size_distribution(self):
+        """Opens the instance size distribution analysis dialog."""
+        if self.labels is None or len(self.labels) == 0:
+            QMessageBox.warning(
+                self,
+                "No Labels",
+                "Please load labels with user-labeled instances first.",
+            )
+            return
+
+        from sleap.gui.dialogs.size_distribution import SizeDistributionDialog
+
+        def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
+            """Navigate to the specified frame and highlight instance."""
+            if video_idx < len(self.labels.videos):
+                video = self.labels.videos[video_idx]
+                self.commands.gotoVideoAndFrameAndInstance(
+                    video, frame_idx, instance_idx
+                )
+
+        dialog = SizeDistributionDialog(
+            labels=self.labels,
+            navigate_callback=navigate_callback,
+            parent=self,
+        )
+        dialog.show()
 
 
 def create_sleap_label_parser():

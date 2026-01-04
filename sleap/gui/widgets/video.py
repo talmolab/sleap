@@ -571,6 +571,21 @@ class QtVideoPlayer(QWidget):
             inst.highlight = True
             inst.highlight_text = highlight_text
 
+    def highlightNavigatedInstance(self, instance: Optional["Instance"]):
+        """Highlight a specific instance for navigation (e.g., from Size Distribution).
+
+        This shows a subtle cyan box around the specified instance to help
+        the user identify which instance was clicked in the distribution plot.
+
+        Args:
+            instance: The Instance object to highlight, or None to clear.
+        """
+        self.view.highlightNavigatedInstance(instance)
+
+    def clearNavigateHighlight(self):
+        """Clear navigation highlight from all instances."""
+        self.view.clearNavigateHighlight()
+
     def zoomToFit(self):
         """Zoom view to fit all instances."""
         zoom_rect = self.view.instancesBoundingRect(margin=20)
@@ -1025,6 +1040,25 @@ class GraphicsView(QGraphicsView):
             return clicked[0].instance
 
         return None
+
+    def highlightNavigatedInstance(self, instance: Optional["Instance"]):
+        """Highlight a specific instance for navigation (e.g., from Size Distribution).
+
+        This shows a subtle cyan box around the specified instance to help
+        the user identify which instance was clicked in the distribution plot.
+
+        Args:
+            instance: The Instance object to highlight, or None to clear.
+        """
+        for qt_instance in self.all_instances:
+            qt_instance.navigate_highlight = (
+                instance is not None and qt_instance.instance is instance
+            )
+
+    def clearNavigateHighlight(self):
+        """Clear navigation highlight from all instances."""
+        for qt_instance in self.all_instances:
+            qt_instance.navigate_highlight = False
 
     def resizeEvent(self, event):
         """Maintain current zoom on resize."""
@@ -1920,6 +1954,14 @@ class QtInstance(QGraphicsObject):
         highlight_pen.setCosmetic(True)
         self.highlight_box.setPen(highlight_pen)
 
+        # Add box for navigation highlight (from Size Distribution click).
+        # Uses cyan to distinguish from yellow (predicted) and selection colors.
+        self.navigate_box = QGraphicsRectItem(parent=self)
+        navigate_pen = QPen(QColor("#4DD0E1"), 4)  # Material Design cyan 300
+        navigate_pen.setCosmetic(True)
+        self.navigate_box.setPen(navigate_pen)
+        self.navigate_box.setOpacity(0)  # Hidden by default
+
         self.track_label = QtTextWithBackground(parent=self)
         self.track_label.setDefaultTextColor(QColor(*color))
 
@@ -2120,6 +2162,27 @@ class QtInstance(QGraphicsObject):
     @highlight_text.setter
     def highlight_text(self, val):
         self.highlight_label.setPlainText(val)
+
+    @property
+    def navigate_highlight(self):
+        """Whether instance has navigation highlight (from Size Distribution click)."""
+        return self.navigate_box.opacity() > 0
+
+    @navigate_highlight.setter
+    def navigate_highlight(self, val):
+        """Set navigation highlight state.
+
+        Args:
+            val: Show highlight if True, hide otherwise.
+        """
+        op = 0.5 if val else 0
+        self.navigate_box.setOpacity(op)
+        # Update the position for the box
+        rect = self.getPointsBoundingRect()
+        if rect is not None:
+            self._bounding_rect = rect
+            rect = rect.marginsAdded(QMarginsF(10, 10, 10, 10))
+            self.navigate_box.setRect(rect)
 
     @property
     def selected(self):

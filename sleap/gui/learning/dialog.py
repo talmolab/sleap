@@ -66,6 +66,9 @@ class LearningDialog(QtWidgets.QDialog):
     """
 
     _handle_learning_finished = QtCore.Signal(int)
+    navigate_to_instance = QtCore.Signal(
+        int, int, int
+    )  # video_idx, frame_idx, instance_idx
 
     def __init__(
         self,
@@ -529,6 +532,7 @@ class LearningDialog(QtWidgets.QDialog):
                 cfg_getter=self._cfg_getter,
                 require_trained=(self.mode == "inference"),
                 labels=self.labels,
+                parent_dialog=self,
             )
             self.tabs[head_name] = widget
 
@@ -1380,6 +1384,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         cfg_getter: Optional["TrainingConfigsGetter"] = None,
         require_trained: bool = False,
         labels: Optional[Labels] = None,
+        parent_dialog: Optional["LearningDialog"] = None,
         *args,
         **kwargs,
     ):
@@ -1387,6 +1392,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         self._video = video
         self._labels = labels
+        self._parent_dialog = parent_dialog
         self._cfg_getter = cfg_getter
         self._cfg_list_widget = None
         self._receptive_field_widget = None
@@ -1468,6 +1474,16 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self._receptive_field_widget:
             col0_layout = QtWidgets.QVBoxLayout()
             col0_layout.addWidget(self._receptive_field_widget)
+
+            # Add "Analyze Sizes" button for cropping model types
+            # Button is inserted into the receptive field widget (below legend)
+            if show_crop_box and labels is not None:
+                self._analyze_size_button = QtWidgets.QPushButton("Analyze Sizes...")
+                self._analyze_size_button.setToolTip(
+                    "View the distribution of instance sizes and identify outliers"
+                )
+                self._analyze_size_button.clicked.connect(self._open_size_distribution)
+                self._receptive_field_widget.addButtonWidget(self._analyze_size_button)
         else:
             col0_layout = None
 
@@ -2006,6 +2022,56 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         for form in self.form_widgets.values():
             form_data.update(form.get_form_data())
         return form_data
+
+    def _open_size_distribution(self):
+        """Opens the instance size distribution analysis dialog."""
+        if self._labels is None:
+            return
+
+        from sleap.gui.dialogs.size_distribution import SizeDistributionDialog
+
+        # Create navigate callback that emits signal to parent LearningDialog
+        navigate_callback = None
+        if self._parent_dialog is not None:
+
+            def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
+                self._parent_dialog.navigate_to_instance.emit(
+                    video_idx, frame_idx, instance_idx
+                )
+
+        dialog = SizeDistributionDialog(
+            labels=self._labels,
+            navigate_callback=navigate_callback,
+            parent=self,
+        )
+
+        # Sync rotation preset with augmentation settings
+        try:
+            aug_data = self.form_widgets["augmentation"].get_form_data()
+            rotation_preset = aug_data.get("_rotation_preset", "Off")
+
+            # Map form values to widget values
+            # Form uses: "Off", "±15°", "±180°", "Custom"
+            # Widget expects: "Off", "+/-15", "+/-180", "Custom"
+            preset_map = {
+                "Off": "Off",
+                "±15°": "+/-15",
+                "±180°": "+/-180",
+                "Custom": "Custom",
+            }
+            widget_preset = preset_map.get(rotation_preset, "Off")
+            dialog.set_rotation_preset(widget_preset)
+
+            # Also sync custom angle if applicable
+            if widget_preset == "Custom":
+                custom_angle = aug_data.get("_rotation_custom_angle")
+                if custom_angle is not None:
+                    dialog.set_custom_angle(int(custom_angle))
+        except Exception:
+            pass  # Use default if we can't read augmentation settings
+
+        # Use show() for non-modal dialog so user can interact with main window
+        dialog.show()
 
 
 def demo_training_dialog():
