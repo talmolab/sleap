@@ -66,6 +66,9 @@ class LearningDialog(QtWidgets.QDialog):
     """
 
     _handle_learning_finished = QtCore.Signal(int)
+    navigate_to_instance = QtCore.Signal(
+        int, int, int
+    )  # video_idx, frame_idx, instance_idx
 
     def __init__(
         self,
@@ -529,6 +532,7 @@ class LearningDialog(QtWidgets.QDialog):
                 cfg_getter=self._cfg_getter,
                 require_trained=(self.mode == "inference"),
                 labels=self.labels,
+                parent_dialog=self,
             )
             self.tabs[head_name] = widget
 
@@ -1380,6 +1384,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         cfg_getter: Optional["TrainingConfigsGetter"] = None,
         require_trained: bool = False,
         labels: Optional[Labels] = None,
+        parent_dialog: Optional["LearningDialog"] = None,
         *args,
         **kwargs,
     ):
@@ -1387,6 +1392,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         self._video = video
         self._labels = labels
+        self._parent_dialog = parent_dialog
         self._cfg_getter = cfg_getter
         self._cfg_list_widget = None
         self._receptive_field_widget = None
@@ -2024,9 +2030,18 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         from sleap.gui.dialogs.size_distribution import SizeDistributionDialog
 
+        # Create navigate callback that emits signal to parent LearningDialog
+        navigate_callback = None
+        if self._parent_dialog is not None:
+
+            def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
+                self._parent_dialog.navigate_to_instance.emit(
+                    video_idx, frame_idx, instance_idx
+                )
+
         dialog = SizeDistributionDialog(
             labels=self._labels,
-            navigate_callback=None,  # No navigation from training dialog
+            navigate_callback=navigate_callback,
             parent=self,
         )
 
@@ -2055,7 +2070,8 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         except Exception:
             pass  # Use default if we can't read augmentation settings
 
-        dialog.exec_()
+        # Use show() for non-modal dialog so user can interact with main window
+        dialog.show()
 
 
 def demo_training_dialog():

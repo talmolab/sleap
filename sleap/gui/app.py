@@ -1651,6 +1651,9 @@ class MainWindow(QMainWindow):
             self._child_windows[mode]._handle_learning_finished.connect(
                 self._handle_learning_finished
             )
+            self._child_windows[mode].navigate_to_instance.connect(
+                self._handle_navigate_to_instance
+            )
         else:
             # Update data in existing dialog widget.
             self._child_windows[mode].labels = self.labels
@@ -1677,6 +1680,14 @@ class MainWindow(QMainWindow):
         self.on_data_update([UpdateTopic.all])
         if new_count > 0:
             self.commands.changestack_push("new predictions")
+
+    def _handle_navigate_to_instance(
+        self, video_idx: int, frame_idx: int, instance_idx: int
+    ):
+        """Handle navigation request from training dialog's Size Distribution widget."""
+        if video_idx < len(self.labels.videos):
+            video = self.labels.videos[video_idx]
+            self.commands.gotoVideoAndFrameAndInstance(video, frame_idx, instance_idx)
 
     def _show_metrics_dialog(self):
         self._child_windows["metrics"] = MetricsTableDialog(self.state["filename"])
