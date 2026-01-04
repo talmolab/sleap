@@ -64,12 +64,26 @@ def kill_process(pid: int):
     """Force kill a running process and any child processes.
 
     Args:
-        proc: A process ID.
+        pid: A process ID.
     """
-    proc_ = psutil.Process(pid)
+    try:
+        proc_ = psutil.Process(pid)
+    except psutil.NoSuchProcess:
+        # Process already exited, nothing to kill
+        return
+
     for subproc_ in proc_.children(recursive=True):
-        subproc_.kill()
-    proc_.kill()
+        try:
+            subproc_.kill()
+        except psutil.NoSuchProcess:
+            # Child process already exited
+            pass
+
+    try:
+        proc_.kill()
+    except psutil.NoSuchProcess:
+        # Process already exited (possibly due to children being killed)
+        pass
 
 
 @attr.s(auto_attribs=True)
