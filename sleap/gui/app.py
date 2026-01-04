@@ -833,11 +833,11 @@ class MainWindow(QMainWindow):
             self.commands.deleteUserFramePredictions,
         )
 
-        labelMenu.addSeparator()
+        ### Analyze Menu ###
 
-        analyzeMenu = labelMenu.addMenu("Analyze")
+        analyzeMenu = self.menuBar().addMenu("Analyze")
         analyzeMenu.addAction(
-            "Crop Size Distribution...", self._open_crop_size_distribution
+            "Instance Size Distribution...", self._open_size_distribution
         )
 
         ### Tracks Menu ###
@@ -1714,8 +1714,8 @@ class MainWindow(QMainWindow):
         """Shows gui for viewing/modifying keyboard shortucts."""
         ShortcutDialog().exec_()
 
-    def _open_crop_size_distribution(self):
-        """Opens the crop size distribution analysis dialog."""
+    def _open_size_distribution(self):
+        """Opens the instance size distribution analysis dialog."""
         if self.labels is None or len(self.labels) == 0:
             QMessageBox.warning(
                 self,
@@ -1724,7 +1724,7 @@ class MainWindow(QMainWindow):
             )
             return
 
-        from sleap.gui.dialogs.crop_distribution import CropSizeDistributionDialog
+        from sleap.gui.dialogs.size_distribution import SizeDistributionDialog
 
         def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
             """Navigate to the specified frame when user clicks 'Go to Frame'."""
@@ -1732,7 +1732,7 @@ class MainWindow(QMainWindow):
                 video = self.labels.videos[video_idx]
                 self.commands.gotoVideoAndFrame(video, frame_idx)
 
-        dialog = CropSizeDistributionDialog(
+        dialog = SizeDistributionDialog(
             labels=self.labels,
             navigate_callback=navigate_callback,
             parent=self,

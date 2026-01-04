@@ -1,80 +1,80 @@
-"""Tests for crop size distribution widget."""
+"""Tests for instance size distribution widget."""
 
 import pytest
 
-from sleap.gui.learning.crop_size import InstanceCropInfo
-from sleap.gui.widgets.crop_distribution import (
-    CropSizeDistributionWidget,
-    CropSizeHistogramCanvas,
+from sleap.gui.learning.size import InstanceSizeInfo
+from sleap.gui.widgets.size_distribution import (
+    SizeDistributionWidget,
+    SizeHistogramCanvas,
 )
 
 
 @pytest.fixture
-def sample_crop_data():
-    """Create sample crop data for testing."""
+def sample_size_data():
+    """Create sample size data for testing."""
     return [
-        InstanceCropInfo(
+        InstanceSizeInfo(
             video_idx=0,
             frame_idx=0,
             instance_idx=0,
             raw_width=100.0,
             raw_height=80.0,
-            raw_crop_size=100.0,
+            raw_size=100.0,
         ),
-        InstanceCropInfo(
+        InstanceSizeInfo(
             video_idx=0,
             frame_idx=10,
             instance_idx=0,
             raw_width=90.0,
             raw_height=90.0,
-            raw_crop_size=90.0,
+            raw_size=90.0,
         ),
-        InstanceCropInfo(
+        InstanceSizeInfo(
             video_idx=0,
             frame_idx=20,
             instance_idx=0,
             raw_width=150.0,
             raw_height=50.0,
-            raw_crop_size=150.0,
+            raw_size=150.0,
         ),
     ]
 
 
-class TestCropSizeHistogramCanvas:
+class TestSizeHistogramCanvas:
     """Tests for the matplotlib canvas."""
 
     def test_canvas_creation(self, qtbot):
         """Test that canvas can be created."""
-        canvas = CropSizeHistogramCanvas()
+        canvas = SizeHistogramCanvas()
         qtbot.addWidget(canvas)
 
         assert canvas is not None
         assert canvas.fig is not None
         assert canvas.axes is not None
 
-    def test_set_data(self, qtbot, sample_crop_data):
+    def test_set_data(self, qtbot, sample_size_data):
         """Test setting data on the canvas."""
-        canvas = CropSizeHistogramCanvas()
+        canvas = SizeHistogramCanvas()
         qtbot.addWidget(canvas)
 
-        canvas.set_data(sample_crop_data)
-        assert canvas._data == sample_crop_data
+        canvas.set_data(sample_size_data)
+        assert canvas._data == sample_size_data
 
-    def test_set_rotation_angle(self, qtbot, sample_crop_data):
+    def test_set_rotation_angle(self, qtbot, sample_size_data):
         """Test setting rotation angle."""
-        canvas = CropSizeHistogramCanvas()
+        canvas = SizeHistogramCanvas()
         qtbot.addWidget(canvas)
 
-        canvas.set_data(sample_crop_data)
+        canvas.set_data(sample_size_data)
         canvas.set_rotation_angle(15.0)
         assert canvas._rotation_angle == 15.0
 
-    def test_set_view_mode(self, qtbot, sample_crop_data):
+    def test_set_view_mode(self, qtbot, sample_size_data):
         """Test switching view modes."""
-        canvas = CropSizeHistogramCanvas()
+        canvas = SizeHistogramCanvas()
         qtbot.addWidget(canvas)
 
-        canvas.set_data(sample_crop_data)
+        canvas.set_data(sample_size_data)
 
         canvas.set_view_mode("scatter")
         assert canvas._view_mode == "scatter"
@@ -82,23 +82,42 @@ class TestCropSizeHistogramCanvas:
         canvas.set_view_mode("histogram")
         assert canvas._view_mode == "histogram"
 
-    def test_point_clicked_signal(self, qtbot, sample_crop_data):
-        """Test that point_clicked signal is emitted."""
-        canvas = CropSizeHistogramCanvas()
+    def test_set_histogram_bins(self, qtbot, sample_size_data):
+        """Test setting histogram bins."""
+        canvas = SizeHistogramCanvas()
         qtbot.addWidget(canvas)
 
-        canvas.set_data(sample_crop_data)
+        canvas.set_data(sample_size_data)
+        canvas.set_histogram_bins(20)
+        assert canvas._hist_bins == 20
+
+    def test_set_histogram_range(self, qtbot, sample_size_data):
+        """Test setting histogram range."""
+        canvas = SizeHistogramCanvas()
+        qtbot.addWidget(canvas)
+
+        canvas.set_data(sample_size_data)
+        canvas.set_histogram_range(50.0, 200.0)
+        assert canvas._hist_x_min == 50.0
+        assert canvas._hist_x_max == 200.0
+
+    def test_point_clicked_signal(self, qtbot, sample_size_data):
+        """Test that point_clicked signal is emitted."""
+        canvas = SizeHistogramCanvas()
+        qtbot.addWidget(canvas)
+
+        canvas.set_data(sample_size_data)
 
         # Verify signal is defined
         assert hasattr(canvas, "point_clicked")
 
 
-class TestCropSizeDistributionWidget:
+class TestSizeDistributionWidget:
     """Tests for the main distribution widget."""
 
     def test_widget_creation(self, qtbot):
         """Test that widget can be created."""
-        widget = CropSizeDistributionWidget()
+        widget = SizeDistributionWidget()
         qtbot.addWidget(widget)
 
         assert widget is not None
@@ -108,7 +127,7 @@ class TestCropSizeDistributionWidget:
 
     def test_rotation_presets(self, qtbot):
         """Test rotation preset selection."""
-        widget = CropSizeDistributionWidget()
+        widget = SizeDistributionWidget()
         qtbot.addWidget(widget)
 
         # Test each preset
@@ -123,7 +142,7 @@ class TestCropSizeDistributionWidget:
 
     def test_custom_angle(self, qtbot):
         """Test custom angle setting."""
-        widget = CropSizeDistributionWidget()
+        widget = SizeDistributionWidget()
         qtbot.addWidget(widget)
 
         widget.set_rotation_preset("Custom")
@@ -133,14 +152,14 @@ class TestCropSizeDistributionWidget:
 
     def test_navigate_signal(self, qtbot):
         """Test that navigate_to_frame signal exists."""
-        widget = CropSizeDistributionWidget()
+        widget = SizeDistributionWidget()
         qtbot.addWidget(widget)
 
         assert hasattr(widget, "navigate_to_frame")
 
     def test_set_labels(self, qtbot, centered_pair_labels):
         """Test setting labels on the widget."""
-        widget = CropSizeDistributionWidget()
+        widget = SizeDistributionWidget()
         qtbot.addWidget(widget)
 
         widget.set_labels(centered_pair_labels)
@@ -150,7 +169,7 @@ class TestCropSizeDistributionWidget:
 
     def test_view_mode_toggle(self, qtbot, centered_pair_labels):
         """Test toggling between scatter and histogram views."""
-        widget = CropSizeDistributionWidget()
+        widget = SizeDistributionWidget()
         qtbot.addWidget(widget)
 
         widget.set_labels(centered_pair_labels)
@@ -163,9 +182,29 @@ class TestCropSizeDistributionWidget:
         widget._scatter_radio.setChecked(True)
         assert widget._canvas._view_mode == "scatter"
 
+    def test_histogram_controls_enabled(self, qtbot, centered_pair_labels):
+        """Test that histogram controls are enabled in histogram mode."""
+        widget = SizeDistributionWidget()
+        qtbot.addWidget(widget)
+
+        widget.set_labels(centered_pair_labels)
+
+        # In scatter mode, controls should be disabled
+        assert not widget._bins_spin.isEnabled()
+        assert not widget._xmin_spin.isEnabled()
+        assert not widget._xmax_spin.isEnabled()
+
+        # Switch to histogram mode
+        widget._histogram_radio.setChecked(True)
+
+        # Controls should now be enabled
+        assert widget._bins_spin.isEnabled()
+        assert widget._xmin_spin.isEnabled()
+        assert widget._xmax_spin.isEnabled()
+
     def test_statistics_update(self, qtbot, centered_pair_labels):
         """Test that statistics are computed and displayed."""
-        widget = CropSizeDistributionWidget()
+        widget = SizeDistributionWidget()
         qtbot.addWidget(widget)
 
         widget.set_labels(centered_pair_labels)
@@ -182,7 +221,7 @@ class TestCropSizeDistributionWidget:
         for lf in centered_pair_labels:
             lf.instances = []
 
-        widget = CropSizeDistributionWidget()
+        widget = SizeDistributionWidget()
         qtbot.addWidget(widget)
 
         widget.set_labels(centered_pair_labels)

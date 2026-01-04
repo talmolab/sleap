@@ -1469,16 +1469,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             col0_layout = QtWidgets.QVBoxLayout()
             col0_layout.addWidget(self._receptive_field_widget)
 
-            # Add "Analyze Crop Sizes" button for cropping model types
+            # Add "Analyze Sizes" button for cropping model types
             if show_crop_box and labels is not None:
-                self._analyze_crop_button = QtWidgets.QPushButton(
-                    "Analyze Crop Sizes..."
+                self._analyze_size_button = QtWidgets.QPushButton("Analyze Sizes...")
+                self._analyze_size_button.setToolTip(
+                    "View the distribution of instance sizes and identify outliers"
                 )
-                self._analyze_crop_button.setToolTip(
-                    "View the distribution of instance crop sizes and identify outliers"
-                )
-                self._analyze_crop_button.clicked.connect(self._open_crop_distribution)
-                col0_layout.addWidget(self._analyze_crop_button)
+                self._analyze_size_button.clicked.connect(self._open_size_distribution)
+                col0_layout.addWidget(self._analyze_size_button)
         else:
             col0_layout = None
 
@@ -2018,14 +2016,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             form_data.update(form.get_form_data())
         return form_data
 
-    def _open_crop_distribution(self):
-        """Opens the crop size distribution analysis dialog."""
+    def _open_size_distribution(self):
+        """Opens the instance size distribution analysis dialog."""
         if self._labels is None:
             return
 
-        from sleap.gui.dialogs.crop_distribution import CropSizeDistributionDialog
+        from sleap.gui.dialogs.size_distribution import SizeDistributionDialog
 
-        dialog = CropSizeDistributionDialog(
+        dialog = SizeDistributionDialog(
             labels=self._labels,
             navigate_callback=None,  # No navigation from training dialog
             parent=self,

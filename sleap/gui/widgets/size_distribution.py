@@ -1,8 +1,9 @@
 """
-Widget for visualizing crop size distribution across instances.
+Widget for visualizing instance size distribution.
 
 Provides histogram and scatter plot views of instance bounding box sizes,
 with support for rotation augmentation preview and click-to-navigate.
+Useful for determining crop sizes and identifying outlier annotations.
 """
 
 from __future__ import annotations
@@ -30,11 +31,11 @@ from matplotlib.figure import Figure
 
 if TYPE_CHECKING:
     import sleap_io as sio
-    from sleap.gui.learning.crop_size import InstanceCropInfo
+    from sleap.gui.learning.size import InstanceSizeInfo
 
 
-class CropSizeHistogramCanvas(Canvas):
-    """Matplotlib canvas for displaying crop size distribution.
+class SizeHistogramCanvas(Canvas):
+    """Matplotlib canvas for displaying instance size distribution.
 
     Provides both scatter and histogram views with click-to-select
     functionality in scatter mode.
@@ -66,11 +67,16 @@ class CropSizeHistogramCanvas(Canvas):
         self.setMinimumSize(400, 300)
         self.updateGeometry()
 
-        self._data: List["InstanceCropInfo"] = []
+        self._data: List["InstanceSizeInfo"] = []
         self._rotation_angle: float = 0.0
         self._scatter = None
         self._selected_idx: Optional[int] = None
         self._view_mode = "scatter"  # "scatter" or "histogram"
+
+        # Histogram settings
+        self._hist_bins: int = 30
+        self._hist_x_min: Optional[float] = None  # None = auto
+        self._hist_x_max: Optional[float] = None  # None = auto
 
         # Store axis limits for stability
         self._x_limits: Optional[tuple] = None
@@ -83,16 +89,16 @@ class CropSizeHistogramCanvas(Canvas):
 
     def _setup_axes(self):
         """Configure the axes appearance."""
-        self.axes.set_xlabel("Crop Size (pixels)", fontsize=10)
+        self.axes.set_xlabel("Size (pixels)", fontsize=10)
         self.axes.set_ylabel("Instance Index", fontsize=10)
         self.axes.grid(True, alpha=0.3, linestyle="-", linewidth=0.5)
         self.axes.tick_params(labelsize=9)
 
-    def set_data(self, data: List["InstanceCropInfo"]):
-        """Set the instance crop size data.
+    def set_data(self, data: List["InstanceSizeInfo"]):
+        """Set the instance size data.
 
         Args:
-            data: List of InstanceCropInfo objects.
+            data: List of InstanceSizeInfo objects.
         """
         self._data = data
         self._selected_idx = None
@@ -102,7 +108,7 @@ class CropSizeHistogramCanvas(Canvas):
         self.update_plot()
 
     def set_rotation_angle(self, angle: float):
-        """Set the rotation angle for crop size calculation.
+        """Set the rotation angle for size calculation.
 
         Args:
             angle: Maximum rotation angle in degrees.
@@ -124,6 +130,31 @@ class CropSizeHistogramCanvas(Canvas):
         self._y_limits = None
         self.update_plot()
 
+    def set_histogram_bins(self, bins: int):
+        """Set the number of histogram bins.
+
+        Args:
+            bins: Number of bins for the histogram.
+        """
+        self._hist_bins = max(5, min(100, bins))
+        if self._view_mode == "histogram":
+            self.update_plot()
+
+    def set_histogram_range(
+        self, x_min: Optional[float] = None, x_max: Optional[float] = None
+    ):
+        """Set the histogram x-axis range.
+
+        Args:
+            x_min: Minimum x value, or None for auto.
+            x_max: Maximum x value, or None for auto.
+        """
+        self._hist_x_min = x_min
+        self._hist_x_max = x_max
+        self._x_limits = None  # Force recalculation
+        if self._view_mode == "histogram":
+            self.update_plot()
+
     def update_plot(self):
         """Redraw the plot with current data and settings."""
         self.axes.clear()
@@ -144,35 +175,35 @@ class CropSizeHistogramCanvas(Canvas):
             self.draw()
             return
 
-        # Calculate crop sizes with rotation
-        crop_sizes = np.array(
-            [d.get_rotated_crop_size(self._rotation_angle) for d in self._data]
+        # Calculate sizes with rotation
+        sizes = np.array(
+            [d.get_rotated_size(self._rotation_angle) for d in self._data]
         )
 
         if self._view_mode == "scatter":
-            self._draw_scatter(crop_sizes)
+            self._draw_scatter(sizes)
         else:
-            self._draw_histogram(crop_sizes)
+            self._draw_histogram(sizes)
 
         self.draw()
 
-    def _draw_scatter(self, crop_sizes: np.ndarray):
-        """Draw scatter plot of crop sizes.
+    def _draw_scatter(self, sizes: np.ndarray):
+        """Draw scatter plot of sizes.
 
         Args:
-            crop_sizes: Array of computed crop sizes.
+            sizes: Array of computed sizes.
         """
-        indices = np.arange(len(crop_sizes))
+        indices = np.arange(len(sizes))
 
         # Color by relative size (outliers are redder)
-        median = np.median(crop_sizes)
+        median = np.median(sizes)
         if median > 0:
-            colors = crop_sizes / median
+            colors = sizes / median
         else:
-            colors = np.ones_like(crop_sizes)
+            colors = np.ones_like(sizes)
 
         self._scatter = self.axes.scatter(
-            crop_sizes,
+            sizes,
             indices,
             c=colors,
             cmap="RdYlBu_r",
@@ -185,9 +216,9 @@ class CropSizeHistogramCanvas(Canvas):
         )
 
         # Add vertical lines for statistics
-        mean_val = np.mean(crop_sizes)
-        median_val = np.median(crop_sizes)
-        max_val = np.max(crop_sizes)
+        mean_val = np.mean(sizes)
+        median_val = np.median(sizes)
+        max_val = np.max(sizes)
 
         self.axes.axvline(
             median_val,
@@ -215,9 +246,9 @@ class CropSizeHistogramCanvas(Canvas):
         )
 
         # Highlight selected point
-        if self._selected_idx is not None and self._selected_idx < len(crop_sizes):
+        if self._selected_idx is not None and self._selected_idx < len(sizes):
             self.axes.scatter(
-                [crop_sizes[self._selected_idx]],
+                [sizes[self._selected_idx]],
                 [self._selected_idx],
                 s=150,
                 facecolors="none",
@@ -228,38 +259,60 @@ class CropSizeHistogramCanvas(Canvas):
 
         # Set fixed axis limits for stability
         if self._x_limits is None:
-            min_val = np.min(crop_sizes)
+            min_val = np.min(sizes)
             x_margin = (max_val - min_val) * 0.1 if max_val > min_val else 10
             self._x_limits = (max(0, min_val - x_margin), max_val + x_margin)
 
         if self._y_limits is None:
-            self._y_limits = (-len(crop_sizes) * 0.02, len(crop_sizes) * 1.02)
+            self._y_limits = (-len(sizes) * 0.02, len(sizes) * 1.02)
 
         self.axes.set_xlim(self._x_limits)
         self.axes.set_ylim(self._y_limits)
 
-        self.axes.legend(loc="upper right", fontsize=8, framealpha=0.9)
-        self.axes.set_ylabel("Instance Index", fontsize=10)
-        self.axes.set_title(
-            f"Crop Size Distribution (n={len(crop_sizes)})", fontsize=11
+        # Legend outside to the right
+        self.axes.legend(
+            loc="upper left",
+            bbox_to_anchor=(1.02, 1.0),
+            fontsize=8,
+            framealpha=0.9,
+            borderaxespad=0,
         )
+        self.axes.set_ylabel("Instance Index", fontsize=10)
+        self.axes.set_title(f"Size Distribution (n={len(sizes)})", fontsize=11)
 
-    def _draw_histogram(self, crop_sizes: np.ndarray):
-        """Draw histogram of crop sizes.
+    def _draw_histogram(self, sizes: np.ndarray):
+        """Draw histogram of sizes.
 
         Args:
-            crop_sizes: Array of computed crop sizes.
+            sizes: Array of computed sizes.
         """
-        n_bins = min(50, max(10, len(crop_sizes) // 5 + 1))
+        # Determine range
+        data_min = np.min(sizes)
+        data_max = np.max(sizes)
+
+        hist_min = self._hist_x_min if self._hist_x_min is not None else data_min
+        hist_max = self._hist_x_max if self._hist_x_max is not None else data_max
+
+        # Filter data to range for histogram
+        mask = (sizes >= hist_min) & (sizes <= hist_max)
+        filtered_sizes = sizes[mask]
+
+        if len(filtered_sizes) == 0:
+            filtered_sizes = sizes  # Fall back to all data
 
         counts, bins, patches = self.axes.hist(
-            crop_sizes, bins=n_bins, alpha=0.7, color="steelblue", edgecolor="white"
+            filtered_sizes,
+            bins=self._hist_bins,
+            range=(hist_min, hist_max),
+            alpha=0.7,
+            color="steelblue",
+            edgecolor="white",
         )
 
-        # Add statistics
-        mean_val = np.mean(crop_sizes)
-        median_val = np.median(crop_sizes)
-        max_val = np.max(crop_sizes)
+        # Add statistics (computed on all data)
+        mean_val = np.mean(sizes)
+        median_val = np.median(sizes)
+        max_val = np.max(sizes)
 
         self.axes.axvline(
             median_val,
@@ -286,17 +339,20 @@ class CropSizeHistogramCanvas(Canvas):
             label=f"Max: {max_val:.0f}",
         )
 
-        # Set fixed axis limits for stability
-        if self._x_limits is None:
-            min_val = np.min(crop_sizes)
-            x_margin = (max_val - min_val) * 0.1 if max_val > min_val else 10
-            self._x_limits = (max(0, min_val - x_margin), max_val + x_margin)
+        # Set axis limits
+        x_margin = (hist_max - hist_min) * 0.05 if hist_max > hist_min else 10
+        self.axes.set_xlim(hist_min - x_margin, hist_max + x_margin)
 
-        self.axes.set_xlim(self._x_limits)
-
-        self.axes.legend(loc="upper right", fontsize=8, framealpha=0.9)
+        # Legend outside to the right
+        self.axes.legend(
+            loc="upper left",
+            bbox_to_anchor=(1.02, 1.0),
+            fontsize=8,
+            framealpha=0.9,
+            borderaxespad=0,
+        )
         self.axes.set_ylabel("Count", fontsize=10)
-        self.axes.set_title(f"Crop Size Histogram (n={len(crop_sizes)})", fontsize=11)
+        self.axes.set_title(f"Size Histogram (n={len(sizes)})", fontsize=11)
 
     def _on_pick(self, event):
         """Handle pick event on scatter points."""
@@ -318,11 +374,12 @@ class CropSizeHistogramCanvas(Canvas):
         self.update_plot()
 
 
-class CropSizeDistributionWidget(QtWidgets.QWidget):
-    """Widget for visualizing crop size distribution with navigation.
+class SizeDistributionWidget(QtWidgets.QWidget):
+    """Widget for visualizing instance size distribution with navigation.
 
     Provides controls for rotation augmentation preview, view mode selection,
-    and click-to-navigate functionality for exploring outliers.
+    histogram configuration, and click-to-navigate functionality for exploring
+    outliers.
 
     Signals:
         navigate_to_frame: Emitted when user wants to navigate to a frame.
@@ -340,8 +397,8 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
         super().__init__(parent)
 
         self._labels: Optional["sio.Labels"] = None
-        self._data: List["InstanceCropInfo"] = []
-        self._selected_info: Optional["InstanceCropInfo"] = None
+        self._data: List["InstanceSizeInfo"] = []
+        self._selected_info: Optional["InstanceSizeInfo"] = None
 
         self._setup_ui()
         self._connect_signals()
@@ -354,13 +411,13 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
 
         # Title and recompute button row
         title_layout = QtWidgets.QHBoxLayout()
-        title = QtWidgets.QLabel("<b>Crop Size Distribution</b>")
+        title = QtWidgets.QLabel("<b>Instance Size Distribution</b>")
         title_layout.addWidget(title)
         title_layout.addStretch()
 
         self._recompute_button = QtWidgets.QPushButton("Recompute")
         self._recompute_button.setToolTip(
-            "Recalculate crop sizes from current labels (user instances only)"
+            "Recalculate sizes from current labels (user instances only)"
         )
         self._recompute_button.setFixedWidth(90)
         title_layout.addWidget(self._recompute_button)
@@ -389,18 +446,48 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
         rotation_layout.addStretch()
         layout.addWidget(rotation_group)
 
-        # View mode toggle
+        # View mode toggle and histogram controls
         view_layout = QtWidgets.QHBoxLayout()
         self._scatter_radio = QtWidgets.QRadioButton("Scatter (clickable)")
         self._histogram_radio = QtWidgets.QRadioButton("Histogram")
         self._scatter_radio.setChecked(True)
         view_layout.addWidget(self._scatter_radio)
         view_layout.addWidget(self._histogram_radio)
+
+        view_layout.addSpacing(20)
+
+        # Histogram controls (enabled only in histogram mode)
+        view_layout.addWidget(QtWidgets.QLabel("Bins:"))
+        self._bins_spin = QtWidgets.QSpinBox()
+        self._bins_spin.setRange(5, 100)
+        self._bins_spin.setValue(30)
+        self._bins_spin.setFixedWidth(60)
+        self._bins_spin.setEnabled(False)
+        view_layout.addWidget(self._bins_spin)
+
+        view_layout.addWidget(QtWidgets.QLabel("X-min:"))
+        self._xmin_spin = QtWidgets.QSpinBox()
+        self._xmin_spin.setRange(0, 10000)
+        self._xmin_spin.setValue(0)
+        self._xmin_spin.setSpecialValueText("Auto")
+        self._xmin_spin.setFixedWidth(70)
+        self._xmin_spin.setEnabled(False)
+        view_layout.addWidget(self._xmin_spin)
+
+        view_layout.addWidget(QtWidgets.QLabel("X-max:"))
+        self._xmax_spin = QtWidgets.QSpinBox()
+        self._xmax_spin.setRange(0, 10000)
+        self._xmax_spin.setValue(0)
+        self._xmax_spin.setSpecialValueText("Auto")
+        self._xmax_spin.setFixedWidth(70)
+        self._xmax_spin.setEnabled(False)
+        view_layout.addWidget(self._xmax_spin)
+
         view_layout.addStretch()
         layout.addLayout(view_layout)
 
         # Matplotlib canvas
-        self._canvas = CropSizeHistogramCanvas(width=7, height=5)
+        self._canvas = SizeHistogramCanvas(width=7, height=5)
         layout.addWidget(self._canvas, stretch=1)
 
         # Bottom panel: info and stats side by side
@@ -444,6 +531,11 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
         self._goto_button.clicked.connect(self._on_goto_clicked)
         self._recompute_button.clicked.connect(self._on_recompute)
 
+        # Histogram controls
+        self._bins_spin.valueChanged.connect(self._on_bins_changed)
+        self._xmin_spin.valueChanged.connect(self._on_xrange_changed)
+        self._xmax_spin.valueChanged.connect(self._on_xrange_changed)
+
     def _get_rotation_angle(self) -> float:
         """Get the current rotation angle setting.
 
@@ -476,10 +568,25 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
 
     def _on_view_mode_changed(self, checked: bool):
         """Handle view mode toggle."""
+        is_histogram = not checked
+        self._bins_spin.setEnabled(is_histogram)
+        self._xmin_spin.setEnabled(is_histogram)
+        self._xmax_spin.setEnabled(is_histogram)
+
         if checked:  # Scatter selected
             self._canvas.set_view_mode("scatter")
         else:
             self._canvas.set_view_mode("histogram")
+
+    def _on_bins_changed(self, value: int):
+        """Handle histogram bins change."""
+        self._canvas.set_histogram_bins(value)
+
+    def _on_xrange_changed(self):
+        """Handle histogram x-range change."""
+        x_min = self._xmin_spin.value() if self._xmin_spin.value() > 0 else None
+        x_max = self._xmax_spin.value() if self._xmax_spin.value() > 0 else None
+        self._canvas.set_histogram_range(x_min, x_max)
 
     def _on_point_clicked(self, video_idx: int, frame_idx: int, instance_idx: int):
         """Handle point click in scatter plot."""
@@ -503,7 +610,7 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
             return
 
         angle = self._get_rotation_angle()
-        rotated_size = self._selected_info.get_rotated_crop_size(angle)
+        rotated_size = self._selected_info.get_rotated_size(angle)
 
         info = self._selected_info
         raw_dims = f"({info.raw_width:.1f} x {info.raw_height:.1f})"
@@ -511,7 +618,7 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
             f"<b>Frame:</b> {info.frame_idx}<br/>"
             f"<b>Instance:</b> {info.instance_idx}<br/>"
             f"<b>Video:</b> {info.video_idx}<br/>"
-            f"<b>Raw Size:</b> {info.raw_crop_size:.1f}px {raw_dims}<br/>"
+            f"<b>Raw Size:</b> {info.raw_size:.1f}px {raw_dims}<br/>"
             f"<b>Rotated Size:</b> {rotated_size:.1f}px"
         )
 
@@ -530,14 +637,14 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
             self._compute_and_update()
 
     def _compute_and_update(self):
-        """Compute crop sizes from labels and update display."""
+        """Compute sizes from labels and update display."""
         if self._labels is None:
             return
 
         # Import here to avoid circular imports
-        from sleap.gui.learning.crop_size import compute_instance_crop_sizes
+        from sleap.gui.learning.size import compute_instance_sizes
 
-        self._data = compute_instance_crop_sizes(self._labels, user_instances_only=True)
+        self._data = compute_instance_sizes(self._labels, user_instances_only=True)
         self._selected_info = None
         self._info_label.setText("Click on a point to select an instance")
         self._goto_button.setEnabled(False)
@@ -552,28 +659,28 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
             return
 
         angle = self._get_rotation_angle()
-        crop_sizes = np.array([d.get_rotated_crop_size(angle) for d in self._data])
+        sizes = np.array([d.get_rotated_size(angle) for d in self._data])
 
         # Calculate statistics
-        mean_val = np.mean(crop_sizes)
-        median_val = np.median(crop_sizes)
-        std_val = np.std(crop_sizes)
-        min_val = np.min(crop_sizes)
-        max_val = np.max(crop_sizes)
+        mean_val = np.mean(sizes)
+        median_val = np.median(sizes)
+        std_val = np.std(sizes)
+        min_val = np.min(sizes)
+        max_val = np.max(sizes)
 
         # Count potential outliers (>2 std from mean)
         outlier_threshold = mean_val + 2 * std_val
-        n_outliers = int(np.sum(crop_sizes > outlier_threshold))
+        n_outliers = int(np.sum(sizes > outlier_threshold))
 
         # Percentiles
-        p90 = np.percentile(crop_sizes, 90)
-        p95 = np.percentile(crop_sizes, 95)
-        p99 = np.percentile(crop_sizes, 99)
+        p90 = np.percentile(sizes, 90)
+        p95 = np.percentile(sizes, 95)
+        p99 = np.percentile(sizes, 99)
 
-        pct = 100 * n_outliers / len(crop_sizes) if len(crop_sizes) > 0 else 0
+        pct = 100 * n_outliers / len(sizes) if len(sizes) > 0 else 0
 
         self._stats_label.setText(
-            f"<b>Count:</b> {len(crop_sizes)}<br/>"
+            f"<b>Count:</b> {len(sizes)}<br/>"
             f"<b>Range:</b> {min_val:.0f} - {max_val:.0f}px<br/>"
             f"<b>Mean +/- Std:</b> {mean_val:.0f} +/- {std_val:.0f}px<br/>"
             f"<b>Median:</b> {median_val:.0f}px<br/>"
@@ -582,7 +689,7 @@ class CropSizeDistributionWidget(QtWidgets.QWidget):
         )
 
     def set_labels(self, labels: "sio.Labels"):
-        """Set the labels data and compute crop sizes.
+        """Set the labels data and compute sizes.
 
         Args:
             labels: A sleap_io.Labels object.

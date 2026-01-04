@@ -1,7 +1,7 @@
 """
-Dialog for viewing crop size distribution across instances.
+Dialog for viewing instance size distribution.
 
-Provides a standalone dialog that wraps the CropSizeDistributionWidget
+Provides a standalone dialog that wraps the SizeDistributionWidget
 with navigation support back to the main window.
 """
 
@@ -11,16 +11,16 @@ from typing import Callable, Optional, TYPE_CHECKING
 
 from qtpy import QtWidgets
 
-from sleap.gui.widgets.crop_distribution import CropSizeDistributionWidget
+from sleap.gui.widgets.size_distribution import SizeDistributionWidget
 
 if TYPE_CHECKING:
     import sleap_io as sio
 
 
-class CropSizeDistributionDialog(QtWidgets.QDialog):
-    """Dialog for viewing crop size distribution with navigation.
+class SizeDistributionDialog(QtWidgets.QDialog):
+    """Dialog for viewing instance size distribution with navigation.
 
-    This dialog displays the CropSizeDistributionWidget and optionally
+    This dialog displays the SizeDistributionWidget and optionally
     connects navigation signals to the main window.
 
     Args:
@@ -49,9 +49,9 @@ class CropSizeDistributionDialog(QtWidgets.QDialog):
         self._labels = labels
         self._navigate_callback = navigate_callback
 
-        self.setWindowTitle("Crop Size Distribution")
-        self.setMinimumSize(700, 700)
-        self.resize(800, 800)
+        self.setWindowTitle("Instance Size Distribution")
+        self.setMinimumSize(750, 750)
+        self.resize(850, 850)
 
         # Make dialog non-modal so user can interact with main window
         self.setModal(False)
@@ -65,7 +65,7 @@ class CropSizeDistributionDialog(QtWidgets.QDialog):
         layout.setContentsMargins(8, 8, 8, 8)
 
         # Main widget
-        self._widget = CropSizeDistributionWidget()
+        self._widget = SizeDistributionWidget()
         self._widget.set_labels(self._labels)
         layout.addWidget(self._widget, stretch=1)
 

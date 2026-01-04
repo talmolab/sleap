@@ -1,8 +1,10 @@
 """
-Crop size computation and data structures for instance bounding boxes.
+Instance size computation and data structures for bounding boxes.
 
 This module provides utilities for analyzing the distribution of instance
-crop sizes across a dataset, including rotation augmentation effects.
+sizes across a dataset, including rotation augmentation effects. Useful for:
+- Determining optimal crop sizes for centered-instance models
+- Identifying outlier instances that may be annotation errors
 """
 
 from __future__ import annotations
@@ -18,8 +20,8 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class InstanceCropInfo:
-    """Data class holding crop size info for a single instance.
+class InstanceSizeInfo:
+    """Data class holding size info for a single instance.
 
     Attributes:
         video_idx: Index of the video in labels.videos.
@@ -27,7 +29,7 @@ class InstanceCropInfo:
         instance_idx: Index of the instance within the labeled frame.
         raw_width: Bounding box width before rotation.
         raw_height: Bounding box height before rotation.
-        raw_crop_size: Maximum of width and height (square crop size).
+        raw_size: Maximum of width and height (square bounding box size).
     """
 
     video_idx: int
@@ -35,19 +37,19 @@ class InstanceCropInfo:
     instance_idx: int
     raw_width: float
     raw_height: float
-    raw_crop_size: float
+    raw_size: float
 
-    def get_rotated_crop_size(self, max_angle_degrees: float) -> float:
-        """Calculate crop size needed for rotation augmentation range +/-max_angle.
+    def get_rotated_size(self, max_angle_degrees: float) -> float:
+        """Calculate size needed for rotation augmentation range +/-max_angle.
 
         When rotation augmentation samples uniformly from [-max_angle, +max_angle],
-        we need a crop large enough to contain the instance at ANY angle in that range.
+        we need a size large enough to contain the instance at ANY angle in that range.
 
         For a rectangle of size (w, h), rotated by angle theta:
             new_width = w*|cos(theta)| + h*|sin(theta)|
             new_height = w*|sin(theta)| + h*|cos(theta)|
 
-        The worst case (largest crop needed) depends on the aspect ratio:
+        The worst case (largest size needed) depends on the aspect ratio:
         - For most shapes (aspect ratio > 0.41), worst case is at 45 degrees
         - For very elongated shapes, worst case may be at 0 or 90 degrees
 
@@ -59,11 +61,11 @@ class InstanceCropInfo:
                 range is assumed to be [-max_angle, +max_angle].
 
         Returns:
-            The crop size needed to contain the instance at any rotation
+            The size needed to contain the instance at any rotation
             within the specified range.
         """
         if max_angle_degrees == 0:
-            return self.raw_crop_size
+            return self.raw_size
 
         max_angle = min(abs(max_angle_degrees), 90)  # Symmetry beyond 90
 
@@ -75,7 +77,7 @@ class InstanceCropInfo:
         if max_angle >= 45:
             angles_to_check.add(45)
 
-        max_crop = 0.0
+        max_size = 0.0
         for angle in angles_to_check:
             theta = math.radians(angle)
             cos_t = math.cos(theta)
@@ -85,17 +87,17 @@ class InstanceCropInfo:
             new_width = self.raw_width * cos_t + self.raw_height * sin_t
             new_height = self.raw_width * sin_t + self.raw_height * cos_t
 
-            crop = max(new_width, new_height)
-            max_crop = max(max_crop, crop)
+            size = max(new_width, new_height)
+            max_size = max(max_size, size)
 
-        return max_crop
+        return max_size
 
 
-def compute_instance_crop_sizes(
+def compute_instance_sizes(
     labels: "sio.Labels",
     user_instances_only: bool = True,
-) -> List[InstanceCropInfo]:
-    """Compute crop sizes for all instances in labels.
+) -> List[InstanceSizeInfo]:
+    """Compute sizes for all instances in labels.
 
     Iterates through all labeled frames and computes the bounding box
     dimensions for each instance. By default, only user-labeled instances
@@ -107,9 +109,9 @@ def compute_instance_crop_sizes(
             instances, not predicted instances.
 
     Returns:
-        List of InstanceCropInfo for each non-empty instance.
+        List of InstanceSizeInfo for each non-empty instance.
     """
-    results: List[InstanceCropInfo] = []
+    results: List[InstanceSizeInfo] = []
 
     for lf in labels:
         video_idx = labels.videos.index(lf.video) if lf.video in labels.videos else 0
@@ -141,13 +143,13 @@ def compute_instance_crop_sizes(
             height = float(np.max(valid_y) - np.min(valid_y))
 
             results.append(
-                InstanceCropInfo(
+                InstanceSizeInfo(
                     video_idx=video_idx,
                     frame_idx=lf.frame_idx,
                     instance_idx=inst_idx,
                     raw_width=width,
                     raw_height=height,
-                    raw_crop_size=max(width, height),
+                    raw_size=max(width, height),
                 )
             )
 
