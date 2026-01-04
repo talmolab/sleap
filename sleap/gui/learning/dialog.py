@@ -1470,13 +1470,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             col0_layout.addWidget(self._receptive_field_widget)
 
             # Add "Analyze Sizes" button for cropping model types
+            # Button is inserted into the receptive field widget (below legend)
             if show_crop_box and labels is not None:
                 self._analyze_size_button = QtWidgets.QPushButton("Analyze Sizes...")
                 self._analyze_size_button.setToolTip(
                     "View the distribution of instance sizes and identify outliers"
                 )
                 self._analyze_size_button.clicked.connect(self._open_size_distribution)
-                col0_layout.addWidget(self._analyze_size_button)
+                self._receptive_field_widget.addButtonWidget(self._analyze_size_button)
         else:
             col0_layout = None
 

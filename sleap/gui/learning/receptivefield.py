@@ -383,52 +383,70 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         self._instance = None
         self._anchor_part = None
         self._crop_size = None
+        self._rf_size = None  # Track receptive field size for legend
         self._head_name = head_name
 
         self.layout = QtWidgets.QVBoxLayout()
 
         self._field_image_widget = ReceptiveFieldImageWidget()
 
-        # Crop size info (shown above receptive field info)
-        self._crop_info_widget = QtWidgets.QLabel("")
+        # Legend (crop size + receptive field)
+        self._legend_widget = QtWidgets.QLabel("")
+
+        # Placeholder layout for button insertion (between legend and explanation)
+        self._button_layout = QtWidgets.QVBoxLayout()
+        self._button_layout.setContentsMargins(0, 4, 0, 4)
+
+        # Explanation text (below legend and optional button)
+        self._explanation_widget = QtWidgets.QLabel("")
 
         # UNet architecture info (params and channels)
         self._arch_info_widget = QtWidgets.QLabel("")
 
-        # Receptive field info
-        self._info_widget = QtWidgets.QLabel("")
-
         self.layout.addWidget(self._field_image_widget)
-        if show_crop_box:
-            self.layout.addWidget(self._crop_info_widget)
-        self.layout.addWidget(self._info_widget)
+        self.layout.addWidget(self._legend_widget)
+        self.layout.addLayout(self._button_layout)
+        self.layout.addWidget(self._explanation_widget)
         self.layout.addWidget(self._arch_info_widget)
         self.layout.addStretch()
 
         self.setLayout(self.layout)
 
-    def _get_info_text(
-        self, size, scale, max_stride, down_blocks, convs_per_block, kernel_size
-    ) -> Text:
-        """Returns text explaining how receptive field size is determined."""
-        # Header with blue square and size (crop size legend added if applicable)
+    def _get_legend_text(self) -> Text:
+        """Returns the legend text for crop size and receptive field."""
         result = ""
-        if self._show_crop_box:
-            result += '<span style="color: red;">\u25a1</span> Crop Size<br/>'
 
-        if size:
+        # Crop size line (if enabled)
+        if self._show_crop_box:
+            if self._crop_size:
+                result += (
+                    f'<span style="color: red;">\u25a0</span> '
+                    f"<b>Crop Size:</b> {self._crop_size} px<br/>"
+                )
+            else:
+                result += (
+                    '<span style="color: red;">\u25a0</span> <b>Crop Size:</b><br/>'
+                )
+
+        # Receptive field line
+        if self._rf_size:
             result += (
                 f'<span style="color: blue;">\u25a0</span> '
-                f"<b>Receptive Field:</b> {size} pixels"
+                f"<b>Receptive Field:</b> {self._rf_size} px"
             )
         else:
             result += (
                 '<span style="color: blue;">\u25a0</span> '
-                "<b>Receptive Field:</b> <i>Unable to determine</i>"
+                "<b>Receptive Field:</b> <i>N/A</i>"
             )
 
-        result += f"""
-        <p>Receptive field size is a function<br />
+        return result
+
+    def _get_explanation_text(
+        self, scale, max_stride, down_blocks, convs_per_block, kernel_size
+    ) -> Text:
+        """Returns explanatory text about receptive field parameters."""
+        return f"""<p>Receptive field size is a function<br />
         of the number of down blocks ({down_blocks}), the<br />
         number of convolutions per block ({convs_per_block}),<br />
         and the convolution kernel size ({kernel_size}).</p>
@@ -438,10 +456,15 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
 
         <p>You can also control the receptive<br />
         field size relative to the original<br />
-        image by adjusting the <b>Input Scaling</b> ({scale}).</p>
-        """
+        image by adjusting the <b>Input Scaling</b> ({scale}).</p>"""
 
-        return result
+    def addButtonWidget(self, widget: QtWidgets.QWidget):
+        """Add a widget (typically a button) between the legend and explanation.
+
+        Args:
+            widget: The widget to add (e.g., QPushButton for "Analyze Sizes...")
+        """
+        self._button_layout.addWidget(widget)
 
     def _get_head_output_channels(self, head_name: str) -> Optional[int]:
         """Get the number of output channels required by a head type.
@@ -528,6 +551,9 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         """Updates receptive field preview from model config."""
         rf_info = receptive_field_info_from_model_cfg(model_cfg)
 
+        # Store receptive field size for legend
+        self._rf_size = rf_info["size"]
+
         # Update architecture info (params and channels) - only for supported backbones
         self._arch_info_widget.setText(
             self._get_arch_info_text(
@@ -537,10 +563,12 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
             )
         )
 
-        # Update receptive field info
-        self._info_widget.setText(
-            self._get_info_text(
-                size=rf_info["size"],
+        # Update legend (crop size + receptive field)
+        self._legend_widget.setText(self._get_legend_text())
+
+        # Update explanation text
+        self._explanation_widget.setText(
+            self._get_explanation_text(
                 scale=scale,
                 max_stride=rf_info["max_stride"],
                 down_blocks=rf_info["down_blocks"],
@@ -602,13 +630,8 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         # Compute anchor point from the instance
         anchor = compute_anchor_point(self._instance, anchor_part)
 
-        # Update the crop info text (shown above receptive field info)
-        if crop_size:
-            self._crop_info_widget.setText(
-                f"<p>Crop Size: <i>{crop_size} pixels</i></p>"
-            )
-        else:
-            self._crop_info_widget.setText("")
+        # Update the legend to include crop size
+        self._legend_widget.setText(self._get_legend_text())
 
         if crop_size and anchor:
             self._field_image_widget._set_crop_size(crop_size, scale, anchor)
