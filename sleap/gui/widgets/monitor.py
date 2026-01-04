@@ -591,6 +591,7 @@ class LossViewer(QtWidgets.QMainWindow):
         zmq_ports: Dict = None,
         zmq_context: Optional[zmq.Context] = None,
         show_controller=True,
+        auto_open_wandb: bool = False,
         parent=None,
     ):
         super().__init__(parent)
@@ -599,6 +600,9 @@ class LossViewer(QtWidgets.QMainWindow):
         self.stop_button = None
         self.cancel_button = None
         self.canceled = False
+        self.auto_open_wandb = auto_open_wandb
+        self.wandb_url: Optional[str] = None
+        self._wandb_label: Optional[QtWidgets.QLabel] = None
 
         # Set up ZMQ ports for communication.
         zmq_ports = zmq_ports or dict()
@@ -725,6 +729,12 @@ class LossViewer(QtWidgets.QMainWindow):
             control_layout.addWidget(self.batches_to_show_field)
 
             control_layout.addStretch(1)
+
+            # WandB URL label (hidden until URL is received)
+            self._wandb_label = QtWidgets.QLabel()
+            self._wandb_label.setOpenExternalLinks(True)
+            self._wandb_label.setVisible(False)
+            control_layout.addWidget(self._wandb_label)
 
             self.stop_button = QtWidgets.QPushButton("Stop Early")
             self.stop_button.clicked.connect(self._stop)
@@ -894,6 +904,11 @@ class LossViewer(QtWidgets.QMainWindow):
             if msg["event"] == "train_begin":
                 self._set_start_time(perf_counter())
                 self.current_job_output_type = msg["what"]
+
+                # Handle WandB URL if present
+                wandb_url = msg.get("wandb_url")
+                if wandb_url:
+                    self._on_wandb_url_received(wandb_url)
 
             # Make sure message matches current training job.
             if msg.get("what", "") == self.current_job_output_type:
@@ -1111,6 +1126,26 @@ class LossViewer(QtWidgets.QMainWindow):
         if not self.ctx_given and self.ctx is not None:
             self.ctx.term()
             self.ctx = None
+
+    def _on_wandb_url_received(self, url: str):
+        """Handle received WandB run URL.
+
+        Args:
+            url: The WandB run URL.
+        """
+        import webbrowser
+
+        self.wandb_url = url
+        logger.info(f"WandB run URL: {url}")
+
+        # Update the clickable label
+        if self._wandb_label is not None:
+            self._wandb_label.setText(f'<a href="{url}">WandB Run</a>')
+            self._wandb_label.setVisible(True)
+
+        # Auto-open in browser if enabled
+        if self.auto_open_wandb:
+            webbrowser.open(url)
 
     def _set_end(self):
         """Mark the end of the run."""

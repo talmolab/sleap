@@ -724,8 +724,11 @@ def run_gui_training(
         zmq_ports["controller_port"] = inference_params.get("controller_port", 9000)
         zmq_ports["publish_port"] = inference_params.get("publish_port", 9001)
 
+        # Get WandB auto-open setting from inference params (GUI-only setting)
+        auto_open_wandb = inference_params.get("gui.wandb_open_in_browser", False)
+
         # Open training monitor window
-        win = LossViewer(zmq_ports=zmq_ports)
+        win = LossViewer(zmq_ports=zmq_ports, auto_open_wandb=auto_open_wandb)
 
         # Reassign the values in the inference parameters in case the ports were changed
         inference_params["controller_port"] = win.zmq_ports["controller_port"]

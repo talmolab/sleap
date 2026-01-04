@@ -879,9 +879,15 @@ class MainTabWidget(QWidget):
 
         row1.addSpacing(12)
 
-        upload_viz = QCheckBox("Upload Viz to WandB")
+        upload_viz = QCheckBox("Upload Viz")
         self._fields["trainer_config.wandb.save_viz_imgs_wandb"] = upload_viz
         row1.addWidget(upload_viz)
+
+        row1.addSpacing(12)
+
+        open_in_browser = QCheckBox("Open in browser")
+        self._fields["gui.wandb_open_in_browser"] = open_in_browser
+        row1.addWidget(open_in_browser)
 
         row1.addStretch()
         layout.addLayout(row1)
@@ -1242,6 +1248,7 @@ class MainTabWidget(QWidget):
         wandb_option_fields = [
             "trainer_config.use_wandb",
             "trainer_config.wandb.save_viz_imgs_wandb",
+            "gui.wandb_open_in_browser",
             "trainer_config.wandb.entity",
             "trainer_config.wandb.project",
             "trainer_config.wandb.prv_runid",
@@ -1301,6 +1308,7 @@ class MainTabWidget(QWidget):
             checkbox_fields = [
                 "trainer_config.use_wandb",
                 "trainer_config.wandb.save_viz_imgs_wandb",
+                "gui.wandb_open_in_browser",
             ]
             for field_name in checkbox_fields:
                 field = self._fields.get(field_name)
