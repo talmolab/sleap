@@ -119,9 +119,7 @@ copyright: >
 nav:
   - Home: index.md
   - Overview: overview.md
-  - Installation:
-      - installation.md
-      - Installation with uv add: installation-uv-add.md
+  - Installation: installation.md
   - Tutorial: 
       - Overview: tutorial/overview.md
       - Setup: tutorial/setup.md

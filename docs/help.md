@@ -16,7 +16,7 @@ Yes! You can install SLEAP as you normally would using the `conda` or `pip`-base
 
 ### What if I already have CUDA set up on my system?
 
-You can use the system CUDA installation by simply using the [pip package](installation.md/#installation-methods) installation method.
+You can use the system CUDA installation by following the [Install SLEAP](installation.md#install-sleap) instructions.
 
 Note that you will need to use a version compatible with **TensorFlow 2.6+** (**CUDA Toolkit v11.3** and **cuDNN v8.2**).
 

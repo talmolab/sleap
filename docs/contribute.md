@@ -26,7 +26,7 @@ Github has made it easy to separate issues from discussions. Generally speaking,
 
 ### Pull Requests
 
-1. Install source code [`develop` branch](installation.md/#installation-methods) and follow instructions to create conda env, etc.
+1. Install from source using the [Development Setup](installation.md#development-setup) instructions.
 2. Create a fork from the `develop` branch.
    * Either work on the `develop` branch or create a new branch (recommended if tackling multiple issues at a time).
    * If creating a branch, use your name followed by a relevant keyword for your changes, eg: `git checkout -b john/some_issue`

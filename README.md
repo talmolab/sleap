@@ -71,7 +71,7 @@ uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index
 Run the SLEAP GUI after installation:
 
 ```bash
-sleap-label
+sleap
 ```
 
 See the docs for [full installation instructions](https://docs.sleap.ai/latest/installation).

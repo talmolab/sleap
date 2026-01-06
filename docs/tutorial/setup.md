@@ -33,7 +33,7 @@ If you have either a Linux or Windows laptop with a GPU, or a [Mac with Apple Si
 
     === "Windows"
 
-        Open a new [PowerShell terminal](../installation.md/#how-to-open-a-terminal) (does not need to be admin) and enter:
+        Open a new PowerShell terminal (does not need to be admin) and enter:
 
         ```bash
         Invoke-WebRequest -Uri "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe" -OutFile "$env:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe"; Start-Process -FilePath "$env:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe" -ArgumentList "/InstallationType=JustMe /RegisterPython=1 /S" -Wait; Remove-Item -Path "$env:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe"
@@ -41,7 +41,7 @@ If you have either a Linux or Windows laptop with a GPU, or a [Mac with Apple Si
 
     === "Linux"
 
-        Open a new [terminal](../installation.md/#how-to-open-a-terminal) and enter:
+        Open a new terminal and enter:
 
         ```bash
         curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -o "~/Downloads/Miniforge3-Linux-x86_64.sh" && chmod +x "~/Downloads/Miniforge3-Linux-x86_64.sh" && "~/Downloads/Miniforge3-Linux-x86_64.sh" -b -p ~/miniforge3 && rm "~/Downloads/Miniforge3-Linux-x86_64.sh" && ~/miniforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
@@ -49,7 +49,7 @@ If you have either a Linux or Windows laptop with a GPU, or a [Mac with Apple Si
 
     === "Mac (Apple Silicon)"
 
-        Open a new [terminal](../installation.md/#how-to-open-a-terminal) and enter:
+        Open a new terminal and enter:
 
         ```bash
         curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh -o "~/Downloads/Miniforge3-MacOSX-arm64.sh" && chmod +x "~/Downloads/Miniforge3-MacOSX-arm64.sh" && "~/Downloads/Miniforge3-MacOSX-arm64.sh" -b -p ~/miniforge3 && rm "~/Downloads/Miniforge3-MacOSX-arm64.sh" && ~/miniforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
@@ -57,7 +57,7 @@ If you have either a Linux or Windows laptop with a GPU, or a [Mac with Apple Si
 
     === "Mac (Intel)"
 
-        Open a new [terminal](../installation.md/#how-to-open-a-terminal) and enter:
+        Open a new terminal and enter:
 
         ```bash
         curl -fsSL --compressed https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-x86_64.sh -o "~/Downloads/Miniforge3-MacOSX-x86_64.sh" && chmod +x "~/Downloads/Miniforge3-MacOSX-x86_64.sh" && "~/Downloads/Miniforge3-MacOSX-x86_64.sh" -b -p ~/miniforge3 && rm "~/Downloads/Miniforge3-MacOSX-x86_64.sh" && ~/miniforge3/bin/conda init "$(basename "${SHELL}")" && source "$HOME/.$(basename "${SHELL}")rc"
