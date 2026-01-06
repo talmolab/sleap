@@ -321,73 +321,15 @@
   
   
   
-    
-    
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../../installation/" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Installation
-  
-
-    
-  </span>
-  
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Installation
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
     <li class="md-nav__item">
-      <a href="../../installation-uv-add/" class="md-nav__link">
+      <a href="../../installation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Installation with uv add
+    Installation
   
 
     
@@ -396,14 +338,6 @@
   
 
       </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
     </li>
   
 
@@ -2160,28 +2094,28 @@
 
     === "Windows"
 
-        Open a new [PowerShell terminal](../installation.md/#how-to-open-a-terminal) (does not need to be admin) and enter:
+        Open a new PowerShell terminal (does not need to be admin) and enter:
 
         <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Invoke-WebRequest<span class="w"> </span>-Uri<span class="w"> </span><span class="s2">&quot;https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe&quot;</span><span class="w"> </span>-OutFile<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$env</span><span class="s2">:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe&quot;</span><span class="p">;</span><span class="w"> </span>Start-Process<span class="w"> </span>-FilePath<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$env</span><span class="s2">:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe&quot;</span><span class="w"> </span>-ArgumentList<span class="w"> </span><span class="s2">&quot;/InstallationType=JustMe /RegisterPython=1 /S&quot;</span><span class="w"> </span>-Wait<span class="p">;</span><span class="w"> </span>Remove-Item<span class="w"> </span>-Path<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$env</span><span class="s2">:UserProfile/Downloads/Miniforge3-Windows-x86_64.exe&quot;</span>
 </span></code></pre></div>
 
     === "Linux"
 
-        Open a new [terminal](../installation.md/#how-to-open-a-terminal) and enter:
+        Open a new terminal and enter:
 
         <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>--compressed<span class="w"> </span>https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-Linux-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-Linux-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-Linux-x86_64.sh&quot;</span><span class="w"> </span>-b<span class="w"> </span>-p<span class="w"> </span>~/miniforge3<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-Linux-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>~/miniforge3/bin/conda<span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
 </span></code></pre></div>
 
     === "Mac (Apple Silicon)"
 
-        Open a new [terminal](../installation.md/#how-to-open-a-terminal) and enter:
+        Open a new terminal and enter:
 
         <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>--compressed<span class="w"> </span>https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-MacOSX-arm64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-MacOSX-arm64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-MacOSX-arm64.sh&quot;</span><span class="w"> </span>-b<span class="w"> </span>-p<span class="w"> </span>~/miniforge3<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-MacOSX-arm64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>~/miniforge3/bin/conda<span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
 </span></code></pre></div>
 
     === "Mac (Intel)"
 
-        Open a new [terminal](../installation.md/#how-to-open-a-terminal) and enter:
+        Open a new terminal and enter:
 
         <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>--compressed<span class="w"> </span>https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-x86_64.sh<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-MacOSX-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-MacOSX-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-MacOSX-x86_64.sh&quot;</span><span class="w"> </span>-b<span class="w"> </span>-p<span class="w"> </span>~/miniforge3<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span><span class="s2">&quot;~/Downloads/Miniforge3-MacOSX-x86_64.sh&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>~/miniforge3/bin/conda<span class="w"> </span>init<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SHELL</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">rc&quot;</span>
 </span></code></pre></div>
