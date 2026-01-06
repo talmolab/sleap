@@ -129,7 +129,23 @@ uv tool uninstall sleap
 
 ## Quick Run
 
-Run SLEAP without installing it permanently. Useful for trying SLEAP or testing a quick fix.
+Run SLEAP without installing it permanently. Useful for quickly viewing or annotating data on any computer with `uv`.
+
+**View and annotate (no training):**
+```
+uvx sleap
+```
+
+Open a file directly:
+```
+uvx sleap labels.slp
+```
+
+This works on any platform—no GPU or extra setup needed.
+
+**With training support:**
+
+If you need to train models, include the `[nn]` extra:
 
 === "Windows/Linux with NVIDIA GPU"
     ```
@@ -145,8 +161,6 @@ Run SLEAP without installing it permanently. Useful for trying SLEAP or testing 
     ```
     uvx --python 3.12 --from "sleap[nn]" sleap
     ```
-
-Replace `sleap` with subcommands like `sleap label`, `sleap doctor`, or legacy commands like `sleap-track`.
 
 ---
 
