@@ -10,7 +10,7 @@ SLEAP is an open-source deep-learning based framework for multi-animal pose trac
 
 
 !!! tip "New in SLEAP 1.5"
-    Check out our [migration notes](guides/migrating-to-sleap-1-5) to learn about the latest features including UV-based installation, PyTorch backend, and new standalone libraries!
+    Check out our [migration notes](guides/migrating-to-sleap-1-5.md) to learn about the latest features including UV-based installation, PyTorch backend, and new standalone libraries!
 
 
 ## Features
@@ -146,7 +146,7 @@ Follow [@talmop](https://x.com/talmop) on [X](https://x.com) for news and update
 
 **Technical issue with the software?**
 
-1. Check the [Help page](help).
+1. Check the [Help page](help.md).
 2. Ask the community via [discussions on Github](https://github.com/talmolab/sleap/discussions).
 3. Search the [issues on GitHub](https://github.com/talmolab/sleap/issues) or open a new one.
 
