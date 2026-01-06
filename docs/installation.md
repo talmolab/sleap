@@ -80,7 +80,7 @@ Training neural networks is much faster with a GPU. Check if you have one:
 
 ## Install SLEAP
 
-This installs SLEAP as a system-wide tool. After installation, you can run `sleap-label` from any terminal.
+This installs SLEAP as a system-wide tool. After installation, you can run `sleap` from any terminal.
 
 Choose your platform (Windows and Linux commands are the same):
 
@@ -105,16 +105,13 @@ Choose your platform (Windows and Linux commands are the same):
 ```
 Resolved X packages in Xs
 Installed sleap
- + sleap-label
- + sleap-track
- + sleap-convert
- + sleap-diagnostic
+ + sleap
  ...
 ```
 
 **Verify it worked:**
 ```
-sleap-label
+sleap
 ```
 A window should open within a few seconds. Close it with the X button.
 
@@ -136,20 +133,20 @@ Run SLEAP without installing it permanently. Useful for trying SLEAP or testing 
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uvx --python 3.12 --from "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap-label
+    uvx --python 3.12 --from "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uvx --python 3.12 --from "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple sleap-label
+    uvx --python 3.12 --from "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple sleap
     ```
 
 === "macOS"
     ```
-    uvx --python 3.12 --from "sleap[nn]" sleap-label
+    uvx --python 3.12 --from "sleap[nn]" sleap
     ```
 
-Replace `sleap-label` with any other command like `sleap-track` or `sleap-convert`.
+Replace `sleap` with subcommands like `sleap label`, `sleap doctor`, or legacy commands like `sleap-track`.
 
 ---
 
@@ -224,9 +221,10 @@ Then install dependencies:
 Use `uv run` to run commands in the development environment:
 
 ```bash
-uv run sleap-label           # Launch GUI
-uv run pytest tests/         # Run tests
-uv run ruff check sleap      # Check code style
+uv run sleap              # Launch GUI
+uv run sleap doctor       # Check system diagnostics
+uv run pytest tests/      # Run tests
+uv run ruff check sleap   # Check code style
 ```
 
 Or activate the environment to run commands directly:
@@ -234,13 +232,13 @@ Or activate the environment to run commands directly:
 === "Windows"
     ```
     .venv\Scripts\activate.bat
-    sleap-label
+    sleap
     ```
 
 === "macOS/Linux"
     ```bash
     source .venv/bin/activate
-    sleap-label
+    sleap
     ```
 
 ### Developing Multiple Packages
@@ -249,12 +247,12 @@ To develop SLEAP and sleap-nn together with live edits:
 
 === "Windows"
     ```
-    uvx --python 3.12 --from "sleap[nn]" --with-editable "D:\sleap" --with-editable "D:\sleap-nn" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap-label
+    uvx --python 3.12 --from "sleap[nn]" --with-editable "D:\sleap" --with-editable "D:\sleap-nn" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap
     ```
 
 === "macOS/Linux"
     ```bash
-    uvx --python 3.12 --from "sleap[nn]" --with-editable ~/sleap --with-editable ~/sleap-nn sleap-label
+    uvx --python 3.12 --from "sleap[nn]" --with-editable ~/sleap --with-editable ~/sleap-nn sleap
     ```
 
 ---
@@ -263,7 +261,7 @@ To develop SLEAP and sleap-nn together with live edits:
 
 The main [`sleap`](https://github.com/talmolab/sleap) package is primarily the GUI frontend and is not designed to be used as a library. If you want to use SLEAP programmatically, consider these options:
 
-1. **[Command-line interface](cli.md):** Use SLEAP's CLI tools (`sleap-track`, `sleap-convert`, etc.) for batch processing and automation.
+1. **[Command-line interface](cli.md):** Use SLEAP's CLI (`sleap track`, `sleap convert`, etc.) for batch processing and automation.
 
 2. **[`sleap-io`](https://io.sleap.ai):** For working with `.slp` files, labels, skeletons, and videos programmatically. This is the **recommended** library for most scripting needs.
     ```bash
@@ -347,12 +345,12 @@ Large packages like PyTorch take time to download. Installation can take 5-15 mi
 ### Check your installation
 
 ```bash
-sleap-diagnostic
+sleap doctor
 ```
 
 This shows your system info and whether GPU is detected.
 
 ### Still stuck?
 
-1. Run `sleap-diagnostic` and copy the output
-2. Open an issue at [github.com/talmolab/sleap/issues](https://github.com/talmolab/sleap/issues)
+1. Run `sleap doctor` and copy the output
+2. Ask for help at [github.com/talmolab/sleap/discussions](https://github.com/talmolab/sleap/discussions)
