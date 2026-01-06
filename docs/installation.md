@@ -199,41 +199,42 @@ cd sleap
 === "Windows/Linux (CUDA)"
     ```bash
     # CUDA 12.8
-    uv sync --extra dev --extra nn-cuda128 --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv sync --extra nn-cuda128 --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
 
     # CUDA 11.8
-    uv sync --extra dev --extra nn-cuda118 --index https://download.pytorch.org/whl/cu118 --index https://pypi.org/simple
+    uv sync --extra nn-cuda118 --index https://download.pytorch.org/whl/cu118 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux (CPU)"
     ```bash
-    uv sync --extra dev --extra nn-cpu --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv sync --extra nn-cpu --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```bash
-    uv sync --extra dev --extra nn-cpu --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv sync --extra nn-cpu --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "GUI Only"
     ```bash
-    uv sync --extra dev
+    uv sync
     ```
 
-!!! note "SLEAP `uv sync` Extras"
-    The `uv sync` comes with the following **extras** (for local builds):
+!!! note "SLEAP `uv sync` Extras and Dependency Groups"
+    `uv sync` automatically installs the **dev** dependency group (pytest, ruff, etc.) for development.
+
+    The following **extras** are also available:
 
     - **nn-cpu**: Installs `sleap-nn` with the default torch-cpu backend.
     - **nn-cuda118**: Installs `sleap-nn` with the torch CUDA 11.8.
     - **nn-cuda128**: Installs `sleap-nn` with the torch CUDA 12.8.
-    - **dev**: Installs all development tools for testing.
     - **docs**: Installs all documentation-related dependencies (e.g., mkdocs).
     - **jupyter**: Installs all Jupyter and JupyterLab dependencies.
 
 !!! tip "Upgrading All Dependencies"
     To ensure you have the latest versions of all dependencies, use the `--upgrade` flag with `uv sync`:
     ```bash
-    uv sync --extra dev --upgrade
+    uv sync --upgrade
     ```
     This will upgrade all installed packages in your environment to the latest available versions compatible with your `pyproject.toml`.
 
@@ -257,27 +258,27 @@ To update all dependencies (including `sleap-nn` and `sleap-io`) when working fr
 
 === "Windows/Linux (CUDA 12.8)"
     ```bash
-    uv sync --extra dev --extra nn-cuda128 --upgrade --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv sync --extra nn-cuda128 --upgrade --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux (CUDA 11.8)"
     ```bash
-    uv sync --extra dev --extra nn-cuda118 --upgrade --index https://download.pytorch.org/whl/cu118 --index https://pypi.org/simple
+    uv sync --extra nn-cuda118 --upgrade --index https://download.pytorch.org/whl/cu118 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux (CPU)"
     ```bash
-    uv sync --extra dev --extra nn-cpu --upgrade --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv sync --extra nn-cpu --upgrade --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```bash
-    uv sync --extra dev --extra nn-cpu --upgrade --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv sync --extra nn-cpu --upgrade --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "GUI Only"
     ```bash
-    uv sync --extra dev --upgrade
+    uv sync --upgrade
     ```
 
 !!! info "Updating Local Editable Dependencies"

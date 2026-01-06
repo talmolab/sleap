@@ -60,14 +60,6 @@ version = {attr = "sleap.version.__version__"}
 readme = {file = ["README.md"], content-type="text/markdown"}
 
 [project.optional-dependencies]
-dev = [
-    "pytest",
-    "pytest-cov",
-    "pytest-qt>=4.4.0",
-    "pytest-xvfb",
-    "ruff",
-]
-
 docs = [
     "mkdocs",
     "mkdocs-material",
@@ -98,6 +90,16 @@ nn-cuda128 = [
 
 nn-cuda118 = [
     "sleap-nn[torch]>=0.0.4"
+]
+
+[dependency-groups]
+# PEP 735: Dev-only dependencies (`dev` is installed automatically by `uv`)
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-qt>=4.4.0",
+    "pytest-xvfb",
+    "ruff",
 ]
 
 [project.urls]
