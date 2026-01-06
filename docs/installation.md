@@ -8,7 +8,8 @@ SLEAP is a tool for tracking animal poses in video. This guide will help you ins
 - **Try it first without installing** → [Quick Run](#quick-run)
 - **Test a bug fix from a branch** → [Install from Git](#install-from-git)
 - **Develop or contribute to SLEAP** → [Development Setup](#development-setup)
-- **Use SLEAP in your own Python scripts** → [Use as Library](#use-as-library)
+- **Use SLEAP programmatically** → [Programmatic Usage](#programmatic-usage)
+- **Previously used conda?** → [Migrating from Conda](#migrating-from-conda)
 
 ---
 
@@ -256,52 +257,67 @@ To develop SLEAP and sleap-nn together with live edits:
     uvx --python 3.12 --from "sleap[nn]" --with-editable ~/sleap --with-editable ~/sleap-nn sleap-label
     ```
 
-### Switching from Conda
+---
 
-If you previously used conda:
+## Programmatic Usage
+
+The main [`sleap`](https://github.com/talmolab/sleap) package is primarily the GUI frontend and is not designed to be used as a library. If you want to use SLEAP programmatically, consider these options:
+
+1. **[Command-line interface](cli.md):** Use SLEAP's CLI tools (`sleap-track`, `sleap-convert`, etc.) for batch processing and automation.
+
+2. **[`sleap-io`](https://io.sleap.ai):** For working with `.slp` files, labels, skeletons, and videos programmatically. This is the **recommended** library for most scripting needs.
+    ```bash
+    uv add sleap-io
+    ```
+    ```python
+    import sleap_io as sio
+    labels = sio.load_slp("predictions.slp")
+    ```
+
+3. **[`sleap-nn`](https://nn.sleap.ai):** For working with the deep learning backend, training models programmatically, or running inference.
+    ```bash
+    uv add sleap-nn
+    ```
+
+---
+
+## Migrating from Conda
+
+Prior to SLEAP v1.5, installation used conda and conda environments. Starting with v1.5, we switched to `uv` for faster, more reliable installations.
+
+The [Install SLEAP](#install-sleap) and [Development Setup](#development-setup) sections above cover all use cases. However, if you prefer working within conda environments, you can still do so:
+
+### Using uv inside a conda environment
+
+```bash
+# Create and activate a conda environment
+conda create -n sleap python=3.12
+conda activate sleap
+
+# Install uv inside the conda environment
+pip install uv
+
+# Install SLEAP using uv pip (works inside conda)
+uv pip install "sleap[nn]"
+```
+
+### Disabling conda auto-activation
+
+If you're switching fully to uv and want to prevent conda from activating automatically:
 
 ```bash
 conda config --set auto_activate_base false
 conda deactivate
+```
+
+Then install Python via uv:
+
+```bash
 uv python install 3.12
 uv python pin 3.12
 ```
 
-Then follow the setup steps above.
-
----
-
-## Use as Library
-
-To use SLEAP in your own Python scripts (e.g., `import sleap`):
-
-```bash
-mkdir my-analysis
-cd my-analysis
-uv init
-```
-
-Then add SLEAP:
-
-=== "Windows/Linux with NVIDIA GPU"
-    ```
-    uv add --python 3.12 "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
-    ```
-
-=== "Windows/Linux without GPU"
-    ```
-    uv add --python 3.12 "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
-    ```
-
-=== "macOS"
-    ```
-    uv add --python 3.12 "sleap[nn]"
-    ```
-
-Run your scripts:
-```bash
-uv run python my_script.py
-```
+Now you can use any of the installation methods above without conda interference.
 
 ---
 
