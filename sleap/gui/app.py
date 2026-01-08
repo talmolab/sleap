@@ -1022,16 +1022,6 @@ class MainWindow(QMainWindow):
         helpMenu.addSeparator()
 
         helpMenu.addAction("Check for Updates...", self._show_update_checker_dialog)
-        helpMenu.addAction("Latest versions:", self.commands.checkForUpdates)
-        self.state["stable_version_menu"] = helpMenu.addAction(
-            "  Stable: N/A", self.commands.openStableVersion
-        )
-        self.state["stable_version_menu"].setEnabled(False)
-        self.state["prerelease_version_menu"] = helpMenu.addAction(
-            "  Prerelease: N/A", self.commands.openPrereleaseVersion
-        )
-        self.state["prerelease_version_menu"].setEnabled(False)
-        self.commands.checkForUpdates()
 
         helpMenu.addSeparator()
         usageMenu = helpMenu.addMenu("Improve SLEAP")

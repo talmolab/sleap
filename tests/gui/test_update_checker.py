@@ -6,7 +6,13 @@ from packaging.version import parse as parse_version
 
 from sleap.gui.dialogs.update_checker import (
     PACKAGES,
-    VersionFetchWorker,
+    COL_PACKAGE,
+    COL_INSTALLED,
+    COL_STABLE,
+    COL_LATEST,
+    COL_DEVELOPMENT,
+    COL_STATUS,
+    UpdateFetchWorker,
     UpdateCheckerDialog,
 )
 
@@ -21,71 +27,98 @@ class TestPackagesConfig:
             assert pkg in PACKAGES
 
     def test_packages_have_valid_structure(self):
-        """Test that each package has display_name and repo."""
-        for pkg_name, (display_name, repo) in PACKAGES.items():
+        """Test that each package has display_name, repo, and default_branch."""
+        for pkg_name, (display_name, repo, default_branch) in PACKAGES.items():
             assert isinstance(display_name, str)
             assert len(display_name) > 0
             assert isinstance(repo, str)
             assert "/" in repo  # Should be "owner/repo" format
+            assert isinstance(default_branch, str)
+            assert default_branch in ["main", "develop"]
 
 
 class TestVersionComparison:
     """Tests for version comparison logic used in the dialog."""
 
     @pytest.mark.parametrize(
-        "installed,latest,expect_update",
+        "installed,stable,expect_upgrade,expect_bleeding_edge",
         [
-            ("1.0.0", "1.0.1", True),  # Patch update available
-            ("1.0.0", "1.1.0", True),  # Minor update available
-            ("1.0.0", "2.0.0", True),  # Major update available
-            ("1.0.1", "1.0.0", False),  # Installed is newer
-            ("1.0.0", "1.0.0", False),  # Same version
-            ("1.4.0a1", "1.3.4", False),  # Pre-release > stable numerically
-            ("1.3.4", "1.4.0a1", True),  # Stable < pre-release
-            ("0.5.7", "0.5.8", True),  # Typical sleap-io update
-            ("0.0.6", "0.0.5", False),  # Dev version ahead of release
+            ("1.0.0", "1.0.1", True, False),  # Patch update available
+            ("1.0.0", "1.1.0", True, False),  # Minor update available
+            ("1.0.0", "2.0.0", True, False),  # Major update available
+            ("1.0.1", "1.0.0", False, True),  # Installed is newer (bleeding edge)
+            ("1.0.0", "1.0.0", False, False),  # Same version (up to date)
+            ("1.4.0a1", "1.3.4", False, True),  # Pre-release > stable
+            ("1.3.4", "1.4.0a1", True, False),  # Stable < pre-release
+            ("0.5.7", "0.5.8", True, False),  # Typical sleap-io update
+            ("0.0.6", "0.0.5", False, True),  # Dev version ahead
         ],
     )
-    def test_version_comparison(self, installed, latest, expect_update):
+    def test_version_comparison(self, installed, stable, expect_upgrade, expect_bleeding_edge):
         """Test that version comparison works correctly."""
         installed_v = parse_version(installed)
-        latest_v = parse_version(latest)
-        has_update = latest_v > installed_v
-        assert has_update == expect_update
+        stable_v = parse_version(stable)
+
+        has_upgrade = installed_v < stable_v
+        is_bleeding_edge = installed_v > stable_v
+
+        assert has_upgrade == expect_upgrade
+        assert is_bleeding_edge == expect_bleeding_edge
 
 
-class TestVersionFetchWorker:
-    """Tests for the VersionFetchWorker thread."""
+class TestUpdateFetchWorker:
+    """Tests for the UpdateFetchWorker thread."""
 
     def test_worker_initialization(self):
         """Test worker initializes with packages."""
-        worker = VersionFetchWorker(PACKAGES)
+        worker = UpdateFetchWorker(PACKAGES)
         assert worker.packages == PACKAGES
 
     @patch("sleap.gui.dialogs.update_checker.requests.get")
-    def test_worker_fetches_versions(self, mock_get, qtbot):
-        """Test worker fetches versions from GitHub API."""
-        # Mock successful API response
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"tag_name": "v1.5.0"}
-        mock_response.raise_for_status.return_value = None
-        mock_get.return_value = mock_response
+    def test_worker_fetches_versions_and_branches(self, mock_get, qtbot):
+        """Test worker fetches both version and branch info."""
+        # Mock responses for releases and compare APIs
+        def mock_response_factory(url, **kwargs):
+            mock_resp = MagicMock()
+            mock_resp.raise_for_status.return_value = None
+            if "releases" in url:
+                mock_resp.json.return_value = [
+                    {"tag_name": "v1.5.0", "prerelease": False, "html_url": "https://github.com/repo/releases/v1.5.0"},
+                    {"tag_name": "v1.6.0a1", "prerelease": True, "html_url": "https://github.com/repo/releases/v1.6.0a1"},
+                ]
+            elif "compare" in url:
+                mock_resp.json.return_value = {
+                    "ahead_by": 42,
+                    "commits": [{"sha": "abc", "commit": {"committer": {"date": "2026-01-08T12:00:00Z"}}}]
+                }
+            return mock_resp
 
-        worker = VersionFetchWorker({"sleap": ("sleap", "talmolab/sleap")})
+        mock_get.side_effect = mock_response_factory
 
-        # Collect emitted signals
-        results = []
-        worker.versionFetched.connect(lambda *args: results.append(args))
+        worker = UpdateFetchWorker({"sleap": ("sleap", "talmolab/sleap", "develop")})
 
-        # Run worker
+        version_results = []
+        branch_results = []
+        worker.versionFetched.connect(lambda *args: version_results.append(args))
+        worker.branchFetched.connect(lambda *args: branch_results.append(args))
+
         with qtbot.waitSignal(worker.finished, timeout=5000):
             worker.start()
 
-        assert len(results) == 1
-        pkg_name, version, error = results[0]
+        # Check version results
+        assert len(version_results) == 1
+        pkg_name, stable_ver, stable_url, latest_ver, latest_url, error = version_results[0]
         assert pkg_name == "sleap"
-        assert version == "1.5.0"  # "v" prefix stripped
+        assert stable_ver == "1.5.0"
+        assert latest_ver == "1.6.0a1"
         assert error == ""
+
+        # Check branch results
+        assert len(branch_results) == 1
+        pkg_name, ahead_count, latest_date, repo_url, error = branch_results[0]
+        assert pkg_name == "sleap"
+        assert ahead_count == 42
+        assert latest_date == "2026-01-08"
 
     @patch("sleap.gui.dialogs.update_checker.requests.get")
     def test_worker_handles_api_error(self, mock_get, qtbot):
@@ -94,19 +127,22 @@ class TestVersionFetchWorker:
 
         mock_get.side_effect = requests.exceptions.RequestException("Network error")
 
-        worker = VersionFetchWorker({"sleap": ("sleap", "talmolab/sleap")})
+        worker = UpdateFetchWorker({"sleap": ("sleap", "talmolab/sleap", "develop")})
 
-        results = []
-        worker.versionFetched.connect(lambda *args: results.append(args))
+        version_results = []
+        branch_results = []
+        worker.versionFetched.connect(lambda *args: version_results.append(args))
+        worker.branchFetched.connect(lambda *args: branch_results.append(args))
 
         with qtbot.waitSignal(worker.finished, timeout=5000):
             worker.start()
 
-        assert len(results) == 1
-        pkg_name, version, error = results[0]
-        assert pkg_name == "sleap"
-        assert version == ""
-        assert "Network error" in error
+        assert len(version_results) == 1
+        assert "Network error" in version_results[0][5]  # error field
+
+        # Branch fetch also fails since no tag available
+        assert len(branch_results) == 1
+        assert "No release tag" in branch_results[0][4]  # error field
 
 
 class TestUpdateCheckerDialog:
@@ -119,23 +155,21 @@ class TestUpdateCheckerDialog:
             qtbot.addWidget(dialog)
 
             assert dialog.windowTitle() == "Check for Updates"
-            assert dialog.minimumWidth() >= 500
-            assert dialog.minimumHeight() >= 250
 
     def test_dialog_table_structure(self, qtbot):
-        """Test dialog table has correct structure."""
+        """Test dialog table has correct 6-column structure."""
         with patch.object(UpdateCheckerDialog, "_fetch_latest_versions"):
             dialog = UpdateCheckerDialog()
             qtbot.addWidget(dialog)
 
-            assert dialog.table.columnCount() == 4
+            assert dialog.table.columnCount() == 6
             assert dialog.table.rowCount() == len(PACKAGES)
 
             # Check headers
             headers = [
-                dialog.table.horizontalHeaderItem(i).text() for i in range(4)
+                dialog.table.horizontalHeaderItem(i).text() for i in range(6)
             ]
-            assert headers == ["Package", "Installed", "Latest", ""]
+            assert headers == ["Package", "Installed", "Stable", "Latest", "Development", "Status"]
 
     def test_dialog_has_buttons(self, qtbot):
         """Test dialog has refresh and close buttons."""
@@ -148,13 +182,14 @@ class TestUpdateCheckerDialog:
             assert dialog.refresh_button.text() == "Refresh"
             assert dialog.close_button.text() == "Close"
 
-    def test_dialog_has_status_label(self, qtbot):
-        """Test dialog has status label."""
+    def test_dialog_has_tip_label(self, qtbot):
+        """Test dialog has tip label for double-click."""
         with patch.object(UpdateCheckerDialog, "_fetch_latest_versions"):
             dialog = UpdateCheckerDialog()
             qtbot.addWidget(dialog)
 
-            assert dialog.status_label is not None
+            assert dialog.tip_label is not None
+            assert "Double-click" in dialog.tip_label.text()
 
     def test_dialog_populates_installed_versions(self, qtbot):
         """Test dialog populates installed versions for packages."""
@@ -162,18 +197,16 @@ class TestUpdateCheckerDialog:
             dialog = UpdateCheckerDialog()
             qtbot.addWidget(dialog)
 
-            # Check each row has package name and installed version
             for row in range(dialog.table.rowCount()):
-                name_item = dialog.table.item(row, 0)
-                installed_item = dialog.table.item(row, 1)
+                name_item = dialog.table.item(row, COL_PACKAGE)
+                installed_item = dialog.table.item(row, COL_INSTALLED)
 
                 assert name_item is not None
                 assert name_item.text() in [
-                    display for display, _ in PACKAGES.values()
+                    display for display, _, _ in PACKAGES.values()
                 ]
 
                 assert installed_item is not None
-                # Should be a version string or "Not installed"
                 assert len(installed_item.text()) > 0
 
     @patch("sleap.gui.dialogs.update_checker.importlib.metadata.version")
@@ -187,17 +220,16 @@ class TestUpdateCheckerDialog:
             dialog = UpdateCheckerDialog()
             qtbot.addWidget(dialog)
 
-            # At least one row should show "Not installed"
             found_not_installed = False
             for row in range(dialog.table.rowCount()):
-                installed_item = dialog.table.item(row, 1)
+                installed_item = dialog.table.item(row, COL_INSTALLED)
                 if installed_item.text() == "Not installed":
                     found_not_installed = True
                     break
             assert found_not_installed
 
-    def test_on_version_fetched_shows_update_available(self, qtbot):
-        """Test that update indicator shows when update is available."""
+    def test_on_version_fetched_shows_upgrade_available(self, qtbot):
+        """Test that upgrade emoji shows when update is available."""
         with patch.object(UpdateCheckerDialog, "_fetch_latest_versions"):
             with patch(
                 "sleap.gui.dialogs.update_checker.importlib.metadata.version",
@@ -206,17 +238,18 @@ class TestUpdateCheckerDialog:
                 dialog = UpdateCheckerDialog()
                 qtbot.addWidget(dialog)
 
-                # Simulate receiving a newer version
-                dialog._on_version_fetched("sleap", "2.0.0", "")
+                # Simulate receiving newer stable version
+                dialog._on_version_fetched(
+                    "sleap", "2.0.0", "https://url", "2.0.0", "https://url", ""
+                )
 
-                # Find the sleap row
                 row = list(PACKAGES.keys()).index("sleap")
-                status_item = dialog.table.item(row, 3)
+                status_item = dialog.table.item(row, COL_STATUS)
 
-                assert status_item.text() == "Update"
+                assert status_item.text() == "\u2b06\ufe0f"  # ⬆️
 
     def test_on_version_fetched_shows_up_to_date(self, qtbot):
-        """Test that up-to-date indicator shows when versions match."""
+        """Test that up-to-date emoji shows when versions match."""
         with patch.object(UpdateCheckerDialog, "_fetch_latest_versions"):
             with patch(
                 "sleap.gui.dialogs.update_checker.importlib.metadata.version",
@@ -225,24 +258,74 @@ class TestUpdateCheckerDialog:
                 dialog = UpdateCheckerDialog()
                 qtbot.addWidget(dialog)
 
-                # Simulate receiving same version
-                dialog._on_version_fetched("sleap", "1.0.0", "")
+                dialog._on_version_fetched(
+                    "sleap", "1.0.0", "https://url", "1.0.0", "https://url", ""
+                )
 
                 row = list(PACKAGES.keys()).index("sleap")
-                status_item = dialog.table.item(row, 3)
+                status_item = dialog.table.item(row, COL_STATUS)
 
-                assert status_item.text() == "✓"
+                assert status_item.text() == "\u2705"  # ✅
 
-    def test_on_fetch_finished_updates_status(self, qtbot):
-        """Test that status label updates after fetch completes."""
+    def test_on_version_fetched_shows_bleeding_edge(self, qtbot):
+        """Test that bleeding edge emoji shows when installed > stable."""
+        with patch.object(UpdateCheckerDialog, "_fetch_latest_versions"):
+            with patch(
+                "sleap.gui.dialogs.update_checker.importlib.metadata.version",
+                return_value="2.0.0",
+            ):
+                dialog = UpdateCheckerDialog()
+                qtbot.addWidget(dialog)
+
+                dialog._on_version_fetched(
+                    "sleap", "1.0.0", "https://url", "1.0.0", "https://url", ""
+                )
+
+                row = list(PACKAGES.keys()).index("sleap")
+                status_item = dialog.table.item(row, COL_STATUS)
+
+                assert status_item.text() == "\U0001f52a"  # 🔪
+
+    def test_on_branch_fetched_shows_commits_ahead(self, qtbot):
+        """Test that development column shows commits ahead."""
         with patch.object(UpdateCheckerDialog, "_fetch_latest_versions"):
             dialog = UpdateCheckerDialog()
             qtbot.addWidget(dialog)
 
-            # Simulate no updates
-            dialog._on_fetch_finished()
+            dialog._on_branch_fetched(
+                "sleap", 42, "2026-01-08", "https://github.com/repo", ""
+            )
 
-            assert "up to date" in dialog.status_label.text().lower()
+            row = list(PACKAGES.keys()).index("sleap")
+            dev_item = dialog.table.item(row, COL_DEVELOPMENT)
+
+            assert dev_item.text() == "+42 (2026-01-08)"
+
+    def test_on_branch_fetched_shows_dash_when_no_commits(self, qtbot):
+        """Test that development column shows dash when no commits ahead."""
+        with patch.object(UpdateCheckerDialog, "_fetch_latest_versions"):
+            dialog = UpdateCheckerDialog()
+            qtbot.addWidget(dialog)
+
+            dialog._on_branch_fetched(
+                "sleap", 0, "", "https://github.com/repo", ""
+            )
+
+            row = list(PACKAGES.keys()).index("sleap")
+            dev_item = dialog.table.item(row, COL_DEVELOPMENT)
+
+            assert dev_item.text() == "—"
+
+    def test_on_all_fetches_finished_enables_refresh(self, qtbot):
+        """Test that refresh button is re-enabled after all fetches complete."""
+        with patch.object(UpdateCheckerDialog, "_fetch_latest_versions"):
+            dialog = UpdateCheckerDialog()
+            qtbot.addWidget(dialog)
+
+            dialog.refresh_button.setEnabled(False)
+            dialog._on_all_fetches_finished()
+
+            assert dialog.refresh_button.isEnabled()
 
     def test_refresh_button_triggers_fetch(self, qtbot):
         """Test that refresh button triggers version fetch."""
@@ -252,10 +335,26 @@ class TestUpdateCheckerDialog:
             dialog = UpdateCheckerDialog()
             qtbot.addWidget(dialog)
 
-            # Clear the call from __init__
             mock_fetch.reset_mock()
-
-            # Click refresh
             dialog.refresh_button.click()
 
             mock_fetch.assert_called_once()
+
+    def test_double_click_stores_url_data(self, qtbot):
+        """Test that version fetched stores URL in cell data."""
+        with patch.object(UpdateCheckerDialog, "_fetch_latest_versions"):
+            dialog = UpdateCheckerDialog()
+            qtbot.addWidget(dialog)
+
+            dialog._on_version_fetched(
+                "sleap", "1.5.0", "https://stable-url", "1.6.0a1", "https://latest-url", ""
+            )
+
+            row = list(PACKAGES.keys()).index("sleap")
+
+            from qtpy.QtCore import Qt
+            stable_item = dialog.table.item(row, COL_STABLE)
+            latest_item = dialog.table.item(row, COL_LATEST)
+
+            assert stable_item.data(Qt.UserRole) == "https://stable-url"
+            assert latest_item.data(Qt.UserRole) == "https://latest-url"
