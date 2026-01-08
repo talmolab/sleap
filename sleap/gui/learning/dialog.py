@@ -36,6 +36,7 @@ from sleap.gui.widgets.frame_target_selector import (
     FrameTargetSelection,
 )
 from sleap.gui.learning.main_tab import MainTabWidget
+from sleap.gui.learning.wandb_utils import check_wandb_login_status
 
 # List of fields which should show list of skeleton nodes
 NODE_LIST_FIELDS = [
@@ -749,37 +750,43 @@ class LearningDialog(QtWidgets.QDialog):
                     defaults_to_apply["_ensure_channels"] = "grayscale"
 
                 # WandB settings from previous config (except run_name)
-                use_wandb = OmegaConf.select(
-                    cfg, "trainer_config.use_wandb", default=None
-                )
-                if use_wandb is not None:
-                    defaults_to_apply["trainer_config.use_wandb"] = use_wandb
-
-                wandb_entity = OmegaConf.select(
-                    cfg, "trainer_config.wandb.entity", default=None
-                )
-                if wandb_entity:
-                    defaults_to_apply["trainer_config.wandb.entity"] = wandb_entity
-
-                wandb_project = OmegaConf.select(
-                    cfg, "trainer_config.wandb.project", default=None
-                )
-                if wandb_project:
-                    defaults_to_apply["trainer_config.wandb.project"] = wandb_project
-
-                wandb_group = OmegaConf.select(
-                    cfg, "trainer_config.wandb.group", default=None
-                )
-                if wandb_group:
-                    defaults_to_apply["trainer_config.wandb.group"] = wandb_group
-
-                save_viz = OmegaConf.select(
-                    cfg, "trainer_config.wandb.save_viz_imgs_wandb", default=None
-                )
-                if save_viz is not None:
-                    defaults_to_apply["trainer_config.wandb.save_viz_imgs_wandb"] = (
-                        save_viz
+                # Only apply if user is logged in to prevent enabling wandb
+                # when credentials are not available (which would trigger an
+                # interactive login prompt that stalls training)
+                is_wandb_logged_in, _, _ = check_wandb_login_status()
+                if is_wandb_logged_in:
+                    use_wandb = OmegaConf.select(
+                        cfg, "trainer_config.use_wandb", default=None
                     )
+                    if use_wandb is not None:
+                        defaults_to_apply["trainer_config.use_wandb"] = use_wandb
+
+                    wandb_entity = OmegaConf.select(
+                        cfg, "trainer_config.wandb.entity", default=None
+                    )
+                    if wandb_entity:
+                        defaults_to_apply["trainer_config.wandb.entity"] = wandb_entity
+
+                    wandb_project = OmegaConf.select(
+                        cfg, "trainer_config.wandb.project", default=None
+                    )
+                    if wandb_project:
+                        defaults_to_apply["trainer_config.wandb.project"] = (
+                            wandb_project
+                        )
+
+                    wandb_group = OmegaConf.select(
+                        cfg, "trainer_config.wandb.group", default=None
+                    )
+                    if wandb_group:
+                        defaults_to_apply["trainer_config.wandb.group"] = wandb_group
+
+                    save_viz = OmegaConf.select(
+                        cfg, "trainer_config.wandb.save_viz_imgs_wandb", default=None
+                    )
+                    if save_viz is not None:
+                        key = "trainer_config.wandb.save_viz_imgs_wandb"
+                        defaults_to_apply[key] = save_viz
 
         if not used_trained_config:
             # No trained config - use video channel analysis for image conversion
