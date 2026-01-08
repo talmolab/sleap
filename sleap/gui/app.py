@@ -1021,6 +1021,7 @@ class MainWindow(QMainWindow):
 
         helpMenu.addSeparator()
 
+        helpMenu.addAction("Check for Updates...", self._show_update_checker_dialog)
         helpMenu.addAction("Latest versions:", self.commands.checkForUpdates)
         self.state["stable_version_menu"] = helpMenu.addAction(
             "  Stable: N/A", self.commands.openStableVersion
@@ -1724,6 +1725,13 @@ class MainWindow(QMainWindow):
     def _show_keyboard_shortcuts_window(self):
         """Shows gui for viewing/modifying keyboard shortucts."""
         ShortcutDialog().exec_()
+
+    def _show_update_checker_dialog(self):
+        """Shows the update checker dialog."""
+        from sleap.gui.dialogs.update_checker import UpdateCheckerDialog
+
+        dialog = UpdateCheckerDialog(self)
+        dialog.exec_()
 
     def _open_size_distribution(self):
         """Opens the instance size distribution analysis dialog."""
