@@ -771,7 +771,9 @@ class LearningDialog(QtWidgets.QDialog):
                         cfg, "trainer_config.wandb.project", default=None
                     )
                     if wandb_project:
-                        defaults_to_apply["trainer_config.wandb.project"] = wandb_project
+                        defaults_to_apply["trainer_config.wandb.project"] = (
+                            wandb_project
+                        )
 
                     wandb_group = OmegaConf.select(
                         cfg, "trainer_config.wandb.group", default=None
@@ -783,9 +785,8 @@ class LearningDialog(QtWidgets.QDialog):
                         cfg, "trainer_config.wandb.save_viz_imgs_wandb", default=None
                     )
                     if save_viz is not None:
-                        defaults_to_apply["trainer_config.wandb.save_viz_imgs_wandb"] = (
-                            save_viz
-                        )
+                        key = "trainer_config.wandb.save_viz_imgs_wandb"
+                        defaults_to_apply[key] = save_viz
 
         if not used_trained_config:
             # No trained config - use video channel analysis for image conversion
