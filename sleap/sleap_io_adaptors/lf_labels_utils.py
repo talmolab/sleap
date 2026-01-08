@@ -172,20 +172,20 @@ def remove_video(labels: Labels, video: Video):
     # Remove labeled frames for this video (iterate backwards to avoid index issues)
     for lf_idx in reversed(range(len(labels.labeled_frames))):
         lf = labels.labeled_frames[lf_idx]
-        if lf.video.matches_content(video):
+        # Use identity comparison to only remove frames from the exact target video,
+        # not all videos with the same shape (which matches_content would match)
+        if lf.video is video:
             labels_pop(labels, lf_idx)
 
     # Remove video from videos list (iterate backwards to avoid index issues)
     for vid_idx in reversed(range(len(labels.videos))):
         vid = labels.videos[vid_idx]
-        if video == vid:
+        if video is vid:
             labels.videos.pop(vid_idx)
 
-        # Remove any suggestions for this video
-        if hasattr(labels, "suggestions"):
-            labels.suggestions = [
-                s for s in labels.suggestions if not s.video.matches_content(video)
-            ]
+    # Remove any suggestions for this video (moved outside loop, uses identity)
+    if hasattr(labels, "suggestions"):
+        labels.suggestions = [s for s in labels.suggestions if s.video is not video]
 
 
 def get_track_occupancy(labels, video):

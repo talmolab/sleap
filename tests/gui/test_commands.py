@@ -1293,3 +1293,119 @@ def test_ExportLabelsSubset(
     assert len(labels.labeled_frames) == n_labels_original
     assert len(labels.videos) == n_videos_original
     assert len(labels.suggestions) == n_suggestions_original
+
+
+def test_remove_video_uses_identity_not_content_matching(centered_pair_predictions):
+    """Test that remove_video only removes frames from the target video.
+
+    This is a regression test for GitHub issue #2534. The bug was that remove_video
+    used matches_content() which compares video shape (resolution + frame count),
+    not object identity. This caused frames from ALL videos with the same shape
+    to be deleted when removing any one of them.
+
+    The fix uses identity comparison (is) instead of content matching.
+    """
+    from sleap.sleap_io_adaptors.lf_labels_utils import (
+        remove_video,
+        labels_copy,
+        labels_add_video,
+        add_suggestion,
+    )
+    from sleap_io import Video, LabeledFrame, Instance
+
+    # Create a copy of the labels to avoid mutating the fixture
+    labels = labels_copy(centered_pair_predictions)
+    original_video = labels.videos[0]
+
+    # Create additional videos - they don't need actual files since we're
+    # testing object identity, not content matching
+    # Note: The bug was that videos with the same shape would all be deleted
+    # when any one was removed. With the fix, only the specific video is removed.
+    video2 = Video(filename="fake_video_2.mp4")
+    video3 = Video(filename="fake_video_3.mp4")
+
+    # Add the new videos to labels
+    labels_add_video(labels, video2)
+    labels_add_video(labels, video3)
+
+    # Count original frames for video1
+    original_frames_video1 = len([lf for lf in labels if lf.video is original_video])
+
+    # Create labeled frames for video2 and video3
+    skeleton = labels.skeleton
+    for frame_idx in [0, 5, 10]:
+        # Add frame to video2
+        lf2 = LabeledFrame(video=video2, frame_idx=frame_idx)
+        inst2 = Instance(points=Instance.empty(skeleton).points, skeleton=skeleton)
+        lf2.instances.append(inst2)
+        labels.append(lf2)
+
+        # Add frame to video3
+        lf3 = LabeledFrame(video=video3, frame_idx=frame_idx)
+        inst3 = Instance(points=Instance.empty(skeleton).points, skeleton=skeleton)
+        lf3.instances.append(inst3)
+        labels.append(lf3)
+
+    # Add suggestions for each video
+    add_suggestion(labels, original_video, 50)
+    add_suggestion(labels, video2, 50)
+    add_suggestion(labels, video3, 50)
+
+    # Verify setup
+    assert len(labels.videos) == 3
+    frames_for_video1 = [lf for lf in labels if lf.video is original_video]
+    frames_for_video2 = [lf for lf in labels if lf.video is video2]
+    frames_for_video3 = [lf for lf in labels if lf.video is video3]
+    assert len(frames_for_video1) == original_frames_video1
+    assert len(frames_for_video2) == 3
+    assert len(frames_for_video3) == 3
+
+    suggestions_video1 = [s for s in labels.suggestions if s.video is original_video]
+    suggestions_video2 = [s for s in labels.suggestions if s.video is video2]
+    suggestions_video3 = [s for s in labels.suggestions if s.video is video3]
+    assert len(suggestions_video1) == 1
+    assert len(suggestions_video2) == 1
+    assert len(suggestions_video3) == 1
+
+    # Remove video2 - this is where the bug would occur
+    # Before the fix: ALL frames with matching shape would be deleted (catastrophic)
+    # After the fix: ONLY frames from video2 should be deleted
+    remove_video(labels, video2)
+
+    # Verify only video2 was removed
+    assert len(labels.videos) == 2
+    assert original_video in labels.videos
+    assert video2 not in labels.videos
+    assert video3 in labels.videos
+
+    # Verify ONLY video2's frames were removed (this is the critical test)
+    remaining_frames_video1 = [lf for lf in labels if lf.video is original_video]
+    remaining_frames_video2 = [lf for lf in labels if lf.video is video2]
+    remaining_frames_video3 = [lf for lf in labels if lf.video is video3]
+
+    assert len(remaining_frames_video1) == original_frames_video1, (
+        "Frames from video1 should NOT have been deleted! "
+        "This indicates the bug where matches_content() was used instead of identity."
+    )
+    assert len(remaining_frames_video2) == 0, "All frames from video2 should be removed"
+    assert len(remaining_frames_video3) == 3, (
+        "Frames from video3 should NOT have been deleted! "
+        "This indicates the bug where matches_content() was used instead of identity."
+    )
+
+    # Verify only video2's suggestions were removed
+    remaining_suggestions_video1 = [
+        s for s in labels.suggestions if s.video is original_video
+    ]
+    remaining_suggestions_video2 = [s for s in labels.suggestions if s.video is video2]
+    remaining_suggestions_video3 = [s for s in labels.suggestions if s.video is video3]
+
+    assert len(remaining_suggestions_video1) == 1, (
+        "Suggestions for video1 should NOT have been deleted!"
+    )
+    assert len(remaining_suggestions_video2) == 0, (
+        "Suggestions for video2 should be removed"
+    )
+    assert len(remaining_suggestions_video3) == 1, (
+        "Suggestions for video3 should NOT have been deleted!"
+    )
