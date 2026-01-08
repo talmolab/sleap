@@ -156,6 +156,7 @@ def get_analytics_data() -> Dict[str, Any]:
     return {
         "sleap_version": sleap.__version__,
         "python_version": platform.python_version(),
+        "tf_version": "N/A",  # TensorFlow no longer bundled with GUI
         "conda_env": Path(os.environ.get("CONDA_PREFIX", "")).stem,
         "platform": platform.platform(),
     }
