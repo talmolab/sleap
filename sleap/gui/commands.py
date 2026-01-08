@@ -4160,31 +4160,31 @@ class AddUserInstancesFromPredictions(EditCommand):
     def make_instance_from_predicted_instance(
         copy_instance: PredictedInstance,
     ) -> Instance:
-        # create the new instance
-        new_instance = Instance(
-            points=copy_instance.points,
+        """Create a user Instance from a PredictedInstance.
+
+        Creates an empty Instance with proper PointsArray dtype, then copies
+        coordinates and visibility from the prediction.
+
+        Args:
+            copy_instance: The PredictedInstance to convert.
+
+        Returns:
+            A new Instance with the same points, skeleton, and track,
+            and from_predicted linking back to the original prediction.
+        """
+        # Create empty instance with proper PointsArray (not PredictedPointsArray)
+        new_instance = Instance.empty(
             skeleton=copy_instance.skeleton,
+            track=copy_instance.track,
             from_predicted=copy_instance,
         )
 
-        # go through each node in skeleton
-        for node in new_instance.skeleton.node_names:
-            # if we're copying from a skeleton that has this node
-            node_idx = new_instance.skeleton.node_names.index(node)
-            if node in copy_instance.points["name"] and not np.any(
-                np.isnan(copy_instance.numpy()[node_idx])
-            ):
-                # just copy x, y, and visible
-                # we don't want to copy a PredictedPoint or score attribute
-                point_data = copy_instance.points[node_idx]
-                if "score" in point_data.dtype.names:
-                    new_instance[node]["xy"] = point_data["xy"]
-                    new_instance[node]["visible"] = point_data["visible"]
-                    new_instance[node]["complete"] = False
-                    new_instance[node]["name"] = node
-
-        # copy the track
-        new_instance.track = copy_instance.track
+        # Copy point data from prediction
+        for i, node in enumerate(copy_instance.skeleton.node_names):
+            pred_point = copy_instance.points[i]
+            new_instance.points[i]["xy"] = pred_point["xy"]
+            new_instance.points[i]["visible"] = pred_point["visible"]
+            new_instance.points[i]["complete"] = False
 
         return new_instance
 
