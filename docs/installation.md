@@ -166,28 +166,99 @@ If you need to train models, include the `[nn]` extra:
 
 ## Install from Git
 
-Install SLEAP from a specific branch. Use this when a developer asks you to test a fix before it's released.
+Install SLEAP from source to test bug fixes before they're released. The SLEAP ecosystem has three packages, and you may need to install one or more from git depending on where the fix is.
 
-**First, replace `BRANCH_NAME` in the command below with the actual branch name** (e.g., `fix/video-loading`), then run:
+### Quick Reference
+
+| What needs testing | Command pattern |
+|-------------------|-----------------|
+| Only `sleap` | `uv tool install "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH" ...` |
+| Only `sleap-io` | `uv tool install "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH" ...` |
+| Only `sleap-nn` | `uv tool install "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH" ...` |
+| All from `develop` | See [Testing everything from develop](#testing-everything-from-develop) |
+
+Replace `BRANCH` with the branch name (e.g., `fix/video-loading`) or `develop` for the latest development version.
+
+### Testing a branch in `sleap`
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap.git@BRANCH_NAME" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap.git@BRANCH_NAME" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap.git@BRANCH_NAME"
+    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH"
     ```
 
-**Example:** To install from a branch called `fix/video-loading`:
+### Testing a branch in `sleap-io`
+
+Install SLEAP from PyPI but override `sleap-io` with a git version:
+
+=== "Windows/Linux with NVIDIA GPU"
+    ```
+    uv tool install --python 3.12 "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    ```
+
+=== "Windows/Linux without GPU"
+    ```
+    uv tool install --python 3.12 "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```
+    uv tool install --python 3.12 "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH"
+    ```
+
+### Testing a branch in `sleap-nn`
+
+Install SLEAP from PyPI but override `sleap-nn` with a git version:
+
+=== "Windows/Linux with NVIDIA GPU"
+    ```
+    uv tool install --python 3.12 "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    ```
+
+=== "Windows/Linux without GPU"
+    ```
+    uv tool install --python 3.12 "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```
+    uv tool install --python 3.12 "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH"
+    ```
+
+### Testing everything from develop
+
+Install the latest development version of all three packages:
+
+=== "Windows/Linux with NVIDIA GPU"
+    ```
+    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@develop" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    ```
+
+=== "Windows/Linux without GPU"
+    ```
+    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@develop" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```
+    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@develop" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop"
+    ```
+
+### Pinning to a specific commit
+
+For reproducibility, you can install from a specific commit hash instead of a branch:
+
 ```
-uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap.git@fix/video-loading"
+uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@abc123def"
 ```
 
 ---
@@ -241,33 +312,38 @@ uv run pytest tests/      # Run tests
 uv run ruff check sleap   # Check code style
 ```
 
-Or activate the environment to run commands directly:
+!!! tip "Activate the virtual environment"
 
-=== "Windows"
-    ```
-    .venv\Scripts\activate.bat
-    sleap
-    ```
+    To avoid typing `uv run` before every command, activate the virtual environment:
 
-=== "macOS/Linux"
-    ```bash
-    source .venv/bin/activate
-    sleap
-    ```
+    === "Windows (Command Prompt)"
+        ```
+        .venv\Scripts\activate.bat
+        ```
+
+    === "Windows (PowerShell)"
+        ```powershell
+        .venv\Scripts\Activate.ps1
+        ```
+
+    === "macOS/Linux"
+        ```bash
+        source .venv/bin/activate
+        ```
+
+    Once activated, you can run commands directly (e.g., `sleap`, `pytest tests/`).
 
 ### Developing Multiple Packages
 
-To develop SLEAP and sleap-nn together with live edits:
+If you're working on `sleap-io` or `sleap-nn` alongside `sleap`, you can install them in editable mode after running `uv sync`:
 
-=== "Windows"
-    ```
-    uvx --python 3.12 --from "sleap[nn]" --with-editable "D:\sleap" --with-editable "D:\sleap-nn" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap
-    ```
+```bash
+# After uv sync, install local packages in editable mode
+uv pip install -e ../sleap-io
+uv pip install -e ../sleap-nn
+```
 
-=== "macOS/Linux"
-    ```bash
-    uvx --python 3.12 --from "sleap[nn]" --with-editable ~/sleap --with-editable ~/sleap-nn sleap
-    ```
+Note: You'll need to re-run these commands after each `uv sync`, as syncing resets the environment to match the lockfile.
 
 ---
 
