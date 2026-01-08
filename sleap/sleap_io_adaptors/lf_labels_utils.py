@@ -321,31 +321,29 @@ def get_unused_predictions(labeled_frame) -> List:
 
     if len(any_tracks):
         # Use tracks to determine which predicted instances have been used
+        # A prediction is "used" if there's a user Instance in the same track
         used_tracks = [
             inst.track
             for inst in instances
-            if hasattr(inst, "track")
-            and inst.track is not None
-            and not hasattr(inst, "from_predicted")
+            if type(inst) is Instance and inst.track is not None
         ]
         unused_predictions = [
             inst
             for inst in instances
-            if hasattr(inst, "track")
-            and inst.track not in used_tracks
-            and hasattr(inst, "from_predicted")
+            if inst.track not in used_tracks and type(inst) is PredictedInstance
         ]
     else:
         # Use from_predicted to determine which predicted instances have been used
+        # A prediction is "used" if a user Instance has from_predicted pointing to it
         used_instances = [
             inst.from_predicted
             for inst in instances
-            if hasattr(inst, "from_predicted") and inst.from_predicted is not None
+            if type(inst) is Instance and inst.from_predicted is not None
         ]
         unused_predictions = [
             inst
             for inst in instances
-            if hasattr(inst, "from_predicted") and inst not in used_instances
+            if type(inst) is PredictedInstance and inst not in used_instances
         ]
 
     return unused_predictions
@@ -374,10 +372,11 @@ def get_instances_to_show(labeled_frame) -> List:
 
     instances = labeled_frame.instances if hasattr(labeled_frame, "instances") else []
 
+    # Show all user instances, plus any unused predictions
     inst_to_show = [
         inst
         for inst in instances
-        if not hasattr(inst, "from_predicted") or inst in unused_predictions
+        if type(inst) is Instance or inst in unused_predictions
     ]
 
     return inst_to_show
