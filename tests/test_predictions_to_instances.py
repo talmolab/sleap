@@ -19,9 +19,8 @@ from sleap_io import (
     LabeledFrame,
     Video,
     Track,
-    Labels,
 )
-from sleap_io.model.instance import PointsArray, PredictedPointsArray
+from sleap_io.model.instance import PointsArray
 
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     get_unused_predictions,
@@ -103,7 +102,7 @@ class TestGetUnusedPredictionsBug:
     def test_returns_only_predicted_instances_with_tracks(
         self, simple_skeleton, simple_video, prediction_with_track
     ):
-        """When a user instance exists for a track, the prediction should not be unused."""
+        """Prediction should not be unused when user instance exists in same track."""
         track = prediction_with_track.track
 
         # Create a user instance in the same track
@@ -139,7 +138,7 @@ class TestGetUnusedPredictionsBug:
     def test_returns_only_predicted_instances_without_tracks(
         self, simple_skeleton, simple_video, prediction_without_track
     ):
-        """When a user instance has from_predicted set, that prediction should not be unused."""
+        """Prediction should not be unused when linked via from_predicted."""
         # Create a user instance linked to the prediction
         user_inst = Instance.empty(
             skeleton=simple_skeleton,
@@ -157,7 +156,7 @@ class TestGetUnusedPredictionsBug:
 
         unused = get_unused_predictions(lf)
 
-        # The prediction should NOT be unused because user_inst.from_predicted points to it
+        # Prediction should NOT be unused since user_inst.from_predicted points to it
         assert prediction_without_track not in unused, (
             "PredictedInstance should not be in unused_predictions when a user "
             "instance has from_predicted pointing to it"
@@ -167,9 +166,7 @@ class TestGetUnusedPredictionsBug:
             "User Instance should never be in unused_predictions"
         )
 
-    def test_only_returns_predicted_instance_type(
-        self, simple_skeleton, simple_video
-    ):
+    def test_only_returns_predicted_instance_type(self, simple_skeleton, simple_video):
         """unused_predictions should only ever contain PredictedInstance objects."""
         track = Track(name="track1")
 
@@ -257,13 +254,9 @@ class TestGetInstancesToShowBug:
         to_show = get_instances_to_show(lf)
 
         # User instance should always be shown
-        assert user_inst in to_show, (
-            "User instance should always be shown"
-        )
+        assert user_inst in to_show, "User instance should always be shown"
 
-    def test_all_user_instances_always_shown(
-        self, simple_skeleton, simple_video
-    ):
+    def test_all_user_instances_always_shown(self, simple_skeleton, simple_video):
         """All user instances (with or without from_predicted) should be shown."""
         # Instance without from_predicted
         user1 = Instance.empty(skeleton=simple_skeleton)
@@ -291,7 +284,7 @@ class TestGetInstancesToShowBug:
 
 
 class TestMakeInstanceFromPredictedInstanceBug:
-    """Tests for Bug 3: make_instance_from_predicted_instance() doesn't properly convert points.
+    """Tests for Bug 3: make_instance_from_predicted_instance() point conversion.
 
     The bug is that the function passes PredictedPointsArray directly to Instance
     instead of converting to PointsArray. This may cause the instance to be
@@ -302,21 +295,25 @@ class TestMakeInstanceFromPredictedInstanceBug:
         self, simple_skeleton, prediction_with_track
     ):
         """The created Instance should have PointsArray, not PredictedPointsArray."""
-        new_instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
-            prediction_with_track
+        new_instance = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_track
+            )
         )
 
         # Check the type of the points array
         assert type(new_instance.points) is PointsArray, (
-            f"Instance points should be PointsArray, not {type(new_instance.points).__name__}"
+            f"Points should be PointsArray, not {type(new_instance.points).__name__}"
         )
 
     def test_resulting_instance_points_have_no_score_field(
         self, simple_skeleton, prediction_with_track
     ):
         """The created Instance's points should not have a 'score' field."""
-        new_instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
-            prediction_with_track
+        new_instance = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_track
+            )
         )
 
         # Check dtype names
@@ -329,8 +326,10 @@ class TestMakeInstanceFromPredictedInstanceBug:
         self, simple_skeleton, prediction_with_track
     ):
         """The created object should be Instance, not PredictedInstance."""
-        new_instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
-            prediction_with_track
+        new_instance = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_track
+            )
         )
 
         assert type(new_instance) is Instance, (
@@ -344,8 +343,10 @@ class TestMakeInstanceFromPredictedInstanceBug:
         self, simple_skeleton, prediction_with_track
     ):
         """The created Instance should preserve the coordinate values."""
-        new_instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
-            prediction_with_track
+        new_instance = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_track
+            )
         )
 
         # Check that coordinates are preserved
@@ -353,16 +354,19 @@ class TestMakeInstanceFromPredictedInstanceBug:
         new_pts = new_instance.numpy()
 
         np.testing.assert_allclose(
-            orig_pts, new_pts,
-            err_msg="Coordinates should be preserved when converting prediction to instance"
+            orig_pts,
+            new_pts,
+            err_msg="Coords should be preserved in prediction-to-instance conversion",
         )
 
     def test_resulting_instance_has_from_predicted_set(
         self, simple_skeleton, prediction_with_track
     ):
         """The created Instance should have from_predicted linking to the original."""
-        new_instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
-            prediction_with_track
+        new_instance = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_track
+            )
         )
 
         assert new_instance.from_predicted is prediction_with_track, (
@@ -430,8 +434,7 @@ class TestOriginalPredictionNotRemovedBug:
 
         # Simulate what DeleteAllPredictions does
         instances_to_delete = [
-            inst for inst in lf.instances
-            if type(inst) == PredictedInstance
+            inst for inst in lf.instances if type(inst) == PredictedInstance
         ]
 
         # Should only find the prediction, not the user instance
@@ -447,7 +450,7 @@ class TestOriginalPredictionNotRemovedBug:
 
 
 class TestFullWorkflowIntegration:
-    """Integration tests for the full workflow of adding predictions as user instances."""
+    """Integration tests for adding predictions as user instances."""
 
     def test_add_all_predictions_then_delete_predictions_preserves_user_instances(
         self, simple_skeleton, simple_video
@@ -462,10 +465,14 @@ class TestFullWorkflowIntegration:
         track1 = Track(name="track1")
         track2 = Track(name="track2")
 
-        pred1 = PredictedInstance.empty(skeleton=simple_skeleton, track=track1, score=0.9)
+        pred1 = PredictedInstance.empty(
+            skeleton=simple_skeleton, track=track1, score=0.9
+        )
         pred1["head"] = (10.0, 20.0, 0.9)
 
-        pred2 = PredictedInstance.empty(skeleton=simple_skeleton, track=track2, score=0.85)
+        pred2 = PredictedInstance.empty(
+            skeleton=simple_skeleton, track=track2, score=0.85
+        )
         pred2["head"] = (50.0, 60.0, 0.85)
 
         lf = LabeledFrame(
@@ -483,14 +490,20 @@ class TestFullWorkflowIntegration:
         # Step 2: Create user instances from predictions
         user_instances = []
         for pred in unused:
-            user_inst = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(pred)
+            user_inst = (
+                AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                    pred
+                )
+            )
             user_instances.append(user_inst)
             lf.instances.append(user_inst)
 
         assert len(lf.instances) == 4  # 2 predictions + 2 user instances
 
         # Step 3: Delete all predictions
-        lf.instances = [inst for inst in lf.instances if type(inst) is not PredictedInstance]
+        lf.instances = [
+            inst for inst in lf.instances if type(inst) is not PredictedInstance
+        ]
 
         assert len(lf.instances) == 2  # Only user instances remain
 
@@ -520,13 +533,17 @@ class TestFullWorkflowIntegration:
         )
 
         # Double-click creates user instance (via AddInstance with copy_instance)
-        user_inst = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
-            prediction_with_track
+        user_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_track
+            )
         )
         lf.instances.append(user_inst)
 
         # Delete predictions
-        lf.instances = [inst for inst in lf.instances if type(inst) is not PredictedInstance]
+        lf.instances = [
+            inst for inst in lf.instances if type(inst) is not PredictedInstance
+        ]
 
         # User instance should be visible
         to_show = get_instances_to_show(lf)
