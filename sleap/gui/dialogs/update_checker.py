@@ -6,7 +6,7 @@ import importlib.metadata
 from typing import Dict, Optional
 
 import requests
-from packaging.version import parse as parse_version, Version
+from packaging.version import parse as parse_version
 from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QDesktopServices
@@ -35,8 +35,12 @@ _cache: Dict[str, dict] = {}
 class UpdateFetchWorker(QtCore.QThread):
     """Worker thread to fetch version and branch info from GitHub API."""
 
-    versionFetched = QtCore.Signal(str, str, str, str, str, str)  # pkg, stable_ver, stable_url, latest_ver, latest_url, error
-    branchFetched = QtCore.Signal(str, int, str, str, str)  # pkg, ahead_count, latest_date, repo_url, error
+    versionFetched = QtCore.Signal(
+        str, str, str, str, str, str
+    )  # pkg, stable_ver, stable_url, latest_ver, latest_url, error
+    branchFetched = QtCore.Signal(
+        str, int, str, str, str
+    )  # pkg, ahead_count, latest_date, repo_url, error
 
     def __init__(self, packages: Dict[str, tuple], parent=None):
         super().__init__(parent)
@@ -55,7 +59,9 @@ class UpdateFetchWorker(QtCore.QThread):
                 releases = response.json()
 
                 if not releases:
-                    self.versionFetched.emit(pkg_name, "", "", "", "", "No releases found")
+                    self.versionFetched.emit(
+                        pkg_name, "", "", "", "", "No releases found"
+                    )
                     continue
 
                 # Find stable (highest non-prerelease) and latest (highest overall)
@@ -208,7 +214,9 @@ class UpdateCheckerDialog(QtWidgets.QDialog):
 
     def _populate_installed_versions(self):
         """Populate the table with installed package versions."""
-        for row, (pkg_name, (display_name, _repo, _branch)) in enumerate(PACKAGES.items()):
+        for row, (pkg_name, (display_name, _repo, _branch)) in enumerate(
+            PACKAGES.items()
+        ):
             # Package name
             name_item = QtWidgets.QTableWidgetItem(display_name)
             self.table.setItem(row, COL_PACKAGE, name_item)

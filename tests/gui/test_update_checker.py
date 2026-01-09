@@ -54,7 +54,9 @@ class TestVersionComparison:
             ("0.0.6", "0.0.5", False, True),  # Dev version ahead
         ],
     )
-    def test_version_comparison(self, installed, stable, expect_upgrade, expect_bleeding_edge):
+    def test_version_comparison(
+        self, installed, stable, expect_upgrade, expect_bleeding_edge
+    ):
         """Test that version comparison works correctly."""
         installed_v = parse_version(installed)
         stable_v = parse_version(stable)
@@ -77,19 +79,33 @@ class TestUpdateFetchWorker:
     @patch("sleap.gui.dialogs.update_checker.requests.get")
     def test_worker_fetches_versions_and_branches(self, mock_get, qtbot):
         """Test worker fetches both version and branch info."""
+
         # Mock responses for releases and compare APIs
         def mock_response_factory(url, **kwargs):
             mock_resp = MagicMock()
             mock_resp.raise_for_status.return_value = None
             if "releases" in url:
                 mock_resp.json.return_value = [
-                    {"tag_name": "v1.5.0", "prerelease": False, "html_url": "https://github.com/repo/releases/v1.5.0"},
-                    {"tag_name": "v1.6.0a1", "prerelease": True, "html_url": "https://github.com/repo/releases/v1.6.0a1"},
+                    {
+                        "tag_name": "v1.5.0",
+                        "prerelease": False,
+                        "html_url": "https://github.com/repo/releases/v1.5.0",
+                    },
+                    {
+                        "tag_name": "v1.6.0a1",
+                        "prerelease": True,
+                        "html_url": "https://github.com/repo/releases/v1.6.0a1",
+                    },
                 ]
             elif "compare" in url:
                 mock_resp.json.return_value = {
                     "ahead_by": 42,
-                    "commits": [{"sha": "abc", "commit": {"committer": {"date": "2026-01-08T12:00:00Z"}}}]
+                    "commits": [
+                        {
+                            "sha": "abc",
+                            "commit": {"committer": {"date": "2026-01-08T12:00:00Z"}},
+                        }
+                    ],
                 }
             return mock_resp
 
@@ -107,7 +123,9 @@ class TestUpdateFetchWorker:
 
         # Check version results
         assert len(version_results) == 1
-        pkg_name, stable_ver, stable_url, latest_ver, latest_url, error = version_results[0]
+        pkg_name, stable_ver, stable_url, latest_ver, latest_url, error = (
+            version_results[0]
+        )
         assert pkg_name == "sleap"
         assert stable_ver == "1.5.0"
         assert latest_ver == "1.6.0a1"
@@ -166,10 +184,15 @@ class TestUpdateCheckerDialog:
             assert dialog.table.rowCount() == len(PACKAGES)
 
             # Check headers
-            headers = [
-                dialog.table.horizontalHeaderItem(i).text() for i in range(6)
+            headers = [dialog.table.horizontalHeaderItem(i).text() for i in range(6)]
+            assert headers == [
+                "Package",
+                "Installed",
+                "Stable",
+                "Latest",
+                "Development",
+                "Status",
             ]
-            assert headers == ["Package", "Installed", "Stable", "Latest", "Development", "Status"]
 
     def test_dialog_has_buttons(self, qtbot):
         """Test dialog has refresh and close buttons."""
@@ -307,9 +330,7 @@ class TestUpdateCheckerDialog:
             dialog = UpdateCheckerDialog()
             qtbot.addWidget(dialog)
 
-            dialog._on_branch_fetched(
-                "sleap", 0, "", "https://github.com/repo", ""
-            )
+            dialog._on_branch_fetched("sleap", 0, "", "https://github.com/repo", "")
 
             row = list(PACKAGES.keys()).index("sleap")
             dev_item = dialog.table.item(row, COL_DEVELOPMENT)
@@ -329,9 +350,7 @@ class TestUpdateCheckerDialog:
 
     def test_refresh_button_triggers_fetch(self, qtbot):
         """Test that refresh button triggers version fetch."""
-        with patch.object(
-            UpdateCheckerDialog, "_fetch_latest_versions"
-        ) as mock_fetch:
+        with patch.object(UpdateCheckerDialog, "_fetch_latest_versions") as mock_fetch:
             dialog = UpdateCheckerDialog()
             qtbot.addWidget(dialog)
 
@@ -347,12 +366,18 @@ class TestUpdateCheckerDialog:
             qtbot.addWidget(dialog)
 
             dialog._on_version_fetched(
-                "sleap", "1.5.0", "https://stable-url", "1.6.0a1", "https://latest-url", ""
+                "sleap",
+                "1.5.0",
+                "https://stable-url",
+                "1.6.0a1",
+                "https://latest-url",
+                "",
             )
 
             row = list(PACKAGES.keys()).index("sleap")
 
             from qtpy.QtCore import Qt
+
             stable_item = dialog.table.item(row, COL_STABLE)
             latest_item = dialog.table.item(row, COL_LATEST)
 

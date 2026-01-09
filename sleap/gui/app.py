@@ -66,7 +66,7 @@ from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.state import GuiState
-from sleap.gui.web import ReleaseChecker, ping_analytics
+from sleap.gui.web import ping_analytics
 from sleap.gui.widgets.docks import (
     InstancesDock,
     SkeletonDock,
@@ -171,8 +171,6 @@ class MainWindow(QMainWindow):
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
-
-        self.release_checker = ReleaseChecker()
 
         if self.state["share usage data"]:
             ping_analytics()
