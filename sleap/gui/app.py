@@ -66,7 +66,7 @@ from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.state import GuiState
-from sleap.gui.web import ReleaseChecker, ping_analytics
+from sleap.gui.web import ping_analytics
 from sleap.gui.widgets.docks import (
     InstancesDock,
     SkeletonDock,
@@ -171,8 +171,6 @@ class MainWindow(QMainWindow):
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
-
-        self.release_checker = ReleaseChecker()
 
         if self.state["share usage data"]:
             ping_analytics()
@@ -1021,16 +1019,7 @@ class MainWindow(QMainWindow):
 
         helpMenu.addSeparator()
 
-        helpMenu.addAction("Latest versions:", self.commands.checkForUpdates)
-        self.state["stable_version_menu"] = helpMenu.addAction(
-            "  Stable: N/A", self.commands.openStableVersion
-        )
-        self.state["stable_version_menu"].setEnabled(False)
-        self.state["prerelease_version_menu"] = helpMenu.addAction(
-            "  Prerelease: N/A", self.commands.openPrereleaseVersion
-        )
-        self.state["prerelease_version_menu"].setEnabled(False)
-        self.commands.checkForUpdates()
+        helpMenu.addAction("Check for Updates...", self._show_update_checker_dialog)
 
         helpMenu.addSeparator()
         usageMenu = helpMenu.addMenu("Improve SLEAP")
@@ -1724,6 +1713,13 @@ class MainWindow(QMainWindow):
     def _show_keyboard_shortcuts_window(self):
         """Shows gui for viewing/modifying keyboard shortucts."""
         ShortcutDialog().exec_()
+
+    def _show_update_checker_dialog(self):
+        """Shows the update checker dialog."""
+        from sleap.gui.dialogs.update_checker import UpdateCheckerDialog
+
+        dialog = UpdateCheckerDialog(self)
+        dialog.exec_()
 
     def _open_size_distribution(self):
         """Opens the instance size distribution analysis dialog."""

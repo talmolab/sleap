@@ -710,18 +710,6 @@ class CommandContext:
         """Open a website from URL using the native system browser."""
         self.execute(OpenWebsite, url=url)
 
-    def checkForUpdates(self):
-        """Check for updates online."""
-        self.execute(CheckForUpdates)
-
-    def openStableVersion(self):
-        """Open the current stable version."""
-        self.execute(OpenStableVersion)
-
-    def openPrereleaseVersion(self):
-        """Open the current prerelease version."""
-        self.execute(OpenPrereleaseVersion)
-
     def exportLabelsSubset(
         self, as_package: bool = False, open_new_project: bool = True
     ):
@@ -4280,39 +4268,6 @@ class OpenWebsite(AppCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         open_website(params["url"])
-
-
-class CheckForUpdates(AppCommand):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        success = context.app.release_checker.check_for_releases()
-        if success:
-            stable = context.app.release_checker.latest_stable
-            prerelease = context.app.release_checker.latest_prerelease
-            context.state["stable_version_menu"].setText(f"  Stable: {stable.version}")
-            context.state["stable_version_menu"].setEnabled(True)
-            context.state["prerelease_version_menu"].setText(
-                f"  Prerelease: {prerelease.version}"
-            )
-            context.state["prerelease_version_menu"].setEnabled(True)
-
-    # TODO: Provide GUI feedback about result.
-
-
-class OpenStableVersion(AppCommand):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        rls = context.app.release_checker.latest_stable
-        if rls is not None:
-            context.openWebsite(rls.url)
-
-
-class OpenPrereleaseVersion(AppCommand):
-    @staticmethod
-    def do_action(context: CommandContext, params: dict):
-        rls = context.app.release_checker.latest_prerelease
-        if rls is not None:
-            context.openWebsite(rls.url)
 
 
 def copy_to_clipboard(text: str):
