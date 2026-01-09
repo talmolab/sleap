@@ -4,6 +4,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from packaging.version import parse as parse_version
 
+from sleap.gui.dialogs import update_checker
 from sleap.gui.dialogs.update_checker import (
     PACKAGES,
     COL_PACKAGE,
@@ -15,6 +16,14 @@ from sleap.gui.dialogs.update_checker import (
     UpdateFetchWorker,
     UpdateCheckerDialog,
 )
+
+
+@pytest.fixture(autouse=True)
+def clear_cache():
+    """Clear the module-level cache before each test for isolation."""
+    update_checker._cache.clear()
+    yield
+    update_checker._cache.clear()
 
 
 class TestPackagesConfig:
