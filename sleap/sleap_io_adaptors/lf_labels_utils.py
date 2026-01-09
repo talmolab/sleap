@@ -1306,13 +1306,16 @@ def labels_copy(labels: Labels) -> Labels:
 
 
 def labels_add_video(labels: Labels, video: Video):
-    """Add a video to the Labels object.
+    """Add a video to the Labels object with duplicate prevention.
 
-    This provides backward compatibility for code that doesn't use the native
-    add_video() method. Delegates to the native method which handles duplicate
-    prevention.
+    This provides a consistent interface for adding videos that works with both
+    current sleap-io and future versions that have native add_video() method.
     """
-    labels.add_video(video)
+    # Use native add_video if available (sleap-io PR300+), otherwise manual check
+    if hasattr(labels, "add_video"):
+        labels.add_video(video)
+    elif video not in labels.videos:
+        labels.videos.append(video)
 
 
 def labels_pop(labels: Labels, index: int) -> LabeledFrame:
