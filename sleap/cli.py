@@ -32,6 +32,20 @@ from rich import box
 
 import sleap
 
+# Import sleap-io CLI commands for integration
+try:
+    from sleap_io.io.cli import (
+        show as sio_show,
+        convert as sio_convert,
+        split as sio_split,
+        filenames as sio_filenames,
+        render as sio_render,
+    )
+
+    _HAS_SLEAP_IO_CLI = True
+except ImportError:
+    _HAS_SLEAP_IO_CLI = False
+
 
 # =============================================================================
 # DefaultGroup Implementation
@@ -124,6 +138,48 @@ SLEAP_HELP_CONFIG = RichHelpConfiguration(
     text_markup="rich",
     show_arguments=True,
 )
+
+# Command organization for help display
+click.rich_click.COMMAND_GROUPS = {
+    "sleap": [
+        {"name": "Application", "commands": ["label", "doctor"]},
+        {"name": "Data Inspection", "commands": ["show", "filenames"]},
+        {"name": "Data Transformation", "commands": ["convert", "split"]},
+        {"name": "Visualization", "commands": ["render"]},
+    ]
+}
+
+
+def wrap_sio_command(sio_cmd: click.Command) -> click.Command:
+    """Wrap a sleap-io CLI command with SLEAP branding.
+
+    This creates a new command that:
+    1. Has the same parameters as the original command
+    2. Uses SLEAP's rich-click configuration for help formatting
+    3. Replaces 'sio' with 'sleap' in help text examples
+
+    Args:
+        sio_cmd: A Click Command object from sleap-io.
+
+    Returns:
+        A new Command object with SLEAP branding applied.
+    """
+    import copy
+
+    # Deep copy to avoid modifying the original
+    new_cmd = copy.copy(sio_cmd)
+
+    # Replace examples in help text
+    if new_cmd.help:
+        new_cmd.help = new_cmd.help.replace("$ sio ", "$ sleap ")
+        # Also replace any "sio" command references in the docs
+        new_cmd.help = new_cmd.help.replace("[bold]sio[/]", "[bold]sleap[/]")
+
+    # Apply SLEAP's rich-click configuration
+    # RichCommand stores config in _rich_config attribute
+    new_cmd._rich_config = SLEAP_HELP_CONFIG
+
+    return new_cmd
 
 
 # =============================================================================
@@ -551,6 +607,19 @@ def _get_nvidia_gpu_info() -> list[dict[str, str]]:
     except Exception:
         pass
     return []
+
+
+# =============================================================================
+# sleap-io Commands (Inherited)
+# =============================================================================
+
+if _HAS_SLEAP_IO_CLI:
+    # Add wrapped sleap-io commands to the CLI group
+    cli.add_command(wrap_sio_command(sio_show), name="show")
+    cli.add_command(wrap_sio_command(sio_convert), name="convert")
+    cli.add_command(wrap_sio_command(sio_split), name="split")
+    cli.add_command(wrap_sio_command(sio_filenames), name="filenames")
+    cli.add_command(wrap_sio_command(sio_render), name="render")
 
 
 # =============================================================================
