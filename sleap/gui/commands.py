@@ -990,7 +990,7 @@ class ImportDeepLabCutFolder(AppCommand):
             if merged_labels is None:
                 merged_labels = labels
             else:
-                merged_labels.merge(labels)
+                merged_labels.merge(labels, frame="auto")
         return merged_labels
 
 
@@ -2343,10 +2343,9 @@ class AddVideo(EditCommand):
         new_videos = ImportVideos.create_videos(import_list)
         video = None
         for video in new_videos:
-            # Add to labels
-            if video not in context.labels.videos:
-                context.labels.videos.append(video)
-                context.labels.update()
+            # Add to labels (add_video handles duplicate prevention)
+            context.labels.add_video(video)
+            context.labels.update()
             context.changestack_push("add video")
 
         # Load if no video currently loaded
@@ -2371,9 +2370,8 @@ class ShowImportVideos(EditCommand):
         new_videos = ImportVideos.create_videos(import_list)
         video = None
         for video in new_videos:
-            # Add to labels
-            if video not in context.labels.videos:
-                context.labels.videos.append(video)
+            # Add to labels (add_video handles duplicate prevention)
+            context.labels.add_video(video)
             context.changestack_push("add video")
 
         # Load if no video currently loaded

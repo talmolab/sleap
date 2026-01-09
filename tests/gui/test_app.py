@@ -77,8 +77,8 @@ def test_app_workflow(
     assert len(app.state["skeleton"].edges) == 1
 
     # FIXME: for now we'll bypass the video adding gui
-    app.labels.videos.append(centered_pair_vid)
-    app.labels.videos.append(small_robot_mp4_vid)
+    app.labels.add_video(centered_pair_vid)
+    app.labels.add_video(small_robot_mp4_vid)
     app.on_data_update([UpdateTopic.video])
 
     assert len(app.labels.videos) == 2
