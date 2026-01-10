@@ -21,9 +21,7 @@ from sleap_io import (
     Skeleton,
     PredictedInstance,
 )
-from sleap_io.model.matching import SkeletonMatcher
 from sleap_io.model.instance import PointsArray
-from sleap.util import weak_filename_match
 from sleap.gui.dialogs.missingfiles import MissingFilesDialog
 
 # For debugging, we can replace missing video files with a "dummy" video
@@ -517,65 +515,6 @@ def find_last(labels, video, frame_idx=None):
             ):
                 return label
     return None
-
-
-def load_and_match(filename: str, match_to: Labels):
-    # Load the Labels file
-    labels: Labels = load_file(filename)
-
-    # if we're given a Labels object to match, use its objects when they match
-    if match_to is not None:
-        if len(labels.skeletons) > 1 or len(match_to.skeletons) > 1:
-            # Match skeletons by name
-            nodes = labels.skeleton.nodes
-            for idx, sk in enumerate(labels.skeletons):
-                for old_sk in match_to.skeletons:
-                    if SkeletonMatcher.match(sk, old_sk):
-                        # use nodes from matched skeleton
-                        for node, match_node in zip(sk.nodes, old_sk.nodes):
-                            node_idx = nodes.index(node)
-                            nodes[node_idx] = match_node
-                        # use skeleton from matched skeleton
-                        labels.skeletons[idx] = old_sk
-                        break
-        elif len(labels.skeletons) == 1 and len(match_to.skeletons) == 1:
-            # Match by node names
-            old_skel = match_to.skeleton
-            old_node_names = old_skel.node_names
-            nodes = labels.skeleton.nodes
-            for i, node in enumerate(nodes):
-                if node.name in old_node_names:
-                    nodes[i] = old_skel.nodes[old_node_names.index(node.name)]
-            labels.skeletons[0] = old_skel
-
-        # Match Videos
-        for idx, vid in enumerate(labels.videos):
-            for old_vid in match_to.videos:
-                # Try to match videos using either their current or source filename
-                # if available.
-                old_vid_paths = [old_vid.filename]
-                if getattr(old_vid.backend, "has_embedded_images", False):
-                    old_vid_paths.append(old_vid.filename)
-
-                new_vid_paths = [vid.filename]
-                if getattr(vid.backend, "has_embedded_images", False):
-                    new_vid_paths.append(vid.filename)
-
-                is_match = False
-                for old_vid_path in old_vid_paths:
-                    for new_vid_path in new_vid_paths:
-                        if old_vid_path == new_vid_path or weak_filename_match(
-                            old_vid_path, new_vid_path
-                        ):
-                            is_match = True
-                            labels.videos[idx] = old_vid
-                            break
-                    if is_match:
-                        break
-                if is_match:
-                    break
-
-    return labels
 
 
 def iterate_labeled_frames(
@@ -1367,12 +1306,12 @@ def labels_copy(labels: Labels) -> Labels:
 
 
 def labels_add_video(labels: Labels, video: Video):
-    """Add a video to the Labels object.
+    """Add a video to the Labels object with duplicate prevention.
 
-    This provides backward compatibility for the missing add_video() method.
+    This is a thin wrapper around Labels.add_video() for backward compatibility
+    with code that imports this function.
     """
-    if video not in labels.videos:
-        labels.videos.append(video)
+    labels.add_video(video)
 
 
 def labels_pop(labels: Labels, index: int) -> LabeledFrame:

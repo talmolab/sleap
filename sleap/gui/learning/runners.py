@@ -24,7 +24,6 @@ from sleap_io import Labels, Video, LabeledFrame
 import sleap_io as sio
 from sleap.gui.learning.configs import ConfigFileInfo
 
-# from sleap.sleap_io_adaptors.lf_labels_utils import load_and_match
 from sleap.gui.config_utils import filter_cfg
 
 logger = logging.getLogger(__name__)
@@ -429,8 +428,6 @@ class InferenceTask:
 
         if success and append_results:
             # Load frames from inference into results list
-            # new_inference_labels = load_and_match(output_path, match_to=self.labels)
-            # FIXME:If necessary
             new_inference_labels = sio.load_slp(output_path)
             self.results.extend(new_inference_labels.labeled_frames)
 
@@ -464,9 +461,9 @@ class InferenceTask:
         # See: https://sleap.ai/develop/api/sleap_io.model.labels.html#sleap_io.model.labels.Labels.merge
         prediction_mode = self.inference_params.get("_prediction_mode", "add")
         if prediction_mode == "replace":
-            self.labels.merge(new_labels, frame_strategy="replace_predictions")
+            self.labels.merge(new_labels, frame="replace_predictions")
         else:
-            self.labels.merge(new_labels, frame_strategy="keep_both")
+            self.labels.merge(new_labels, frame="keep_both")
 
 
 def write_pipeline_files(

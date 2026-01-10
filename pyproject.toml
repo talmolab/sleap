@@ -52,7 +52,7 @@ dependencies = [
     "seaborn",
     "requests",
     "matplotlib",
-    "sleap-io[all]>=0.6.0",  # CLI commands added in 0.6.0
+    "sleap-io[all]>=0.6.0,<0.7.0",
 ]
 
 [tool.setuptools.dynamic]
@@ -139,6 +139,9 @@ sleap-nn = [
     { index = "pytorch-cu128", extra = "nn-cuda128" },
 ]
 markupsafe = { index = "pypi" }
+# For sleap-io dev, uncomment ONE of the following:
+# sleap-io = { git = "https://github.com/talmolab/sleap-io", branch = "main" }
+# sleap-io = { path = "../sleap-io", editable = true }
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
