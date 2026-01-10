@@ -104,6 +104,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     clear_suggestion,
     get_instances_to_show,
     get_predictions_on_user_frames,
+    labels_add_video,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
@@ -990,7 +991,7 @@ class ImportDeepLabCutFolder(AppCommand):
             if merged_labels is None:
                 merged_labels = labels
             else:
-                merged_labels.merge(labels)
+                merged_labels.merge(labels, frame="auto")
         return merged_labels
 
 
@@ -2343,10 +2344,9 @@ class AddVideo(EditCommand):
         new_videos = ImportVideos.create_videos(import_list)
         video = None
         for video in new_videos:
-            # Add to labels
-            if video not in context.labels.videos:
-                context.labels.videos.append(video)
-                context.labels.update()
+            # Add to labels (labels_add_video handles duplicate prevention)
+            labels_add_video(context.labels, video)
+            context.labels.update()
             context.changestack_push("add video")
 
         # Load if no video currently loaded
@@ -2371,9 +2371,8 @@ class ShowImportVideos(EditCommand):
         new_videos = ImportVideos.create_videos(import_list)
         video = None
         for video in new_videos:
-            # Add to labels
-            if video not in context.labels.videos:
-                context.labels.videos.append(video)
+            # Add to labels (labels_add_video handles duplicate prevention)
+            labels_add_video(context.labels, video)
             context.changestack_push("add video")
 
         # Load if no video currently loaded

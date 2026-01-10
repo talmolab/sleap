@@ -85,7 +85,7 @@ class MergeDialog(QtWidgets.QDialog):
             # Attempt merge with frame strategy
             merge_result = base_copy.merge(
                 self.new_labels,
-                frame_strategy="keep_both",  # Use sleap-io frame strategy
+                frame="keep_both",  # Use sleap-io frame strategy
             )
 
             # Analyze what was merged vs conflicts
@@ -279,7 +279,7 @@ class MergeDialog(QtWidgets.QDialog):
         # Use sleap-io merge with appropriate frame strategy
         self.base_labels.merge(
             self.new_labels,
-            frame_strategy="keep_both",  # Adjust based on user preference
+            frame="keep_both",  # Adjust based on user preference
         )
 
 
