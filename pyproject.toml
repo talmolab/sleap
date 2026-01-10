@@ -52,9 +52,7 @@ dependencies = [
     "seaborn",
     "requests",
     "matplotlib",
-    "sleap-io[all]",
-    # TODO: Switch to release version when sleap-io 0.6.0 is released:
-    # "sleap-io[all]>=0.6.0,<0.7.0",
+    "sleap-io[all]>=0.6.0,<0.7.0",
 ]
 
 [tool.setuptools.dynamic]
@@ -141,8 +139,6 @@ sleap-nn = [
     { index = "pytorch-cu128", extra = "nn-cuda128" },
 ]
 markupsafe = { index = "pypi" }
-# TODO: Remove git source when sleap-io 0.6.0 is released
-sleap-io = { git = "https://github.com/talmolab/sleap-io", branch = "main" }
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
