@@ -3,7 +3,6 @@
 This module tests the main CLI entry point and sleap-io command integration.
 """
 
-import pytest
 from click.testing import CliRunner
 
 from sleap.cli import cli
