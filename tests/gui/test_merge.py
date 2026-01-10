@@ -8,7 +8,7 @@ import pytest
 from copy import deepcopy
 
 from sleap_io import Labels, LabeledFrame, Instance, PredictedInstance, Video, Skeleton
-from sleap.gui.dialogs.merge import show_instance_type_counts, MergeDialog
+from sleap.gui.dialogs.merge import show_instance_type_counts
 
 
 def test_count_string(simple_predictions):
@@ -135,7 +135,7 @@ class TestInferenceResultMerging:
             lf.instances.append(pred)
             results.append(lf)
 
-        # Create InferenceTask with add mode (trained_job_paths can be empty for testing)
+        # Create InferenceTask with add mode (trained_job_paths=[] for testing)
         task = InferenceTask(
             trained_job_paths=[],
             labels=labels,
