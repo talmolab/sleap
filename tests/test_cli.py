@@ -6,7 +6,7 @@ This module tests the main CLI entry point and sleap-io command integration.
 import pytest
 from click.testing import CliRunner
 
-from sleap.cli import cli, _HAS_SLEAP_IO_CLI
+from sleap.cli import cli
 
 
 class TestCLIBasics:
@@ -43,9 +43,45 @@ class TestCLIBasics:
         assert "diagnostics" in result.output.lower()
 
 
-@pytest.mark.skipif(not _HAS_SLEAP_IO_CLI, reason="sleap-io CLI not available")
 class TestSleapIoIntegration:
-    """Tests for sleap-io CLI command integration."""
+    """Tests for sleap-io CLI command integration.
+
+    These tests verify that sleap-io commands are properly inherited and branded.
+    Requires sleap-io>=0.6.0 which is enforced via version fencing in pyproject.toml.
+    """
+
+    def test_sleap_io_commands_are_registered(self):
+        """Verify all sleap-io commands are registered on the CLI.
+
+        This test explicitly checks that the commands exist as Click command
+        objects, catching cases where the import might have failed silently.
+        """
+        expected_commands = ["show", "convert", "split", "filenames", "render"]
+        registered_commands = list(cli.commands.keys())
+
+        for cmd in expected_commands:
+            assert cmd in registered_commands, (
+                f"Command '{cmd}' not found in CLI. "
+                f"Available commands: {registered_commands}. "
+                "This likely means sleap-io>=0.6.0 is not installed correctly."
+            )
+
+    def test_sleap_io_version_has_cli(self):
+        """Verify installed sleap-io version includes CLI commands.
+
+        This test imports directly from sleap-io to verify the CLI module exists.
+        """
+        # This import should not fail if sleap-io>=0.6.0 is installed
+        from sleap_io.io.cli import show, convert, split, filenames, render
+
+        # Verify they are Click commands
+        import click
+
+        assert isinstance(show, click.Command)
+        assert isinstance(convert, click.Command)
+        assert isinstance(split, click.Command)
+        assert isinstance(filenames, click.Command)
+        assert isinstance(render, click.Command)
 
     def test_show_command_registered(self):
         """Verify show command is available."""

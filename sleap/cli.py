@@ -32,19 +32,14 @@ from rich import box
 
 import sleap
 
-# Import sleap-io CLI commands for integration
-try:
-    from sleap_io.io.cli import (
-        show as sio_show,
-        convert as sio_convert,
-        split as sio_split,
-        filenames as sio_filenames,
-        render as sio_render,
-    )
-
-    _HAS_SLEAP_IO_CLI = True
-except ImportError:
-    _HAS_SLEAP_IO_CLI = False
+# Import sleap-io CLI commands for integration (requires sleap-io>=0.6.0)
+from sleap_io.io.cli import (
+    show as sio_show,
+    convert as sio_convert,
+    split as sio_split,
+    filenames as sio_filenames,
+    render as sio_render,
+)
 
 
 # =============================================================================
@@ -613,13 +608,12 @@ def _get_nvidia_gpu_info() -> list[dict[str, str]]:
 # sleap-io Commands (Inherited)
 # =============================================================================
 
-if _HAS_SLEAP_IO_CLI:
-    # Add wrapped sleap-io commands to the CLI group
-    cli.add_command(wrap_sio_command(sio_show), name="show")
-    cli.add_command(wrap_sio_command(sio_convert), name="convert")
-    cli.add_command(wrap_sio_command(sio_split), name="split")
-    cli.add_command(wrap_sio_command(sio_filenames), name="filenames")
-    cli.add_command(wrap_sio_command(sio_render), name="render")
+# Add wrapped sleap-io commands to the CLI group
+cli.add_command(wrap_sio_command(sio_show), name="show")
+cli.add_command(wrap_sio_command(sio_convert), name="convert")
+cli.add_command(wrap_sio_command(sio_split), name="split")
+cli.add_command(wrap_sio_command(sio_filenames), name="filenames")
+cli.add_command(wrap_sio_command(sio_render), name="render")
 
 
 # =============================================================================
