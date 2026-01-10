@@ -1511,3 +1511,31 @@ def get_predictions_on_user_frames(
                 result.append((lf, pred))
 
     return result
+
+
+def labels_merge(base: Labels, other: Labels, frame: str = "auto", **kwargs):
+    """Merge labels with compatibility for both old and new sleap-io API.
+
+    This provides forward compatibility for sleap-io PR300 which renames
+    the `frame_strategy` parameter to `frame`. Uses the new parameter name
+    if available, otherwise falls back to old parameter name.
+
+    Args:
+        base: The base Labels object to merge into.
+        other: The Labels object to merge from.
+        frame: Frame merge strategy (e.g., "auto", "keep_both", "replace_predictions").
+        **kwargs: Additional keyword arguments passed to merge().
+
+    Returns:
+        The result of the merge operation.
+    """
+    import inspect
+
+    # Check if the new 'frame' parameter is supported
+    merge_sig = inspect.signature(base.merge)
+    if "frame" in merge_sig.parameters:
+        # New API (sleap-io PR300+)
+        return base.merge(other, frame=frame, **kwargs)
+    else:
+        # Old API (current sleap-io)
+        return base.merge(other, frame_strategy=frame, **kwargs)
