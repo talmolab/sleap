@@ -136,3 +136,5 @@ outputs/
 plan/
 scratch/
 tmp/
+# Playwright MCP artifacts
+.playwright-mcp/
