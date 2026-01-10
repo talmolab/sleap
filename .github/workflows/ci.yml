@@ -4,24 +4,35 @@ name: CI
 on:
   pull_request:
     types: [opened, reopened, synchronize]
-    paths:
-      - "sleap/**"
-      - "tests/**"
-      - ".github/workflows/ci.yml"
-      - "pyproject.toml"
   push:
     branches:
       - main
       - develop
-    paths:
-      - "sleap/**"
-      - "tests/**"
-      - ".github/workflows/ci.yml"
-      - "pyproject.toml"
+  workflow_dispatch: # Allow manual triggers
 
 jobs:
+  # Check which files changed to determine if we need to run tests
+  changes:
+    name: Check for changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'sleap/**'
+              - 'tests/**'
+              - '.github/workflows/ci.yml'
+              - 'pyproject.toml'
+
   # Lint with ruff
   lint:
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
     # This job runs:
     #
     # 1. Linting and formatting checks with ruff
@@ -54,6 +65,8 @@ jobs:
 
   # Tests with pytest
   tests:
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -164,3 +177,33 @@ jobs:
           fail_ci_if_error: true
           verbose: false
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  # This job aggregates all CI results into a single check for branch protection.
+  # It succeeds if all jobs passed OR were correctly skipped (e.g., docs-only changes).
+  ci:
+    name: CI
+    if: always()
+    needs: [changes, lint, tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI status
+        run: |
+          echo "changes: ${{ needs.changes.result }}"
+          echo "lint: ${{ needs.lint.result }}"
+          echo "tests: ${{ needs.tests.result }}"
+
+          # Fail if any job failed or was cancelled
+          if [[ "${{ needs.changes.result }}" == "failure" || "${{ needs.changes.result }}" == "cancelled" ]]; then
+            echo "::error::changes job failed or was cancelled"
+            exit 1
+          fi
+          if [[ "${{ needs.lint.result }}" == "failure" || "${{ needs.lint.result }}" == "cancelled" ]]; then
+            echo "::error::lint job failed or was cancelled"
+            exit 1
+          fi
+          if [[ "${{ needs.tests.result }}" == "failure" || "${{ needs.tests.result }}" == "cancelled" ]]; then
+            echo "::error::tests job failed or was cancelled"
+            exit 1
+          fi
+
+          echo "All CI checks passed or were correctly skipped!"
