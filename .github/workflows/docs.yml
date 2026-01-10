@@ -41,12 +41,19 @@ jobs:
             git config --global user.name "github-actions[bot]"
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Build and upload docs (release)
-        if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+      - name: Build and upload docs (stable release)
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' && !github.event.release.prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
             uv run mike deploy --update-aliases --allow-empty --push "${{ github.event.release.tag_name }}" latest
+
+      - name: Build and upload docs (pre-release)
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            uv run mike deploy --allow-empty --push "${{ github.event.release.tag_name }}"
 
       - name: Build and upload docs (dev)
         if: ${{ github.event_name == 'push' }}
