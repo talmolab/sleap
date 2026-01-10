@@ -9,7 +9,6 @@ from typing import Dict, List, Optional
 from qtpy import QtWidgets, QtCore
 
 from sleap_io import Instance, Labels
-from sleap.sleap_io_adaptors.lf_labels_utils import labels_merge
 
 USE_BASE_STRING = "Use base, discard conflicting new instances"
 USE_NEW_STRING = "Use new, discard conflicting base instances"
@@ -84,8 +83,7 @@ class MergeDialog(QtWidgets.QDialog):
             base_copy = deepcopy(self.base_labels)
 
             # Attempt merge with frame strategy
-            merge_result = labels_merge(
-                base_copy,
+            merge_result = base_copy.merge(
                 self.new_labels,
                 frame="keep_both",  # Use sleap-io frame strategy
             )
@@ -279,8 +277,7 @@ class MergeDialog(QtWidgets.QDialog):
     def _perform_final_merge(self):
         """Perform the final merge operation."""
         # Use sleap-io merge with appropriate frame strategy
-        labels_merge(
-            self.base_labels,
+        self.base_labels.merge(
             self.new_labels,
             frame="keep_both",  # Adjust based on user preference
         )

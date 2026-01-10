@@ -1308,14 +1308,10 @@ def labels_copy(labels: Labels) -> Labels:
 def labels_add_video(labels: Labels, video: Video):
     """Add a video to the Labels object with duplicate prevention.
 
-    This provides a consistent interface for adding videos that works with both
-    current sleap-io and future versions that have native add_video() method.
+    This is a thin wrapper around Labels.add_video() for backward compatibility
+    with code that imports this function.
     """
-    # Use native add_video if available (sleap-io PR300+), otherwise manual check
-    if hasattr(labels, "add_video"):
-        labels.add_video(video)
-    elif video not in labels.videos:
-        labels.videos.append(video)
+    labels.add_video(video)
 
 
 def labels_pop(labels: Labels, index: int) -> LabeledFrame:
@@ -1511,31 +1507,3 @@ def get_predictions_on_user_frames(
                 result.append((lf, pred))
 
     return result
-
-
-def labels_merge(base: Labels, other: Labels, frame: str = "auto", **kwargs):
-    """Merge labels with compatibility for both old and new sleap-io API.
-
-    This provides forward compatibility for sleap-io PR300 which renames
-    the `frame_strategy` parameter to `frame`. Uses the new parameter name
-    if available, otherwise falls back to old parameter name.
-
-    Args:
-        base: The base Labels object to merge into.
-        other: The Labels object to merge from.
-        frame: Frame merge strategy (e.g., "auto", "keep_both", "replace_predictions").
-        **kwargs: Additional keyword arguments passed to merge().
-
-    Returns:
-        The result of the merge operation.
-    """
-    import inspect
-
-    # Check if the new 'frame' parameter is supported
-    merge_sig = inspect.signature(base.merge)
-    if "frame" in merge_sig.parameters:
-        # New API (sleap-io PR300+)
-        return base.merge(other, frame=frame, **kwargs)
-    else:
-        # Old API (current sleap-io)
-        return base.merge(other, frame_strategy=frame, **kwargs)

@@ -25,7 +25,6 @@ import sleap_io as sio
 from sleap.gui.learning.configs import ConfigFileInfo
 
 from sleap.gui.config_utils import filter_cfg
-from sleap.sleap_io_adaptors.lf_labels_utils import labels_merge
 
 logger = logging.getLogger(__name__)
 
@@ -462,9 +461,9 @@ class InferenceTask:
         # See: https://sleap.ai/develop/api/sleap_io.model.labels.html#sleap_io.model.labels.Labels.merge
         prediction_mode = self.inference_params.get("_prediction_mode", "add")
         if prediction_mode == "replace":
-            labels_merge(self.labels, new_labels, frame="replace_predictions")
+            self.labels.merge(new_labels, frame="replace_predictions")
         else:
-            labels_merge(self.labels, new_labels, frame="keep_both")
+            self.labels.merge(new_labels, frame="keep_both")
 
 
 def write_pipeline_files(

@@ -105,7 +105,6 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     get_instances_to_show,
     get_predictions_on_user_frames,
     labels_add_video,
-    labels_merge,
 )
 from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
@@ -992,7 +991,7 @@ class ImportDeepLabCutFolder(AppCommand):
             if merged_labels is None:
                 merged_labels = labels
             else:
-                labels_merge(merged_labels, labels, frame="auto")
+                merged_labels.merge(labels, frame="auto")
         return merged_labels
 
 
