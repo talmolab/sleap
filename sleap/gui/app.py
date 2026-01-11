@@ -73,6 +73,7 @@ from sleap.gui.widgets.docks import (
     SuggestionsDock,
     VideosDock,
 )
+from sleap.gui.widgets.qc import QCDock
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.info.summary import StatisticSeries
@@ -837,6 +838,7 @@ class MainWindow(QMainWindow):
         analyzeMenu.addAction(
             "Instance Size Distribution...", self._open_size_distribution
         )
+        analyzeMenu.addAction("Label QC...", self._open_label_qc)
 
         ### Tracks Menu ###
 
@@ -1051,6 +1053,7 @@ class MainWindow(QMainWindow):
         self.skeleton_dock = SkeletonDock(self, tab_with=self.videos_dock)
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
+        self.qc_dock = QCDock(self, tab_with=self.videos_dock)
 
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
@@ -1747,6 +1750,23 @@ class MainWindow(QMainWindow):
             parent=self,
         )
         dialog.show()
+
+    def _open_label_qc(self):
+        """Opens the label QC dock and updates it with current labels."""
+        if self.labels is None or len(self.labels) == 0:
+            QMessageBox.warning(
+                self,
+                "No Labels",
+                "Please load labels with user-labeled instances first.",
+            )
+            return
+
+        # Show the QC dock
+        self.qc_dock.show()
+        self.qc_dock.raise_()
+
+        # Update labels in the QC widget
+        self.qc_dock.update_labels(self.labels)
 
 
 def create_sleap_label_parser():
