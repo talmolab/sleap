@@ -97,6 +97,7 @@ class QCWidget(QWidget):
 
         self._setup_ui()
         self._connect_signals()
+        self._update_summary()  # Initialize summary with current labels state
 
     def _setup_ui(self):
         """Create the widget UI layout."""
@@ -230,9 +231,10 @@ class QCWidget(QWidget):
         threshold = value / 100.0
         self.threshold_label.setText(f"{threshold:.2f}")
 
-        # Update flagged list if we have results
+        # Update flagged list and summary if we have results
         if self._results is not None:
             self._update_flagged_list()
+            self._update_summary()
 
     def _on_run_analysis(self):
         """Run QC analysis on current labels."""

@@ -132,3 +132,86 @@ class TestQCWidget:
 
         widget.high_btn.click()
         assert widget.threshold_slider.value() == 50
+
+    def test_summary_no_labels(self, qtbot):
+        """Test summary shows 'No labels loaded' when no labels provided.
+
+        Regression test for bug where summary wasn't updated on init.
+        """
+        widget = QCWidget(labels=None)
+        qtbot.addWidget(widget)
+        assert "No labels loaded" in widget.summary_label.text()
+
+    def test_summary_with_labels_before_analysis(self, qtbot):
+        """Test summary shows 'Ready to analyze' when labels loaded but not analyzed.
+
+        Regression test for bug where summary wasn't updated on init with labels.
+        """
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+
+        # Create mock labeled frames with mock instances
+        mock_lf1 = MagicMock()
+        mock_lf1.instances = [MagicMock(), MagicMock()]  # 2 instances
+        mock_lf2 = MagicMock()
+        mock_lf2.instances = [MagicMock()]  # 1 instance
+        mock_labels.__iter__ = MagicMock(return_value=iter([mock_lf1, mock_lf2]))
+
+        widget = QCWidget(labels=mock_labels)
+        qtbot.addWidget(widget)
+
+        # Should show "Ready to analyze: 3 instances, 10 frames"
+        assert "Ready to analyze" in widget.summary_label.text()
+        assert "3 instances" in widget.summary_label.text()
+
+    def test_summary_updates_on_threshold_change(self, qtbot):
+        """Test summary updates when threshold slider changes.
+
+        Regression test for bug where summary wasn't updated on threshold change.
+        """
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Create mock results
+        widget._results = MagicMock()
+
+        # Create mock flags with different scores
+        mock_flag_high = MagicMock()
+        mock_flag_high.score = 0.9
+        mock_flag_high.confidence = "high"
+
+        mock_flag_medium = MagicMock()
+        mock_flag_medium.score = 0.7
+        mock_flag_medium.confidence = "medium"
+
+        mock_flag_low = MagicMock()
+        mock_flag_low.score = 0.5
+        mock_flag_low.confidence = "low"
+
+        all_flags = [mock_flag_high, mock_flag_medium, mock_flag_low]
+
+        def get_flagged_impl(threshold):
+            return [f for f in all_flags if f.score >= threshold]
+
+        widget._results.get_flagged = MagicMock(side_effect=get_flagged_impl)
+        widget._results.get_frame_issues = MagicMock(return_value=[])
+
+        # Mock labels with 10 instances
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=5)
+        mock_lf = MagicMock()
+        mock_lf.instances = [MagicMock() for _ in range(10)]
+        mock_labels.__iter__ = MagicMock(return_value=iter([mock_lf]))
+        widget.labels = mock_labels
+
+        # Set high threshold (0.8) - should flag 1
+        widget.threshold_slider.setValue(80)
+        assert "1 flagged" in widget.summary_label.text()
+
+        # Set medium threshold (0.6) - should flag 2
+        widget.threshold_slider.setValue(60)
+        assert "2 flagged" in widget.summary_label.text()
+
+        # Set low threshold (0.4) - should flag 3
+        widget.threshold_slider.setValue(40)
+        assert "3 flagged" in widget.summary_label.text()
