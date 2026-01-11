@@ -2,6 +2,9 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+from qtpy import QtCore
+
 from sleap.gui.widgets.qc import QCFlagTableModel, QCWidget
 
 
@@ -12,46 +15,67 @@ class MockQCFlag:
         self, video_idx, frame_idx, instance_idx, score, confidence, top_issue
     ):
         self.instance_key = (video_idx, frame_idx, instance_idx)
+        self.video_idx = video_idx
+        self.frame_idx = frame_idx
+        self.instance_idx = instance_idx
         self.score = score
         self.confidence = confidence
         self.top_issue = top_issue
+        self.feature_contributions = {"edge_zscore": 0.5, "visibility": 0.3}
 
 
 class TestQCFlagTableModel:
     """Tests for QCFlagTableModel."""
 
-    def test_properties(self):
+    def test_columns(self):
         """Test table has expected columns."""
         model = QCFlagTableModel()
-        assert "video" in model.properties
-        assert "frame" in model.properties
-        assert "score" in model.properties
-        assert "top_issue" in model.properties
+        assert "Frame" in model.COLUMNS
+        assert "Instance" in model.COLUMNS
+        assert "Score" in model.COLUMNS
+        assert "Issue" in model.COLUMNS
+        assert "Confidence" in model.COLUMNS
 
     def test_empty_model(self):
         """Test model can be created empty."""
         model = QCFlagTableModel()
         assert model.rowCount() == 0
+        assert model.columnCount() == 5
 
-    def test_item_to_data(self):
-        """Test item conversion to display data."""
+    def test_data_display_role(self):
+        """Test data retrieval with DisplayRole."""
         model = QCFlagTableModel()
-        flag = MockQCFlag(
-            video_idx=0,
-            frame_idx=10,
-            instance_idx=0,
-            score=0.85,
-            confidence="high",
-            top_issue="edge_zscore",
-        )
+        flags = [
+            MockQCFlag(
+                video_idx=0,
+                frame_idx=10,
+                instance_idx=0,
+                score=0.85,
+                confidence="high",
+                top_issue="edge_zscore",
+            )
+        ]
+        model.items = flags
 
-        data = model.item_to_data(None, flag)
-        assert data["video"] == 0
-        assert data["frame"] == 10
-        assert data["instance"] == 0
-        assert data["score"] == "0.850"
-        assert data["confidence"] == "High"
-        assert data["top_issue"] == "Edge Zscore"
+        # Frame column (0)
+        frame_data = model.data(model.index(0, 0), QtCore.Qt.DisplayRole)
+        assert frame_data == "10"
+
+        # Instance column (1)
+        instance_data = model.data(model.index(0, 1), QtCore.Qt.DisplayRole)
+        assert instance_data == "0"
+
+        # Score column (2)
+        score_data = model.data(model.index(0, 2), QtCore.Qt.DisplayRole)
+        assert score_data == "0.850"
+
+        # Confidence column (3)
+        conf_data = model.data(model.index(0, 3), QtCore.Qt.DisplayRole)
+        assert conf_data == "High"
+
+        # Issue column (4)
+        issue_data = model.data(model.index(0, 4), QtCore.Qt.DisplayRole)
+        assert issue_data == "Edge Zscore"
 
     def test_items_setter(self):
         """Test setting items on model."""
@@ -63,6 +87,13 @@ class TestQCFlagTableModel:
         model.items = flags
         assert model.rowCount() == 2
 
+    def test_header_data(self):
+        """Test header data returns column names."""
+        model = QCFlagTableModel()
+        assert model.headerData(0, QtCore.Qt.Horizontal) == "Frame"
+        assert model.headerData(1, QtCore.Qt.Horizontal) == "Instance"
+        assert model.headerData(2, QtCore.Qt.Horizontal) == "Score"
+
 
 class TestQCWidget:
     """Tests for QCWidget."""
@@ -72,30 +103,38 @@ class TestQCWidget:
         widget = QCWidget()
         qtbot.addWidget(widget)
         assert widget is not None
-        assert widget.labels is None
+        assert widget._labels is None
 
     def test_widget_has_controls(self, qtbot):
         """Test widget has expected controls."""
         widget = QCWidget()
         qtbot.addWidget(widget)
-        assert widget.run_btn is not None
-        assert widget.threshold_slider is not None
-        assert widget.table_view is not None
-        assert widget.goto_btn is not None
-        assert widget.export_btn is not None
+        assert widget._run_button is not None
+        assert widget._threshold_slider is not None
+        assert widget._table_view is not None
+        assert widget._export_button is not None
+        assert widget._score_canvas is not None
+        assert widget._breakdown_canvas is not None
 
     def test_threshold_slider_default(self, qtbot):
         """Test default threshold is 0.7."""
         widget = QCWidget()
         qtbot.addWidget(widget)
-        assert widget.threshold_slider.value() == 70
+        assert widget._threshold_slider.value() == 70
+
+    def test_threshold_slider_range(self, qtbot):
+        """Test threshold slider has expected range."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert widget._threshold_slider.minimum() == 30
+        assert widget._threshold_slider.maximum() == 90
 
     def test_threshold_label_updates(self, qtbot):
         """Test threshold label updates with slider."""
         widget = QCWidget()
         qtbot.addWidget(widget)
-        widget.threshold_slider.setValue(50)
-        assert "0.50" in widget.threshold_label.text()
+        widget._threshold_slider.setValue(50)
+        assert "0.50" in widget._threshold_label.text()
 
     def test_set_labels(self, qtbot):
         """Test setting labels on widget."""
@@ -107,7 +146,7 @@ class TestQCWidget:
         mock_labels.__iter__ = MagicMock(return_value=iter([]))
 
         widget.set_labels(mock_labels)
-        assert widget.labels is mock_labels
+        assert widget._labels is mock_labels
 
     def test_run_analysis_no_labels(self, qtbot):
         """Test run analysis shows warning with no labels."""
@@ -115,38 +154,23 @@ class TestQCWidget:
         qtbot.addWidget(widget)
 
         # Should show warning dialog
-        with patch("sleap.gui.widgets.qc.QMessageBox") as mock_msgbox:
+        with patch("sleap.gui.widgets.qc.QtWidgets.QMessageBox") as mock_msgbox:
             widget._on_run_analysis()
             mock_msgbox.warning.assert_called_once()
 
-    def test_sensitivity_presets(self, qtbot):
-        """Test sensitivity preset buttons."""
+    def test_stats_no_labels(self, qtbot):
+        """Test stats shows 'No labels loaded' when no labels provided."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._labels = None
+        widget._update_statistics()
+        assert "No labels loaded" in widget._stats_label.text()
+
+    def test_stats_with_labels_before_analysis(self, qtbot):
+        """Test stats shows 'Ready to analyze' when labels loaded but not analyzed."""
         widget = QCWidget()
         qtbot.addWidget(widget)
 
-        widget.low_btn.click()
-        assert widget.threshold_slider.value() == 80
-
-        widget.medium_btn.click()
-        assert widget.threshold_slider.value() == 70
-
-        widget.high_btn.click()
-        assert widget.threshold_slider.value() == 50
-
-    def test_summary_no_labels(self, qtbot):
-        """Test summary shows 'No labels loaded' when no labels provided.
-
-        Regression test for bug where summary wasn't updated on init.
-        """
-        widget = QCWidget(labels=None)
-        qtbot.addWidget(widget)
-        assert "No labels loaded" in widget.summary_label.text()
-
-    def test_summary_with_labels_before_analysis(self, qtbot):
-        """Test summary shows 'Ready to analyze' when labels loaded but not analyzed.
-
-        Regression test for bug where summary wasn't updated on init with labels.
-        """
         mock_labels = MagicMock()
         mock_labels.__len__ = MagicMock(return_value=10)
 
@@ -157,61 +181,105 @@ class TestQCWidget:
         mock_lf2.instances = [MagicMock()]  # 1 instance
         mock_labels.__iter__ = MagicMock(return_value=iter([mock_lf1, mock_lf2]))
 
-        widget = QCWidget(labels=mock_labels)
-        qtbot.addWidget(widget)
+        widget.set_labels(mock_labels)
 
         # Should show "Ready to analyze: 3 instances, 10 frames"
-        assert "Ready to analyze" in widget.summary_label.text()
-        assert "3 instances" in widget.summary_label.text()
+        assert "Ready to analyze" in widget._stats_label.text()
+        assert "3 instances" in widget._stats_label.text()
 
-    def test_summary_updates_on_threshold_change(self, qtbot):
-        """Test summary updates when threshold slider changes.
-
-        Regression test for bug where summary wasn't updated on threshold change.
-        """
+    def test_navigate_signal_emitted(self, qtbot):
+        """Test navigate_to_instance signal is emitted on selection."""
         widget = QCWidget()
         qtbot.addWidget(widget)
 
-        # Create mock results
-        widget._results = MagicMock()
+        # Add some flags to the table
+        flags = [
+            MockQCFlag(0, 5, 0, 0.9, "high", "edge_error"),
+            MockQCFlag(0, 10, 1, 0.7, "medium", "visibility"),
+        ]
+        widget._table_model.items = flags
 
-        # Create mock flags with different scores
-        mock_flag_high = MagicMock()
-        mock_flag_high.score = 0.9
-        mock_flag_high.confidence = "high"
+        # Track signal emission
+        received_signals = []
 
-        mock_flag_medium = MagicMock()
-        mock_flag_medium.score = 0.7
-        mock_flag_medium.confidence = "medium"
+        def on_navigate(video_idx, frame_idx, instance_idx):
+            received_signals.append((video_idx, frame_idx, instance_idx))
 
-        mock_flag_low = MagicMock()
-        mock_flag_low.score = 0.5
-        mock_flag_low.confidence = "low"
+        widget.navigate_to_instance.connect(on_navigate)
 
-        all_flags = [mock_flag_high, mock_flag_medium, mock_flag_low]
+        # Select first row
+        widget._table_view.selectRow(0)
+        qtbot.wait(50)  # Allow signal to propagate
 
-        def get_flagged_impl(threshold):
-            return [f for f in all_flags if f.score >= threshold]
+        assert len(received_signals) == 1
+        assert received_signals[0] == (0, 5, 0)
 
-        widget._results.get_flagged = MagicMock(side_effect=get_flagged_impl)
-        widget._results.get_frame_issues = MagicMock(return_value=[])
+    def test_export_button_disabled_before_analysis(self, qtbot):
+        """Test export button is disabled before analysis."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert not widget._export_button.isEnabled()
 
-        # Mock labels with 10 instances
+
+class TestQCDialog:
+    """Tests for QCDialog."""
+
+    def test_dialog_creation(self, qtbot):
+        """Test dialog can be created."""
+        from sleap.gui.dialogs.qc import QCDialog
+
         mock_labels = MagicMock()
-        mock_labels.__len__ = MagicMock(return_value=5)
-        mock_lf = MagicMock()
-        mock_lf.instances = [MagicMock() for _ in range(10)]
-        mock_labels.__iter__ = MagicMock(return_value=iter([mock_lf]))
-        widget.labels = mock_labels
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
 
-        # Set high threshold (0.8) - should flag 1
-        widget.threshold_slider.setValue(80)
-        assert "1 flagged" in widget.summary_label.text()
+        dialog = QCDialog(labels=mock_labels)
+        qtbot.addWidget(dialog)
+        assert dialog is not None
 
-        # Set medium threshold (0.6) - should flag 2
-        widget.threshold_slider.setValue(60)
-        assert "2 flagged" in widget.summary_label.text()
+    def test_dialog_has_widget(self, qtbot):
+        """Test dialog contains QCWidget."""
+        from sleap.gui.dialogs.qc import QCDialog
 
-        # Set low threshold (0.4) - should flag 3
-        widget.threshold_slider.setValue(40)
-        assert "3 flagged" in widget.summary_label.text()
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dialog = QCDialog(labels=mock_labels)
+        qtbot.addWidget(dialog)
+        assert dialog._widget is not None
+        assert isinstance(dialog._widget, QCWidget)
+
+    def test_dialog_navigate_callback(self, qtbot):
+        """Test dialog navigation callback is called."""
+        from sleap.gui.dialogs.qc import QCDialog
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        callback_calls = []
+
+        def callback(video_idx, frame_idx, instance_idx):
+            callback_calls.append((video_idx, frame_idx, instance_idx))
+
+        dialog = QCDialog(labels=mock_labels, navigate_callback=callback)
+        qtbot.addWidget(dialog)
+
+        # Emit navigate signal from widget
+        dialog._widget.navigate_to_instance.emit(0, 42, 1)
+        qtbot.wait(50)
+
+        assert len(callback_calls) == 1
+        assert callback_calls[0] == (0, 42, 1)
+
+    def test_dialog_is_non_modal(self, qtbot):
+        """Test dialog is non-modal."""
+        from sleap.gui.dialogs.qc import QCDialog
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dialog = QCDialog(labels=mock_labels)
+        qtbot.addWidget(dialog)
+        assert not dialog.isModal()

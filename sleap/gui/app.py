@@ -73,7 +73,6 @@ from sleap.gui.widgets.docks import (
     SuggestionsDock,
     VideosDock,
 )
-from sleap.gui.widgets.qc import QCDock
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.info.summary import StatisticSeries
@@ -1053,7 +1052,6 @@ class MainWindow(QMainWindow):
         self.skeleton_dock = SkeletonDock(self, tab_with=self.videos_dock)
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
-        self.qc_dock = QCDock(self, tab_with=self.videos_dock)
 
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
@@ -1752,7 +1750,7 @@ class MainWindow(QMainWindow):
         dialog.show()
 
     def _open_label_qc(self):
-        """Opens the label QC dock and updates it with current labels."""
+        """Opens the label QC analysis dialog."""
         if self.labels is None or len(self.labels) == 0:
             QMessageBox.warning(
                 self,
@@ -1761,12 +1759,22 @@ class MainWindow(QMainWindow):
             )
             return
 
-        # Show the QC dock
-        self.qc_dock.show()
-        self.qc_dock.raise_()
+        from sleap.gui.dialogs.qc import QCDialog
 
-        # Update labels in the QC widget
-        self.qc_dock.update_labels(self.labels)
+        def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
+            """Navigate to the specified frame and highlight instance."""
+            if video_idx < len(self.labels.videos):
+                video = self.labels.videos[video_idx]
+                self.commands.gotoVideoAndFrameAndInstance(
+                    video, frame_idx, instance_idx
+                )
+
+        dialog = QCDialog(
+            labels=self.labels,
+            navigate_callback=navigate_callback,
+            parent=self,
+        )
+        dialog.show()
 
 
 def create_sleap_label_parser():
