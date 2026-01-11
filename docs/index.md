@@ -88,9 +88,9 @@ See the docs for [full installation instructions](installation.md).
 
 ## Learn to SLEAP
 
-- **Learn step-by-step: [Tutorial](tutorial/overview.md)**
-- **Learn more advanced usage: [Guides](guides/guides-overview.md) and [Notebooks](notebooks/notebooks-overview.md)**
-- **Learn by watching: [ABL:AOC 2023 Workshop](https://www.youtube.com/watch?v=BfW-HgeDfMI) and [MIT CBMM Tutorial](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking)**
+- **Learn step-by-step: [Tutorial](tutorial/index.md)**
+- **Learn more advanced usage: [Guides](guides/index.md) and [Notebooks](notebooks/index.md)**
+- **Learn by watching: [Cosyne 2024 Tutorial (Part 1)](https://youtu.be/R5PRhkhAve0), [Cosyne 2024 Tutorial (Part 2)](https://youtu.be/Z64v-vp-Jvo), [ABL:AOC 2023 Workshop](https://www.youtube.com/watch?v=BfW-HgeDfMI), and [MIT CBMM Tutorial](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking)**
 - **Learn by reading: [Paper (Pereira et al., Nature Methods, 2022)](https://www.nature.com/articles/s41592-022-01426-1) and [Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020)](https://rdcu.be/caH3H)**
 - **Learn from others: [Discussions on Github](https://github.com/talmolab/sleap/discussions)**
 

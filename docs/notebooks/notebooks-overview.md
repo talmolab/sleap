@@ -2,10 +2,6 @@
 
 Here are Jupyter notebooks you can run to try SLEAP on [Google Colaboratory](https://colab.research.google.com) (Colab). Colab is great for running training and inference on your data if you don't have access to a local machine with a supported GPU.
 
-!!! warning "Documentation for New SLEAP Versions"
-    This documentation is for the **latest version of SLEAP**.  
-    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
-
 ## Basic usage
 
 ### [Training and inference on an example dataset](Training_and_inference_on_an_example_dataset.ipynb)

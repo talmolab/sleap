@@ -5,10 +5,6 @@ hide:
 
 # Tutorial
 
-!!! warning "Documentation for New SLEAP Versions"
-    This documentation is for the **latest version of SLEAP**.  
-    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
-
 The tutorial will walk you through the entire SLEAP workflow. You can follow along this tutorial and try running SLEAP on one of our [sample datasets](../reference/datasets.md). Then you will be ready to start using SLEAP on your own data.
 
 ## Table of Contents

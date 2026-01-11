@@ -1,10 +1,6 @@
 # Overview
 **Here's an overview of the guides:**
 
-!!! warning "Documentation for New SLEAP Versions"
-    This documentation is for the **latest version of SLEAP**.  
-    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
-
 !!! info "Major Changes in SLEAP 1.5+"
     Want to learn about the major changes and updates in the latest release?  
     See [Migrating to SLEAP 1.5+](migrating-to-sleap-1-5.md) for a summary of what's new and how to update your workflows.

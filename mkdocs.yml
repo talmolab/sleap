@@ -26,9 +26,12 @@ theme:
 
   features:
     - navigation.tracking
-    - toc.follow
-    - navigation.indexes
+    - navigation.tabs           # Top-level sections as horizontal tabs
+    - navigation.tabs.sticky    # Tabs stay visible when scrolling
+    - navigation.sections       # Show section headers as groups
+    - navigation.indexes        # Section index pages
     - navigation.top
+    - toc.follow
     - search.suggest
     - search.highlight
     - content.code.copy
@@ -117,11 +120,22 @@ copyright: >
   Copyright &copy; 2025 Talmo Lab 
 
 nav:
-  - Home: index.md
-  - Overview: overview.md
-  - Installation: installation.md
-  - Tutorial: 
-      - Overview: tutorial/overview.md
+  # ══════════════════════════════════════════════════════════════
+  # OVERVIEW TAB
+  # Landing page with installation and changelog
+  # ══════════════════════════════════════════════════════════════
+  - Overview:
+      - index.md
+      - Installation: installation.md
+      - Changelog: changelog.md
+
+  # ══════════════════════════════════════════════════════════════
+  # TUTORIAL TAB
+  # Learning-oriented: Step-by-step for beginners acquiring skills
+  # ══════════════════════════════════════════════════════════════
+  - Tutorial:
+      - tutorial/index.md
+      - Workflow: overview.md
       - Setup: tutorial/setup.md
       - Importing data: tutorial/importing-data.md
       - Initial labeling: tutorial/initial-labeling.md
@@ -130,41 +144,72 @@ nav:
       - Tracking new data: tutorial/tracking-new-data.md
       - Proofreading: tutorial/proofreading.md
       - Exporting the results: tutorial/exporting-the-results.md
-      - I'm done SLEAPing, now what?: tutorial/i-m-done-sleaping-now-what.md
+      - What's Next: tutorial/i-m-done-sleaping-now-what.md
+
+  # ══════════════════════════════════════════════════════════════
+  # GUIDES TAB
+  # Task-oriented: Problem-solving for users who know basics
+  # ══════════════════════════════════════════════════════════════
   - Guides:
-      - Overview: guides/guides-overview.md
-      - Migrating to SLEAP 1.5+: guides/migrating-to-sleap-1-5.md
-      - Importing predictions for labeling: guides/importing-predictions-for-labeling.md
-      - Tracking and proofreading: guides/tracking-and-proofreading.md
-      - Run training and inference on Colab: guides/run-training-and-inference-on-colab.md
-      - Creating a custom training profile: guides/creating-a-custom-training-profile.md
-      - Running SLEAP remotely: guides/running-sleap-remotely.md
-  - Notebooks:
-    - Overview: notebooks/notebooks-overview.md
-    - Training and inference on an example dataset: notebooks/Training_and_inference_on_an_example_dataset.ipynb
-    - Training and inference using Google Drive: notebooks/Training_and_inference_using_Google_Drive.ipynb
-    - Model evaluation: notebooks/Model_evaluation.ipynb
-    - Analysis examples: notebooks/Analysis_examples.ipynb
-    - Data structures: notebooks/Data_structures.ipynb
-    - Post inference tracking: notebooks/Post_inference_tracking.ipynb
-    - Interactive and resumable training: notebooks/Interactive_and_resumable_training.ipynb
-    - Interactive and realtime inference: notebooks/Interactive_and_realtime_inference.ipynb
-    - Using exported data: notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data.ipynb
-    - Using idTracker.ai with SLEAP: notebooks/sleap_io_idtracker_IDs.ipynb
-  - Learning: 
-      - System Overview: learnings/system-overview.md
-      - Using GUI: learnings/gui.md
-      - Training Options: learnings/training-options.md
-      - Skeleton design: learnings/skeleton-design.md
-      - Configuring models: learnings/configuring-models.md
-      - Prediction Assisted Labeling: learnings/prediction-assisted-labeling.md
-      - Types of mistakes in tracking code: learnings/main-mistakes-by-tracking.md
-      - Troubleshooting workflows: learnings/troubleshoot-workflows.md
-      - Export Data For Analysis: learnings/export-analysis.md
-  - Reference: 
-      - Datasets: reference/datasets.md
-      - Command line interfaces: reference/command-line-interfaces.md
+      - guides/index.md
+      - Migration & Setup:
+          - Migrating to SLEAP 1.5+: guides/migrating-to-sleap-1-5.md
+      - Data & Labeling:
+          - Importing predictions: guides/importing-predictions-for-labeling.md
+          - Tracking and proofreading: guides/tracking-and-proofreading.md
+      - Training & Inference:
+          - Training on Colab: guides/run-training-and-inference-on-colab.md
+          - Custom training profiles: guides/creating-a-custom-training-profile.md
+          - Remote training: guides/running-sleap-remotely.md
+      - Notebooks:
+          - notebooks/index.md
+          - Training example: notebooks/Training_and_inference_on_an_example_dataset.ipynb
+          - Google Drive workflow: notebooks/Training_and_inference_using_Google_Drive.ipynb
+          - Model evaluation: notebooks/Model_evaluation.ipynb
+          - Analysis examples: notebooks/Analysis_examples.ipynb
+          - Data structures: notebooks/Data_structures.ipynb
+          - Post-inference tracking: notebooks/Post_inference_tracking.ipynb
+          - Interactive training: notebooks/Interactive_and_resumable_training.ipynb
+          - Realtime inference: notebooks/Interactive_and_realtime_inference.ipynb
+          - Cosyne tutorial: notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data.ipynb
+          - idTracker.ai integration: notebooks/sleap_io_idtracker_IDs.ipynb
+
+  # ══════════════════════════════════════════════════════════════
+  # CONCEPTS TAB
+  # Understanding-oriented: Background, theory, explanations
+  # ══════════════════════════════════════════════════════════════
+  - Concepts:
+      - concepts/index.md
+      - System Architecture:
+          - System Overview: learnings/system-overview.md
+          - Training Options: learnings/training-options.md
+          - Configuring models: learnings/configuring-models.md
+      - Using SLEAP:
+          - GUI Guide: learnings/gui.md
+          - Skeleton design: learnings/skeleton-design.md
+          - Prediction-assisted labeling: learnings/prediction-assisted-labeling.md
+      - Troubleshooting:
+          - Tracking mistakes: learnings/main-mistakes-by-tracking.md
+          - Workflow issues: learnings/troubleshoot-workflows.md
+          - Export for analysis: learnings/export-analysis.md
       - Evaluation metrics: reference/evaluation_metrics.md
-      - Full API: api/
-      - Changelog: changelog.md
+
+  # ══════════════════════════════════════════════════════════════
+  # REFERENCE TAB
+  # Information-oriented: Technical specifications, lookup
+  # ══════════════════════════════════════════════════════════════
+  - Reference:
+      - reference/index.md
+      - Command Line:
+          - "<code>sleap</code> CLI": cli/sleap.md
+          - Legacy CLI: cli/legacy.md
+      - API:
+          - "<code>sleap</code>": api/
+          - "<code>sleap-io</code>": https://io.sleap.ai
+          - "<code>sleap-nn</code>": https://nn.sleap.ai
+      - Datasets: reference/datasets.md
+
+  # ══════════════════════════════════════════════════════════════
+  # HELP - Standalone
+  # ══════════════════════════════════════════════════════════════
   - Help: help.md
