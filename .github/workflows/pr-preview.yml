@@ -1,0 +1,127 @@
+# PR-local documentation preview deployment
+# Each PR gets its own isolated preview at https://docs.sleap.ai/pr/{number}/
+# This prevents parallel PRs from clobbering each other's docs
+name: Docs - PR Preview
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+    paths:
+      - "sleap/**"
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/pr-preview.yml"
+
+# Per-PR concurrency: each PR gets its own group, allowing parallel PR previews
+# cancel-in-progress: true means new pushes to the same PR cancel previous builds
+concurrency:
+  group: pr-preview-${{ github.event.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write       # To push to gh-pages branch
+  pull-requests: write  # To post comments on PRs
+
+jobs:
+  deploy:
+    name: Deploy Preview
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for diff computation
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: uv sync --extra nn-cpu --extra docs
+
+      - name: Build docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: uv run mkdocs build --site-dir _site
+
+      - name: Get changed files and generate links
+        id: changed-pages
+        env:
+          BASE_URL: https://docs.sleap.ai/pr/${{ github.event.number }}/
+        run: |
+          # Get list of changed files in this PR (docs-relevant paths only)
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD -- \
+            'docs/**' 'sleap/**' 'mkdocs.yml' '.github/workflows/pr-preview.yml' \
+            2>/dev/null || echo "")
+
+          # Convert to space-separated args
+          FILES_ARGS=$(echo "$CHANGED_FILES" | tr '\n' ' ')
+
+          # Run the script to generate markdown links
+          RESULT=$(python scripts/get_changed_docs_urls.py "$BASE_URL" $FILES_ARGS)
+
+          # Extract markdown from JSON result (handle multiline)
+          MARKDOWN=$(echo "$RESULT" | python -c "import sys, json; print(json.load(sys.stdin)['markdown'])")
+
+          # Use heredoc for multiline output
+          echo "links<<EOF" >> $GITHUB_OUTPUT
+          echo "$MARKDOWN" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Deploy PR Preview
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: _site
+          target-folder: pr/${{ github.event.number }}
+          commit-message: "Deploy PR #${{ github.event.number }} preview"
+
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: docs-preview
+          message: |
+            ## Docs Preview
+
+            | | |
+            |---|---|
+            | **Preview URL** | https://docs.sleap.ai/pr/${{ github.event.number }}/ |
+            | **Commit** | `${{ github.event.pull_request.head.sha }}` |
+
+            ${{ steps.changed-pages.outputs.links }}
+
+            _This preview will be removed when the PR is closed._
+
+  cleanup:
+    name: Cleanup Preview
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Remove PR preview
+        run: |
+          if [ -d "pr/${{ github.event.number }}" ]; then
+            rm -rf "pr/${{ github.event.number }}"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Remove PR #${{ github.event.number }} preview" || echo "Nothing to commit"
+            git push
+          else
+            echo "Preview directory pr/${{ github.event.number }} does not exist"
+          fi
+
+      - name: Comment on PR (cleanup)
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: docs-preview
+          message: |
+            ## Docs Preview
+
+            Preview has been removed.
