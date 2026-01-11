@@ -226,26 +226,31 @@ def train_command(
                         / trainer.config.trainer_config.run_name
                     ).as_posix()
                     logger.info(f"Training labels path for index {index}: {ckpt_path}")
-                    data_paths[f"train_{index}"] = (
+                    # Use new sleap-nn v0.1.0+ naming convention:
+                    # labels_gt.{split}.{idx}.slp
+                    data_paths[f"train.{index}"] = (
                         Path(trainer.config.trainer_config.ckpt_dir)
                         / trainer.config.trainer_config.run_name
-                        / f"labels_train_gt_{index}.slp"
+                        / f"labels_gt.train.{index}.slp"
                     ).as_posix()
-                    data_paths[f"val_{index}"] = (
+                    data_paths[f"val.{index}"] = (
                         Path(trainer.config.trainer_config.ckpt_dir)
                         / trainer.config.trainer_config.run_name
-                        / f"labels_val_gt_{index}.slp"
+                        / f"labels_gt.val.{index}.slp"
                     ).as_posix()
 
                 if (
                     OmegaConf.select(config, "data_config.test_file_path", default=None)
                     is not None
                 ):
-                    data_paths["test"] = config.data_config.test_file_path
+                    # Test files use index 0 for consistency with new naming
+                    data_paths["test.0"] = config.data_config.test_file_path
 
                 for d_name, path in data_paths.items():
                     labels = sio.load_slp(path)
 
+                    # Use new sleap-nn v0.1.0+ naming convention:
+                    # labels_pr.{split}.{idx}.slp
                     pred_labels = predict(
                         data_path=path,
                         model_paths=[
@@ -257,7 +262,7 @@ def train_command(
                         device=trainer.trainer.strategy.root_device,
                         output_path=Path(trainer.config.trainer_config.ckpt_dir)
                         / trainer.config.trainer_config.run_name
-                        / f"pred_{d_name}.slp",
+                        / f"labels_pr.{d_name}.slp",
                         ensure_rgb=config.data_config.preprocessing.ensure_rgb,
                         ensure_grayscale=config.data_config.preprocessing.ensure_grayscale,
                     )
@@ -273,11 +278,13 @@ def train_command(
                         ground_truth_instances=labels, predicted_instances=pred_labels
                     )
                     metrics = evaluator.evaluate()
+                    # Use new sleap-nn v0.1.0+ naming convention:
+                    # metrics.{split}.{idx}.npz
                     np.savez(
                         (
                             Path(trainer.config.trainer_config.ckpt_dir)
                             / trainer.config.trainer_config.run_name
-                            / f"{d_name}_pred_metrics.npz"
+                            / f"metrics.{d_name}.npz"
                         ).as_posix(),
                         **metrics,
                     )
