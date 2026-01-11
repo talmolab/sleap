@@ -441,6 +441,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pre-release-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre-release Versions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pre-release Versions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-latest-pre-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install Latest Pre-release
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-a-specific-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install a Specific Version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pin-dependency-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pin Dependency Versions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rollback-to-stable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback to Stable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cuda-130-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CUDA 13.0 Support
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-run" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2433,6 +2505,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pre-release-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre-release Versions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pre-release Versions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-latest-pre-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install Latest Pre-release
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#install-a-specific-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install a Specific Version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pin-dependency-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pin Dependency Versions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rollback-to-stable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rollback to Stable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cuda-130-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CUDA 13.0 Support
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-run" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2746,6 +2890,7 @@
 <ul>
 <li><strong>Just use SLEAP</strong> → <a href="#install-sleap">Install SLEAP</a> (most users)</li>
 <li><strong>Try it first without installing</strong> → <a href="#quick-run">Quick Run</a></li>
+<li><strong>Test new features before release</strong> → <a href="#pre-release-versions">Pre-release Versions</a></li>
 <li><strong>Test a bug fix from a branch</strong> → <a href="#install-from-git">Install from Git</a></li>
 <li><strong>Develop or contribute to SLEAP</strong> → <a href="#development-setup">Development Setup</a></li>
 <li><strong>Use SLEAP programmatically</strong> → <a href="#programmatic-usage">Programmatic Usage</a></li>
@@ -2853,36 +2998,152 @@
 <div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sleap
 </span></code></pre></div>
 A window should open within a few seconds. Close it with the X button.</p>
-<p><strong>Update to latest version:</strong>
+<p><strong>Update to latest stable version:</strong>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uv tool upgrade sleap
 </span></code></pre></div></p>
-<p><strong>Uninstall:</strong>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>uv tool uninstall sleap
+<p><strong>Check installed version:</strong>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sleap doctor
 </span></code></pre></div></p>
+<p><strong>Uninstall:</strong>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>uv tool uninstall sleap
+</span></code></pre></div></p>
+<hr />
+<h2 id="pre-release-versions">Pre-release Versions<a class="headerlink" href="#pre-release-versions" title="Permanent link">&para;</a></h2>
+<p>To test new features before official release, you can install pre-release versions (alpha, beta, release candidates). Pre-releases require the <code>--prerelease allow</code> flag.</p>
+<div class="admonition warning">
+<p class="admonition-title">Pre-release software</p>
+<p>Pre-release versions may contain bugs or incomplete features. Use stable releases for production annotation work.</p>
+</div>
+<h3 id="install-latest-pre-release">Install Latest Pre-release<a class="headerlink" href="#install-latest-pre-release" title="Permanent link">&para;</a></h3>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_4_2">Windows/Linux without GPU</label><label for="__tabbed_4_3">macOS</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]&quot; --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]&quot; --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]&quot; --prerelease allow
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="install-a-specific-version">Install a Specific Version<a class="headerlink" href="#install-a-specific-version" title="Permanent link">&para;</a></h3>
+<p>Pin to an exact version for reproducibility or to test a specific release:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:3"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><input id="__tabbed_5_3" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_5_2">Windows/Linux without GPU</label><label for="__tabbed_5_3">macOS</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]==1.6.0a0&quot; --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]==1.6.0a0&quot; --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]==1.6.0a0&quot; --prerelease allow
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="pin-dependency-versions">Pin Dependency Versions<a class="headerlink" href="#pin-dependency-versions" title="Permanent link">&para;</a></h3>
+<p>For full reproducibility, you can explicitly pin the versions of <code>sleap-io</code> and <code>sleap-nn</code> using the <code>--with</code> flag:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="6:3"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><input id="__tabbed_6_3" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_6_2">Windows/Linux without GPU</label><label for="__tabbed_6_3">macOS</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]==1.6.0a0&quot; --with &quot;sleap-io==0.6.0&quot; --with &quot;sleap-nn==0.1.0a0&quot; --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]==1.6.0a0&quot; --with &quot;sleap-io==0.6.0&quot; --with &quot;sleap-nn==0.1.0a0&quot; --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]==1.6.0a0&quot; --with &quot;sleap-io==0.6.0&quot; --with &quot;sleap-nn==0.1.0a0&quot; --prerelease allow
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<div class="admonition info">
+<p class="admonition-title">Version compatibility</p>
+<p>The SLEAP ecosystem has three packages with coordinated releases:</p>
+<table>
+<thead>
+<tr>
+<th>SLEAP</th>
+<th>sleap-io</th>
+<th>sleap-nn</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.6.0aN</td>
+<td>0.6.x</td>
+<td>0.1.0aN</td>
+</tr>
+<tr>
+<td>1.6.x</td>
+<td>0.6.x</td>
+<td>0.1.x</td>
+</tr>
+<tr>
+<td>1.5.x</td>
+<td>0.5.x</td>
+<td>0.0.x</td>
+</tr>
+</tbody>
+</table>
+<p>When pinning versions, ensure you use compatible combinations. Mismatched versions may cause errors.</p>
+</div>
+<h3 id="rollback-to-stable">Rollback to Stable<a class="headerlink" href="#rollback-to-stable" title="Permanent link">&para;</a></h3>
+<p>If you encounter issues with a pre-release, rollback to the latest stable version:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="7:3"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><input id="__tabbed_7_3" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_7_2">Windows/Linux without GPU</label><label for="__tabbed_7_3">macOS</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]==1.5.2&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]==1.5.2&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]==1.5.2&quot;
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="cuda-130-support">CUDA 13.0 Support<a class="headerlink" href="#cuda-130-support" title="Permanent link">&para;</a></h3>
+<p>Starting with v1.6.0, SLEAP supports CUDA 13.0 for the latest NVIDIA GPUs:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>uv tool install --force --python 3.12 &quot;sleap[nn]&quot; --prerelease allow --index https://download.pytorch.org/whl/cu130 --index https://pypi.org/simple
+</span></code></pre></div>
 <hr />
 <h2 id="quick-run">Quick Run<a class="headerlink" href="#quick-run" title="Permanent link">&para;</a></h2>
 <p>Run SLEAP without installing it permanently. Useful for quickly viewing or annotating data on any computer with <code>uv</code>.</p>
 <p><strong>View and annotate (no training):</strong>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>uvx sleap
+<div class="language-text highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>uvx sleap
 </span></code></pre></div></p>
 <p>Open a file directly:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>uvx sleap labels.slp
+<div class="language-text highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>uvx sleap labels.slp
 </span></code></pre></div></p>
 <p>This works on any platform—no GPU or extra setup needed.</p>
 <p><strong>With training support:</strong></p>
 <p>If you need to train models, include the <code>[nn]</code> extra:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="4:3"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><input id="__tabbed_4_3" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_4_2">Windows/Linux without GPU</label><label for="__tabbed_4_3">macOS</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="8:3"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><input id="__tabbed_8_2" name="__tabbed_8" type="radio" /><input id="__tabbed_8_3" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_8_2">Windows/Linux without GPU</label><label for="__tabbed_8_3">macOS</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>uvx --python 3.12 --from &quot;sleap[nn]&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap
+<div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>uvx --python 3.12 --from &quot;sleap[nn]&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uvx --python 3.12 --from &quot;sleap[nn]&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple sleap
+<div class="language-text highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>uvx --python 3.12 --from &quot;sleap[nn]&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple sleap
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>uvx --python 3.12 --from &quot;sleap[nn]&quot; sleap
+<div class="language-text highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>uvx --python 3.12 --from &quot;sleap[nn]&quot; sleap
 </span></code></pre></div>
 </div>
 </div>
@@ -2919,79 +3180,79 @@ A window should open within a few seconds. Close it with the X button.</p>
 </table>
 <p>Replace <code>BRANCH</code> with the branch name (e.g., <code>fix/video-loading</code>) or <code>develop</code> for the latest development version.</p>
 <h3 id="testing-a-branch-in-sleap">Testing a branch in <code>sleap</code><a class="headerlink" href="#testing-a-branch-in-sleap" title="Permanent link">&para;</a></h3>
-<div class="tabbed-set tabbed-alternate" data-tabs="5:3"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><input id="__tabbed_5_3" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_5_2">Windows/Linux without GPU</label><label for="__tabbed_5_3">macOS</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="9:3"><input checked="checked" id="__tabbed_9_1" name="__tabbed_9" type="radio" /><input id="__tabbed_9_2" name="__tabbed_9" type="radio" /><input id="__tabbed_9_3" name="__tabbed_9" type="radio" /><div class="tabbed-labels"><label for="__tabbed_9_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_9_2">Windows/Linux without GPU</label><label for="__tabbed_9_3">macOS</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH&quot;
+<div class="language-text highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH&quot;
 </span></code></pre></div>
 </div>
 </div>
 </div>
 <h3 id="testing-a-branch-in-sleap-io">Testing a branch in <code>sleap-io</code><a class="headerlink" href="#testing-a-branch-in-sleap-io" title="Permanent link">&para;</a></h3>
 <p>Install SLEAP from PyPI but override <code>sleap-io</code> with a git version:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="6:3"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><input id="__tabbed_6_3" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_6_2">Windows/Linux without GPU</label><label for="__tabbed_6_3">macOS</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="10:3"><input checked="checked" id="__tabbed_10_1" name="__tabbed_10" type="radio" /><input id="__tabbed_10_2" name="__tabbed_10" type="radio" /><input id="__tabbed_10_3" name="__tabbed_10" type="radio" /><div class="tabbed-labels"><label for="__tabbed_10_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_10_2">Windows/Linux without GPU</label><label for="__tabbed_10_3">macOS</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH&quot;
+<div class="language-text highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH&quot;
 </span></code></pre></div>
 </div>
 </div>
 </div>
 <h3 id="testing-a-branch-in-sleap-nn">Testing a branch in <code>sleap-nn</code><a class="headerlink" href="#testing-a-branch-in-sleap-nn" title="Permanent link">&para;</a></h3>
 <p>Install SLEAP from PyPI but override <code>sleap-nn</code> with a git version:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="7:3"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><input id="__tabbed_7_3" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_7_2">Windows/Linux without GPU</label><label for="__tabbed_7_3">macOS</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="11:3"><input checked="checked" id="__tabbed_11_1" name="__tabbed_11" type="radio" /><input id="__tabbed_11_2" name="__tabbed_11" type="radio" /><input id="__tabbed_11_3" name="__tabbed_11" type="radio" /><div class="tabbed-labels"><label for="__tabbed_11_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_11_2">Windows/Linux without GPU</label><label for="__tabbed_11_3">macOS</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH&quot;
+<div class="language-text highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>uv tool install --python 3.12 &quot;sleap[nn]&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH&quot;
 </span></code></pre></div>
 </div>
 </div>
 </div>
 <h3 id="testing-everything-from-develop">Testing everything from develop<a class="headerlink" href="#testing-everything-from-develop" title="Permanent link">&para;</a></h3>
 <p>Install the latest development version of all three packages:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="8:3"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><input id="__tabbed_8_2" name="__tabbed_8" type="radio" /><input id="__tabbed_8_3" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_8_2">Windows/Linux without GPU</label><label for="__tabbed_8_3">macOS</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="12:3"><input checked="checked" id="__tabbed_12_1" name="__tabbed_12" type="radio" /><input id="__tabbed_12_2" name="__tabbed_12" type="radio" /><input id="__tabbed_12_3" name="__tabbed_12" type="radio" /><div class="tabbed-labels"><label for="__tabbed_12_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_12_2">Windows/Linux without GPU</label><label for="__tabbed_12_3">macOS</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@develop&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@develop&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@develop&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@develop&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop&quot; --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@develop&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@develop&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@develop&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@develop&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop&quot; --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@develop&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@develop&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop&quot;
+<div class="language-text highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@develop&quot; --with &quot;sleap-io @ git+https://github.com/talmolab/sleap-io@develop&quot; --with &quot;sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop&quot;
 </span></code></pre></div>
 </div>
 </div>
 </div>
 <h3 id="pinning-to-a-specific-commit">Pinning to a specific commit<a class="headerlink" href="#pinning-to-a-specific-commit" title="Permanent link">&para;</a></h3>
 <p>For reproducibility, you can install from a specific commit hash instead of a branch:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@abc123def&quot;
+<div class="language-text highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>uv tool install --python 3.12 &quot;sleap[nn] @ git+https://github.com/talmolab/sleap@abc123def&quot;
 </span></code></pre></div>
 <hr />
 <h2 id="development-setup">Development Setup<a class="headerlink" href="#development-setup" title="Permanent link">&para;</a></h2>
@@ -3005,48 +3266,48 @@ A window should open within a few seconds. Close it with the X button.</p>
 </ul>
 <h3 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h3>
 <p>These commands download SLEAP's source code to a folder called <code>sleap</code> in your current directory:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap.git
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="nb">cd</span><span class="w"> </span>sleap
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap.git
+</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a><span class="nb">cd</span><span class="w"> </span>sleap
 </span></code></pre></div>
 <p>Then install dependencies:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="9:3"><input checked="checked" id="__tabbed_9_1" name="__tabbed_9" type="radio" /><input id="__tabbed_9_2" name="__tabbed_9" type="radio" /><input id="__tabbed_9_3" name="__tabbed_9" type="radio" /><div class="tabbed-labels"><label for="__tabbed_9_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_9_2">Windows/Linux without GPU</label><label for="__tabbed_9_3">macOS</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="13:3"><input checked="checked" id="__tabbed_13_1" name="__tabbed_13" type="radio" /><input id="__tabbed_13_2" name="__tabbed_13" type="radio" /><input id="__tabbed_13_3" name="__tabbed_13" type="radio" /><div class="tabbed-labels"><label for="__tabbed_13_1">Windows/Linux with NVIDIA GPU</label><label for="__tabbed_13_2">Windows/Linux without GPU</label><label for="__tabbed_13_3">macOS</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>uv sync --python 3.12 --extra dev --extra nn-cuda128 --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>uv sync --python 3.12 --extra dev --extra nn-cuda128 --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>uv sync --python 3.12 --extra dev --extra nn-cpu --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+<div class="language-text highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>uv sync --python 3.12 --extra dev --extra nn-cpu --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>uv sync --python 3.12 --extra dev --extra nn-cpu
+<div class="language-text highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>uv sync --python 3.12 --extra dev --extra nn-cpu
 </span></code></pre></div>
 </div>
 </div>
 </div>
 <h3 id="running-commands">Running Commands<a class="headerlink" href="#running-commands" title="Permanent link">&para;</a></h3>
 <p>Use <code>uv run</code> to run commands in the development environment:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap<span class="w">              </span><span class="c1"># Launch GUI</span>
-</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap<span class="w"> </span>doctor<span class="w">       </span><span class="c1"># Check system diagnostics</span>
-</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w">      </span><span class="c1"># Run tests</span>
-</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a>uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>sleap<span class="w">   </span><span class="c1"># Check code style</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-46-1"><a id="__codelineno-46-1" name="__codelineno-46-1" href="#__codelineno-46-1"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap<span class="w">              </span><span class="c1"># Launch GUI</span>
+</span><span id="__span-46-2"><a id="__codelineno-46-2" name="__codelineno-46-2" href="#__codelineno-46-2"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap<span class="w"> </span>doctor<span class="w">       </span><span class="c1"># Check system diagnostics</span>
+</span><span id="__span-46-3"><a id="__codelineno-46-3" name="__codelineno-46-3" href="#__codelineno-46-3"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w">      </span><span class="c1"># Run tests</span>
+</span><span id="__span-46-4"><a id="__codelineno-46-4" name="__codelineno-46-4" href="#__codelineno-46-4"></a>uv<span class="w"> </span>run<span class="w"> </span>ruff<span class="w"> </span>check<span class="w"> </span>sleap<span class="w">   </span><span class="c1"># Check code style</span>
 </span></code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Activate the virtual environment</p>
 <p>To avoid typing <code>uv run</code> before every command, activate the virtual environment:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="10:3"><input checked="checked" id="__tabbed_10_1" name="__tabbed_10" type="radio" /><input id="__tabbed_10_2" name="__tabbed_10" type="radio" /><input id="__tabbed_10_3" name="__tabbed_10" type="radio" /><div class="tabbed-labels"><label for="__tabbed_10_1">Windows (Command Prompt)</label><label for="__tabbed_10_2">Windows (PowerShell)</label><label for="__tabbed_10_3">macOS/Linux</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="14:3"><input checked="checked" id="__tabbed_14_1" name="__tabbed_14" type="radio" /><input id="__tabbed_14_2" name="__tabbed_14" type="radio" /><input id="__tabbed_14_3" name="__tabbed_14" type="radio" /><div class="tabbed-labels"><label for="__tabbed_14_1">Windows (Command Prompt)</label><label for="__tabbed_14_2">Windows (PowerShell)</label><label for="__tabbed_14_3">macOS/Linux</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>.venv\Scripts\activate.bat
+<div class="language-text highlight"><pre><span></span><code><span id="__span-47-1"><a id="__codelineno-47-1" name="__codelineno-47-1" href="#__codelineno-47-1"></a>.venv\Scripts\activate.bat
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-48-1"><a id="__codelineno-48-1" name="__codelineno-48-1" href="#__codelineno-48-1"></a><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-49-1"><a id="__codelineno-49-1" name="__codelineno-49-1" href="#__codelineno-49-1"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 </span></code></pre></div>
 </div>
 </div>
@@ -3055,9 +3316,9 @@ A window should open within a few seconds. Close it with the X button.</p>
 </div>
 <h3 id="developing-multiple-packages">Developing Multiple Packages<a class="headerlink" href="#developing-multiple-packages" title="Permanent link">&para;</a></h3>
 <p>If you're working on <code>sleap-io</code> or <code>sleap-nn</code> alongside <code>sleap</code>, you can install them in editable mode after running <code>uv sync</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="c1"># After uv sync, install local packages in editable mode</span>
-</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>../sleap-io
-</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>../sleap-nn
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-50-1"><a id="__codelineno-50-1" name="__codelineno-50-1" href="#__codelineno-50-1"></a><span class="c1"># After uv sync, install local packages in editable mode</span>
+</span><span id="__span-50-2"><a id="__codelineno-50-2" name="__codelineno-50-2" href="#__codelineno-50-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>../sleap-io
+</span><span id="__span-50-3"><a id="__codelineno-50-3" name="__codelineno-50-3" href="#__codelineno-50-3"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>../sleap-nn
 </span></code></pre></div>
 <p>Note: You'll need to re-run these commands after each <code>uv sync</code>, as syncing resets the environment to match the lockfile.</p>
 <hr />
@@ -3069,15 +3330,15 @@ A window should open within a few seconds. Close it with the X button.</p>
 </li>
 <li>
 <p><strong><a href="https://io.sleap.ai"><code>sleap-io</code></a>:</strong> For working with <code>.slp</code> files, labels, skeletons, and videos programmatically. This is the <strong>recommended</strong> library for most scripting needs.
-    <div class="language-bash highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a>uv<span class="w"> </span>add<span class="w"> </span>sleap-io
+    <div class="language-bash highlight"><pre><span></span><code><span id="__span-51-1"><a id="__codelineno-51-1" name="__codelineno-51-1" href="#__codelineno-51-1"></a>uv<span class="w"> </span>add<span class="w"> </span>sleap-io
 </span></code></pre></div>
-    <div class="language-python highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sleap_io</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sio</span>
-</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a><span class="n">labels</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_slp</span><span class="p">(</span><span class="s2">&quot;predictions.slp&quot;</span><span class="p">)</span>
+    <div class="language-python highlight"><pre><span></span><code><span id="__span-52-1"><a id="__codelineno-52-1" name="__codelineno-52-1" href="#__codelineno-52-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sleap_io</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sio</span>
+</span><span id="__span-52-2"><a id="__codelineno-52-2" name="__codelineno-52-2" href="#__codelineno-52-2"></a><span class="n">labels</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_slp</span><span class="p">(</span><span class="s2">&quot;predictions.slp&quot;</span><span class="p">)</span>
 </span></code></pre></div></p>
 </li>
 <li>
 <p><strong><a href="https://nn.sleap.ai"><code>sleap-nn</code></a>:</strong> For working with the deep learning backend, training models programmatically, or running inference.
-    <div class="language-bash highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a>uv<span class="w"> </span>add<span class="w"> </span>sleap-nn
+    <div class="language-bash highlight"><pre><span></span><code><span id="__span-53-1"><a id="__codelineno-53-1" name="__codelineno-53-1" href="#__codelineno-53-1"></a>uv<span class="w"> </span>add<span class="w"> </span>sleap-nn
 </span></code></pre></div></p>
 </li>
 </ol>
@@ -3086,24 +3347,24 @@ A window should open within a few seconds. Close it with the X button.</p>
 <p>Prior to SLEAP v1.5, installation used conda and conda environments. Starting with v1.5, we switched to <code>uv</code> for faster, more reliable installations.</p>
 <p>The <a href="#install-sleap">Install SLEAP</a> and <a href="#development-setup">Development Setup</a> sections above cover all use cases. However, if you prefer working within conda environments, you can still do so:</p>
 <h3 id="using-uv-inside-a-conda-environment">Using uv inside a conda environment<a class="headerlink" href="#using-uv-inside-a-conda-environment" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="c1"># Create and activate a conda environment</span>
-</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.12
-</span><span id="__span-40-3"><a id="__codelineno-40-3" name="__codelineno-40-3" href="#__codelineno-40-3"></a>conda<span class="w"> </span>activate<span class="w"> </span>sleap
-</span><span id="__span-40-4"><a id="__codelineno-40-4" name="__codelineno-40-4" href="#__codelineno-40-4"></a>
-</span><span id="__span-40-5"><a id="__codelineno-40-5" name="__codelineno-40-5" href="#__codelineno-40-5"></a><span class="c1"># Install uv inside the conda environment</span>
-</span><span id="__span-40-6"><a id="__codelineno-40-6" name="__codelineno-40-6" href="#__codelineno-40-6"></a>pip<span class="w"> </span>install<span class="w"> </span>uv
-</span><span id="__span-40-7"><a id="__codelineno-40-7" name="__codelineno-40-7" href="#__codelineno-40-7"></a>
-</span><span id="__span-40-8"><a id="__codelineno-40-8" name="__codelineno-40-8" href="#__codelineno-40-8"></a><span class="c1"># Install SLEAP using uv pip (works inside conda)</span>
-</span><span id="__span-40-9"><a id="__codelineno-40-9" name="__codelineno-40-9" href="#__codelineno-40-9"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-54-1"><a id="__codelineno-54-1" name="__codelineno-54-1" href="#__codelineno-54-1"></a><span class="c1"># Create and activate a conda environment</span>
+</span><span id="__span-54-2"><a id="__codelineno-54-2" name="__codelineno-54-2" href="#__codelineno-54-2"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>sleap<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.12
+</span><span id="__span-54-3"><a id="__codelineno-54-3" name="__codelineno-54-3" href="#__codelineno-54-3"></a>conda<span class="w"> </span>activate<span class="w"> </span>sleap
+</span><span id="__span-54-4"><a id="__codelineno-54-4" name="__codelineno-54-4" href="#__codelineno-54-4"></a>
+</span><span id="__span-54-5"><a id="__codelineno-54-5" name="__codelineno-54-5" href="#__codelineno-54-5"></a><span class="c1"># Install uv inside the conda environment</span>
+</span><span id="__span-54-6"><a id="__codelineno-54-6" name="__codelineno-54-6" href="#__codelineno-54-6"></a>pip<span class="w"> </span>install<span class="w"> </span>uv
+</span><span id="__span-54-7"><a id="__codelineno-54-7" name="__codelineno-54-7" href="#__codelineno-54-7"></a>
+</span><span id="__span-54-8"><a id="__codelineno-54-8" name="__codelineno-54-8" href="#__codelineno-54-8"></a><span class="c1"># Install SLEAP using uv pip (works inside conda)</span>
+</span><span id="__span-54-9"><a id="__codelineno-54-9" name="__codelineno-54-9" href="#__codelineno-54-9"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span>
 </span></code></pre></div>
 <h3 id="disabling-conda-auto-activation">Disabling conda auto-activation<a class="headerlink" href="#disabling-conda-auto-activation" title="Permanent link">&para;</a></h3>
 <p>If you're switching fully to uv and want to prevent conda from activating automatically:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a>conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w"> </span>auto_activate_base<span class="w"> </span><span class="nb">false</span>
-</span><span id="__span-41-2"><a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>conda<span class="w"> </span>deactivate
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-55-1"><a id="__codelineno-55-1" name="__codelineno-55-1" href="#__codelineno-55-1"></a>conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w"> </span>auto_activate_base<span class="w"> </span><span class="nb">false</span>
+</span><span id="__span-55-2"><a id="__codelineno-55-2" name="__codelineno-55-2" href="#__codelineno-55-2"></a>conda<span class="w"> </span>deactivate
 </span></code></pre></div>
 <p>Then install Python via uv:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a>uv<span class="w"> </span>python<span class="w"> </span>install<span class="w"> </span><span class="m">3</span>.12
-</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>uv<span class="w"> </span>python<span class="w"> </span>pin<span class="w"> </span><span class="m">3</span>.12
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-56-1"><a id="__codelineno-56-1" name="__codelineno-56-1" href="#__codelineno-56-1"></a>uv<span class="w"> </span>python<span class="w"> </span>install<span class="w"> </span><span class="m">3</span>.12
+</span><span id="__span-56-2"><a id="__codelineno-56-2" name="__codelineno-56-2" href="#__codelineno-56-2"></a>uv<span class="w"> </span>python<span class="w"> </span>pin<span class="w"> </span><span class="m">3</span>.12
 </span></code></pre></div>
 <p>Now you can use any of the installation methods above without conda interference.</p>
 <hr />
@@ -3116,14 +3377,14 @@ A window should open within a few seconds. Close it with the X button.</p>
 </ol>
 <h3 id="running-scripts-is-disabled-windows">"running scripts is disabled" (Windows)<a class="headerlink" href="#running-scripts-is-disabled-windows" title="Permanent link">&para;</a></h3>
 <p>Open PowerShell as Administrator and run:
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a><span class="nb">Set-ExecutionPolicy</span> <span class="n">RemoteSigned</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-57-1"><a id="__codelineno-57-1" name="__codelineno-57-1" href="#__codelineno-57-1"></a><span class="nb">Set-ExecutionPolicy</span> <span class="n">RemoteSigned</span>
 </span></code></pre></div></p>
 <h3 id="python-version-errors">Python version errors<a class="headerlink" href="#python-version-errors" title="Permanent link">&para;</a></h3>
 <p>Always include <code>--python 3.12</code> in your commands. Python 3.14 is not yet supported.</p>
 <h3 id="installation-seems-stuck">Installation seems stuck<a class="headerlink" href="#installation-seems-stuck" title="Permanent link">&para;</a></h3>
 <p>Large packages like PyTorch take time to download. Installation can take 5-15 minutes on slower connections. If it takes more than 30 minutes, cancel with Ctrl+C and try again.</p>
 <h3 id="check-your-installation">Check your installation<a class="headerlink" href="#check-your-installation" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a>sleap<span class="w"> </span>doctor
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-58-1"><a id="__codelineno-58-1" name="__codelineno-58-1" href="#__codelineno-58-1"></a>sleap<span class="w"> </span>doctor
 </span></code></pre></div>
 <p>This shows your system info and whether GPU is detected.</p>
 <h3 id="still-stuck">Still stuck?<a class="headerlink" href="#still-stuck" title="Permanent link">&para;</a></h3>
