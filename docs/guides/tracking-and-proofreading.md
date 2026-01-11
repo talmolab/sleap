@@ -1,6 +1,8 @@
-*Case: You're happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.*
+!!! info "When to use this guide"
 
-The basics of [tracking](../tutorial/tracking-new-data.md) and [proofreading](../tutorial/proofreading.md) are covered in the [Tutorial](../../tutorial/). You should go read that if you haven't already. Here we'll go into more details.
+    You're happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.
+
+The basics of [tracking](../tutorial/tracking-new-data.md) and [proofreading](../tutorial/proofreading.md) are covered in the [Tutorial](../../tutorial/). Read that first if you haven't already. This guide goes into more detail.
 
 ## Tracking methods
 
@@ -28,11 +30,11 @@ Once you have the desired number of instances in every frame, SLEAP connects ide
 
 ## More training data?
 
-Often your models will fail to predict *all* of the instances on *all* of the frames. Even if you're happy enough with the result since you can interpolate missing data, it's possible that the missing instances will cause problems when we try to determine track identities across frames, so if your tracking results are poor, you may wish to [Importing predictions for labeling](importing-predictions-for-labeling.md).
+Often your models will fail to predict *all* of the instances on *all* of the frames. Even if you're happy enough with the result since you can interpolate missing data, it's possible that the missing instances will cause problems when we try to determine track identities across frames, so if your tracking results are poor, you may wish to [import predictions for labeling](importing-predictions-for-labeling.md).
 
 ## Color palettes
 
-When you're proofreading track identities, the first step should always be to enable "**Color Predicted Instances**" in the View menu. Choosing the right color palette can also make a difference. If there are a small number of instances you're tracking, the "five+" palette will make it easier to see instances which were assigned to later tracks, both in on the video frame:
+When you're proofreading track identities, the first step should always be to enable "**Color Predicted Instances**" in the View menu. Choosing the right color palette can also make a difference. If there are a small number of instances you're tracking, the "five+" palette will make it easier to see instances which were assigned to later tracks, both on the video frame:
 
 ![orange-leg](../assets/images/orange-leg.jpg)
 
@@ -48,7 +50,9 @@ Sometimes the background in the video will make it hard to see certain colors in
 
 There are two main types of mistakes made by the tracking code: lost identities and mistaken identities.
 
-**Lost Identities:** The code may fail to identity an instance in one frame with any instances from previous frames.
+### Lost Identities
+
+The code may fail to identify an instance in one frame with any instances from previous frames.
 
 Here's a strategy that works well for fixing **lost** identities:
 
@@ -63,11 +67,13 @@ Here's a strategy that works well for fixing **lost** identities:
 
 You can then type the number key listed next to the track (while still holding down the **Show tracks legend** key) to assign the selected instance to the corresponding track. In the image above, you'd want to hit **Command + 1** to assign the orange instance to the red **"F"** track.
 
-**Mistaken Identities:** The code may misidentify which instance goes in which track.
+### Mistaken Identities
+
+The code may misidentify which instance goes in which track.
 
 Mistaken identities are harder to correct since there's no certain way to find them—if we knew where they were, then we wouldn't have gotten them wrong in the first place. But there are some strategies to make it easier to locate them in your predictions.
 
-One strategy is to set the trail length to a **number greater than 0** (e.g. 50) and jump through the predictions using the **frame next large step** hotkey. It's usually possible to see identity swaps by looking at the shape of the track trails, as here:
+One strategy is to set the trail length to a **number greater than 0** (e.g. 50) and jump through the predictions using the **frame next large step** keyboard shortcut. It's usually possible to see identity swaps by looking at the shape of the track trails, as here:
 
 ![swap-trails](../assets/images/swap-trails.jpg)
 
@@ -81,7 +87,7 @@ In the "**Labeling Suggestions**" panel, choose the **"velocity"** method. You s
 
 If there are far too many frame suggestions, then make the threshold higher. If there aren't very many, you might try lowering the threshold (or this may indicate that this method won't work well for this file).
 
-Once you're happy with the number of suggested frames, you can step between these (using the "**Next Suggestion**" hotkey in the "Go" menu) and quickly review whether this is in fact a swap by looking at the track trails or reviewing adjacent frames. If you've found a swap, either use the keyboard shortcut for the "**Transpose Instance Tracks**" hotkey in the "Labels" menu, or select one of the swapped instances and use **Show tracks legend** hotkey plus a number key, just like you do for fixing lost identities (as explained above).
+Once you're happy with the number of suggested frames, you can step between these (using the "**Next Suggestion**" keyboard shortcut in the "Go" menu) and quickly review whether this is in fact a swap by looking at the track trails or reviewing adjacent frames. If you've found a swap, either use the "**Transpose Instance Tracks**" keyboard shortcut in the "Labels" menu, or select one of the swapped instances and use the **Show tracks legend** keyboard shortcut plus a number key, just like you do for fixing lost identities (as explained above).
 
 You can optionally select "**Propagate Track Labels**". This means that switching the tracks in one frame will also be applied in all subsequent frames.
 
