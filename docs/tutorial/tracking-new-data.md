@@ -15,7 +15,7 @@ We have included a testing video in the tutorial data which we will be tracking 
     A new SLEAP window will appear with a blank project that contains the new video and nothing else.
 
     !!! tip
-        In the typical workflow, you'll do this step programmatically such as through the [command line interface](../reference/command-line-interfaces.md/#sleap-track).
+        In the typical workflow, you'll do this step programmatically such as through the [command line interface](../cli/legacy/#sleap-track).
 
 3. Go to the **Predict** menu → **Run Inference** to open the inference configuration window.
 

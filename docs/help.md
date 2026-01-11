@@ -26,9 +26,9 @@ Note that you will need to use a version compatible with **TensorFlow 2.6+** (**
 
 If you're new to pose tracking in general, check out [this talk](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking) or our review in _[Nature Neuroscience](https://rdcu.be/caH3H)_.
 
-If you're just new to SLEAP, we suggest starting with the [high-level overview](overview.md) and then following the [tutorial](tutorial/overview.md).
+If you're just new to SLEAP, we suggest starting with the [high-level overview](overview.md) and then following the [tutorial](tutorial/).
 
-Once you get the hang of it, check out the [guides](guides/guides-overview.md) for more detailed info.
+Once you get the hang of it, check out the [guides](guides/) for more detailed info.
 
 ### Does my data need to be in a particular format?
 
@@ -59,7 +59,7 @@ This is most likely an issue with the video compression format. [`See above`](#d
 
 ### How do I get predictions out?
 
-See [export-analysis](learnings/export-analysis.md) and [sleap-convert](reference/command-line-interfaces.md/#sleap-convert).
+See [export-analysis](learnings/export-analysis.md) and [sleap-convert](cli/legacy/#sleap-convert).
 
 ### What do I do with the output of SLEAP?
 
@@ -121,7 +121,7 @@ Feel free to reach out to us at `talmo@salk.edu` if you have a question that isn
 
 - Share new ideas for new features or improvements in the [Discussion forum](https://github.com/talmolab/sleap/discussions/categories/ideas).
 
-- Contribute some code! See our [contribution guidelines](contribute.md) for more info.
+- Contribute some code! Check out our [GitHub repository](https://github.com/talmolab/sleap) for more info.
 
 ## What is usage data?
 

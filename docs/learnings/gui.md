@@ -1,6 +1,6 @@
 # GUI
 
-The SLEAP labeling interface is accessible via the `sleap_label` command (see [`Command Line Interfaces`](../reference/command-line-interfaces.md)).
+The SLEAP labeling interface is accessible via the `sleap_label` command (see [Legacy CLI](../cli/legacy/)).
 
 ## Menus
 

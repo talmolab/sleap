@@ -1,6 +1,6 @@
 *Case: You're happy enough with the frame-by-frame predictions but you need to correct the identities tracked across frames.*
 
-The basics of [tracking](../tutorial/tracking-new-data.md) and [proofreading](../tutorial/proofreading.md) are covered in the [Tutorial](../tutorial/overview.md). You should go read that if you haven't already. Here we'll go into more details.
+The basics of [tracking](../tutorial/tracking-new-data.md) and [proofreading](../tutorial/proofreading.md) are covered in the [Tutorial](../../tutorial/). You should go read that if you haven't already. Here we'll go into more details.
 
 ## Tracking methods
 

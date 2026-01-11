@@ -351,7 +351,7 @@ Note: You'll need to re-run these commands after each `uv sync`, as syncing rese
 
 The main [`sleap`](https://github.com/talmolab/sleap) package is primarily the GUI frontend and is not designed to be used as a library. If you want to use SLEAP programmatically, consider these options:
 
-1. **[Command-line interface](reference/command-line-interfaces.md):** Use SLEAP's CLI (`sleap track`, `sleap convert`, etc.) for batch processing and automation.
+1. **[Command-line interface](cli/sleap/):** Use SLEAP's CLI (`sleap track`, `sleap convert`, etc.) for batch processing and automation.
 
 2. **[`sleap-io`](https://io.sleap.ai):** For working with `.slp` files, labels, skeletons, and videos programmatically. This is the **recommended** library for most scripting needs.
     ```bash
