@@ -238,7 +238,12 @@ class ConfigFileInfo:
 
             # otherwise try loading it from validation labels (much slower!)
             else:
-                filename = self._get_file_path("labels_gt.val.slp")
+                # Try new naming first, then legacy, then old sleap-nn naming
+                filename = (
+                    self._get_file_path("labels_gt.val.0.slp")  # sleap-nn v0.1.0+
+                    or self._get_file_path("labels_gt.val.slp")  # legacy SLEAP
+                    or self._get_file_path("labels_val_gt_0.slp")  # sleap-nn < v0.1.0
+                )
                 if filename is not None:
                     val_labels = load_file(filename)
                     if val_labels.skeletons:
@@ -314,10 +319,11 @@ class ConfigFileInfo:
         cache_key = (dset_name, split_name)
         if cache_key not in self._dset_len_cache:
             n = None
+            # Try new naming first, then legacy, then old sleap-nn naming
             filename = (
-                self._get_file_path(f"labels_gt.{split_name}.slp")
-                if self._get_file_path(f"labels_gt.{split_name}.slp")
-                else self._get_file_path(f"labels_{split_name}_gt_0.slp")
+                self._get_file_path(f"labels_gt.{split_name}.0.slp")  # v0.1.0+
+                or self._get_file_path(f"labels_gt.{split_name}.slp")  # legacy
+                or self._get_file_path(f"labels_{split_name}_gt_0.slp")  # < v0.1.0
             )
             if filename is not None:
                 with h5py.File(filename, "r") as f:
@@ -328,7 +334,11 @@ class ConfigFileInfo:
         return self._dset_len_cache[cache_key]
 
     def _get_metrics(self, split_name: Text):
-        metrics_path_nn = self._get_file_path(f"{split_name}_0_pred_metrics.npz")
+        # Try new naming first, then old sleap-nn naming
+        metrics_path_nn = (
+            self._get_file_path(f"metrics.{split_name}.0.npz")  # v0.1.0+
+            or self._get_file_path(f"{split_name}_0_pred_metrics.npz")  # < v0.1.0
+        )
 
         if metrics_path_nn is None:
             # Loading legacy metrics from SLEAP <= v1.4.1

@@ -163,12 +163,18 @@ def describe_model(model_path, verbose=False):
 
     def describe_dataset(split_name):
         # Check whether the checkpoint files are sleap_nn or legacy sleap
-        # and load the labels accordingly
+        # and load the labels accordingly.
+        # Try new naming first, then legacy, then old sleap-nn naming
         labels = None
-        if os.path.exists(rel_path(f"labels_gt.{split_name}.slp")):
-            labels = labels_load_file(rel_path(f"labels_gt.{split_name}.slp"))
-        elif os.path.exists(rel_path(f"labels_{split_name}_gt_0.slp")):
-            labels = labels_load_file(rel_path(f"labels_{split_name}_gt_0.slp"))
+        gt_new = rel_path(f"labels_gt.{split_name}.0.slp")  # v0.1.0+
+        gt_legacy = rel_path(f"labels_gt.{split_name}.slp")  # legacy
+        gt_old = rel_path(f"labels_{split_name}_gt_0.slp")  # < v0.1.0
+        if os.path.exists(gt_new):
+            labels = labels_load_file(gt_new)
+        elif os.path.exists(gt_legacy):
+            labels = labels_load_file(gt_legacy)
+        elif os.path.exists(gt_old):
+            labels = labels_load_file(gt_old)
 
         if labels is not None:
             labeled_frames_user = [
@@ -181,12 +187,19 @@ def describe_model(model_path, verbose=False):
                 f"Frames: {len(labeled_frames_user)} / Instances: {len(user_instances)}"
             )
 
-        if os.path.exists(rel_path(f"metrics.{split_name}.npz")):
+        # Try new naming first, then old sleap-nn naming, then legacy naming
+        metrics_new = rel_path(f"metrics.{split_name}.0.npz")  # v0.1.0+
+        metrics_old = rel_path(f"{split_name}_0_pred_metrics.npz")  # < v0.1.0
+        metrics_legacy = rel_path(f"metrics.{split_name}.npz")  # legacy
+        if os.path.exists(metrics_new):
             print("Metrics:")
-            describe_metrics(rel_path(f"metrics.{split_name}.npz"), legacy=True)
-        elif os.path.exists(rel_path(f"{split_name}_0_pred_metrics.npz")):
+            describe_metrics(metrics_new, legacy=False)
+        elif os.path.exists(metrics_old):
             print("Metrics:")
-            describe_metrics(rel_path(f"{split_name}_0_pred_metrics.npz"), legacy=False)
+            describe_metrics(metrics_old, legacy=False)
+        elif os.path.exists(metrics_legacy):
+            print("Metrics:")
+            describe_metrics(metrics_legacy, legacy=True)
 
     print("=====")
     print("Training set:")

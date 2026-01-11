@@ -77,19 +77,23 @@ jupyter = [
 ]
 
 nn = [
-    "sleap-nn[torch]>=0.0.4"
+    "sleap-nn[torch]>=0.1.0a0"
 ]
 
 nn-cpu = [
-    "sleap-nn[torch]>=0.0.4"
+    "sleap-nn[torch]>=0.1.0a0"
 ]
 
 nn-cuda128 = [
-    "sleap-nn[torch]>=0.0.4"
+    "sleap-nn[torch]>=0.1.0a0"
 ]
 
 nn-cuda118 = [
-    "sleap-nn[torch]>=0.0.4"
+    "sleap-nn[torch]>=0.1.0a0"
+]
+
+nn-cuda130 = [
+    "sleap-nn[torch]>=0.1.0a0"
 ]
 
 [dependency-groups]
@@ -128,7 +132,8 @@ conflicts = [
     [
         { extra = "nn-cpu" },
         { extra = "nn-cuda118" },
-        { extra = "nn-cuda128" }
+        { extra = "nn-cuda128" },
+        { extra = "nn-cuda130" }
     ]
 ]
 
@@ -137,6 +142,7 @@ sleap-nn = [
     { index = "pytorch-cpu", extra = "nn-cpu" },
     { index = "pytorch-cu118", extra = "nn-cuda118" },
     { index = "pytorch-cu128", extra = "nn-cuda128" },
+    { index = "pytorch-cu130", extra = "nn-cuda130" },
 ]
 markupsafe = { index = "pypi" }
 # For sleap-io dev, uncomment ONE of the following:
@@ -161,6 +167,12 @@ explicit = true
 name = "pytorch-cu128"
 url = "https://pypi.org/simple"
 extra-index-url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://pypi.org/simple"
+extra-index-url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
 [[tool.uv.index]]
