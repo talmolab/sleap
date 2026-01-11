@@ -1,6 +1,11 @@
 site_name: SLEAP Documentation
 site_url: https://docs.sleap.ai/
 repo_url: https://github.com/talmolab/sleap
+edit_uri: edit/develop/docs/
+
+# Custom hooks
+hooks:
+  - hooks/copy_source_markdown.py  # Publish .md sources alongside HTML
 
 theme:
   name: material

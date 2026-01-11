@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for diff computation
 
       - name: Setup UV
         uses: astral-sh/setup-uv@v6
@@ -43,6 +45,30 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: uv run mkdocs build --site-dir _site
+
+      - name: Get changed files and generate links
+        id: changed-pages
+        env:
+          BASE_URL: https://docs.sleap.ai/pr/${{ github.event.number }}/
+        run: |
+          # Get list of changed files in this PR (docs-relevant paths only)
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD -- \
+            'docs/**' 'sleap/**' 'mkdocs.yml' '.github/workflows/pr-preview.yml' \
+            2>/dev/null || echo "")
+
+          # Convert to space-separated args
+          FILES_ARGS=$(echo "$CHANGED_FILES" | tr '\n' ' ')
+
+          # Run the script to generate markdown links
+          RESULT=$(python scripts/get_changed_docs_urls.py "$BASE_URL" $FILES_ARGS)
+
+          # Extract markdown from JSON result (handle multiline)
+          MARKDOWN=$(echo "$RESULT" | python -c "import sys, json; print(json.load(sys.stdin)['markdown'])")
+
+          # Use heredoc for multiline output
+          echo "links<<EOF" >> $GITHUB_OUTPUT
+          echo "$MARKDOWN" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Deploy PR Preview
         uses: JamesIves/github-pages-deploy-action@v4
@@ -63,6 +89,8 @@ jobs:
             |---|---|
             | **Preview URL** | https://docs.sleap.ai/pr/${{ github.event.number }}/ |
             | **Commit** | `${{ github.event.pull_request.head.sha }}` |
+
+            ${{ steps.changed-pages.outputs.links }}
 
             _This preview will be removed when the PR is closed._
 
