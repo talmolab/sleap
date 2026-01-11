@@ -1,0 +1,156 @@
+"""Reference-based features: nearest neighbor distance."""
+
+from __future__ import annotations
+
+from typing import Optional
+
+import numpy as np
+
+
+def normalize_pose(points: np.ndarray) -> np.ndarray:
+    """Normalize pose to unit scale and center.
+
+    Args:
+        points: (N_nodes, 2) array of coordinates (may contain NaN).
+
+    Returns:
+        Normalized points array (NaN preserved).
+    """
+    visible_mask = ~np.isnan(points).any(axis=1)
+    if visible_mask.sum() < 2:
+        return points.copy()
+
+    visible_points = points[visible_mask]
+
+    # Center
+    centroid = visible_points.mean(axis=0)
+
+    # Scale by bounding box diagonal
+    bbox_min = visible_points.min(axis=0)
+    bbox_max = visible_points.max(axis=0)
+    scale = np.linalg.norm(bbox_max - bbox_min)
+    if scale < 1e-6:
+        scale = 1.0
+
+    normalized = (points - centroid) / scale
+    return normalized
+
+
+def pose_distance(
+    pose_a: np.ndarray,
+    pose_b: np.ndarray,
+    method: str = "euclidean",
+) -> float:
+    """Compute distance between two poses.
+
+    Args:
+        pose_a: (N_nodes, 2) array.
+        pose_b: (N_nodes, 2) array.
+        method: Distance method ("euclidean", "procrustes").
+
+    Returns:
+        Distance value (lower = more similar).
+    """
+    # Find commonly visible nodes
+    visible_a = ~np.isnan(pose_a).any(axis=1)
+    visible_b = ~np.isnan(pose_b).any(axis=1)
+    common = visible_a & visible_b
+
+    if common.sum() < 2:
+        return float("inf")
+
+    pts_a = pose_a[common]
+    pts_b = pose_b[common]
+
+    if method == "euclidean":
+        return float(np.mean(np.linalg.norm(pts_a - pts_b, axis=1)))
+
+    elif method == "procrustes":
+        from scipy.spatial import procrustes
+
+        try:
+            _, _, disparity = procrustes(pts_a, pts_b)
+            return float(disparity)
+        except ValueError:
+            return float("inf")
+
+    else:
+        raise ValueError(f"Unknown method: {method}")
+
+
+class NearestNeighborScorer:
+    """Score instances by distance to nearest neighbor in reference set.
+
+    Attributes:
+        normalize: Whether to normalize poses before comparison.
+        method: Distance method ("euclidean" or "procrustes").
+        reference_poses: Stored reference poses after fitting.
+    """
+
+    def __init__(self, normalize: bool = True, method: str = "euclidean"):
+        """Initialize scorer.
+
+        Args:
+            normalize: Whether to normalize poses before comparison.
+            method: Distance method.
+        """
+        self.normalize = normalize
+        self.method = method
+        self.reference_poses: Optional[np.ndarray] = None
+
+    def fit(self, poses: np.ndarray) -> "NearestNeighborScorer":
+        """Store reference poses.
+
+        Args:
+            poses: (N_instances, N_nodes, 2) array of reference poses.
+
+        Returns:
+            Self for chaining.
+        """
+        if self.normalize:
+            self.reference_poses = np.array([normalize_pose(p) for p in poses])
+        else:
+            self.reference_poses = poses.copy()
+        return self
+
+    def score(self, pose: np.ndarray) -> dict[str, float]:
+        """Score a pose by distance to nearest neighbor.
+
+        Args:
+            pose: (N_nodes, 2) array.
+
+        Returns:
+            Dictionary with:
+            - nn_distance: distance to nearest neighbor
+            - nn_index: index of nearest neighbor
+            - mean_distance: mean distance to all references
+        """
+        if self.reference_poses is None:
+            raise ValueError("Model not fitted. Call fit() first.")
+
+        if self.normalize:
+            query = normalize_pose(pose)
+        else:
+            query = pose
+
+        distances = []
+        for ref_pose in self.reference_poses:
+            dist = pose_distance(query, ref_pose, method=self.method)
+            distances.append(dist)
+
+        distances = np.array(distances)
+        valid_distances = distances[np.isfinite(distances)]
+
+        if len(valid_distances) == 0:
+            return {
+                "nn_distance": float("inf"),
+                "nn_index": -1,
+                "mean_distance": float("inf"),
+            }
+
+        nn_idx = int(np.argmin(distances))
+        return {
+            "nn_distance": float(distances[nn_idx]),
+            "nn_index": nn_idx,
+            "mean_distance": float(np.mean(valid_distances)),
+        }
