@@ -11,6 +11,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 import numpy as np
 from qtpy import QtCore, QtWidgets, QtGui
+from qtpy.QtCore import QThread, Signal as QSignal
 
 # Matplotlib setup with proper backend handling
 import matplotlib
@@ -324,6 +325,49 @@ class QCFlagTableModel(QtCore.QAbstractTableModel):
         return None
 
 
+class QCAnalysisWorker(QThread):
+    """Worker thread for running QC analysis in background.
+
+    Signals:
+        progress: Emitted with (step_name, progress_pct) during analysis.
+        finished: Emitted with QCResults when analysis completes.
+        error: Emitted with error message if analysis fails.
+    """
+
+    progress = QSignal(str, int)  # (step_name, progress_percent)
+    finished = QSignal(object)  # QCResults
+    error = QSignal(str)
+
+    def __init__(self, labels, parent=None):
+        super().__init__(parent)
+        self._labels = labels
+        self._results = None
+
+    def run(self):
+        """Run the QC analysis."""
+        try:
+            from sleap.qc import LabelQCDetector
+
+            # Step 1: Extract features
+            self.progress.emit("Extracting features...", 10)
+            detector = LabelQCDetector()
+
+            # Step 2: Fit model
+            self.progress.emit("Fitting detection model...", 40)
+            detector.fit(self._labels)
+
+            # Step 3: Score instances
+            self.progress.emit("Scoring instances...", 70)
+            results = detector.score(self._labels)
+
+            # Step 4: Complete
+            self.progress.emit("Complete", 100)
+            self.finished.emit(results)
+
+        except Exception as e:
+            self.error.emit(str(e))
+
+
 class QCWidget(QtWidgets.QWidget):
     """Widget for label quality control analysis with visualizations.
 
@@ -349,6 +393,7 @@ class QCWidget(QtWidgets.QWidget):
         self._detector = None
         self._results: Optional["QCResults"] = None
         self._selected_flag: Optional["QCFlag"] = None
+        self._worker: Optional[QCAnalysisWorker] = None
 
         self._setup_ui()
         self._connect_signals()
@@ -357,7 +402,7 @@ class QCWidget(QtWidgets.QWidget):
         """Set up the widget UI."""
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
 
         # === Top row: title and run button ===
         title_layout = QtWidgets.QHBoxLayout()
@@ -373,16 +418,21 @@ class QCWidget(QtWidgets.QWidget):
         title_layout.addWidget(self._run_button)
         layout.addLayout(title_layout)
 
-        # Progress bar (hidden by default)
+        # Progress bar with status (hidden by default)
+        progress_layout = QtWidgets.QHBoxLayout()
+        self._progress_label = QtWidgets.QLabel("")
+        self._progress_label.setVisible(False)
+        progress_layout.addWidget(self._progress_label)
+
         self._progress_bar = QtWidgets.QProgressBar()
         self._progress_bar.setVisible(False)
-        layout.addWidget(self._progress_bar)
+        self._progress_bar.setTextVisible(True)
+        progress_layout.addWidget(self._progress_bar, stretch=1)
+        layout.addLayout(progress_layout)
 
         # === Threshold control ===
-        threshold_group = QtWidgets.QGroupBox("Sensitivity Threshold")
-        threshold_layout = QtWidgets.QHBoxLayout(threshold_group)
-        threshold_layout.setContentsMargins(8, 8, 8, 8)
-
+        threshold_layout = QtWidgets.QHBoxLayout()
+        threshold_layout.addWidget(QtWidgets.QLabel("Sensitivity:"))
         threshold_layout.addWidget(QtWidgets.QLabel("More"))
 
         self._threshold_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
@@ -407,15 +457,21 @@ class QCWidget(QtWidgets.QWidget):
         )
         threshold_layout.addWidget(self._threshold_label)
 
-        layout.addWidget(threshold_group)
+        layout.addLayout(threshold_layout)
 
-        # === Score histogram ===
-        self._score_canvas = QCScoreCanvas(width=6, height=2.5)
-        layout.addWidget(self._score_canvas)
+        # === Tabbed visualization area ===
+        self._viz_tabs = QtWidgets.QTabWidget()
+        self._viz_tabs.setMinimumHeight(220)
 
-        # === Issue breakdown ===
-        self._breakdown_canvas = QCBreakdownCanvas(width=6, height=2)
-        layout.addWidget(self._breakdown_canvas)
+        # Score distribution tab
+        self._score_canvas = QCScoreCanvas(width=6, height=2.2)
+        self._viz_tabs.addTab(self._score_canvas, "Score Distribution")
+
+        # Issue breakdown tab
+        self._breakdown_canvas = QCBreakdownCanvas(width=6, height=2.2)
+        self._viz_tabs.addTab(self._breakdown_canvas, "Issue Breakdown")
+
+        layout.addWidget(self._viz_tabs)
 
         # === Flagged instances table ===
         table_group = QtWidgets.QGroupBox("Flagged Instances")
@@ -429,7 +485,7 @@ class QCWidget(QtWidgets.QWidget):
         self._table_view.setSelectionMode(QtWidgets.QTableView.SingleSelection)
         self._table_view.setAlternatingRowColors(True)
         self._table_view.setSortingEnabled(True)
-        self._table_view.setMinimumHeight(150)
+        self._table_view.setMinimumHeight(120)
 
         # Set column widths
         header = self._table_view.horizontalHeader()
@@ -445,13 +501,13 @@ class QCWidget(QtWidgets.QWidget):
         # Selected instance details
         details_group = QtWidgets.QGroupBox("Selected Instance")
         details_layout = QtWidgets.QVBoxLayout(details_group)
-        details_layout.setContentsMargins(8, 8, 8, 8)
+        details_layout.setContentsMargins(6, 6, 6, 6)
 
         self._details_label = QtWidgets.QLabel(
             "Click a row in the table to select an instance"
         )
         self._details_label.setWordWrap(True)
-        self._details_label.setMinimumHeight(80)
+        self._details_label.setMinimumHeight(70)
         details_layout.addWidget(self._details_label)
 
         bottom_layout.addWidget(details_group)
@@ -459,27 +515,16 @@ class QCWidget(QtWidgets.QWidget):
         # Statistics panel
         stats_group = QtWidgets.QGroupBox("Statistics")
         stats_layout = QtWidgets.QVBoxLayout(stats_group)
-        stats_layout.setContentsMargins(8, 8, 8, 8)
+        stats_layout.setContentsMargins(6, 6, 6, 6)
 
         self._stats_label = QtWidgets.QLabel("No analysis run yet")
         self._stats_label.setWordWrap(True)
-        self._stats_label.setMinimumHeight(80)
+        self._stats_label.setMinimumHeight(70)
         stats_layout.addWidget(self._stats_label)
 
         bottom_layout.addWidget(stats_group)
 
         layout.addLayout(bottom_layout)
-
-        # === Export button ===
-        export_layout = QtWidgets.QHBoxLayout()
-        export_layout.addStretch()
-
-        self._export_button = QtWidgets.QPushButton("Export to CSV...")
-        self._export_button.setToolTip("Export all QC results to a CSV file")
-        self._export_button.setEnabled(False)
-        export_layout.addWidget(self._export_button)
-
-        layout.addLayout(export_layout)
 
     def _connect_signals(self):
         """Connect UI signals."""
@@ -490,7 +535,6 @@ class QCWidget(QtWidgets.QWidget):
             self._on_selection_changed
         )
         self._table_view.doubleClicked.connect(self._on_row_double_clicked)
-        self._export_button.clicked.connect(self._on_export)
 
     def set_labels(self, labels: "sio.Labels"):
         """Set the labels to analyze.
@@ -527,33 +571,51 @@ class QCWidget(QtWidgets.QWidget):
             )
             return
 
+        # If already running, don't start another
+        if self._worker is not None and self._worker.isRunning():
+            return
+
+        # Show progress UI
         self._run_button.setEnabled(False)
+        self._progress_label.setVisible(True)
+        self._progress_label.setText("Starting...")
         self._progress_bar.setVisible(True)
-        self._progress_bar.setRange(0, 0)  # Indeterminate
+        self._progress_bar.setRange(0, 100)
+        self._progress_bar.setValue(0)
 
-        try:
-            # Import here to avoid circular imports
-            from sleap.qc import LabelQCDetector
+        # Create and start worker thread
+        self._worker = QCAnalysisWorker(self._labels)
+        self._worker.progress.connect(self._on_analysis_progress)
+        self._worker.finished.connect(self._on_analysis_finished)
+        self._worker.error.connect(self._on_analysis_error)
+        self._worker.start()
 
-            # Create and fit detector
-            self._detector = LabelQCDetector()
-            self._detector.fit(self._labels)
+    def _on_analysis_progress(self, step_name: str, progress: int):
+        """Handle progress update from worker."""
+        self._progress_label.setText(step_name)
+        self._progress_bar.setValue(progress)
 
-            # Score all instances
-            self._results = self._detector.score(self._labels)
+    def _on_analysis_finished(self, results):
+        """Handle successful analysis completion."""
+        self._results = results
 
-            # Update all displays
-            self._update_all_displays()
-            self._export_button.setEnabled(True)
+        # Hide progress UI
+        self._progress_label.setVisible(False)
+        self._progress_bar.setVisible(False)
+        self._run_button.setEnabled(True)
 
-        except Exception as e:
-            QtWidgets.QMessageBox.critical(
-                self, "Analysis Error", f"Error during QC analysis:\n{str(e)}"
-            )
+        # Update all displays
+        self._update_all_displays()
 
-        finally:
-            self._run_button.setEnabled(True)
-            self._progress_bar.setVisible(False)
+    def _on_analysis_error(self, error_msg: str):
+        """Handle analysis error."""
+        self._progress_label.setVisible(False)
+        self._progress_bar.setVisible(False)
+        self._run_button.setEnabled(True)
+
+        QtWidgets.QMessageBox.critical(
+            self, "Analysis Error", f"Error during QC analysis:\n{error_msg}"
+        )
 
     def _on_threshold_changed(self, value: int):
         """Handle threshold slider change."""
@@ -708,9 +770,17 @@ class QCWidget(QtWidgets.QWidget):
             f"<b>Top Features:</b><br/>{features_text}"
         )
 
-    def _on_export(self):
-        """Export QC results to CSV."""
+    @property
+    def has_results(self) -> bool:
+        """Return True if analysis results are available."""
+        return self._results is not None
+
+    def export_results(self):
+        """Export QC results to CSV (public method for dialog)."""
         if self._results is None:
+            QtWidgets.QMessageBox.warning(
+                self, "No Results", "Please run analysis first."
+            )
             return
 
         filepath, _ = QtWidgets.QFileDialog.getSaveFileName(

@@ -50,8 +50,8 @@ class QCDialog(QtWidgets.QDialog):
         self._navigate_callback = navigate_callback
 
         self.setWindowTitle("Label Quality Control")
-        self.setMinimumSize(700, 900)
-        self.resize(800, 950)
+        self.setMinimumSize(650, 700)
+        self.resize(700, 750)
 
         # Make dialog non-modal so user can interact with main window
         self.setModal(False)
@@ -69,10 +69,21 @@ class QCDialog(QtWidgets.QDialog):
         self._widget.set_labels(self._labels)
         layout.addWidget(self._widget, stretch=1)
 
-        # Button box
-        button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
-        button_box.rejected.connect(self.close)
-        layout.addWidget(button_box)
+        # Button row: Export on left, Close on right
+        button_layout = QtWidgets.QHBoxLayout()
+
+        self._export_button = QtWidgets.QPushButton("Export to CSV...")
+        self._export_button.setToolTip("Export all QC results to a CSV file")
+        self._export_button.clicked.connect(self._widget.export_results)
+        button_layout.addWidget(self._export_button)
+
+        button_layout.addStretch()
+
+        close_button = QtWidgets.QPushButton("Close")
+        close_button.clicked.connect(self.close)
+        button_layout.addWidget(close_button)
+
+        layout.addLayout(button_layout)
 
     def _connect_signals(self):
         """Connect widget signals."""

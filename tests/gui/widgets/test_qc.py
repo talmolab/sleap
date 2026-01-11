@@ -112,9 +112,9 @@ class TestQCWidget:
         assert widget._run_button is not None
         assert widget._threshold_slider is not None
         assert widget._table_view is not None
-        assert widget._export_button is not None
         assert widget._score_canvas is not None
         assert widget._breakdown_canvas is not None
+        assert widget._viz_tabs is not None  # Tabbed visualization
 
     def test_threshold_slider_default(self, qtbot):
         """Test default threshold is 0.7."""
@@ -214,11 +214,11 @@ class TestQCWidget:
         assert len(received_signals) == 1
         assert received_signals[0] == (0, 5, 0)
 
-    def test_export_button_disabled_before_analysis(self, qtbot):
-        """Test export button is disabled before analysis."""
+    def test_has_results_property(self, qtbot):
+        """Test has_results property is False before analysis."""
         widget = QCWidget()
         qtbot.addWidget(widget)
-        assert not widget._export_button.isEnabled()
+        assert not widget.has_results
 
 
 class TestQCDialog:
