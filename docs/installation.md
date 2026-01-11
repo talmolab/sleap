@@ -6,6 +6,7 @@ SLEAP is a tool for tracking animal poses in video. This guide will help you ins
 
 - **Just use SLEAP** → [Install SLEAP](#install-sleap) (most users)
 - **Try it first without installing** → [Quick Run](#quick-run)
+- **Test new features before release** → [Pre-release Versions](#pre-release-versions)
 - **Test a bug fix from a branch** → [Install from Git](#install-from-git)
 - **Develop or contribute to SLEAP** → [Development Setup](#development-setup)
 - **Use SLEAP programmatically** → [Programmatic Usage](#programmatic-usage)
@@ -115,14 +116,121 @@ sleap
 ```
 A window should open within a few seconds. Close it with the X button.
 
-**Update to latest version:**
+**Update to latest stable version:**
 ```
 uv tool upgrade sleap
+```
+
+**Check installed version:**
+```
+sleap doctor
 ```
 
 **Uninstall:**
 ```
 uv tool uninstall sleap
+```
+
+---
+
+## Pre-release Versions
+
+To test new features before official release, you can install pre-release versions (alpha, beta, release candidates). Pre-releases require the `--prerelease allow` flag.
+
+!!! warning "Pre-release software"
+    Pre-release versions may contain bugs or incomplete features. Use stable releases for production annotation work.
+
+### Install Latest Pre-release
+
+=== "Windows/Linux with NVIDIA GPU"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]" --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    ```
+
+=== "Windows/Linux without GPU"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]" --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]" --prerelease allow
+    ```
+
+### Install a Specific Version
+
+Pin to an exact version for reproducibility or to test a specific release:
+
+=== "Windows/Linux with NVIDIA GPU"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    ```
+
+=== "Windows/Linux without GPU"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --prerelease allow
+    ```
+
+### Pin Dependency Versions
+
+For full reproducibility, you can explicitly pin the versions of `sleap-io` and `sleap-nn` using the `--with` flag:
+
+=== "Windows/Linux with NVIDIA GPU"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --with "sleap-io==0.6.0" --with "sleap-nn==0.1.0a0" --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    ```
+
+=== "Windows/Linux without GPU"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --with "sleap-io==0.6.0" --with "sleap-nn==0.1.0a0" --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --with "sleap-io==0.6.0" --with "sleap-nn==0.1.0a0" --prerelease allow
+    ```
+
+!!! info "Version compatibility"
+    The SLEAP ecosystem has three packages with coordinated releases:
+
+    | SLEAP | sleap-io | sleap-nn |
+    |-------|----------|----------|
+    | 1.6.0aN | 0.6.x | 0.1.0aN |
+    | 1.6.x | 0.6.x | 0.1.x |
+    | 1.5.x | 0.5.x | 0.0.x |
+
+    When pinning versions, ensure you use compatible combinations. Mismatched versions may cause errors.
+
+### Rollback to Stable
+
+If you encounter issues with a pre-release, rollback to the latest stable version:
+
+=== "Windows/Linux with NVIDIA GPU"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]==1.5.2" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    ```
+
+=== "Windows/Linux without GPU"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]==1.5.2" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+=== "macOS"
+    ```
+    uv tool install --force --python 3.12 "sleap[nn]==1.5.2"
+    ```
+
+### CUDA 13.0 Support
+
+Starting with v1.6.0, SLEAP supports CUDA 13.0 for the latest NVIDIA GPUs:
+
+```
+uv tool install --force --python 3.12 "sleap[nn]" --prerelease allow --index https://download.pytorch.org/whl/cu130 --index https://pypi.org/simple
 ```
 
 ---
