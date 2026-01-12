@@ -51,6 +51,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
 
         self._labels = labels
         self._navigate_callback = navigate_callback
+        self._tab_visible = True  # Track if we're the visible tab when docked
 
         self._setup_ui()
         self._setup_dock()
@@ -129,6 +130,17 @@ class QCDockWidget(QtWidgets.QDockWidget):
         # Update dock button text when dock state changes (e.g., via dragging)
         self.topLevelChanged.connect(self._update_dock_button)
 
+        # Track tab visibility for navigation precedence
+        # visibilityChanged is emitted when tab is selected/deselected in tabified mode
+        self.visibilityChanged.connect(self._on_visibility_changed)
+
+    def _on_visibility_changed(self, visible: bool):
+        """Track visibility changes for navigation precedence.
+
+        When tabified, this signal tells us if our tab is selected.
+        """
+        self._tab_visible = visible
+
     def _on_navigate(self, video_idx: int, frame_idx: int, instance_idx: int):
         """Handle navigation request from widget."""
         if self._navigate_callback is not None:
@@ -181,6 +193,52 @@ class QCDockWidget(QtWidgets.QDockWidget):
         """
         self._labels = labels
         self._widget.set_labels(labels)
+
+    @property
+    def is_active_for_navigation(self) -> bool:
+        """Check if QC dock should take precedence for space navigation.
+
+        Returns True if:
+        - The dock is visible (not closed)
+        - The widget has flagged results to navigate
+        - AND either: dock is floating, OR dock is the visible tab when tabified
+
+        Returns:
+            True if QC navigation should take precedence over suggestions.
+        """
+        # Must be visible (not closed) and have flags to navigate
+        if not self.isVisible():
+            return False
+        if not self._widget.has_flags:
+            return False
+
+        # If floating, always active
+        if self.isFloating():
+            return True
+
+        # If docked, use tracked tab visibility from visibilityChanged signal
+        return self._tab_visible
+
+    @property
+    def has_flags(self) -> bool:
+        """Check if the widget has flagged items."""
+        return self._widget.has_flags
+
+    def goto_next_flag(self) -> bool:
+        """Navigate to next flagged instance.
+
+        Returns:
+            True if navigation occurred.
+        """
+        return self._widget.goto_next_flag()
+
+    def goto_prev_flag(self) -> bool:
+        """Navigate to previous flagged instance.
+
+        Returns:
+            True if navigation occurred.
+        """
+        return self._widget.goto_prev_flag()
 
     def closeEvent(self, event):
         """Handle dock widget close event."""

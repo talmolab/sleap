@@ -528,6 +528,35 @@ class QCFlagTableModel(QtCore.QAbstractTableModel):
 
         return None
 
+    def sort(self, column: int, order: QtCore.Qt.SortOrder = QtCore.Qt.AscendingOrder):
+        """Sort the model by the given column.
+
+        Args:
+            column: Column index to sort by.
+            order: Sort order (AscendingOrder or DescendingOrder).
+        """
+        self.beginResetModel()
+
+        reverse = order == QtCore.Qt.DescendingOrder
+
+        # Define sort key for each column
+        if column == 0:  # Frame
+            key = lambda x: x.frame_idx
+        elif column == 1:  # Instance
+            key = lambda x: x.instance_idx
+        elif column == 2:  # Score
+            key = lambda x: x.score
+        elif column == 3:  # Confidence (high > medium > low)
+            conf_order = {"high": 2, "medium": 1, "low": 0}
+            key = lambda x: conf_order.get(x.confidence, -1)
+        elif column == 4:  # Issue (alphabetical)
+            key = lambda x: x.top_issue
+        else:
+            key = lambda x: 0
+
+        self._items.sort(key=key, reverse=reverse)
+        self.endResetModel()
+
 
 class QCAnalysisWorker(QThread):
     """Worker thread for running QC analysis in background.
@@ -1066,6 +1095,52 @@ class QCWidget(QtWidgets.QWidget):
     def has_results(self) -> bool:
         """Return True if analysis results are available."""
         return self._results is not None
+
+    @property
+    def has_flags(self) -> bool:
+        """Return True if there are flagged items to navigate."""
+        return len(self._table_model.items) > 0
+
+    def goto_next_flag(self) -> bool:
+        """Navigate to the next flagged instance in the table.
+
+        Returns:
+            True if navigation occurred, False if no items or at end.
+        """
+        if not self.has_flags:
+            return False
+
+        # Get current selection
+        indexes = self._table_view.selectionModel().selectedRows()
+        current_row = indexes[0].row() if indexes else -1
+
+        # Move to next row (wrap around)
+        next_row = (current_row + 1) % len(self._table_model.items)
+
+        # Select the row (this triggers navigation via _on_selection_changed)
+        self._table_view.selectRow(next_row)
+        return True
+
+    def goto_prev_flag(self) -> bool:
+        """Navigate to the previous flagged instance in the table.
+
+        Returns:
+            True if navigation occurred, False if no items.
+        """
+        if not self.has_flags:
+            return False
+
+        # Get current selection
+        indexes = self._table_view.selectionModel().selectedRows()
+        n_items = len(self._table_model.items)
+        current_row = indexes[0].row() if indexes else 0
+
+        # Move to previous row (wrap around)
+        prev_row = (current_row - 1) % n_items
+
+        # Select the row (this triggers navigation via _on_selection_changed)
+        self._table_view.selectRow(prev_row)
+        return True
 
     def export_results(self):
         """Export QC results to CSV (public method for dialog)."""

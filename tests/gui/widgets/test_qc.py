@@ -94,6 +94,72 @@ class TestQCFlagTableModel:
         assert model.headerData(1, QtCore.Qt.Horizontal) == "Instance"
         assert model.headerData(2, QtCore.Qt.Horizontal) == "Score"
 
+    def test_sort_by_frame(self):
+        """Test sorting by frame column."""
+        model = QCFlagTableModel()
+        flags = [
+            MockQCFlag(0, 10, 0, 0.9, "high", "edge_error"),
+            MockQCFlag(0, 5, 1, 0.7, "medium", "visibility"),
+            MockQCFlag(0, 15, 0, 0.6, "low", "scale"),
+        ]
+        model.items = flags
+
+        # Sort ascending by frame
+        model.sort(0, QtCore.Qt.AscendingOrder)
+        assert model._items[0].frame_idx == 5
+        assert model._items[1].frame_idx == 10
+        assert model._items[2].frame_idx == 15
+
+        # Sort descending by frame
+        model.sort(0, QtCore.Qt.DescendingOrder)
+        assert model._items[0].frame_idx == 15
+        assert model._items[1].frame_idx == 10
+        assert model._items[2].frame_idx == 5
+
+    def test_sort_by_score(self):
+        """Test sorting by score column."""
+        model = QCFlagTableModel()
+        flags = [
+            MockQCFlag(0, 10, 0, 0.7, "medium", "edge_error"),
+            MockQCFlag(0, 5, 1, 0.9, "high", "visibility"),
+            MockQCFlag(0, 15, 0, 0.6, "low", "scale"),
+        ]
+        model.items = flags
+
+        # Sort ascending by score (lowest first)
+        model.sort(2, QtCore.Qt.AscendingOrder)
+        assert model._items[0].score == 0.6
+        assert model._items[1].score == 0.7
+        assert model._items[2].score == 0.9
+
+        # Sort descending by score (highest first)
+        model.sort(2, QtCore.Qt.DescendingOrder)
+        assert model._items[0].score == 0.9
+        assert model._items[1].score == 0.7
+        assert model._items[2].score == 0.6
+
+    def test_sort_by_confidence(self):
+        """Test sorting by confidence column."""
+        model = QCFlagTableModel()
+        flags = [
+            MockQCFlag(0, 10, 0, 0.7, "medium", "edge_error"),
+            MockQCFlag(0, 5, 1, 0.9, "high", "visibility"),
+            MockQCFlag(0, 15, 0, 0.6, "low", "scale"),
+        ]
+        model.items = flags
+
+        # Sort ascending by confidence (low first)
+        model.sort(3, QtCore.Qt.AscendingOrder)
+        assert model._items[0].confidence == "low"
+        assert model._items[1].confidence == "medium"
+        assert model._items[2].confidence == "high"
+
+        # Sort descending by confidence (high first)
+        model.sort(3, QtCore.Qt.DescendingOrder)
+        assert model._items[0].confidence == "high"
+        assert model._items[1].confidence == "medium"
+        assert model._items[2].confidence == "low"
+
 
 class TestQCWidget:
     """Tests for QCWidget."""
@@ -504,3 +570,203 @@ class TestExportToSuggestions:
         # Should only add 1 new frame (frame 20)
         assert result == 1
         assert len(mock_labels.suggestions) == 2  # 1 existing + 1 new
+
+
+class TestQCNavigation:
+    """Tests for QC flag navigation functionality."""
+
+    def test_has_flags_property_no_items(self, qtbot):
+        """Test has_flags is False when no items in table."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert not widget.has_flags
+
+    def test_has_flags_property_with_items(self, qtbot):
+        """Test has_flags is True when items in table."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        flags = [MockQCFlag(0, 5, 0, 0.9, "high", "edge_error")]
+        widget._table_model.items = flags
+        assert widget.has_flags
+
+    def test_goto_next_flag_no_items(self, qtbot):
+        """Test goto_next_flag returns False with no items."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert not widget.goto_next_flag()
+
+    def test_goto_next_flag_advances_selection(self, qtbot):
+        """Test goto_next_flag advances to next row."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        flags = [
+            MockQCFlag(0, 5, 0, 0.9, "high", "edge_error"),
+            MockQCFlag(0, 10, 1, 0.7, "medium", "visibility"),
+            MockQCFlag(0, 15, 0, 0.6, "medium", "edge_error"),
+        ]
+        widget._table_model.items = flags
+
+        # No selection initially, should start at row 0
+        assert widget.goto_next_flag()
+        indexes = widget._table_view.selectionModel().selectedRows()
+        assert len(indexes) == 1
+        assert indexes[0].row() == 0
+
+        # Move to row 1
+        assert widget.goto_next_flag()
+        indexes = widget._table_view.selectionModel().selectedRows()
+        assert indexes[0].row() == 1
+
+        # Move to row 2
+        assert widget.goto_next_flag()
+        indexes = widget._table_view.selectionModel().selectedRows()
+        assert indexes[0].row() == 2
+
+        # Wrap around to row 0
+        assert widget.goto_next_flag()
+        indexes = widget._table_view.selectionModel().selectedRows()
+        assert indexes[0].row() == 0
+
+    def test_goto_prev_flag_no_items(self, qtbot):
+        """Test goto_prev_flag returns False with no items."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert not widget.goto_prev_flag()
+
+    def test_goto_prev_flag_goes_backward(self, qtbot):
+        """Test goto_prev_flag goes to previous row."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        flags = [
+            MockQCFlag(0, 5, 0, 0.9, "high", "edge_error"),
+            MockQCFlag(0, 10, 1, 0.7, "medium", "visibility"),
+            MockQCFlag(0, 15, 0, 0.6, "medium", "edge_error"),
+        ]
+        widget._table_model.items = flags
+
+        # Start at row 1
+        widget._table_view.selectRow(1)
+        qtbot.wait(10)
+
+        # Move to row 0
+        assert widget.goto_prev_flag()
+        indexes = widget._table_view.selectionModel().selectedRows()
+        assert indexes[0].row() == 0
+
+        # Wrap to last row
+        assert widget.goto_prev_flag()
+        indexes = widget._table_view.selectionModel().selectedRows()
+        assert indexes[0].row() == 2
+
+
+class TestQCDockNavigation:
+    """Tests for QC dock widget navigation precedence."""
+
+    def test_dock_has_flags_property(self, qtbot):
+        """Test dock widget exposes has_flags property."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+
+        # Initially no flags
+        assert not dock.has_flags
+
+        # Add flags
+        flags = [MockQCFlag(0, 5, 0, 0.9, "high", "edge_error")]
+        dock._widget._table_model.items = flags
+        assert dock.has_flags
+
+    def test_dock_goto_methods(self, qtbot):
+        """Test dock widget exposes navigation methods."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+
+        # Add flags
+        flags = [
+            MockQCFlag(0, 5, 0, 0.9, "high", "edge_error"),
+            MockQCFlag(0, 10, 1, 0.7, "medium", "visibility"),
+        ]
+        dock._widget._table_model.items = flags
+
+        # Test goto_next_flag
+        assert dock.goto_next_flag()
+        indexes = dock._widget._table_view.selectionModel().selectedRows()
+        assert indexes[0].row() == 0
+
+        # Test goto_prev_flag (wraps to end)
+        assert dock.goto_prev_flag()
+        indexes = dock._widget._table_view.selectionModel().selectedRows()
+        assert indexes[0].row() == 1
+
+    def test_is_active_for_navigation_not_visible(self, qtbot):
+        """Test is_active_for_navigation is False when dock is not visible."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+
+        # Add flags but keep dock hidden
+        flags = [MockQCFlag(0, 5, 0, 0.9, "high", "edge_error")]
+        dock._widget._table_model.items = flags
+        dock.hide()
+
+        assert not dock.is_active_for_navigation
+
+    def test_is_active_for_navigation_no_flags(self, qtbot):
+        """Test is_active_for_navigation is False when no flags."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+        dock.show()
+
+        # No flags, so should not be active
+        assert not dock.is_active_for_navigation
+
+    def test_is_active_for_navigation_floating(self, qtbot):
+        """Test is_active_for_navigation is True when floating with flags."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+        from qtpy.QtWidgets import QMainWindow
+        from qtpy.QtCore import Qt
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        main_window = QMainWindow()
+        qtbot.addWidget(main_window)
+
+        dock = QCDockWidget(labels=mock_labels, parent=main_window)
+        main_window.addDockWidget(Qt.RightDockWidgetArea, dock)
+        qtbot.addWidget(dock)
+
+        # Add flags and float the dock
+        flags = [MockQCFlag(0, 5, 0, 0.9, "high", "edge_error")]
+        dock._widget._table_model.items = flags
+        dock.setFloating(True)
+        dock.show()
+        main_window.show()
+        qtbot.wait(50)
+
+        assert dock.is_active_for_navigation

@@ -557,13 +557,13 @@ class MainWindow(QMainWindow):
             goMenu,
             "goto next suggestion",
             "Next Suggestion",
-            self.commands.nextSuggestedFrame,
+            self._goto_next_suggestion_or_flag,
         )
         add_menu_item(
             goMenu,
             "goto prev suggestion",
             "Previous Suggestion",
-            self.commands.prevSuggestedFrame,
+            self._goto_prev_suggestion_or_flag,
         )
         add_menu_item(
             goMenu,
@@ -613,7 +613,13 @@ class MainWindow(QMainWindow):
         self.viewMenu = viewMenu  # store as attribute so docks can add items
 
         viewMenu.addSeparator()
-        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
+        add_menu_check_item(viewMenu, "fit", "Fit View to Instances")
+        add_menu_item(
+            viewMenu,
+            "fit selection",
+            "Fit View to Selection",
+            self._fit_view_to_selection,
+        )
 
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
@@ -1755,6 +1761,36 @@ class MainWindow(QMainWindow):
 
         dialog = UpdateCheckerDialog(self)
         dialog.exec_()
+
+    def _fit_view_to_selection(self):
+        """Zoom the view to fit just the selected instance."""
+        if self.player is None:
+            return
+        if not self.player.zoomToSelection():
+            # No instance selected - show a brief message
+            self.statusBar().showMessage("No instance selected", 2000)
+
+    def _goto_next_suggestion_or_flag(self):
+        """Go to next suggestion or QC flag, depending on which is active.
+
+        If QC dock is visible and is the active tab (or floating) with flags,
+        navigate to the next QC flag. Otherwise, navigate to next suggestion.
+        """
+        if hasattr(self, "_qc_dock") and self._qc_dock.is_active_for_navigation:
+            self._qc_dock.goto_next_flag()
+        else:
+            self.commands.nextSuggestedFrame()
+
+    def _goto_prev_suggestion_or_flag(self):
+        """Go to previous suggestion or QC flag, depending on which is active.
+
+        If QC dock is visible and is the active tab (or floating) with flags,
+        navigate to the previous QC flag. Otherwise, navigate to prev suggestion.
+        """
+        if hasattr(self, "_qc_dock") and self._qc_dock.is_active_for_navigation:
+            self._qc_dock.goto_prev_flag()
+        else:
+            self.commands.prevSuggestedFrame()
 
     def _open_size_distribution(self):
         """Opens the instance size distribution analysis dialog."""
