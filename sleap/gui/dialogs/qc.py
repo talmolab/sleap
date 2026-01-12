@@ -139,6 +139,8 @@ class QCDockWidget(QtWidgets.QDockWidget):
         if self.isFloating():
             # Currently floating, dock it
             self.setFloating(False)
+            # Bring the QC tab to front after docking
+            self.raise_()
         else:
             # Currently docked, float it
             self.setFloating(True)

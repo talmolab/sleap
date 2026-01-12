@@ -1081,8 +1081,8 @@ class MainWindow(QMainWindow):
         # Add to main window's dock area on the right side
         self.addDockWidget(Qt.RightDockWidgetArea, self._qc_dock)
 
-        # Tabify with other docks on the right side
-        self.tabifyDockWidget(self.videos_dock, self._qc_dock)
+        # Tabify with other docks on the right side (after instances_dock to be last)
+        self.tabifyDockWidget(self.instances_dock, self._qc_dock)
 
         # Add toggle action to View menu
         self.viewMenu.addAction(self._qc_dock.toggleViewAction())
