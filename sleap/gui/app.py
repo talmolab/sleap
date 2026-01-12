@@ -1750,7 +1750,11 @@ class MainWindow(QMainWindow):
         dialog.show()
 
     def _open_label_qc(self):
-        """Opens the label QC analysis dialog."""
+        """Opens the label QC analysis dock widget.
+
+        The dock widget starts floating but can be docked to the left or right
+        side of the main window. The dock is reused if already open.
+        """
         if self.labels is None or len(self.labels) == 0:
             QMessageBox.warning(
                 self,
@@ -1759,7 +1763,16 @@ class MainWindow(QMainWindow):
             )
             return
 
-        from sleap.gui.dialogs.qc import QCDialog
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        # Check if we already have a QC dock
+        if hasattr(self, "_qc_dock") and self._qc_dock is not None:
+            # Update labels in case they changed
+            self._qc_dock.update_labels(self.labels)
+            # Show and raise the existing dock
+            self._qc_dock.show()
+            self._qc_dock.raise_()
+            return
 
         def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
             """Navigate to the specified frame and highlight instance."""
@@ -1769,12 +1782,22 @@ class MainWindow(QMainWindow):
                     video, frame_idx, instance_idx
                 )
 
-        dialog = QCDialog(
+        # Create the dock widget
+        self._qc_dock = QCDockWidget(
             labels=self.labels,
             navigate_callback=navigate_callback,
             parent=self,
         )
-        dialog.show()
+
+        # Add to main window's dock area (required for docking to work)
+        self.addDockWidget(Qt.RightDockWidgetArea, self._qc_dock)
+
+        # Add toggle action to View menu
+        self.viewMenu.addAction(self._qc_dock.toggleViewAction())
+
+        # Start floating (already set in QCDockWidget, but ensure it)
+        self._qc_dock.setFloating(True)
+        self._qc_dock.show()
 
 
 def create_sleap_label_parser():

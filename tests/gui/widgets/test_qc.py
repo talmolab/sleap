@@ -283,3 +283,167 @@ class TestQCDialog:
         dialog = QCDialog(labels=mock_labels)
         qtbot.addWidget(dialog)
         assert not dialog.isModal()
+
+
+class TestQCDockWidget:
+    """Tests for QCDockWidget docking functionality."""
+
+    def test_dock_widget_is_dockable(self, qtbot):
+        """Test that QCDockWidget is a QDockWidget."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+        from qtpy.QtWidgets import QDockWidget
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+        assert isinstance(dock, QDockWidget)
+
+    def test_dock_widget_starts_floating(self, qtbot):
+        """Test that dock widget starts in floating mode."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+        assert dock.isFloating()
+
+    def test_dock_widget_allowed_areas(self, qtbot):
+        """Test that dock widget can be docked to left or right."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+        from qtpy.QtCore import Qt
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+        allowed_areas = dock.allowedAreas()
+        assert allowed_areas & Qt.LeftDockWidgetArea
+        assert allowed_areas & Qt.RightDockWidgetArea
+
+    def test_dock_widget_has_suggestions_button(self, qtbot):
+        """Test that dock widget has Add to Suggestions button."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+        assert dock._suggestions_button is not None
+        assert "Suggestions" in dock._suggestions_button.text()
+
+
+class TestExportToSuggestions:
+    """Tests for export_to_suggestions functionality."""
+
+    def test_export_no_results(self, qtbot):
+        """Test export fails gracefully when no results available."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        with patch("sleap.gui.widgets.qc.QtWidgets.QMessageBox") as mock_msgbox:
+            result = widget.export_to_suggestions()
+            mock_msgbox.warning.assert_called_once()
+            assert result == -1
+
+    def test_export_no_labels(self, qtbot):
+        """Test export fails gracefully when no labels loaded."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Set up mock results but no labels
+        widget._results = MagicMock()
+        widget._labels = None
+
+        with patch("sleap.gui.widgets.qc.QtWidgets.QMessageBox") as mock_msgbox:
+            result = widget.export_to_suggestions()
+            mock_msgbox.warning.assert_called_once()
+            assert result == -1
+
+    def test_export_no_flagged_instances(self, qtbot):
+        """Test export handles no flagged instances."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Set up mock results with no flagged instances
+        mock_results = MagicMock()
+        mock_results.get_flagged.return_value = []
+        widget._results = mock_results
+        widget._labels = MagicMock()
+
+        with patch("sleap.gui.widgets.qc.QtWidgets.QMessageBox") as mock_msgbox:
+            result = widget.export_to_suggestions()
+            mock_msgbox.information.assert_called_once()
+            assert result == 0
+
+    def test_export_creates_suggestions(self, qtbot):
+        """Test export creates SuggestionFrame objects for flagged frames."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Create mock labels with videos
+        mock_video = MagicMock()
+        mock_labels = MagicMock()
+        mock_labels.videos = [mock_video]
+        mock_labels.suggestions = []
+
+        # Create mock results with flagged instances
+        mock_flags = [
+            MockQCFlag(0, 10, 0, 0.9, "high", "edge_error"),
+            MockQCFlag(0, 10, 1, 0.85, "high", "visibility"),  # Same frame
+            MockQCFlag(0, 20, 0, 0.75, "medium", "edge_error"),  # Different frame
+        ]
+        mock_results = MagicMock()
+        mock_results.get_flagged.return_value = mock_flags
+        widget._results = mock_results
+        widget._labels = mock_labels
+        widget._threshold_slider.setValue(70)
+
+        with patch("sleap.gui.widgets.qc.QtWidgets.QMessageBox"):
+            result = widget.export_to_suggestions()
+
+        # Should add 2 unique frames (10 and 20)
+        assert result == 2
+        assert len(mock_labels.suggestions) == 2
+
+    def test_export_skips_existing_suggestions(self, qtbot):
+        """Test export doesn't duplicate existing suggestions."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Create mock labels with one existing suggestion
+        mock_video = MagicMock()
+        existing_suggestion = MagicMock()
+        existing_suggestion.video = mock_video
+        existing_suggestion.frame_idx = 10
+
+        mock_labels = MagicMock()
+        mock_labels.videos = [mock_video]
+        mock_labels.suggestions = [existing_suggestion]
+
+        # Create mock results with flagged instances
+        mock_flags = [
+            MockQCFlag(0, 10, 0, 0.9, "high", "edge_error"),  # Already in suggestions
+            MockQCFlag(0, 20, 0, 0.75, "medium", "edge_error"),  # New frame
+        ]
+        mock_results = MagicMock()
+        mock_results.get_flagged.return_value = mock_flags
+        widget._results = mock_results
+        widget._labels = mock_labels
+        widget._threshold_slider.setValue(70)
+
+        with patch("sleap.gui.widgets.qc.QtWidgets.QMessageBox"):
+            result = widget.export_to_suggestions()
+
+        # Should only add 1 new frame (frame 20)
+        assert result == 1
+        assert len(mock_labels.suggestions) == 2  # 1 existing + 1 new

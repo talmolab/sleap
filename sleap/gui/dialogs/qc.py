@@ -1,8 +1,8 @@
 """
-Dialog for viewing label QC results.
+Dockable widget for viewing label QC results.
 
-Provides a standalone dialog that wraps the QCWidget
-with navigation support back to the main window.
+Provides a QDockWidget that wraps the QCWidget with navigation support.
+Starts floating by default but can be docked to left or right side.
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Callable, Optional, TYPE_CHECKING
 
 from qtpy import QtWidgets
+from qtpy.QtCore import Qt
 
 from sleap.gui.widgets.qc import QCWidget
 
@@ -17,18 +18,19 @@ if TYPE_CHECKING:
     import sleap_io as sio
 
 
-class QCDialog(QtWidgets.QDialog):
-    """Dialog for label quality control analysis with navigation.
+class QCDockWidget(QtWidgets.QDockWidget):
+    """Dockable widget for label quality control analysis.
 
-    This dialog displays the QCWidget and optionally connects
-    navigation signals to the main window.
+    This dock widget wraps the QCWidget and provides docking capabilities.
+    It starts floating by default but can be docked to the left or right
+    side of the main window for convenient review workflows.
 
     Args:
         labels: The Labels object containing labeled frames.
         navigate_callback: Optional callback function that takes
             (video_idx, frame_idx, instance_idx) arguments. Called when
             user selects an instance to navigate to.
-        parent: Parent widget.
+        parent: Parent widget (typically the main window).
     """
 
     def __init__(
@@ -37,42 +39,66 @@ class QCDialog(QtWidgets.QDialog):
         navigate_callback: Optional[Callable[[int, int, int], None]] = None,
         parent: Optional[QtWidgets.QWidget] = None,
     ):
-        """Initialize the dialog.
+        """Initialize the dock widget.
 
         Args:
             labels: The Labels object containing labeled frames.
             navigate_callback: Optional callback for navigation.
             parent: Parent widget.
         """
-        super().__init__(parent)
+        super().__init__("Label Quality Control", parent)
 
         self._labels = labels
         self._navigate_callback = navigate_callback
 
-        self.setWindowTitle("Label Quality Control")
+        self._setup_ui()
+        self._setup_dock()
+        self._connect_signals()
+
+    def _setup_dock(self):
+        """Configure dock widget properties."""
+        self.setObjectName("LabelQCDock")
+
+        # Allow docking on left or right side
+        self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+
+        # Start floating by default for initial popup experience
+        self.setFloating(True)
+
+        # Set minimum and default sizes
         self.setMinimumSize(650, 700)
         self.resize(700, 750)
 
-        # Make dialog non-modal so user can interact with main window
-        self.setModal(False)
-
-        self._setup_ui()
-        self._connect_signals()
+        # Enable close button and allow floating
+        self.setFeatures(
+            QtWidgets.QDockWidget.DockWidgetClosable
+            | QtWidgets.QDockWidget.DockWidgetMovable
+            | QtWidgets.QDockWidget.DockWidgetFloatable
+        )
 
     def _setup_ui(self):
-        """Set up the dialog UI."""
-        layout = QtWidgets.QVBoxLayout(self)
+        """Set up the dock widget UI."""
+        # Create container widget
+        container = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(container)
         layout.setContentsMargins(8, 8, 8, 8)
 
-        # Main widget
+        # Main QC widget
         self._widget = QCWidget()
         self._widget.set_labels(self._labels)
         layout.addWidget(self._widget, stretch=1)
 
-        # Button row: Export on left, Close on right
+        # Button row: Add to Suggestions, Export CSV, Close
         button_layout = QtWidgets.QHBoxLayout()
 
-        self._export_button = QtWidgets.QPushButton("Export to CSV...")
+        self._suggestions_button = QtWidgets.QPushButton("Add to Suggestions")
+        self._suggestions_button.setToolTip(
+            "Add flagged frames to the Labeling Suggestions list for review"
+        )
+        self._suggestions_button.clicked.connect(self._on_add_to_suggestions)
+        button_layout.addWidget(self._suggestions_button)
+
+        self._export_button = QtWidgets.QPushButton("Export CSV...")
         self._export_button.setToolTip("Export all QC results to a CSV file")
         self._export_button.clicked.connect(self._widget.export_results)
         button_layout.addWidget(self._export_button)
@@ -85,6 +111,8 @@ class QCDialog(QtWidgets.QDialog):
 
         layout.addLayout(button_layout)
 
+        self.setWidget(container)
+
     def _connect_signals(self):
         """Connect widget signals."""
         if self._navigate_callback is not None:
@@ -94,6 +122,17 @@ class QCDialog(QtWidgets.QDialog):
         """Handle navigation request from widget."""
         if self._navigate_callback is not None:
             self._navigate_callback(video_idx, frame_idx, instance_idx)
+
+    def _on_add_to_suggestions(self):
+        """Handle Add to Suggestions button click."""
+        n_added = self._widget.export_to_suggestions()
+        if n_added > 0:
+            # Trigger update of suggestions dock in main window
+            parent = self.parent()
+            if parent is not None and hasattr(parent, "on_data_update"):
+                from sleap.gui.commands import UpdateTopic
+
+                parent.on_data_update([UpdateTopic.suggestions])
 
     def update_labels(self, labels: "sio.Labels"):
         """Update the labels being analyzed.
@@ -105,7 +144,11 @@ class QCDialog(QtWidgets.QDialog):
         self._widget.set_labels(labels)
 
     def closeEvent(self, event):
-        """Handle dialog close event."""
+        """Handle dock widget close event."""
         # Clean up the widget's resources (e.g., stop running analysis)
         self._widget.cleanup()
         super().closeEvent(event)
+
+
+# Keep QCDialog as an alias for backwards compatibility
+QCDialog = QCDockWidget

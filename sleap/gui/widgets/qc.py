@@ -1089,6 +1089,89 @@ class QCWidget(QtWidgets.QWidget):
                     self, "Export Error", f"Error exporting results:\n{str(e)}"
                 )
 
+    def export_to_suggestions(self) -> int:
+        """Export flagged frames to the suggestions list.
+
+        Creates SuggestionFrame objects for each unique frame that contains
+        flagged instances and adds them to labels.suggestions.
+
+        Returns:
+            Number of suggestions added, or -1 if export failed.
+        """
+        from sleap_io import SuggestionFrame
+
+        if self._results is None:
+            QtWidgets.QMessageBox.warning(
+                self, "No Results", "Please run analysis first."
+            )
+            return -1
+
+        if self._labels is None:
+            QtWidgets.QMessageBox.warning(
+                self, "No Labels", "No labels file loaded."
+            )
+            return -1
+
+        threshold = self._threshold_slider.value() / 100.0
+        flagged = self._results.get_flagged(threshold=threshold)
+
+        if not flagged:
+            QtWidgets.QMessageBox.information(
+                self,
+                "No Flagged Instances",
+                "No instances are flagged at the current threshold.",
+            )
+            return 0
+
+        # Get unique frames (video_idx, frame_idx pairs)
+        # Track the highest score for each frame for metadata
+        unique_frames = {}
+        for flag in flagged:
+            key = (flag.video_idx, flag.frame_idx)
+            if key not in unique_frames or flag.score > unique_frames[key].score:
+                unique_frames[key] = flag
+
+        # Filter out frames that are already in suggestions
+        existing_suggestions = set()
+        for sugg in self._labels.suggestions:
+            video_idx = self._labels.videos.index(sugg.video)
+            existing_suggestions.add((video_idx, sugg.frame_idx))
+
+        new_frames = {
+            key: flag
+            for key, flag in unique_frames.items()
+            if key not in existing_suggestions
+        }
+
+        if not new_frames:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Already Added",
+                f"All {len(unique_frames)} flagged frames are already in suggestions.",
+            )
+            return 0
+
+        # Create SuggestionFrame objects
+        suggestions = []
+        for (video_idx, frame_idx), flag in new_frames.items():
+            video = self._labels.videos[video_idx]
+            suggestion = SuggestionFrame(video=video, frame_idx=frame_idx)
+            suggestions.append(suggestion)
+
+        # Add to labels
+        self._labels.suggestions.extend(suggestions)
+
+        n_added = len(suggestions)
+        n_skipped = len(unique_frames) - n_added
+
+        msg = f"Added {n_added} frame(s) to suggestions."
+        if n_skipped > 0:
+            msg += f"\n({n_skipped} already in suggestions)"
+
+        QtWidgets.QMessageBox.information(self, "Export Complete", msg)
+
+        return n_added
+
     def cleanup(self):
         """Clean up resources, stopping any running analysis.
 
