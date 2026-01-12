@@ -88,7 +88,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
         self._widget.set_labels(self._labels)
         layout.addWidget(self._widget, stretch=1)
 
-        # Button row: Add to Suggestions, Export CSV, Close
+        # Button row: Add to Suggestions, Export CSV, Dock/Undock, Close
         button_layout = QtWidgets.QHBoxLayout()
 
         self._suggestions_button = QtWidgets.QPushButton("Add to Suggestions")
@@ -105,6 +105,14 @@ class QCDockWidget(QtWidgets.QDockWidget):
 
         button_layout.addStretch()
 
+        # Dock/Undock toggle button
+        self._dock_button = QtWidgets.QPushButton("Dock to Right")
+        self._dock_button.setToolTip(
+            "Dock this panel to the right side of the main window"
+        )
+        self._dock_button.clicked.connect(self._toggle_dock)
+        button_layout.addWidget(self._dock_button)
+
         close_button = QtWidgets.QPushButton("Close")
         close_button.clicked.connect(self.close)
         button_layout.addWidget(close_button)
@@ -118,10 +126,39 @@ class QCDockWidget(QtWidgets.QDockWidget):
         if self._navigate_callback is not None:
             self._widget.navigate_to_instance.connect(self._on_navigate)
 
+        # Update dock button text when dock state changes (e.g., via dragging)
+        self.topLevelChanged.connect(self._update_dock_button)
+
     def _on_navigate(self, video_idx: int, frame_idx: int, instance_idx: int):
         """Handle navigation request from widget."""
         if self._navigate_callback is not None:
             self._navigate_callback(video_idx, frame_idx, instance_idx)
+
+    def _toggle_dock(self):
+        """Toggle between docked and floating states."""
+        if self.isFloating():
+            # Currently floating, dock it
+            self.setFloating(False)
+        else:
+            # Currently docked, float it
+            self.setFloating(True)
+
+    def _update_dock_button(self, floating: bool):
+        """Update dock button text based on current state.
+
+        Args:
+            floating: True if the widget is now floating, False if docked.
+        """
+        if floating:
+            self._dock_button.setText("Dock to Right")
+            self._dock_button.setToolTip(
+                "Dock this panel to the right side of the main window"
+            )
+        else:
+            self._dock_button.setText("Undock")
+            self._dock_button.setToolTip(
+                "Undock this panel to a floating window"
+            )
 
     def _on_add_to_suggestions(self):
         """Handle Add to Suggestions button click."""

@@ -341,6 +341,54 @@ class TestQCDockWidget:
         assert dock._suggestions_button is not None
         assert "Suggestions" in dock._suggestions_button.text()
 
+    def test_dock_widget_has_dock_button(self, qtbot):
+        """Test that dock widget has dock/undock toggle button."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+        assert dock._dock_button is not None
+        # Initially floating, so button should say "Dock to Right"
+        assert "Dock" in dock._dock_button.text()
+
+    def test_dock_button_toggles_state(self, qtbot):
+        """Test that dock button toggles between docked and floating."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+        from qtpy.QtWidgets import QMainWindow
+        from qtpy.QtCore import Qt
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        # Need a main window for docking to work
+        main_window = QMainWindow()
+        qtbot.addWidget(main_window)
+
+        dock = QCDockWidget(labels=mock_labels, parent=main_window)
+        main_window.addDockWidget(Qt.RightDockWidgetArea, dock)
+        qtbot.addWidget(dock)
+
+        # Initially floating
+        assert dock.isFloating()
+        assert "Dock" in dock._dock_button.text()
+
+        # Click to dock
+        dock._dock_button.click()
+        qtbot.wait(50)
+        assert not dock.isFloating()
+        assert "Undock" in dock._dock_button.text()
+
+        # Click to undock
+        dock._dock_button.click()
+        qtbot.wait(50)
+        assert dock.isFloating()
+        assert "Dock" in dock._dock_button.text()
+
 
 class TestExportToSuggestions:
     """Tests for export_to_suggestions functionality."""
