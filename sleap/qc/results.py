@@ -162,12 +162,45 @@ class QCResults:
         return pd.DataFrame(rows)
 
     def _infer_top_issue(self, contributions: dict[str, float]) -> str:
-        """Infer the most likely issue from feature contributions."""
+        """Infer the most likely issue from feature contributions.
+
+        Normalizes contributions to comparable scales before finding the
+        dominant feature, since z-score features (~0-5) and raw distance
+        features (~0-100+) have different magnitudes.
+        """
         if not contributions:
             return "Unknown"
 
-        # Find the feature with highest contribution
-        top_feature = max(contributions, key=contributions.get)
+        # Normalize contributions to comparable scales
+        # Z-score features are already ~0-5 range, raw features need scaling
+        scale_factors = {
+            # Raw distance features - scale to ~0-5 range
+            "max_centroid_distance": 30.0,
+            "centroid_distance_std": 10.0,
+            "nn_distance": 10.0,
+            # Curvature is typically 0-3
+            "max_curvature": 1.0,
+            "curvature_std": 1.0,
+            # Rate features (0-1 range) - scale up to be comparable
+            "visibility_rate": 0.3,
+            "visibility_pattern_score": 0.3,
+            "has_isolated_invisible": 0.3,
+            # Symmetry: only meaningful if skeleton has symmetry defined
+            # Value of 1.0 usually means no symmetry info, so scale down
+            "min_symmetry_consistency": 5.0,
+        }
+
+        normalized = {}
+        for feat, val in contributions.items():
+            scale = scale_factors.get(feat, 1.0)
+            # Skip features with default/uninformative values
+            if feat == "min_symmetry_consistency" and val == 1.0:
+                normalized[feat] = 0.0  # Ignore if no symmetry data
+            else:
+                normalized[feat] = val / scale
+
+        # Find the feature with highest normalized contribution
+        top_feature = max(normalized, key=normalized.get)
 
         # Map feature names to issue descriptions
         issue_map = {
