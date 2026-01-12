@@ -60,11 +60,12 @@ class QCScoreCanvas(Canvas):
 
         super().__init__(self.fig)
 
+        # Use Preferred policy instead of Expanding to prevent unbounded growth
+        # when docked. This respects size hints without fighting the splitter.
         self.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
         )
-        self.setMinimumSize(400, 200)
-        self.updateGeometry()
+        self.setMinimumSize(300, 150)
 
         self._scores: np.ndarray = np.array([])
         self._threshold: float = 0.7
@@ -190,11 +191,11 @@ class QCBreakdownCanvas(Canvas):
 
         super().__init__(self.fig)
 
+        # Use Preferred policy instead of Expanding to prevent unbounded growth
         self.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
         )
-        self.setMinimumSize(400, 150)
-        self.updateGeometry()
+        self.setMinimumSize(300, 120)
 
         self._issue_counts: dict = {}
 
@@ -294,11 +295,11 @@ class QCFeatureCanvas(Canvas):
 
         super().__init__(self.fig)
 
+        # Use Preferred policy instead of Expanding to prevent unbounded growth
         self.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
         )
-        self.setMinimumSize(400, 150)
-        self.updateGeometry()
+        self.setMinimumSize(300, 120)
 
         self._feature_data: dict = {}  # {feature_name: (normal_values, flagged_values)}
         self._top_features: list = []
@@ -698,7 +699,11 @@ class QCWidget(QtWidgets.QWidget):
 
         # === Tabbed visualization area ===
         self._viz_tabs = QtWidgets.QTabWidget()
-        self._viz_tabs.setMinimumHeight(220)
+        self._viz_tabs.setMinimumHeight(180)
+        # Let the tabs shrink when space is limited but not expand unboundedly
+        self._viz_tabs.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
 
         # Score distribution tab
         self._score_canvas = QCScoreCanvas(width=6, height=2.2)

@@ -1053,8 +1053,42 @@ class MainWindow(QMainWindow):
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
 
+        # Create QC dock (hidden by default, shown when user clicks menu item)
+        self._create_qc_dock()
+
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
+
+    def _create_qc_dock(self):
+        """Create the QC dock widget (hidden by default)."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
+            """Navigate to the specified frame and highlight instance."""
+            if self.labels is not None and video_idx < len(self.labels.videos):
+                video = self.labels.videos[video_idx]
+                self.commands.gotoVideoAndFrameAndInstance(
+                    video, frame_idx, instance_idx
+                )
+
+        # Create the dock widget (with no labels initially)
+        self._qc_dock = QCDockWidget(
+            labels=None,
+            navigate_callback=navigate_callback,
+            parent=self,
+        )
+
+        # Add to main window's dock area on the right side
+        self.addDockWidget(Qt.RightDockWidgetArea, self._qc_dock)
+
+        # Tabify with other docks on the right side
+        self.tabifyDockWidget(self.videos_dock, self._qc_dock)
+
+        # Add toggle action to View menu
+        self.viewMenu.addAction(self._qc_dock.toggleViewAction())
+
+        # Start hidden (closed) - user opens via Analyze menu
+        self._qc_dock.hide()
 
     def _load_overlays(self):
         """Load all standard video overlays."""
@@ -1752,8 +1786,8 @@ class MainWindow(QMainWindow):
     def _open_label_qc(self):
         """Opens the label QC analysis dock widget.
 
-        The dock widget starts floating but can be docked to the left or right
-        side of the main window. The dock is reused if already open.
+        The dock widget is tabbed with other right-side docks and can be
+        undocked to float. Its state is saved with the window state.
         """
         if self.labels is None or len(self.labels) == 0:
             QMessageBox.warning(
@@ -1763,41 +1797,10 @@ class MainWindow(QMainWindow):
             )
             return
 
-        from sleap.gui.dialogs.qc import QCDockWidget
-
-        # Check if we already have a QC dock
-        if hasattr(self, "_qc_dock") and self._qc_dock is not None:
-            # Update labels in case they changed
-            self._qc_dock.update_labels(self.labels)
-            # Show and raise the existing dock
-            self._qc_dock.show()
-            self._qc_dock.raise_()
-            return
-
-        def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
-            """Navigate to the specified frame and highlight instance."""
-            if video_idx < len(self.labels.videos):
-                video = self.labels.videos[video_idx]
-                self.commands.gotoVideoAndFrameAndInstance(
-                    video, frame_idx, instance_idx
-                )
-
-        # Create the dock widget
-        self._qc_dock = QCDockWidget(
-            labels=self.labels,
-            navigate_callback=navigate_callback,
-            parent=self,
-        )
-
-        # Add to main window's dock area (required for docking to work)
-        self.addDockWidget(Qt.RightDockWidgetArea, self._qc_dock)
-
-        # Add toggle action to View menu
-        self.viewMenu.addAction(self._qc_dock.toggleViewAction())
-
-        # Start floating (already set in QCDockWidget, but ensure it)
-        self._qc_dock.setFloating(True)
+        # Update labels and show the dock (created at init time)
+        self._qc_dock.update_labels(self.labels)
         self._qc_dock.show()
+        self._qc_dock.raise_()
 
 
 def create_sleap_label_parser():

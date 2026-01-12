@@ -35,14 +35,15 @@ class QCDockWidget(QtWidgets.QDockWidget):
 
     def __init__(
         self,
-        labels: "sio.Labels",
+        labels: Optional["sio.Labels"] = None,
         navigate_callback: Optional[Callable[[int, int, int], None]] = None,
         parent: Optional[QtWidgets.QWidget] = None,
     ):
         """Initialize the dock widget.
 
         Args:
-            labels: The Labels object containing labeled frames.
+            labels: The Labels object containing labeled frames, or None if
+                not yet loaded.
             navigate_callback: Optional callback for navigation.
             parent: Parent widget.
         """
@@ -62,12 +63,13 @@ class QCDockWidget(QtWidgets.QDockWidget):
         # Allow docking on left or right side
         self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
 
-        # Start floating by default for initial popup experience
-        self.setFloating(True)
+        # Start docked by default (not floating) - Qt state restoration will
+        # override this if the user previously changed it
+        self.setFloating(False)
 
-        # Set minimum and default sizes
-        self.setMinimumSize(650, 700)
-        self.resize(700, 750)
+        # Set minimum size for when docked
+        self.setMinimumWidth(400)
+        self.setMinimumHeight(500)
 
         # Enable close button and allow floating
         self.setFeatures(
@@ -105,11 +107,9 @@ class QCDockWidget(QtWidgets.QDockWidget):
 
         button_layout.addStretch()
 
-        # Dock/Undock toggle button
-        self._dock_button = QtWidgets.QPushButton("Dock to Right")
-        self._dock_button.setToolTip(
-            "Dock this panel to the right side of the main window"
-        )
+        # Dock/Undock toggle button - starts with "Undock" since we default to docked
+        self._dock_button = QtWidgets.QPushButton("Undock")
+        self._dock_button.setToolTip("Undock this panel to a floating window")
         self._dock_button.clicked.connect(self._toggle_dock)
         button_layout.addWidget(self._dock_button)
 
