@@ -300,8 +300,15 @@ class LabelQCDetector:
             masks.append(mask)
         return np.array(masks)
 
-    def _extract_features(self, points: np.ndarray) -> np.ndarray:
-        """Extract combined feature vector for a single instance."""
+    def _extract_features(
+        self, points: np.ndarray, nn_distance: Optional[float] = None
+    ) -> np.ndarray:
+        """Extract combined feature vector for a single instance.
+
+        Args:
+            points: (N_nodes, 2) array of coordinates.
+            nn_distance: Optional precomputed NN distance (skips slow NN query).
+        """
         # Baseline features
         baseline = self.baseline_extractor.extract(points)
 
@@ -326,9 +333,12 @@ class LabelQCDetector:
         vis_result = self.visibility_model.score(vis_mask)
         v3_features.append(vis_result["pattern_score"])
 
-        # NN distance
-        nn_result = self.nn_scorer.score(points)
-        v3_features.append(nn_result["nn_distance"])
+        # NN distance (use precomputed if available)
+        if nn_distance is not None:
+            v3_features.append(nn_distance)
+        else:
+            nn_result = self.nn_scorer.score(points)
+            v3_features.append(nn_result["nn_distance"])
 
         # Hull features
         hull = compute_convex_hull(points)
@@ -348,6 +358,8 @@ class LabelQCDetector:
     ) -> np.ndarray:
         """Extract features for all instances.
 
+        Uses batch NN scoring for O(n log n) performance instead of O(n²).
+
         Args:
             instances: List of pose arrays.
             use_loo_nn: If True, use leave-one-out NN distances (for training).
@@ -359,17 +371,20 @@ class LabelQCDetector:
                 progress_callback(step, progress, detail)
 
         n = len(instances)
+
+        # Pre-compute all NN distances in batch (fast KD-tree query)
+        if use_loo_nn and hasattr(self, "_training_nn_distances"):
+            # Use precomputed LOO distances for training
+            nn_distances = self._training_nn_distances
+        else:
+            # Batch query for scoring (not LOO)
+            _report("Computing NN distances", 0.20, f"Batch query for {n} instances")
+            nn_distances = self.nn_scorer.score_batch(np.array(instances))
+
+        # Extract features with precomputed NN distances
         features = []
         for i, inst in enumerate(instances):
-            feat = self._extract_features(inst)
-            # Replace NN distance with LOO version during training
-            if use_loo_nn and hasattr(self, "_training_nn_distances"):
-                nn_dist_idx = (
-                    self.feature_names.index("nn_distance")
-                    if self.feature_names
-                    else 15
-                )
-                feat[nn_dist_idx] = self._training_nn_distances[i]
+            feat = self._extract_features(inst, nn_distance=nn_distances[i])
             features.append(feat)
 
             # Progress update (every 1000 instances)

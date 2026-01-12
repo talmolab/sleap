@@ -81,6 +81,8 @@ def pose_distance(
 class NearestNeighborScorer:
     """Score instances by distance to nearest neighbor in reference set.
 
+    Uses KD-tree for efficient O(log n) nearest neighbor queries.
+
     Attributes:
         normalize: Whether to normalize poses before comparison.
         method: Distance method ("euclidean" or "procrustes").
@@ -97,9 +99,11 @@ class NearestNeighborScorer:
         self.normalize = normalize
         self.method = method
         self.reference_poses: Optional[np.ndarray] = None
+        self._kdtree = None
+        self._flattened_refs: Optional[np.ndarray] = None
 
     def fit(self, poses: np.ndarray) -> "NearestNeighborScorer":
-        """Store reference poses.
+        """Store reference poses and build KD-tree for fast queries.
 
         Args:
             poses: (N_instances, N_nodes, 2) array of reference poses.
@@ -107,14 +111,30 @@ class NearestNeighborScorer:
         Returns:
             Self for chaining.
         """
+        from sklearn.neighbors import NearestNeighbors
+
         if self.normalize:
             self.reference_poses = np.array([normalize_pose(p) for p in poses])
         else:
             self.reference_poses = poses.copy()
+
+        # Build KD-tree for fast queries (euclidean method only)
+        if self.method == "euclidean":
+            # Flatten poses and impute NaN with 0 (after normalization, 0 is near center)
+            self._flattened_refs = np.array(
+                [np.nan_to_num(p.flatten(), nan=0.0) for p in self.reference_poses]
+            )
+            self._kdtree = NearestNeighbors(
+                n_neighbors=1, algorithm="auto", metric="euclidean"
+            )
+            self._kdtree.fit(self._flattened_refs)
+
         return self
 
     def score(self, pose: np.ndarray) -> dict[str, float]:
         """Score a pose by distance to nearest neighbor.
+
+        Uses KD-tree for fast O(log n) queries when available.
 
         Args:
             pose: (N_nodes, 2) array.
@@ -123,7 +143,7 @@ class NearestNeighborScorer:
             Dictionary with:
             - nn_distance: distance to nearest neighbor
             - nn_index: index of nearest neighbor
-            - mean_distance: mean distance to all references
+            - mean_distance: mean distance to all references (only for non-KD-tree)
         """
         if self.reference_poses is None:
             raise ValueError("Model not fitted. Call fit() first.")
@@ -133,6 +153,17 @@ class NearestNeighborScorer:
         else:
             query = pose
 
+        # Fast path: use KD-tree for euclidean distance
+        if self._kdtree is not None:
+            query_flat = np.nan_to_num(query.flatten(), nan=0.0).reshape(1, -1)
+            distances, indices = self._kdtree.kneighbors(query_flat)
+            return {
+                "nn_distance": float(distances[0, 0]),
+                "nn_index": int(indices[0, 0]),
+                "mean_distance": float(distances[0, 0]),  # Approximate
+            }
+
+        # Slow path: iterate over all references (for procrustes)
         distances = []
         for ref_pose in self.reference_poses:
             dist = pose_distance(query, ref_pose, method=self.method)
@@ -154,3 +185,33 @@ class NearestNeighborScorer:
             "nn_index": nn_idx,
             "mean_distance": float(np.mean(valid_distances)),
         }
+
+    def score_batch(self, poses: np.ndarray) -> np.ndarray:
+        """Score multiple poses efficiently using KD-tree.
+
+        Args:
+            poses: (N_instances, N_nodes, 2) array of poses to score.
+
+        Returns:
+            (N_instances,) array of nearest neighbor distances.
+        """
+        if self.reference_poses is None:
+            raise ValueError("Model not fitted. Call fit() first.")
+
+        if self._kdtree is None:
+            # Fall back to individual scoring
+            return np.array([self.score(p)["nn_distance"] for p in poses])
+
+        # Normalize and flatten all poses
+        if self.normalize:
+            normalized = np.array([normalize_pose(p) for p in poses])
+        else:
+            normalized = poses
+
+        flattened = np.array(
+            [np.nan_to_num(p.flatten(), nan=0.0) for p in normalized]
+        )
+
+        # Batch KD-tree query
+        distances, _ = self._kdtree.kneighbors(flattened)
+        return distances[:, 0]
