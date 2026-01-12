@@ -227,6 +227,13 @@ def train(config_name, config_dir, overrides):
     "labels dataset.This is useful for generating predictions for initialization.",
 )
 @click.option(
+    "--exclude_user_labeled",
+    is_flag=True,
+    default=False,
+    help="Skip frames that have user-labeled instances. Useful when predicting on "
+    "entire video but skipping already-labeled frames.",
+)
+@click.option(
     "--no_empty_frames",
     is_flag=True,
     default=False,
