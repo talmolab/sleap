@@ -524,11 +524,10 @@ def _print_package_table(console: Console):
     table.add_column("Package", style="cyan")
     table.add_column("Version", style="white")
     table.add_column("Source", style="yellow")
-    table.add_column("Location", style="dim", overflow="ellipsis")
+    table.add_column("Location", style="dim", overflow="fold")
 
     packages = get_all_package_info()
     for pkg, info in packages.items():
-        location = _shorten_path(info["location"], 45)
-        table.add_row(pkg, info["version"], info["source"], location)
+        table.add_row(pkg, info["version"], info["source"], info["location"])
 
     console.print(table)

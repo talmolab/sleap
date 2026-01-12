@@ -41,6 +41,31 @@ class TestCLIBasics:
         assert result.exit_code == 0
         assert "diagnostics" in result.output.lower()
 
+    def test_doctor_runs(self):
+        """Verify doctor command runs and produces output."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["doctor"])
+        assert result.exit_code == 0
+        # Check for expected sections in output
+        assert "Platform" in result.output
+        assert "Python" in result.output
+        assert "GPU" in result.output or "CUDA" in result.output
+        assert "Packages" in result.output
+
+    def test_doctor_json(self):
+        """Verify doctor --json outputs valid JSON."""
+        import json
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["doctor", "--json"])
+        assert result.exit_code == 0
+        # Should be valid JSON
+        data = json.loads(result.output)
+        assert "sleap_version" in data
+        assert "platform" in data
+        assert "python" in data
+        assert "packages" in data
+
 
 class TestSleapIoIntegration:
     """Tests for sleap-io CLI command integration.

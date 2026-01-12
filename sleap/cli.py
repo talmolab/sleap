@@ -342,7 +342,7 @@ def doctor(output_json: bool) -> None:
         padding=(0, 2),
     )
     platform_table.add_column("Key", style="cyan")
-    platform_table.add_column("Value")
+    platform_table.add_column("Value", overflow="fold")
 
     platform_table.add_row("OS", f"{platform.system()} {platform.release()}")
     platform_table.add_row("Platform", platform.platform())
@@ -365,7 +365,7 @@ def doctor(output_json: bool) -> None:
         padding=(0, 2),
     )
     python_table.add_column("Key", style="cyan")
-    python_table.add_column("Value")
+    python_table.add_column("Value", overflow="fold")
 
     python_table.add_row("Version", sys.version.split()[0])
     python_table.add_row("Executable", sys.executable)
@@ -393,7 +393,7 @@ def doctor(output_json: bool) -> None:
             padding=(0, 2),
         )
         conda_table.add_column("Key", style="cyan")
-        conda_table.add_column("Value")
+        conda_table.add_column("Value", overflow="fold")
         conda_table.add_row("Environment", conda_info["environment"])
         conda_table.add_row("Prefix", conda_info["prefix"])
         console.print(conda_table)
@@ -410,7 +410,7 @@ def doctor(output_json: bool) -> None:
             padding=(0, 2),
         )
         uv_table.add_column("Key", style="cyan")
-        uv_table.add_column("Value")
+        uv_table.add_column("Value", overflow="fold")
         uv_table.add_row("Version", uv_info["version"])
         uv_table.add_row("Path", uv_info["path"])
         console.print(uv_table)
@@ -428,7 +428,7 @@ def doctor(output_json: bool) -> None:
         padding=(0, 2),
     )
     gpu_table.add_column("Key", style="cyan")
-    gpu_table.add_column("Value")
+    gpu_table.add_column("Value", overflow="fold")
 
     nvidia_driver = _get_nvidia_driver_version()
     if nvidia_driver:
@@ -443,8 +443,9 @@ def doctor(output_json: bool) -> None:
     else:
         gpu_table.add_row("NVIDIA Driver", "[dim]Not detected[/]")
 
-    # Get PyTorch info
-    pytorch_info = get_pytorch_info()
+    # Get PyTorch info (slow due to torch import - show spinner)
+    with console.status("[dim]Checking PyTorch...[/]", spinner="dots"):
+        pytorch_info = get_pytorch_info()
     if pytorch_info["installed"]:
         pytorch_str = f"v{pytorch_info['version']}"
         if pytorch_info["accelerator"] == "cuda":
