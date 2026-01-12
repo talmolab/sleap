@@ -120,7 +120,7 @@ class QCScoreCanvas(Canvas):
             return
 
         # Draw histogram with fixed bins from 0 to 1
-        bins = np.linspace(0, 1, 21)  # 20 bins
+        bins = np.linspace(0, 1, 51)  # 50 bins for finer detail
         n_flagged = np.sum(self._scores >= self._threshold)
         n_total = len(self._scores)
 
@@ -226,13 +226,14 @@ class QCBreakdownCanvas(Canvas):
             self.draw()
             return
 
-        # Sort by count descending, take top 8
+        # Sort by count descending, show ALL issue types
         sorted_issues = sorted(
             self._issue_counts.items(), key=lambda x: x[1], reverse=True
-        )[:8]
+        )
 
         labels = [item[0] for item in sorted_issues]
         counts = [item[1] for item in sorted_issues]
+        max_count = max(counts) if counts else 1
 
         # Horizontal bar chart
         y_pos = np.arange(len(labels))
@@ -244,15 +245,37 @@ class QCBreakdownCanvas(Canvas):
         self.axes.set_xlabel("Count", fontsize=10)
         self.axes.set_title("Issue Breakdown", fontsize=11)
 
-        # Add count labels on bars
+        # Add count labels - inside bar (white) if bar is wide enough, else outside
         for bar, count in zip(bars, counts):
-            self.axes.text(
-                bar.get_width() + 0.3,
-                bar.get_y() + bar.get_height() / 2,
-                str(count),
-                va="center",
-                fontsize=9,
-            )
+            bar_width = bar.get_width()
+            y_center = bar.get_y() + bar.get_height() / 2
+
+            # If bar is at least 20% of max width, put label inside
+            if bar_width >= max_count * 0.2:
+                self.axes.text(
+                    bar_width - max_count * 0.02,  # Slightly inside right edge
+                    y_center,
+                    str(count),
+                    va="center",
+                    ha="right",
+                    fontsize=9,
+                    color="white",
+                    fontweight="bold",
+                )
+            else:
+                # Put label outside the bar
+                self.axes.text(
+                    bar_width + max_count * 0.02,
+                    y_center,
+                    str(count),
+                    va="center",
+                    ha="left",
+                    fontsize=9,
+                    color="#333",
+                )
+
+        # Add some padding on the right for labels
+        self.axes.set_xlim(0, max_count * 1.15)
 
         self.draw()
 

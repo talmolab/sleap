@@ -286,9 +286,10 @@ class LabelQCDetector:
     def _instance_to_array(self, instance: "sio.Instance") -> np.ndarray:
         """Convert instance to (n_nodes, 2) array.
 
-        Uses Instance.numpy() which returns invisible points as NaN.
+        Uses Instance.numpy() which returns invisible points as NaN by default.
+        Feature extractors handle NaN values by skipping them in computations.
         """
-        return instance.numpy(invisible_as_nan=True)
+        return instance.numpy()
 
     def _get_visibility_masks(
         self, instances: list[np.ndarray]
