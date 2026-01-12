@@ -257,6 +257,186 @@ class QCBreakdownCanvas(Canvas):
         self.draw()
 
 
+class QCFeatureCanvas(Canvas):
+    """Matplotlib canvas for displaying feature distributions.
+
+    Shows box plots comparing flagged vs non-flagged instances across
+    top contributing features.
+    """
+
+    def __init__(self, width: int = 6, height: int = 2.5, dpi: int = 100):
+        """Initialize the canvas."""
+        self.fig = Figure(figsize=(width, height), dpi=dpi, constrained_layout=True)
+        self.axes = self.fig.add_subplot(111)
+
+        super().__init__(self.fig)
+
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
+        self.setMinimumSize(400, 150)
+        self.updateGeometry()
+
+        self._feature_data: dict = {}  # {feature_name: (normal_values, flagged_values)}
+        self._top_features: list = []
+
+    def set_feature_data(
+        self,
+        feature_contributions: dict,
+        instance_scores: dict,
+        threshold: float,
+        feature_names: list,
+    ):
+        """Set the feature data to display.
+
+        Args:
+            feature_contributions: Dict mapping InstanceKey to feature dict.
+            instance_scores: Dict mapping InstanceKey to score.
+            threshold: Threshold for flagging instances.
+            feature_names: List of all feature names.
+        """
+        if not feature_contributions or not feature_names:
+            self._feature_data = {}
+            self._top_features = []
+            self.update_plot()
+            return
+
+        # Separate flagged vs normal
+        normal_features = {name: [] for name in feature_names}
+        flagged_features = {name: [] for name in feature_names}
+
+        for key, contributions in feature_contributions.items():
+            score = instance_scores.get(key, 0)
+            target = flagged_features if score >= threshold else normal_features
+
+            for name in feature_names:
+                val = contributions.get(name, 0)
+                if np.isfinite(val):
+                    target[name].append(val)
+
+        # Find top discriminating features by difference in means
+        feature_scores = []
+        for name in feature_names:
+            normal_vals = normal_features.get(name, [])
+            flagged_vals = flagged_features.get(name, [])
+
+            if normal_vals and flagged_vals:
+                normal_mean = np.mean(normal_vals)
+                normal_std = np.std(normal_vals) or 1.0
+                flagged_mean = np.mean(flagged_vals)
+                # Z-score of difference
+                diff = abs(flagged_mean - normal_mean) / normal_std
+                feature_scores.append((name, diff))
+
+        # Sort by discriminating power and take top 6
+        feature_scores.sort(key=lambda x: x[1], reverse=True)
+        self._top_features = [name for name, _ in feature_scores[:6]]
+
+        # Store the data
+        self._feature_data = {
+            name: (normal_features[name], flagged_features[name])
+            for name in self._top_features
+        }
+
+        self.update_plot()
+
+    def update_plot(self):
+        """Redraw the feature comparison chart."""
+        self.axes.clear()
+
+        if not self._feature_data or not self._top_features:
+            self.axes.text(
+                0.5,
+                0.5,
+                "No feature data\n\nRun analysis to see feature distributions",
+                ha="center",
+                va="center",
+                transform=self.axes.transAxes,
+                fontsize=11,
+                color="gray",
+            )
+            self.axes.set_title("Feature Comparison", fontsize=11)
+            self.draw()
+            return
+
+        # Prepare data for box plots
+        positions = []
+        box_data = []
+        colors = []
+        tick_labels = []
+
+        for i, name in enumerate(self._top_features):
+            normal_vals, flagged_vals = self._feature_data[name]
+            base_pos = i * 2.5
+
+            # Normal values
+            if normal_vals:
+                positions.append(base_pos)
+                box_data.append(normal_vals)
+                colors.append("#6c757d")  # Gray for normal
+                tick_labels.append("")
+
+            # Flagged values
+            if flagged_vals:
+                positions.append(base_pos + 0.8)
+                box_data.append(flagged_vals)
+                colors.append("#dc3545")  # Red for flagged
+                tick_labels.append("")
+
+        if not box_data:
+            self.axes.text(
+                0.5,
+                0.5,
+                "Insufficient data for comparison",
+                ha="center",
+                va="center",
+                transform=self.axes.transAxes,
+                fontsize=11,
+                color="gray",
+            )
+            self.draw()
+            return
+
+        # Create box plots
+        bp = self.axes.boxplot(
+            box_data,
+            positions=positions,
+            widths=0.6,
+            patch_artist=True,
+            showfliers=False,  # Hide outliers for cleaner view
+        )
+
+        # Color the boxes
+        for patch, color in zip(bp["boxes"], colors):
+            patch.set_facecolor(color)
+            patch.set_alpha(0.7)
+
+        # Set x-axis labels
+        feature_positions = [i * 2.5 + 0.4 for i in range(len(self._top_features))]
+        self.axes.set_xticks(feature_positions)
+        # Shorten feature names
+        short_names = [
+            name.replace("_", " ").replace(" zscore", "")[:12]
+            for name in self._top_features
+        ]
+        self.axes.set_xticklabels(short_names, fontsize=8, rotation=45, ha="right")
+
+        # Add legend
+        from matplotlib.patches import Patch
+
+        legend_elements = [
+            Patch(facecolor="#6c757d", alpha=0.7, label="Normal"),
+            Patch(facecolor="#dc3545", alpha=0.7, label="Flagged"),
+        ]
+        self.axes.legend(handles=legend_elements, loc="upper right", fontsize=8)
+
+        self.axes.set_ylabel("Feature Value", fontsize=9)
+        self.axes.set_title("Top Discriminating Features", fontsize=11)
+        self.axes.grid(True, alpha=0.3, axis="y")
+
+        self.draw()
+
+
 class QCFlagTableModel(QtCore.QAbstractTableModel):
     """Table model for QC flagged instances."""
 
@@ -329,12 +509,12 @@ class QCAnalysisWorker(QThread):
     """Worker thread for running QC analysis in background.
 
     Signals:
-        progress: Emitted with (step_name, progress_pct) during analysis.
+        progress: Emitted with (step_name, progress_pct, detail) during analysis.
         finished: Emitted with QCResults when analysis completes.
         error: Emitted with error message if analysis fails.
     """
 
-    progress = QSignal(str, int)  # (step_name, progress_percent)
+    progress = QSignal(str, int, str)  # (step_name, progress_percent, detail)
     finished = QSignal(object)  # QCResults
     error = QSignal(str)
 
@@ -342,28 +522,47 @@ class QCAnalysisWorker(QThread):
         super().__init__(parent)
         self._labels = labels
         self._results = None
+        self._cancelled = False
+
+    def cancel(self):
+        """Request cancellation of the analysis."""
+        self._cancelled = True
 
     def run(self):
         """Run the QC analysis."""
         try:
             from sleap.qc import LabelQCDetector
 
-            # Step 1: Extract features
-            self.progress.emit("Extracting features...", 10)
+            def progress_callback(step_name, progress_fraction, detail=None):
+                """Handle progress updates from detector."""
+                if self._cancelled:
+                    raise InterruptedError("Analysis cancelled")
+                progress_pct = int(progress_fraction * 100)
+                self.progress.emit(step_name, progress_pct, detail or "")
+
+            # Create detector
+            self.progress.emit("Initializing...", 0, "")
             detector = LabelQCDetector()
 
-            # Step 2: Fit model
-            self.progress.emit("Fitting detection model...", 40)
-            detector.fit(self._labels)
+            # Fit model with progress callback
+            detector.fit(self._labels, progress_callback=progress_callback)
 
-            # Step 3: Score instances
-            self.progress.emit("Scoring instances...", 70)
-            results = detector.score(self._labels)
+            if self._cancelled:
+                return
 
-            # Step 4: Complete
-            self.progress.emit("Complete", 100)
+            # Score instances with progress callback
+            results = detector.score(self._labels, progress_callback=progress_callback)
+
+            if self._cancelled:
+                return
+
+            # Complete
+            self.progress.emit("Complete", 100, "")
             self.finished.emit(results)
 
+        except InterruptedError:
+            # Analysis was cancelled, just return silently
+            pass
         except Exception as e:
             self.error.emit(str(e))
 
@@ -418,7 +617,7 @@ class QCWidget(QtWidgets.QWidget):
         title_layout.addWidget(self._run_button)
         layout.addLayout(title_layout)
 
-        # Progress bar with status (hidden by default)
+        # Progress bar with status and cancel button (hidden by default)
         progress_layout = QtWidgets.QHBoxLayout()
         self._progress_label = QtWidgets.QLabel("")
         self._progress_label.setVisible(False)
@@ -428,7 +627,22 @@ class QCWidget(QtWidgets.QWidget):
         self._progress_bar.setVisible(False)
         self._progress_bar.setTextVisible(True)
         progress_layout.addWidget(self._progress_bar, stretch=1)
+
+        # Cancel button
+        self._cancel_button = QtWidgets.QPushButton("Cancel")
+        self._cancel_button.setVisible(False)
+        self._cancel_button.setFixedWidth(60)
+        self._cancel_button.setToolTip("Cancel the running analysis")
+        progress_layout.addWidget(self._cancel_button)
+
         layout.addLayout(progress_layout)
+
+        # Timer for spinner animation during analysis
+        self._spinner_timer = QtCore.QTimer(self)
+        self._spinner_timer.setInterval(100)  # 100ms
+        self._spinner_timer.timeout.connect(self._update_spinner)
+        self._spinner_chars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+        self._spinner_idx = 0
 
         # === Threshold control ===
         threshold_layout = QtWidgets.QHBoxLayout()
@@ -470,6 +684,10 @@ class QCWidget(QtWidgets.QWidget):
         # Issue breakdown tab
         self._breakdown_canvas = QCBreakdownCanvas(width=6, height=2.2)
         self._viz_tabs.addTab(self._breakdown_canvas, "Issue Breakdown")
+
+        # Features tab
+        self._feature_canvas = QCFeatureCanvas(width=6, height=2.2)
+        self._viz_tabs.addTab(self._feature_canvas, "Features")
 
         layout.addWidget(self._viz_tabs)
 
@@ -529,12 +747,34 @@ class QCWidget(QtWidgets.QWidget):
     def _connect_signals(self):
         """Connect UI signals."""
         self._run_button.clicked.connect(self._on_run_analysis)
+        self._cancel_button.clicked.connect(self._on_cancel_analysis)
         self._threshold_slider.valueChanged.connect(self._on_threshold_changed)
         self._score_canvas.threshold_changed.connect(self._on_canvas_threshold_changed)
         self._table_view.selectionModel().selectionChanged.connect(
             self._on_selection_changed
         )
         self._table_view.doubleClicked.connect(self._on_row_double_clicked)
+
+    def _update_spinner(self):
+        """Update the spinner animation character."""
+        self._spinner_idx = (self._spinner_idx + 1) % len(self._spinner_chars)
+        # Update the progress label with spinner
+        current_text = self._progress_label.text()
+        # Remove old spinner if present
+        for char in self._spinner_chars:
+            if current_text.startswith(char + " "):
+                current_text = current_text[2:]
+                break
+        self._progress_label.setText(
+            f"{self._spinner_chars[self._spinner_idx]} {current_text}"
+        )
+
+    def _on_cancel_analysis(self):
+        """Handle cancel button click."""
+        if self._worker is not None and self._worker.isRunning():
+            self._worker.cancel()
+            self._progress_label.setText("Cancelling...")
+            self._cancel_button.setEnabled(False)
 
     def set_labels(self, labels: "sio.Labels"):
         """Set the labels to analyze.
@@ -582,6 +822,12 @@ class QCWidget(QtWidgets.QWidget):
         self._progress_bar.setVisible(True)
         self._progress_bar.setRange(0, 100)
         self._progress_bar.setValue(0)
+        self._cancel_button.setVisible(True)
+        self._cancel_button.setEnabled(True)
+
+        # Start spinner animation
+        self._spinner_idx = 0
+        self._spinner_timer.start()
 
         # Create and start worker thread
         self._worker = QCAnalysisWorker(self._labels)
@@ -590,18 +836,25 @@ class QCWidget(QtWidgets.QWidget):
         self._worker.error.connect(self._on_analysis_error)
         self._worker.start()
 
-    def _on_analysis_progress(self, step_name: str, progress: int):
+    def _on_analysis_progress(self, step_name: str, progress: int, detail: str):
         """Handle progress update from worker."""
-        self._progress_label.setText(step_name)
+        # Format the label: step name with optional detail
+        if detail:
+            text = f"{step_name} ({detail})"
+        else:
+            text = step_name
+        self._progress_label.setText(text)
         self._progress_bar.setValue(progress)
 
     def _on_analysis_finished(self, results):
         """Handle successful analysis completion."""
         self._results = results
 
-        # Hide progress UI
+        # Stop spinner and hide progress UI
+        self._spinner_timer.stop()
         self._progress_label.setVisible(False)
         self._progress_bar.setVisible(False)
+        self._cancel_button.setVisible(False)
         self._run_button.setEnabled(True)
 
         # Update all displays
@@ -609,8 +862,11 @@ class QCWidget(QtWidgets.QWidget):
 
     def _on_analysis_error(self, error_msg: str):
         """Handle analysis error."""
+        # Stop spinner and hide progress UI
+        self._spinner_timer.stop()
         self._progress_label.setVisible(False)
         self._progress_bar.setVisible(False)
+        self._cancel_button.setVisible(False)
         self._run_button.setEnabled(True)
 
         QtWidgets.QMessageBox.critical(
@@ -665,6 +921,14 @@ class QCWidget(QtWidgets.QWidget):
             issue = flag.top_issue.replace("_", " ").title()
             issue_counts[issue] = issue_counts.get(issue, 0) + 1
         self._breakdown_canvas.set_issue_counts(issue_counts)
+
+        # Update feature comparison chart
+        self._feature_canvas.set_feature_data(
+            self._results.feature_contributions,
+            self._results.instance_scores,
+            threshold,
+            self._results.feature_names,
+        )
 
     def _update_statistics(self):
         """Update the statistics panel."""
@@ -801,3 +1065,26 @@ class QCWidget(QtWidgets.QWidget):
                 QtWidgets.QMessageBox.critical(
                     self, "Export Error", f"Error exporting results:\n{str(e)}"
                 )
+
+    def cleanup(self):
+        """Clean up resources, stopping any running analysis.
+
+        Should be called before the widget is destroyed.
+        """
+        # Stop spinner timer
+        self._spinner_timer.stop()
+
+        # Cancel and wait for worker thread
+        if self._worker is not None and self._worker.isRunning():
+            self._worker.cancel()
+            # Wait up to 2 seconds for thread to finish
+            if not self._worker.wait(2000):
+                # Thread didn't finish, terminate it
+                self._worker.terminate()
+                self._worker.wait()
+            self._worker = None
+
+    def closeEvent(self, event):
+        """Handle widget close event."""
+        self.cleanup()
+        super().closeEvent(event)

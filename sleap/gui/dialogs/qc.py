@@ -103,3 +103,9 @@ class QCDialog(QtWidgets.QDialog):
         """
         self._labels = labels
         self._widget.set_labels(labels)
+
+    def closeEvent(self, event):
+        """Handle dialog close event."""
+        # Clean up the widget's resources (e.g., stop running analysis)
+        self._widget.cleanup()
+        super().closeEvent(event)
