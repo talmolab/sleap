@@ -487,14 +487,22 @@ class CommandContext:
             if 0 <= instance_idx < len(user_instances):
                 instance_to_highlight = user_instances[instance_idx]
 
-        # Use a timer to highlight after the frame is redrawn
+        # Use a timer to highlight and select after the frame is redrawn
         # (state changes trigger plot() which recreates instances via overlay)
         player = getattr(self.app, "player", None)
         if player is not None and instance_to_highlight is not None:
+
+            def _highlight_select_and_zoom():
+                # Highlight the instance (cyan box)
+                player.highlightNavigatedInstance(instance_to_highlight)
+                # Select the instance so zoomToSelection works
+                player.view.selectInstance(instance_to_highlight)
+                # Zoom to selection if enabled
+                if self.state.get("fit_selection", False):
+                    player.zoomToSelection()
+
             # Small delay to ensure overlay has added instances to scene
-            QtCore.QTimer.singleShot(
-                50, lambda: player.highlightNavigatedInstance(instance_to_highlight)
-            )
+            QtCore.QTimer.singleShot(50, _highlight_select_and_zoom)
 
     # Editing Commands
 
