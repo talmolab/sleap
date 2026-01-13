@@ -9,6 +9,12 @@ data:
   label: Overfit Mode (train=val)
   name: data_config.use_same_data_for_val
   type: bool
+- default: null
+  help: Random seed for reproducible train/validation data splits. Leave empty (Auto) for random seed each run.
+  label: Random Seed
+  name: trainer_config.seed
+  type: optional_int
+  none_label: Auto
 - default: 1.0
   help: Rescaling factor applied to input images before training. Values less than 1.0 downsample the image (e.g., 0.5 reduces dimensions by half), which reduces memory usage and speeds up training at the cost of spatial resolution. Set to 1.0 to use original image resolution. Note that crop size and sigma values are relative to the scaled image.
   label: Input Scaling
@@ -23,7 +29,8 @@ data:
   name: data_config.preprocessing.crop_size
   type: optional_int
   none_label: Auto
-  range: 0,832
+  range: 32,1024
+  step: 32
 
 model:
 - default: unet
