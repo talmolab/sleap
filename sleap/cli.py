@@ -27,13 +27,21 @@ from rich.console import Console
 
 import sleap
 
-# Import sleap-io CLI commands for integration (requires sleap-io>=0.6.0)
+# Import sleap-io CLI commands for integration (requires sleap-io>=0.6.1)
 from sleap_io.io.cli import (
     show as sio_show,
     convert as sio_convert,
     split as sio_split,
+    unsplit as sio_unsplit,
+    merge as sio_merge,
     filenames as sio_filenames,
     render as sio_render,
+    fix as sio_fix,
+    embed as sio_embed,
+    unembed as sio_unembed,
+    trim as sio_trim,
+    reencode as sio_reencode,
+    transform as sio_transform,
 )
 
 
@@ -138,8 +146,12 @@ click.rich_click.COMMAND_GROUPS = {
     "sleap": [
         {"name": "Application", "commands": ["label", "doctor"]},
         {"name": "Data Inspection", "commands": ["show", "filenames"]},
-        {"name": "Data Transformation", "commands": ["convert", "split"]},
-        {"name": "Visualization", "commands": ["render"]},
+        {
+            "name": "Data Transformation",
+            "commands": ["convert", "split", "unsplit", "merge", "trim", "fix"],
+        },
+        {"name": "Frame Management", "commands": ["embed", "unembed"]},
+        {"name": "Video Processing", "commands": ["reencode", "transform", "render"]},
     ]
 }
 
@@ -1008,8 +1020,16 @@ def _format_doctor_plain(data: dict) -> str:
 cli.add_command(wrap_sio_command(sio_show), name="show")
 cli.add_command(wrap_sio_command(sio_convert), name="convert")
 cli.add_command(wrap_sio_command(sio_split), name="split")
+cli.add_command(wrap_sio_command(sio_unsplit), name="unsplit")
+cli.add_command(wrap_sio_command(sio_merge), name="merge")
 cli.add_command(wrap_sio_command(sio_filenames), name="filenames")
 cli.add_command(wrap_sio_command(sio_render), name="render")
+cli.add_command(wrap_sio_command(sio_fix), name="fix")
+cli.add_command(wrap_sio_command(sio_embed), name="embed")
+cli.add_command(wrap_sio_command(sio_unembed), name="unembed")
+cli.add_command(wrap_sio_command(sio_trim), name="trim")
+cli.add_command(wrap_sio_command(sio_reencode), name="reencode")
+cli.add_command(wrap_sio_command(sio_transform), name="transform")
 
 
 # =============================================================================

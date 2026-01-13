@@ -163,7 +163,21 @@ class TestSleapIoIntegration:
 
     def test_sleap_io_commands_are_registered(self):
         """Verify all sleap-io commands are registered on the CLI."""
-        expected_commands = ["show", "convert", "split", "filenames", "render"]
+        expected_commands = [
+            "show",
+            "convert",
+            "split",
+            "unsplit",
+            "merge",
+            "filenames",
+            "render",
+            "fix",
+            "embed",
+            "unembed",
+            "trim",
+            "reencode",
+            "transform",
+        ]
         registered_commands = list(cli.commands.keys())
 
         for cmd in expected_commands:
@@ -229,12 +243,85 @@ class TestSleapIoIntegration:
         # Native commands
         assert "label" in result.output
         assert "doctor" in result.output
-        # Inherited commands
+        # Inherited commands (original)
         assert "show" in result.output
         assert "convert" in result.output
         assert "split" in result.output
         assert "filenames" in result.output
         assert "render" in result.output
+        # Inherited commands (v0.6.1 additions)
+        assert "unsplit" in result.output
+        assert "merge" in result.output
+        assert "fix" in result.output
+        assert "embed" in result.output
+        assert "unembed" in result.output
+        assert "trim" in result.output
+        assert "reencode" in result.output
+        assert "transform" in result.output
+
+    def test_unsplit_command_registered(self):
+        """Verify unsplit command is available."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["unsplit", "--help"])
+        assert result.exit_code == 0
+        assert "$ sleap unsplit" in result.output
+        assert "$ sio unsplit" not in result.output
+
+    def test_merge_command_registered(self):
+        """Verify merge command is available."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["merge", "--help"])
+        assert result.exit_code == 0
+        assert "$ sleap merge" in result.output
+        assert "$ sio merge" not in result.output
+
+    def test_fix_command_registered(self):
+        """Verify fix command is available."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["fix", "--help"])
+        assert result.exit_code == 0
+        assert "$ sleap fix" in result.output
+        assert "$ sio fix" not in result.output
+
+    def test_embed_command_registered(self):
+        """Verify embed command is available."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["embed", "--help"])
+        assert result.exit_code == 0
+        assert "$ sleap embed" in result.output
+        assert "$ sio embed" not in result.output
+
+    def test_unembed_command_registered(self):
+        """Verify unembed command is available."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["unembed", "--help"])
+        assert result.exit_code == 0
+        assert "$ sleap unembed" in result.output
+        assert "$ sio unembed" not in result.output
+
+    def test_trim_command_registered(self):
+        """Verify trim command is available."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["trim", "--help"])
+        assert result.exit_code == 0
+        assert "$ sleap trim" in result.output
+        assert "$ sio trim" not in result.output
+
+    def test_reencode_command_registered(self):
+        """Verify reencode command is available."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["reencode", "--help"])
+        assert result.exit_code == 0
+        assert "$ sleap reencode" in result.output
+        assert "$ sio reencode" not in result.output
+
+    def test_transform_command_registered(self):
+        """Verify transform command is available."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["transform", "--help"])
+        assert result.exit_code == 0
+        assert "$ sleap transform" in result.output
+        assert "$ sio transform" not in result.output
 
     def test_show_with_file(self, tmp_path):
         """Verify show command works with an actual file."""
