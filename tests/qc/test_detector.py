@@ -197,7 +197,8 @@ class TestLabelQCDetector:
         # (higher score = more anomalous)
         # Allow anomaly to be >= 90th percentile of normal scores
         percentile_90 = sorted_normal[int(len(sorted_normal) * 0.9)]
-        assert anomaly_score >= percentile_90 or anomaly_score > np.median(normal_scores)
+        median_score = np.median(normal_scores)
+        assert anomaly_score >= percentile_90 or anomaly_score > median_score
 
     def test_flag_threshold(self, labels_with_anomaly):
         """Test flagging with different thresholds."""
