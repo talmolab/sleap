@@ -355,7 +355,9 @@ class TestDiagnosticFunctions:
         sep = os.pathsep
         if os.name == "nt":
             # Windows paths
-            test_path = f"C:\\conda\\bin{sep}C:\\Users\\user\\.local\\bin{sep}C:\\Windows"
+            test_path = (
+                f"C:\\conda\\bin{sep}C:\\Users\\user\\.local\\bin{sep}C:\\Windows"
+            )
         else:
             # Unix paths
             test_path = f"/conda/bin{sep}/home/user/.local/bin{sep}/usr/bin"
