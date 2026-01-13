@@ -68,9 +68,7 @@ class TestLabelQCDetector:
             points_array += np.random.randn(5, 2) * 2
 
             instance = Instance.from_numpy(points_array, skeleton=skeleton)
-            lf = LabeledFrame(
-                video=video, frame_idx=frame_idx, instances=[instance]
-            )
+            lf = LabeledFrame(video=video, frame_idx=frame_idx, instances=[instance])
             labels.append(lf)
 
         # Add one anomalous frame (node displaced significantly)
@@ -251,9 +249,7 @@ class TestLabelQCDetector:
         frame_issues = results.get_frame_issues()
 
         # Should detect at least the incomplete frame
-        incomplete_frames = [
-            (k, v) for k, v in frame_issues if v.is_incomplete
-        ]
+        incomplete_frames = [(k, v) for k, v in frame_issues if v.is_incomplete]
         assert len(incomplete_frames) >= 1
 
     def test_duplicate_detection(self, skeleton):

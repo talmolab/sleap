@@ -257,9 +257,7 @@ class LabelQCDetector:
         _report("Complete", 1.0, f"{instance_count} instances scored")
         return results
 
-    def flag(
-        self, labels: "sio.Labels", threshold: Optional[float] = None
-    ) -> list:
+    def flag(self, labels: "sio.Labels", threshold: Optional[float] = None) -> list:
         """Return list of flagged instances above threshold.
 
         Args:
@@ -290,9 +288,7 @@ class LabelQCDetector:
         """
         return instance.numpy()
 
-    def _get_visibility_masks(
-        self, instances: list[np.ndarray]
-    ) -> np.ndarray:
+    def _get_visibility_masks(self, instances: list[np.ndarray]) -> np.ndarray:
         """Get visibility masks for all instances."""
         masks = []
         for inst in instances:
@@ -316,9 +312,7 @@ class LabelQCDetector:
         v3_features = []
 
         # Curvature
-        if self.config.should_use_curvature(
-            self.skeleton_analyzer.max_chain_length
-        ):
+        if self.config.should_use_curvature(self.skeleton_analyzer.max_chain_length):
             chains = self.skeleton_analyzer.get_curvature_chains()
             if chains:
                 curv = compute_curvature(points, chains[0])
@@ -342,9 +336,8 @@ class LabelQCDetector:
 
         # Hull features
         hull = compute_convex_hull(points)
-        hull_area_z = (
-            (hull["hull_area"] - self._hull_stats["mean"])
-            / max(self._hull_stats["std"], 1e-6)
+        hull_area_z = (hull["hull_area"] - self._hull_stats["mean"]) / max(
+            self._hull_stats["std"], 1e-6
         )
         v3_features.extend([hull_area_z, hull["compactness"]])
 
@@ -390,7 +383,7 @@ class LabelQCDetector:
             # Progress update (every 1000 instances)
             if (i + 1) % 1000 == 0:
                 progress = 0.20 + 0.50 * ((i + 1) / n)
-                _report("Extracting features", progress, f"{i+1}/{n}")
+                _report("Extracting features", progress, f"{i + 1}/{n}")
 
         return np.array(features)
 
@@ -435,9 +428,7 @@ class LabelQCDetector:
         # distances[:,1] is distance to nearest neighbor
         return distances[:, 1].tolist()
 
-    def _compute_loo_nn_distances(
-        self, instances: list[np.ndarray]
-    ) -> list[float]:
+    def _compute_loo_nn_distances(self, instances: list[np.ndarray]) -> list[float]:
         """Compute leave-one-out nearest neighbor distances (naive O(n^2)).
 
         For each instance, finds distance to nearest OTHER instance.
@@ -467,9 +458,7 @@ class LabelQCDetector:
         """Get combined feature names."""
         return BASELINE_FEATURE_NAMES + V3_FEATURE_NAMES
 
-    def _score_instance(
-        self, features: np.ndarray
-    ) -> tuple[float, dict[str, float]]:
+    def _score_instance(self, features: np.ndarray) -> tuple[float, dict[str, float]]:
         """Score an instance and return contributions."""
         # Handle NaN in features
         features_clean = np.nan_to_num(features, nan=0.0, posinf=10.0, neginf=-10.0)
@@ -478,9 +467,7 @@ class LabelQCDetector:
             result = self.gmm_detector.score(features_clean)
             score = result["normalized_score"]
         else:
-            scores = self.zscore_detector.score_batch(
-                features_clean.reshape(1, -1)
-            )
+            scores = self.zscore_detector.score_batch(features_clean.reshape(1, -1))
             score = scores[0] if len(scores) > 0 else 0.0
 
         # Build contributions dict
@@ -490,16 +477,12 @@ class LabelQCDetector:
 
         return float(score) if np.isfinite(score) else 0.0, contributions
 
-    def _check_frame(
-        self, instances: list[np.ndarray], video_id: str
-    ) -> FrameQC:
+    def _check_frame(self, instances: list[np.ndarray], video_id: str) -> FrameQC:
         """Check frame-level quality."""
         frame_qc = FrameQC()
 
         # Instance count check
-        count_result = self.instance_count_checker.check(
-            len(instances), video_id
-        )
+        count_result = self.instance_count_checker.check(len(instances), video_id)
         frame_qc.is_incomplete = count_result["is_incomplete"]
         frame_qc.expected_instance_count = int(count_result["expected_count"])
         frame_qc.actual_instance_count = len(instances)

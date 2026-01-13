@@ -113,9 +113,7 @@ class TestComputeInstanceIOU:
 
     def test_handles_nan(self):
         """Should handle NaN (invisible nodes)."""
-        points_a = np.array(
-            [[0, 0], [10, 0], [np.nan, np.nan], [0, 10]], dtype=float
-        )
+        points_a = np.array([[0, 0], [10, 0], [np.nan, np.nan], [0, 10]], dtype=float)
         points_b = np.array([[0, 0], [10, 0], [10, 10], [0, 10]], dtype=float)
 
         iou = compute_instance_iou(points_a, points_b)
@@ -166,9 +164,7 @@ class TestComputeNodeOverlap:
 
     def test_handles_nan(self):
         """Should only compare commonly visible nodes."""
-        points_a = np.array(
-            [[0, 0], [np.nan, np.nan], [20, 0]], dtype=float
-        )
+        points_a = np.array([[0, 0], [np.nan, np.nan], [20, 0]], dtype=float)
         points_b = np.array([[0, 0], [10, 0], [20, 0]], dtype=float)
 
         result = compute_node_overlap(points_a, points_b, distance_threshold=5.0)

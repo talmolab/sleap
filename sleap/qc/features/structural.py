@@ -145,9 +145,7 @@ def compute_convex_hull(
         aspect_ratio = width / height if height > 0 else 1.0
 
         # Compactness (isoperimetric quotient)
-        compactness = (
-            4 * np.pi * area / (perimeter**2) if perimeter > 0 else 0.0
-        )
+        compactness = 4 * np.pi * area / (perimeter**2) if perimeter > 0 else 0.0
 
         return {
             "hull_area": float(area),
