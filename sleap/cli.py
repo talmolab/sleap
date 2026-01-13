@@ -409,7 +409,8 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
 
     console.print("[Python]", style=f"bold {SLEAP_BLUE}")
     w = _DOCTOR_WIDTHS["python"] + 1  # +1 for colon
-    console.print(f"  [{DIM}]{'Version:':<{w}}[/] [{SLEAP_GREEN}]{sys.version.split()[0]}[/]")
+    py_ver = sys.version.split()[0]
+    console.print(f"  [{DIM}]{'Version:':<{w}}[/] [{SLEAP_GREEN}]{py_ver}[/]")
     console.print(f"  [{DIM}]{'Executable:':<{w}}[/] [{SLEAP_CYAN}]{sys.executable}[/]")
     console.print(f"  [{DIM}]{'Prefix:':<{w}}[/] [{SLEAP_CYAN}]{sys.prefix}[/]")
     venv = os.environ.get("VIRTUAL_ENV")
@@ -427,12 +428,19 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
     if uv_info:
         console.print("[UV]", style=f"bold {SLEAP_BLUE}")
         w = _DOCTOR_WIDTHS["uv"] + 1  # +1 for colon
-        console.print(f"  [{DIM}]{'Version:':<{w}}[/] [{SLEAP_GREEN}]{uv_info.version}[/]")
+        uv_ver = uv_info.version
+        console.print(f"  [{DIM}]{'Version:':<{w}}[/] [{SLEAP_GREEN}]{uv_ver}[/]")
         console.print(f"  [{DIM}]{'Path:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.path}[/]")
-        console.print(f"  [{DIM}]{'Cache Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.cache_dir}[/]")
-        console.print(f"  [{DIM}]{'Tool Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.tool_dir}[/]")
-        console.print(f"  [{DIM}]{'Tool Bin Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.tool_bin_dir}[/]")
-        console.print(f"  [{DIM}]{'Python Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.python_dir}[/]")
+        uv_cache = uv_info.cache_dir
+        console.print(f"  [{DIM}]{'Cache Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_cache}[/]")
+        uv_tool = uv_info.tool_dir
+        console.print(f"  [{DIM}]{'Tool Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_tool}[/]")
+        uv_tool_bin = uv_info.tool_bin_dir
+        console.print(
+            f"  [{DIM}]{'Tool Bin Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_tool_bin}[/]"
+        )
+        uv_py_dir = uv_info.python_dir
+        console.print(f"  [{DIM}]{'Python Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_py_dir}[/]")
         if uv_info.installed_tools:
             tools_str = ", ".join(uv_info.installed_tools)
             console.print(f"  [{DIM}]{'Installed Tools:':<{w}}[/] {tools_str}")
@@ -442,11 +450,19 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
         console.print("[UV Config]", style=f"bold {SLEAP_BLUE}")
         w = _DOCTOR_WIDTHS["uv_config"] + 1  # +1 for colon
         if uv_info.default_python:
-            console.print(f"  [{DIM}]{'Default Python:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.default_python}[/]")
+            default_py = uv_info.default_python
+            console.print(
+                f"  [{DIM}]{'Default Python:':<{w}}[/] [{SLEAP_CYAN}]{default_py}[/]"
+            )
         else:
-            console.print(f"  [{DIM}]{'Default Python:':<{w}}[/] [{DIM}](not configured)[/]")
+            console.print(
+                f"  [{DIM}]{'Default Python:':<{w}}[/] [{DIM}](not configured)[/]"
+            )
         if uv_info.resolved_python:
-            console.print(f"  [{DIM}]{'Resolved Python:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.resolved_python}[/]")
+            resolved_py = uv_info.resolved_python
+            console.print(
+                f"  [{DIM}]{'Resolved Python:':<{w}}[/] [{SLEAP_CYAN}]{resolved_py}[/]"
+            )
 
         pref = uv_info.python_preference or "managed"
         is_default = not uv_info.python_preference
@@ -482,7 +498,10 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
         if conda_info.active:
             console.print(f"  [{DIM}]{'Status:':<{w}}[/] [{SLEAP_YELLOW}]ACTIVE[/]")
             console.print(f"  [{DIM}]{'Environment:':<{w}}[/] {conda_info.environment}")
-            console.print(f"  [{DIM}]{'Prefix:':<{w}}[/] [{SLEAP_CYAN}]{conda_info.prefix}[/]")
+            conda_prefix = conda_info.prefix
+            console.print(
+                f"  [{DIM}]{'Prefix:':<{w}}[/] [{SLEAP_CYAN}]{conda_prefix}[/]"
+            )
         else:
             console.print(f"  [{DIM}]{'Status:':<{w}}[/] installed but not activated")
         if conda_info.version:
@@ -490,7 +509,9 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
         if conda_info.auto_activate_base is not None:
             status = "True" if conda_info.auto_activate_base else "False"
             color = SLEAP_RED if conda_info.auto_activate_base else SLEAP_GREEN
-            console.print(f"  [{DIM}]{'auto_activate_base:':<{w}}[/] [{color}]{status}[/]")
+            console.print(
+                f"  [{DIM}]{'auto_activate_base:':<{w}}[/] [{color}]{status}[/]"
+            )
             if conda_info.auto_activate_base:
                 console.print(
                     f"  [{SLEAP_YELLOW}]WARNING: auto_activate_base=True "
@@ -532,7 +553,9 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
         driver_str = nvidia_driver
         if system_cuda:
             driver_str += f" (CUDA {system_cuda})"
-        console.print(f"  [{DIM}]{'NVIDIA Driver:':<{w}}[/] [{SLEAP_GREEN}]{driver_str}[/]")
+        console.print(
+            f"  [{DIM}]{'NVIDIA Driver:':<{w}}[/] [{SLEAP_GREEN}]{driver_str}[/]"
+        )
         for i, gpu in enumerate(gpus):
             console.print(
                 f"  [{DIM}]{f'GPU {i}:':<{w}}[/] [{SLEAP_TEAL}]{gpu.name}[/] "
@@ -610,12 +633,22 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
                 else SLEAP_PURPLE if binary.source == "uv-tool" else SLEAP_ORANGE
             )
             console.print(f"  [{SLEAP_TEAL}]{binary.name}[/]:")
-            console.print(f"    [{DIM}]{'Path:':<{w}}[/] [{SLEAP_CYAN}]{binary.path}[/]")
+            bin_path = binary.path
+            console.print(f"    [{DIM}]{'Path:':<{w}}[/] [{SLEAP_CYAN}]{bin_path}[/]")
             if binary.real_path != binary.path:
-                console.print(f"    [{DIM}]{'Real Path:':<{w}}[/] [{SLEAP_CYAN}]{binary.real_path}[/]")
-            console.print(f"    [{DIM}]{'Source:':<{w}}[/] [{source_color}]{binary.source}[/]")
+                real_path = binary.real_path
+                console.print(
+                    f"    [{DIM}]{'Real Path:':<{w}}[/] [{SLEAP_CYAN}]{real_path}[/]"
+                )
+            bin_src = binary.source
+            console.print(
+                f"    [{DIM}]{'Source:':<{w}}[/] [{source_color}]{bin_src}[/]"
+            )
             if binary.python_path:
-                console.print(f"    [{DIM}]{'Python:':<{w}}[/] [{SLEAP_CYAN}]{binary.python_path}[/]")
+                py_path = binary.python_path
+                console.print(
+                    f"    [{DIM}]{'Python:':<{w}}[/] [{SLEAP_CYAN}]{py_path}[/]"
+                )
         console.print()
 
     # -------------------------------------------------------------------------
@@ -885,9 +918,9 @@ def _format_doctor_plain(data: dict) -> str:
             driver_str += f" (CUDA {system_cuda})"
         lines.append(f"  {'NVIDIA Driver:':<{w}} {driver_str}")
         for i, gpu in enumerate(gpus):
-            lines.append(
-                f"  {f'GPU {i}:':<{w}} {gpu.name} ({gpu.memory_free} free / {gpu.memory_total})"
-            )
+            gpu_label = f"GPU {i}:"
+            gpu_mem = f"{gpu.memory_free} free / {gpu.memory_total}"
+            lines.append(f"  {gpu_label:<{w}} {gpu.name} ({gpu_mem})")
     else:
         lines.append(f"  {'NVIDIA Driver:':<{w}} Not detected")
     pytorch_version = data.get("pytorch_version", "")
