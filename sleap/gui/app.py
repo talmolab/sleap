@@ -45,7 +45,6 @@ frame and instances listed in data view table.
 """
 
 import os
-import random
 import re
 from logging import getLogger
 from pathlib import Path
@@ -1516,22 +1515,15 @@ class MainWindow(QMainWindow):
             for video in self.labels.videos
         }
 
+        # For random sample options, store candidate pools (all frames)
+        # Actual sampling is done in the dialog based on sample_count and exclusions
+        # This allows re-sampling when "skip user labeled" checkbox changes
         selection["random"] = {
-            video: remove_user_labeled(
-                video, random.sample(range(video.shape[0]), min(20, video.shape[0]))
-            )
-            for video in self.labels.videos
+            video: list(range(video.shape[0])) for video in self.labels.videos
         }
 
-        if len(self.labels.videos) > 1:
-            selection["random_video"] = {
-                current_video: remove_user_labeled(
-                    current_video,
-                    random.sample(
-                        range(current_video.shape[0]), min(20, current_video.shape[0])
-                    ),
-                )
-            }
+        # Always provide random_video option (current video sampling)
+        selection["random_video"] = {current_video: list(range(current_video.shape[0]))}
 
         if user_labeled_frames:
             selection["user"] = {

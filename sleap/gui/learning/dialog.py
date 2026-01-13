@@ -5,7 +5,7 @@ Dialogs for running training and/or inference in GUI.
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Dict, List, Optional, Text, cast
+from typing import Dict, List, Optional, Set, Text, cast
 
 from qtpy import QtCore, QtGui, QtWidgets
 
@@ -355,14 +355,33 @@ class LearningDialog(QtWidgets.QDialog):
                 frame_count=frame_count,
             )
 
+        # For random sample options, use sampling logic with default sample count
+        # The actual count will be updated when settings change
+        default_sample_count = 20
+
+        if "random_video" in self._frame_selection:
+            frame_count = self._sample_frames_from_pool(
+                self._frame_selection["random_video"],
+                default_sample_count,
+                exclude_user_labeled=False,
+            )
+            options["random_video"] = FrameTargetOption(
+                key="random_video",
+                label="Random sample (current video)",
+                description="Random frames from current video",
+                frame_count=frame_count,
+            )
+
         if "random" in self._frame_selection:
-            frame_count = self.count_total_frames_for_selection_option(
-                self._frame_selection["random"]
+            frame_count = self._sample_frames_from_pool(
+                self._frame_selection["random"],
+                default_sample_count,
+                exclude_user_labeled=False,
             )
             options["random"] = FrameTargetOption(
                 key="random",
-                label="Random sample",
-                description="Random frames for quick model check",
+                label="Random sample (all videos)",
+                description="Random frames from all videos",
                 frame_count=frame_count,
             )
 
@@ -456,8 +475,85 @@ class LearningDialog(QtWidgets.QDialog):
             )
 
     def _on_target_selection_changed(self):
-        """Track when user explicitly changes the frame target selection."""
+        """Track when user explicitly changes the frame target selection.
+
+        Also updates frame counts for random sample options based on current
+        settings (sample count spinbox, exclude user labeled checkbox).
+        """
         self._target_selection_user_changed = True
+        self._update_random_sample_frame_counts()
+
+    def _get_user_labeled_frame_indices(self, video: Video) -> Set[int]:
+        """Get set of frame indices that have user-labeled instances for a video."""
+        return {
+            lf.frame_idx for lf in self.labels.user_labeled_frames if lf.video == video
+        }
+
+    def _sample_frames_from_pool(
+        self,
+        candidate_pool: Dict[Video, List[int]],
+        sample_count: int,
+        exclude_user_labeled: bool,
+    ) -> int:
+        """Sample frames from a candidate pool and return the sampled count.
+
+        This implements the "filter then sample" approach, which maintains
+        the target sample count when possible (unlike "sample then filter").
+
+        Args:
+            candidate_pool: Dict mapping videos to lists of candidate frame indices.
+            sample_count: Target number of frames to sample.
+            exclude_user_labeled: If True, exclude user-labeled frames first.
+
+        Returns:
+            The actual number of frames that would be sampled.
+        """
+        total_sampled = 0
+
+        for video, candidates in candidate_pool.items():
+            if not candidates:
+                continue
+
+            # Convert to set for efficient filtering
+            available = set(candidates)
+
+            # Filter out user-labeled frames if requested
+            if exclude_user_labeled:
+                user_labeled = self._get_user_labeled_frame_indices(video)
+                available = available - user_labeled
+
+            # Sample up to sample_count from available frames
+            actual_sample_size = min(sample_count, len(available))
+            total_sampled += actual_sample_size
+
+        return total_sampled
+
+    def _update_random_sample_frame_counts(self):
+        """Update frame counts for random sample options based on current settings."""
+        if self._frame_selection is None:
+            return
+
+        selection = self.frame_target_selector.get_selection()
+        sample_count = selection.sample_count
+        exclude_user_labeled = selection.exclude_user_labeled
+
+        # Update random_video option
+        if "random_video" in self._frame_selection:
+            count = self._sample_frames_from_pool(
+                self._frame_selection["random_video"],
+                sample_count,
+                exclude_user_labeled,
+            )
+            self.frame_target_selector.update_option_frame_count("random_video", count)
+
+        # Update random (all videos) option
+        if "random" in self._frame_selection:
+            count = self._sample_frames_from_pool(
+                self._frame_selection["random"],
+                sample_count,
+                exclude_user_labeled,
+            )
+            self.frame_target_selector.update_option_frame_count("random", count)
 
     def connect_signals(self):
         """Connect valueChanged signals for pipeline and any existing tabs.
@@ -999,7 +1095,12 @@ class LearningDialog(QtWidgets.QDialog):
         """Get frames to predict based on user selection.
 
         Uses the new FrameTargetSelector widget for selection.
+
+        For random sample options (random, random_video), this method performs
+        the actual sampling based on sample_count and exclude_user_labeled settings.
         """
+        import random
+
         frames_to_predict = dict()
 
         if self._frame_selection is None:
@@ -1016,6 +1117,7 @@ class LearningDialog(QtWidgets.QDialog):
             "video": "video",
             "all_videos": "all_videos",
             "random": "random",
+            "random_video": "random_video",
             "suggestions": "suggestions",
             "user_labeled": "user",
             "predicted": "predicted",
@@ -1024,7 +1126,37 @@ class LearningDialog(QtWidgets.QDialog):
 
         frame_selection_key = key_map.get(target_key)
         if frame_selection_key and frame_selection_key in self._frame_selection:
-            frames_to_predict = self._frame_selection[frame_selection_key].copy()
+            candidate_frames = self._frame_selection[frame_selection_key].copy()
+
+            # For random sample options, perform actual sampling
+            if target_key in ("random", "random_video"):
+                sample_count = selection.sample_count
+                exclude_user_labeled = selection.exclude_user_labeled
+
+                frames_to_predict = {}
+                for video, candidates in candidate_frames.items():
+                    if not candidates:
+                        frames_to_predict[video] = []
+                        continue
+
+                    # Convert to set for efficient filtering
+                    available = set(candidates)
+
+                    # Filter out user-labeled frames if requested
+                    if exclude_user_labeled:
+                        user_labeled = self._get_user_labeled_frame_indices(video)
+                        available = available - user_labeled
+
+                    # Sample from available frames
+                    available_list = list(available)
+                    actual_sample_size = min(sample_count, len(available_list))
+                    if actual_sample_size > 0:
+                        sampled = random.sample(available_list, actual_sample_size)
+                        frames_to_predict[video] = sorted(sampled)
+                    else:
+                        frames_to_predict[video] = []
+            else:
+                frames_to_predict = candidate_frames
 
         return frames_to_predict
 
