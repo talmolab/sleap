@@ -210,9 +210,7 @@ class TestDiagnosticFunctions:
             capture_output=True,
         )
         (tmp_path / "test.txt").write_text("hello")
-        subprocess.run(
-            ["git", "-C", str(tmp_path), "add", "."], capture_output=True
-        )
+        subprocess.run(["git", "-C", str(tmp_path), "add", "."], capture_output=True)
         subprocess.run(
             ["git", "-C", str(tmp_path), "commit", "-m", "Initial"],
             capture_output=True,
@@ -398,7 +396,7 @@ class TestFormattingHelpers:
         with patch.dict(
             "os.environ",
             {"HOME": str(tmp_path), "UV_PYTHON_PREFERENCE": ""},
-            clear=False
+            clear=False,
         ):
             # Note: This test may not work if tomllib is not available
             # Just verify it doesn't crash

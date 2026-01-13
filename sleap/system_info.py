@@ -891,9 +891,9 @@ def get_uv_info_data() -> Optional[UVInfo]:
 
     info.python_preference = get_uv_config_value("python-preference")
     info.resolution_strategy = get_uv_config_value("resolution")
-    info.index_strategy = (
-        os.environ.get("UV_INDEX_STRATEGY", "") or get_uv_config_value("index-strategy")
-    )
+    info.index_strategy = os.environ.get(
+        "UV_INDEX_STRATEGY", ""
+    ) or get_uv_config_value("index-strategy")
     info.prerelease = get_uv_config_value("prerelease")
 
     return info
@@ -1123,9 +1123,7 @@ def get_memory_info() -> tuple[str, str, str]:
         try:
             # Use wmic for memory info
             wmic_fields = "TotalVisibleMemorySize,FreePhysicalMemory"
-            rc, stdout, _ = run_command(
-                ["wmic", "OS", "get", wmic_fields, "/VALUE"]
-            )
+            rc, stdout, _ = run_command(["wmic", "OS", "get", wmic_fields, "/VALUE"])
             if rc == 0:
                 values = {}
                 for line in stdout.split("\n"):

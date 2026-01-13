@@ -593,7 +593,9 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
         source_color = (
             SLEAP_PURPLE
             if pkg.source == "editable"
-            else SLEAP_ORANGE if pkg.source == "conda" else DIM
+            else SLEAP_ORANGE
+            if pkg.source == "conda"
+            else DIM
         )
         pkg_line = (
             f"  [{SLEAP_TEAL}]{(pkg.name + ':'):<{w}}[/] "
@@ -630,7 +632,9 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
             source_color = (
                 SLEAP_TEAL
                 if binary.source == "venv"
-                else SLEAP_PURPLE if binary.source == "uv-tool" else SLEAP_ORANGE
+                else SLEAP_PURPLE
+                if binary.source == "uv-tool"
+                else SLEAP_ORANGE
             )
             console.print(f"  [{SLEAP_TEAL}]{binary.name}[/]:")
             bin_path = binary.path
