@@ -113,12 +113,13 @@ class TestCLIBasics:
         assert "[Python]" in content
 
     def test_doctor_output_auto_filename(self, tmp_path, monkeypatch):
-        """Verify doctor -o without path creates auto-timestamped file."""
+        """Verify doctor -o auto creates auto-timestamped file."""
         # Change to tmp_path so auto file is created there
         monkeypatch.chdir(tmp_path)
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["doctor", "-o"])
+        # Use "-o auto" since Click requires an argument for the option
+        result = runner.invoke(cli, ["doctor", "-o", "auto"])
         assert result.exit_code == 0
         assert "Saved to:" in result.output
 

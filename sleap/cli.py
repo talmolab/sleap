@@ -311,9 +311,7 @@ _DOCTOR_WIDTHS = {
     "--output",
     "output_file",
     default=None,
-    help="Save output to file. Use -o without a path for auto-timestamped filename.",
-    is_flag=False,
-    flag_value="auto",
+    help="Save output to file. Use '-o auto' for auto-timestamped filename.",
 )
 def doctor(output_json: bool, output_file: Optional[str]) -> None:
     """Show system diagnostics for troubleshooting.

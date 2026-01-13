@@ -349,8 +349,16 @@ class TestDiagnosticFunctions:
 
     def test_analyze_path_detects_conda_conflict(self):
         """Verify analyze_path detects conda before uv conflict."""
-        # Create a PATH with conda before uv
-        test_path = "/conda/bin:/home/user/.local/bin:/usr/bin"
+        import os
+
+        # Create a PATH with conda before uv - use os.pathsep for cross-platform
+        sep = os.pathsep
+        if os.name == "nt":
+            # Windows paths
+            test_path = f"C:\\conda\\bin{sep}C:\\Users\\user\\.local\\bin{sep}C:\\Windows"
+        else:
+            # Unix paths
+            test_path = f"/conda/bin{sep}/home/user/.local/bin{sep}/usr/bin"
         with patch.dict("os.environ", {"PATH": test_path}):
             entries, conflicts = analyze_path()
             # Should detect conda before uv paths
