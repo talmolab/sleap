@@ -69,9 +69,7 @@ class RenderingPreviewWidget(QtWidgets.QWidget):
         if self.video is None:
             return [lf.frame_idx for lf in self.labels.labeled_frames]
         return sorted(
-            lf.frame_idx
-            for lf in self.labels.labeled_frames
-            if lf.video == self.video
+            lf.frame_idx for lf in self.labels.labeled_frames if lf.video == self.video
         )
 
     def _setup_ui(self):
