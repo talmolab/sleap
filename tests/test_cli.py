@@ -66,6 +66,94 @@ class TestCLIBasics:
         assert "python" in data
         assert "packages" in data
 
+    def test_doctor_json_has_new_fields(self):
+        """Verify doctor --json includes new diagnostic fields."""
+        import json
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["doctor", "--json"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        # Check new fields
+        assert "gpu" in data
+        assert "binaries" in data
+        assert "path_entries" in data
+        assert "path_conflicts" in data
+        # Check platform has new fields
+        assert "ram_used" in data["platform"]
+        assert "disk_used" in data["platform"]
+
+    def test_doctor_has_new_sections(self):
+        """Verify doctor has new consolidated sections."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["doctor"])
+        assert result.exit_code == 0
+        # Check for new sections
+        assert "[Platform]" in result.output
+        assert "[Python]" in result.output
+        assert "[Packages]" in result.output
+        assert "[PATH" in result.output
+        # Check for new output format
+        assert "Generated:" in result.output
+        assert "RAM:" in result.output or "Disk:" in result.output
+
+    def test_doctor_output_to_file(self, tmp_path):
+        """Verify doctor -o writes to file."""
+        output_file = tmp_path / "doctor.txt"
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["doctor", "-o", str(output_file)])
+        assert result.exit_code == 0
+
+        # File should exist and have content
+        assert output_file.exists()
+        content = output_file.read_text()
+        assert "SLEAP System Diagnostics" in content
+        assert "[Platform]" in content
+        assert "[Python]" in content
+
+    def test_doctor_output_auto_filename(self, tmp_path, monkeypatch):
+        """Verify doctor -o auto creates auto-timestamped file."""
+        # Change to tmp_path so auto file is created there
+        monkeypatch.chdir(tmp_path)
+
+        runner = CliRunner()
+        # Use "-o auto" since Click requires an argument for the option
+        result = runner.invoke(cli, ["doctor", "-o", "auto"])
+        assert result.exit_code == 0
+        assert "Saved to:" in result.output
+
+        # Find the auto-generated file
+        import glob
+
+        files = glob.glob(str(tmp_path / "sleap-doctor-*.txt"))
+        assert len(files) == 1
+        content = open(files[0]).read()
+        assert "SLEAP System Diagnostics" in content
+
+    def test_doctor_file_content_has_all_sections(self, tmp_path):
+        """Verify saved file has all diagnostic sections."""
+        output_file = tmp_path / "doctor.txt"
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["doctor", "-o", str(output_file)])
+        assert result.exit_code == 0
+
+        content = output_file.read_text()
+        # Verify all sections are present
+        assert "[Platform]" in content
+        assert "[Python]" in content
+        assert "[Packages]" in content
+        assert "[PATH" in content
+
+    def test_doctor_shows_tip_when_not_saving(self):
+        """Verify doctor shows -o tip when not saving to file."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["doctor"])
+        assert result.exit_code == 0
+        assert "Tip:" in result.output
+        assert "sleap doctor -o" in result.output
+
 
 class TestSleapIoIntegration:
     """Tests for sleap-io CLI command integration.
