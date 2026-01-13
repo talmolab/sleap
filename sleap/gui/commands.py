@@ -1929,8 +1929,7 @@ def render_video_gui(
         win.setValue(current)
         pct = (current / total) * 100 if total > 0 else 0
         win.setLabelText(
-            f"Rendering video...<br>{current}/{total} frames "
-            f"(<b>{pct:.1f}%</b>)"
+            f"Rendering video...<br>{current}/{total} frames (<b>{pct:.1f}%</b>)"
         )
 
     def on_finished(fname):
