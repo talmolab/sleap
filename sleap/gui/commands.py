@@ -84,7 +84,6 @@ from sleap_io.model.instance import (
 )
 from sleap_io import Video
 from sleap_io import save_video
-from sleap.io.visuals import save_labeled_video
 from sleap.util import get_package_file
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.sleap_io_adaptors.skeleton_utils import (
@@ -1519,43 +1518,165 @@ class ExportVideoClip(AppCommand):
         return params
 
 
-class ExportLabeledClip(ExportVideoClip):
-    """Export a labeled video clip with labels and edges.
+class ExportLabeledClip(AppCommand):
+    """Export a labeled video clip with skeleton overlay.
 
-    This command is used to export a labeled video clip with labels and edges. It
-    inherits from the `ExportVideoClip` class and provides additional functionality for
-    exporting labeled videos.
+    Uses sleap-io's rendering API for high-quality video export with
+    real-time preview capabilities.
     """
 
     @classmethod
     def ask(cls, context: CommandContext, params: dict) -> bool:
-        """Ask the user for parameters to export a labeled video clip."""
-        params["form_name"] = "labeled_clip_form"
-        ok = super().ask(context, params)
-        return ok
+        """Show the render dialog and collect export parameters.
+
+        Args:
+            context: The command context.
+            params: Dictionary to store collected parameters.
+
+        Returns:
+            True if user confirmed, False if cancelled.
+        """
+        from sleap.gui.dialogs.render_clip import RenderClipDialog
+
+        labels = context.state["labels"]
+        video = context.state["video"]
+        frame_idx = context.state.get("frame_idx", None)
+
+        # Get frame range if a clip is selected in main window
+        frame_range = None
+        if context.state["has_frame_range"]:
+            frame_range = tuple(context.state["frame_range"])
+
+        dialog = RenderClipDialog(
+            labels=labels,
+            video=video,
+            current_frame=frame_idx,
+            frame_range=frame_range,
+            parent=context.app,
+        )
+
+        if not dialog.exec_():
+            return False
+
+        # Collect parameters from dialog
+        params["video_filename"] = dialog.get_output_path()
+        params["frame_indices"] = dialog.get_frame_indices()
+        export_params = dialog.get_export_params()
+
+        # Map dialog params to render params
+        params["fps"] = export_params.get("fps", 30)
+        params["crf"] = export_params.get("crf", 23)
+        params["scale"] = export_params.get("scale", 1.0)
+        params["color_by"] = export_params.get("color_by", "track")
+        params["palette"] = export_params.get("palette", "tableau10")
+        params["marker_shape"] = export_params.get("marker_shape", "circle")
+        params["marker_size"] = export_params.get("marker_size", 4.0)
+        params["line_width"] = export_params.get("line_width", 2.0)
+        params["alpha"] = export_params.get("alpha", 1.0)
+        params["show_nodes"] = export_params.get("show_nodes", True)
+        params["show_edges"] = export_params.get("show_edges", True)
+        params["background"] = export_params.get("background")
+        params["open_when_done"] = export_params.get("open_when_done", True)
+
+        return True
 
     @classmethod
-    def write_new_video(cls, context, params):
-        """Write a new annotated video using the parameters provided.
+    def do_action(cls, context: CommandContext, params: dict):
+        """Export the labeled video clip.
+
+        Args:
+            context: The command context.
+            params: Export parameters from ask().
+        """
+        labels = context.state["labels"]
+        video = context.state["video"]
+
+        # Build render parameters
+        render_params = {
+            "fps": params.get("fps", 30),
+            "crf": params.get("crf", 23),
+            "scale": params.get("scale", 1.0),
+            "color_by": params.get("color_by", "track"),
+            "palette": params.get("palette", "tableau10"),
+            "marker_shape": params.get("marker_shape", "circle"),
+            "marker_size": params.get("marker_size", 4.0),
+            "line_width": params.get("line_width", 2.0),
+            "alpha": params.get("alpha", 1.0),
+            "show_nodes": params.get("show_nodes", True),
+            "show_edges": params.get("show_edges", True),
+        }
+
+        # Add background if not "video"
+        if params.get("background"):
+            render_params["background"] = params["background"]
+
+        # Render with progress dialog (non-blocking)
+        render_video_gui(
+            labels=labels,
+            filename=params["video_filename"],
+            video=video,
+            frame_inds=params.get("frame_indices"),
+            render_params=render_params,
+            open_when_done=params.get("open_when_done", True),
+        )
+
+    @classmethod
+    def write_new_video(cls, context: CommandContext, params: dict):
+        """Write annotated video using sleap-io rendering.
+
+        .. deprecated::
+            This method is deprecated. Use `render_video_gui()` for GUI rendering
+            with progress dialog, or call `sleap_io.render_video()` directly for
+            programmatic use.
 
         Args:
             context: The command context.
             params: The parameters for the export.
         """
-        save_labeled_video(
-            filename=params["video_filename"],
-            labels=context.state["labels"],
-            video=context.state["video"],
-            frames=list(params["frames"]),
-            fps=params["fps"],
-            color_manager=params["color_manager"],
-            background=params["background"],
-            show_edges=params["show edges"],
-            edge_is_wedge=params["edge_is_wedge"],
-            marker_size=params["marker size"],
-            scale=params["scale"],
-            crop_size_xy=params["crop"],
-            gui_progress=params["gui_progress"],
+        import warnings
+
+        import sleap_io as sio
+
+        warnings.warn(
+            "ExportLabeledClip.write_new_video() is deprecated. "
+            "Use render_video_gui() or sleap_io.render_video() directly.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        labels = context.state["labels"]
+        video = context.state["video"]
+
+        # Build render parameters
+        render_params = {
+            "fps": params.get("fps", 30),
+            "crf": params.get("crf", 23),
+            "scale": params.get("scale", 1.0),
+            "color_by": params.get("color_by", "track"),
+            "palette": params.get("palette", "tableau10"),
+            "marker_shape": params.get("marker_shape", "circle"),
+            "marker_size": params.get("marker_size", 4.0),
+            "line_width": params.get("line_width", 2.0),
+            "alpha": params.get("alpha", 1.0),
+            "show_nodes": params.get("show_nodes", True),
+            "show_edges": params.get("show_edges", True),
+        }
+
+        # Add background if not "video"
+        if params.get("background"):
+            render_params["background"] = params["background"]
+
+        # Get frame indices
+        frame_inds = params.get("frame_indices", None)
+
+        # Render video using sleap-io
+        sio.render_video(
+            labels,
+            params["video_filename"],
+            video=video,
+            frame_inds=frame_inds,
+            show_progress=True,
+            **render_params,
         )
 
 
@@ -1663,6 +1784,213 @@ class ExportPackageThread(QtCore.QThread):
                 self.cancelled.emit()
             else:
                 self.error.emit(str(e))
+
+
+class RenderVideoThread(QtCore.QThread):
+    """Background thread for rendering video without freezing GUI.
+
+    Uses sleap-io's render_video() with progress_callback for non-blocking rendering.
+    """
+
+    progress = QtCore.Signal(int, int)  # (current, total)
+    finished = QtCore.Signal(str)  # output filename
+    error = QtCore.Signal(str)  # error message
+    cancelled = QtCore.Signal()
+
+    def __init__(
+        self,
+        labels,
+        filename: str,
+        video,
+        frame_inds: list[int] | None,
+        render_params: dict,
+        parent=None,
+    ):
+        """Initialize the render video thread.
+
+        Args:
+            labels: Labels object to render.
+            filename: Output video path.
+            video: Video to render from.
+            frame_inds: Frame indices to render (None = all labeled).
+            render_params: Dict of rendering parameters for sio.render_video().
+            parent: Parent QObject.
+        """
+        super().__init__(parent)
+        self.labels = labels
+        self.filename = filename
+        self.video = video
+        self.frame_inds = frame_inds
+        self.render_params = render_params
+        self._cancelled = False
+
+    def cancel(self):
+        """Request cancellation of the render."""
+        self._cancelled = True
+
+    def run(self):
+        """Run the render in background thread."""
+        import sleap_io as sio
+
+        def on_progress(current, total):
+            """Progress callback for sio.render_video()."""
+            self.progress.emit(current, total)
+            # Return False to cancel rendering
+            return not self._cancelled
+
+        try:
+            sio.render_video(
+                self.labels,
+                self.filename,
+                video=self.video,
+                frame_inds=self.frame_inds,
+                progress_callback=on_progress,
+                show_progress=False,  # We handle progress ourselves
+                **self.render_params,
+            )
+
+            if self._cancelled:
+                # Clean up partial file on cancellation
+                if Path(self.filename).exists():
+                    os.remove(self.filename)
+                self.cancelled.emit()
+                return
+
+            self.finished.emit(self.filename)
+
+        except Exception as e:
+            # Check if this was a cancellation
+            is_cancelled = "cancel" in str(e).lower() or self._cancelled
+            if is_cancelled:
+                # Clean up partial file
+                if Path(self.filename).exists():
+                    os.remove(self.filename)
+                self.cancelled.emit()
+            else:
+                self.error.emit(str(e))
+
+
+def render_video_gui(
+    labels,
+    filename: str,
+    video,
+    frame_inds: list[int] | None,
+    render_params: dict,
+    open_when_done: bool = True,
+) -> str:
+    """Render video with progress dialog.
+
+    Args:
+        labels: Labels object to render.
+        filename: Output video path.
+        video: Video to render from.
+        frame_inds: Frame indices to render (None = all labeled).
+        render_params: Dict of rendering parameters for sio.render_video().
+        open_when_done: If True, open video after rendering.
+
+    Returns:
+        The filename if successful, "canceled" if canceled by user.
+    """
+    # Calculate total frames for progress
+    if frame_inds is not None:
+        total_frames = len(frame_inds)
+    else:
+        total_frames = len(
+            [lf for lf in labels.labeled_frames if video is None or lf.video == video]
+        )
+
+    # Create progress dialog
+    win = QtWidgets.QProgressDialog(
+        f"Rendering video...<br>0/{total_frames} frames", "Cancel", 0, total_frames
+    )
+    win.setWindowTitle("Rendering Video")
+    win.setWindowModality(QtCore.Qt.WindowModal)
+    win.setMinimumDuration(0)
+    win.setAutoClose(False)
+    win.setAutoReset(False)
+    win.setMinimumWidth(350)
+    win.show()
+    QtWidgets.QApplication.instance().processEvents()
+
+    # Track result
+    result = {"status": None, "filename": None, "error": None}
+
+    # Create worker thread
+    worker = RenderVideoThread(
+        labels=labels,
+        filename=filename,
+        video=video,
+        frame_inds=frame_inds,
+        render_params=render_params,
+    )
+
+    def on_progress(current, total):
+        win.setMaximum(total)
+        win.setValue(current)
+        pct = (current / total) * 100 if total > 0 else 0
+        win.setLabelText(
+            f"Rendering video...<br>{current}/{total} frames (<b>{pct:.1f}%</b>)"
+        )
+
+    def on_finished(fname):
+        result["status"] = "finished"
+        result["filename"] = fname
+
+    def on_cancelled():
+        result["status"] = "canceled"
+
+    def on_error(msg):
+        result["status"] = "error"
+        result["error"] = msg
+
+    # Connect signals
+    worker.progress.connect(on_progress)
+    worker.finished.connect(on_finished)
+    worker.cancelled.connect(on_cancelled)
+    worker.error.connect(on_error)
+
+    # Handle cancel button
+    win.canceled.connect(worker.cancel)
+
+    # Start the worker
+    worker.start()
+
+    # Process events while worker is running (keeps GUI responsive)
+    while worker.isRunning():
+        QtWidgets.QApplication.instance().processEvents()
+        worker.wait(10)  # Wait up to 10ms
+
+    # Ensure thread is fully terminated
+    worker.wait()
+
+    # Process any remaining events (including final signals from worker)
+    QtWidgets.QApplication.instance().processEvents()
+
+    # Clean up: disconnect signals and delete worker
+    worker.progress.disconnect()
+    worker.finished.disconnect()
+    worker.cancelled.disconnect()
+    worker.error.disconnect()
+    worker.deleteLater()
+
+    win.close()
+
+    # Handle result
+    if result["status"] == "finished":
+        if open_when_done:
+            open_file(result["filename"])
+        return result["filename"]
+    elif result["status"] == "canceled":
+        return "canceled"
+    elif result["status"] == "error":
+        QtWidgets.QMessageBox.critical(
+            None,
+            "Render Error",
+            f"Failed to render video:\n{result['error']}",
+        )
+        raise RuntimeError(result["error"])
+
+    return filename
 
 
 def export_dataset_gui(

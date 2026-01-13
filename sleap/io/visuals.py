@@ -1,10 +1,19 @@
 """
 Module for generating videos with visual annotation overlays.
+
+.. deprecated::
+    This module is deprecated. Use ``sleap_io.render_video()`` and
+    ``sleap_io.render_image()`` instead for improved rendering with
+    more customization options. See the sleap-io documentation for details.
+
+The legacy rendering code in this module is maintained for backwards
+compatibility but will be removed in a future release.
 """
 
 from __future__ import annotations
 
 import logging
+import warnings
 from collections import deque
 from queue import Queue, Empty
 from threading import Thread
@@ -31,6 +40,9 @@ logger = logging.getLogger(__name__)
 
 class VideoMarkerThread(Thread):
     """Annotate frame images (draw instances).
+
+    .. deprecated::
+        Use ``sleap_io.render_video()`` instead for improved rendering.
 
     Args:
         in_q: Queue with (list of frame indexes, ndarray of frame images).
@@ -59,6 +71,11 @@ class VideoMarkerThread(Thread):
         palette: str = "standard",
         distinctly_color: str = "instances",
     ):
+        warnings.warn(
+            "VideoMarkerThread is deprecated. Use sleap_io.render_video() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super(VideoMarkerThread, self).__init__()
         self.in_q = in_q
         self.out_q = out_q
@@ -438,6 +455,29 @@ def save_labeled_video(
 ):
     """Function to generate and save video with annotations.
 
+    .. deprecated::
+        Use ``sleap_io.render_video()`` instead for improved rendering with
+        more customization options including color schemes, marker shapes,
+        and real-time preview support.
+
+        Example migration::
+
+            import sleap_io as sio
+
+            # Old way (deprecated):
+            save_labeled_video(filename, labels, video, frames, fps=30)
+
+            # New way:
+            sio.render_video(
+                labels,
+                filename,
+                video=video,
+                frame_inds=frames,
+                fps=30,
+                color_by="track",
+                palette="tableau10",
+            )
+
     Args:
         filename: Output filename.
         labels: The dataset from which to get data.
@@ -461,6 +501,12 @@ def save_labeled_video(
     Returns:
         None.
     """
+    warnings.warn(
+        "save_labeled_video() is deprecated. Use sleap_io.render_video() instead "
+        "for improved rendering with more customization options.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     # Set up GUI progress dialog if requested
     progress_win = None
     canceled = False
