@@ -71,6 +71,11 @@ class LearningDialog(QtWidgets.QDialog):
         int, int, int
     )  # video_idx, frame_idx, instance_idx
 
+    # Class-level cache for pipeline tab form state.
+    # Persists across dialog sessions so values are restored after Cancel.
+    # Key: (mode, labels_filename, tab_name), Value: form data dict
+    _cached_tab_state: Dict[tuple, dict] = {}
+
     def __init__(
         self,
         mode: Text,
@@ -256,6 +261,20 @@ class LearningDialog(QtWidgets.QDialog):
         # Defer minimum width update to after event processing completes
         # to ensure layout is fully computed
         QtCore.QTimer.singleShot(0, self._update_minimum_width)
+
+    def closeEvent(self, event):
+        """Handle dialog close event.
+
+        Saves current form state for all pipeline tabs before closing.
+        This allows values to persist across Cancel operations - when the
+        dialog is reopened, the cached values are restored.
+        """
+        # Save form state for all initialized tabs
+        for tab_name, tab_widget in self.tabs.items():
+            cache_key = (self.mode, self.labels_filename, tab_name)
+            LearningDialog._cached_tab_state[cache_key] = tab_widget.get_all_form_data()
+
+        super().closeEvent(event)
 
     def update_file_lists(self):
         """Update config file lists for all currently shown tabs.
@@ -638,6 +657,12 @@ class LearningDialog(QtWidgets.QDialog):
 
             # Update file list for the newly created tab
             widget.update_file_list()
+
+            # Restore cached form state if available (persists across Cancel)
+            cache_key = (self.mode, self.labels_filename, head_name)
+            if cache_key in LearningDialog._cached_tab_state:
+                cached_data = LearningDialog._cached_tab_state[cache_key]
+                widget.set_fields_from_key_val_dict(cached_data)
 
         return self.tabs[head_name]
 
@@ -1943,8 +1968,16 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         cfg = cfg_info.config
         key_val_dict = get_keyval_dict_from_omegaconf(cfg)
-        if key_val_dict.get("trainer_config.trainer_devices") == "auto":
-            key_val_dict["trainer_config.trainer_devices"] = None
+
+        # Filter out system-specific settings that should come from preferences,
+        # not from the training profile. These are machine-specific (GPU count,
+        # workers) and should default to "auto" regardless of what the profile says.
+        system_specific_keys = [
+            "trainer_config.trainer_devices",
+            "trainer_config.train_data_loader.num_workers",
+        ]
+        for key in system_specific_keys:
+            key_val_dict.pop(key, None)
 
         # Clear run_name - it should be auto-generated for new training runs.
         # This prevents old run_name from base config from leaking through.

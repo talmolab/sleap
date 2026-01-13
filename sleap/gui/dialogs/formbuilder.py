@@ -481,6 +481,11 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 min, max = 0, item["default"] * 10
                 field.setRange(min, max)
 
+            # Support step size for spinbox (useful for crop_size which should be
+            # divisible by max_stride, typically 32)
+            if "step" in item.keys():
+                field.setSingleStep(int(item["step"]))
+
             field.setValue(item["default"])
             if item.get("default_disabled", False):
                 field.setToNone()
@@ -769,6 +774,9 @@ class OptionalSpinWidget(QtWidgets.QWidget):
 
     def updateState(self, valueChanged=True):
         self.spin_widget.setDisabled(self.check_widget.isChecked())
+        # Force visual refresh to ensure spinbox displays correctly after
+        # enable/disable state change (fixes display not updating on some platforms)
+        self.spin_widget.repaint()
         if valueChanged:
             self.valueChanged.emit()
 
@@ -807,13 +815,28 @@ class OptionalSpinWidget(QtWidgets.QWidget):
                 val = self.noneVal
 
         is_none = self.isNoneVal(val)
+
+        # Block signals temporarily to avoid multiple valueChanged emissions
+        # and ensure state is consistent before any signals fire
+        self.check_widget.blockSignals(True)
+        self.spin_widget.blockSignals(True)
+
         self.check_widget.setChecked(is_none)
         if not is_none:
+            # Enable spinbox before setting value to ensure proper display
+            self.spin_widget.setEnabled(True)
             self.spin_widget.setValue(val)
+
+        self.check_widget.blockSignals(False)
+        self.spin_widget.blockSignals(False)
+
         self.updateState(valueChanged=False)
 
     def setRange(self, min, max):
         self.spin_widget.setRange(min, max)
+
+    def setSingleStep(self, step):
+        self.spin_widget.setSingleStep(step)
 
 
 class FieldComboWidget(QtWidgets.QComboBox):
