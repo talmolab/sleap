@@ -721,7 +721,8 @@ class QCWidget(QtWidgets.QWidget):
         self._threshold_label.setMinimumWidth(40)
         self._threshold_label.setAlignment(QtCore.Qt.AlignCenter)
         self._threshold_label.setStyleSheet(
-            "font-weight: bold; background: #f8f9fa; padding: 2px 6px; border-radius: 3px;"
+            "font-weight: bold; background: #f8f9fa; "
+            "padding: 2px 6px; border-radius: 3px;"
         )
         threshold_layout.addWidget(self._threshold_label)
 

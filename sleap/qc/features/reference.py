@@ -120,7 +120,7 @@ class NearestNeighborScorer:
 
         # Build KD-tree for fast queries (euclidean method only)
         if self.method == "euclidean":
-            # Flatten poses and impute NaN with 0 (after normalization, 0 is near center)
+            # Flatten poses and impute NaN with 0 (0 is near center after norm)
             self._flattened_refs = np.array(
                 [np.nan_to_num(p.flatten(), nan=0.0) for p in self.reference_poses]
             )

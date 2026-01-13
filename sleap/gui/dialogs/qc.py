@@ -52,7 +52,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
         self._labels = labels
         self._navigate_callback = navigate_callback
         self._tab_visible = True  # Track if we're the visible tab when docked
-        # Store main window reference explicitly (self.parent() may change after docking)
+        # Store main window reference (self.parent() may change after docking)
         self._main_window = parent
 
         self._setup_ui()

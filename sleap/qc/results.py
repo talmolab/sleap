@@ -5,11 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, NamedTuple
 
-import numpy as np
 
 if TYPE_CHECKING:
     import pandas as pd
-    import sleap_io as sio
 
 
 class InstanceKey(NamedTuple):

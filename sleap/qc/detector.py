@@ -246,9 +246,8 @@ class LabelQCDetector:
                     instance_count += 1
                     if instance_count % 500 == 0:
                         progress = 0.80 + 0.18 * (instance_count / total_instances)
-                        _report(
-                            "Scoring instances", progress, f"{instance_count}/{total_instances}"
-                        )
+                        msg = f"{instance_count}/{total_instances}"
+                        _report("Scoring instances", progress, msg)
 
                 # Frame-level checks
                 frame_key = FrameKey(video_idx, frame_idx)
@@ -414,8 +413,6 @@ class LabelQCDetector:
             List of LOO NN distances.
         """
         from sklearn.neighbors import NearestNeighbors
-
-        n = len(instances)
 
         # Normalize poses
         normalized = [normalize_pose(inst) for inst in instances]

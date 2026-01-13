@@ -44,7 +44,7 @@ class GMMDetector:
         self.model: Optional[GaussianMixture] = None
         self.scaler: Optional[StandardScaler] = None
         self.log_likelihood_threshold: Optional[float] = None
-        self.train_log_likelihoods: Optional[np.ndarray] = None  # For percentile scoring
+        self.train_log_likelihoods: Optional[np.ndarray] = None  # For percentiles
         self.feature_names: Optional[list[str]] = None
 
     def fit(
