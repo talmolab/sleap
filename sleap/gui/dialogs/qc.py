@@ -52,6 +52,8 @@ class QCDockWidget(QtWidgets.QDockWidget):
         self._labels = labels
         self._navigate_callback = navigate_callback
         self._tab_visible = True  # Track if we're the visible tab when docked
+        # Store main window reference explicitly (self.parent() may change after docking)
+        self._main_window = parent
 
         self._setup_ui()
         self._setup_dock()
@@ -140,7 +142,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
 
         # Connect to parent state for fit_selection sync (do this early)
         # This ensures the checkbox stays synced even if the dock hasn't been shown yet
-        parent = self.parent()
+        parent = self._main_window
         if parent is not None and hasattr(parent, "state"):
             # Initial sync of checkbox state
             self._sync_fit_selection_checkbox()
@@ -159,7 +161,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
 
         # When dock becomes visible, sync state from parent
         if visible:
-            parent = self.parent()
+            parent = self._main_window
             if parent is not None:
                 # Sync labels
                 if hasattr(parent, "labels"):
@@ -209,7 +211,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
         n_added = self._widget.export_to_suggestions()
         if n_added > 0:
             # Trigger update of suggestions dock in main window
-            parent = self.parent()
+            parent = self._main_window
             if parent is not None and hasattr(parent, "on_data_update"):
                 from sleap.gui.commands import UpdateTopic
 
@@ -221,7 +223,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
         Updates the main window's state to mirror the checkbox and applies
         the zoom effect immediately.
         """
-        parent = self.parent()
+        parent = self._main_window
         if parent is not None and hasattr(parent, "state"):
             # Qt.Checked = 2, Qt.Unchecked = 0
             enabled = state == Qt.Checked
@@ -244,7 +246,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
         Args:
             enabled: If True, zoom to current selection. If False, clear zoom.
         """
-        parent = self.parent()
+        parent = self._main_window
         if parent is None or not hasattr(parent, "player"):
             return
 
@@ -263,7 +265,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
             value: Optional value from state callback. If None, reads from state.
         """
         if value is None:
-            parent = self.parent()
+            parent = self._main_window
             if parent is not None and hasattr(parent, "state"):
                 value = parent.state.get("fit_selection", False)
             else:
