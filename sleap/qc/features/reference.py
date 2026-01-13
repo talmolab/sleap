@@ -208,9 +208,7 @@ class NearestNeighborScorer:
         else:
             normalized = poses
 
-        flattened = np.array(
-            [np.nan_to_num(p.flatten(), nan=0.0) for p in normalized]
-        )
+        flattened = np.array([np.nan_to_num(p.flatten(), nan=0.0) for p in normalized])
 
         # Batch KD-tree query
         distances, _ = self._kdtree.kneighbors(flattened)

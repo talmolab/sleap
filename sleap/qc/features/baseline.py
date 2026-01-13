@@ -143,9 +143,7 @@ class BaselineFeatureExtractor:
                         if norm1 < 1e-6 or norm2 < 1e-6:
                             continue
 
-                        cos_angle = np.clip(
-                            np.dot(v1, v2) / (norm1 * norm2), -1.0, 1.0
-                        )
+                        cos_angle = np.clip(np.dot(v1, v2) / (norm1 * norm2), -1.0, 1.0)
                         angle = np.arccos(cos_angle)
 
                         key = (center, min(n1, n2), max(n1, n2))
@@ -196,27 +194,19 @@ class BaselineFeatureExtractor:
         # Edge features
         edge_zscores = self._compute_edge_zscores(points)
         max_edge_z = (
-            float(np.nanmax(np.abs(edge_zscores)))
-            if len(edge_zscores) > 0
-            else 0.0
+            float(np.nanmax(np.abs(edge_zscores))) if len(edge_zscores) > 0 else 0.0
         )
         mean_edge_z = (
-            float(np.nanmean(np.abs(edge_zscores)))
-            if len(edge_zscores) > 0
-            else 0.0
+            float(np.nanmean(np.abs(edge_zscores))) if len(edge_zscores) > 0 else 0.0
         )
 
         # Angle features
         angle_zscores = self._compute_angle_zscores(points)
         max_angle_z = (
-            float(np.nanmax(np.abs(angle_zscores)))
-            if len(angle_zscores) > 0
-            else 0.0
+            float(np.nanmax(np.abs(angle_zscores))) if len(angle_zscores) > 0 else 0.0
         )
         mean_angle_z = (
-            float(np.nanmean(np.abs(angle_zscores)))
-            if len(angle_zscores) > 0
-            else 0.0
+            float(np.nanmean(np.abs(angle_zscores))) if len(angle_zscores) > 0 else 0.0
         )
 
         # Pairwise features
@@ -278,9 +268,7 @@ class BaselineFeatureExtractor:
             length = np.linalg.norm(p2 - p1)
             key = tuple(sorted([src, dst]))
             if key in self.stats.edge_means:
-                z = (length - self.stats.edge_means[key]) / self.stats.edge_stds[
-                    key
-                ]
+                z = (length - self.stats.edge_means[key]) / self.stats.edge_stds[key]
                 zscores.append(z)
 
         return np.array(zscores)
@@ -309,9 +297,7 @@ class BaselineFeatureExtractor:
                     if norm1 < 1e-6 or norm2 < 1e-6:
                         continue
 
-                    cos_angle = np.clip(
-                        np.dot(v1, v2) / (norm1 * norm2), -1.0, 1.0
-                    )
+                    cos_angle = np.clip(np.dot(v1, v2) / (norm1 * norm2), -1.0, 1.0)
                     angle = np.arccos(cos_angle)
 
                     key = (center, min(n1, n2), max(n1, n2))
@@ -407,9 +393,7 @@ class BaselineFeatureExtractor:
 
         return float(np.min(consistency_scores)) if consistency_scores else 1.0
 
-    def _compute_visibility_features(
-        self, points: np.ndarray
-    ) -> tuple[float, bool]:
+    def _compute_visibility_features(self, points: np.ndarray) -> tuple[float, bool]:
         """Compute visibility rate and isolated invisible flag."""
         visible_mask = ~np.isnan(points[:, 0])
         vis_rate = visible_mask.sum() / self.n_nodes

@@ -151,7 +151,7 @@ class QCScoreCanvas(Canvas):
 
         # Add annotation for flagged count
         self.axes.annotate(
-            f"{n_flagged} flagged\n({100*n_flagged/n_total:.1f}%)",
+            f"{n_flagged} flagged\n({100 * n_flagged / n_total:.1f}%)",
             xy=(self._threshold + 0.02, self.axes.get_ylim()[1] * 0.9),
             fontsize=9,
             color="#dc3545",
@@ -1077,12 +1077,11 @@ class QCWidget(QtWidgets.QWidget):
 
         # Get top contributing features
         contributions = flag.feature_contributions
-        top_features = sorted(
-            contributions.items(), key=lambda x: x[1], reverse=True
-        )[:3]
+        top_features = sorted(contributions.items(), key=lambda x: x[1], reverse=True)[
+            :3
+        ]
         features_text = "<br/>".join(
-            f"  • {name.replace('_', ' ')}: {value:.3f}"
-            for name, value in top_features
+            f"  • {name.replace('_', ' ')}: {value:.3f}" for name, value in top_features
         )
 
         self._details_label.setText(
@@ -1209,9 +1208,7 @@ class QCWidget(QtWidgets.QWidget):
             return -1
 
         if self._labels is None:
-            QtWidgets.QMessageBox.warning(
-                self, "No Labels", "No labels file loaded."
-            )
+            QtWidgets.QMessageBox.warning(self, "No Labels", "No labels file loaded.")
             return -1
 
         threshold = self._threshold_slider.value() / 100.0

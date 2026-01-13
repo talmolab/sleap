@@ -222,9 +222,7 @@ class QCResults:
 
         return issue_map.get(top_feature, f"High {top_feature}")
 
-    def _get_confidence(
-        self, score: float, contributions: dict[str, float]
-    ) -> str:
+    def _get_confidence(self, score: float, contributions: dict[str, float]) -> str:
         """Determine confidence level."""
         if score > 0.8:
             return "high"

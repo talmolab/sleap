@@ -614,7 +614,8 @@ class QtVideoPlayer(QWidget):
         if not zoom_rect.size().isEmpty():
             # Add margin around the instance
             margin = 20
-            zoom_rect = zoom_rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
+            margins = QMarginsF(margin, margin, margin, margin)
+            zoom_rect = zoom_rect.marginsAdded(margins)
             self.view.zoomToRect(zoom_rect)
             return True
         return False

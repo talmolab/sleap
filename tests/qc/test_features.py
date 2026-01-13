@@ -33,9 +33,7 @@ class TestBaselineFeatureExtractor:
         # Create simple training instances (straight line poses)
         instances = []
         for _ in range(10):
-            points = np.array(
-                [[0, 0], [10, 0], [20, 0], [30, 0], [40, 0]], dtype=float
-            )
+            points = np.array([[0, 0], [10, 0], [20, 0], [30, 0], [40, 0]], dtype=float)
             # Add small variation
             points += np.random.randn(5, 2) * 0.5
             instances.append(points)
@@ -74,9 +72,7 @@ class TestBaselineFeatureExtractor:
         normal_features = extractor.extract(normal)
 
         # Anomalous instance (one node displaced)
-        anomalous = np.array(
-            [[0, 0], [10, 0], [20, 50], [30, 0], [40, 0]], dtype=float
-        )
+        anomalous = np.array([[0, 0], [10, 0], [20, 50], [30, 0], [40, 0]], dtype=float)
         anomalous_features = extractor.extract(anomalous)
 
         # Max edge z-score should be higher for anomaly
@@ -168,9 +164,7 @@ class TestConvexHull:
 
     def test_square_hull(self):
         """Square should have predictable hull metrics."""
-        points = np.array(
-            [[0, 0], [10, 0], [10, 10], [0, 10], [5, 5]], dtype=float
-        )
+        points = np.array([[0, 0], [10, 0], [10, 10], [0, 10], [5, 5]], dtype=float)
 
         result = compute_convex_hull(points)
 

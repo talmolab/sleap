@@ -1,7 +1,5 @@
 """Tests for sleap.qc.config module."""
 
-import pytest
-
 from sleap.qc.config import QCConfig
 
 

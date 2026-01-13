@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 from qtpy import QtCore
 
 from sleap.gui.widgets.qc import QCFlagTableModel, QCWidget

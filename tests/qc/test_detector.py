@@ -68,9 +68,7 @@ class TestLabelQCDetector:
             points_array += np.random.randn(5, 2) * 2
 
             instance = Instance.from_numpy(points_array, skeleton=skeleton)
-            lf = LabeledFrame(
-                video=video, frame_idx=frame_idx, instances=[instance]
-            )
+            lf = LabeledFrame(video=video, frame_idx=frame_idx, instances=[instance])
             labels.append(lf)
 
         # Add one anomalous frame (node displaced significantly)
@@ -197,7 +195,8 @@ class TestLabelQCDetector:
         # (higher score = more anomalous)
         # Allow anomaly to be >= 90th percentile of normal scores
         percentile_90 = sorted_normal[int(len(sorted_normal) * 0.9)]
-        assert anomaly_score >= percentile_90 or anomaly_score > np.median(normal_scores)
+        median_score = np.median(normal_scores)
+        assert anomaly_score >= percentile_90 or anomaly_score > median_score
 
     def test_flag_threshold(self, labels_with_anomaly):
         """Test flagging with different thresholds."""
@@ -250,9 +249,7 @@ class TestLabelQCDetector:
         frame_issues = results.get_frame_issues()
 
         # Should detect at least the incomplete frame
-        incomplete_frames = [
-            (k, v) for k, v in frame_issues if v.is_incomplete
-        ]
+        incomplete_frames = [(k, v) for k, v in frame_issues if v.is_incomplete]
         assert len(incomplete_frames) >= 1
 
     def test_duplicate_detection(self, skeleton):

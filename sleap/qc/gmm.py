@@ -128,9 +128,8 @@ class GMMDetector:
 
         # Normalize: convert log-likelihood to percentile-based score
         # Score = 1 - percentile (so low log_ll = high score = anomalous)
-        percentile = (
-            (self.train_log_likelihoods < log_likelihood).sum()
-            / len(self.train_log_likelihoods)
+        percentile = (self.train_log_likelihoods < log_likelihood).sum() / len(
+            self.train_log_likelihoods
         )
         normalized = 1.0 - percentile
 

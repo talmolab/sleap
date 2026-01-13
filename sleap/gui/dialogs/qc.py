@@ -115,7 +115,9 @@ class QCDockWidget(QtWidgets.QDockWidget):
         self._fit_selection_checkbox.setToolTip(
             "Auto-zoom to fit the selected instance when navigating"
         )
-        self._fit_selection_checkbox.stateChanged.connect(self._on_fit_selection_changed)
+        self._fit_selection_checkbox.stateChanged.connect(
+            self._on_fit_selection_changed
+        )
         button_layout.addWidget(self._fit_selection_checkbox)
 
         # Dock/Undock toggle button - starts with "Undock" since we default to docked
@@ -202,9 +204,7 @@ class QCDockWidget(QtWidgets.QDockWidget):
             )
         else:
             self._dock_button.setText("Undock")
-            self._dock_button.setToolTip(
-                "Undock this panel to a floating window"
-            )
+            self._dock_button.setToolTip("Undock this panel to a floating window")
 
     def _on_add_to_suggestions(self):
         """Handle Add to Suggestions button click."""
