@@ -335,6 +335,7 @@ training:
   type: list
   options: current frame,random frames
   default: current frame
+  help: Which frames to run prediction on for visualization during training. "Current frame" uses the frame currently displayed in the GUI. "Random frames" selects random frames from the labeled data.
 
 inference:
 
@@ -427,6 +428,7 @@ inference:
   type: int
   default: 4
   range: 1,512
+  help: Number of frames to process in parallel during inference. Higher values can speed up inference by better utilizing GPU parallelism, but require more GPU memory. Reduce if you encounter out-of-memory errors.
 
 - name: tracking.tracker
   label: Tracker (cross-frame identity) Method
@@ -466,20 +468,24 @@ inference:
       default_disabled: true
       range: 1,100
       default: 1
+      help: Maximum number of unique track identities to maintain. Set to limit memory usage and computation for videos with many animals. "No limit" allows unlimited tracks.
     - name: tracking.similarity
       label: Similarity Method
       type: list
       default: oks
       options: "oks,iou,centroids"
+      help: Method to compute similarity between instances across frames. OKS (Object Keypoint Similarity) uses all keypoint positions. IoU uses intersection over union of bounding boxes. Centroids uses only the center point distance.
     - name: tracking.match
       label: Matching Method
       type: list
       default: greedy
       options: greedy,hungarian
+      help: Algorithm for assigning track identities across frames. Greedy assigns best matches first (faster). Hungarian finds the optimal global assignment (more accurate but slower).
     - name: tracking.track_window
       label: Elapsed Frame Window
       type: int
       default: 5
+      help: Number of previous frames to consider when matching instances to existing tracks. Larger values help recover from brief occlusions or detection failures but use more memory.
     - name: tracking.robust
       label: 'Robust quantile of similarity scores'
       help: 'For a value between 0 and 1 (excluded), use a robust quantile
@@ -496,6 +502,7 @@ inference:
       label: Connect Single Track Breaks
       type: bool
       default: false
+      help: If enabled, automatically connect track fragments that have single-frame gaps. This can help recover from brief detection failures.
 
   simple:
     # - type: text
@@ -530,20 +537,24 @@ inference:
       default_disabled: true
       range: 1,100
       default: 1
+      help: Maximum number of unique track identities to maintain. Set to limit memory usage and computation for videos with many animals. "No limit" allows unlimited tracks.
     - name: tracking.similarity
       label: Similarity Method
       type: list
       default: instance
       options: "centroid,iou,object keypoint"
+      help: Method to compute similarity between instances across frames. Centroid uses only the center point distance (fastest). IoU uses intersection over union of bounding boxes. Object keypoint uses all keypoint positions (most accurate).
     - name: tracking.match
       label: Matching Method
       type: list
       default: hungarian
       options: greedy,hungarian
+      help: Algorithm for assigning track identities across frames. Greedy assigns best matches first (faster). Hungarian finds the optimal global assignment (more accurate but slower).
     - name: tracking.track_window
       label: Elapsed Frame Window
       type: int
       default: 5
+      help: Number of previous frames to consider when matching instances to existing tracks. Larger values help recover from brief occlusions or detection failures but use more memory.
     - name: tracking.robust
       label: 'Robust quantile of similarity scores'
       help: 'For a value between 0 and 1 (excluded), use a robust quantile
@@ -560,6 +571,7 @@ inference:
       label: Connect Single Track Breaks
       type: bool
       default: false
+      help: If enabled, automatically connect track fragments that have single-frame gaps. This can help recover from brief detection failures.
 
 
 
@@ -569,3 +581,4 @@ inference:
   type: list
   options: current frame,random frames
   default: current frame
+  help: Which frames to run prediction on. "Current frame" uses the frame currently displayed in the GUI. "Random frames" selects random frames from the video.
