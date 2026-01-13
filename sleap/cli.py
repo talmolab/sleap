@@ -18,17 +18,12 @@ from __future__ import annotations
 
 import os
 import platform
-import shutil
-import subprocess
 import sys
 from typing import Any, Optional
 
 import rich_click as click
 from rich_click import RichHelpConfiguration, rich_config
 from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich import box
 
 import sleap
 
@@ -121,6 +116,9 @@ SLEAP_TEAL = "#1abc9c"
 SLEAP_BLUE = "#3498db"
 SLEAP_PURPLE = "#9b59b6"
 SLEAP_ORANGE = "#e67e22"
+SLEAP_GREEN = "#2ecc71"
+SLEAP_RED = "#e74c3c"
+SLEAP_YELLOW = "#f1c40f"
 
 # Configure rich-click with solarized-slim theme
 SLEAP_HELP_CONFIG = RichHelpConfiguration(
@@ -296,22 +294,47 @@ def label(
     is_flag=True,
     help="Output diagnostics as JSON for programmatic use.",
 )
-def doctor(output_json: bool) -> None:
+@click.option(
+    "-o",
+    "--output",
+    "output_file",
+    type=click.Path(),
+    default=None,
+    help="Save output to file. Use -o without a path for auto-timestamped filename.",
+    is_flag=False,
+    flag_value="auto",
+)
+def doctor(output_json: bool, output_file: Optional[str]) -> None:
     """Show system diagnostics for troubleshooting.
 
     Displays detailed information about your system configuration,
-    including Python environment, GPU status, and package versions.
+    including Python environment, GPU status, package versions,
+    UV/conda configuration, and more.
 
     This output is designed to be copy-pasted when reporting issues.
 
     [dim]Examples:[/]
       sleap doctor           Show diagnostics
       sleap doctor --json    Output as JSON
+      sleap doctor -o        Save to auto-timestamped file
+      sleap doctor -o out.txt   Save to specific file
     """
+    from datetime import datetime
+    from pathlib import Path
+
     from sleap.system_info import (
-        get_all_package_info,
-        get_pytorch_info,
-        _get_nvidia_driver_version,
+        PACKAGES,
+        DIM,
+        get_detailed_package_info,
+        get_uv_info_data,
+        get_conda_info_data,
+        get_binary_info,
+        get_nvidia_info,
+        get_pytorch_info_detailed,
+        get_memory_info,
+        get_disk_info,
+        get_ffmpeg_info,
+        analyze_path,
     )
 
     if output_json:
@@ -319,194 +342,369 @@ def doctor(output_json: bool) -> None:
         return
 
     console = Console()
+    all_data = {}
 
+    # Print header
     console.print()
-    console.print(
-        Panel(
-            f"[bold {SLEAP_TEAL}]SLEAP System Diagnostics[/]",
-            border_style=SLEAP_TEAL,
-            padding=(0, 2),
-        )
-    )
+    console.print(f"[bold {SLEAP_TEAL}]SLEAP System Diagnostics[/]")
+    console.print(f"[{SLEAP_TEAL}]{'=' * 24}[/]")
+
+    # Timestamp
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    console.print(f"[{DIM}]Generated:[/] {timestamp}")
     console.print()
+    all_data["timestamp"] = timestamp
 
     # -------------------------------------------------------------------------
     # Platform Information
     # -------------------------------------------------------------------------
-    platform_table = Table(
-        title="Platform",
-        show_header=False,
-        box=box.SIMPLE,
-        title_style=f"bold {SLEAP_BLUE}",
-        border_style="dim",
-        padding=(0, 2),
-    )
-    platform_table.add_column("Key", style="cyan")
-    platform_table.add_column("Value", overflow="fold")
+    ram_used, ram_avail, ram_total = get_memory_info()
+    venv_path = os.environ.get("VIRTUAL_ENV", "") or sys.prefix
+    disk_used, disk_avail, disk_total = get_disk_info(venv_path)
 
-    platform_table.add_row("OS", f"{platform.system()} {platform.release()}")
-    platform_table.add_row("Platform", platform.platform())
-    platform_table.add_row("Machine", platform.machine())
+    all_data["platform"] = {
+        "os_name": platform.system(),
+        "os_release": platform.release(),
+        "platform_full": platform.platform(),
+        "machine": platform.machine(),
+        "processor": platform.processor(),
+        "ram_used": ram_used,
+        "ram_total": ram_total,
+        "disk_used": disk_used,
+        "disk_total": disk_total,
+    }
+
+    console.print("[Platform]", style=f"bold {SLEAP_BLUE}")
+    console.print(f"  [{DIM}]OS:[/] {platform.system()} {platform.release()}")
+    console.print(f"  [{DIM}]Platform:[/] {platform.platform()}")
+    console.print(f"  [{DIM}]Machine:[/] {platform.machine()}")
     processor = platform.processor()
-    platform_table.add_row("Processor", processor if processor else "N/A")
-
-    console.print(platform_table)
+    if processor:
+        console.print(f"  [{DIM}]Processor:[/] {processor}")
+    if ram_total:
+        console.print(f"  [{DIM}]RAM:[/] {ram_used} / {ram_total}")
+    if disk_total:
+        console.print(f"  [{DIM}]Disk:[/] {disk_used} / {disk_total}")
     console.print()
 
     # -------------------------------------------------------------------------
     # Python Information
     # -------------------------------------------------------------------------
-    python_table = Table(
-        title="Python",
-        show_header=False,
-        box=box.SIMPLE,
-        title_style=f"bold {SLEAP_BLUE}",
-        border_style="dim",
-        padding=(0, 2),
-    )
-    python_table.add_column("Key", style="cyan")
-    python_table.add_column("Value", overflow="fold")
+    all_data["python"] = {
+        "version": sys.version.split()[0],
+        "executable": sys.executable,
+        "prefix": sys.prefix,
+        "virtual_env": os.environ.get("VIRTUAL_ENV", ""),
+    }
 
-    python_table.add_row("Version", sys.version.split()[0])
-    python_table.add_row("Executable", sys.executable)
-    python_table.add_row("Prefix", sys.prefix)
-
-    # Virtual environment detection
+    console.print("[Python]", style=f"bold {SLEAP_BLUE}")
+    console.print(f"  [{DIM}]Version:[/] [{SLEAP_GREEN}]{sys.version.split()[0]}[/]")
+    console.print(f"  [{DIM}]Executable:[/] {sys.executable}")
+    console.print(f"  [{DIM}]Prefix:[/] {sys.prefix}")
     venv = os.environ.get("VIRTUAL_ENV")
     if venv:
-        python_table.add_row("Virtual Env", venv)
-
-    console.print(python_table)
+        console.print(f"  [{DIM}]Virtual Env:[/] {venv}")
     console.print()
 
     # -------------------------------------------------------------------------
-    # Conda / UV Information
+    # UV Information
     # -------------------------------------------------------------------------
-    conda_info = _get_conda_info()
-    if conda_info:
-        conda_table = Table(
-            title="Conda",
-            show_header=False,
-            box=box.SIMPLE,
-            title_style=f"bold {SLEAP_BLUE}",
-            border_style="dim",
-            padding=(0, 2),
-        )
-        conda_table.add_column("Key", style="cyan")
-        conda_table.add_column("Value", overflow="fold")
-        conda_table.add_row("Environment", conda_info["environment"])
-        conda_table.add_row("Prefix", conda_info["prefix"])
-        console.print(conda_table)
+    with console.status(f"[{DIM}]Checking UV...[/]", spinner="dots"):
+        uv_info = get_uv_info_data()
+    all_data["uv"] = uv_info
+
+    if uv_info:
+        console.print("[UV]", style=f"bold {SLEAP_BLUE}")
+        console.print(f"  [{DIM}]Version:[/] [{SLEAP_GREEN}]{uv_info.version}[/]")
+        console.print(f"  [{DIM}]Path:[/] {uv_info.path}")
+        console.print(f"  [{DIM}]Cache Dir:[/] {uv_info.cache_dir}")
+        console.print(f"  [{DIM}]Tool Dir:[/] {uv_info.tool_dir}")
+        console.print(f"  [{DIM}]Tool Bin Dir:[/] {uv_info.tool_bin_dir}")
+        console.print(f"  [{DIM}]Python Dir:[/] {uv_info.python_dir}")
+        if uv_info.installed_tools:
+            tools_str = ", ".join(uv_info.installed_tools)
+            console.print(f"  [{DIM}]Installed Tools:[/] {tools_str}")
         console.print()
 
-    uv_info = _get_uv_info()
-    if uv_info:
-        uv_table = Table(
-            title="UV",
-            show_header=False,
-            box=box.SIMPLE,
-            title_style=f"bold {SLEAP_BLUE}",
-            border_style="dim",
-            padding=(0, 2),
-        )
-        uv_table.add_column("Key", style="cyan")
-        uv_table.add_column("Value", overflow="fold")
-        uv_table.add_row("Version", uv_info["version"])
-        uv_table.add_row("Path", uv_info["path"])
-        console.print(uv_table)
+        # UV Config
+        console.print("[UV Config]", style=f"bold {SLEAP_BLUE}")
+        if uv_info.default_python:
+            console.print(f"  [{DIM}]Default Python:[/] {uv_info.default_python}")
+        else:
+            console.print(f"  [{DIM}]Default Python:[/] [{DIM}](not configured)[/]")
+        if uv_info.resolved_python:
+            console.print(f"  [{DIM}]Resolved Python:[/] {uv_info.resolved_python}")
+
+        pref = uv_info.python_preference or "managed"
+        is_default = not uv_info.python_preference
+        pref_display = f"{pref} [{DIM}](default)[/]" if is_default else pref
+        console.print(f"  [{DIM}]Python Preference:[/] {pref_display}")
+
+        res = uv_info.resolution_strategy or "highest"
+        is_default = not uv_info.resolution_strategy
+        res_display = f"{res} [{DIM}](default)[/]" if is_default else res
+        console.print(f"  [{DIM}]Resolution:[/] {res_display}")
+
+        idx = uv_info.index_strategy or "first-index"
+        is_default = not uv_info.index_strategy
+        idx_display = f"{idx} [{DIM}](default)[/]" if is_default else idx
+        console.print(f"  [{DIM}]Index Strategy:[/] {idx_display}")
+
+        pre = uv_info.prerelease or "if-necessary"
+        is_default = not uv_info.prerelease
+        pre_display = f"{pre} [{DIM}](default)[/]" if is_default else pre
+        console.print(f"  [{DIM}]Prerelease:[/] {pre_display}")
+        console.print()
+
+    # -------------------------------------------------------------------------
+    # Conda Information
+    # -------------------------------------------------------------------------
+    with console.status(f"[{DIM}]Checking conda...[/]", spinner="dots"):
+        conda_info = get_conda_info_data()
+    all_data["conda"] = conda_info
+
+    if conda_info:
+        console.print("[Conda]", style=f"bold {SLEAP_BLUE}")
+        if conda_info.active:
+            console.print(f"  [{DIM}]Status:[/] [{SLEAP_YELLOW}]ACTIVE[/]")
+            console.print(f"  [{DIM}]Environment:[/] {conda_info.environment}")
+            console.print(f"  [{DIM}]Prefix:[/] {conda_info.prefix}")
+        else:
+            console.print(f"  [{DIM}]Status:[/] installed but not activated")
+        if conda_info.version:
+            console.print(f"  [{DIM}]Version:[/] {conda_info.version}")
+        if conda_info.auto_activate_base is not None:
+            status = "True" if conda_info.auto_activate_base else "False"
+            color = SLEAP_RED if conda_info.auto_activate_base else SLEAP_GREEN
+            console.print(f"  [{DIM}]auto_activate_base:[/] [{color}]{status}[/]")
+            if conda_info.auto_activate_base:
+                console.print(
+                    f"  [{SLEAP_YELLOW}]WARNING: auto_activate_base=True "
+                    f"may interfere with uv[/]"
+                )
+                console.print(
+                    f"  [{DIM}]Suggestion: "
+                    f"conda config --set auto_activate_base false[/]"
+                )
+        if conda_info.sleap_packages:
+            pkgs_str = ", ".join(conda_info.sleap_packages)
+            console.print(
+                f"  [{DIM}]SLEAP packages in conda:[/] [{SLEAP_RED}]{pkgs_str}[/]"
+            )
+            console.print(
+                f"  [{SLEAP_YELLOW}]WARNING: Conda SLEAP packages "
+                f"may conflict with uv/pip[/]"
+            )
         console.print()
 
     # -------------------------------------------------------------------------
     # GPU / CUDA Information
     # -------------------------------------------------------------------------
-    gpu_table = Table(
-        title="GPU / CUDA",
-        show_header=False,
-        box=box.SIMPLE,
-        title_style=f"bold {SLEAP_BLUE}",
-        border_style="dim",
-        padding=(0, 2),
-    )
-    gpu_table.add_column("Key", style="cyan")
-    gpu_table.add_column("Value", overflow="fold")
+    with console.status(f"[{DIM}]Checking GPU...[/]", spinner="dots"):
+        nvidia_driver, system_cuda, gpus = get_nvidia_info()
+    all_data["nvidia_driver"] = nvidia_driver
+    all_data["system_cuda"] = system_cuda
+    all_data["gpus"] = gpus
 
-    nvidia_driver = _get_nvidia_driver_version()
+    with console.status(f"[{DIM}]Checking PyTorch...[/]", spinner="dots"):
+        pytorch_version, pytorch_accelerator, pytorch_cuda = get_pytorch_info_detailed()
+    all_data["pytorch_version"] = pytorch_version
+    all_data["pytorch_accelerator"] = pytorch_accelerator
+    all_data["pytorch_cuda"] = pytorch_cuda
+
+    console.print("[GPU / CUDA]", style=f"bold {SLEAP_BLUE}")
     if nvidia_driver:
-        gpu_table.add_row("NVIDIA Driver", nvidia_driver)
-
-        gpus = _get_nvidia_gpu_info()
+        driver_str = nvidia_driver
+        if system_cuda:
+            driver_str += f" (CUDA {system_cuda})"
+        console.print(f"  [{DIM}]NVIDIA Driver:[/] [{SLEAP_GREEN}]{driver_str}[/]")
         for i, gpu in enumerate(gpus):
-            gpu_table.add_row(
-                f"GPU {i}",
-                f"{gpu['name']} ({gpu['memory_free']} free / {gpu['memory_total']})",
+            console.print(
+                f"  [{DIM}]GPU {i}:[/] [{SLEAP_TEAL}]{gpu.name}[/] "
+                f"([{SLEAP_GREEN}]{gpu.memory_free}[/] free / {gpu.memory_total})"
             )
     else:
-        gpu_table.add_row("NVIDIA Driver", "[dim]Not detected[/]")
-
-    # Get PyTorch info (slow due to torch import - show spinner)
-    with console.status("[dim]Checking PyTorch...[/]", spinner="dots"):
-        pytorch_info = get_pytorch_info()
-    if pytorch_info["installed"]:
-        pytorch_str = f"v{pytorch_info['version']}"
-        if pytorch_info["accelerator"] == "cuda":
-            pytorch_str += f" (CUDA {pytorch_info['cuda_version']})"
-        elif pytorch_info["accelerator"] == "mps":
-            pytorch_str += " (MPS)"
+        console.print(f"  [{DIM}]NVIDIA Driver:[/] Not detected")
+    if pytorch_version:
+        pt_str = f"v{pytorch_version}"
+        if pytorch_accelerator == "cuda":
+            pt_str += f" ([{SLEAP_GREEN}]CUDA {pytorch_cuda}[/])"
+        elif pytorch_accelerator == "mps":
+            pt_str += f" ([{SLEAP_GREEN}]MPS[/])"
         else:
-            pytorch_str += " (CPU)"
-        gpu_table.add_row("PyTorch", pytorch_str)
+            pt_str += f" ([{SLEAP_YELLOW}]CPU[/])"
+        console.print(f"  [{DIM}]PyTorch:[/] [{SLEAP_TEAL}]{pt_str}[/]")
     else:
-        gpu_table.add_row("PyTorch", "[dim]Not installed[/]")
-
-    console.print(gpu_table)
+        console.print(f"  [{DIM}]PyTorch:[/] Not installed")
     console.print()
 
     # -------------------------------------------------------------------------
     # Package Versions
     # -------------------------------------------------------------------------
-    packages_table = Table(
-        title="Packages",
-        show_header=True,
-        header_style=f"bold {SLEAP_TEAL}",
-        box=box.SIMPLE,
-        title_style=f"bold {SLEAP_BLUE}",
-        border_style="dim",
-        padding=(0, 2),
-    )
-    packages_table.add_column("Package", style="cyan")
-    packages_table.add_column("Version")
-    packages_table.add_column("Source", style="dim")
+    with console.status(f"[{DIM}]Checking packages...[/]", spinner="dots"):
+        packages = []
+        for pkg_name in PACKAGES:
+            pkg_info = get_detailed_package_info(pkg_name)
+            if pkg_info:
+                packages.append(pkg_info)
+    all_data["packages"] = packages
 
-    packages = get_all_package_info()
-    for pkg_name, info in packages.items():
-        packages_table.add_row(pkg_name, info["version"], info["source"])
+    console.print("[Packages]", style=f"bold {SLEAP_BLUE}")
+    for pkg in packages:
+        source_color = (
+            SLEAP_PURPLE
+            if pkg.source == "editable"
+            else SLEAP_ORANGE if pkg.source == "conda" else DIM
+        )
+        pkg_line = (
+            f"  [{SLEAP_TEAL}]{pkg.name}[/]: "
+            f"[{SLEAP_GREEN}]v{pkg.version}[/] ([{source_color}]{pkg.source}[/])"
+        )
+        if pkg.editable and pkg.git_commit:
+            git_info = f"git:{pkg.git_branch or 'HEAD'}@{pkg.git_commit}"
+            if pkg.git_dirty:
+                git_info += "*"
+            pkg_line += f" [[{SLEAP_PURPLE}]{git_info}[/]]"
+        console.print(pkg_line)
+        if pkg.editable:
+            console.print(f"    Location: [{DIM}]{pkg.location}[/]")
+    console.print()
 
-    console.print(packages_table)
+    # -------------------------------------------------------------------------
+    # CLI Binaries
+    # -------------------------------------------------------------------------
+    with console.status(f"[{DIM}]Checking CLI binaries...[/]", spinner="dots"):
+        binaries = []
+        bin_names = ["sleap", "sleap-nn", "sleap-nn-track", "sio"]
+        for bin_name in bin_names:
+            bin_info = get_binary_info(bin_name)
+            if bin_info:
+                binaries.append(bin_info)
+        # Add ffmpeg binaries
+        binaries.extend(get_ffmpeg_info())
+    all_data["binaries"] = binaries
+
+    if binaries:
+        console.print("[CLI Binaries]", style=f"bold {SLEAP_BLUE}")
+        for binary in binaries:
+            source_color = (
+                SLEAP_TEAL
+                if binary.source == "venv"
+                else SLEAP_PURPLE if binary.source == "uv-tool" else SLEAP_ORANGE
+            )
+            console.print(f"  [{SLEAP_TEAL}]{binary.name}[/]:")
+            console.print(f"    [{DIM}]Path:[/] {binary.path}")
+            if binary.real_path != binary.path:
+                console.print(f"    [{DIM}]Real Path:[/] {binary.real_path}")
+            console.print(f"    [{DIM}]Source:[/] [{source_color}]{binary.source}[/]")
+            if binary.python_path:
+                console.print(f"    [{DIM}]Python:[/] {binary.python_path}")
+        console.print()
+
+    # -------------------------------------------------------------------------
+    # PATH Analysis
+    # -------------------------------------------------------------------------
+    path_entries, path_conflicts = analyze_path()
+    all_data["path_entries"] = path_entries
+    all_data["path_conflicts"] = path_conflicts
+
+    if path_conflicts:
+        console.print("[PATH Conflicts]", style=f"bold {SLEAP_RED}")
+        for conflict in path_conflicts:
+            console.print(f"  [{SLEAP_YELLOW}]WARNING: {conflict}[/]")
+        console.print()
+
+    console.print("[PATH (relevant entries)]", style=f"bold {SLEAP_BLUE}")
+    relevant_keywords = [
+        "conda",
+        "miniconda",
+        "uv",
+        ".local",
+        "sleap",
+        "python",
+        "venv",
+    ]
+    for path in path_entries:
+        if any(kw in path.lower() for kw in relevant_keywords):
+            console.print(f"  {path}")
     console.print()
 
     # -------------------------------------------------------------------------
     # Footer
     # -------------------------------------------------------------------------
-    console.print(
-        Panel(
-            "[dim]Copy this output when reporting issues at:\n"
-            "https://github.com/talmolab/sleap/issues[/]",
-            border_style="dim",
-            padding=(0, 2),
+    output_path = None
+    if output_file:
+        if output_file == "auto":
+            file_timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            output_path = Path(f"sleap-doctor-{file_timestamp}.txt")
+        else:
+            output_path = Path(output_file)
+
+        output_text = _format_doctor_plain(all_data)
+        output_path.write_text(output_text)
+
+    console.print(f"[{DIM}]Copy this output when reporting issues at:[/]")
+    console.print(f"[{SLEAP_BLUE}]https://github.com/talmolab/sleap/issues[/]")
+    console.print()
+    if output_path:
+        console.print(f"[{SLEAP_GREEN}]Saved to:[/] [{SLEAP_TEAL}]{output_path}[/]")
+    else:
+        console.print(
+            f"[bold {SLEAP_TEAL}]Tip:[/] [{DIM}]Use[/] "
+            f"[{SLEAP_TEAL}]sleap doctor -o[/] "
+            f"[{DIM}]to save diagnostics to a file[/]"
         )
-    )
     console.print()
 
 
 def _doctor_json() -> None:
     """Output diagnostics as JSON."""
+    import dataclasses
     import json
 
     from sleap.system_info import (
-        get_all_package_info,
-        get_pytorch_info,
-        _get_nvidia_driver_version,
+        PACKAGES,
+        get_detailed_package_info,
+        get_uv_info_data,
+        get_conda_info_data,
+        get_binary_info,
+        get_nvidia_info,
+        get_pytorch_info_detailed,
+        get_memory_info,
+        get_disk_info,
+        get_ffmpeg_info,
+        analyze_path,
     )
+
+    def to_dict(obj):
+        if dataclasses.is_dataclass(obj):
+            return {k: to_dict(v) for k, v in dataclasses.asdict(obj).items()}
+        elif isinstance(obj, list):
+            return [to_dict(item) for item in obj]
+        else:
+            return obj
+
+    ram_used, ram_avail, ram_total = get_memory_info()
+    venv_path = os.environ.get("VIRTUAL_ENV", "") or sys.prefix
+    disk_used, disk_avail, disk_total = get_disk_info(venv_path)
+
+    nvidia_driver, system_cuda, gpus = get_nvidia_info()
+    pytorch_version, pytorch_accelerator, pytorch_cuda = get_pytorch_info_detailed()
+
+    packages = []
+    for pkg_name in PACKAGES:
+        pkg_info = get_detailed_package_info(pkg_name)
+        if pkg_info:
+            packages.append(pkg_info)
+
+    binaries = []
+    for bin_name in ["sleap", "sleap-nn", "sleap-nn-track", "sio"]:
+        bin_info = get_binary_info(bin_name)
+        if bin_info:
+            binaries.append(bin_info)
+    binaries.extend(get_ffmpeg_info())
+
+    path_entries, path_conflicts = analyze_path()
 
     data = {
         "sleap_version": sleap.__version__,
@@ -516,6 +714,10 @@ def _doctor_json() -> None:
             "platform": platform.platform(),
             "machine": platform.machine(),
             "processor": platform.processor(),
+            "ram_used": ram_used,
+            "ram_total": ram_total,
+            "disk_used": disk_used,
+            "disk_total": disk_total,
         },
         "python": {
             "version": sys.version.split()[0],
@@ -523,86 +725,217 @@ def _doctor_json() -> None:
             "prefix": sys.prefix,
             "virtual_env": os.environ.get("VIRTUAL_ENV"),
         },
-        "conda": _get_conda_info(),
-        "uv": _get_uv_info(),
+        "uv": to_dict(get_uv_info_data()),
+        "conda": to_dict(get_conda_info_data()),
         "gpu": {
-            "nvidia_driver": _get_nvidia_driver_version(),
-            "gpus": _get_nvidia_gpu_info(),
+            "nvidia_driver": nvidia_driver,
+            "system_cuda": system_cuda,
+            "gpus": to_dict(gpus),
         },
-        "pytorch": get_pytorch_info(),
-        "packages": get_all_package_info(),
+        "pytorch": {
+            "version": pytorch_version,
+            "accelerator": pytorch_accelerator,
+            "cuda_version": pytorch_cuda,
+        },
+        "packages": to_dict(packages),
+        "binaries": to_dict(binaries),
+        "path_entries": path_entries,
+        "path_conflicts": path_conflicts,
     }
 
     print(json.dumps(data, indent=2))
 
 
-def _get_conda_info() -> Optional[dict[str, str]]:
-    """Get conda environment information."""
-    conda_prefix = os.environ.get("CONDA_PREFIX")
-    conda_env = os.environ.get("CONDA_DEFAULT_ENV")
-    if conda_prefix:
-        return {
-            "environment": conda_env or "base",
-            "prefix": conda_prefix,
-        }
-    return None
+def _format_doctor_plain(data: dict) -> str:
+    """Format diagnostic data as plain text (for file output)."""
+    lines = []
 
+    # Header
+    lines.append("SLEAP System Diagnostics")
+    lines.append("=" * 24)
 
-def _get_uv_info() -> Optional[dict[str, str]]:
-    """Get uv information if available."""
-    uv_path = shutil.which("uv")
-    if not uv_path:
-        return None
-    try:
-        result = subprocess.run(
-            ["uv", "--version"],
-            capture_output=True,
-            text=True,
-            timeout=5,
+    # Timestamp
+    lines.append(f"Generated: {data.get('timestamp', 'N/A')}")
+    lines.append("")
+
+    # Platform
+    p = data.get("platform", {})
+    lines.append("[Platform]")
+    lines.append(f"  OS: {p.get('os_name', '')} {p.get('os_release', '')}")
+    lines.append(f"  Platform: {p.get('platform_full', '')}")
+    lines.append(f"  Machine: {p.get('machine', '')}")
+    if p.get("processor"):
+        lines.append(f"  Processor: {p['processor']}")
+    if p.get("ram_total"):
+        lines.append(f"  RAM: {p['ram_used']} / {p['ram_total']}")
+    if p.get("disk_total"):
+        lines.append(f"  Disk: {p['disk_used']} / {p['disk_total']}")
+    lines.append("")
+
+    # Python
+    py = data.get("python", {})
+    lines.append("[Python]")
+    lines.append(f"  Version: {py.get('version', '')}")
+    lines.append(f"  Executable: {py.get('executable', '')}")
+    lines.append(f"  Prefix: {py.get('prefix', '')}")
+    if py.get("virtual_env"):
+        lines.append(f"  Virtual Env: {py['virtual_env']}")
+    lines.append("")
+
+    # UV
+    uv = data.get("uv")
+    if uv:
+        lines.append("[UV]")
+        lines.append(f"  Version: {uv.version}")
+        lines.append(f"  Path: {uv.path}")
+        lines.append(f"  Cache Dir: {uv.cache_dir}")
+        lines.append(f"  Tool Dir: {uv.tool_dir}")
+        lines.append(f"  Tool Bin Dir: {uv.tool_bin_dir}")
+        lines.append(f"  Python Dir: {uv.python_dir}")
+        if uv.installed_tools:
+            lines.append(f"  Installed Tools: {', '.join(uv.installed_tools)}")
+        lines.append("")
+        # UV Config
+        lines.append("[UV Config]")
+        if uv.default_python:
+            lines.append(f"  Default Python: {uv.default_python}")
+        else:
+            lines.append("  Default Python: (not configured)")
+        if uv.resolved_python:
+            lines.append(f"  Resolved Python: {uv.resolved_python}")
+        pref = uv.python_preference or "managed"
+        lines.append(
+            f"  Python Preference: {pref}"
+            f"{' (default)' if not uv.python_preference else ''}"
         )
-        if result.returncode == 0:
-            return {
-                "version": result.stdout.strip(),
-                "path": uv_path,
-            }
-    except Exception:
-        pass
-    return None
-
-
-def _get_nvidia_gpu_info() -> list[dict[str, str]]:
-    """Get NVIDIA GPU information."""
-    if not shutil.which("nvidia-smi"):
-        return []
-    try:
-        result = subprocess.run(
-            [
-                "nvidia-smi",
-                "--query-gpu=name,memory.total,memory.free,utilization.gpu",
-                "--format=csv,noheader,nounits",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=5,
+        res = uv.resolution_strategy or "highest"
+        lines.append(
+            f"  Resolution: {res}"
+            f"{' (default)' if not uv.resolution_strategy else ''}"
         )
-        if result.returncode == 0:
-            gpus = []
-            for line in result.stdout.strip().split("\n"):
-                if line:
-                    parts = [p.strip() for p in line.split(",")]
-                    if len(parts) >= 4:
-                        gpus.append(
-                            {
-                                "name": parts[0],
-                                "memory_total": f"{parts[1]} MB",
-                                "memory_free": f"{parts[2]} MB",
-                                "utilization": f"{parts[3]}%",
-                            }
-                        )
-            return gpus
-    except Exception:
-        pass
-    return []
+        idx = uv.index_strategy or "first-index"
+        lines.append(
+            f"  Index Strategy: {idx}"
+            f"{' (default)' if not uv.index_strategy else ''}"
+        )
+        pre = uv.prerelease or "if-necessary"
+        lines.append(
+            f"  Prerelease: {pre}{' (default)' if not uv.prerelease else ''}"
+        )
+        lines.append("")
+
+    # Conda
+    conda = data.get("conda")
+    if conda:
+        lines.append("[Conda]")
+        if conda.active:
+            lines.append("  Status: ACTIVE")
+            lines.append(f"  Environment: {conda.environment}")
+            lines.append(f"  Prefix: {conda.prefix}")
+        else:
+            lines.append("  Status: installed but not activated")
+        if conda.version:
+            lines.append(f"  Version: {conda.version}")
+        if conda.auto_activate_base is not None:
+            status = "True" if conda.auto_activate_base else "False"
+            lines.append(f"  auto_activate_base: {status}")
+            if conda.auto_activate_base:
+                lines.append("  WARNING: auto_activate_base=True may interfere with uv")
+                lines.append(
+                    "  Suggestion: conda config --set auto_activate_base false"
+                )
+        if conda.sleap_packages:
+            lines.append(
+                f"  SLEAP packages in conda: {', '.join(conda.sleap_packages)}"
+            )
+            lines.append("  WARNING: Conda SLEAP packages may conflict with uv/pip")
+        lines.append("")
+
+    # GPU/CUDA
+    lines.append("[GPU / CUDA]")
+    nvidia_driver = data.get("nvidia_driver", "")
+    system_cuda = data.get("system_cuda", "")
+    gpus = data.get("gpus", [])
+    if nvidia_driver:
+        driver_str = nvidia_driver
+        if system_cuda:
+            driver_str += f" (CUDA {system_cuda})"
+        lines.append(f"  NVIDIA Driver: {driver_str}")
+        for i, gpu in enumerate(gpus):
+            lines.append(
+                f"  GPU {i}: {gpu.name} ({gpu.memory_free} free / {gpu.memory_total})"
+            )
+    else:
+        lines.append("  NVIDIA Driver: Not detected")
+    pytorch_version = data.get("pytorch_version", "")
+    pytorch_accelerator = data.get("pytorch_accelerator", "")
+    pytorch_cuda = data.get("pytorch_cuda", "")
+    if pytorch_version:
+        pt_str = f"  PyTorch: v{pytorch_version}"
+        if pytorch_accelerator == "cuda":
+            pt_str += f" (CUDA {pytorch_cuda})"
+        elif pytorch_accelerator == "mps":
+            pt_str += " (MPS)"
+        else:
+            pt_str += " (CPU)"
+        lines.append(pt_str)
+    else:
+        lines.append("  PyTorch: Not installed")
+    lines.append("")
+
+    # Packages
+    packages = data.get("packages", [])
+    lines.append("[Packages]")
+    for pkg in packages:
+        pkg_line = f"  {pkg.name}: v{pkg.version} ({pkg.source})"
+        if pkg.editable:
+            if pkg.git_commit:
+                git_info = f"git:{pkg.git_branch or 'HEAD'}@{pkg.git_commit}"
+                if pkg.git_dirty:
+                    git_info += "*"
+                pkg_line += f" [{git_info}]"
+            pkg_line += f"\n    Location: {pkg.location}"
+        lines.append(pkg_line)
+    lines.append("")
+
+    # Binaries
+    binaries = data.get("binaries", [])
+    if binaries:
+        lines.append("[CLI Binaries]")
+        for binary in binaries:
+            lines.append(f"  {binary.name}:")
+            lines.append(f"    Path: {binary.path}")
+            if binary.real_path != binary.path:
+                lines.append(f"    Real Path: {binary.real_path}")
+            lines.append(f"    Source: {binary.source}")
+            if binary.python_path:
+                lines.append(f"    Python: {binary.python_path}")
+        lines.append("")
+
+    # PATH
+    path_conflicts = data.get("path_conflicts", [])
+    path_entries = data.get("path_entries", [])
+    if path_conflicts:
+        lines.append("[PATH Conflicts]")
+        for conflict in path_conflicts:
+            lines.append(f"  WARNING: {conflict}")
+        lines.append("")
+
+    lines.append("[PATH (relevant entries)]")
+    relevant_keywords = [
+        "conda",
+        "miniconda",
+        "uv",
+        ".local",
+        "sleap",
+        "python",
+        "venv",
+    ]
+    for path in path_entries:
+        if any(kw in path.lower() for kw in relevant_keywords):
+            lines.append(f"  {path}")
+
+    return "\n".join(lines)
 
 
 # =============================================================================
