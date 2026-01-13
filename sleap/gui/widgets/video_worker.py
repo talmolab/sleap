@@ -130,7 +130,8 @@ class FrameLoaderThread(QThread):
                     print(f"[THREAD] Frame {frame_idx} was None")
 
         except Exception as e:
-            print(f"[THREAD] Error processing frame {frame_idx}: {e}")
+            if self.debug_mode:
+                print(f"[THREAD] Error processing frame {frame_idx}: {e}")
 
     def request_frame(self, video: sio.Video, frame_idx: int):
         """Request a frame to be loaded (called from main thread)."""
