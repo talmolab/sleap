@@ -646,6 +646,7 @@ class QCWidget(QtWidgets.QWidget):
         self._results: Optional["QCResults"] = None
         self._selected_flag: Optional["QCFlag"] = None
         self._worker: Optional[QCAnalysisWorker] = None
+        self._last_export_dir: Optional[str] = None  # Persist export directory
 
         self._setup_ui()
         self._connect_signals()
@@ -1144,16 +1145,34 @@ class QCWidget(QtWidgets.QWidget):
 
     def export_results(self):
         """Export QC results to CSV (public method for dialog)."""
+        import os
+
         if self._results is None:
             QtWidgets.QMessageBox.warning(
                 self, "No Results", "Please run analysis first."
             )
             return
 
+        # Determine default directory: use last export dir, or labels folder, or CWD
+        default_dir = self._last_export_dir
+        if default_dir is None and self._labels is not None:
+            # Try to get directory from labels provenance
+            provenance = getattr(self._labels, "provenance", None)
+            if provenance is not None:
+                labels_path = getattr(provenance, "filename", None)
+                if labels_path:
+                    default_dir = os.path.dirname(labels_path)
+
+        default_filename = "qc_results.csv"
+        if default_dir:
+            default_path = os.path.join(default_dir, default_filename)
+        else:
+            default_path = default_filename
+
         filepath, _ = QtWidgets.QFileDialog.getSaveFileName(
             self,
             "Export QC Results",
-            "qc_results.csv",
+            default_path,
             "CSV Files (*.csv);;All Files (*)",
         )
 
@@ -1161,6 +1180,8 @@ class QCWidget(QtWidgets.QWidget):
             try:
                 df = self._results.to_dataframe()
                 df.to_csv(filepath, index=False)
+                # Persist the directory for next export
+                self._last_export_dir = os.path.dirname(filepath)
                 QtWidgets.QMessageBox.information(
                     self, "Export Complete", f"Results exported to:\n{filepath}"
                 )

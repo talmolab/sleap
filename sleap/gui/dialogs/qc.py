@@ -138,6 +138,16 @@ class QCDockWidget(QtWidgets.QDockWidget):
         # visibilityChanged is emitted when tab is selected/deselected in tabified mode
         self.visibilityChanged.connect(self._on_visibility_changed)
 
+        # Connect to parent state for fit_selection sync (do this early)
+        # This ensures the checkbox stays synced even if the dock hasn't been shown yet
+        parent = self.parent()
+        if parent is not None and hasattr(parent, "state"):
+            # Initial sync of checkbox state
+            self._sync_fit_selection_checkbox()
+            # Connect to state changes
+            parent.state.connect("fit_selection", self._on_fit_selection_state_changed)
+            self._state_connected = True
+
     def _on_visibility_changed(self, visible: bool):
         """Track visibility changes and update labels if needed.
 
@@ -157,15 +167,9 @@ class QCDockWidget(QtWidgets.QDockWidget):
                     if parent_labels is not None and self._labels is not parent_labels:
                         self.update_labels(parent_labels)
 
-                # Sync fit_selection checkbox and connect to state changes
+                # Sync fit_selection checkbox (connection made in _connect_signals)
                 if hasattr(parent, "state"):
                     self._sync_fit_selection_checkbox()
-                    # Connect to state changes if not already connected
-                    if not hasattr(self, "_state_connected"):
-                        parent.state.connect(
-                            "fit_selection", self._sync_fit_selection_checkbox
-                        )
-                        self._state_connected = True
 
     def _on_navigate(self, video_idx: int, frame_idx: int, instance_idx: int):
         """Handle navigation request from widget."""
@@ -214,12 +218,43 @@ class QCDockWidget(QtWidgets.QDockWidget):
     def _on_fit_selection_changed(self, state: int):
         """Handle Fit to Selection checkbox change.
 
-        Updates the main window's state to mirror the checkbox.
+        Updates the main window's state to mirror the checkbox and applies
+        the zoom effect immediately.
         """
         parent = self.parent()
         if parent is not None and hasattr(parent, "state"):
             # Qt.Checked = 2, Qt.Unchecked = 0
-            parent.state["fit_selection"] = state == Qt.Checked
+            enabled = state == Qt.Checked
+            parent.state["fit_selection"] = enabled
+            # Apply immediate zoom effect (state change will also trigger this,
+            # but that's fine - it's idempotent)
+            self._apply_fit_selection_zoom(enabled)
+
+    def _on_fit_selection_state_changed(self, value: bool):
+        """Handle fit_selection state change from menu or elsewhere.
+
+        Syncs the checkbox and applies immediate zoom effect.
+        """
+        self._sync_fit_selection_checkbox(value)
+        self._apply_fit_selection_zoom(value)
+
+    def _apply_fit_selection_zoom(self, enabled: bool):
+        """Apply or clear the fit-to-selection zoom.
+
+        Args:
+            enabled: If True, zoom to current selection. If False, clear zoom.
+        """
+        parent = self.parent()
+        if parent is None or not hasattr(parent, "player"):
+            return
+
+        player = parent.player
+        if enabled:
+            # Zoom to fit the current selection
+            player.zoomToSelection()
+        else:
+            # Clear the zoom to show full frame
+            player.view.clearZoom()
 
     def _sync_fit_selection_checkbox(self, value=None):
         """Sync checkbox state from main window's state.
