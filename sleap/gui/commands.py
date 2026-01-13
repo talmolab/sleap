@@ -1542,10 +1542,16 @@ class ExportLabeledClip(AppCommand):
         video = context.state["video"]
         frame_idx = context.state.get("frame_idx", None)
 
+        # Get frame range if a clip is selected in main window
+        frame_range = None
+        if context.state["has_frame_range"]:
+            frame_range = tuple(context.state["frame_range"])
+
         dialog = RenderClipDialog(
             labels=labels,
             video=video,
             current_frame=frame_idx,
+            frame_range=frame_range,
             parent=context.app,
         )
 

@@ -26,10 +26,16 @@ class RenderClipDialog(QtWidgets.QDialog):
 
     Usage from SLEAP GUI::
 
+        # Get frame range if clip is selected
+        frame_range = None
+        if context.state["has_frame_range"]:
+            frame_range = tuple(context.state["frame_range"])
+
         dialog = RenderClipDialog(
             labels=context.state["labels"],
             video=context.state["video"],
             current_frame=context.state["frame_idx"],
+            frame_range=frame_range,
             parent=context.app,
         )
         if dialog.exec_():
@@ -47,6 +53,7 @@ class RenderClipDialog(QtWidgets.QDialog):
         labels: "sio.Labels",
         video: "sio.Video | None" = None,
         current_frame: int | None = None,
+        frame_range: tuple[int, int] | None = None,
         parent: QtWidgets.QWidget | None = None,
     ):
         """Initialize the render clip dialog.
@@ -56,22 +63,43 @@ class RenderClipDialog(QtWidgets.QDialog):
             video: The video to render. If None, uses first video in labels.
             current_frame: Initial frame to show in preview. If None, uses
                 first labeled frame.
+            frame_range: Optional (start, end) tuple for initial frame range.
+                If provided, selects "Custom range" and sets start/end values.
+                This is typically from the main window's selected clip.
             parent: Parent widget.
         """
         super().__init__(parent)
         self.labels = labels
         self.video = video or (labels.videos[0] if labels.videos else None)
         self._current_frame = current_frame
+        self._initial_frame_range = frame_range
         self._output_path: str | None = None
 
         self._setup_ui()
         self._connect_signals()
+
+        # Initialize frame range from main window's selection
+        if frame_range is not None:
+            self._set_frame_range(frame_range)
 
         # Jump to current frame if specified
         if current_frame is not None:
             self._jump_to_frame(current_frame)
 
         self._update_preview()
+
+    def _set_frame_range(self, frame_range: tuple[int, int]):
+        """Set the frame range from an external selection (e.g., main window clip).
+
+        Args:
+            frame_range: (start, end) tuple of frame indices.
+        """
+        start, end = frame_range
+        # Select custom range mode
+        self.range_custom.setChecked(True)
+        # Set the start and end values
+        self.start_frame.setValue(start)
+        self.end_frame.setValue(end - 1)  # end is exclusive in context, make inclusive
 
     def _jump_to_frame(self, frame_idx: int):
         """Jump preview to a specific frame index."""
@@ -452,8 +480,13 @@ class RenderClipDialog(QtWidgets.QDialog):
             }
             self.scale.setValue(preset_scales.get(preset_text, 1.0))
 
-    def _get_render_params(self) -> dict:
-        """Get current render parameters from controls."""
+    def _get_render_params(self, for_preview: bool = True) -> dict:
+        """Get current render parameters from controls.
+
+        Args:
+            for_preview: If True, always use scale=1.0 for accurate preview.
+                If False, use the actual scale setting for export.
+        """
         params = {
             "color_by": self.color_by.currentText(),
             "palette": self.palette.currentText(),
@@ -470,8 +503,12 @@ class RenderClipDialog(QtWidgets.QDialog):
         if bg != "video":
             params["background"] = bg
 
-        # Scale for preview (use current scale setting)
-        params["scale"] = self.scale.value()
+        # Scale: always 1.0 for preview (accurate display), use setting for export
+        if for_preview:
+            # Preview always at full resolution for accurate display
+            params["scale"] = 1.0
+        else:
+            params["scale"] = self.scale.value()
 
         return params
 
@@ -518,7 +555,8 @@ class RenderClipDialog(QtWidgets.QDialog):
         Returns:
             Dictionary of parameters for `sio.render_video()`.
         """
-        params = self._get_render_params()
+        # Use actual scale setting for export (not preview's scale=1.0)
+        params = self._get_render_params(for_preview=False)
         params["fps"] = self.fps.value()
         params["crf"] = self.crf.value()
         params["open_when_done"] = self.open_when_done.isChecked()
