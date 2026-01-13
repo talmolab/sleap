@@ -1234,21 +1234,21 @@ def analyze_path() -> tuple[list[str], list[str]]:
     conflicts = []
 
     # Check for common conflict patterns
-    conda_paths = [
-        p for p in entries if "conda" in p.lower() or "miniconda" in p.lower()
-    ]
-    uv_paths = [p for p in entries if ".local/share/uv" in p or ".local/bin" in p]
+    # Normalize path separators for cross-platform matching
+    normalized = [p.replace("\\", "/").lower() for p in entries]
+    conda_paths = [p for p in normalized if "conda" in p or "miniconda" in p]
+    uv_paths = [p for p in normalized if ".local/share/uv" in p or ".local/bin" in p]
 
     if conda_paths and uv_paths:
         # Check priority - which comes first?
-        for i, path in enumerate(entries):
-            if "conda" in path.lower():
+        for i, path in enumerate(normalized):
+            if "conda" in path:
                 first_conda = i
                 break
         else:
             first_conda = len(entries)
 
-        for i, path in enumerate(entries):
+        for i, path in enumerate(normalized):
             if ".local/bin" in path:
                 first_uv = i
                 break
