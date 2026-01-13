@@ -53,13 +53,13 @@ class TestFrameTargetSelectorInstantiation:
         assert inference_selector._mode == "inference"
         assert inference_selector.target_dropdown is not None
 
-    def test_training_mode_has_9_options(self, training_selector):
-        """Training mode should have 9 target options."""
-        assert training_selector.target_dropdown.count() == 9
+    def test_training_mode_has_10_options(self, training_selector):
+        """Training mode should have 10 target options."""
+        assert training_selector.target_dropdown.count() == 10
 
-    def test_inference_mode_has_8_options(self, inference_selector):
-        """Inference mode should have 8 target options (no 'nothing')."""
-        assert inference_selector.target_dropdown.count() == 8
+    def test_inference_mode_has_9_options(self, inference_selector):
+        """Inference mode should have 9 target options (no 'nothing')."""
+        assert inference_selector.target_dropdown.count() == 9
 
     def test_training_mode_includes_nothing(self, training_selector):
         """Training mode should include 'nothing' option."""
@@ -148,7 +148,8 @@ class TestTargetOptions:
             "clip": "Selected clip",
             "video": "Entire video",
             "all_videos": "All videos",
-            "random": "Random sample",
+            "random_video": "Random sample (current video)",
+            "random": "Random sample (all videos)",
             "suggestions": "Suggestions",
             "user_labeled": "User labeled",
             "predicted": "Frames with predictions",
@@ -448,10 +449,10 @@ class TestModeSwitching:
 
     def test_set_mode_training_to_inference(self, training_selector):
         """Switching from training to inference should remove 'nothing' option."""
-        assert training_selector.target_dropdown.count() == 9
+        assert training_selector.target_dropdown.count() == 10
         training_selector.set_mode("inference")
         assert training_selector._mode == "inference"
-        assert training_selector.target_dropdown.count() == 8
+        assert training_selector.target_dropdown.count() == 9
         options = [
             training_selector.target_dropdown.itemData(i)
             for i in range(training_selector.target_dropdown.count())
@@ -467,12 +468,12 @@ class TestModeSwitching:
         _options, not DEFAULT_OPTIONS. This is current behavior - if full
         restoration is needed, options should be reset from DEFAULT_OPTIONS.
         """
-        assert inference_selector.target_dropdown.count() == 8
+        assert inference_selector.target_dropdown.count() == 9
         inference_selector.set_mode("training")
         assert inference_selector._mode == "training"
-        # Options count stays 8 because 'nothing' was never in _options
+        # Options count stays 9 because 'nothing' was never in _options
         # (filtered during inference mode construction)
-        assert inference_selector.target_dropdown.count() == 8
+        assert inference_selector.target_dropdown.count() == 9
 
     def test_set_mode_same_mode_no_change(self, training_selector):
         """Setting same mode should be a no-op."""

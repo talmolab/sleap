@@ -25,6 +25,7 @@ from qtpy.QtWidgets import (
     QRadioButton,
     QButtonGroup,
     QComboBox,
+    QSpinBox,
 )
 
 
@@ -62,6 +63,7 @@ class FrameTargetSelection:
         exclude_predicted: Whether to skip already-predicted frames.
         prediction_mode: "add" (keep existing) or "replace" (overwrite).
         clear_all_first: Pre-action to clear all predictions before running.
+        sample_count: Number of frames for random sample options.
     """
 
     target_key: str = "frame"
@@ -69,6 +71,7 @@ class FrameTargetSelection:
     exclude_predicted: bool = False
     prediction_mode: str = "add"
     clear_all_first: bool = False
+    sample_count: int = 20
 
 
 class FrameTargetSelector(QWidget):
@@ -121,9 +124,15 @@ class FrameTargetSelector(QWidget):
             frame_count=0,
         ),
         FrameTargetOption(
+            key="random_video",
+            label="Random sample (current video)",
+            description="Random frames from current video",
+            frame_count=20,
+        ),
+        FrameTargetOption(
             key="random",
-            label="Random sample",
-            description="20 random frames for quick model check",
+            label="Random sample (all videos)",
+            description="Random frames from all videos",
             frame_count=20,
         ),
         FrameTargetOption(
@@ -177,7 +186,7 @@ class FrameTargetSelector(QWidget):
         target_layout = QVBoxLayout(self.target_group_box)
         target_layout.setSpacing(8)
 
-        # Row 1: Dropdown + description label (same row)
+        # Row 1: Dropdown + sample count spinbox + description label (same row)
         dropdown_row = QHBoxLayout()
         dropdown_row.setSpacing(12)
 
@@ -185,6 +194,18 @@ class FrameTargetSelector(QWidget):
         self.target_dropdown = QComboBox()
         self.target_dropdown.setMinimumWidth(150)
         dropdown_row.addWidget(self.target_dropdown)
+
+        # Sample count spinbox (only visible for random sample options)
+        self.sample_count_label = QLabel("Frames:")
+        self.sample_count_label.setStyleSheet("font-size: 11px;")
+        dropdown_row.addWidget(self.sample_count_label)
+
+        self.sample_count_spinbox = QSpinBox()
+        self.sample_count_spinbox.setRange(1, 1000)
+        self.sample_count_spinbox.setValue(20)
+        self.sample_count_spinbox.setMinimumWidth(60)
+        self.sample_count_spinbox.setStyleSheet("font-size: 11px;")
+        dropdown_row.addWidget(self.sample_count_spinbox)
 
         # Description label (shows description + frame count) - to the right
         self.description_label = QLabel()
@@ -247,9 +268,16 @@ class FrameTargetSelector(QWidget):
         self.skip_user_labeled_cb.stateChanged.connect(
             self._on_skip_user_labeled_changed
         )
+        self.sample_count_spinbox.valueChanged.connect(self._on_sample_count_changed)
 
     def _on_skip_user_labeled_changed(self, state):
         """Handle skip user labeled checkbox change."""
+        self._update_description()
+        self.valueChanged.emit()
+
+    def _on_sample_count_changed(self, value):
+        """Handle sample count spinbox change."""
+        self._update_description()
         self.valueChanged.emit()
 
     def _build_options_from_list(self, options: List[FrameTargetOption]):
@@ -308,14 +336,20 @@ class FrameTargetSelector(QWidget):
           would result in zero frames. Force off + disabled.
         - "nothing": No inference runs, so all filters are irrelevant. Disable all
           and force "Keep" for predictions.
+        - "random", "random_video": Show sample count spinbox.
         - All other targets: All filter combinations are valid.
         """
-        # Default: enable everything
+        # Default: enable everything, hide sample count spinbox
         self.skip_user_labeled_cb.setEnabled(True)
         self.predictions_label.setEnabled(True)
         self.predictions_clear_radio.setEnabled(True)
         self.predictions_replace_radio.setEnabled(True)
         self.predictions_keep_radio.setEnabled(True)
+
+        # Show sample count spinbox only for random sample options
+        is_random_sample = self._selected_key in ("random", "random_video")
+        self.sample_count_label.setVisible(is_random_sample)
+        self.sample_count_spinbox.setVisible(is_random_sample)
 
         if self._selected_key == "suggestions":
             # Suggestions already excludes user-labeled frames in sleap-nn
@@ -414,6 +448,7 @@ class FrameTargetSelector(QWidget):
             exclude_predicted=False,
             prediction_mode=prediction_mode,
             clear_all_first=clear_all_first,
+            sample_count=self.sample_count_spinbox.value(),
         )
 
     def set_selection(self, selection: FrameTargetSelection):
@@ -439,6 +474,9 @@ class FrameTargetSelector(QWidget):
         else:
             self.predictions_keep_radio.setChecked(True)
 
+        # Set sample count spinbox
+        self.sample_count_spinbox.setValue(selection.sample_count)
+
         self._update_description()
         self._apply_target_auto_configuration()
 
@@ -458,6 +496,7 @@ class FrameTargetSelector(QWidget):
             "_exclude_predicted": selection.exclude_predicted,
             "_prediction_mode": selection.prediction_mode,
             "_clear_all_first": selection.clear_all_first,
+            "_sample_count": selection.sample_count,
         }
 
     def get_mode(self) -> str:
