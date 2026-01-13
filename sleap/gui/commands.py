@@ -84,7 +84,6 @@ from sleap_io.model.instance import (
 )
 from sleap_io import Video
 from sleap_io import save_video
-from sleap.io.visuals import save_labeled_video
 from sleap.util import get_package_file
 from sleap_io.model.skeleton import Node, Skeleton
 from sleap.sleap_io_adaptors.skeleton_utils import (
@@ -1519,43 +1518,118 @@ class ExportVideoClip(AppCommand):
         return params
 
 
-class ExportLabeledClip(ExportVideoClip):
-    """Export a labeled video clip with labels and edges.
+class ExportLabeledClip(AppCommand):
+    """Export a labeled video clip with skeleton overlay.
 
-    This command is used to export a labeled video clip with labels and edges. It
-    inherits from the `ExportVideoClip` class and provides additional functionality for
-    exporting labeled videos.
+    Uses sleap-io's rendering API for high-quality video export with
+    real-time preview capabilities.
     """
 
     @classmethod
     def ask(cls, context: CommandContext, params: dict) -> bool:
-        """Ask the user for parameters to export a labeled video clip."""
-        params["form_name"] = "labeled_clip_form"
-        ok = super().ask(context, params)
-        return ok
+        """Show the render dialog and collect export parameters.
+
+        Args:
+            context: The command context.
+            params: Dictionary to store collected parameters.
+
+        Returns:
+            True if user confirmed, False if cancelled.
+        """
+        from sleap.gui.dialogs.render_clip import RenderClipDialog
+
+        labels = context.state["labels"]
+        video = context.state["video"]
+        frame_idx = context.state.get("frame_idx", None)
+
+        dialog = RenderClipDialog(
+            labels=labels,
+            video=video,
+            current_frame=frame_idx,
+            parent=context.app,
+        )
+
+        if not dialog.exec_():
+            return False
+
+        # Collect parameters from dialog
+        params["video_filename"] = dialog.get_output_path()
+        params["frame_indices"] = dialog.get_frame_indices()
+        export_params = dialog.get_export_params()
+
+        # Map dialog params to render params
+        params["fps"] = export_params.get("fps", 30)
+        params["crf"] = export_params.get("crf", 23)
+        params["scale"] = export_params.get("scale", 1.0)
+        params["color_by"] = export_params.get("color_by", "track")
+        params["palette"] = export_params.get("palette", "tableau10")
+        params["marker_shape"] = export_params.get("marker_shape", "circle")
+        params["marker_size"] = export_params.get("marker_size", 4.0)
+        params["line_width"] = export_params.get("line_width", 2.0)
+        params["alpha"] = export_params.get("alpha", 1.0)
+        params["show_nodes"] = export_params.get("show_nodes", True)
+        params["show_edges"] = export_params.get("show_edges", True)
+        params["background"] = export_params.get("background")
+        params["open_when_done"] = export_params.get("open_when_done", True)
+
+        return True
 
     @classmethod
-    def write_new_video(cls, context, params):
-        """Write a new annotated video using the parameters provided.
+    def do_action(cls, context: CommandContext, params: dict):
+        """Export the labeled video clip.
+
+        Args:
+            context: The command context.
+            params: Export parameters from ask().
+        """
+        cls.write_new_video(context, params)
+
+        if params.get("open_when_done", False):
+            open_file(params["video_filename"])
+
+    @classmethod
+    def write_new_video(cls, context: CommandContext, params: dict):
+        """Write annotated video using sleap-io rendering.
 
         Args:
             context: The command context.
             params: The parameters for the export.
         """
-        save_labeled_video(
-            filename=params["video_filename"],
-            labels=context.state["labels"],
-            video=context.state["video"],
-            frames=list(params["frames"]),
-            fps=params["fps"],
-            color_manager=params["color_manager"],
-            background=params["background"],
-            show_edges=params["show edges"],
-            edge_is_wedge=params["edge_is_wedge"],
-            marker_size=params["marker size"],
-            scale=params["scale"],
-            crop_size_xy=params["crop"],
-            gui_progress=params["gui_progress"],
+        import sleap_io as sio
+
+        labels = context.state["labels"]
+        video = context.state["video"]
+
+        # Build render parameters
+        render_params = {
+            "fps": params.get("fps", 30),
+            "crf": params.get("crf", 23),
+            "scale": params.get("scale", 1.0),
+            "color_by": params.get("color_by", "track"),
+            "palette": params.get("palette", "tableau10"),
+            "marker_shape": params.get("marker_shape", "circle"),
+            "marker_size": params.get("marker_size", 4.0),
+            "line_width": params.get("line_width", 2.0),
+            "alpha": params.get("alpha", 1.0),
+            "show_nodes": params.get("show_nodes", True),
+            "show_edges": params.get("show_edges", True),
+        }
+
+        # Add background if not "video"
+        if params.get("background"):
+            render_params["background"] = params["background"]
+
+        # Get frame indices
+        frame_inds = params.get("frame_indices", None)
+
+        # Render video using sleap-io
+        sio.render_video(
+            labels,
+            params["video_filename"],
+            video=video,
+            frame_inds=frame_inds,
+            show_progress=True,
+            **render_params,
         )
 
 
