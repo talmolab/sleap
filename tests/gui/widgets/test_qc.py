@@ -803,3 +803,39 @@ class TestQCDockNavigation:
         # Now dock should have labels from parent
         assert dock._labels is mock_labels
         assert dock._widget._labels is mock_labels
+
+    def test_fit_selection_checkbox_exists(self, qtbot):
+        """Test that dock widget has Fit to Selection checkbox."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        dock = QCDockWidget()
+        qtbot.addWidget(dock)
+
+        assert hasattr(dock, "_fit_selection_checkbox")
+        assert dock._fit_selection_checkbox.text() == "Fit to Selection"
+
+    def test_fit_selection_checkbox_syncs_with_parent_state(self, qtbot):
+        """Test checkbox syncs with parent's fit_selection state."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+        from qtpy.QtWidgets import QMainWindow
+        from qtpy.QtCore import Qt
+
+        # Create main window with mock state
+        main_window = QMainWindow()
+        main_window.state = MagicMock()
+        main_window.state.get = MagicMock(return_value=True)
+        main_window.state.connect = MagicMock()
+        qtbot.addWidget(main_window)
+
+        dock = QCDockWidget(parent=main_window)
+        main_window.addDockWidget(Qt.RightDockWidgetArea, dock)
+        qtbot.addWidget(dock)
+
+        # Sync checkbox - should read True from state
+        dock._sync_fit_selection_checkbox()
+        assert dock._fit_selection_checkbox.isChecked()
+
+        # Sync with False
+        main_window.state.get = MagicMock(return_value=False)
+        dock._sync_fit_selection_checkbox()
+        assert not dock._fit_selection_checkbox.isChecked()

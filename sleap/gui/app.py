@@ -153,6 +153,7 @@ class MainWindow(QMainWindow):
         self.state["show edges"] = True
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
+        self.state["fit_selection"] = False
         self.state["color predicted"] = prefs["color predicted"]
         self.state["trail_length"] = prefs["trail length"]
         self.state["trail_shade"] = prefs["trail shade"]
@@ -614,12 +615,19 @@ class MainWindow(QMainWindow):
 
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "fit", "Fit View to Instances")
-        add_menu_item(
-            viewMenu,
-            "fit selection",
-            "Fit View to Selection",
-            self._fit_view_to_selection,
-        )
+        add_menu_check_item(viewMenu, "fit_selection", "Fit View to Selection")
+
+        # Make fit and fit_selection mutually exclusive
+        def _on_fit_changed(value):
+            if value:
+                self.state["fit_selection"] = False
+
+        def _on_fit_selection_changed(value):
+            if value:
+                self.state["fit"] = False
+
+        self.state.connect("fit", _on_fit_changed)
+        self.state.connect("fit_selection", _on_fit_selection_changed)
 
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
@@ -1338,6 +1346,8 @@ class MainWindow(QMainWindow):
 
         if self.state["fit"]:
             player.zoomToFit()
+        elif self.state["fit_selection"]:
+            player.zoomToSelection()
 
         # Update related displays
         self.updateStatusMessage()
@@ -1764,14 +1774,6 @@ class MainWindow(QMainWindow):
 
         dialog = UpdateCheckerDialog(self)
         dialog.exec_()
-
-    def _fit_view_to_selection(self):
-        """Zoom the view to fit just the selected instance."""
-        if self.player is None:
-            return
-        if not self.player.zoomToSelection():
-            # No instance selected - show a brief message
-            self.statusBar().showMessage("No instance selected", 2000)
 
     def _goto_next_suggestion_or_flag(self):
         """Go to next suggestion or QC flag, depending on which is active.

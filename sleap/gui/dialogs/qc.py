@@ -108,15 +108,19 @@ class QCDockWidget(QtWidgets.QDockWidget):
 
         button_layout.addStretch()
 
+        # Fit to Selection checkbox - mirrors View menu option
+        self._fit_selection_checkbox = QtWidgets.QCheckBox("Fit to Selection")
+        self._fit_selection_checkbox.setToolTip(
+            "Auto-zoom to fit the selected instance when navigating"
+        )
+        self._fit_selection_checkbox.stateChanged.connect(self._on_fit_selection_changed)
+        button_layout.addWidget(self._fit_selection_checkbox)
+
         # Dock/Undock toggle button - starts with "Undock" since we default to docked
         self._dock_button = QtWidgets.QPushButton("Undock")
         self._dock_button.setToolTip("Undock this panel to a floating window")
         self._dock_button.clicked.connect(self._toggle_dock)
         button_layout.addWidget(self._dock_button)
-
-        close_button = QtWidgets.QPushButton("Close")
-        close_button.clicked.connect(self.close)
-        button_layout.addWidget(close_button)
 
         layout.addLayout(button_layout)
 
@@ -143,13 +147,25 @@ class QCDockWidget(QtWidgets.QDockWidget):
         """
         self._tab_visible = visible
 
-        # When dock becomes visible, sync labels from parent if needed
+        # When dock becomes visible, sync state from parent
         if visible:
             parent = self.parent()
-            if parent is not None and hasattr(parent, "labels"):
-                parent_labels = parent.labels
-                if parent_labels is not None and self._labels is not parent_labels:
-                    self.update_labels(parent_labels)
+            if parent is not None:
+                # Sync labels
+                if hasattr(parent, "labels"):
+                    parent_labels = parent.labels
+                    if parent_labels is not None and self._labels is not parent_labels:
+                        self.update_labels(parent_labels)
+
+                # Sync fit_selection checkbox and connect to state changes
+                if hasattr(parent, "state"):
+                    self._sync_fit_selection_checkbox()
+                    # Connect to state changes if not already connected
+                    if not hasattr(self, "_state_connected"):
+                        parent.state.connect(
+                            "fit_selection", self._sync_fit_selection_checkbox
+                        )
+                        self._state_connected = True
 
     def _on_navigate(self, video_idx: int, frame_idx: int, instance_idx: int):
         """Handle navigation request from widget."""
@@ -194,6 +210,34 @@ class QCDockWidget(QtWidgets.QDockWidget):
                 from sleap.gui.commands import UpdateTopic
 
                 parent.on_data_update([UpdateTopic.suggestions])
+
+    def _on_fit_selection_changed(self, state: int):
+        """Handle Fit to Selection checkbox change.
+
+        Updates the main window's state to mirror the checkbox.
+        """
+        parent = self.parent()
+        if parent is not None and hasattr(parent, "state"):
+            # Qt.Checked = 2, Qt.Unchecked = 0
+            parent.state["fit_selection"] = state == Qt.Checked
+
+    def _sync_fit_selection_checkbox(self, value=None):
+        """Sync checkbox state from main window's state.
+
+        Args:
+            value: Optional value from state callback. If None, reads from state.
+        """
+        if value is None:
+            parent = self.parent()
+            if parent is not None and hasattr(parent, "state"):
+                value = parent.state.get("fit_selection", False)
+            else:
+                value = False
+
+        # Block signals to avoid feedback loop
+        self._fit_selection_checkbox.blockSignals(True)
+        self._fit_selection_checkbox.setChecked(bool(value))
+        self._fit_selection_checkbox.blockSignals(False)
 
     def update_labels(self, labels: "sio.Labels"):
         """Update the labels being analyzed.
