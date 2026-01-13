@@ -152,6 +152,7 @@ class MainWindow(QMainWindow):
         self.state["show edges"] = True
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
+        self.state["fit_selection"] = False
         self.state["color predicted"] = prefs["color predicted"]
         self.state["trail_length"] = prefs["trail length"]
         self.state["trail_shade"] = prefs["trail shade"]
@@ -556,13 +557,13 @@ class MainWindow(QMainWindow):
             goMenu,
             "goto next suggestion",
             "Next Suggestion",
-            self.commands.nextSuggestedFrame,
+            self._goto_next_suggestion_or_flag,
         )
         add_menu_item(
             goMenu,
             "goto prev suggestion",
             "Previous Suggestion",
-            self.commands.prevSuggestedFrame,
+            self._goto_prev_suggestion_or_flag,
         )
         add_menu_item(
             goMenu,
@@ -612,7 +613,20 @@ class MainWindow(QMainWindow):
         self.viewMenu = viewMenu  # store as attribute so docks can add items
 
         viewMenu.addSeparator()
-        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
+        add_menu_check_item(viewMenu, "fit", "Fit View to Instances")
+        add_menu_check_item(viewMenu, "fit_selection", "Fit View to Selection")
+
+        # Make fit and fit_selection mutually exclusive
+        def _on_fit_changed(value):
+            if value:
+                self.state["fit_selection"] = False
+
+        def _on_fit_selection_changed(value):
+            if value:
+                self.state["fit"] = False
+
+        self.state.connect("fit", _on_fit_changed)
+        self.state.connect("fit_selection", _on_fit_selection_changed)
 
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
@@ -836,6 +850,7 @@ class MainWindow(QMainWindow):
         analyzeMenu.addAction(
             "Instance Size Distribution...", self._open_size_distribution
         )
+        analyzeMenu.addAction("Label QC...", self._open_label_qc)
 
         ### Tracks Menu ###
 
@@ -1051,8 +1066,42 @@ class MainWindow(QMainWindow):
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
 
+        # Create QC dock (hidden by default, shown when user clicks menu item)
+        self._create_qc_dock()
+
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
+
+    def _create_qc_dock(self):
+        """Create the QC dock widget (hidden by default)."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
+            """Navigate to the specified frame and highlight instance."""
+            if self.labels is not None and video_idx < len(self.labels.videos):
+                video = self.labels.videos[video_idx]
+                self.commands.gotoVideoAndFrameAndInstance(
+                    video, frame_idx, instance_idx
+                )
+
+        # Create the dock widget (with no labels initially)
+        self._qc_dock = QCDockWidget(
+            labels=None,
+            navigate_callback=navigate_callback,
+            parent=self,
+        )
+
+        # Add to main window's dock area on the right side
+        self.addDockWidget(Qt.RightDockWidgetArea, self._qc_dock)
+
+        # Tabify with other docks on the right side (after instances_dock to be last)
+        self.tabifyDockWidget(self.instances_dock, self._qc_dock)
+
+        # Add toggle action to View menu
+        self.viewMenu.addAction(self._qc_dock.toggleViewAction())
+
+        # Start hidden (closed) - user opens via Analyze menu
+        self._qc_dock.hide()
 
     def _load_overlays(self):
         """Load all standard video overlays."""
@@ -1155,8 +1204,11 @@ class MainWindow(QMainWindow):
         self._menu_actions["goto next labeled"].setEnabled(has_labeled_frames)
         self._menu_actions["goto prev labeled"].setEnabled(has_labeled_frames)
 
-        self._menu_actions["goto next suggestion"].setEnabled(has_suggestions)
-        self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
+        # Enable suggestion navigation if there are suggestions OR QC flags
+        has_qc_flags = hasattr(self, "_qc_dock") and self._qc_dock.has_flags
+        has_nav_targets = has_suggestions or has_qc_flags
+        self._menu_actions["goto next suggestion"].setEnabled(has_nav_targets)
+        self._menu_actions["goto prev suggestion"].setEnabled(has_nav_targets)
 
         self._menu_actions["goto next track spawn"].setEnabled(has_tracks)
 
@@ -1293,6 +1345,8 @@ class MainWindow(QMainWindow):
 
         if self.state["fit"]:
             player.zoomToFit()
+        elif self.state["fit_selection"]:
+            player.zoomToSelection()
 
         # Update related displays
         self.updateStatusMessage()
@@ -1713,6 +1767,28 @@ class MainWindow(QMainWindow):
         dialog = UpdateCheckerDialog(self)
         dialog.exec_()
 
+    def _goto_next_suggestion_or_flag(self):
+        """Go to next suggestion or QC flag, depending on which is active.
+
+        If QC dock is visible and is the active tab (or floating) with flags,
+        navigate to the next QC flag. Otherwise, navigate to next suggestion.
+        """
+        if hasattr(self, "_qc_dock") and self._qc_dock.is_active_for_navigation:
+            self._qc_dock.goto_next_flag()
+        else:
+            self.commands.nextSuggestedFrame()
+
+    def _goto_prev_suggestion_or_flag(self):
+        """Go to previous suggestion or QC flag, depending on which is active.
+
+        If QC dock is visible and is the active tab (or floating) with flags,
+        navigate to the previous QC flag. Otherwise, navigate to prev suggestion.
+        """
+        if hasattr(self, "_qc_dock") and self._qc_dock.is_active_for_navigation:
+            self._qc_dock.goto_prev_flag()
+        else:
+            self.commands.prevSuggestedFrame()
+
     def _open_size_distribution(self):
         """Opens the instance size distribution analysis dialog."""
         if self.labels is None or len(self.labels) == 0:
@@ -1739,6 +1815,25 @@ class MainWindow(QMainWindow):
             parent=self,
         )
         dialog.show()
+
+    def _open_label_qc(self):
+        """Opens the label QC analysis dock widget.
+
+        The dock widget is tabbed with other right-side docks and can be
+        undocked to float. Its state is saved with the window state.
+        """
+        if self.labels is None or len(self.labels) == 0:
+            QMessageBox.warning(
+                self,
+                "No Labels",
+                "Please load labels with user-labeled instances first.",
+            )
+            return
+
+        # Update labels and show the dock (created at init time)
+        self._qc_dock.update_labels(self.labels)
+        self._qc_dock.show()
+        self._qc_dock.raise_()
 
 
 def create_sleap_label_parser():

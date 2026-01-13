@@ -592,6 +592,33 @@ class QtVideoPlayer(QWidget):
         if not zoom_rect.size().isEmpty():
             self.view.zoomToRect(zoom_rect)
 
+    def zoomToSelection(self) -> bool:
+        """Zoom view to fit just the selected instance.
+
+        Returns:
+            True if zoom was applied (an instance was selected),
+            False if no instance is selected.
+        """
+        # Find the selected QtInstance in the view
+        selected_instance = None
+        for qt_inst in self.view.all_instances:
+            if qt_inst.selected:
+                selected_instance = qt_inst
+                break
+
+        if selected_instance is None:
+            return False
+
+        # Get bounding rect of just this instance with margin
+        zoom_rect = selected_instance.boundingRect()
+        if not zoom_rect.size().isEmpty():
+            # Add margin around the instance
+            margin = 20
+            zoom_rect = zoom_rect.marginsAdded(QMarginsF(margin, margin, margin, margin))
+            self.view.zoomToRect(zoom_rect)
+            return True
+        return False
+
     def setFitZoom(self, value):
         """Zooms or unzooms current view to fit all instances."""
         if self.video:
