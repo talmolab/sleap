@@ -1197,8 +1197,11 @@ class MainWindow(QMainWindow):
         self._menu_actions["goto next labeled"].setEnabled(has_labeled_frames)
         self._menu_actions["goto prev labeled"].setEnabled(has_labeled_frames)
 
-        self._menu_actions["goto next suggestion"].setEnabled(has_suggestions)
-        self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
+        # Enable suggestion navigation if there are suggestions OR QC flags
+        has_qc_flags = hasattr(self, "_qc_dock") and self._qc_dock.has_flags
+        has_nav_targets = has_suggestions or has_qc_flags
+        self._menu_actions["goto next suggestion"].setEnabled(has_nav_targets)
+        self._menu_actions["goto prev suggestion"].setEnabled(has_nav_targets)
 
         self._menu_actions["goto next track spawn"].setEnabled(has_tracks)
 

@@ -135,11 +135,21 @@ class QCDockWidget(QtWidgets.QDockWidget):
         self.visibilityChanged.connect(self._on_visibility_changed)
 
     def _on_visibility_changed(self, visible: bool):
-        """Track visibility changes for navigation precedence.
+        """Track visibility changes and update labels if needed.
 
         When tabified, this signal tells us if our tab is selected.
+        Also updates labels when dock becomes visible (handles case where
+        dock is opened via View menu instead of Analyze > Label QC).
         """
         self._tab_visible = visible
+
+        # When dock becomes visible, sync labels from parent if needed
+        if visible:
+            parent = self.parent()
+            if parent is not None and hasattr(parent, "labels"):
+                parent_labels = parent.labels
+                if parent_labels is not None and self._labels is not parent_labels:
+                    self.update_labels(parent_labels)
 
     def _on_navigate(self, video_idx: int, frame_idx: int, instance_idx: int):
         """Handle navigation request from widget."""

@@ -770,3 +770,36 @@ class TestQCDockNavigation:
         qtbot.wait(50)
 
         assert dock.is_active_for_navigation
+
+    def test_visibility_changed_updates_labels(self, qtbot):
+        """Test that making dock visible syncs labels from parent."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+        from qtpy.QtWidgets import QMainWindow
+        from qtpy.QtCore import Qt
+
+        # Create mock labels
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        # Create main window with labels attribute
+        main_window = QMainWindow()
+        main_window.labels = mock_labels
+        qtbot.addWidget(main_window)
+
+        # Create dock WITHOUT labels (simulating init-time creation)
+        dock = QCDockWidget(labels=None, parent=main_window)
+        main_window.addDockWidget(Qt.RightDockWidgetArea, dock)
+        qtbot.addWidget(dock)
+
+        # Initially dock has no labels
+        assert dock._labels is None
+        assert dock._widget._labels is None
+
+        # Simulate visibility change (like when View menu toggle activates dock)
+        dock._on_visibility_changed(True)
+        qtbot.wait(10)
+
+        # Now dock should have labels from parent
+        assert dock._labels is mock_labels
+        assert dock._widget._labels is mock_labels
