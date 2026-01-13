@@ -1588,20 +1588,61 @@ class ExportLabeledClip(AppCommand):
             context: The command context.
             params: Export parameters from ask().
         """
-        cls.write_new_video(context, params)
+        labels = context.state["labels"]
+        video = context.state["video"]
 
-        if params.get("open_when_done", False):
-            open_file(params["video_filename"])
+        # Build render parameters
+        render_params = {
+            "fps": params.get("fps", 30),
+            "crf": params.get("crf", 23),
+            "scale": params.get("scale", 1.0),
+            "color_by": params.get("color_by", "track"),
+            "palette": params.get("palette", "tableau10"),
+            "marker_shape": params.get("marker_shape", "circle"),
+            "marker_size": params.get("marker_size", 4.0),
+            "line_width": params.get("line_width", 2.0),
+            "alpha": params.get("alpha", 1.0),
+            "show_nodes": params.get("show_nodes", True),
+            "show_edges": params.get("show_edges", True),
+        }
+
+        # Add background if not "video"
+        if params.get("background"):
+            render_params["background"] = params["background"]
+
+        # Render with progress dialog (non-blocking)
+        render_video_gui(
+            labels=labels,
+            filename=params["video_filename"],
+            video=video,
+            frame_inds=params.get("frame_indices"),
+            render_params=render_params,
+            open_when_done=params.get("open_when_done", True),
+        )
 
     @classmethod
     def write_new_video(cls, context: CommandContext, params: dict):
         """Write annotated video using sleap-io rendering.
 
+        .. deprecated::
+            This method is deprecated. Use `render_video_gui()` for GUI rendering
+            with progress dialog, or call `sleap_io.render_video()` directly for
+            programmatic use.
+
         Args:
             context: The command context.
             params: The parameters for the export.
         """
+        import warnings
+
         import sleap_io as sio
+
+        warnings.warn(
+            "ExportLabeledClip.write_new_video() is deprecated. "
+            "Use render_video_gui() or sleap_io.render_video() directly.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         labels = context.state["labels"]
         video = context.state["video"]
@@ -1743,6 +1784,214 @@ class ExportPackageThread(QtCore.QThread):
                 self.cancelled.emit()
             else:
                 self.error.emit(str(e))
+
+
+class RenderVideoThread(QtCore.QThread):
+    """Background thread for rendering video without freezing GUI.
+
+    Uses sleap-io's render_video() with progress_callback for non-blocking rendering.
+    """
+
+    progress = QtCore.Signal(int, int)  # (current, total)
+    finished = QtCore.Signal(str)  # output filename
+    error = QtCore.Signal(str)  # error message
+    cancelled = QtCore.Signal()
+
+    def __init__(
+        self,
+        labels,
+        filename: str,
+        video,
+        frame_inds: list[int] | None,
+        render_params: dict,
+        parent=None,
+    ):
+        """Initialize the render video thread.
+
+        Args:
+            labels: Labels object to render.
+            filename: Output video path.
+            video: Video to render from.
+            frame_inds: Frame indices to render (None = all labeled).
+            render_params: Dict of rendering parameters for sio.render_video().
+            parent: Parent QObject.
+        """
+        super().__init__(parent)
+        self.labels = labels
+        self.filename = filename
+        self.video = video
+        self.frame_inds = frame_inds
+        self.render_params = render_params
+        self._cancelled = False
+
+    def cancel(self):
+        """Request cancellation of the render."""
+        self._cancelled = True
+
+    def run(self):
+        """Run the render in background thread."""
+        import sleap_io as sio
+
+        def on_progress(current, total):
+            """Progress callback for sio.render_video()."""
+            self.progress.emit(current, total)
+            # Return False to cancel rendering
+            return not self._cancelled
+
+        try:
+            sio.render_video(
+                self.labels,
+                self.filename,
+                video=self.video,
+                frame_inds=self.frame_inds,
+                progress_callback=on_progress,
+                show_progress=False,  # We handle progress ourselves
+                **self.render_params,
+            )
+
+            if self._cancelled:
+                # Clean up partial file on cancellation
+                if Path(self.filename).exists():
+                    os.remove(self.filename)
+                self.cancelled.emit()
+                return
+
+            self.finished.emit(self.filename)
+
+        except Exception as e:
+            # Check if this was a cancellation
+            is_cancelled = "cancel" in str(e).lower() or self._cancelled
+            if is_cancelled:
+                # Clean up partial file
+                if Path(self.filename).exists():
+                    os.remove(self.filename)
+                self.cancelled.emit()
+            else:
+                self.error.emit(str(e))
+
+
+def render_video_gui(
+    labels,
+    filename: str,
+    video,
+    frame_inds: list[int] | None,
+    render_params: dict,
+    open_when_done: bool = True,
+) -> str:
+    """Render video with progress dialog.
+
+    Args:
+        labels: Labels object to render.
+        filename: Output video path.
+        video: Video to render from.
+        frame_inds: Frame indices to render (None = all labeled).
+        render_params: Dict of rendering parameters for sio.render_video().
+        open_when_done: If True, open video after rendering.
+
+    Returns:
+        The filename if successful, "canceled" if canceled by user.
+    """
+    # Calculate total frames for progress
+    if frame_inds is not None:
+        total_frames = len(frame_inds)
+    else:
+        total_frames = len(
+            [lf for lf in labels.labeled_frames if video is None or lf.video == video]
+        )
+
+    # Create progress dialog
+    win = QtWidgets.QProgressDialog(
+        f"Rendering video...<br>0/{total_frames} frames", "Cancel", 0, total_frames
+    )
+    win.setWindowTitle("Rendering Video")
+    win.setWindowModality(QtCore.Qt.WindowModal)
+    win.setMinimumDuration(0)
+    win.setAutoClose(False)
+    win.setAutoReset(False)
+    win.setMinimumWidth(350)
+    win.show()
+    QtWidgets.QApplication.instance().processEvents()
+
+    # Track result
+    result = {"status": None, "filename": None, "error": None}
+
+    # Create worker thread
+    worker = RenderVideoThread(
+        labels=labels,
+        filename=filename,
+        video=video,
+        frame_inds=frame_inds,
+        render_params=render_params,
+    )
+
+    def on_progress(current, total):
+        win.setMaximum(total)
+        win.setValue(current)
+        pct = (current / total) * 100 if total > 0 else 0
+        win.setLabelText(
+            f"Rendering video...<br>{current}/{total} frames "
+            f"(<b>{pct:.1f}%</b>)"
+        )
+
+    def on_finished(fname):
+        result["status"] = "finished"
+        result["filename"] = fname
+
+    def on_cancelled():
+        result["status"] = "canceled"
+
+    def on_error(msg):
+        result["status"] = "error"
+        result["error"] = msg
+
+    # Connect signals
+    worker.progress.connect(on_progress)
+    worker.finished.connect(on_finished)
+    worker.cancelled.connect(on_cancelled)
+    worker.error.connect(on_error)
+
+    # Handle cancel button
+    win.canceled.connect(worker.cancel)
+
+    # Start the worker
+    worker.start()
+
+    # Process events while worker is running (keeps GUI responsive)
+    while worker.isRunning():
+        QtWidgets.QApplication.instance().processEvents()
+        worker.wait(10)  # Wait up to 10ms
+
+    # Ensure thread is fully terminated
+    worker.wait()
+
+    # Process any remaining events (including final signals from worker)
+    QtWidgets.QApplication.instance().processEvents()
+
+    # Clean up: disconnect signals and delete worker
+    worker.progress.disconnect()
+    worker.finished.disconnect()
+    worker.cancelled.disconnect()
+    worker.error.disconnect()
+    worker.deleteLater()
+
+    win.close()
+
+    # Handle result
+    if result["status"] == "finished":
+        if open_when_done:
+            open_file(result["filename"])
+        return result["filename"]
+    elif result["status"] == "canceled":
+        return "canceled"
+    elif result["status"] == "error":
+        QtWidgets.QMessageBox.critical(
+            None,
+            "Render Error",
+            f"Failed to render video:\n{result['error']}",
+        )
+        raise RuntimeError(result["error"])
+
+    return filename
 
 
 def export_dataset_gui(
