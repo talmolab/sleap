@@ -225,8 +225,9 @@ class QCDockWidget(QtWidgets.QDockWidget):
         """
         parent = self._main_window
         if parent is not None and hasattr(parent, "state"):
-            # Qt.Checked = 2, Qt.Unchecked = 0
-            enabled = state == Qt.Checked
+            # stateChanged passes int: 0=Unchecked, 2=Checked
+            # Note: Qt.Checked is an enum, so compare to int value directly
+            enabled = state == Qt.Checked.value
             parent.state["fit_selection"] = enabled
             # Apply immediate zoom effect (state change will also trigger this,
             # but that's fine - it's idempotent)
