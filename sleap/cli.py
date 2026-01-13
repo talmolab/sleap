@@ -645,7 +645,7 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
     ]
     for path in path_entries:
         if any(kw in path.lower() for kw in relevant_keywords):
-            console.print(f"  {path}")
+            console.print(f"  [{SLEAP_CYAN}]{path}[/]")
     console.print()
 
     # -------------------------------------------------------------------------
