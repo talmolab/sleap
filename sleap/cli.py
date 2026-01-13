@@ -119,6 +119,7 @@ SLEAP_ORANGE = "#e67e22"
 SLEAP_GREEN = "#2ecc71"
 SLEAP_RED = "#e74c3c"
 SLEAP_YELLOW = "#f1c40f"
+SLEAP_CYAN = "#00bcd4"  # Paths/filenames - visible on both light and dark terminals
 
 # Configure rich-click with solarized-slim theme
 SLEAP_HELP_CONFIG = RichHelpConfiguration(
@@ -285,6 +286,17 @@ def label(
 # Doctor Command (System Diagnostics)
 # =============================================================================
 
+# Field width constants for aligned output (right-aligned field names)
+_DOCTOR_WIDTHS = {
+    "platform": 9,  # "Processor"
+    "python": 11,  # "Virtual Env"
+    "uv": 15,  # "Installed Tools"
+    "uv_config": 17,  # "Python Preference"
+    "conda": 18,  # "auto_activate_base"
+    "gpu": 13,  # "NVIDIA Driver"
+    "binaries": 9,  # "Real Path"
+}
+
 
 @cli.command(context_settings={"help_option_names": ["-h", "--help"]})
 @rich_config(help_config=SLEAP_HELP_CONFIG)
@@ -298,7 +310,6 @@ def label(
     "-o",
     "--output",
     "output_file",
-    type=click.Path(),
     default=None,
     help="Save output to file. Use -o without a path for auto-timestamped filename.",
     is_flag=False,
@@ -375,16 +386,17 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
     }
 
     console.print("[Platform]", style=f"bold {SLEAP_BLUE}")
-    console.print(f"  [{DIM}]OS:[/] {platform.system()} {platform.release()}")
-    console.print(f"  [{DIM}]Platform:[/] {platform.platform()}")
-    console.print(f"  [{DIM}]Machine:[/] {platform.machine()}")
+    w = _DOCTOR_WIDTHS["platform"] + 1  # +1 for colon
+    console.print(f"  [{DIM}]{'OS:':<{w}}[/] {platform.system()} {platform.release()}")
+    console.print(f"  [{DIM}]{'Platform:':<{w}}[/] {platform.platform()}")
+    console.print(f"  [{DIM}]{'Machine:':<{w}}[/] {platform.machine()}")
     processor = platform.processor()
     if processor:
-        console.print(f"  [{DIM}]Processor:[/] {processor}")
+        console.print(f"  [{DIM}]{'Processor:':<{w}}[/] {processor}")
     if ram_total:
-        console.print(f"  [{DIM}]RAM:[/] {ram_used} / {ram_total}")
+        console.print(f"  [{DIM}]{'RAM:':<{w}}[/] {ram_used} / {ram_total}")
     if disk_total:
-        console.print(f"  [{DIM}]Disk:[/] {disk_used} / {disk_total}")
+        console.print(f"  [{DIM}]{'Disk:':<{w}}[/] {disk_used} / {disk_total}")
     console.print()
 
     # -------------------------------------------------------------------------
@@ -398,12 +410,13 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
     }
 
     console.print("[Python]", style=f"bold {SLEAP_BLUE}")
-    console.print(f"  [{DIM}]Version:[/] [{SLEAP_GREEN}]{sys.version.split()[0]}[/]")
-    console.print(f"  [{DIM}]Executable:[/] {sys.executable}")
-    console.print(f"  [{DIM}]Prefix:[/] {sys.prefix}")
+    w = _DOCTOR_WIDTHS["python"] + 1  # +1 for colon
+    console.print(f"  [{DIM}]{'Version:':<{w}}[/] [{SLEAP_GREEN}]{sys.version.split()[0]}[/]")
+    console.print(f"  [{DIM}]{'Executable:':<{w}}[/] [{SLEAP_CYAN}]{sys.executable}[/]")
+    console.print(f"  [{DIM}]{'Prefix:':<{w}}[/] [{SLEAP_CYAN}]{sys.prefix}[/]")
     venv = os.environ.get("VIRTUAL_ENV")
     if venv:
-        console.print(f"  [{DIM}]Virtual Env:[/] {venv}")
+        console.print(f"  [{DIM}]{'Virtual Env:':<{w}}[/] [{SLEAP_CYAN}]{venv}[/]")
     console.print()
 
     # -------------------------------------------------------------------------
@@ -415,45 +428,47 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
 
     if uv_info:
         console.print("[UV]", style=f"bold {SLEAP_BLUE}")
-        console.print(f"  [{DIM}]Version:[/] [{SLEAP_GREEN}]{uv_info.version}[/]")
-        console.print(f"  [{DIM}]Path:[/] {uv_info.path}")
-        console.print(f"  [{DIM}]Cache Dir:[/] {uv_info.cache_dir}")
-        console.print(f"  [{DIM}]Tool Dir:[/] {uv_info.tool_dir}")
-        console.print(f"  [{DIM}]Tool Bin Dir:[/] {uv_info.tool_bin_dir}")
-        console.print(f"  [{DIM}]Python Dir:[/] {uv_info.python_dir}")
+        w = _DOCTOR_WIDTHS["uv"] + 1  # +1 for colon
+        console.print(f"  [{DIM}]{'Version:':<{w}}[/] [{SLEAP_GREEN}]{uv_info.version}[/]")
+        console.print(f"  [{DIM}]{'Path:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.path}[/]")
+        console.print(f"  [{DIM}]{'Cache Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.cache_dir}[/]")
+        console.print(f"  [{DIM}]{'Tool Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.tool_dir}[/]")
+        console.print(f"  [{DIM}]{'Tool Bin Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.tool_bin_dir}[/]")
+        console.print(f"  [{DIM}]{'Python Dir:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.python_dir}[/]")
         if uv_info.installed_tools:
             tools_str = ", ".join(uv_info.installed_tools)
-            console.print(f"  [{DIM}]Installed Tools:[/] {tools_str}")
+            console.print(f"  [{DIM}]{'Installed Tools:':<{w}}[/] {tools_str}")
         console.print()
 
         # UV Config
         console.print("[UV Config]", style=f"bold {SLEAP_BLUE}")
+        w = _DOCTOR_WIDTHS["uv_config"] + 1  # +1 for colon
         if uv_info.default_python:
-            console.print(f"  [{DIM}]Default Python:[/] {uv_info.default_python}")
+            console.print(f"  [{DIM}]{'Default Python:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.default_python}[/]")
         else:
-            console.print(f"  [{DIM}]Default Python:[/] [{DIM}](not configured)[/]")
+            console.print(f"  [{DIM}]{'Default Python:':<{w}}[/] [{DIM}](not configured)[/]")
         if uv_info.resolved_python:
-            console.print(f"  [{DIM}]Resolved Python:[/] {uv_info.resolved_python}")
+            console.print(f"  [{DIM}]{'Resolved Python:':<{w}}[/] [{SLEAP_CYAN}]{uv_info.resolved_python}[/]")
 
         pref = uv_info.python_preference or "managed"
         is_default = not uv_info.python_preference
         pref_display = f"{pref} [{DIM}](default)[/]" if is_default else pref
-        console.print(f"  [{DIM}]Python Preference:[/] {pref_display}")
+        console.print(f"  [{DIM}]{'Python Preference:':<{w}}[/] {pref_display}")
 
         res = uv_info.resolution_strategy or "highest"
         is_default = not uv_info.resolution_strategy
         res_display = f"{res} [{DIM}](default)[/]" if is_default else res
-        console.print(f"  [{DIM}]Resolution:[/] {res_display}")
+        console.print(f"  [{DIM}]{'Resolution:':<{w}}[/] {res_display}")
 
         idx = uv_info.index_strategy or "first-index"
         is_default = not uv_info.index_strategy
         idx_display = f"{idx} [{DIM}](default)[/]" if is_default else idx
-        console.print(f"  [{DIM}]Index Strategy:[/] {idx_display}")
+        console.print(f"  [{DIM}]{'Index Strategy:':<{w}}[/] {idx_display}")
 
         pre = uv_info.prerelease or "if-necessary"
         is_default = not uv_info.prerelease
         pre_display = f"{pre} [{DIM}](default)[/]" if is_default else pre
-        console.print(f"  [{DIM}]Prerelease:[/] {pre_display}")
+        console.print(f"  [{DIM}]{'Prerelease:':<{w}}[/] {pre_display}")
         console.print()
 
     # -------------------------------------------------------------------------
@@ -465,18 +480,19 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
 
     if conda_info:
         console.print("[Conda]", style=f"bold {SLEAP_BLUE}")
+        w = _DOCTOR_WIDTHS["conda"] + 1  # +1 for colon
         if conda_info.active:
-            console.print(f"  [{DIM}]Status:[/] [{SLEAP_YELLOW}]ACTIVE[/]")
-            console.print(f"  [{DIM}]Environment:[/] {conda_info.environment}")
-            console.print(f"  [{DIM}]Prefix:[/] {conda_info.prefix}")
+            console.print(f"  [{DIM}]{'Status:':<{w}}[/] [{SLEAP_YELLOW}]ACTIVE[/]")
+            console.print(f"  [{DIM}]{'Environment:':<{w}}[/] {conda_info.environment}")
+            console.print(f"  [{DIM}]{'Prefix:':<{w}}[/] [{SLEAP_CYAN}]{conda_info.prefix}[/]")
         else:
-            console.print(f"  [{DIM}]Status:[/] installed but not activated")
+            console.print(f"  [{DIM}]{'Status:':<{w}}[/] installed but not activated")
         if conda_info.version:
-            console.print(f"  [{DIM}]Version:[/] {conda_info.version}")
+            console.print(f"  [{DIM}]{'Version:':<{w}}[/] {conda_info.version}")
         if conda_info.auto_activate_base is not None:
             status = "True" if conda_info.auto_activate_base else "False"
             color = SLEAP_RED if conda_info.auto_activate_base else SLEAP_GREEN
-            console.print(f"  [{DIM}]auto_activate_base:[/] [{color}]{status}[/]")
+            console.print(f"  [{DIM}]{'auto_activate_base:':<{w}}[/] [{color}]{status}[/]")
             if conda_info.auto_activate_base:
                 console.print(
                     f"  [{SLEAP_YELLOW}]WARNING: auto_activate_base=True "
@@ -489,7 +505,7 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
         if conda_info.sleap_packages:
             pkgs_str = ", ".join(conda_info.sleap_packages)
             console.print(
-                f"  [{DIM}]SLEAP packages in conda:[/] [{SLEAP_RED}]{pkgs_str}[/]"
+                f"  [{DIM}]{'SLEAP in conda:':<{w}}[/] [{SLEAP_RED}]{pkgs_str}[/]"
             )
             console.print(
                 f"  [{SLEAP_YELLOW}]WARNING: Conda SLEAP packages "
@@ -513,18 +529,19 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
     all_data["pytorch_cuda"] = pytorch_cuda
 
     console.print("[GPU / CUDA]", style=f"bold {SLEAP_BLUE}")
+    w = _DOCTOR_WIDTHS["gpu"] + 1  # +1 for colon
     if nvidia_driver:
         driver_str = nvidia_driver
         if system_cuda:
             driver_str += f" (CUDA {system_cuda})"
-        console.print(f"  [{DIM}]NVIDIA Driver:[/] [{SLEAP_GREEN}]{driver_str}[/]")
+        console.print(f"  [{DIM}]{'NVIDIA Driver:':<{w}}[/] [{SLEAP_GREEN}]{driver_str}[/]")
         for i, gpu in enumerate(gpus):
             console.print(
-                f"  [{DIM}]GPU {i}:[/] [{SLEAP_TEAL}]{gpu.name}[/] "
+                f"  [{DIM}]{f'GPU {i}:':<{w}}[/] [{SLEAP_TEAL}]{gpu.name}[/] "
                 f"([{SLEAP_GREEN}]{gpu.memory_free}[/] free / {gpu.memory_total})"
             )
     else:
-        console.print(f"  [{DIM}]NVIDIA Driver:[/] Not detected")
+        console.print(f"  [{DIM}]{'NVIDIA Driver:':<{w}}[/] Not detected")
     if pytorch_version:
         pt_str = f"v{pytorch_version}"
         if pytorch_accelerator == "cuda":
@@ -533,9 +550,9 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
             pt_str += f" ([{SLEAP_GREEN}]MPS[/])"
         else:
             pt_str += f" ([{SLEAP_YELLOW}]CPU[/])"
-        console.print(f"  [{DIM}]PyTorch:[/] [{SLEAP_TEAL}]{pt_str}[/]")
+        console.print(f"  [{DIM}]{'PyTorch:':<{w}}[/] [{SLEAP_TEAL}]{pt_str}[/]")
     else:
-        console.print(f"  [{DIM}]PyTorch:[/] Not installed")
+        console.print(f"  [{DIM}]{'PyTorch:':<{w}}[/] Not installed")
     console.print()
 
     # -------------------------------------------------------------------------
@@ -550,6 +567,7 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
     all_data["packages"] = packages
 
     console.print("[Packages]", style=f"bold {SLEAP_BLUE}")
+    w = max(len(pkg.name) for pkg in packages) + 1 if packages else 10  # +1 for colon
     for pkg in packages:
         source_color = (
             SLEAP_PURPLE
@@ -557,7 +575,7 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
             else SLEAP_ORANGE if pkg.source == "conda" else DIM
         )
         pkg_line = (
-            f"  [{SLEAP_TEAL}]{pkg.name}[/]: "
+            f"  [{SLEAP_TEAL}]{(pkg.name + ':'):<{w}}[/] "
             f"[{SLEAP_GREEN}]v{pkg.version}[/] ([{source_color}]{pkg.source}[/])"
         )
         if pkg.editable and pkg.git_commit:
@@ -567,7 +585,7 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
             pkg_line += f" [[{SLEAP_PURPLE}]{git_info}[/]]"
         console.print(pkg_line)
         if pkg.editable:
-            console.print(f"    Location: [{DIM}]{pkg.location}[/]")
+            console.print(f"  {'':<{w}} Location: [{SLEAP_CYAN}]{pkg.location}[/]")
     console.print()
 
     # -------------------------------------------------------------------------
@@ -586,6 +604,7 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
 
     if binaries:
         console.print("[CLI Binaries]", style=f"bold {SLEAP_BLUE}")
+        w = _DOCTOR_WIDTHS["binaries"] + 1  # +1 for colon
         for binary in binaries:
             source_color = (
                 SLEAP_TEAL
@@ -593,12 +612,12 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
                 else SLEAP_PURPLE if binary.source == "uv-tool" else SLEAP_ORANGE
             )
             console.print(f"  [{SLEAP_TEAL}]{binary.name}[/]:")
-            console.print(f"    [{DIM}]Path:[/] {binary.path}")
+            console.print(f"    [{DIM}]{'Path:':<{w}}[/] [{SLEAP_CYAN}]{binary.path}[/]")
             if binary.real_path != binary.path:
-                console.print(f"    [{DIM}]Real Path:[/] {binary.real_path}")
-            console.print(f"    [{DIM}]Source:[/] [{source_color}]{binary.source}[/]")
+                console.print(f"    [{DIM}]{'Real Path:':<{w}}[/] [{SLEAP_CYAN}]{binary.real_path}[/]")
+            console.print(f"    [{DIM}]{'Source:':<{w}}[/] [{source_color}]{binary.source}[/]")
             if binary.python_path:
-                console.print(f"    [{DIM}]Python:[/] {binary.python_path}")
+                console.print(f"    [{DIM}]{'Python:':<{w}}[/] [{SLEAP_CYAN}]{binary.python_path}[/]")
         console.print()
 
     # -------------------------------------------------------------------------
@@ -760,85 +779,90 @@ def _format_doctor_plain(data: dict) -> str:
 
     # Platform
     p = data.get("platform", {})
+    w = _DOCTOR_WIDTHS["platform"] + 1  # +1 for colon
     lines.append("[Platform]")
-    lines.append(f"  OS: {p.get('os_name', '')} {p.get('os_release', '')}")
-    lines.append(f"  Platform: {p.get('platform_full', '')}")
-    lines.append(f"  Machine: {p.get('machine', '')}")
+    lines.append(f"  {'OS:':<{w}} {p.get('os_name', '')} {p.get('os_release', '')}")
+    lines.append(f"  {'Platform:':<{w}} {p.get('platform_full', '')}")
+    lines.append(f"  {'Machine:':<{w}} {p.get('machine', '')}")
     if p.get("processor"):
-        lines.append(f"  Processor: {p['processor']}")
+        lines.append(f"  {'Processor:':<{w}} {p['processor']}")
     if p.get("ram_total"):
-        lines.append(f"  RAM: {p['ram_used']} / {p['ram_total']}")
+        lines.append(f"  {'RAM:':<{w}} {p['ram_used']} / {p['ram_total']}")
     if p.get("disk_total"):
-        lines.append(f"  Disk: {p['disk_used']} / {p['disk_total']}")
+        lines.append(f"  {'Disk:':<{w}} {p['disk_used']} / {p['disk_total']}")
     lines.append("")
 
     # Python
     py = data.get("python", {})
+    w = _DOCTOR_WIDTHS["python"] + 1  # +1 for colon
     lines.append("[Python]")
-    lines.append(f"  Version: {py.get('version', '')}")
-    lines.append(f"  Executable: {py.get('executable', '')}")
-    lines.append(f"  Prefix: {py.get('prefix', '')}")
+    lines.append(f"  {'Version:':<{w}} {py.get('version', '')}")
+    lines.append(f"  {'Executable:':<{w}} {py.get('executable', '')}")
+    lines.append(f"  {'Prefix:':<{w}} {py.get('prefix', '')}")
     if py.get("virtual_env"):
-        lines.append(f"  Virtual Env: {py['virtual_env']}")
+        lines.append(f"  {'Virtual Env:':<{w}} {py['virtual_env']}")
     lines.append("")
 
     # UV
     uv = data.get("uv")
     if uv:
+        w = _DOCTOR_WIDTHS["uv"] + 1  # +1 for colon
         lines.append("[UV]")
-        lines.append(f"  Version: {uv.version}")
-        lines.append(f"  Path: {uv.path}")
-        lines.append(f"  Cache Dir: {uv.cache_dir}")
-        lines.append(f"  Tool Dir: {uv.tool_dir}")
-        lines.append(f"  Tool Bin Dir: {uv.tool_bin_dir}")
-        lines.append(f"  Python Dir: {uv.python_dir}")
+        lines.append(f"  {'Version:':<{w}} {uv.version}")
+        lines.append(f"  {'Path:':<{w}} {uv.path}")
+        lines.append(f"  {'Cache Dir:':<{w}} {uv.cache_dir}")
+        lines.append(f"  {'Tool Dir:':<{w}} {uv.tool_dir}")
+        lines.append(f"  {'Tool Bin Dir:':<{w}} {uv.tool_bin_dir}")
+        lines.append(f"  {'Python Dir:':<{w}} {uv.python_dir}")
         if uv.installed_tools:
-            lines.append(f"  Installed Tools: {', '.join(uv.installed_tools)}")
+            lines.append(f"  {'Installed Tools:':<{w}} {', '.join(uv.installed_tools)}")
         lines.append("")
         # UV Config
+        w = _DOCTOR_WIDTHS["uv_config"] + 1  # +1 for colon
         lines.append("[UV Config]")
         if uv.default_python:
-            lines.append(f"  Default Python: {uv.default_python}")
+            lines.append(f"  {'Default Python:':<{w}} {uv.default_python}")
         else:
-            lines.append("  Default Python: (not configured)")
+            lines.append(f"  {'Default Python:':<{w}} (not configured)")
         if uv.resolved_python:
-            lines.append(f"  Resolved Python: {uv.resolved_python}")
+            lines.append(f"  {'Resolved Python:':<{w}} {uv.resolved_python}")
         pref = uv.python_preference or "managed"
         lines.append(
-            f"  Python Preference: {pref}"
+            f"  {'Python Preference:':<{w}} {pref}"
             f"{' (default)' if not uv.python_preference else ''}"
         )
         res = uv.resolution_strategy or "highest"
         lines.append(
-            f"  Resolution: {res}"
+            f"  {'Resolution:':<{w}} {res}"
             f"{' (default)' if not uv.resolution_strategy else ''}"
         )
         idx = uv.index_strategy or "first-index"
         lines.append(
-            f"  Index Strategy: {idx}"
+            f"  {'Index Strategy:':<{w}} {idx}"
             f"{' (default)' if not uv.index_strategy else ''}"
         )
         pre = uv.prerelease or "if-necessary"
         lines.append(
-            f"  Prerelease: {pre}{' (default)' if not uv.prerelease else ''}"
+            f"  {'Prerelease:':<{w}} {pre}{' (default)' if not uv.prerelease else ''}"
         )
         lines.append("")
 
     # Conda
     conda = data.get("conda")
     if conda:
+        w = _DOCTOR_WIDTHS["conda"] + 1  # +1 for colon
         lines.append("[Conda]")
         if conda.active:
-            lines.append("  Status: ACTIVE")
-            lines.append(f"  Environment: {conda.environment}")
-            lines.append(f"  Prefix: {conda.prefix}")
+            lines.append(f"  {'Status:':<{w}} ACTIVE")
+            lines.append(f"  {'Environment:':<{w}} {conda.environment}")
+            lines.append(f"  {'Prefix:':<{w}} {conda.prefix}")
         else:
-            lines.append("  Status: installed but not activated")
+            lines.append(f"  {'Status:':<{w}} installed but not activated")
         if conda.version:
-            lines.append(f"  Version: {conda.version}")
+            lines.append(f"  {'Version:':<{w}} {conda.version}")
         if conda.auto_activate_base is not None:
             status = "True" if conda.auto_activate_base else "False"
-            lines.append(f"  auto_activate_base: {status}")
+            lines.append(f"  {'auto_activate_base:':<{w}} {status}")
             if conda.auto_activate_base:
                 lines.append("  WARNING: auto_activate_base=True may interfere with uv")
                 lines.append(
@@ -846,12 +870,13 @@ def _format_doctor_plain(data: dict) -> str:
                 )
         if conda.sleap_packages:
             lines.append(
-                f"  SLEAP packages in conda: {', '.join(conda.sleap_packages)}"
+                f"  {'SLEAP in conda:':<{w}} {', '.join(conda.sleap_packages)}"
             )
             lines.append("  WARNING: Conda SLEAP packages may conflict with uv/pip")
         lines.append("")
 
     # GPU/CUDA
+    w = _DOCTOR_WIDTHS["gpu"] + 1  # +1 for colon
     lines.append("[GPU / CUDA]")
     nvidia_driver = data.get("nvidia_driver", "")
     system_cuda = data.get("system_cuda", "")
@@ -860,56 +885,58 @@ def _format_doctor_plain(data: dict) -> str:
         driver_str = nvidia_driver
         if system_cuda:
             driver_str += f" (CUDA {system_cuda})"
-        lines.append(f"  NVIDIA Driver: {driver_str}")
+        lines.append(f"  {'NVIDIA Driver:':<{w}} {driver_str}")
         for i, gpu in enumerate(gpus):
             lines.append(
-                f"  GPU {i}: {gpu.name} ({gpu.memory_free} free / {gpu.memory_total})"
+                f"  {f'GPU {i}:':<{w}} {gpu.name} ({gpu.memory_free} free / {gpu.memory_total})"
             )
     else:
-        lines.append("  NVIDIA Driver: Not detected")
+        lines.append(f"  {'NVIDIA Driver:':<{w}} Not detected")
     pytorch_version = data.get("pytorch_version", "")
     pytorch_accelerator = data.get("pytorch_accelerator", "")
     pytorch_cuda = data.get("pytorch_cuda", "")
     if pytorch_version:
-        pt_str = f"  PyTorch: v{pytorch_version}"
+        pt_str = f"v{pytorch_version}"
         if pytorch_accelerator == "cuda":
             pt_str += f" (CUDA {pytorch_cuda})"
         elif pytorch_accelerator == "mps":
             pt_str += " (MPS)"
         else:
             pt_str += " (CPU)"
-        lines.append(pt_str)
+        lines.append(f"  {'PyTorch:':<{w}} {pt_str}")
     else:
-        lines.append("  PyTorch: Not installed")
+        lines.append(f"  {'PyTorch:':<{w}} Not installed")
     lines.append("")
 
     # Packages
     packages = data.get("packages", [])
     lines.append("[Packages]")
+    w = max(len(pkg.name) for pkg in packages) + 1 if packages else 10  # +1 for colon
     for pkg in packages:
-        pkg_line = f"  {pkg.name}: v{pkg.version} ({pkg.source})"
+        pkg_line = f"  {(pkg.name + ':'):<{w}} v{pkg.version} ({pkg.source})"
         if pkg.editable:
             if pkg.git_commit:
                 git_info = f"git:{pkg.git_branch or 'HEAD'}@{pkg.git_commit}"
                 if pkg.git_dirty:
                     git_info += "*"
                 pkg_line += f" [{git_info}]"
-            pkg_line += f"\n    Location: {pkg.location}"
+            pkg_line += f"\n  {'':<{w}} Location: {pkg.location}"
         lines.append(pkg_line)
     lines.append("")
 
     # Binaries
     binaries = data.get("binaries", [])
     if binaries:
+        w = _DOCTOR_WIDTHS["binaries"] + 1  # +1 for colon
         lines.append("[CLI Binaries]")
         for binary in binaries:
             lines.append(f"  {binary.name}:")
-            lines.append(f"    Path: {binary.path}")
+            lines.append(f"    {'Path:':<{w}} {binary.path}")
             if binary.real_path != binary.path:
-                lines.append(f"    Real Path: {binary.real_path}")
-            lines.append(f"    Source: {binary.source}")
+                lines.append(f"    {'Real Path:':<{w}} {binary.real_path}")
+            lines.append(f"    {'Source:':<{w}} {binary.source}")
             if binary.python_path:
-                lines.append(f"    Python: {binary.python_path}")
+                lines.append(f"    {'Python:':<{w}} {binary.python_path}")
         lines.append("")
 
     # PATH
