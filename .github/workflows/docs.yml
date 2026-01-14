@@ -8,6 +8,10 @@ on:
     branches:
       - develop
 
+# Ensure only one docs deployment runs at a time to prevent gh-pages push conflicts
+concurrency:
+  group: docs-deployment
+  cancel-in-progress: false
 
 jobs:
   docs:
