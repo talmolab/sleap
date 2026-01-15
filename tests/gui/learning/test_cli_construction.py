@@ -17,7 +17,6 @@ from sleap.gui.learning.runners import (
     DatasetItemForInference,
     ItemsForInference,
     InferenceTask,
-    write_pipeline_files,
 )
 
 
@@ -763,9 +762,10 @@ class TestWritePipelineFiles:
         train_script_content = train_script_path.read_text()
 
         # CRITICAL ASSERTION: train script should NOT contain zmq
-        assert (
-            "zmq" not in train_script_content
-        ), f"Train script should not contain zmq overrides. Content:\n{train_script_content}"
+        assert "zmq" not in train_script_content, (
+            f"Train script should not contain zmq overrides. "
+            f"Content:\n{train_script_content}"
+        )
 
         # Verify the script has basic required content
         assert "sleap-nn-train" in train_script_content
