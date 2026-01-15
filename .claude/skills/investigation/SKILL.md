@@ -14,7 +14,10 @@ description: >
 
 ## Instructions
 
-1. Create a folder in `{REPO_ROOT}/scratch/` with the format `{YYYY-MM-DD}-{descriptive-name}`.
+1. Create a folder in `{REPO_ROOT}/scratch/` with the format `{YYYY-MM-DD}-{descriptive-name}`:
+   ```bash
+   mkdir scratch/$(uv run python -c "import datetime; print(datetime.date.today().isoformat())")-{descriptive-name}
+   ```
 2. Create a `README.md` in this folder with: task description, background context, task checklist. Update with findings as you progress.
 3. Create scripts and data files as needed for empirical work.
 4. For complex investigations, split into sub-documents as patterns emerge.
