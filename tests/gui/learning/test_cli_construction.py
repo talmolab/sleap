@@ -17,6 +17,7 @@ from sleap.gui.learning.runners import (
     DatasetItemForInference,
     ItemsForInference,
     InferenceTask,
+    write_pipeline_files,
 )
 
 
@@ -675,6 +676,101 @@ class TestModelPathHandling:
 # =============================================================================
 # Output Path Generation Tests
 # =============================================================================
+
+
+class TestWritePipelineFiles:
+    """Tests for write_pipeline_files function."""
+
+    def test_train_script_does_not_contain_zmq(self, tmp_path, mock_labels):
+        """Train script should not contain zmq overrides.
+
+        Regression test for issue #2562: The export training package feature
+        crashed because the code tried to access zmq config fields that don't
+        exist in the GUI-generated config. The fix removes zmq overrides entirely
+        since they're unnecessary for Colab training.
+        """
+        from sleap.gui.learning.runners import write_pipeline_files
+        from sleap.gui.learning.configs import ConfigFileInfo
+        from omegaconf import OmegaConf
+
+        # Create a minimal config WITHOUT zmq fields (simulating GUI form data)
+        # This is exactly the scenario that caused the bug
+        config_dict = {
+            "trainer_config": {
+                "ckpt_dir": str(tmp_path / "models"),
+                "run_name": "test_run",
+                "save_ckpt": True,
+            },
+            "data_config": {
+                "train_labels_path": ["labels.slp"],
+            },
+            "model_config": {
+                "head_configs": {},
+            },
+        }
+        config = OmegaConf.create(config_dict)
+
+        # Create ConfigFileInfo with the minimal config
+        cfg_info = ConfigFileInfo(
+            config=config,
+            path="test_config.yaml",
+            filename="test_config.yaml",
+            head_name="centroid",
+            dont_retrain=False,
+        )
+
+        # Create output directory
+        output_dir = tmp_path / "export"
+        output_dir.mkdir()
+        labels_path = tmp_path / "labels.slp"
+        labels_path.touch()
+
+        # Create video item for inference
+        video_item = VideoItemForInference(
+            video=mock_labels.videos[0],
+            frames=[0, 1, 2],
+            labels_path=str(labels_path),
+            video_idx=0,
+        )
+
+        items_for_inference = ItemsForInference(
+            items=[video_item],
+            total_frame_count=3,
+        )
+
+        # Mock the sleap_nn functions to avoid requiring the full sleap-nn install
+        # verify_training_cfg is imported inside the function from sleap_nn
+        # filter_cfg is imported at module level from sleap.gui.config_utils
+        with patch(
+            "sleap_nn.config.training_job_config.verify_training_cfg",
+            side_effect=lambda cfg: cfg,
+        ), patch(
+            "sleap.gui.config_utils.filter_cfg",
+            side_effect=lambda cfg: cfg,
+        ):
+            # Call write_pipeline_files
+            write_pipeline_files(
+                output_dir=str(output_dir),
+                labels_filename=str(labels_path),
+                config_info_list=[cfg_info],
+                inference_params={},
+                items_for_inference=items_for_inference,
+            )
+
+        # Read the generated train script
+        train_script_path = output_dir / "train-script.sh"
+        assert train_script_path.exists(), "train-script.sh should be created"
+        train_script_content = train_script_path.read_text()
+
+        # CRITICAL ASSERTION: train script should NOT contain zmq
+        assert (
+            "zmq" not in train_script_content
+        ), f"Train script should not contain zmq overrides. Content:\n{train_script_content}"
+
+        # Verify the script has basic required content
+        assert "sleap-nn-train" in train_script_content
+        assert "--config-name" in train_script_content
+        assert "--config-dir" in train_script_content
 
 
 class TestOutputPathGeneration:
