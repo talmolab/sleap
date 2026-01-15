@@ -87,20 +87,20 @@ Choose your platform (Windows and Linux commands are the same):
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --python 3.12 "sleap[nn]"
+    uv tool install --python 3.13 "sleap[nn]"
     ```
 
-**What does `[nn]` mean?** The `[nn]` installs neural network dependencies (PyTorch) for training models. If you only need to view and annotate data (no training), you can omit it: `uv tool install --python 3.12 sleap`
+**What does `[nn]` mean?** The `[nn]` installs neural network dependencies (PyTorch) for training models. If you only need to view and annotate data (no training), you can omit it: `uv tool install --python 3.13 sleap`
 
 **Expected output:**
 ```
@@ -144,17 +144,17 @@ To test new features before official release, you can install pre-release versio
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]" --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --force --python 3.13 "sleap[nn]" --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]" --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --force --python 3.13 "sleap[nn]" --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]" --prerelease allow
+    uv tool install --force --python 3.13 "sleap[nn]" --prerelease allow
     ```
 
 ### Install a Specific Version
@@ -163,17 +163,17 @@ Pin to an exact version for reproducibility or to test a specific release:
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --force --python 3.13 "sleap[nn]==1.6.0a0" --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --force --python 3.13 "sleap[nn]==1.6.0a0" --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --prerelease allow
+    uv tool install --force --python 3.13 "sleap[nn]==1.6.0a0" --prerelease allow
     ```
 
 ### Pin Dependency Versions
@@ -182,17 +182,17 @@ For full reproducibility, you can explicitly pin the versions of `sleap-io` and 
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --with "sleap-io==0.6.0" --with "sleap-nn==0.1.0a0" --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --force --python 3.13 "sleap[nn]==1.6.0a0" --with "sleap-io==0.6.0" --with "sleap-nn==0.1.0a0" --prerelease allow --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --with "sleap-io==0.6.0" --with "sleap-nn==0.1.0a0" --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --force --python 3.13 "sleap[nn]==1.6.0a0" --with "sleap-io==0.6.0" --with "sleap-nn==0.1.0a0" --prerelease allow --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]==1.6.0a0" --with "sleap-io==0.6.0" --with "sleap-nn==0.1.0a0" --prerelease allow
+    uv tool install --force --python 3.13 "sleap[nn]==1.6.0a0" --with "sleap-io==0.6.0" --with "sleap-nn==0.1.0a0" --prerelease allow
     ```
 
 !!! info "Version compatibility"
@@ -212,17 +212,17 @@ If you encounter issues with a pre-release, rollback to the latest stable versio
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]==1.5.2" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --force --python 3.13 "sleap[nn]==1.5.2" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]==1.5.2" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --force --python 3.13 "sleap[nn]==1.5.2" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --force --python 3.12 "sleap[nn]==1.5.2"
+    uv tool install --force --python 3.13 "sleap[nn]==1.5.2"
     ```
 
 ### CUDA 13.0 Support
@@ -230,7 +230,7 @@ If you encounter issues with a pre-release, rollback to the latest stable versio
 Starting with v1.6.0, SLEAP supports CUDA 13.0 for the latest NVIDIA GPUs:
 
 ```
-uv tool install --force --python 3.12 "sleap[nn]" --prerelease allow --index https://download.pytorch.org/whl/cu130 --index https://pypi.org/simple
+uv tool install --force --python 3.13 "sleap[nn]" --prerelease allow --index https://download.pytorch.org/whl/cu130 --index https://pypi.org/simple
 ```
 
 ---
@@ -257,17 +257,17 @@ If you need to train models, include the `[nn]` extra:
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uvx --python 3.12 --from "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap
+    uvx --python 3.13 --from "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple sleap
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uvx --python 3.12 --from "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple sleap
+    uvx --python 3.13 --from "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple sleap
     ```
 
 === "macOS"
     ```
-    uvx --python 3.12 --from "sleap[nn]" sleap
+    uvx --python 3.13 --from "sleap[nn]" sleap
     ```
 
 ---
@@ -291,17 +291,17 @@ Replace `BRANCH` with the branch name (e.g., `fix/video-loading`) or `develop` f
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH"
+    uv tool install --python 3.13 "sleap[nn] @ git+https://github.com/talmolab/sleap@BRANCH"
     ```
 
 ### Testing a branch in `sleap-io`
@@ -310,17 +310,17 @@ Install SLEAP from PyPI but override `sleap-io` with a git version:
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --python 3.12 "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH"
+    uv tool install --python 3.13 "sleap[nn]" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@BRANCH"
     ```
 
 ### Testing a branch in `sleap-nn`
@@ -329,17 +329,17 @@ Install SLEAP from PyPI but override `sleap-nn` with a git version:
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --python 3.12 "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH"
+    uv tool install --python 3.13 "sleap[nn]" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@BRANCH"
     ```
 
 ### Testing everything from develop
@@ -348,17 +348,17 @@ Install the latest development version of all three packages:
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@develop" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@develop" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@develop" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv tool install --python 3.13 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@develop" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@develop" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop"
+    uv tool install --python 3.13 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --with "sleap-io @ git+https://github.com/talmolab/sleap-io@develop" --with "sleap-nn @ git+https://github.com/talmolab/sleap-nn@develop"
     ```
 
 ### Pinning to a specific commit
@@ -366,7 +366,7 @@ Install the latest development version of all three packages:
 For reproducibility, you can install from a specific commit hash instead of a branch:
 
 ```
-uv tool install --python 3.12 "sleap[nn] @ git+https://github.com/talmolab/sleap@abc123def"
+uv tool install --python 3.13 "sleap[nn] @ git+https://github.com/talmolab/sleap@abc123def"
 ```
 
 ---
@@ -396,17 +396,17 @@ Then install dependencies:
 
 === "Windows/Linux with NVIDIA GPU"
     ```
-    uv sync --python 3.12 --extra dev --extra nn-cuda128 --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
+    uv sync --python 3.13 --extra dev --extra nn-cuda128 --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
 
 === "Windows/Linux without GPU"
     ```
-    uv sync --python 3.12 --extra dev --extra nn-cpu --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    uv sync --python 3.13 --extra dev --extra nn-cpu --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
     ```
 
 === "macOS"
     ```
-    uv sync --python 3.12 --extra dev --extra nn-cpu
+    uv sync --python 3.13 --extra dev --extra nn-cpu
     ```
 
 ### Running Commands
@@ -487,7 +487,7 @@ The [Install SLEAP](#install-sleap) and [Development Setup](#development-setup) 
 
 ```bash
 # Create and activate a conda environment
-conda create -n sleap python=3.12
+conda create -n sleap python=3.13
 conda activate sleap
 
 # Install uv inside the conda environment
@@ -509,8 +509,8 @@ conda deactivate
 Then install Python via uv:
 
 ```bash
-uv python install 3.12
-uv python pin 3.12
+uv python install 3.13
+uv python pin 3.13
 ```
 
 Now you can use any of the installation methods above without conda interference.
@@ -534,7 +534,7 @@ Set-ExecutionPolicy RemoteSigned
 
 ### Python version errors
 
-Always include `--python 3.12` in your commands. Python 3.14 is not yet supported.
+Always include `--python 3.13` in your commands. Python 3.14 is not yet supported.
 
 ### Installation seems stuck
 
