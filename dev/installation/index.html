@@ -2786,7 +2786,7 @@
 <hr />
 <h2 id="install-sleap">Install SLEAP<a class="headerlink" href="#install-sleap" title="Permanent link">&para;</a></h2>
 <p>One command works on all platforms. It automatically detects your GPU and installs the right version of PyTorch.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a1&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 <p>That's it! SLEAP is now available system-wide. Run it from any terminal:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap
@@ -2836,7 +2836,7 @@
 </span></code></pre></div>
 <h3 id="upgrade-to-a-specific-version">Upgrade to a specific version<a class="headerlink" href="#upgrade-to-a-specific-version" title="Permanent link">&para;</a></h3>
 <p>If you need specific versions (for reproducibility or to match a collaborator), reinstall:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a1&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 <p>This replaces the existing installation with the exact versions specified.</p>
 <h3 id="downgrade">Downgrade<a class="headerlink" href="#downgrade" title="Permanent link">&para;</a></h3>
@@ -2853,7 +2853,7 @@
 <li>Something is broken and you want a completely fresh environment</li>
 <li>Installing from local source code (to pick up changes)</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a1&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 </details>
 <hr />
@@ -2873,6 +2873,11 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>1.6.0a2</td>
+<td>0.6.2</td>
+<td>0.1.0a2</td>
+</tr>
 <tr>
 <td>1.6.0a1</td>
 <td>0.6.1</td>
@@ -2924,7 +2929,7 @@
 </tr>
 </tbody>
 </table>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a1&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>cu128
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>cu128
 </span></code></pre></div>
 </details>
 <hr />
@@ -3004,7 +3009,7 @@
 </span></code></pre></div>
 <h3 id="force-a-clean-reinstall">Force a clean reinstall<a class="headerlink" href="#force-a-clean-reinstall" title="Permanent link">&para;</a></h3>
 <p>If something is broken:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a1&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 <h3 id="installation-seems-stuck">Installation seems stuck<a class="headerlink" href="#installation-seems-stuck" title="Permanent link">&para;</a></h3>
 <p>Large packages like PyTorch take time. Installation can take 5-15 minutes on slower connections. Wait up to 30 minutes before cancelling.</p>
