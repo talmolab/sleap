@@ -75,7 +75,7 @@ SLEAP uses `uv` to manage installation. It's a fast, modern package manager that
 One command works on all platforms. It automatically detects your GPU and installs the right version of PyTorch.
 
 ```bash
-uv tool install --python 3.13 "sleap[nn]==1.6.0a1" --with "sleap-io==0.6.1" --with "sleap-nn==0.1.0a1" --prerelease allow --torch-backend auto
+uv tool install --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend auto
 ```
 
 That's it! SLEAP is now available system-wide. Run it from any terminal:
@@ -156,7 +156,7 @@ uv tool upgrade sleap --upgrade-package sleap-io --upgrade-package sleap-nn
 If you need specific versions (for reproducibility or to match a collaborator), reinstall:
 
 ```bash
-uv tool install --python 3.13 "sleap[nn]==1.6.0a1" --with "sleap-io==0.6.1" --with "sleap-nn==0.1.0a1" --prerelease allow --torch-backend auto
+uv tool install --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend auto
 ```
 
 This replaces the existing installation with the exact versions specified.
@@ -182,7 +182,7 @@ uv tool uninstall sleap
     - Installing from local source code (to pick up changes)
 
     ```bash
-    uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a1" --with "sleap-io==0.6.1" --with "sleap-nn==0.1.0a1" --prerelease allow --torch-backend auto
+    uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend auto
     ```
 
 ---
@@ -203,6 +203,7 @@ The SLEAP ecosystem has three packages that work together:
 
 | SLEAP | sleap-io | sleap-nn |
 |-------|----------|----------|
+| 1.6.0a2 | 0.6.2 | 0.1.0a2 |
 | 1.6.0a1 | 0.6.1 | 0.1.0a1 |
 | 1.6.0a0 | 0.6.0 | 0.1.0a0 |
 | 1.5.x | <0.6.0 | <0.1.0 |
@@ -221,7 +222,7 @@ Always use compatible versions when pinning.
     | `xpu` | Intel GPUs |
 
     ```bash
-    uv tool install --python 3.13 "sleap[nn]==1.6.0a1" --with "sleap-io==0.6.1" --with "sleap-nn==0.1.0a1" --prerelease allow --torch-backend cu128
+    uv tool install --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend cu128
     ```
 
 ---
@@ -343,7 +344,7 @@ uv self update
 If something is broken:
 
 ```bash
-uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a1" --with "sleap-io==0.6.1" --with "sleap-nn==0.1.0a1" --prerelease allow --torch-backend auto
+uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend auto
 ```
 
 ### Installation seems stuck
