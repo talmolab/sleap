@@ -32,7 +32,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --extra nn-cpu --extra docs
+          uv sync --extra nn-cpu
 
       - name: Print environment info
         run: |

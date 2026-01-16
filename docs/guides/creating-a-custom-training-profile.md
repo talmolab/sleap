@@ -54,4 +54,4 @@ SLEAP supports training on:
 - AMD GPUs and older Macs (pre-M1) may fail during training.
 - Other GPU architectures or unsupported hardware configurations may lead to memory or allocation errors.
 
-For detailed GPU setup instructions, see [Do You Have an NVIDIA GPU?](../installation.md#do-you-have-an-nvidia-gpu).
+GPU detection is automatic when you install SLEAP. Run `sleap doctor` to verify your GPU is detected. If you need to manually specify a backend, see the [Pre-release Versions](../installation.md#pre-release-versions) section.
