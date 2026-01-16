@@ -52,7 +52,7 @@ dependencies = [
     "seaborn",
     "requests",
     "matplotlib",
-    "sleap-io[all]>=0.6.1,<0.7.0",
+    "sleap-io[all]>=0.6.2,<0.7.0",
 ]
 
 [tool.setuptools.dynamic]
@@ -66,23 +66,23 @@ jupyter = [
 ]
 
 nn = [
-    "sleap-nn[torch]>=0.1.0a1"
+    "sleap-nn[torch]>=0.1.0a2"
 ]
 
 nn-cpu = [
-    "sleap-nn[torch]>=0.1.0a1"
+    "sleap-nn[torch]>=0.1.0a2"
 ]
 
 nn-cuda128 = [
-    "sleap-nn[torch]>=0.1.0a1"
+    "sleap-nn[torch]>=0.1.0a2"
 ]
 
 nn-cuda118 = [
-    "sleap-nn[torch]>=0.1.0a1"
+    "sleap-nn[torch]>=0.1.0a2"
 ]
 
 nn-cuda130 = [
-    "sleap-nn[torch]>=0.1.0a1"
+    "sleap-nn[torch]>=0.1.0a2"
 ]
 
 [dependency-groups]
