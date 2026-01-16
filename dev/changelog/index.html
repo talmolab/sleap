@@ -2704,15 +2704,33 @@
 <div class="md-source-file"><a href="../changelog.md" title="View markdown source" class="md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6m4 18H6V4h7v5h5v11M13 9V3.5L18.5 9H13Z"/></svg></a></div>
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <h2 id="v160a1"><a href="https://github.com/talmolab/sleap/releases/tag/v1.6.0a1">v1.6.0a1</a><a class="headerlink" href="#v160a1" title="Permanent link">&para;</a></h2>
-<h1>SLEAP v1.6.0a1 - Draft Release Notes</h1>
-<h2>What's Changed</h2>
-<h3>SLEAP v1.6.0a1 - Label QC, Enhanced CLI, and Video Rendering Overhaul</h3>
-<p>This is a pre-release for testing. See <a href="https://github.com/talmolab/sleap/releases/tag/v1.5.2">v1.5.2</a> for the latest stable release.</p>
+<h1>SLEAP v1.6.0a1</h1>
+<h2>About the v1.6 Pre-release Series</h2>
+<p>This is a <strong>pre-release</strong> for SLEAP v1.6.0. It contains many new features and improvements, but is not yet considered stable. For production use, see <a href="https://github.com/talmolab/sleap/releases/tag/v1.5.2">v1.5.2</a>.</p>
+<p>We are releasing a series of pre-releases that incrementally build towards the stable v1.6.0 release. Each pre-release adds new features and bug fixes:</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/talmolab/sleap/releases/tag/v1.6.0a0"><strong>v1.6.0a0</strong></a></td>
+<td>Unified <code>sleap</code> CLI, redesigned training dialog (55x faster loading), bug fixes for adding instances from predictions</td>
+</tr>
+<tr>
+<td><strong>v1.6.0a1</strong> <em>(current)</em></td>
+<td>Label QC for automated error detection, 8 new CLI commands from sleap-io, video rendering with live preview</td>
+</tr>
+</tbody>
+</table>
 <blockquote>
 <p><strong>Note</strong>: Starting with SLEAP v1.5+, all deep learning functionality is powered by the PyTorch-based <code>sleap-nn</code> backend. TensorFlow models (with <code>UNet</code> backbones) from earlier versions are still supported for inference. Refer to the <a href="https://docs.sleap.ai/v1.6.0a1/guides/migrating-to-sleap-1-5/" rel="nofollow">Migrating to 1.5+</a> docs for more details!</p>
 </blockquote>
 <hr>
-<h3>How to install?</h3>
+<h2>How to Install</h2>
 <p><strong>Step 1</strong>: Install <a href="https://github.com/astral-sh/uv"><code>uv</code></a> (skip if already installed)</p>
 <div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="# Windows
 powershell -c &quot;irm https://astral.sh/uv/install.ps1 | iex&quot;
@@ -2786,7 +2804,7 @@ uv tool install --reinstall --python 3.12 <span class="pl-s"><span class="pl-pds
 </tbody>
 </table>
 <hr>
-<h3>Highlights</h3>
+<h2>What's New in v1.6.0a1</h2>
 <ul>
 <li>
 <p><strong>Label Quality Control (QC):</strong></p>
@@ -2897,14 +2915,33 @@ uv tool install --reinstall --python 3.12 <span class="pl-s"><span class="pl-pds
 </ul>
 <p><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/talmolab/sleap/compare/v1.6.0a0...v1.6.0a1"><tt>v1.6.0a0...v1.6.0a1</tt></a></p>
 <h2 id="v160a0"><a href="https://github.com/talmolab/sleap/releases/tag/v1.6.0a0">v1.6.0a0</a><a class="headerlink" href="#v160a0" title="Permanent link">&para;</a></h2>
-<h2>What's Changed</h2>
-<h3>SLEAP v1.6.0a0 - Unified CLI, Training GUI Overhaul, and sleap-nn Integration</h3>
-<p>This is a pre-release for testing. See <a href="https://github.com/talmolab/sleap/releases/tag/v1.5.2">v1.5.2</a> for the latest stable release.</p>
+<h1>SLEAP v1.6.0a0</h1>
+<h2>About the v1.6 Pre-release Series</h2>
+<p>This is a <strong>pre-release</strong> for SLEAP v1.6.0. It contains many new features and improvements, but is not yet considered stable. For production use, see <a href="https://github.com/talmolab/sleap/releases/tag/v1.5.2">v1.5.2</a>.</p>
+<p>We are releasing a series of pre-releases that incrementally build towards the stable v1.6.0 release. Each pre-release adds new features and bug fixes:</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>v1.6.0a0</strong> <em>(current)</em></td>
+<td>Unified <code>sleap</code> CLI, redesigned training dialog (55x faster loading), bug fixes for adding instances from predictions</td>
+</tr>
+<tr>
+<td><a href="https://github.com/talmolab/sleap/releases/tag/v1.6.0a1"><strong>v1.6.0a1</strong></a></td>
+<td>Label QC for automated error detection, 8 new CLI commands from sleap-io, video rendering with live preview</td>
+</tr>
+</tbody>
+</table>
 <blockquote>
 <p><strong>Note</strong>: Starting with SLEAP v1.5+, all deep learning functionality is powered by the PyTorch-based <code>sleap-nn</code> backend. TensorFlow models (with <code>UNet</code> backbones) from earlier versions are still supported for inference. Refer to the <a href="https://docs.sleap.ai/v1.6.0a0/guides/migrating-to-sleap-1-5/" rel="nofollow">Migrating to 1.5+</a> docs for more details!</p>
 </blockquote>
 <hr>
-<h3>How to install?</h3>
+<h2>How to Install</h2>
 <p><strong>Step 1</strong>: Install <a href="https://github.com/astral-sh/uv"><code>uv</code></a> (skip if already installed)</p>
 <div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="# Windows
 powershell -c &quot;irm https://astral.sh/uv/install.ps1 | iex&quot;
@@ -2973,7 +3010,7 @@ uv tool install --force --python 3.12 <span class="pl-s"><span class="pl-pds">"<
 </tbody>
 </table>
 <hr>
-<h3>Highlights</h3>
+<h2>What's New in v1.6.0a0</h2>
 <ul>
 <li>
 <p><strong>Unified CLI:</strong></p>
