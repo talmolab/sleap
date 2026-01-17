@@ -45,11 +45,26 @@ frame and instances listed in data view table.
 """
 
 import os
+import sys
+
+# Fix macOS Homebrew libpng conflict with ImageIO.
+# Homebrew's libpng can cause bus errors when Qt renders text via CoreText/ImageIO.
+# DYLD_* vars are read at process startup, so we must re-exec with a clean environment.
+# See: https://github.com/talmolab/sleap/issues/TBD
+if (
+    sys.platform == "darwin"
+    and os.environ.get("DYLD_LIBRARY_PATH")
+    and not os.environ.get("_SLEAP_DYLD_FIXED")
+):
+    env = os.environ.copy()
+    del env["DYLD_LIBRARY_PATH"]  # Must delete, not set to ""
+    env["_SLEAP_DYLD_FIXED"] = "1"
+    os.execve(sys.executable, [sys.executable] + sys.argv, env)
+
 import re
 from logging import getLogger
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
-import sys
 import subprocess
 
 from qtpy import QtCore, QtGui
