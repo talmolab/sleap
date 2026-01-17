@@ -279,10 +279,7 @@ class MainTabWidget(QWidget):
         scroll_area.setFrameShape(QScrollArea.NoFrame)
 
         scroll_content = QWidget()
-        scroll_content.setObjectName("mainTabScrollContent")
-        scroll_content.setStyleSheet(
-            "#mainTabScrollContent { background-color: white; }"
-        )
+        # No explicit background - use default Qt palette like the config tabs
         main_layout = QVBoxLayout(scroll_content)
         main_layout.setSpacing(12)
         main_layout.setContentsMargins(12, 12, 12, 12)
