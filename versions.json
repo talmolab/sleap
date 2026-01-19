@@ -7,7 +7,9 @@
   {
     "version": "v1.6.0a2",
     "title": "v1.6.0a2",
-    "aliases": []
+    "aliases": [
+      "prerelease"
+    ]
   },
   {
     "version": "v1.6.0a1",
