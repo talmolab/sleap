@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtGui import QGuiApplication
+from qtpy.QtGui import QGuiApplication, QPalette
 from qtpy.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -279,7 +279,10 @@ class MainTabWidget(QWidget):
         scroll_area.setFrameShape(QScrollArea.NoFrame)
 
         scroll_content = QWidget()
-        # No explicit background - use default Qt palette like the config tabs
+        # Use QPalette.Base for system-aware background:
+        # white in light mode, dark in dark mode
+        scroll_content.setAutoFillBackground(True)
+        scroll_content.setBackgroundRole(QPalette.Base)
         main_layout = QVBoxLayout(scroll_content)
         main_layout.setSpacing(12)
         main_layout.setContentsMargins(12, 12, 12, 12)
