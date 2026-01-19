@@ -127,15 +127,34 @@ class InferenceProgressDialog(QtWidgets.QDialog):
         scrollbar = self._log_area.verticalScrollBar()
         scrollbar.setValue(scrollbar.maximum())
 
-    def setFinished(self, success: bool = True):
-        """Mark inference as finished and update button states."""
+    def setFinished(
+        self,
+        success: bool = True,
+        new_frame_count: int = 0,
+        total_frame_count: int = 0,
+    ):
+        """Mark inference as finished and update button states.
+
+        Args:
+            success: Whether inference completed successfully.
+            new_frame_count: Number of frames with predicted instances.
+            total_frame_count: Total number of frames processed.
+        """
         self._finished = True
         self._ok_button.setEnabled(True)
         self._cancel_button.setEnabled(False)
         if success:
-            self._label.setText("<b>Inference complete!</b>")
+            no_result_count = max(0, total_frame_count - new_frame_count)
+            msg = (
+                f"<b>Inference complete!</b><br><br>"
+                f"Inference ran on {total_frame_count:,} frames.<br>"
+                f"Instances were predicted on {new_frame_count:,} frames "
+                f"({no_result_count:,} frame{'s' if no_result_count != 1 else ''} "
+                f"with no instances found)."
+            )
+            self._label.setText(msg)
         else:
-            self._label.setText("<b>Inference failed.</b>")
+            self._label.setText("<b>Inference failed or was canceled.</b>")
 
 
 class InferenceWorker(QtCore.QThread):
@@ -145,7 +164,7 @@ class InferenceWorker(QtCore.QThread):
     progressUpdate = QtCore.Signal(int, int)  # (current, total)
     statusUpdate = QtCore.Signal(str)  # status message (HTML)
     logOutput = QtCore.Signal(str)  # log line
-    finished = QtCore.Signal(bool, int)  # (success, new_frame_count)
+    finished = QtCore.Signal(bool, int, int)  # (success, new_frame_count, total_frame_count)
 
     def __init__(
         self,
@@ -158,6 +177,7 @@ class InferenceWorker(QtCore.QThread):
         self._items_for_inference = items_for_inference
         self._canceled = False
         self._new_frame_count = 0
+        self._total_frame_count = items_for_inference.total_frame_count
 
     def cancel(self):
         """Request cancellation of inference."""
@@ -168,7 +188,7 @@ class InferenceWorker(QtCore.QThread):
         try:
             for i, item_for_inference in enumerate(self._items_for_inference.items):
                 if self._canceled:
-                    self.finished.emit(False, -1)
+                    self.finished.emit(False, -1, self._total_frame_count)
                     return
 
                 # Run inference for this item
@@ -177,20 +197,20 @@ class InferenceWorker(QtCore.QThread):
                 )
 
                 if ret == "canceled":
-                    self.finished.emit(False, -1)
+                    self.finished.emit(False, -1, self._total_frame_count)
                     return
                 elif ret != "success":
                     self.logOutput.emit(f"Error: Inference failed with code {ret}")
-                    self.finished.emit(False, 0)
+                    self.finished.emit(False, 0, self._total_frame_count)
                     return
 
             # Merge results
             self._new_frame_count = self._inference_task.merge_results()
-            self.finished.emit(True, self._new_frame_count)
+            self.finished.emit(True, self._new_frame_count, self._total_frame_count)
 
         except Exception as e:
             self.logOutput.emit(f"Error: {e}")
-            self.finished.emit(False, 0)
+            self.finished.emit(False, 0, self._total_frame_count)
 
     def _run_inference_item(
         self, item_for_inference: "ItemForInference", item_idx: int, total_items: int
@@ -203,7 +223,16 @@ class InferenceWorker(QtCore.QThread):
         self.logOutput.emit(f"Running: {' '.join(cli_args[:3])}...")
 
         # Run inference CLI capturing output
-        with subprocess.Popen(cli_args, stdout=subprocess.PIPE) as proc:
+        # Use unbuffered mode for real-time log streaming
+        env = os.environ.copy()
+        env["PYTHONUNBUFFERED"] = "1"
+        with subprocess.Popen(
+            cli_args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,  # Merge stderr into stdout
+            bufsize=1,  # Line buffered
+            env=env,
+        ) as proc:
             while proc.poll() is None:
                 if self._canceled:
                     kill_process(proc.pid)
@@ -1128,15 +1157,17 @@ def run_gui_inference(
         dialog.setMaximum(total)
 
     def on_status(msg):
-        dialog.setLabelText(msg)
+        if msg:  # Guard against None
+            dialog.setLabelText(msg)
 
     def on_log(line):
-        dialog.appendLog(line)
+        if line:  # Guard against None
+            dialog.appendLog(line)
 
-    def on_finished(success, frame_count):
+    def on_finished(success, frame_count, total_frame_count):
         result["success"] = success
         result["frame_count"] = frame_count
-        dialog.setFinished(success)
+        dialog.setFinished(success, frame_count, total_frame_count)
 
     worker.progressUpdate.connect(on_progress)
     worker.statusUpdate.connect(on_status)
