@@ -178,10 +178,15 @@ class InferenceWorker(QtCore.QThread):
         self._canceled = False
         self._new_frame_count = 0
         self._total_frame_count = items_for_inference.total_frame_count
+        self._current_process = None  # Track current subprocess for cancellation
 
     def cancel(self):
         """Request cancellation of inference."""
         self._canceled = True
+        # Kill the subprocess immediately if running
+        # This is needed because readline() blocks and won't check _canceled
+        if self._current_process is not None:
+            kill_process(self._current_process.pid)
 
     def run(self):
         """Run inference in background thread."""
@@ -230,17 +235,21 @@ class InferenceWorker(QtCore.QThread):
             cli_args,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,  # Merge stderr into stdout
+            text=True,  # Text mode (required for line buffering)
             bufsize=1,  # Line buffered
             env=env,
         ) as proc:
+            # Track process for cancellation from main thread
+            self._current_process = proc
+
             while proc.poll() is None:
                 if self._canceled:
                     kill_process(proc.pid)
+                    self._current_process = None
                     return "", "canceled"
 
-                # Read line
-                line = proc.stdout.readline()
-                line = line.decode().rstrip()
+                # Read line (already decoded in text mode)
+                line = proc.stdout.readline().rstrip()
 
                 is_json = False
                 if line.startswith("{"):
@@ -284,6 +293,8 @@ class InferenceWorker(QtCore.QThread):
 
                 time.sleep(0.02)
 
+            # Clear process reference now that it's finished
+            self._current_process = None
             success = proc.returncode == 0
 
         if success:
@@ -709,8 +720,12 @@ class InferenceTask:
         ret = "success" if success else proc.returncode
         return output_path, ret
 
-    def merge_results(self):
-        """Merges result frames into labels dataset."""
+    def merge_results(self) -> int:
+        """Merges result frames into labels dataset.
+
+        Returns:
+            Number of frames with predicted instances.
+        """
 
         def remove_empty_instances_and_frames(lf: LabeledFrame):
             """Removes instances without visible points and empty frames."""
@@ -738,6 +753,8 @@ class InferenceTask:
             self.labels.merge(new_labels, frame="replace_predictions")
         else:
             self.labels.merge(new_labels, frame="keep_both")
+
+        return len(self.results)
 
 
 def write_pipeline_files(
