@@ -374,6 +374,14 @@ class InferenceTask:
                 cli_args.extend(["--features", "bboxes"])
                 cli_args.extend(["--scoring_method", "iou"])
 
+        # Add filter_overlapping args (independent of tracking)
+        if self.inference_params.get("filter_overlapping", False):
+            cli_args.append("--filter_overlapping")
+            method = self.inference_params.get("filter_overlapping_method", "iou")
+            cli_args.extend(["--filter_overlapping_method", method])
+            threshold = self.inference_params.get("filter_overlapping_threshold", 0.8)
+            cli_args.extend(["--filter_overlapping_threshold", str(threshold)])
+
         return cli_args, output_path
 
     def predict_subprocess(
