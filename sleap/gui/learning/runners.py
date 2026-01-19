@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, Text, Tuple
 import logging
 from sleap.util import show_sleap_nn_installation_message
 
-from qtpy import QtWidgets
+from qtpy import QtCore, QtWidgets
 
 from sleap_io import Labels, Video, LabeledFrame
 import sleap_io as sio
@@ -27,6 +27,243 @@ from sleap.gui.learning.configs import ConfigFileInfo
 from sleap.gui.config_utils import filter_cfg
 
 logger = logging.getLogger(__name__)
+
+
+class InferenceProgressDialog(QtWidgets.QDialog):
+    """Custom progress dialog for inference with log display.
+
+    Features:
+    - Taller progress bar for better visibility
+    - Scrollable log area showing subprocess output (dark theme)
+    - OK button (enabled when done) and Cancel button (disabled when done)
+    """
+
+    # Signal emitted when cancel is requested
+    cancelRequested = QtWidgets.QDialog.rejected  # Reuse rejected signal
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Running Inference")
+        self.setMinimumWidth(600)
+        self.setMinimumHeight(500)
+
+        self._canceled = False
+        self._finished = False
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        # Status label
+        self._label = QtWidgets.QLabel("Initializing...")
+        self._label.setWordWrap(True)
+        layout.addWidget(self._label)
+
+        # Progress bar with minimum height for better visibility
+        self._progress_bar = QtWidgets.QProgressBar()
+        self._progress_bar.setMinimumHeight(25)
+        self._progress_bar.setRange(0, 1)
+        layout.addWidget(self._progress_bar)
+
+        # Log area
+        log_label = QtWidgets.QLabel("Log output:")
+        layout.addWidget(log_label)
+
+        self._log_area = QtWidgets.QPlainTextEdit()
+        self._log_area.setReadOnly(True)
+        self._log_area.setMinimumHeight(250)
+        # Dark theme: light grey text on black background
+        self._log_area.setStyleSheet(
+            "QPlainTextEdit { background-color: #1e1e1e; color: #a0a0a0; }"
+        )
+        # Use monospace font, smaller size
+        font = self._log_area.font()
+        font.setFamily("Consolas, Monaco, monospace")
+        font.setPointSize(8)
+        self._log_area.setFont(font)
+        layout.addWidget(self._log_area, stretch=1)
+
+        # OK and Cancel buttons
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addStretch()
+
+        self._ok_button = QtWidgets.QPushButton("OK")
+        self._ok_button.setEnabled(False)  # Disabled until inference completes
+        self._ok_button.clicked.connect(self.accept)
+        button_layout.addWidget(self._ok_button)
+
+        self._cancel_button = QtWidgets.QPushButton("Cancel")
+        self._cancel_button.clicked.connect(self._on_cancel)
+        button_layout.addWidget(self._cancel_button)
+
+        layout.addLayout(button_layout)
+
+    def _on_cancel(self):
+        """Handle cancel button click."""
+        self._canceled = True
+        self._cancel_button.setEnabled(False)
+        self._cancel_button.setText("Canceling...")
+
+    def wasCanceled(self) -> bool:
+        """Return whether the dialog was canceled."""
+        return self._canceled
+
+    def setLabelText(self, text: str):
+        """Set the status label text."""
+        self._label.setText(text)
+
+    def setMaximum(self, maximum: int):
+        """Set the progress bar maximum value."""
+        self._progress_bar.setMaximum(maximum)
+
+    def setValue(self, value: int):
+        """Set the progress bar current value."""
+        self._progress_bar.setValue(value)
+
+    def appendLog(self, text: str):
+        """Append text to the log area and auto-scroll."""
+        if not text:
+            return
+        self._log_area.appendPlainText(text)
+        # Auto-scroll to bottom
+        scrollbar = self._log_area.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
+
+    def setFinished(self, success: bool = True):
+        """Mark inference as finished and update button states."""
+        self._finished = True
+        self._ok_button.setEnabled(True)
+        self._cancel_button.setEnabled(False)
+        if success:
+            self._label.setText("<b>Inference complete!</b>")
+        else:
+            self._label.setText("<b>Inference failed.</b>")
+
+
+class InferenceWorker(QtCore.QThread):
+    """Background worker thread for running inference without blocking UI."""
+
+    # Signals for communicating with main thread
+    progressUpdate = QtCore.Signal(int, int)  # (current, total)
+    statusUpdate = QtCore.Signal(str)  # status message (HTML)
+    logOutput = QtCore.Signal(str)  # log line
+    finished = QtCore.Signal(bool, int)  # (success, new_frame_count)
+
+    def __init__(
+        self,
+        inference_task: "InferenceTask",
+        items_for_inference: "ItemsForInference",
+        parent=None,
+    ):
+        super().__init__(parent)
+        self._inference_task = inference_task
+        self._items_for_inference = items_for_inference
+        self._canceled = False
+        self._new_frame_count = 0
+
+    def cancel(self):
+        """Request cancellation of inference."""
+        self._canceled = True
+
+    def run(self):
+        """Run inference in background thread."""
+        try:
+            for i, item_for_inference in enumerate(self._items_for_inference.items):
+                if self._canceled:
+                    self.finished.emit(False, -1)
+                    return
+
+                # Run inference for this item
+                predictions_path, ret = self._run_inference_item(
+                    item_for_inference, i, len(self._items_for_inference.items)
+                )
+
+                if ret == "canceled":
+                    self.finished.emit(False, -1)
+                    return
+                elif ret != "success":
+                    self.logOutput.emit(f"Error: Inference failed with code {ret}")
+                    self.finished.emit(False, 0)
+                    return
+
+            # Merge results
+            self._new_frame_count = self._inference_task.merge_results()
+            self.finished.emit(True, self._new_frame_count)
+
+        except Exception as e:
+            self.logOutput.emit(f"Error: {e}")
+            self.finished.emit(False, 0)
+
+    def _run_inference_item(
+        self, item_for_inference: "ItemForInference", item_idx: int, total_items: int
+    ) -> Tuple[str, str]:
+        """Run inference for a single item, emitting progress signals."""
+        cli_args, output_path = self._inference_task.make_predict_cli_call(
+            item_for_inference, gui=True
+        )
+
+        self.logOutput.emit(f"Running: {' '.join(cli_args[:3])}...")
+
+        # Run inference CLI capturing output
+        with subprocess.Popen(cli_args, stdout=subprocess.PIPE) as proc:
+            while proc.poll() is None:
+                if self._canceled:
+                    kill_process(proc.pid)
+                    return "", "canceled"
+
+                # Read line
+                line = proc.stdout.readline()
+                line = line.decode().rstrip()
+
+                is_json = False
+                if line.startswith("{"):
+                    try:
+                        line_data = json.loads(line)
+                        is_json = True
+                    except (json.JSONDecodeError, ValueError):
+                        is_json = False
+
+                if is_json:
+                    # Extract progress info
+                    n_processed = line_data.get("n_processed")
+                    n_total = line_data.get("n_total")
+                    rate = line_data.get("rate")
+                    eta = line_data.get("eta")
+
+                    if n_processed is not None and n_total is not None:
+                        self.progressUpdate.emit(n_processed, n_total)
+
+                        # Build status message
+                        msg = f"<b>Predicted:</b> {n_processed:,}/{n_total:,}"
+                        if rate is not None and eta is not None:
+                            eta_mins, eta_secs = divmod(eta, 60)
+                            if eta_mins > 60:
+                                eta_hours, eta_mins = divmod(eta_mins, 60)
+                                eta_str = (
+                                    f"{int(eta_hours)} hours, {int(eta_mins):02} mins"
+                                )
+                            elif eta_mins > 0:
+                                eta_str = f"{int(eta_mins)} mins, {int(eta_secs):02} secs"
+                            else:
+                                eta_str = f"{int(eta_secs):02} secs"
+                            msg += f"<br><b>ETA:</b> {eta_str}"
+                            msg += f"<br><b>FPS:</b> {rate:.1f}"
+                        msg = msg.replace(" ", "&nbsp;")
+                        self.statusUpdate.emit(msg)
+                else:
+                    # Non-JSON output goes to log
+                    if line:
+                        self.logOutput.emit(line)
+
+                time.sleep(0.02)
+
+            success = proc.returncode == 0
+
+        if success:
+            # Load frames from inference into results list
+            new_inference_labels = sio.load_slp(output_path)
+            self._inference_task.results.extend(new_inference_labels.labeled_frames)
+
+        ret = "success" if success else proc.returncode
+        return output_path, ret
 
 
 def get_timestamp() -> Text:
@@ -418,10 +655,10 @@ class InferenceTask:
                 if not is_json:
                     # Pass through non-json output.
                     print(line)
-                    line_data = {}
+                    line_data = {"log_line": line} if line else {}
 
                 if waiting_callback is not None:
-                    # Pass line data to callback.
+                    # Pass line data to callback (includes log_line for non-JSON output).
                     ret = waiting_callback(**line_data)
 
                     if ret == "cancel":
@@ -874,91 +1111,72 @@ def run_gui_inference(
     Returns:
         Number of new frames added to labels.
     """
+    if not gui:
+        # Non-GUI mode: run synchronously with original callback approach
+        return _run_inference_sync(inference_task, items_for_inference)
 
-    if gui:
-        progress = QtWidgets.QProgressDialog(
-            "Initializing...",
-            "Cancel",
-            0,
-            1,
-        )
-        progress.show()
-        QtWidgets.QApplication.instance().processEvents()
+    # GUI mode: use threaded worker for responsive UI
+    dialog = InferenceProgressDialog()
+    result = {"frame_count": 0, "success": False}
 
-    # Make callback to process events while running inference
-    def waiting(
-        n_processed: Optional[int] = None,
-        n_total: Optional[int] = None,
-        elapsed: Optional[float] = None,
-        rate: Optional[float] = None,
-        eta: Optional[float] = None,
-        current_item: Optional[int] = None,
-        total_items: Optional[int] = None,
-        **kwargs,
-    ) -> str:
-        if gui:
-            QtWidgets.QApplication.instance().processEvents()
-            if n_total is not None:
-                progress.setMaximum(n_total)
-            if n_processed is not None:
-                progress.setValue(n_processed)
+    # Create worker thread
+    worker = InferenceWorker(inference_task, items_for_inference)
 
-            msg = "Predicting..."
+    # Connect signals
+    def on_progress(current, total):
+        dialog.setValue(current)
+        dialog.setMaximum(total)
 
-            if n_processed is not None and n_total is not None:
-                msg = f"<b>Predicted:</b> {n_processed:,}/{n_total:,}"
+    def on_status(msg):
+        dialog.setLabelText(msg)
 
-            # Show time elapsed?
-            if rate is not None and eta is not None:
-                eta_mins, eta_secs = divmod(eta, 60)
-                if eta_mins > 60:
-                    eta_hours, eta_mins = divmod(eta_mins, 60)
-                    eta_str = f"{int(eta_hours)} hours, {int(eta_mins):02} mins"
-                elif eta_mins > 0:
-                    eta_str = f"{int(eta_mins)} mins, {int(eta_secs):02} secs"
-                else:
-                    eta_str = f"{int(eta_secs):02} secs"
-                msg += f"<br><b>ETA:</b> {eta_str}"
-                msg += f"<br><b>FPS:</b> {rate:.1f}"
+    def on_log(line):
+        dialog.appendLog(line)
 
-            msg = msg.replace(" ", "&nbsp;")
+    def on_finished(success, frame_count):
+        result["success"] = success
+        result["frame_count"] = frame_count
+        dialog.setFinished(success)
 
-            progress.setLabelText(msg)
-            QtWidgets.QApplication.instance().processEvents()
+    worker.progressUpdate.connect(on_progress)
+    worker.statusUpdate.connect(on_status)
+    worker.logOutput.connect(on_log)
+    worker.finished.connect(on_finished)
 
-            if progress.wasCanceled():
-                return "cancel"
+    # Connect cancel button to worker
+    dialog._cancel_button.clicked.connect(worker.cancel)
 
-    for i, item_for_inference in enumerate(items_for_inference.items):
+    # Start worker and show dialog
+    worker.start()
+    dialog.exec_()  # Blocks until user clicks OK or Cancel
 
-        def waiting_item(**kwargs):
-            kwargs["current_item"] = i
-            kwargs["total_items"] = len(items_for_inference.items)
-            return waiting(**kwargs)
+    # Wait for worker to finish if still running
+    if worker.isRunning():
+        worker.cancel()
+        worker.wait(5000)  # Wait up to 5 seconds
 
-        # Run inference for desired frames in this video.
+    return result["frame_count"] if result["success"] else -1
+
+
+def _run_inference_sync(
+    inference_task: InferenceTask,
+    items_for_inference: ItemsForInference,
+) -> int:
+    """Run inference synchronously (non-GUI mode)."""
+    for item_for_inference in items_for_inference.items:
         predictions_path, ret = inference_task.predict_subprocess(
             item_for_inference,
             append_results=True,
-            waiting_callback=waiting_item,
-            gui=gui,
+            waiting_callback=None,
+            gui=False,
         )
 
         if ret == "canceled":
             return -1
         elif ret != "success":
-            if gui:
-                QtWidgets.QMessageBox(
-                    text=(
-                        "An error occcured during inference. Your command line "
-                        "terminal may have more information about the error."
-                    )
-                ).exec_()
             return -1
 
     inference_task.merge_results()
-    if gui:
-        progress.close()
     return len(inference_task.results)
 
 
