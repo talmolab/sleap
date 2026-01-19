@@ -4058,9 +4058,9 @@ explicit Qt layout programming.</p>
 </span><span id="__span-0-786"><a id="__codelineno-0-786" name="__codelineno-0-786"></a>        <span class="n">layout</span><span class="o">.</span><span class="n">setSpacing</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
 </span><span id="__span-0-787"><a id="__codelineno-0-787" name="__codelineno-0-787"></a>
 </span><span id="__span-0-788"><a id="__codelineno-0-788" name="__codelineno-0-788"></a>        <span class="c1"># Fixed-width labels for alignment</span>
-</span><span id="__span-0-789"><a id="__codelineno-0-789" name="__codelineno-0-789"></a>        <span class="n">LABEL_WIDTH_COL1</span> <span class="o">=</span> <span class="mi">105</span>  <span class="c1"># &quot;Device Accelerator:&quot; width</span>
+</span><span id="__span-0-789"><a id="__codelineno-0-789" name="__codelineno-0-789"></a>        <span class="n">LABEL_WIDTH_COL1</span> <span class="o">=</span> <span class="mi">105</span>  <span class="c1"># &quot;Accelerator:&quot; width</span>
 </span><span id="__span-0-790"><a id="__codelineno-0-790" name="__codelineno-0-790"></a>        <span class="n">DROPDOWN_WIDTH</span> <span class="o">=</span> <span class="mi">140</span>  <span class="c1"># Dropdown width for alignment</span>
-</span><span id="__span-0-791"><a id="__codelineno-0-791" name="__codelineno-0-791"></a>        <span class="n">LABEL_WIDTH_COL2</span> <span class="o">=</span> <span class="mi">115</span>  <span class="c1"># &quot;Data Loader Workers:&quot; is longest</span>
+</span><span id="__span-0-791"><a id="__codelineno-0-791" name="__codelineno-0-791"></a>        <span class="n">LABEL_WIDTH_COL2</span> <span class="o">=</span> <span class="mi">115</span>  <span class="c1"># &quot;Dataloader Workers:&quot; is longest</span>
 </span><span id="__span-0-792"><a id="__codelineno-0-792" name="__codelineno-0-792"></a>
 </span><span id="__span-0-793"><a id="__codelineno-0-793" name="__codelineno-0-793"></a>        <span class="c1"># Row 1: Data Pipeline + Workers (training only)</span>
 </span><span id="__span-0-794"><a id="__codelineno-0-794" name="__codelineno-0-794"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span> <span class="o">==</span> <span class="s2">&quot;training&quot;</span><span class="p">:</span>
@@ -4082,7 +4082,7 @@ explicit Qt layout programming.</p>
 </span><span id="__span-0-810"><a id="__codelineno-0-810" name="__codelineno-0-810"></a>
 </span><span id="__span-0-811"><a id="__codelineno-0-811" name="__codelineno-0-811"></a>            <span class="n">row1</span><span class="o">.</span><span class="n">addSpacing</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 </span><span id="__span-0-812"><a id="__codelineno-0-812" name="__codelineno-0-812"></a>
-</span><span id="__span-0-813"><a id="__codelineno-0-813" name="__codelineno-0-813"></a>            <span class="n">workers_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Data Loader Workers:&quot;</span><span class="p">)</span>
+</span><span id="__span-0-813"><a id="__codelineno-0-813" name="__codelineno-0-813"></a>            <span class="n">workers_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Dataloader Workers:&quot;</span><span class="p">)</span>
 </span><span id="__span-0-814"><a id="__codelineno-0-814" name="__codelineno-0-814"></a>            <span class="n">workers_label</span><span class="o">.</span><span class="n">setFixedWidth</span><span class="p">(</span><span class="n">LABEL_WIDTH_COL2</span><span class="p">)</span>
 </span><span id="__span-0-815"><a id="__codelineno-0-815" name="__codelineno-0-815"></a>            <span class="n">row1</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">workers_label</span><span class="p">)</span>
 </span><span id="__span-0-816"><a id="__codelineno-0-816" name="__codelineno-0-816"></a>
@@ -4130,7 +4130,7 @@ explicit Qt layout programming.</p>
 </span><span id="__span-0-858"><a id="__codelineno-0-858" name="__codelineno-0-858"></a>        <span class="n">row2</span> <span class="o">=</span> <span class="n">QHBoxLayout</span><span class="p">()</span>
 </span><span id="__span-0-859"><a id="__codelineno-0-859" name="__codelineno-0-859"></a>        <span class="n">row2</span><span class="o">.</span><span class="n">setSpacing</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
 </span><span id="__span-0-860"><a id="__codelineno-0-860" name="__codelineno-0-860"></a>
-</span><span id="__span-0-861"><a id="__codelineno-0-861" name="__codelineno-0-861"></a>        <span class="n">accel_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Device Accelerator:&quot;</span><span class="p">)</span>
+</span><span id="__span-0-861"><a id="__codelineno-0-861" name="__codelineno-0-861"></a>        <span class="n">accel_label</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Accelerator:&quot;</span><span class="p">)</span>
 </span><span id="__span-0-862"><a id="__codelineno-0-862" name="__codelineno-0-862"></a>        <span class="n">accel_label</span><span class="o">.</span><span class="n">setFixedWidth</span><span class="p">(</span><span class="n">LABEL_WIDTH_COL1</span><span class="p">)</span>
 </span><span id="__span-0-863"><a id="__codelineno-0-863" name="__codelineno-0-863"></a>        <span class="n">row2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">accel_label</span><span class="p">)</span>
 </span><span id="__span-0-864"><a id="__codelineno-0-864" name="__codelineno-0-864"></a>
