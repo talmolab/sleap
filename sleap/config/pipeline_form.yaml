@@ -222,7 +222,7 @@ training:
   type: list
 
 - name: trainer_config.train_data_loader.num_workers
-  label: Data Loader Workers
+  label: Dataloader Workers
   type: int
   default: 0
   range: 0,16
@@ -236,7 +236,7 @@ training:
   help: Number of GPU devices to train on. "Auto" detects available GPUs.
 
 - name: trainer_config.trainer_accelerator
-  label: Device Accelerator
+  label: Accelerator
   type: list
   default: "auto"
   options: auto,cuda,cpu,mps

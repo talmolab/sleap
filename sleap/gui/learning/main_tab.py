@@ -786,9 +786,9 @@ class MainTabWidget(QWidget):
         layout.setSpacing(8)
 
         # Fixed-width labels for alignment
-        LABEL_WIDTH_COL1 = 105  # "Device Accelerator:" width
+        LABEL_WIDTH_COL1 = 105  # "Accelerator:" width
         DROPDOWN_WIDTH = 140  # Dropdown width for alignment
-        LABEL_WIDTH_COL2 = 115  # "Data Loader Workers:" is longest
+        LABEL_WIDTH_COL2 = 115  # "Dataloader Workers:" is longest
 
         # Row 1: Data Pipeline + Workers (training only)
         if self._mode == "training":
@@ -810,7 +810,7 @@ class MainTabWidget(QWidget):
 
             row1.addSpacing(20)
 
-            workers_label = QLabel("Data Loader Workers:")
+            workers_label = QLabel("Dataloader Workers:")
             workers_label.setFixedWidth(LABEL_WIDTH_COL2)
             row1.addWidget(workers_label)
 
@@ -858,7 +858,7 @@ class MainTabWidget(QWidget):
         row2 = QHBoxLayout()
         row2.setSpacing(8)
 
-        accel_label = QLabel("Device Accelerator:")
+        accel_label = QLabel("Accelerator:")
         accel_label.setFixedWidth(LABEL_WIDTH_COL1)
         row2.addWidget(accel_label)
 
