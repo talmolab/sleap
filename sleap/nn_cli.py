@@ -1,4 +1,8 @@
-"""CLI commands for SLEAP-NN training and inference."""
+"""CLI commands for SLEAP-NN training and inference.
+
+This module provides CLI entry points for sleap-nn commands (train, track, export,
+predict) that can be used when sleap-nn is installed.
+"""
 
 import logging
 from pathlib import Path
@@ -477,6 +481,36 @@ def train(config_name, config_dir, overrides):
     default=0,
     help="IOU to use when culling instances *after* tracking. (default: 0)",
 )
+@click.option(
+    "--filter_overlapping",
+    is_flag=True,
+    default=False,
+    help=(
+        "Enable filtering of overlapping instances after inference using greedy NMS. "
+        "Applied independently of tracking. (default: False)"
+    ),
+)
+@click.option(
+    "--filter_overlapping_method",
+    type=click.Choice(["iou", "oks"]),
+    default="iou",
+    help=(
+        "Similarity metric for filtering overlapping instances. "
+        "'iou': bounding box intersection-over-union. "
+        "'oks': Object Keypoint Similarity (pose-based). (default: iou)"
+    ),
+)
+@click.option(
+    "--filter_overlapping_threshold",
+    type=float,
+    default=0.8,
+    help=(
+        "Similarity threshold for filtering overlapping instances. "
+        "Instances with similarity above this threshold are removed, "
+        "keeping the higher-scoring instance. "
+        "Typical values: 0.3 (aggressive) to 0.8 (permissive). (default: 0.8)"
+    ),
+)
 def track(**kwargs):
     """Run Inference and Tracking workflow.
 
@@ -504,6 +538,249 @@ def track(**kwargs):
     except ImportError:
         logger.error(
             "sleap-nn is not installed. This appears to be a GUI-only installation. "
-            "To enable training, please install SLEAP with the 'nn' dependency. "
+            "To enable inference, please install SLEAP with the 'nn' dependency. "
+            "See the installation guide: https://docs.sleap.ai/latest/installation/"
+        )
+
+
+@click.command()
+@click.argument(
+    "model_paths",
+    nargs=-1,
+    type=click.Path(exists=True, file_okay=False),
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(file_okay=False),
+    default=None,
+    help="Output directory for exported model files.",
+)
+@click.option(
+    "--format",
+    "-f",
+    "fmt",
+    type=click.Choice(["onnx", "tensorrt", "both"], case_sensitive=False),
+    default="onnx",
+    show_default=True,
+    help="Export format.",
+)
+@click.option("--opset-version", type=int, default=17, show_default=True)
+@click.option("--max-instances", type=int, default=20, show_default=True)
+@click.option("--max-batch-size", type=int, default=8, show_default=True)
+@click.option("--input-scale", type=float, default=None)
+@click.option("--input-height", type=int, default=None)
+@click.option("--input-width", type=int, default=None)
+@click.option("--crop-size", type=int, default=None)
+@click.option("--max-peaks-per-node", type=int, default=20, show_default=True)
+@click.option("--n-line-points", type=int, default=10, show_default=True)
+@click.option("--max-edge-length-ratio", type=float, default=0.25, show_default=True)
+@click.option("--dist-penalty-weight", type=float, default=1.0, show_default=True)
+@click.option("--device", type=str, default="cpu", show_default=True)
+@click.option(
+    "--precision",
+    type=click.Choice(["fp32", "fp16"], case_sensitive=False),
+    default="fp16",
+    show_default=True,
+    help="TensorRT precision mode.",
+)
+@click.option("--verify/--no-verify", default=True, show_default=True)
+def export(
+    model_paths,
+    output,
+    fmt,
+    opset_version,
+    max_instances,
+    max_batch_size,
+    input_scale,
+    input_height,
+    input_width,
+    crop_size,
+    max_peaks_per_node,
+    n_line_points,
+    max_edge_length_ratio,
+    dist_penalty_weight,
+    device,
+    precision,
+    verify,
+):
+    """Export trained models to ONNX/TensorRT formats.
+
+    (From `sleap-nn`: `sleap-nn export`)
+
+    MODEL_PATHS are paths to trained model directories with training_config.json.
+    Provide one path for single model export, or two paths (centroid +
+    centered_instance) for combined top-down export.
+
+    Examples:
+        sleap-nn-export /path/to/model -o exports/my_model --format onnx
+        sleap-nn-export /path/to/model -o exports/my_model --format both
+        sleap-nn-export /path/to/centroid /path/to/instance -o exports/topdown
+    """
+    try:
+        from sleap_nn.export.cli import export as sleap_nn_export
+
+        # Get the Click context and invoke the sleap-nn export command
+        ctx = click.get_current_context()
+        ctx.invoke(
+            sleap_nn_export,
+            model_paths=tuple(Path(p) for p in model_paths),
+            output=Path(output) if output else None,
+            fmt=fmt,
+            opset_version=opset_version,
+            max_instances=max_instances,
+            max_batch_size=max_batch_size,
+            input_scale=input_scale,
+            input_height=input_height,
+            input_width=input_width,
+            crop_size=crop_size,
+            max_peaks_per_node=max_peaks_per_node,
+            n_line_points=n_line_points,
+            max_edge_length_ratio=max_edge_length_ratio,
+            dist_penalty_weight=dist_penalty_weight,
+            device=device,
+            precision=precision,
+            verify=verify,
+        )
+
+    except ImportError:
+        logger.error(
+            "sleap-nn is not installed. This appears to be a GUI-only installation. "
+            "To enable model export, please install SLEAP with the 'nn' dependency. "
+            "See the installation guide: https://docs.sleap.ai/latest/installation/"
+        )
+
+
+@click.command()
+@click.argument(
+    "export_dir",
+    type=click.Path(exists=True, file_okay=False),
+)
+@click.argument(
+    "video_path",
+    type=click.Path(exists=True, dir_okay=False),
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False),
+    default=None,
+    help="Output SLP file path. Default: video_name.predictions.slp",
+)
+@click.option(
+    "--runtime",
+    type=click.Choice(["auto", "onnx", "tensorrt"], case_sensitive=False),
+    default="auto",
+    show_default=True,
+    help="Runtime to use for inference.",
+)
+@click.option("--device", type=str, default="auto", show_default=True)
+@click.option("--batch-size", type=int, default=4, show_default=True)
+@click.option("--n-frames", type=int, default=None, help="Limit to first N frames.")
+@click.option(
+    "--max-edge-length-ratio",
+    type=float,
+    default=0.25,
+    show_default=True,
+    help="Bottom-up: max edge length as ratio of PAF dimensions.",
+)
+@click.option(
+    "--dist-penalty-weight",
+    type=float,
+    default=1.0,
+    show_default=True,
+    help="Bottom-up: weight for distance penalty in PAF scoring.",
+)
+@click.option(
+    "--n-points",
+    type=int,
+    default=10,
+    show_default=True,
+    help="Bottom-up: number of points to sample along PAF.",
+)
+@click.option(
+    "--min-instance-peaks",
+    type=float,
+    default=0,
+    show_default=True,
+    help="Bottom-up: minimum peaks required per instance.",
+)
+@click.option(
+    "--min-line-scores",
+    type=float,
+    default=-0.5,
+    show_default=True,
+    help="Bottom-up: minimum line score threshold.",
+)
+@click.option(
+    "--peak-conf-threshold",
+    type=float,
+    default=0.1,
+    show_default=True,
+    help="Bottom-up: peak confidence threshold for filtering candidates.",
+)
+@click.option(
+    "--max-instances",
+    type=int,
+    default=None,
+    help="Maximum instances to output per frame.",
+)
+def predict(
+    export_dir,
+    video_path,
+    output,
+    runtime,
+    device,
+    batch_size,
+    n_frames,
+    max_edge_length_ratio,
+    dist_penalty_weight,
+    n_points,
+    min_instance_peaks,
+    min_line_scores,
+    peak_conf_threshold,
+    max_instances,
+):
+    """Run inference on exported models and save predictions to SLP.
+
+    (From `sleap-nn`: `sleap-nn predict`)
+
+    EXPORT_DIR is the directory containing the exported model (model.onnx or model.trt)
+    along with export_metadata.json and training_config.yaml.
+
+    VIDEO_PATH is the path to the video file to process.
+
+    Examples:
+        sleap-nn-predict exports/my_model video.mp4 -o predictions.slp
+        sleap-nn-predict exports/my_model video.mp4 --runtime tensorrt --batch-size 8
+    """
+    try:
+        from sleap_nn.export.cli import predict as sleap_nn_predict
+
+        # Get the Click context and invoke the sleap-nn predict command
+        ctx = click.get_current_context()
+        ctx.invoke(
+            sleap_nn_predict,
+            export_dir=Path(export_dir),
+            video_path=Path(video_path),
+            output=Path(output) if output else None,
+            runtime=runtime,
+            device=device,
+            batch_size=batch_size,
+            n_frames=n_frames,
+            max_edge_length_ratio=max_edge_length_ratio,
+            dist_penalty_weight=dist_penalty_weight,
+            n_points=n_points,
+            min_instance_peaks=min_instance_peaks,
+            min_line_scores=min_line_scores,
+            peak_conf_threshold=peak_conf_threshold,
+            max_instances=max_instances,
+        )
+
+    except ImportError:
+        logger.error(
+            "sleap-nn is not installed. This appears to be a GUI-only installation. "
+            "To enable inference on exported models, please install SLEAP with the "
+            "'nn' dependency. "
             "See the installation guide: https://docs.sleap.ai/latest/installation/"
         )
