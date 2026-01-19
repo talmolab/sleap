@@ -1,0 +1,32 @@
+.md-typeset .admonition,
+.md-typeset details {
+    font-size: inherit; /* Ensures it matches the surrounding text */
+}
+
+/* Markdown source link button - positioned in top-right like Material action buttons */
+.md-source-file {
+    float: right;
+    margin: 0 0 0.5em 0.5em;
+}
+
+.md-source-file a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2em;
+    height: 2em;
+    border-radius: 0.2em;
+    color: var(--md-default-fg-color--light);
+    transition: color 0.25s, background-color 0.25s;
+}
+
+.md-source-file a:hover {
+    color: var(--md-accent-fg-color);
+    background-color: var(--md-accent-fg-color--transparent);
+}
+
+.md-source-file svg {
+    width: 1.2em;
+    height: 1.2em;
+    fill: currentColor;
+}
