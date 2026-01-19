@@ -69,7 +69,7 @@ class FrameTargetSelection:
     target_key: str = "frame"
     exclude_user_labeled: bool = False
     exclude_predicted: bool = False
-    prediction_mode: str = "add"
+    prediction_mode: str = "replace"
     clear_all_first: bool = False
     sample_count: int = 20
 
@@ -240,12 +240,12 @@ class FrameTargetSelector(QWidget):
 
         self.predictions_replace_radio = QRadioButton("Replace")
         self.predictions_replace_radio.setStyleSheet("font-size: 11px;")
+        self.predictions_replace_radio.setChecked(True)  # Default to Replace
         self.predictions_button_group.addButton(self.predictions_replace_radio, 1)
         options_layout.addWidget(self.predictions_replace_radio)
 
         self.predictions_keep_radio = QRadioButton("Keep")
         self.predictions_keep_radio.setStyleSheet("font-size: 11px;")
-        self.predictions_keep_radio.setChecked(True)  # Default to Keep
         self.predictions_button_group.addButton(self.predictions_keep_radio, 2)
         options_layout.addWidget(self.predictions_keep_radio)
 
