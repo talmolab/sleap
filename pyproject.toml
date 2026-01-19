@@ -52,7 +52,7 @@ dependencies = [
     "seaborn",
     "requests",
     "matplotlib",
-    "sleap-io[all]>=0.6.2,<0.7.0",
+    "sleap-io[all]>=0.6.3,<0.7.0",
 ]
 
 [tool.setuptools.dynamic]
@@ -66,23 +66,23 @@ jupyter = [
 ]
 
 nn = [
-    "sleap-nn[torch]>=0.1.0a2"
+    "sleap-nn[torch]>=0.1.0a3"
 ]
 
 nn-cpu = [
-    "sleap-nn[torch]>=0.1.0a2"
+    "sleap-nn[torch]>=0.1.0a3"
 ]
 
 nn-cuda128 = [
-    "sleap-nn[torch]>=0.1.0a2"
+    "sleap-nn[torch]>=0.1.0a3"
 ]
 
 nn-cuda118 = [
-    "sleap-nn[torch]>=0.1.0a2"
+    "sleap-nn[torch]>=0.1.0a3"
 ]
 
 nn-cuda130 = [
-    "sleap-nn[torch]>=0.1.0a2"
+    "sleap-nn[torch]>=0.1.0a3"
 ]
 
 [dependency-groups]
@@ -123,6 +123,8 @@ sleap-train = "sleap.legacy_cli_adaptors:train_command"
 sleap-track = "sleap.legacy_cli_adaptors:track_command"
 sleap-nn-train = "sleap.nn_cli:train"
 sleap-nn-track = "sleap.nn_cli:track"
+sleap-nn-export = "sleap.nn_cli:export"
+sleap-nn-predict = "sleap.nn_cli:predict"
 # sleap-export = "sleap.legacy_cli_adaptors:export_cli"
 
 [tool.uv]
