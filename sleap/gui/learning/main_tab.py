@@ -477,38 +477,42 @@ class MainTabWidget(QWidget):
         group = QGroupBox("Preprocessing / Postprocessing")
         group.setMinimumWidth(self.BOX_MIN_WIDTH)
 
-        layout = QHBoxLayout(group)
+        layout = QVBoxLayout(group)
         layout.setSpacing(8)
+
+        # Row 1: Convert Colors (training) + Max Instances
+        row1 = QHBoxLayout()
+        row1.setSpacing(8)
 
         # Convert Colors (training only shows this)
         if self._mode == "training":
             label = QLabel("Convert Colors:")
-            layout.addWidget(label)
+            row1.addWidget(label)
 
             convert_combo = QComboBox()
             convert_combo.addItem("", "")  # No conversion
             convert_combo.addItem("RGB", "RGB")
             convert_combo.addItem("grayscale", "grayscale")
             self._fields["_ensure_channels"] = convert_combo
-            layout.addWidget(convert_combo)
+            row1.addWidget(convert_combo)
 
-            layout.addSpacing(20)
+            row1.addSpacing(20)
 
         # Max Instances
         max_label = QLabel("Max Instances:")
-        layout.addWidget(max_label)
+        row1.addWidget(max_label)
 
         max_spinbox = QSpinBox()
         max_spinbox.setRange(1, 100)
         max_spinbox.setValue(1)
         max_spinbox.setMinimumWidth(80)
         self._fields["_max_instances"] = max_spinbox
-        layout.addWidget(max_spinbox)
+        row1.addWidget(max_spinbox)
 
         no_max_cb = QCheckBox("No max")
         no_max_cb.setChecked(True)  # Default to no max
         self._fields["_max_instances_disabled"] = no_max_cb
-        layout.addWidget(no_max_cb)
+        row1.addWidget(no_max_cb)
 
         # Connect checkbox to enable/disable spinbox
         no_max_cb.stateChanged.connect(
@@ -516,7 +520,70 @@ class MainTabWidget(QWidget):
         )
         max_spinbox.setEnabled(False)  # Start disabled since "No max" is checked
 
-        layout.addStretch()
+        row1.addStretch()
+        layout.addLayout(row1)
+
+        # Row 2: Filter Overlapping Instances (both training and inference)
+        row2 = QHBoxLayout()
+        row2.setSpacing(8)
+
+        filter_cb = QCheckBox("Filter Overlapping Instances")
+        filter_cb.setChecked(False)
+        filter_cb.setToolTip(
+            "Enable greedy NMS filtering to remove overlapping instances "
+            "after inference. Applied independently of tracking."
+        )
+        self._fields["filter_overlapping"] = filter_cb
+        row2.addWidget(filter_cb)
+
+        row2.addSpacing(12)
+
+        method_label = QLabel("Method:")
+        row2.addWidget(method_label)
+
+        method_combo = QComboBox()
+        method_combo.addItem("IOU (bounding box)", "iou")
+        method_combo.addItem("OKS (keypoints)", "oks")
+        method_combo.setToolTip(
+            "Similarity metric for detecting overlaps:\n"
+            "- IOU: Intersection-over-union of bounding boxes (faster)\n"
+            "- OKS: Object Keypoint Similarity (pose-aware)"
+        )
+        self._fields["filter_overlapping_method"] = method_combo
+        row2.addWidget(method_combo)
+
+        row2.addSpacing(12)
+
+        threshold_label = QLabel("Threshold:")
+        row2.addWidget(threshold_label)
+
+        threshold_spinbox = QDoubleSpinBox()
+        threshold_spinbox.setRange(0.0, 1.0)
+        threshold_spinbox.setSingleStep(0.05)
+        threshold_spinbox.setValue(0.8)
+        threshold_spinbox.setDecimals(2)
+        threshold_spinbox.setFixedWidth(70)
+        threshold_spinbox.setToolTip(
+            "Similarity threshold above which instances are considered "
+            "overlapping and removed (keeping higher-scoring instance).\n"
+            "Lower = more aggressive filtering (0.3), Higher = permissive (0.8)"
+        )
+        self._fields["filter_overlapping_threshold"] = threshold_spinbox
+        row2.addWidget(threshold_spinbox)
+
+        row2.addStretch()
+        layout.addLayout(row2)
+
+        # Connect checkbox to enable/disable method and threshold controls
+        def on_filter_toggled(state):
+            method_combo.setEnabled(state)
+            threshold_spinbox.setEnabled(state)
+            method_label.setEnabled(state)
+            threshold_label.setEnabled(state)
+
+        filter_cb.stateChanged.connect(on_filter_toggled)
+        # Start disabled since checkbox is unchecked
+        on_filter_toggled(False)
 
         return group
 
