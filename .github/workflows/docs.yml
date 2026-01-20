@@ -57,7 +57,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            uv run mike deploy --allow-empty --push "${{ github.event.release.tag_name }}"
+            uv run mike deploy --update-aliases --allow-empty --push "${{ github.event.release.tag_name }}" prerelease
 
       - name: Build and upload docs (dev)
         if: ${{ github.event_name == 'push' }}
