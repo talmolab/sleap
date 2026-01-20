@@ -115,19 +115,18 @@ class LearningDialog(QtWidgets.QDialog):
             labels_filename=self.labels_filename
         )
 
-        # Layout for buttons
-        buttons = QtWidgets.QDialogButtonBox()
-        self.copy_button = buttons.addButton(
-            "Copy to clipboard", QtWidgets.QDialogButtonBox.ActionRole
-        )
-        self.save_button = buttons.addButton(
-            "Save configuration files...", QtWidgets.QDialogButtonBox.ActionRole
-        )
-        self.export_button = buttons.addButton(
-            "Export training job package...", QtWidgets.QDialogButtonBox.ActionRole
-        )
-        self.cancel_button = buttons.addButton(QtWidgets.QDialogButtonBox.Cancel)
-        self.run_button = buttons.addButton("Run", QtWidgets.QDialogButtonBox.ApplyRole)
+        # Layout for buttons (manual layout for consistent cross-platform ordering)
+        self.copy_button = QtWidgets.QPushButton("Copy to clipboard")
+        self.save_button = QtWidgets.QPushButton("Save configuration files...")
+        self.export_button = QtWidgets.QPushButton("Export training job package...")
+        self.cancel_button = QtWidgets.QPushButton("Cancel")
+        self.run_button = QtWidgets.QPushButton("Run")
+
+        # Disable auto-default on all buttons except Run to prevent accidental defaults
+        self.copy_button.setAutoDefault(False)
+        self.save_button.setAutoDefault(False)
+        self.export_button.setAutoDefault(False)
+        self.cancel_button.setAutoDefault(False)
 
         self.copy_button.setToolTip("Copy configuration to the clipboard")
         self.save_button.setToolTip("Save scripts and configuration to run pipeline.")
@@ -135,9 +134,16 @@ class LearningDialog(QtWidgets.QDialog):
             "Export data, configuration, and scripts for remote training and inference."
         )
         self.run_button.setToolTip("Run pipeline locally (GPU recommended).")
+        self.run_button.setDefault(True)
+        self.cancel_button.clicked.connect(self.reject)
 
         buttons_layout = QtWidgets.QHBoxLayout()
-        buttons_layout.addWidget(buttons, alignment=QtCore.Qt.AlignTop)
+        buttons_layout.addWidget(self.copy_button)
+        buttons_layout.addWidget(self.save_button)
+        buttons_layout.addWidget(self.export_button)
+        buttons_layout.addStretch()
+        buttons_layout.addWidget(self.cancel_button)
+        buttons_layout.addWidget(self.run_button)
 
         buttons_layout_widget = QtWidgets.QWidget()
         buttons_layout_widget.setLayout(buttons_layout)
