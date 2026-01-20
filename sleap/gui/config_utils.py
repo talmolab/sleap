@@ -142,6 +142,12 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
             if backbone != selected_backbone:
                 key_val_dict[f"model_config.backbone_config.{backbone}"] = None
 
+        # Set fixed max_stride for ConvNeXt and SwinT (not configurable like UNet)
+        if selected_backbone in ("convnext", "swint"):
+            key_val_dict[
+                f"model_config.backbone_config.{selected_backbone}.max_stride"
+            ] = 32
+
     if "_ensure_channels" in key_val_dict:
         ensure_channels = key_val_dict["_ensure_channels"].lower()
         ensure_rgb = False

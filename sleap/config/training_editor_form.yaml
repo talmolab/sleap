@@ -107,13 +107,6 @@ model:
     label: Use Pretrained Weights
     name: _convnext_use_pretrained
     type: bool
-  - default: 32
-    help: "Fixed at 32 for ConvNeXt architecture. Image dimensions must be divisible by this value.
-      Unlike UNet, this cannot be changed."
-    label: Max Stride
-    name: model_config.backbone_config.convnext.max_stride
-    type: int
-    readonly: true
   - default: 3
     help: Kernel size for the decoder upsampling convolutions.
     label: Decoder Kernel Size
@@ -148,13 +141,6 @@ model:
     label: Use Pretrained Weights
     name: _swint_use_pretrained
     type: bool
-  - default: 32
-    help: "Fixed at 32 for Swin Transformer architecture. Image dimensions must be divisible by this value.
-      Unlike UNet, this cannot be changed."
-    label: Max Stride
-    name: model_config.backbone_config.swint.max_stride
-    type: int
-    readonly: true
   - default: 7
     help: Window size for the Swin Transformer attention mechanism.
       Larger windows capture more context but use more memory.
