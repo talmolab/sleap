@@ -52,9 +52,10 @@ class InferenceProgressDialog(QtWidgets.QDialog):
 
         layout = QtWidgets.QVBoxLayout(self)
 
-        # Status label
+        # Status label (centered)
         self._label = QtWidgets.QLabel("Initializing...")
         self._label.setWordWrap(True)
+        self._label.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(self._label)
 
         # Progress bar with minimum height for better visibility
@@ -225,7 +226,7 @@ class InferenceWorker(QtCore.QThread):
             item_for_inference, gui=True
         )
 
-        self.logOutput.emit(f"Running: {' '.join(cli_args[:3])}...")
+        self.logOutput.emit(f"Running: {' '.join(cli_args)}")
 
         # Run inference CLI capturing output
         # Use unbuffered mode for real-time log streaming
@@ -269,22 +270,21 @@ class InferenceWorker(QtCore.QThread):
                     if n_processed is not None and n_total is not None:
                         self.progressUpdate.emit(n_processed, n_total)
 
-                        # Build status message
-                        msg = f"<b>Predicted:</b> {n_processed:,}/{n_total:,}"
+                        # Build status message (all on one line with spacing)
+                        msg = f"Predicted: <b>{n_processed:,}/{n_total:,}</b>"
                         if rate is not None and eta is not None:
                             eta_mins, eta_secs = divmod(eta, 60)
                             if eta_mins > 60:
                                 eta_hours, eta_mins = divmod(eta_mins, 60)
                                 eta_str = (
-                                    f"{int(eta_hours)} hours, {int(eta_mins):02} mins"
+                                    f"{int(eta_hours)}h {int(eta_mins):02}m"
                                 )
                             elif eta_mins > 0:
-                                eta_str = f"{int(eta_mins)} mins, {int(eta_secs):02} secs"
+                                eta_str = f"{int(eta_mins)}m {int(eta_secs):02}s"
                             else:
-                                eta_str = f"{int(eta_secs):02} secs"
-                            msg += f"<br><b>ETA:</b> {eta_str}"
-                            msg += f"<br><b>FPS:</b> {rate:.1f}"
-                        msg = msg.replace(" ", "&nbsp;")
+                                eta_str = f"{int(eta_secs)}s"
+                            msg += f" &nbsp; &nbsp; FPS: <b>{rate:.1f}</b>"
+                            msg += f" &nbsp; &nbsp; ETA: <b>{eta_str}</b>"
                         self.statusUpdate.emit(msg)
                 else:
                     # Non-JSON output goes to log
