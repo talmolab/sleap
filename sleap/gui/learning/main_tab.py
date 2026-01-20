@@ -313,7 +313,10 @@ class MainTabWidget(QWidget):
         if self._mode == "training":
             main_layout.addWidget(self._create_wandb_section())
 
-            # Section 7: Output (training only)
+            # Section 7: Evaluation (training only)
+            main_layout.addWidget(self._create_evaluation_section())
+
+            # Section 8: Output (training only)
             main_layout.addWidget(self._create_output_section())
 
         main_layout.addStretch()
@@ -1022,6 +1025,46 @@ class MainTabWidget(QWidget):
 
         row4.addStretch()
         layout.addLayout(row4)
+
+        return group
+
+    def _create_evaluation_section(self) -> QGroupBox:
+        """Create the Evaluation section (training only)."""
+        group = QGroupBox("Evaluation")
+        group.setMinimumWidth(self.BOX_MIN_WIDTH)
+
+        layout = QVBoxLayout(group)
+        layout.setSpacing(8)
+
+        # Single row: Enable checkbox + Frequency spinner
+        row = QHBoxLayout()
+        row.setSpacing(8)
+
+        eval_enabled = QCheckBox("Run evaluation during training")
+        eval_enabled.setChecked(True)
+        self._fields["trainer_config.eval.enabled"] = eval_enabled
+        row.addWidget(eval_enabled)
+
+        row.addSpacing(20)
+
+        freq_label = QLabel("Frequency (epochs):")
+        row.addWidget(freq_label)
+
+        eval_freq = QSpinBox()
+        eval_freq.setRange(1, 200)
+        eval_freq.setValue(1)
+        eval_freq.setMinimumWidth(60)
+        eval_freq.setEnabled(True)  # Enabled by default since eval is enabled
+        self._fields["trainer_config.eval.frequency"] = eval_freq
+        row.addWidget(eval_freq)
+
+        # Connect checkbox to enable/disable frequency spinner
+        eval_enabled.stateChanged.connect(
+            lambda state, sb=eval_freq: sb.setEnabled(state)
+        )
+
+        row.addStretch()
+        layout.addLayout(row)
 
         return group
 

@@ -55,11 +55,11 @@ def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
         - params: Total backbone parameter count
         - params_formatted: Human-readable param count (e.g., "1.30M")
         - head_features: List of (head_name, output_stride, channels) for each head
+        - backbone_type: Type of backbone (unet, convnext, swint)
+        - model_type: For convnext/swint, the model variant (tiny, small, base, large)
     """
     model_cfg = cfg.model_config
-    model_cfg.backbone_config.unet.max_stride = int(
-        model_cfg.backbone_config.unet.max_stride
-    )
+    backbone_config = model_cfg.backbone_config
 
     rf_info = dict(
         size=None,
@@ -71,17 +71,39 @@ def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
         params=None,
         params_formatted=None,
         head_features=[],  # List of (head_name, output_stride, channels)
-        backbone_type=None,  # e.g., "unet"
+        backbone_type=None,  # e.g., "unet", "convnext", "swint"
+        model_type=None,  # For convnext/swint: "tiny", "small", "base", "large"
     )
+
+    # Detect backbone type
+    backbone_type = None
+    for bt in ["unet", "convnext", "swint"]:
+        if hasattr(backbone_config, bt) and getattr(backbone_config, bt) is not None:
+            backbone_type = bt
+            break
+
+    rf_info["backbone_type"] = backbone_type
+
+    if backbone_type is None:
+        return rf_info
+
+    # Get max_stride based on backbone type
+    if backbone_type == "unet":
+        backbone_config.unet.max_stride = int(backbone_config.unet.max_stride)
+        max_stride = backbone_config.unet.max_stride
+    else:
+        # ConvNeXt and SwinT have fixed max_stride of 32
+        max_stride = 32
+
+    rf_info["max_stride"] = max_stride
+
     head_type = get_head_from_omegaconf(cfg)
 
     # Collect output strides for each sub-head
     head_output_strides = []  # List of (sub_head_name, output_stride)
     for k, head_cfg in model_cfg.head_configs[head_type].items():
         if k == "class_vectors":
-            head_output_strides.append(
-                (k, int(model_cfg.backbone_config.unet.max_stride))
-            )
+            head_output_strides.append((k, int(max_stride)))
         else:
             head_output_strides.append((k, int(head_cfg.output_stride)))
 
@@ -89,89 +111,111 @@ def receptive_field_info_from_model_cfg(cfg: OmegaConf) -> dict:
     output_stride = min(output_strides)
     rf_info["output_stride"] = output_stride
 
-    # Check backbone type - currently only UNet is supported
-    # TODO: Add support for other backbones (ConvNext, SwinT, etc.)
-    if not hasattr(model_cfg.backbone_config, "unet"):
-        return rf_info
+    # Handle backbone-specific RF calculations
+    if backbone_type == "unet":
+        try:
+            _ = np.log2(max_stride / output_stride)
+        except ZeroDivisionError:
+            return rf_info
 
-    rf_info["backbone_type"] = "unet"
+        rf_info["convs_per_block"] = 2
+        rf_info["kernel_size"] = 3
 
-    try:
-        _ = np.log2(model_cfg.backbone_config.unet.max_stride / output_stride)
-    except ZeroDivisionError:
-        # Unable to create model from these config parameters
-        return rf_info
+        stem_stride = None
+        stem_blocks = 0
+        if hasattr(backbone_config.unet, "stem_stride"):
+            cfg_stem_stride = backbone_config.unet.stem_stride
+            if cfg_stem_stride is not None:
+                stem_stride = int(cfg_stem_stride)
+                stem_blocks = np.log2(cfg_stem_stride).astype(int)
 
-    if hasattr(model_cfg.backbone_config.unet, "max_stride"):
-        rf_info["max_stride"] = model_cfg.backbone_config.unet.max_stride
+        down_blocks = np.log2(max_stride).astype(int) - stem_blocks
+        rf_info["down_blocks"] = down_blocks
 
-    rf_info["convs_per_block"] = 2
-
-    rf_info["kernel_size"] = 3
-
-    stem_stride = None
-    stem_blocks = 0
-    if hasattr(model_cfg.backbone_config.unet, "stem_stride"):
-        cfg_stem_stride = model_cfg.backbone_config.unet.stem_stride
-        if cfg_stem_stride is not None:
-            stem_stride = int(cfg_stem_stride)
-            stem_blocks = np.log2(cfg_stem_stride).astype(int)
-
-    down_blocks = (
-        np.log2(model_cfg.backbone_config.unet.max_stride).astype(int) - stem_blocks
-    )
-
-    rf_info["down_blocks"] = down_blocks
-
-    if rf_info["down_blocks"] and rf_info["convs_per_block"] and rf_info["kernel_size"]:
-        rf_info["size"] = compute_rf(
-            down_blocks=rf_info["down_blocks"],
-            convs_per_block=rf_info["convs_per_block"],
-            kernel_size=rf_info["kernel_size"],
+        has_rf_params = (
+            rf_info["down_blocks"]
+            and rf_info["convs_per_block"]
+            and rf_info["kernel_size"]
         )
+        if has_rf_params:
+            rf_info["size"] = compute_rf(
+                down_blocks=rf_info["down_blocks"],
+                convs_per_block=rf_info["convs_per_block"],
+                kernel_size=rf_info["kernel_size"],
+            )
 
-    # Extract UNet config for architecture calculations
-    unet_cfg = model_cfg.backbone_config.unet
-    filters = int(getattr(unet_cfg, "filters", 32))
-    filters_rate = float(getattr(unet_cfg, "filters_rate", 1.5))
-    max_stride = int(unet_cfg.max_stride)
-    middle_block = bool(getattr(unet_cfg, "middle_block", True))
-    up_interpolate = bool(getattr(unet_cfg, "up_interpolate", False))
+        # Extract UNet config for architecture calculations
+        unet_cfg = backbone_config.unet
+        filters = int(getattr(unet_cfg, "filters", 32))
+        filters_rate = float(getattr(unet_cfg, "filters_rate", 1.5))
+        middle_block = bool(getattr(unet_cfg, "middle_block", True))
+        up_interpolate = bool(getattr(unet_cfg, "up_interpolate", False))
 
-    # Compute channel counts at each stride
-    try:
-        # Use min output_stride to get all decoder levels we need
-        min_output_stride = min(s for _, s in head_output_strides)
-        stride_to_channels = unet_utils.compute_unet_channels(
-            filters=filters,
-            filters_rate=filters_rate,
-            max_stride=max_stride,
-            output_stride=min_output_stride,
-            stem_stride=stem_stride,
-        )
-        # Populate head_features for each sub-head
-        for head_name, head_stride in head_output_strides:
-            channels = stride_to_channels.get(head_stride)
-            if channels is not None:
-                rf_info["head_features"].append((head_name, head_stride, channels))
-    except Exception:
-        pass  # Leave as empty list if computation fails
+        # Compute channel counts at each stride
+        try:
+            min_output_stride = min(s for _, s in head_output_strides)
+            stride_to_channels = unet_utils.compute_unet_channels(
+                filters=filters,
+                filters_rate=filters_rate,
+                max_stride=max_stride,
+                output_stride=min_output_stride,
+                stem_stride=stem_stride,
+            )
+            for head_name, head_stride in head_output_strides:
+                channels = stride_to_channels.get(head_stride)
+                if channels is not None:
+                    rf_info["head_features"].append((head_name, head_stride, channels))
+        except Exception:
+            pass
 
-    # Compute total parameter count
-    try:
-        params = unet_utils.compute_unet_params(
-            filters=filters,
-            filters_rate=filters_rate,
-            max_stride=max_stride,
-            output_stride=output_stride,
-            stem_stride=stem_stride,
-            middle_block=middle_block,
-            up_interpolate=up_interpolate,
-        )
-        rf_info["params"] = params
-        rf_info["params_formatted"] = unet_utils.format_params(params)
-    except Exception:
-        pass  # Leave as None if computation fails
+        # Compute total parameter count
+        try:
+            params = unet_utils.compute_unet_params(
+                filters=filters,
+                filters_rate=filters_rate,
+                max_stride=max_stride,
+                output_stride=output_stride,
+                stem_stride=stem_stride,
+                middle_block=middle_block,
+                up_interpolate=up_interpolate,
+            )
+            rf_info["params"] = params
+            rf_info["params_formatted"] = unet_utils.format_params(params)
+        except Exception:
+            pass
+
+    elif backbone_type in ("convnext", "swint"):
+        # ConvNeXt and SwinT have fixed max_stride=32
+        rf_info["down_blocks"] = 5  # log2(32) = 5
+
+        # Get model type (tiny, small, base, large)
+        backbone_cfg = getattr(backbone_config, backbone_type)
+        model_type = getattr(backbone_cfg, "model_type", "tiny")
+        rf_info["model_type"] = model_type
+
+        # Approximate parameter counts for pretrained models
+        # These are rough estimates based on torchvision model sizes
+        if backbone_type == "convnext":
+            param_counts = {
+                "tiny": 28_600_000,
+                "small": 50_200_000,
+                "base": 88_600_000,
+                "large": 197_800_000,
+            }
+        else:  # swint
+            param_counts = {
+                "tiny": 28_300_000,
+                "small": 49_600_000,
+                "base": 87_800_000,
+            }
+
+        params = param_counts.get(model_type)
+        if params:
+            rf_info["params"] = params
+            rf_info["params_formatted"] = unet_utils.format_params(params)
+
+        # RF size is architecture-dependent and complex for transformer-based models
+        # For now, leave as None since exact RF calculation is non-trivial
 
     return rf_info
 
@@ -499,53 +543,77 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         params_formatted: Optional[str],
         head_features: list,
         backbone_type: Optional[str] = "unet",
+        model_type: Optional[str] = None,
     ) -> Text:
         """Returns text showing backbone architecture info (params and channels).
 
         Args:
             params_formatted: Human-readable param count (e.g., "1.30M")
             head_features: List of (head_name, output_stride, channels) tuples
-            backbone_type: Type of backbone (e.g., "unet"). Only renders for
-                supported types.
+            backbone_type: Type of backbone (e.g., "unet", "convnext", "swint").
+            model_type: For convnext/swint, the model variant (e.g., "tiny").
         """
-        # Only render for supported backbone types
-        if backbone_type != "unet" or params_formatted is None:
+        if backbone_type is None:
             return ""
 
-        result = "<p><b>UNet:</b><br/>"
-        result += f"<b>Parameters:</b> ~{params_formatted}<br/>"
+        if backbone_type == "unet":
+            if params_formatted is None:
+                return ""
 
-        # Show features for each head with validation
-        for i, (head_name, stride, backbone_channels) in enumerate(head_features):
-            head_output = self._get_head_output_channels(head_name)
+            result = "<p><b>UNet:</b><br/>"
+            result += f"<b>Parameters:</b> ~{params_formatted}<br/>"
 
-            if head_output is not None:
-                if backbone_channels >= head_output:
-                    # Good: backbone has enough channels
-                    result += (
-                        f"<b>Features ({head_name} @ stride {stride}):</b> "
-                        f'<span style="color: green;">'
-                        f"{backbone_channels}\u2192{head_output} \u2713</span>"
-                    )
+            # Show features for each head with validation
+            for i, (head_name, stride, backbone_channels) in enumerate(head_features):
+                head_output = self._get_head_output_channels(head_name)
+
+                if head_output is not None:
+                    if backbone_channels >= head_output:
+                        # Good: backbone has enough channels
+                        result += (
+                            f"<b>Features ({head_name} @ stride {stride}):</b> "
+                            f'<span style="color: green;">'
+                            f"{backbone_channels}\u2192{head_output} \u2713</span>"
+                        )
+                    else:
+                        # Warning: backbone channels less than head output
+                        result += (
+                            f"<b>Features ({head_name} @ stride {stride}):</b> "
+                            f'<span style="color: red;">'
+                            f"{backbone_channels}\u2192{head_output} \u26a0</span>"
+                        )
                 else:
-                    # Warning: backbone channels less than head output
+                    # Can't determine head output, just show backbone channels
                     result += (
                         f"<b>Features ({head_name} @ stride {stride}):</b> "
-                        f'<span style="color: red;">'
-                        f"{backbone_channels}\u2192{head_output} \u26a0</span>"
+                        f"{backbone_channels} ch"
                     )
-            else:
-                # Can't determine head output, just show backbone channels
-                result += (
-                    f"<b>Features ({head_name} @ stride {stride}):</b> "
-                    f"{backbone_channels} ch"
-                )
 
-            if i < len(head_features) - 1:
-                result += "<br/>"
+                if i < len(head_features) - 1:
+                    result += "<br/>"
 
-        result += "</p>"
-        return result
+            result += "</p>"
+            return result
+
+        elif backbone_type == "convnext":
+            model_display = model_type.capitalize() if model_type else "Tiny"
+            result = f"<p><b>ConvNeXt ({model_display}):</b><br/>"
+            result += "<b>Max Stride:</b> 32 (fixed)<br/>"
+            if params_formatted:
+                result += f"<b>Parameters:</b> ~{params_formatted}<br/>"
+            result += "<b>Pretrained:</b> ImageNet weights available</p>"
+            return result
+
+        elif backbone_type == "swint":
+            model_display = model_type.capitalize() if model_type else "Tiny"
+            result = f"<p><b>Swin Transformer ({model_display}):</b><br/>"
+            result += "<b>Max Stride:</b> 32 (fixed)<br/>"
+            if params_formatted:
+                result += f"<b>Parameters:</b> ~{params_formatted}<br/>"
+            result += "<b>Pretrained:</b> ImageNet weights available</p>"
+            return result
+
+        return ""
 
     def setModelConfig(self, model_cfg: OmegaConf, scale: float):
         """Updates receptive field preview from model config."""
@@ -560,6 +628,7 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
                 params_formatted=rf_info["params_formatted"],
                 head_features=rf_info["head_features"],
                 backbone_type=rf_info["backbone_type"],
+                model_type=rf_info.get("model_type"),
             )
         )
 

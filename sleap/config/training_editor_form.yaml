@@ -36,7 +36,7 @@ model:
 - default: unet
   label: Backbone
   name: _backbone_name
-  options: unet
+  options: unet,convnext,swint
   type: stacked
 
 
@@ -90,6 +90,80 @@ model:
   #   label: Stacks
   #   name: model.backbone.unet.stacks
   #   type: int
+#####
+
+#####
+  convnext:
+  - default: tiny
+    help: ConvNeXt model variant. Larger models have more parameters and capacity
+      but require more memory and compute. tiny (28M params), small (50M), base (89M), large (198M).
+    label: Model Type
+    name: model_config.backbone_config.convnext.model_type
+    options: tiny,small,base,large
+    type: list
+  - default: false
+    help: Use ImageNet pretrained weights for faster convergence and better performance.
+      Requires RGB input (3 channels). Enable "Ensure RGB" in preprocessing if using grayscale images.
+    label: Use Pretrained Weights
+    name: _convnext_use_pretrained
+    type: bool
+  - default: 3
+    help: Kernel size for the decoder upsampling convolutions.
+    label: Decoder Kernel Size
+    name: model_config.backbone_config.convnext.kernel_size
+    options: 3,5
+    type: list
+  - default: 2.0
+    help: Factor to scale the number of filters in the decoder relative to the encoder.
+    label: Decoder Filters Rate
+    name: model_config.backbone_config.convnext.filters_rate
+    type: double
+  - default: true
+    help: If True, use bilinear interpolation for upsampling in the decoder.
+      If False, use transposed convolutions.
+    label: Up Interpolate
+    name: model_config.backbone_config.convnext.up_interpolate
+    type: bool
+#####
+
+#####
+  swint:
+  - default: tiny
+    help: Swin Transformer model variant. Larger models have more parameters and capacity
+      but require more memory and compute. tiny (28M params), small (50M), base (88M).
+    label: Model Type
+    name: model_config.backbone_config.swint.model_type
+    options: tiny,small,base
+    type: list
+  - default: false
+    help: Use ImageNet pretrained weights for faster convergence and better performance.
+      Requires RGB input (3 channels). Enable "Ensure RGB" in preprocessing if using grayscale images.
+    label: Use Pretrained Weights
+    name: _swint_use_pretrained
+    type: bool
+  - default: 7
+    help: Window size for the Swin Transformer attention mechanism.
+      Larger windows capture more context but use more memory.
+    label: Window Size
+    name: model_config.backbone_config.swint.window_size
+    type: int
+  - default: 3
+    help: Kernel size for the decoder upsampling convolutions.
+    label: Decoder Kernel Size
+    name: model_config.backbone_config.swint.kernel_size
+    options: 3,5
+    type: list
+  - default: 2.0
+    help: Factor to scale the number of filters in the decoder relative to the encoder.
+    label: Decoder Filters Rate
+    name: model_config.backbone_config.swint.filters_rate
+    type: double
+  - default: true
+    help: If True, use bilinear interpolation for upsampling in the decoder.
+      If False, use transposed convolutions.
+    label: Up Interpolate
+    name: model_config.backbone_config.swint.up_interpolate
+    type: bool
 #####
 
 - centered_instance:

@@ -32,7 +32,10 @@ def get_omegaconf_from_gui_form(flat_dict):
         parts = key.split(".")
         d = result
         for p in parts[:-1]:
-            d = d.setdefault(p, {})
+            # Use setdefault but handle case where key exists with None value
+            if p not in d or d[p] is None:
+                d[p] = {}
+            d = d[p]
         d[parts[-1]] = value
     return OmegaConf.create(result)
 
@@ -55,6 +58,11 @@ def get_head_from_omegaconf(cfg: OmegaConf):
 
 def find_backbone_name_from_key_val_dict(key_val_dict: dict):
     """Find the backbone model name from the config dictionary."""
+    # Prefer explicit selection from form if available
+    if "_backbone_name" in key_val_dict:
+        return key_val_dict["_backbone_name"]
+
+    # Fall back to inferring from keys
     backbone_name = None
     for key in key_val_dict:
         if key.startswith("model_config.backbone_config."):
@@ -110,6 +118,36 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
     Returns:
         None, modifies dict in place.
     """
+    # Filter backbone configs to only include the selected backbone
+    # sleap-nn's BackboneConfig uses @oneof pattern - exactly one must be set
+    all_backbones = ["unet", "convnext", "swint"]
+    selected_backbone = key_val_dict.get("_backbone_name")
+    if selected_backbone in all_backbones:
+        # Remove keys for non-selected backbones
+        keys_to_remove = []
+        for key in key_val_dict:
+            if key.startswith("model_config.backbone_config."):
+                backbone_in_key = key.split(".")[2]
+                is_other_backbone = (
+                    backbone_in_key in all_backbones
+                    and backbone_in_key != selected_backbone
+                )
+                if is_other_backbone:
+                    keys_to_remove.append(key)
+        for key in keys_to_remove:
+            del key_val_dict[key]
+
+        # Explicitly set non-selected backbones to None
+        for backbone in all_backbones:
+            if backbone != selected_backbone:
+                key_val_dict[f"model_config.backbone_config.{backbone}"] = None
+
+        # Set fixed max_stride for ConvNeXt and SwinT (not configurable like UNet)
+        if selected_backbone in ("convnext", "swint"):
+            key_val_dict[
+                f"model_config.backbone_config.{selected_backbone}.max_stride"
+            ] = 32
+
     if "_ensure_channels" in key_val_dict:
         ensure_channels = key_val_dict["_ensure_channels"].lower()
         ensure_rgb = False
@@ -214,6 +252,41 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         key_val_dict["data_config.augmentation_config.intensity.brightness_p"] = (
             1.0 if brightness_enabled else 0.0
         )
+
+    # Handle ConvNeXt pretrained weights checkbox
+    if "_convnext_use_pretrained" in key_val_dict:
+        convnext_weights_key = (
+            "model_config.backbone_config.convnext.pre_trained_weights"
+        )
+        if key_val_dict["_convnext_use_pretrained"]:
+            model_type = key_val_dict.get(
+                "model_config.backbone_config.convnext.model_type", "tiny"
+            )
+            weights_map = {
+                "tiny": "ConvNeXt_Tiny_Weights",
+                "small": "ConvNeXt_Small_Weights",
+                "base": "ConvNeXt_Base_Weights",
+                "large": "ConvNeXt_Large_Weights",
+            }
+            key_val_dict[convnext_weights_key] = weights_map.get(model_type)
+        else:
+            key_val_dict[convnext_weights_key] = None
+
+    # Handle SwinT pretrained weights checkbox
+    if "_swint_use_pretrained" in key_val_dict:
+        swint_weights_key = "model_config.backbone_config.swint.pre_trained_weights"
+        if key_val_dict["_swint_use_pretrained"]:
+            model_type = key_val_dict.get(
+                "model_config.backbone_config.swint.model_type", "tiny"
+            )
+            weights_map = {
+                "tiny": "Swin_T_Weights",
+                "small": "Swin_S_Weights",
+                "base": "Swin_B_Weights",
+            }
+            key_val_dict[swint_weights_key] = weights_map.get(model_type)
+        else:
+            key_val_dict[swint_weights_key] = None
 
 
 def get_skeleton_from_config(skeleton_config: OmegaConf):
