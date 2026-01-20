@@ -1002,9 +1002,18 @@ class LearningDialog(QtWidgets.QDialog):
         print(tab_idx)
 
     def merge_pipeline_and_head_config_data(self, head_name, head_data, pipeline_data):
+        # Inference-only fields that should not be merged into training config
+        inference_only_fields = {
+            "filter_overlapping",
+            "filter_overlapping_method",
+            "filter_overlapping_threshold",
+        }
         for key, val in pipeline_data.items():
             # Skip GUI-only fields (not part of sleap-nn config schema)
             if key.startswith("gui."):
+                continue
+            # Skip inference-only fields
+            if key in inference_only_fields:
                 continue
             if key.startswith("model_config.head_configs."):
                 key_scope = key.split(".")
