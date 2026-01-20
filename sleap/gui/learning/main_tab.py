@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtGui import QGuiApplication
+from qtpy.QtGui import QGuiApplication, QPalette
 from qtpy.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -279,7 +279,10 @@ class MainTabWidget(QWidget):
         scroll_area.setFrameShape(QScrollArea.NoFrame)
 
         scroll_content = QWidget()
-        # No explicit background - use default Qt palette like the config tabs
+        # Use QPalette.Base for system-aware background:
+        # white in light mode, dark in dark mode
+        scroll_content.setAutoFillBackground(True)
+        scroll_content.setBackgroundRole(QPalette.Base)
         main_layout = QVBoxLayout(scroll_content)
         main_layout.setSpacing(12)
         main_layout.setContentsMargins(12, 12, 12, 12)
@@ -783,9 +786,9 @@ class MainTabWidget(QWidget):
         layout.setSpacing(8)
 
         # Fixed-width labels for alignment
-        LABEL_WIDTH_COL1 = 105  # "Device Accelerator:" width
+        LABEL_WIDTH_COL1 = 105  # "Accelerator:" width
         DROPDOWN_WIDTH = 140  # Dropdown width for alignment
-        LABEL_WIDTH_COL2 = 115  # "Data Loader Workers:" is longest
+        LABEL_WIDTH_COL2 = 115  # "Dataloader Workers:" is longest
 
         # Row 1: Data Pipeline + Workers (training only)
         if self._mode == "training":
@@ -807,7 +810,7 @@ class MainTabWidget(QWidget):
 
             row1.addSpacing(20)
 
-            workers_label = QLabel("Data Loader Workers:")
+            workers_label = QLabel("Dataloader Workers:")
             workers_label.setFixedWidth(LABEL_WIDTH_COL2)
             row1.addWidget(workers_label)
 
@@ -855,7 +858,7 @@ class MainTabWidget(QWidget):
         row2 = QHBoxLayout()
         row2.setSpacing(8)
 
-        accel_label = QLabel("Device Accelerator:")
+        accel_label = QLabel("Accelerator:")
         accel_label.setFixedWidth(LABEL_WIDTH_COL1)
         row2.addWidget(accel_label)
 

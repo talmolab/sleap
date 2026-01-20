@@ -179,7 +179,7 @@ class TestSelection:
         assert selection.target_key == "frame"
         assert selection.exclude_user_labeled is False
         assert selection.exclude_predicted is False
-        assert selection.prediction_mode == "add"
+        assert selection.prediction_mode == "replace"
         assert selection.clear_all_first is False
 
     def test_set_selection_target_key(self, training_selector):
@@ -237,11 +237,11 @@ class TestSelection:
 class TestPredictionModeRadios:
     """Tests for prediction mode radio button behavior."""
 
-    def test_default_is_keep(self, training_selector):
-        """Default prediction mode should be 'Keep'."""
-        assert training_selector.predictions_keep_radio.isChecked() is True
+    def test_default_is_replace(self, training_selector):
+        """Default prediction mode should be 'Replace'."""
+        assert training_selector.predictions_replace_radio.isChecked() is True
+        assert training_selector.predictions_keep_radio.isChecked() is False
         assert training_selector.predictions_clear_radio.isChecked() is False
-        assert training_selector.predictions_replace_radio.isChecked() is False
 
     def test_clear_all_selection(self, training_selector):
         """Selecting Clear all should set clear_all_first=True."""
@@ -339,7 +339,7 @@ class TestFormData:
         assert data["_predict_target"] == "frame"
         assert data["_exclude_user_labeled"] is False
         assert data["_exclude_predicted"] is False
-        assert data["_prediction_mode"] == "add"
+        assert data["_prediction_mode"] == "replace"
         assert data["_clear_all_first"] is False
 
     def test_get_form_data_after_changes(self, training_selector):
@@ -614,15 +614,15 @@ class TestEdgeCases:
 
     def test_suggestions_auto_configures_replace_and_skip(self, inference_selector):
         """Selecting 'Suggestions' should auto-select Replace and enable Skip."""
-        # Verify initial state - Keep is selected and skip is unchecked
-        assert inference_selector.predictions_keep_radio.isChecked()
+        # Verify initial state - Replace is selected (new default) and skip is unchecked
+        assert inference_selector.predictions_replace_radio.isChecked()
         assert not inference_selector.skip_user_labeled_cb.isChecked()
 
         # Select Suggestions
         suggestions_index = inference_selector._option_keys.index("suggestions")
         inference_selector.target_dropdown.setCurrentIndex(suggestions_index)
 
-        # Verify auto-configuration
+        # Verify auto-configuration (Replace stays selected, Skip gets enabled)
         assert inference_selector.predictions_replace_radio.isChecked()
         assert inference_selector.skip_user_labeled_cb.isChecked()
         assert not inference_selector.predictions_keep_radio.isChecked()
@@ -686,7 +686,7 @@ class TestFrameTargetSelection:
         assert selection.target_key == "frame"
         assert selection.exclude_user_labeled is False
         assert selection.exclude_predicted is False
-        assert selection.prediction_mode == "add"
+        assert selection.prediction_mode == "replace"
         assert selection.clear_all_first is False
 
     def test_selection_custom_values(self):

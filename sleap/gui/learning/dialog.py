@@ -1347,22 +1347,8 @@ class LearningDialog(QtWidgets.QDialog):
         )
 
         self._handle_learning_finished.emit(new_counts)
-
-        # count < 0 means there was an error and we didn't get any results.
-        if new_counts is not None and new_counts >= 0:
-            total_count = items_for_inference.total_frame_count
-            no_result_count = max(0, total_count - new_counts)
-
-            message = (
-                f"Inference ran on {total_count} frames."
-                f"\n\nInstances were predicted on {new_counts} frames "
-                f"({no_result_count} frame{'s' if no_result_count != 1 else ''} with "
-                "no instances found)."
-            )
-
-            win = QtWidgets.QMessageBox(text=message)
-            win.setWindowTitle("Inference Results")
-            win.exec_()
+        # Note: The inference progress dialog now shows the completion message
+        # with frame counts, so we don't need a separate popup here.
 
     def copy(self):
         """Copy scripts and configs to clipboard"""

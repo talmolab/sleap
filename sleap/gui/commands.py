@@ -3310,6 +3310,19 @@ class DeleteAllPredictions(InstanceDeleteCommand):
             if type(inst) == PredictedInstance
         ]
 
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        # Use efficient batch removal instead of per-instance deletion
+        # This is much faster for large datasets (O(n) vs O(n^2))
+        context.labels.remove_predictions()
+
+        # Clear selected instance if it was a prediction
+        if context.state["instance"] is not None:
+            if type(context.state["instance"]) == PredictedInstance:
+                context.state["instance"] = None
+
+        context.changestack_push("delete instances")
+
 
 class DeleteFramePredictions(InstanceDeleteCommand):
     @staticmethod
