@@ -530,6 +530,8 @@ class InferenceTask:
         cli_args = [
             "sleap-nn-track",
         ]
+        if gui:
+            cli_args.append("--gui")
         cli_args.extend(
             item_for_inference.cli_args
         )  # sample inference CLI args: ['--data_path', '...', '--video_index', '0',

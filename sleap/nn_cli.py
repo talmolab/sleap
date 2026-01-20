@@ -511,6 +511,12 @@ def train(config_name, config_dir, overrides):
         "Typical values: 0.3 (aggressive) to 0.8 (permissive). (default: 0.8)"
     ),
 )
+@click.option(
+    "--gui",
+    is_flag=True,
+    default=False,
+    help="Output JSON progress for GUI integration instead of Rich progress bar.",
+)
 def track(**kwargs):
     """Run Inference and Tracking workflow.
 
