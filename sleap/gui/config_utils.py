@@ -32,7 +32,10 @@ def get_omegaconf_from_gui_form(flat_dict):
         parts = key.split(".")
         d = result
         for p in parts[:-1]:
-            d = d.setdefault(p, {})
+            # Use setdefault but handle case where key exists with None value
+            if p not in d or d[p] is None:
+                d[p] = {}
+            d = d[p]
         d[parts[-1]] = value
     return OmegaConf.create(result)
 
