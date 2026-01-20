@@ -922,18 +922,27 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.epoch = msg["epoch"]
                 elif msg["event"] == "epoch_end":
                     self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
-                    self._add_datapoint(
-                        x=(self.epoch + 1) * self.epoch_size,
-                        y=msg["logs"]["train_loss"],
-                        which="train_loss",
+                    # Support both sleap-nn naming (train/loss) and legacy (train_loss)
+                    train_loss = msg["logs"].get(
+                        "train/loss", msg["logs"].get("train_loss")
                     )
-                    if "val_loss" in msg["logs"].keys():
+                    if train_loss is not None:
+                        self._add_datapoint(
+                            x=(self.epoch + 1) * self.epoch_size,
+                            y=train_loss,
+                            which="train_loss",
+                        )
+                    # Support both sleap-nn naming (val/loss) and legacy (val_loss)
+                    val_loss = msg["logs"].get(
+                        "val/loss", msg["logs"].get("val_loss")
+                    )
+                    if val_loss is not None:
                         # update variables and add points to plot
                         self.penultimate_epoch_val_loss = self.last_epoch_val_loss
-                        self.last_epoch_val_loss = msg["logs"]["val_loss"]
+                        self.last_epoch_val_loss = val_loss
                         self._add_datapoint(
                             (self.epoch + 1) * self.epoch_size,
-                            msg["logs"]["val_loss"],
+                            val_loss,
                             "val_loss",
                         )
                         # calculate timing and flags at new epoch
@@ -971,11 +980,16 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.on_epoch.emit()
                 elif msg["event"] == "batch_end":
                     self.last_batch_number = msg["batch"]
-                    self._add_datapoint(
-                        x=(self.epoch * self.epoch_size) + msg["batch"],
-                        y=msg["logs"]["train_loss"],
-                        which="batch",
+                    # Support both sleap-nn naming (loss) and legacy (train_loss)
+                    batch_loss = msg["logs"].get(
+                        "loss", msg["logs"].get("train_loss")
                     )
+                    if batch_loss is not None:
+                        self._add_datapoint(
+                            x=(self.epoch * self.epoch_size) + msg["batch"],
+                            y=batch_loss,
+                            which="batch",
+                        )
 
             # Check for messages again (up to times_to_check times).
             if times_to_check > 0:
