@@ -215,6 +215,41 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
             1.0 if brightness_enabled else 0.0
         )
 
+    # Handle ConvNeXt pretrained weights checkbox
+    if "_convnext_use_pretrained" in key_val_dict:
+        convnext_weights_key = (
+            "model_config.backbone_config.convnext.pre_trained_weights"
+        )
+        if key_val_dict["_convnext_use_pretrained"]:
+            model_type = key_val_dict.get(
+                "model_config.backbone_config.convnext.model_type", "tiny"
+            )
+            weights_map = {
+                "tiny": "ConvNeXt_Tiny_Weights",
+                "small": "ConvNeXt_Small_Weights",
+                "base": "ConvNeXt_Base_Weights",
+                "large": "ConvNeXt_Large_Weights",
+            }
+            key_val_dict[convnext_weights_key] = weights_map.get(model_type)
+        else:
+            key_val_dict[convnext_weights_key] = None
+
+    # Handle SwinT pretrained weights checkbox
+    if "_swint_use_pretrained" in key_val_dict:
+        swint_weights_key = "model_config.backbone_config.swint.pre_trained_weights"
+        if key_val_dict["_swint_use_pretrained"]:
+            model_type = key_val_dict.get(
+                "model_config.backbone_config.swint.model_type", "tiny"
+            )
+            weights_map = {
+                "tiny": "Swin_T_Weights",
+                "small": "Swin_S_Weights",
+                "base": "Swin_B_Weights",
+            }
+            key_val_dict[swint_weights_key] = weights_map.get(model_type)
+        else:
+            key_val_dict[swint_weights_key] = None
+
 
 def get_skeleton_from_config(skeleton_config: OmegaConf):
     """Create Sleap-io Skeleton objects from config.
