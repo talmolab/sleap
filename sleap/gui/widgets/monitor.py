@@ -933,9 +933,7 @@ class LossViewer(QtWidgets.QMainWindow):
                             which="train_loss",
                         )
                     # Support both sleap-nn naming (val/loss) and legacy (val_loss)
-                    val_loss = msg["logs"].get(
-                        "val/loss", msg["logs"].get("val_loss")
-                    )
+                    val_loss = msg["logs"].get("val/loss", msg["logs"].get("val_loss"))
                     if val_loss is not None:
                         # update variables and add points to plot
                         self.penultimate_epoch_val_loss = self.last_epoch_val_loss
@@ -981,9 +979,7 @@ class LossViewer(QtWidgets.QMainWindow):
                 elif msg["event"] == "batch_end":
                     self.last_batch_number = msg["batch"]
                     # Support both sleap-nn naming (loss) and legacy (train_loss)
-                    batch_loss = msg["logs"].get(
-                        "loss", msg["logs"].get("train_loss")
-                    )
+                    batch_loss = msg["logs"].get("loss", msg["logs"].get("train_loss"))
                     if batch_loss is not None:
                         self._add_datapoint(
                             x=(self.epoch * self.epoch_size) + msg["batch"],
