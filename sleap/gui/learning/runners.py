@@ -165,7 +165,8 @@ class InferenceWorker(QtCore.QThread):
     progressUpdate = QtCore.Signal(int, int)  # (current, total)
     statusUpdate = QtCore.Signal(str)  # status message (HTML)
     logOutput = QtCore.Signal(str)  # log line
-    finished = QtCore.Signal(bool, int, int)  # (success, new_frame_count, total_frame_count)
+    # (success, new_frame_count, total_frame_count)
+    finished = QtCore.Signal(bool, int, int)
 
     def __init__(
         self,
@@ -700,7 +701,7 @@ class InferenceTask:
                     line_data = {"log_line": line} if line else {}
 
                 if waiting_callback is not None:
-                    # Pass line data to callback (includes log_line for non-JSON output).
+                    # Pass line data to callback (log_line for non-JSON output).
                     ret = waiting_callback(**line_data)
 
                     if ret == "cancel":
