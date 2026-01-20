@@ -277,9 +277,7 @@ class InferenceWorker(QtCore.QThread):
                             eta_mins, eta_secs = divmod(eta, 60)
                             if eta_mins > 60:
                                 eta_hours, eta_mins = divmod(eta_mins, 60)
-                                eta_str = (
-                                    f"{int(eta_hours)}h {int(eta_mins):02}m"
-                                )
+                                eta_str = f"{int(eta_hours)}h {int(eta_mins):02}m"
                             elif eta_mins > 0:
                                 eta_str = f"{int(eta_mins)}m {int(eta_secs):02}s"
                             else:
