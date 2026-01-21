@@ -66,23 +66,23 @@ jupyter = [
 ]
 
 nn = [
-    "sleap-nn[torch]>=0.1.0a3"
+    "sleap-nn[torch]>=0.1.0a4"
 ]
 
 nn-cpu = [
-    "sleap-nn[torch]>=0.1.0a3"
+    "sleap-nn[torch]>=0.1.0a4"
 ]
 
 nn-cuda128 = [
-    "sleap-nn[torch]>=0.1.0a3"
+    "sleap-nn[torch]>=0.1.0a4"
 ]
 
 nn-cuda118 = [
-    "sleap-nn[torch]>=0.1.0a3"
+    "sleap-nn[torch]>=0.1.0a4"
 ]
 
 nn-cuda130 = [
-    "sleap-nn[torch]>=0.1.0a3"
+    "sleap-nn[torch]>=0.1.0a4"
 ]
 
 [dependency-groups]
