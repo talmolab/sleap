@@ -77,8 +77,8 @@ class TestIterateLabeledFrames:
         result_indices = [lf.frame_idx for lf in frames]
 
         assert result_indices[0] == 20, (
-            f"First frame should be 20 (immediate previous to 30), got {result_indices[0]}. "
-            "This is the bug from issue #2578 - Previous Labeled Frame was skipping one frame."
+            f"First frame should be 20 (immediate previous to 30), "
+            f"got {result_indices[0]}. Bug #2578."
         )
         assert result_indices == [20, 10, 50, 40, 30]
 
@@ -96,8 +96,8 @@ class TestIterateLabeledFrames:
         result_indices = [lf.frame_idx for lf in frames]
 
         assert result_indices[0] == 30, (
-            f"First frame should be 30 (immediate previous to 35), got {result_indices[0]}. "
-            "This is the bug from issue #2578."
+            f"First frame should be 30 (immediate previous to 35), "
+            f"got {result_indices[0]}. Bug #2578."
         )
 
     def test_reverse_iteration_wraps_at_beginning(self, labels_with_frames):
