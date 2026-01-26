@@ -585,9 +585,12 @@ def iterate_labeled_frames(
 
         # Reorder the list to start from the specified position
         if reverse:
-            # For reverse, we need to handle the reordering differently
-            reordered = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
-            frame_idxs = reordered[::-1]  # Reverse the reordered list
+            # For reverse: start from cut_list_idx and go backwards, then wrap
+            # Result: [cut_list_idx, cut_list_idx-1, ..., 0, last, ..., cut_list_idx+1]
+            frame_idxs = (
+                frame_idxs[: cut_list_idx + 1][::-1]
+                + frame_idxs[cut_list_idx + 1 :][::-1]
+            )
         else:
             # For forward, just reorder normally
             frame_idxs = frame_idxs[cut_list_idx:] + frame_idxs[:cut_list_idx]
