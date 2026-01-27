@@ -1063,9 +1063,19 @@ def run_gui_training(
             # so we have access to them here (rather than letting
             # train_subprocess update them).
             # training.Trainer.set_run_name(job, labels_filename)
-            job.trainer_config.ckpt_dir = os.path.join(
-                os.path.dirname(labels_filename), "models"
+            # Use user-specified ckpt_dir if provided, otherwise default to "models"
+            user_ckpt_dir = OmegaConf.select(
+                job, "trainer_config.ckpt_dir", default=None
             )
+            if not user_ckpt_dir:
+                user_ckpt_dir = "models"
+            # Resolve relative paths against the labels file directory
+            if not os.path.isabs(user_ckpt_dir):
+                job.trainer_config.ckpt_dir = os.path.join(
+                    os.path.dirname(labels_filename), user_ckpt_dir
+                )
+            else:
+                job.trainer_config.ckpt_dir = user_ckpt_dir
             base_run_name = f"{model_type}.n={len(labels.user_labeled_frames)}"
             run_path = setup_new_run_folder(
                 job,
