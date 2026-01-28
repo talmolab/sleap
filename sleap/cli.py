@@ -1118,9 +1118,7 @@ def _make_nn_stub(command_name: str) -> click.Command:
         """This command requires sleap-nn to be installed."""
         raise click.ClickException(
             f"The '{command_name}' command requires sleap-nn.\n\n"
-            "To install sleap-nn, run:\n"
-            "  uv sync --extra nn\n\n"
-            "Or see the installation guide: https://docs.sleap.ai/latest/installation/"
+            "See the installation guide to install with sleap-nn: https://docs.sleap.ai/latest/installation/"
         )
 
     # Update the help text to indicate it's unavailable
