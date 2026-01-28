@@ -1105,6 +1105,35 @@ cli.add_command(wrap_sio_command(sio_transform), name="transform")
 # sleap-nn Commands (Inherited)
 # =============================================================================
 
+
+def _make_nn_stub(command_name: str) -> click.Command:
+    """Create a stub command that shows an error when sleap-nn is not installed."""
+
+    @click.command(
+        name=command_name,
+        context_settings={"help_option_names": ["-h", "--help"]},
+    )
+    @rich_config(help_config=SLEAP_HELP_CONFIG)
+    def stub_command():
+        """This command requires sleap-nn to be installed."""
+        raise click.ClickException(
+            f"The '{command_name}' command requires sleap-nn.\n\n"
+            "To install sleap-nn, run:\n"
+            "  uv sync --extra nn\n\n"
+            "Or see the installation guide: https://docs.sleap.ai/latest/installation/"
+        )
+
+    # Update the help text to indicate it's unavailable
+    stub_command.help = (
+        f"[dim](Requires sleap-nn)[/] "
+        f"Run sleap-nn {command_name} workflow.\n\n"
+        "sleap-nn is not installed. To enable this command, install with:\n\n"
+        "  uv sync --extra nn"
+    )
+
+    return stub_command
+
+
 # Add wrapped sleap-nn commands to the CLI group (if sleap-nn is installed)
 if _SLEAP_NN_AVAILABLE:
     cli.add_command(wrap_nn_command(nn_train), name="train")
@@ -1113,6 +1142,10 @@ if _SLEAP_NN_AVAILABLE:
     cli.add_command(wrap_nn_command(nn_export), name="export")
     cli.add_command(wrap_nn_command(nn_predict), name="predict")
     cli.add_command(wrap_nn_command(nn_system), name="system")
+else:
+    # Register stub commands that show helpful error messages
+    for cmd_name in ["train", "track", "eval", "export", "predict", "system"]:
+        cli.add_command(_make_nn_stub(cmd_name), name=cmd_name)
 
 
 # =============================================================================
