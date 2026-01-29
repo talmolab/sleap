@@ -309,12 +309,13 @@ class TestInferenceTaskCLI:
         )
 
     def test_basic_cli_call(self, inference_task, video_item):
-        """Basic CLI call should include sleap-nn-track and model paths."""
+        """Basic CLI call should include sleap track and model paths."""
         cli_args, output_path = inference_task.make_predict_cli_call(
             video_item, output_path="/path/to/output.slp"
         )
 
-        assert cli_args[0] == "sleap-nn-track"
+        assert cli_args[0] == "sleap"
+        assert cli_args[1] == "track"
         assert "--model_paths" in cli_args
         # Model path should be parent directory (strip training_config.yaml)
         model_idx = cli_args.index("--model_paths") + 1
@@ -768,7 +769,7 @@ class TestWritePipelineFiles:
         )
 
         # Verify the script has basic required content
-        assert "sleap-nn-train" in train_script_content
+        assert "sleap train" in train_script_content
         assert "--config-name" in train_script_content
         assert "--config-dir" in train_script_content
 
@@ -863,7 +864,8 @@ class TestFullCLIIntegration:
         )
 
         # Check base command
-        assert cli_args[0] == "sleap-nn-track"
+        assert cli_args[0] == "sleap"
+        assert cli_args[1] == "track"
 
         # Check data args
         assert "--data_path" in cli_args
