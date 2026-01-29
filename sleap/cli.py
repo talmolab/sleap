@@ -360,7 +360,7 @@ def label(
     # Import and call the existing GUI launcher
     from sleap.gui.app import main as gui_main
 
-    gui_main(args=args if args else None)
+    gui_main(args=args)
 
 
 # =============================================================================
