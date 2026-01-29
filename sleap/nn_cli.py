@@ -2,6 +2,9 @@
 
 This module provides CLI entry points for sleap-nn commands (train, track, export,
 predict) that can be used when sleap-nn is installed.
+
+Note: These are legacy entry points. The preferred way to run these commands is
+via the unified `sleap` CLI (e.g., `sleap train` instead of `sleap-nn-train`).
 """
 
 import logging
@@ -11,6 +14,18 @@ import click
 from click import Command
 
 logger = logging.getLogger(__name__)
+
+
+def _warn_deprecated(old_cmd: str, new_cmd: str) -> None:
+    """Print a deprecation warning for legacy CLI commands."""
+    click.echo(
+        click.style(
+            f"Note: '{old_cmd}' is a legacy command. "
+            f"Consider using '{new_cmd}' instead.",
+            fg="yellow",
+        ),
+        err=True,
+    )
 
 
 class TrainCommand(Command):
@@ -62,6 +77,8 @@ def train(config_name, config_dir, overrides):
         sleap-nn-train -c myconfig -d /path/to/config_dir/ trainer_config.max_epochs=100
         sleap-nn-train -c myconfig -d /path/to/config_dir/ +experiment=new_model
     """
+    _warn_deprecated("sleap-nn-train", "sleap train")
+
     # Import sleap-nn modules inside function
     try:
         from sleap_nn.train import run_training
@@ -522,6 +539,8 @@ def track(**kwargs):
 
     (From `sleap-nn`: `sleap-nn track`)
     """
+    _warn_deprecated("sleap-nn-track", "sleap track")
+
     # Import sleap-nn modules inside function
     try:
         from sleap_nn.predict import run_inference, frame_list
@@ -623,6 +642,8 @@ def export(
         sleap-nn-export /path/to/model -o exports/my_model --format both
         sleap-nn-export /path/to/centroid /path/to/instance -o exports/topdown
     """
+    _warn_deprecated("sleap-nn-export", "sleap export")
+
     try:
         from sleap_nn.export.cli import export as sleap_nn_export
 
@@ -760,6 +781,8 @@ def predict(
         sleap-nn-predict exports/my_model video.mp4 -o predictions.slp
         sleap-nn-predict exports/my_model video.mp4 --runtime tensorrt --batch-size 8
     """
+    _warn_deprecated("sleap-nn-predict", "sleap predict")
+
     try:
         from sleap_nn.export.cli import predict as sleap_nn_predict
 

@@ -59,6 +59,23 @@ from sleap_io.io.cli import (
     transform as sio_transform,
 )
 
+# Import sleap-nn CLI commands for integration (optional, requires sleap-nn)
+try:
+    from sleap_nn.cli import (
+        train as nn_train,
+        track as nn_track,
+        eval as nn_eval,
+        system as nn_system,
+    )
+    from sleap_nn.export.cli import (
+        export as nn_export,
+        predict as nn_predict,
+    )
+
+    _SLEAP_NN_AVAILABLE = True
+except ImportError:
+    _SLEAP_NN_AVAILABLE = False
+
 
 # =============================================================================
 # DefaultGroup Implementation
@@ -160,6 +177,10 @@ SLEAP_HELP_CONFIG = RichHelpConfiguration(
 click.rich_click.COMMAND_GROUPS = {
     "sleap": [
         {"name": "Application", "commands": ["label", "doctor"]},
+        {
+            "name": "Neural Network",
+            "commands": ["train", "track", "eval", "export", "predict", "system"],
+        },
         {"name": "Data Inspection", "commands": ["show", "filenames"]},
         {
             "name": "Data Transformation",
@@ -195,6 +216,39 @@ def wrap_sio_command(sio_cmd: click.Command) -> click.Command:
         new_cmd.help = new_cmd.help.replace("$ sio ", "$ sleap ")
         # Also replace any "sio" command references in the docs
         new_cmd.help = new_cmd.help.replace("[bold]sio[/]", "[bold]sleap[/]")
+
+    # Apply SLEAP's rich-click configuration
+    # RichCommand stores config in _rich_config attribute
+    new_cmd._rich_config = SLEAP_HELP_CONFIG
+
+    return new_cmd
+
+
+def wrap_nn_command(nn_cmd: click.Command) -> click.Command:
+    """Wrap a sleap-nn CLI command with SLEAP branding.
+
+    This creates a new command that:
+    1. Has the same parameters as the original command
+    2. Uses SLEAP's rich-click configuration for help formatting
+    3. Replaces 'sleap-nn' with 'sleap' in help text examples
+
+    Args:
+        nn_cmd: A Click Command object from sleap-nn.
+
+    Returns:
+        A new Command object with SLEAP branding applied.
+    """
+    import copy
+
+    # Deep copy to avoid modifying the original
+    new_cmd = copy.copy(nn_cmd)
+
+    # Replace examples in help text
+    if new_cmd.help:
+        new_cmd.help = new_cmd.help.replace("sleap-nn ", "sleap ")
+        new_cmd.help = new_cmd.help.replace("$ sleap-nn ", "$ sleap ")
+        # Also replace any "sleap-nn" command references in the docs
+        new_cmd.help = new_cmd.help.replace("[bold]sleap-nn[/]", "[bold]sleap[/]")
 
     # Apply SLEAP's rich-click configuration
     # RichCommand stores config in _rich_config attribute
@@ -1045,6 +1099,51 @@ cli.add_command(wrap_sio_command(sio_unembed), name="unembed")
 cli.add_command(wrap_sio_command(sio_trim), name="trim")
 cli.add_command(wrap_sio_command(sio_reencode), name="reencode")
 cli.add_command(wrap_sio_command(sio_transform), name="transform")
+
+
+# =============================================================================
+# sleap-nn Commands (Inherited)
+# =============================================================================
+
+
+def _make_nn_stub(command_name: str) -> click.Command:
+    """Create a stub command that shows an error when sleap-nn is not installed."""
+
+    @click.command(
+        name=command_name,
+        context_settings={"help_option_names": ["-h", "--help"]},
+    )
+    @rich_config(help_config=SLEAP_HELP_CONFIG)
+    def stub_command():
+        """This command requires sleap-nn to be installed."""
+        raise click.ClickException(
+            f"The '{command_name}' command requires sleap-nn.\n\n"
+            "See the installation guide to install with sleap-nn: https://docs.sleap.ai/latest/installation/"
+        )
+
+    # Update the help text to indicate it's unavailable
+    stub_command.help = (
+        f"[dim](Requires sleap-nn)[/] "
+        f"Run sleap-nn {command_name} workflow.\n\n"
+        "sleap-nn is not installed. To enable this command, install with:\n\n"
+        "  uv sync --extra nn"
+    )
+
+    return stub_command
+
+
+# Add wrapped sleap-nn commands to the CLI group (if sleap-nn is installed)
+if _SLEAP_NN_AVAILABLE:
+    cli.add_command(wrap_nn_command(nn_train), name="train")
+    cli.add_command(wrap_nn_command(nn_track), name="track")
+    cli.add_command(wrap_nn_command(nn_eval), name="eval")
+    cli.add_command(wrap_nn_command(nn_export), name="export")
+    cli.add_command(wrap_nn_command(nn_predict), name="predict")
+    cli.add_command(wrap_nn_command(nn_system), name="system")
+else:
+    # Register stub commands that show helpful error messages
+    for cmd_name in ["train", "track", "eval", "export", "predict", "system"]:
+        cli.add_command(_make_nn_stub(cmd_name), name=cmd_name)
 
 
 # =============================================================================
