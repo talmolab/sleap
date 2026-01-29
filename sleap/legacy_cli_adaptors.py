@@ -1,4 +1,9 @@
-"""Adaptors for legacy CLI commands."""
+"""Adaptors for legacy CLI commands.
+
+Note: These are legacy entry points maintained for backwards compatibility.
+The preferred way to run these commands is via the unified `sleap` CLI
+(e.g., `sleap train` instead of `sleap-train`).
+"""
 
 import click
 from omegaconf import OmegaConf
@@ -13,6 +18,18 @@ import sleap_io as sio
 from sleap.sleap_io_adaptors.lf_labels_utils import load_labels_video_search
 
 logger = logging.getLogger(__name__)
+
+
+def _warn_deprecated(old_cmd: str, new_cmd: str) -> None:
+    """Print a deprecation warning for legacy CLI commands."""
+    click.echo(
+        click.style(
+            f"Note: '{old_cmd}' is a legacy command. "
+            f"Consider using '{new_cmd}' instead.",
+            fg="yellow",
+        ),
+        err=True,
+    )
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
@@ -131,6 +148,8 @@ def train_command(
     gpu,
 ):
     """Train a SLEAP model with the specified configuration."""
+    _warn_deprecated("sleap-train", "sleap train")
+
     try:
         from sleap_nn.training.model_trainer import ModelTrainer
         from sleap_nn.predict import run_inference as predict
@@ -657,6 +676,8 @@ def track_command(
     tracking_of_max_levels,
 ):
     """Track instances in video data using trained SLEAP models."""
+    _warn_deprecated("sleap-track", "sleap track")
+
     try:
         import torch
         from sleap_nn.predict import run_inference as predict
