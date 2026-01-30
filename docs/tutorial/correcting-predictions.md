@@ -148,7 +148,7 @@ Since last time was a special case where we were training with a single image, l
     !!! tip
         Curious about how we chose these model settings? Here are some resources to learn more while you wait for your model to train:
 
-        - <a href="../../learnings/configuring-models/#configuring-models" target="_blank">SLEAP: Configuring models</a>
+        - <a href="https://nn.sleap.ai/latest/reference/models/" target="_blank">sleap-nn: Model Configuration</a>
         - <a href="../../learnings/troubleshoot-workflows" target="_blank">SLEAP: Troubleshooting workflows</a>
         - <a href="https://www.nature.com/articles/s41592-022-01426-1" target="_blank"> Pereira et al., *Nature Methods* (2022)</a> (**Fig. 4**)
 

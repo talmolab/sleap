@@ -30,6 +30,8 @@ theme:
         name: Switch to dark mode
 
   features:
+    - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.tracking
     - toc.follow
     - navigation.indexes
@@ -113,10 +115,12 @@ extra:
   version:
     provider: mike
   social:
-      - icon: fontawesome/brands/github 
+      - icon: fontawesome/brands/github
         link: https://github.com/talmolab
       - icon: fontawesome/brands/x-twitter
         link: https://x.com/talmop
+      - icon: fontawesome/solid/envelope
+        link: mailto:talmo@salk.edu
 
 copyright: >
   Copyright &copy; 2025 Talmo Lab 
@@ -156,20 +160,18 @@ nav:
     - Interactive and realtime inference: notebooks/Interactive_and_realtime_inference.ipynb
     - Using exported data: notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data.ipynb
     - Using idTracker.ai with SLEAP: notebooks/sleap_io_idtracker_IDs.ipynb
-  - Learning: 
+  - Learning:
+      - learnings/index.md
       - System Overview: learnings/system-overview.md
       - Using GUI: learnings/gui.md
-      - Training Options: learnings/training-options.md
-      - Skeleton design: learnings/skeleton-design.md
-      - Configuring models: learnings/configuring-models.md
-      - Prediction Assisted Labeling: learnings/prediction-assisted-labeling.md
-      - Types of mistakes in tracking code: learnings/main-mistakes-by-tracking.md
-      - Troubleshooting workflows: learnings/troubleshoot-workflows.md
-      - Export Data For Analysis: learnings/export-analysis.md
-  - Reference: 
+      - Skeleton Design: learnings/skeleton-design.md
+      - Prediction-Assisted Labeling: learnings/prediction-assisted-labeling.md
+      - Tracking Mistakes: learnings/main-mistakes-by-tracking.md
+      - Export for Analysis: learnings/export-analysis.md
+  - Reference:
       - Datasets: reference/datasets.md
       - Command line interfaces: reference/command-line-interfaces.md
-      - Evaluation metrics: reference/evaluation_metrics.md
+      - Label Quality Control: reference/quality-control.md
       - Full API: api/
       - Changelog: changelog.md
   - Help: help.md

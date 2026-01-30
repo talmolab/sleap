@@ -71,7 +71,7 @@ You'll need both of these files for each model you're going to use for inference
     This allows you to run inference on older models without needing to retrain them with the new backend.
 
 
-Inference will run in different modes depending on the output types of the models you supply. See the instructions for [Configuring models](../learnings/configuring-models.md).
+Inference will run in different modes depending on the output types of the models you supply. See the instructions for [Model Configuration](https://nn.sleap.ai/latest/reference/models/).
 
 For this example, let's suppose you have two models: centroids and instance-centered confidence maps. This is the typical "top-down" case for multi-instance predictions.
 

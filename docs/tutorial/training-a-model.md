@@ -15,7 +15,7 @@ As we add more labeled frames, the accuracy will very quickly improve, so there'
 
 Even though we've only labeled a single frame so far, let's see what happens when we train a super lightweight model.
 
-[Training options](../learnings/training-options.md) has more information about different training options, but for this tutorial let’s use the default settings for training with the “top-down” pipeline.
+[Model Configuration](https://nn.sleap.ai/latest/reference/models/) has more information about different training options, but for this tutorial let's use the default settings for training with the "top-down" pipeline.
 
 1. In the menu bar at the top, click **Predict** → **Run Training...** to open the training pipeline configuration window.
 
