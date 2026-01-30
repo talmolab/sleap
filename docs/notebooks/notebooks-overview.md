@@ -36,10 +36,6 @@ In this notebook, we show how to use the tracking functionality within SLEAP to 
 
 Training in SLEAP can be done via the GUI, CLI, or interactively in Python. Here we show how to use `sleap-nn`'s Python API to enable customizable training workflows, including resumable training for initialization from existing models.
 
-### [Interactive and realtime inference](Interactive_and_realtime_inference.ipynb)
-
-Once you have trained models, you can run inference via the GUI, CLI, or interactively in Python. Here we show how to load trained models, use them to predict on new frames, and implement a basic version of a realtime SLEAP tracker for closed-loop applications.
-
 ### [Model evaluation](Model_evaluation.ipynb)
 
 After you've trained several models, you may want to compute some metrics for benchmarking and comparisons. This notebook walks through some of the types of metrics that SLEAP can compute for you, as well as how to recompute them.
