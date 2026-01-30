@@ -85,6 +85,11 @@ One command works on all platforms. It automatically detects your GPU and instal
 
     Check the [version compatibility table](#version-compatibility) for the latest versions.
 
+!!! warning "Python version matters"
+    If you don't have Python installed, `uv` will automatically download one. Without `--python 3.13`, it may download Python 3.14 which **SLEAP does not support yet**.
+
+    Always include `--python 3.13` (or `--python 3.12`) in your install command.
+
 That's it! SLEAP is now available system-wide. Run it from any terminal:
 
 ```bash
