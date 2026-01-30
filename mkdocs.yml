@@ -157,7 +157,6 @@ nav:
     - Data structures: notebooks/Data_structures.ipynb
     - Post inference tracking: notebooks/Post_inference_tracking.ipynb
     - Interactive and resumable training: notebooks/Interactive_and_resumable_training.ipynb
-    - Interactive and realtime inference: notebooks/Interactive_and_realtime_inference.ipynb
     - Using exported data: notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data.ipynb
     - Using idTracker.ai with SLEAP: notebooks/sleap_io_idtracker_IDs.ipynb
   - Learning:
