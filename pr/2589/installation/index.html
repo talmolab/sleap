@@ -2828,6 +2828,11 @@
 </span></code></pre></div>
 <p>Check the <a href="#version-compatibility">version compatibility table</a> for the latest versions.</p>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">Python version matters</p>
+<p>If you don't have Python installed, <code>uv</code> will automatically download one. Without <code>--python 3.13</code>, it may download Python 3.14 which <strong>SLEAP does not support yet</strong>.</p>
+<p>Always include <code>--python 3.13</code> (or <code>--python 3.12</code>) in your install command.</p>
+</div>
 <p>That's it! SLEAP is now available system-wide. Run it from any terminal:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap
 </span></code></pre></div>
