@@ -34,14 +34,53 @@ Detects possible identity swaps between tracked instances.
 
 ## Programmatic Access
 
-The QC module is also available programmatically via `sleap.qc`:
+The QC module is available programmatically via `sleap.qc`:
 
 ```python
-import sleap
+import sleap_io as sio
+from sleap.qc import LabelQCDetector, QCConfig
 
-labels = sleap.load_file("labels.slp")
-# QC API documentation TBD based on sleap.qc module
+# Load labels
+labels = sio.load_file("labels.slp")
+
+# Create detector with default config
+detector = LabelQCDetector()
+
+# Fit on labels (learns what "normal" looks like from your data)
+detector.fit(labels)
+
+# Score all instances
+results = detector.score(labels)
+
+# Get flagged instances above threshold (0.0-1.0, higher = more anomalous)
+flagged = results.get_flagged(threshold=0.7)
+
+# Inspect flagged instances
+for flag in flagged:
+    print(f"Video {flag.video_idx}, Frame {flag.frame_idx}, Instance {flag.instance_idx}")
+    print(f"  Score: {flag.score:.2f}")
+    print(f"  Top contributors: {flag.top_contributors}")
 ```
+
+### Configuration Options
+
+```python
+from sleap.qc import QCConfig
+
+config = QCConfig(
+    instance_threshold=0.7,      # Score threshold for flagging
+    gmm_n_components=3,          # Number of GMM components
+    duplicate_iou_threshold=0.5, # IoU threshold for duplicate detection
+)
+detector = LabelQCDetector(config=config)
+```
+
+### Available Classes
+
+- `LabelQCDetector`: Main detection interface
+- `QCConfig`: Configuration settings
+- `QCResults`: Container for scores, frame results, and feature contributions
+- `QCFlag`: Individual flagged instance with score and contributing features
 
 ## Tips
 
