@@ -68,7 +68,7 @@ This view helps identify systematic labeling issues in your dataset.
 
 ### Features
 
-Box plots comparing feature distributions between normal (gray) and flagged (red) instances. This tab shows the top discriminating features—the characteristics that most differentiate flagged instances from normal ones.
+Box plots comparing feature distributions between normal (gray) and flagged (red) instances. This tab shows the top discriminating features--the characteristics that most differentiate flagged instances from normal ones.
 
 Features shown may include:
 
@@ -87,8 +87,8 @@ A sortable table listing all instances that exceed the current threshold:
 |--------|-------------|
 | **Frame** | Frame index where the instance appears |
 | **Instance** | Instance index within that frame |
-| **Score** | Anomaly score (0.0–1.0). Higher scores indicate more unusual instances. Displayed in red for scores ≥0.8, yellow for ≥0.6 |
-| **Confidence** | "High" (score ≥0.8), "Medium" (0.5–0.8), or "Low" (<0.5) |
+| **Score** | Anomaly score (0.0--1.0). Higher scores indicate more unusual instances. Displayed in red for scores >=0.8, yellow for >=0.6 |
+| **Confidence** | "High" (score >=0.8), "Medium" (0.5--0.8), or "Low" (<0.5) |
 | **Issue** | The primary issue type (most contributing feature) |
 
 **Interacting with the table:**
@@ -184,7 +184,7 @@ detector = LabelQCDetector(config=config)
 
 - Run QC after initial labeling but before training to catch errors early
 - Re-run after proofreading tracking results to verify corrections
-- Not all flagged items are actual errors—use your judgment when reviewing
+- Not all flagged items are actual errors--use your judgment when reviewing
 - Lower the threshold if you want to be more thorough; raise it to focus on the most obvious issues
 - Use the Issue Breakdown tab to identify systematic problems in your labeling workflow
 - QC is most effective when you have consistent labeling practices across your dataset
