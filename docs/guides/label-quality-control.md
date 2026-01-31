@@ -157,7 +157,7 @@ flagged = results.get_flagged(threshold=0.7)
 for flag in flagged:
     print(f"Video {flag.video_idx}, Frame {flag.frame_idx}, Instance {flag.instance_idx}")
     print(f"  Score: {flag.score:.2f}")
-    print(f"  Issue: {flag.top_issue}")
+    print(f"  Top contributors: {flag.top_contributors}")
 ```
 
 ### Configuration Options
