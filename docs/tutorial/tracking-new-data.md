@@ -21,9 +21,6 @@ We have included a testing video in the tutorial data which we will be tracking 
 
     ![](../assets/images/tutorial/run-inference.png)
 
-    !!! warning
-        Did you close the inference window and now cannot open it again? This is a known bug. Closing and re-opening SLEAP should allow you to run inference again.
-
 4. *Optional:* For this tutorial, we include a pretrained model that you can use for inference, but if you were happy with the model you just trained in the previous step, you can manually select it in this step.
     
     !!! note
