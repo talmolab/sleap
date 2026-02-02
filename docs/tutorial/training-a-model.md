@@ -17,6 +17,9 @@ Even though we've only labeled a single frame so far, let's see what happens whe
 
 [Model Configuration](https://nn.sleap.ai/latest/reference/models/) has more information about different training options, but for this tutorial let's use the default settings for training with the "top-down" pipeline.
 
+!!! info "New in SLEAP 1.6: Additional backbone options"
+    SLEAP 1.6 introduces new backbone architectures including **ConvNeXt** and **Swin Transformer** in addition to the default **UNet**. For this tutorial, we'll use the default UNet backbone, but you can explore these options in the [Model Configuration guide](https://nn.sleap.ai/latest/reference/models/).
+
 1. In the menu bar at the top, click **Predict** → **Run Training...** to open the training pipeline configuration window.
 
     ![](../assets/images/tutorial/run-predict.png)

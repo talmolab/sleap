@@ -4,7 +4,7 @@
 
 We start by assembling a candidate group of images to label. You can either pick your own frames or let the system suggest a set of frames using the “Labeling Suggestions” panel. SLEAP can give you random or evenly-spaced samples, or it can try to give you distinctive groups of frames by taking the image features into account.
 
-For this tutotial, let’s just get 50 random frames. 
+For this tutorial, let’s just get 50 random frames. 
 
 1. Switch to the **Labeling Suggestions** tab.
 2. Set **Method** to **sample** and **Samples Per Video** to **50**.
