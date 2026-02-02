@@ -1188,10 +1188,82 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#understanding-the-distribution" class="md-nav__link">
+  <a href="#recompute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Understanding the Distribution
+        Recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotation-augmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rotation Augmentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scatter-clickable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scatter (clickable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#histogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histogram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selected-instance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selected Instance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statistics
       
     </span>
   </a>
@@ -1225,6 +1297,17 @@
     <span class="md-ellipsis">
       
         Using with Crop Size Visualization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic Access
       
     </span>
   </a>
@@ -2266,10 +2349,82 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#understanding-the-distribution" class="md-nav__link">
+  <a href="#recompute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Understanding the Distribution
+        Recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotation-augmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rotation Augmentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scatter-clickable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scatter (clickable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#histogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histogram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selected-instance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selected Instance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statistics
       
     </span>
   </a>
@@ -2303,6 +2458,17 @@
     <span class="md-ellipsis">
       
         Using with Crop Size Visualization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic Access
       
     </span>
   </a>
@@ -2351,24 +2517,86 @@
 <p>The Instance Size Distribution widget helps you analyze your labeled data to choose an appropriate crop size.</p>
 <h2 id="accessing-the-widget">Accessing the Widget<a class="headerlink" href="#accessing-the-widget" title="Permanent link">&para;</a></h2>
 <p>From the GUI: <strong>Analyze</strong> → <strong>Instance Size Distribution...</strong></p>
-<h2 id="understanding-the-distribution">Understanding the Distribution<a class="headerlink" href="#understanding-the-distribution" title="Permanent link">&para;</a></h2>
-<p>The widget displays a histogram of instance bounding box sizes across your labeled frames:</p>
+<p>This opens a dialog window showing the size distribution of all user-labeled instances in your project.</p>
+<p><img alt="Instance Size Distribution dialog before loading data" src="../../assets/images/instancesd_preview.png" /></p>
+<p><img alt="Instance Size Distribution dialog with data loaded" src="../../assets/images/instancesd_example.png" /></p>
+<h2 id="recompute">Recompute<a class="headerlink" href="#recompute" title="Permanent link">&para;</a></h2>
+<p>Click the <strong>Recompute</strong> button to recalculate sizes from your current labels. This is useful if you've added or modified labels since opening the dialog.</p>
+<p>The widget only analyzes user-labeled instances (not predicted instances) to give you accurate statistics based on your ground truth annotations.</p>
+<h2 id="rotation-augmentation">Rotation Augmentation<a class="headerlink" href="#rotation-augmentation" title="Permanent link">&para;</a></h2>
+<p>The <strong>Rotation Augmentation</strong> controls let you preview how rotation augmentation during training will affect the required crop size.</p>
+<p>When you rotate an instance, its bounding box grows to accommodate the rotated skeleton. This setting helps you understand what crop size you'll need if using rotation augmentation.</p>
+<p><strong>Preset options:</strong></p>
 <ul>
-<li><strong>X-axis</strong>: Bounding box size (in pixels)</li>
-<li><strong>Y-axis</strong>: Number of instances</li>
+<li><strong>Off</strong>: No rotation applied. Shows the raw bounding box sizes.</li>
+<li><strong>&plusmn;15</strong>: Simulates &plusmn;15 degree rotation augmentation (common for videos with limited rotation).</li>
+<li><strong>&plusmn;180</strong>: Simulates full rotation augmentation (common for overhead/top-down views).</li>
+<li><strong>Custom</strong>: Enables the custom angle spinner to set any angle from 0-180 degrees.</li>
 </ul>
+<p>When using rotation augmentation in training, set this to match your training configuration to see the effective crop sizes you'll need.</p>
+<h2 id="visualization">Visualization<a class="headerlink" href="#visualization" title="Permanent link">&para;</a></h2>
+<p>The center plot shows the distribution of instance sizes. You can switch between two views:</p>
+<h3 id="scatter-clickable">Scatter (clickable)<a class="headerlink" href="#scatter-clickable" title="Permanent link">&para;</a></h3>
+<p>The default view shows each instance as a point:</p>
+<ul>
+<li><strong>X-axis</strong>: Size in pixels (the larger dimension of the bounding box)</li>
+<li><strong>Y-axis</strong>: Instance index (ordered by position in the labels file)</li>
+<li><strong>Point colors</strong>: Colored by relative size (blue = near median, red = larger than median)</li>
+<li><strong>Vertical lines</strong>: Show statistics:</li>
+<li><strong>Green dashed</strong>: Median size</li>
+<li><strong>Blue dotted</strong>: Mean size</li>
+<li><strong>Red solid</strong>: Maximum size</li>
+</ul>
+<p><strong>Clicking a point</strong> selects that instance and navigates to it in the main video player, making it easy to inspect outliers.</p>
+<h3 id="histogram">Histogram<a class="headerlink" href="#histogram" title="Permanent link">&para;</a></h3>
+<p>An alternative view showing the count distribution:</p>
+<ul>
+<li><strong>X-axis</strong>: Size in pixels</li>
+<li><strong>Y-axis</strong>: Count (number of instances in each bin)</li>
+<li><strong>Vertical lines</strong>: Same statistics as scatter view (median, mean, max)</li>
+</ul>
+<p><strong>Histogram options</strong> (enabled when Histogram is selected):</p>
+<ul>
+<li><strong>Bins</strong>: Number of histogram bins (5-100, default 30)</li>
+<li><strong>X-min</strong>: Minimum x-axis value, or "Auto" for automatic range</li>
+<li><strong>X-max</strong>: Maximum x-axis value, or "Auto" for automatic range</li>
+</ul>
+<p>Use the range controls to zoom in on a specific size range if needed.</p>
+<h2 id="selected-instance">Selected Instance<a class="headerlink" href="#selected-instance" title="Permanent link">&para;</a></h2>
+<p>When you click a point in the scatter plot, the <strong>Selected Instance</strong> panel shows:</p>
+<ul>
+<li><strong>Frame</strong>: The frame index where the instance appears</li>
+<li><strong>Instance</strong>: The instance index within that frame</li>
+<li><strong>Video</strong>: The video index (for multi-video projects)</li>
+<li><strong>Raw Size</strong>: The bounding box size without rotation (with width × height dimensions)</li>
+<li><strong>Rotated Size</strong>: The effective size with the current rotation setting applied</li>
+</ul>
+<p>This helps you understand both the original annotation size and how it will grow with rotation augmentation.</p>
+<h2 id="statistics">Statistics<a class="headerlink" href="#statistics" title="Permanent link">&para;</a></h2>
+<p>The <strong>Statistics</strong> panel shows summary statistics for all instances:</p>
+<ul>
+<li><strong>Count</strong>: Total number of user-labeled instances</li>
+<li><strong>Range</strong>: Minimum and maximum sizes in pixels</li>
+<li><strong>Mean &plusmn; Std</strong>: Average size with standard deviation</li>
+<li><strong>Median</strong>: The middle value (50<sup>th</sup> percentile)</li>
+<li><strong>90<sup>th</sup>/95<sup>th</sup>/99<sup>th</sup></strong>: Percentile values for choosing crop sizes</li>
+<li><strong>Outliers (&gt;2 sigma)</strong>: Count of instances more than 2 standard deviations above the mean</li>
+</ul>
+<p>These statistics update when you change the rotation setting.</p>
 <h2 id="choosing-a-crop-size">Choosing a Crop Size<a class="headerlink" href="#choosing-a-crop-size" title="Permanent link">&para;</a></h2>
+<p>Use the statistics to choose an appropriate crop size:</p>
 <ol>
-<li>Open <strong>Analyze</strong> → <strong>Instance Size Distribution...</strong></li>
-<li>Review the histogram to see the range of instance sizes</li>
-<li>Choose a crop size that covers the majority of instances (e.g., 95<sup>th</sup> percentile)</li>
-<li>Consider adding padding (10-20%) for animals near frame edges</li>
+<li><strong>95<sup>th</sup> percentile</strong> is a common choice—it covers 95% of instances while excluding extreme outliers</li>
+<li><strong>Add 10-20% padding</strong> for animals near frame edges or to account for prediction uncertainty</li>
+<li><strong>Consider rotation</strong>: If using rotation augmentation, set the rotation preview to match and use those statistics</li>
 </ol>
+<p>For example, if your 95<sup>th</sup> percentile with &plusmn;180 rotation is 200px, a crop size of 220-240px would be reasonable.</p>
 <h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Consistent animal sizes</strong>: If your animals are similar sizes, the distribution will be tight and crop size selection is straightforward</li>
 <li><strong>Variable sizes</strong>: If sizes vary significantly (e.g., adults and juveniles), consider using a larger crop size or filtering your training data</li>
-<li><strong>Multiple videos</strong>: Check the distribution across all videos to ensure your crop size works for different recording conditions</li>
+<li><strong>Multiple videos</strong>: The widget analyzes all videos together. If recording conditions vary, click through outliers to see if they come from specific videos</li>
+<li><strong>Inspect outliers</strong>: Click on the largest points in the scatter plot to check if they represent real variation or labeling errors</li>
 </ul>
 <h2 id="using-with-crop-size-visualization">Using with Crop Size Visualization<a class="headerlink" href="#using-with-crop-size-visualization" title="Permanent link">&para;</a></h2>
 <p>After choosing a crop size, you can visualize it in the main view:</p>
@@ -2377,6 +2605,31 @@
 <li>The crop size overlay will show the crop region on your video</li>
 <li>Scrub through frames to verify the crop captures the full animal</li>
 </ol>
+<h2 id="programmatic-access">Programmatic Access<a class="headerlink" href="#programmatic-access" title="Permanent link">&para;</a></h2>
+<p>For scripting or automation, you can compute instance sizes programmatically:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sleap_io</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sio</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sleap.gui.learning.size</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_instance_sizes</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Load labels</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">labels</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s2">&quot;labels.slp&quot;</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Compute sizes for user-labeled instances</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">sizes</span> <span class="o">=</span> <span class="n">compute_instance_sizes</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">user_instances_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># Get raw sizes</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">raw_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">raw_size</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">])</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;95th percentile: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">raw_sizes</span><span class="p">,</span><span class="w"> </span><span class="mi">95</span><span class="p">)</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">px&quot;</span><span class="p">)</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># With rotation augmentation (+/-180 degrees)</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">rotated_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">get_rotated_size</span><span class="p">(</span><span class="mi">180</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">])</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;95th percentile with rotation: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">rotated_sizes</span><span class="p">,</span><span class="w"> </span><span class="mi">95</span><span class="p">)</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">px&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Each <code>InstanceSizeInfo</code> object contains:
+- <code>video_idx</code>, <code>frame_idx</code>, <code>instance_idx</code>: Location identifiers
+- <code>raw_width</code>, <code>raw_height</code>: Bounding box dimensions
+- <code>raw_size</code>: Maximum of width and height
+- <code>get_rotated_size(angle)</code>: Size needed with rotation augmentation</p>
 <h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://nn.sleap.ai/latest/reference/models/">Configuring Models</a> - Full details on crop size and other model parameters</li>

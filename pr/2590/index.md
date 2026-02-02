@@ -24,7 +24,7 @@
 - **Fast inference** – Up to 600+ FPS batch processing, <10ms realtime latency
 - **Modern backends** – [`sleap-io`](https://io.sleap.ai) for data handling and PyTorch-based [`sleap-nn`](https://nn.sleap.ai) for training
 
-**Let's start SLEAPing!** 🐭🐭
+**Let's Get Some SLEAP!** 🐭🐭
 
 ---
 
