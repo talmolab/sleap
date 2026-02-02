@@ -1,5 +1,8 @@
 # 8. Exporting the results
 
+!!! tip "Want more details?"
+    For comprehensive export options including CLI commands, Python API, and code examples, see [Export for Analysis](../learnings/export-analysis.md).
+
 SLEAP stores labeled data, predictions, and all metadata in `.slp` files. These files use a custom format that is optimized for SLEAP workflows and contain metadata, but ultimately are just HDF5 files that implement our [data model](../notebooks/Data_structures.ipynb).
 
 These `.slp` files are not intended for final use in analysis since they require SLEAP to be parsed appropriately.

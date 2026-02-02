@@ -148,7 +148,7 @@ sleap label
 
 -   :fontawesome-brands-github:{ .lg } **Report Issues**
 
-    Found a bug? [Create an issue](https://github.com/talmolab/sleap/issues/new)
+    Found a bug? [Create an issue](https://github.com/talmolab/sleap/issues/new?template=bug_report.md)
 
 -   :material-forum:{ .lg } **Discussions**
 
