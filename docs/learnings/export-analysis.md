@@ -24,6 +24,9 @@ The easiest way to export data is through the **File** menu:
 For batch processing or scripting, use the `sleap convert` command:
 
 ```bash
+# Convert to CSV
+sleap convert predictions.slp -o analysis.csv
+
 # Convert to NWB (Neurodata Without Borders)
 sleap convert predictions.slp -o data.nwb
 
@@ -39,13 +42,12 @@ sleap convert labels.slp -o yolo_dataset/ --to ultralytics
 
 See `sleap convert --help` or the [sleap-io CLI documentation](https://io.sleap.ai/latest/cli/#sio-convert) for all options.
 
-!!! note "Analysis HDF5 and CSV"
-    Analysis HDF5 and CSV exports are available via the **GUI** or **Python API**:
+!!! note "Analysis HDF5"
+    Analysis HDF5 export is available via the **GUI** or **Python API**:
     ```python
     import sleap_io as sio
     labels = sio.load_slp("predictions.slp")
     sio.save_analysis_h5(labels, "analysis.h5")
-    sio.save_csv(labels, "analysis.csv")
     ```
 
 ---
@@ -89,7 +91,7 @@ For dataset schemas, axis ordering presets, and advanced options, see the [sleap
 | Format | Extension | CLI | Python API | Documentation |
 |--------|-----------|:---:|:----------:|---------------|
 | **Analysis HDF5** | `.h5` | — | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#sleap-analysis-hdf5-format-h5) |
-| **CSV** | `.csv` | — | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#csv-format-csv) |
+| **CSV** | `.csv` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#csv-format-csv) |
 | **NWB** | `.nwb` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#nwb-format-nwb) |
 | **COCO** | `.json` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#coco-format-json) |
 | **Label Studio** | `.json` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#label-studio-format-json) |
