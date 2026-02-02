@@ -172,7 +172,7 @@ sleap convert annotations.json -o labels.slp --from coco  # COCO to SLP
 **Supported formats:**
 
 - **Input:** slp, nwb, coco, labelstudio, alphatracker, jabs, dlc, ultralytics, leap
-- **Output:** slp, nwb, coco, labelstudio, jabs, ultralytics
+- **Output:** slp, nwb, coco, labelstudio, jabs, ultralytics, csv
 
 ### `sleap show`
 
