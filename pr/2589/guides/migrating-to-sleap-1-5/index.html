@@ -920,6 +920,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1149,6 +1153,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#whats-new-in-v16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's New in v1.6
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What&#39;s New in v1.6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unified-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label-quality-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label Quality Control
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instance-size-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instance Size Distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#onnxtensorrt-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ONNX/TensorRT Export
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1201,6 +1277,62 @@
     
   
     Tracking and proofreading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instance-size-distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
   
 
     
@@ -2306,6 +2438,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#whats-new-in-v16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's New in v1.6
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What&#39;s New in v1.6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unified-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label-quality-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label Quality Control
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instance-size-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instance Size Distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#onnxtensorrt-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ONNX/TensorRT Export
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2359,6 +2563,37 @@
 <ul>
 <li><strong>GUI Support</strong>: SLEAP now uses a new <u>YAML-based</u> config file structure, but you can still upload and work with old SLEAP JSON files in the GUI. For details on converting legacy SLEAP 1.4 config/JSON files to the new YAML format, see our <a href="https://nn.sleap.ai/latest/config/#converting-legacy-sleap-14-configjson-to-sleap-nn-yaml">conversion guide</a>.</li>
 <li><strong>Using TensorFlow Model Weights</strong>: Continue to support running inference on SLEAP &lt;1.4 TensorFlow model weights (UNet backbone only). Check <a href="https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support">using legacy models</a> for more details.</li>
+</ul>
+<h2 id="whats-new-in-v16">What's New in v1.6<a class="headerlink" href="#whats-new-in-v16" title="Permanent link">&para;</a></h2>
+<p>SLEAP 1.6 builds on the v1.5 foundation with additional features and improvements:</p>
+<h3 id="unified-cli">Unified CLI<a class="headerlink" href="#unified-cli" title="Permanent link">&para;</a></h3>
+<p>The new <code>sleap</code> command provides a single entry point for all SLEAP functionality:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap<span class="w">                    </span><span class="c1"># Launch the GUI</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sleap<span class="w"> </span>doctor<span class="w">             </span><span class="c1"># System diagnostics</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>sleap<span class="w"> </span>train<span class="w"> </span>...<span class="w">          </span><span class="c1"># Training (via sleap-nn)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>sleap<span class="w"> </span>track<span class="w"> </span>...<span class="w">          </span><span class="c1"># Inference (via sleap-nn)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>sleap<span class="w"> </span>show<span class="w"> </span>labels.slp<span class="w">    </span><span class="c1"># View labels summary (via sleap-io)</span>
+</span></code></pre></div>
+<p>See <a href="../../reference/command-line-interfaces/">Command Line Interfaces</a> for the full list of commands.</p>
+<h3 id="label-quality-control">Label Quality Control<a class="headerlink" href="#label-quality-control" title="Permanent link">&para;</a></h3>
+<p>New <strong>Analyze → Label QC...</strong> menu for automated detection of labeling errors including:
+- Temporal jitter (unstable predictions across frames)
+- Visibility inconsistencies
+- Scale anomalies
+- Potential identity swaps</p>
+<p>See <a href="../label-quality-control/">Label Quality Control</a> for details.</p>
+<h3 id="instance-size-distribution">Instance Size Distribution<a class="headerlink" href="#instance-size-distribution" title="Permanent link">&para;</a></h3>
+<p>New <strong>Analyze → Instance Size Distribution...</strong> widget helps determine optimal crop sizes for top-down models by analyzing the distribution of instance bounding box sizes in your labeled data.</p>
+<p>See <a href="../instance-size-distribution/">Instance Size Distribution</a> for details.</p>
+<h3 id="onnxtensorrt-export">ONNX/TensorRT Export<a class="headerlink" href="#onnxtensorrt-export" title="Permanent link">&para;</a></h3>
+<p>Export trained models to ONNX or TensorRT format for 3-6x faster inference:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--model<span class="w"> </span>models/my_model<span class="w"> </span>--format<span class="w"> </span>onnx
+</span></code></pre></div>
+<h3 id="additional-improvements">Additional Improvements<a class="headerlink" href="#additional-improvements" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Real-time inference progress</strong>: Live FPS and ETA display during inference</li>
+<li><strong>Filter overlapping instances</strong>: New controls in training/inference dialogs</li>
+<li><strong>Crop size visualization</strong>: Overlay showing crop region for top-down models</li>
 </ul>
 <p><em>For a complete list of changes, see our <a href="../../changelog/">Changelog</a>.</em></p>
 

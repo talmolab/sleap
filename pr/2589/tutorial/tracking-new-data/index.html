@@ -933,6 +933,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1075,6 +1079,62 @@
     
   
     Tracking and proofreading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/instance-size-distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
   
 
     
@@ -2118,16 +2178,12 @@
 <p>A new SLEAP window will appear with a blank project that contains the new video and nothing else.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>In the typical workflow, you'll do this step programmatically such as through the <a href="../../reference/command-line-interfaces/#sleap-track">command line interface</a>.</p>
+<p>In the typical workflow, you'll do this step programmatically using the <a href="../../reference/command-line-interfaces/">command line interface</a>. The recommended commands are <code>sleap track</code> or <code>sleap-nn track</code>.</p>
 </div>
 </li>
 <li>
 <p>Go to the <strong>Predict</strong> menu → <strong>Run Inference</strong> to open the inference configuration window.</p>
 <p><img alt="" src="../../assets/images/tutorial/run-inference.png" /></p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Did you close the inference window and now cannot open it again? This is a known bug. Closing and re-opening SLEAP should allow you to run inference again.</p>
-</div>
 </li>
 <li>
 <p><em>Optional:</em> For this tutorial, we include a pretrained model that you can use for inference, but if you were happy with the model you just trained in the previous step, you can manually select it in this step.</p>
@@ -2137,7 +2193,7 @@
 </div>
 <p>By default, SLEAP uses the newest model in the <code>models</code> subfolder of the project folder. To change it, click over to the <strong>Centroid Model Configuration</strong> tab, then click <strong>Select training config file...</strong> from the dropdown menu at the top:</p>
 <p><img alt="" src="../../assets/images/tutorial/select-config.png" /></p>
-<p>Navigate up one directory and select any JSON file for the model that you just trained:</p>
+<p>Navigate up one directory and select the config file for the model that you just trained (<code>.yaml</code> for models trained with SLEAP 1.5+, or <code>.json</code> for legacy models):</p>
 <p><img alt="" src="../../assets/images/tutorial/select-trained-model.gif" /></p>
 <p>Click over to the <strong>Centered Instance Model Configuration</strong> tab and repeat the same steps to select the other model.</p>
 </li>

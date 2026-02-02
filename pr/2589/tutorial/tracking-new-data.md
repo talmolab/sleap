@@ -15,14 +15,11 @@ We have included a testing video in the tutorial data which we will be tracking 
     A new SLEAP window will appear with a blank project that contains the new video and nothing else.
 
     !!! tip
-        In the typical workflow, you'll do this step programmatically such as through the [command line interface](../reference/command-line-interfaces.md/#sleap-track).
+        In the typical workflow, you'll do this step programmatically using the [command line interface](../reference/command-line-interfaces.md). The recommended commands are `sleap track` or `sleap-nn track`.
 
 3. Go to the **Predict** menu → **Run Inference** to open the inference configuration window.
 
     ![](../assets/images/tutorial/run-inference.png)
-
-    !!! warning
-        Did you close the inference window and now cannot open it again? This is a known bug. Closing and re-opening SLEAP should allow you to run inference again.
 
 4. *Optional:* For this tutorial, we include a pretrained model that you can use for inference, but if you were happy with the model you just trained in the previous step, you can manually select it in this step.
     
@@ -34,7 +31,7 @@ We have included a testing video in the tutorial data which we will be tracking 
 
     ![](../assets/images/tutorial/select-config.png)
 
-    Navigate up one directory and select any JSON file for the model that you just trained:
+    Navigate up one directory and select the config file for the model that you just trained (`.yaml` for models trained with SLEAP 1.5+, or `.json` for legacy models):
 
     ![](../assets/images/tutorial/select-trained-model.gif)
 

@@ -933,6 +933,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1075,6 +1079,62 @@
     
   
     Tracking and proofreading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/instance-size-distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
   
 
     
@@ -2108,6 +2168,18 @@
 <p>Automated algorithms are never perfect. Using these tools in your research workflow should always be followed by a quality control step.</p>
 <p>This is especially important for tracking where making even one mistake results in catastrophic errors since an identity switch can propagate to the rest of the video.</p>
 <p>You can read more about the most common mistakes made by the tracking algorithm <a href="../../learnings/main-mistakes-by-tracking/">here</a>. But for this tutorial, we will see how to handle switches.</p>
+<div class="admonition tip">
+<p class="admonition-title">New in SLEAP v1.6+</p>
+<p>SLEAP v1.6 introduces automated quality control tools to help you find potential errors:</p>
+<ul>
+<li>
+<p><strong><a href="../../guides/label-quality-control/">Label Quality Control</a></strong>: Automatically detects potential annotation errors using statistical anomaly detection. The system learns what "normal" poses look like in your data and flags instances that deviate significantly—useful for catching labeling mistakes, unusual poses, or tracking errors.</p>
+</li>
+<li>
+<p><strong><a href="../../guides/instance-size-distribution/">Instance Size Distribution</a></strong>: Analyzes the bounding box sizes of your labeled instances to help you choose the optimal crop size for top-down models. Click on outliers to navigate directly to unusually large or small instances that may need review.</p>
+</li>
+</ul>
+</div>
 <ol>
 <li>
 <p>To make it easier to spot switches, you can configure how SLEAP displays the predictions.</p>

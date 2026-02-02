@@ -983,6 +983,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1125,6 +1129,62 @@
     
   
     Tracking and proofreading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/instance-size-distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
   
 
     
@@ -2184,6 +2244,10 @@
 <p>As we add more labeled frames, the accuracy will very quickly improve, so there's no point in training a big and slow model.</p>
 <p>Even though we've only labeled a single frame so far, let's see what happens when we train a super lightweight model.</p>
 <p><a href="https://nn.sleap.ai/latest/reference/models/">Model Configuration</a> has more information about different training options, but for this tutorial let's use the default settings for training with the "top-down" pipeline.</p>
+<div class="admonition info">
+<p class="admonition-title">New in SLEAP 1.6: Additional backbone options</p>
+<p>SLEAP 1.6 introduces new backbone architectures including <strong>ConvNeXt</strong> and <strong>Swin Transformer</strong> in addition to the default <strong>UNet</strong>. For this tutorial, we'll use the default UNet backbone, but you can explore these options in the <a href="https://nn.sleap.ai/latest/reference/models/">Model Configuration guide</a>.</p>
+</div>
 <ol>
 <li>
 <p>In the menu bar at the top, click <strong>Predict</strong> → <strong>Run Training...</strong> to open the training pipeline configuration window.</p>

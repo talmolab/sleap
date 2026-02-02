@@ -1051,6 +1051,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1193,6 +1197,62 @@
     
   
     Tracking and proofreading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/instance-size-distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
   
 
     
@@ -2406,15 +2466,27 @@ Replace <code>YourUsername</code> with your actual Windows username.  </p>
 <ol>
 <li>
 <p>Open a terminal. Then launch the SLEAP GUI by typing this command followed by <kbd>Enter</kbd> or <kbd>Return</kbd>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap-label
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sleap
 </span></code></pre></div>
 <div class="admonition note">
-<p class="admonition-title">If you installed SLEAP with <strong>pip</strong></p>
-<p>Make sure to first activate the SLEAP conda environment:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>conda<span class="w"> </span>activate<span class="w"> </span>sleap
-</span></code></pre></div></p>
-<p>Then you can launch the GUI with:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sleap-label
+<p class="admonition-title">Development installation</p>
+<p>If you installed SLEAP for development (via <code>uv sync</code>), activate the environment first:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Linux/macOS</label><label for="__tabbed_4_2">Windows (PowerShell)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>sleap
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">sleap</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<p>Or run without activating:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap
 </span></code></pre></div></p>
 </div>
 <p><img alt="" src="../../assets/images/tutorial/open-gui.png" /></p>
@@ -2424,7 +2496,7 @@ Replace <code>YourUsername</code> with your actual Windows username.  </p>
 <p><img alt="" src="../../assets/images/tutorial/add-videos.png" /></p>
 </li>
 <li>
-<p><strong>Open</strong> the mice.mp4 from the git cloned folder <strong>sleap-tutorial-data-main</strong>. For future reference, SLEAP currently supports mp4, avi, and h5 files<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
+<p><strong>Open</strong> the mice.mp4 from the git cloned folder <strong>sleap-tutorial-data-main</strong>. For future reference, SLEAP supports a wide range of video and image formats<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.</p>
 <p><img alt="" src="../../assets/images/tutorial/import-mice-mp4.png" /></p>
 </li>
 <li>
@@ -2459,7 +2531,7 @@ Replace <code>YourUsername</code> with your actual Windows username.  </p>
 <hr />
 <ol>
 <li id="fn:1">
-<p>SLEAP currently supports mp4, avi, and h5 files. For mp4 and avi files, you’ll be asked whether to import the video as grayscale. For h5 files, you’ll be asked the dataset and whether the video is stored with channels first or last.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+<p>SLEAP supports common video formats (mp4, avi, mov, mkv), HDF5 files (h5, hdf5), image sequences (png, jpg, jpeg, bmp), and TIFF stacks (tif, tiff). For video files, you may be asked whether to import as grayscale. For HDF5 files, you'll be asked the dataset and whether the video is stored with channels first or last. See the <a href="https://io.sleap.ai">sleap-io documentation</a> for full details on supported formats.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
