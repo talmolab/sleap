@@ -1,5 +1,8 @@
 # Export for Analysis
 
+!!! note "New to exporting?"
+    If you're just getting started, see the [Exporting the Results](../tutorial/exporting-the-results.md) tutorial for a guided introduction.
+
 SLEAP provides multiple ways to export your pose tracking data for downstream analysis.
 
 !!! tip "Comprehensive format documentation"

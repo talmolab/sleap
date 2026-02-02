@@ -1881,6 +1881,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#label-qc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label QC
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2183,7 +2194,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/quality-control/" class="md-nav__link">
+      <a href="../../reference/quality-control.md" class="md-nav__link">
         
   
   
@@ -2487,6 +2498,17 @@
     <span class="md-ellipsis">
       
         Crop Size Overlay
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label-qc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label QC
       
     </span>
   </a>
@@ -2841,7 +2863,7 @@
 </tr>
 <tr>
 <td><strong>Label QC...</strong></td>
-<td>Open the <a href="../../reference/quality-control/">Label Quality Control</a> panel to find annotation errors</td>
+<td>Open the <a href="../reference/quality-control.md">Label Quality Control</a> panel to find annotation errors</td>
 </tr>
 </tbody>
 </table>
@@ -2860,23 +2882,34 @@
 </tr>
 <tr>
 <td><strong>Check for Updates</strong></td>
-<td>Check GitHub for newer SLEAP versions</td>
+<td>Check GitHub for newer SLEAP versions and shows a dialog with release notes if an update is available</td>
 </tr>
 </tbody>
 </table>
 <hr />
 <h2 id="analysis-widgets">Analysis Widgets<a class="headerlink" href="#analysis-widgets" title="Permanent link">&para;</a></h2>
 <h3 id="instance-size-distribution">Instance Size Distribution<a class="headerlink" href="#instance-size-distribution" title="Permanent link">&para;</a></h3>
-<p>Access via <strong>View → Instance Size Distribution</strong> or the toolbar.</p>
+<p>Access via <strong>Analyze → Instance Size Distribution...</strong> or the toolbar.</p>
 <p>This widget shows the distribution of instance bounding box sizes in your labeled data. Use it to:</p>
 <ul>
 <li><strong>Choose crop sizes</strong> for top-down models—crop size should encompass most instances</li>
 <li><strong>Identify outliers</strong> that may indicate labeling errors</li>
 <li><strong>Verify consistency</strong> across your labeled frames</li>
 </ul>
+<p>For a detailed walkthrough including rotation augmentation, statistics interpretation, and programmatic access, see <a href="../../guides/instance-size-distribution/">Instance Size Distribution Guide</a>.</p>
 <h3 id="crop-size-overlay">Crop Size Overlay<a class="headerlink" href="#crop-size-overlay" title="Permanent link">&para;</a></h3>
 <p>Enable via <strong>View → Crop Size Overlay</strong>.</p>
 <p>Shows the crop region that will be used for top-down training pipelines, similar to the receptive field overlay. Helps verify your crop size setting captures the full animal.</p>
+<h3 id="label-qc">Label QC<a class="headerlink" href="#label-qc" title="Permanent link">&para;</a></h3>
+<p>Access via <strong>Analyze → Label QC...</strong></p>
+<p>This panel uses statistical anomaly detection to automatically find potential labeling errors in your dataset. It flags instances with unusual edge lengths, joint angles, node spacing, or other features that deviate from the norm.</p>
+<p>Use it to:</p>
+<ul>
+<li><strong>Catch errors before training</strong>—find labeling mistakes early</li>
+<li><strong>Verify proofreading</strong>—check tracking corrections after proofreading</li>
+<li><strong>Identify systematic issues</strong>—see patterns in labeling errors</li>
+</ul>
+<p>For a complete guide including sensitivity tuning, issue types, and programmatic access, see <a href="../../guides/label-quality-control/">Label Quality Control Guide</a>.</p>
 <hr />
 <h2 id="mouse-controls">Mouse Controls<a class="headerlink" href="#mouse-controls" title="Permanent link">&para;</a></h2>
 <table>

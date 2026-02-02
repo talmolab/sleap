@@ -101,7 +101,7 @@ The SLEAP labeling interface is launched via the `sleap label` command (or legac
 | Command | Description |
 |---------|-------------|
 | **Keyboard Shortcuts** | View and customize shortcuts |
-| **Check for Updates** | Check GitHub for newer SLEAP versions |
+| **Check for Updates** | Check GitHub for newer SLEAP versions and shows a dialog with release notes if an update is available |
 
 ---
 
@@ -109,7 +109,7 @@ The SLEAP labeling interface is launched via the `sleap label` command (or legac
 
 ### Instance Size Distribution
 
-Access via **View → Instance Size Distribution** or the toolbar.
+Access via **Analyze → Instance Size Distribution...** or the toolbar.
 
 This widget shows the distribution of instance bounding box sizes in your labeled data. Use it to:
 
@@ -117,11 +117,27 @@ This widget shows the distribution of instance bounding box sizes in your labele
 - **Identify outliers** that may indicate labeling errors
 - **Verify consistency** across your labeled frames
 
+For a detailed walkthrough including rotation augmentation, statistics interpretation, and programmatic access, see [Instance Size Distribution Guide](../guides/instance-size-distribution.md).
+
 ### Crop Size Overlay
 
 Enable via **View → Crop Size Overlay**.
 
 Shows the crop region that will be used for top-down training pipelines, similar to the receptive field overlay. Helps verify your crop size setting captures the full animal.
+
+### Label QC
+
+Access via **Analyze → Label QC...**
+
+This panel uses statistical anomaly detection to automatically find potential labeling errors in your dataset. It flags instances with unusual edge lengths, joint angles, node spacing, or other features that deviate from the norm.
+
+Use it to:
+
+- **Catch errors before training**—find labeling mistakes early
+- **Verify proofreading**—check tracking corrections after proofreading
+- **Identify systematic issues**—see patterns in labeling errors
+
+For a complete guide including sensitivity tuning, issue types, and programmatic access, see [Label Quality Control Guide](../guides/label-quality-control.md).
 
 ---
 

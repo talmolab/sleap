@@ -2039,7 +2039,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/quality-control/" class="md-nav__link">
+      <a href="../../reference/quality-control.md" class="md-nav__link">
         
   
   
@@ -2276,6 +2276,10 @@
 
 <div class="md-source-file"><a href="../exporting-the-results.md" title="View markdown source" class="md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6m4 18H6V4h7v5h5v11M13 9V3.5L18.5 9H13Z"/></svg></a></div>
 <h1 id="8-exporting-the-results">8. Exporting the results<a class="headerlink" href="#8-exporting-the-results" title="Permanent link">&para;</a></h1>
+<div class="admonition tip">
+<p class="admonition-title">Want more details?</p>
+<p>For comprehensive export options including CLI commands, Python API, and code examples, see <a href="../../learnings/export-analysis/">Export for Analysis</a>.</p>
+</div>
 <p>SLEAP stores labeled data, predictions, and all metadata in <code>.slp</code> files. These files use a custom format that is optimized for SLEAP workflows and contain metadata, but ultimately are just HDF5 files that implement our <a href="../../notebooks/Data_structures/">data model</a>.</p>
 <p>These <code>.slp</code> files are not intended for final use in analysis since they require SLEAP to be parsed appropriately.</p>
 <p>Once you're ready to analyze your results, you have several options for different file formats for export. While these do not contain all the metadata used during the labeling and training stage, they are more convenient for analysis and portable for use in different downstream softwares and libraries.</p>
