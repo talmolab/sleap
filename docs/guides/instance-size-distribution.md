@@ -103,7 +103,7 @@ These statistics update when you change the rotation setting.
 
 Use the statistics to choose an appropriate crop size:
 
-1. **95th percentile** is a common choice--it covers 95% of instances while excluding extreme outliers
+1. **95th percentile** is a common choice—it covers 95% of instances while excluding extreme outliers
 2. **Add 10-20% padding** for animals near frame edges or to account for prediction uncertainty
 3. **Consider rotation**: If using rotation augmentation, set the rotation preview to match and use those statistics
 
@@ -153,7 +153,6 @@ Each `InstanceSizeInfo` object contains:
 - `raw_width`, `raw_height`: Bounding box dimensions
 - `raw_size`: Maximum of width and height
 - `get_rotated_size(angle)`: Size needed with rotation augmentation
-
 
 ## Related
 
