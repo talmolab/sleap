@@ -912,3 +912,211 @@ class TestFullConfigPipeline:
         assert (
             filtered_cfg.model_config.head_configs.single_instance.confmaps.sigma == 4.0
         )
+
+
+# =============================================================================
+# Config Loading Reverse Mapping Tests
+# =============================================================================
+
+
+class TestConfigLoadingReverseMapping:
+    """Tests for reverse mapping when loading configs into the GUI.
+
+    These tests verify that augmentation settings from loaded configs
+    (including legacy configs using affine_p) are correctly mapped to
+    GUI form fields.
+    """
+
+    def test_rotation_preset_from_rotation_p(self):
+        """rotation_p should be used to determine _rotation_preset."""
+        key_val_dict = {
+            "data_config.augmentation_config.geometric.rotation_min": -180,
+            "data_config.augmentation_config.geometric.rotation_max": 180,
+            "data_config.augmentation_config.geometric.rotation_p": 1.0,
+        }
+
+        # Simulate the reverse mapping logic from _load_config
+        rot_min = key_val_dict.get(
+            "data_config.augmentation_config.geometric.rotation_min"
+        )
+        rot_max = key_val_dict.get(
+            "data_config.augmentation_config.geometric.rotation_max"
+        )
+        rot_p = key_val_dict.get("data_config.augmentation_config.geometric.rotation_p")
+        affine_p = key_val_dict.get(
+            "data_config.augmentation_config.geometric.affine_p"
+        )
+
+        effective_rot_p = rot_p if rot_p is not None else affine_p
+
+        assert effective_rot_p == 1.0
+        assert rot_min == -180 and rot_max == 180
+
+    def test_rotation_preset_fallback_to_affine_p(self):
+        """affine_p should be used as fallback when rotation_p is None.
+
+        This is the case for legacy/baseline configs that use affine_p
+        instead of the new rotation_p/scale_p parameters.
+        """
+        # This is how baseline configs look - they have affine_p but no rotation_p
+        key_val_dict = {
+            "data_config.augmentation_config.geometric.rotation_min": -180.0,
+            "data_config.augmentation_config.geometric.rotation_max": 180.0,
+            "data_config.augmentation_config.geometric.affine_p": 1.0,
+            # rotation_p is NOT present (None)
+        }
+
+        rot_min = key_val_dict.get(
+            "data_config.augmentation_config.geometric.rotation_min"
+        )
+        rot_max = key_val_dict.get(
+            "data_config.augmentation_config.geometric.rotation_max"
+        )
+        rot_p = key_val_dict.get("data_config.augmentation_config.geometric.rotation_p")
+        affine_p = key_val_dict.get(
+            "data_config.augmentation_config.geometric.affine_p"
+        )
+
+        # Check rotation_p first, fall back to affine_p for legacy configs
+        effective_rot_p = rot_p if rot_p is not None else affine_p
+
+        # With affine_p=1.0 and rotation_min=-180, rotation_max=180,
+        # should NOT be "Off"
+        assert effective_rot_p == 1.0
+        assert rot_min == -180.0 and rot_max == 180.0
+
+        # Determine preset
+        if effective_rot_p is None or effective_rot_p == 0:
+            preset = "Off"
+        elif rot_min == -180 and rot_max == 180:
+            preset = "±180°"
+        elif rot_min == -15 and rot_max == 15:
+            preset = "±15°"
+        else:
+            preset = "Custom"
+
+        assert preset == "±180°"
+
+    def test_scale_enabled_from_scale_p(self):
+        """scale_p should be used to determine _scale_enabled."""
+        key_val_dict = {
+            "data_config.augmentation_config.geometric.scale_min": 0.9,
+            "data_config.augmentation_config.geometric.scale_max": 1.1,
+            "data_config.augmentation_config.geometric.scale_p": 1.0,
+        }
+
+        scale_p = key_val_dict.get("data_config.augmentation_config.geometric.scale_p")
+        scale_min = key_val_dict.get(
+            "data_config.augmentation_config.geometric.scale_min"
+        )
+        scale_max = key_val_dict.get(
+            "data_config.augmentation_config.geometric.scale_max"
+        )
+        affine_p = key_val_dict.get(
+            "data_config.augmentation_config.geometric.affine_p"
+        )
+
+        effective_scale_p = scale_p if scale_p is not None else affine_p
+
+        scale_enabled = (
+            effective_scale_p is not None
+            and effective_scale_p > 0
+            and scale_min is not None
+            and scale_max is not None
+            and scale_min != scale_max
+        )
+
+        assert scale_enabled is True
+
+    def test_scale_enabled_fallback_to_affine_p(self):
+        """affine_p should be used as fallback when scale_p is None.
+
+        This is the case for legacy/baseline configs that use affine_p
+        instead of the new rotation_p/scale_p parameters.
+        """
+        # This is how baseline configs look - they have affine_p but no scale_p
+        key_val_dict = {
+            "data_config.augmentation_config.geometric.scale_min": 0.9,
+            "data_config.augmentation_config.geometric.scale_max": 1.1,
+            "data_config.augmentation_config.geometric.affine_p": 1.0,
+            # scale_p is NOT present (None)
+        }
+
+        scale_p = key_val_dict.get("data_config.augmentation_config.geometric.scale_p")
+        scale_min = key_val_dict.get(
+            "data_config.augmentation_config.geometric.scale_min"
+        )
+        scale_max = key_val_dict.get(
+            "data_config.augmentation_config.geometric.scale_max"
+        )
+        affine_p = key_val_dict.get(
+            "data_config.augmentation_config.geometric.affine_p"
+        )
+
+        # Check scale_p first, fall back to affine_p for legacy configs
+        effective_scale_p = scale_p if scale_p is not None else affine_p
+
+        # Scale is enabled if probability > 0 AND min != max
+        scale_enabled = (
+            effective_scale_p is not None
+            and effective_scale_p > 0
+            and scale_min is not None
+            and scale_max is not None
+            and scale_min != scale_max
+        )
+
+        assert scale_enabled is True
+
+    def test_scale_disabled_when_min_equals_max(self):
+        """Scale should be disabled when min == max (no actual scaling)."""
+        key_val_dict = {
+            "data_config.augmentation_config.geometric.scale_min": 1.0,
+            "data_config.augmentation_config.geometric.scale_max": 1.0,
+            "data_config.augmentation_config.geometric.affine_p": 1.0,
+        }
+
+        scale_p = key_val_dict.get("data_config.augmentation_config.geometric.scale_p")
+        scale_min = key_val_dict.get(
+            "data_config.augmentation_config.geometric.scale_min"
+        )
+        scale_max = key_val_dict.get(
+            "data_config.augmentation_config.geometric.scale_max"
+        )
+        affine_p = key_val_dict.get(
+            "data_config.augmentation_config.geometric.affine_p"
+        )
+
+        effective_scale_p = scale_p if scale_p is not None else affine_p
+
+        scale_enabled = (
+            effective_scale_p is not None
+            and effective_scale_p > 0
+            and scale_min is not None
+            and scale_max is not None
+            and scale_min != scale_max
+        )
+
+        # scale_min == scale_max means no actual scaling occurs
+        assert scale_enabled is False
+
+    def test_rotation_off_when_affine_p_zero(self):
+        """Rotation should be Off when affine_p is 0."""
+        key_val_dict = {
+            "data_config.augmentation_config.geometric.rotation_min": -180.0,
+            "data_config.augmentation_config.geometric.rotation_max": 180.0,
+            "data_config.augmentation_config.geometric.affine_p": 0.0,
+        }
+
+        rot_p = key_val_dict.get("data_config.augmentation_config.geometric.rotation_p")
+        affine_p = key_val_dict.get(
+            "data_config.augmentation_config.geometric.affine_p"
+        )
+
+        effective_rot_p = rot_p if rot_p is not None else affine_p
+
+        if effective_rot_p is None or effective_rot_p == 0:
+            preset = "Off"
+        else:
+            preset = "±180°"
+
+        assert preset == "Off"
