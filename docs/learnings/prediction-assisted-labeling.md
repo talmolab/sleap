@@ -1,48 +1,88 @@
+# Prediction-Assisted Labeling
 
-# Prediction-assisted labeling
+Prediction-assisted labeling accelerates your workflow by using model predictions to bootstrap new labels.
 
-*Prediction-assisted labeling* has two main goals. First, it speeds up the labeling
-process as it is faster to correct a predicted instance which is mostly
-correct than it is to add a new instance from scratch. Second, it
-provides feedback about where your model does well and where it does
-poorly, and this should give you a better idea of which frames will be
-most useful to label.
+**Benefits:**
 
-The GUI doesn’t yet give you a way to monitor the progress during inference,
-although it will alert you if an error occurs during inference.
+- **Faster labeling** — Correcting a mostly-correct prediction is quicker than labeling from scratch
+- **Targeted feedback** — See where your model succeeds and fails, helping you choose the most useful frames to label
 
-When inference finishes, you’ll be told how many instances were
-predicted. Suggested frames with predicted instances will be marked in
-red on the seekbar.
+---
 
-# Reviewing and fixing predictions
+## The Active Learning Loop
 
-After you’ve successfully trained models and predicted some instances,
-you’ll get a message that inference has finished.
-Predictions will be marked with a thin black line on the seekbar, while frames
-that you manually labeled will be marked with a thicker black line. (For
-"suggested" frames, manually labeled frames will have a dark blue line and
-predicted frames will have a lighter blue.)
+```
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│   Label frames  →  Train model  →  Predict  →  Correct  │
+│        ↑                                          │     │
+│        └──────────────────────────────────────────┘     │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
 
-Predicted instances will _not_ be used for future model training unless you
-correct the predictions in the GUI.
+1. **Label** a small set of frames manually
+2. **Train** a model on your labels
+3. **Predict** on suggested or unlabeled frames
+4. **Correct** the predictions to create new training data
+5. **Repeat** until accuracy is satisfactory
 
-![](../assets/images/fixing-predictions.gif)
+---
 
-Predicted instances in the frame are displayed in grey with yellow
-nodes. To edit a prediction, you’ll need to replace it with an editable
-instance. **Double-click** the predicted instance and it will be converted into a regular instance.
+## Understanding the Seekbar
 
-!!! note
-    All node labels on the regular instance will be colored red.
-    After moving nodes, the node labels will colored green. This is just a visual indicator
-    to keep track of which nodes have been moved from the original prediction.
+After running inference, the seekbar shows different markers:
 
+| Marker | Meaning |
+|--------|---------|
+| **Thick black line** | Manually labeled frame |
+| **Thin black line** | Frame with predictions |
+| **Dark blue line** | Suggested frame with manual labels |
+| **Light blue line** | Suggested frame with predictions |
+| **Red marker** | Suggested frame ready for review |
 
-You can now edit the instance as before. Once you’ve added and/or
-corrected more instances, you can repeat the process:
-train a new model, predict on more frames, correct those predictions,
-and so on. You’ll want to regularly generate new frame suggestions,
-since active learning will return predictions for just these frames.
+---
 
-After you have accurate frame-by-frame prediction, you’re ready to predict for entire video clips and to track animal identities. We use a variety of heuristic algorithms for tracking identities across time (see [Tracking methods](../guides/tracking-and-proofreading.md/#tracking-methods) for more details). SLEAP also includes a graphical proof-reading tool for quickly assessing the accuracy of tracking and correcting problems.
+## Correcting Predictions
+
+Predicted instances appear in **grey with yellow nodes**. To edit them:
+
+1. **Double-click** the predicted instance to convert it to an editable instance
+2. Adjust the nodes as needed
+3. Save your changes
+
+![Fixing predictions](../assets/images/fixing-predictions.gif)
+
+!!! tip "Visual feedback"
+    After converting a prediction:
+
+    - **Red nodes** = unchanged from prediction
+    - **Green nodes** = manually adjusted
+
+    This helps you track which nodes you've reviewed.
+
+!!! warning "Predictions don't train automatically"
+    Predicted instances are **not** used for training until you convert and correct them. Always double-click to convert before making edits.
+
+---
+
+## Best Practices
+
+1. **Generate new suggestions regularly** — Active learning works best with fresh suggestions based on your latest model
+
+2. **Focus on failure cases** — Prioritize frames where predictions are wrong or uncertain
+
+3. **Don't over-correct** — If a prediction is close enough, a small adjustment is fine
+
+4. **Iterate frequently** — Several rounds of train → predict → correct typically yields better results than one large labeling session
+
+---
+
+## Next Steps
+
+Once you have accurate frame-by-frame predictions, you're ready to:
+
+- **Run inference on full videos** — Predict poses across entire clips
+- **Track identities** — Link instances across frames (see [Tracking methods](../guides/tracking-and-proofreading.md#tracking-methods))
+- **Proofread tracks** — Use the proofreading tools to fix tracking errors
+

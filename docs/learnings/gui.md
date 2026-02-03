@@ -1,210 +1,207 @@
-# GUI
+# Using the GUI
 
-The SLEAP labeling interface is accessible via the `sleap_label` command (see [`Command Line Interfaces`](../reference/command-line-interfaces.md)).
+The SLEAP labeling interface is launched via the `sleap label` command (or legacy `sleap-label`). See [Command Line Interfaces](../reference/command-line-interfaces.md) for details.
+
+!!! tip "Keyboard shortcuts"
+    Most menu commands have keyboard shortcuts. View and customize them via **Help → Keyboard Shortcuts**.
+
+---
 
 ## Menus
 
-Note that many of the menu command have keyboard shortcuts which can be configured from "**Keyboard Reference**" in the "**Help**" menu.
+### File
+
+| Command | Description |
+|---------|-------------|
+| **New...** | Create a new project |
+| **Open...** | Open an existing project |
+| **Save** / **Save As...** | Save the current project |
+| **Import...** | Import from external formats: [COCO] (`.json`), [DeepLabCut] (`.csv`), [DeepPoseKit] (`.h5`), [LEAP] (`.mat`) |
+| **Merge Data From...** | Copy labels/predictions from another SLEAP project into the current one |
+| **Add Videos...** | Add videos to the current project |
+| **Replace Videos...** | Swap videos with copies at different paths (useful for moving between drives) |
+
+### Go
+
+| Command | Description |
+|---------|-------------|
+| **Next Labeled Frame** | Jump to next frame with any labels (user or predicted) |
+| **Next User Labeled Frame** | Jump to next frame with user labels only |
+| **Next Suggestion** | Jump to the next suggested frame |
+| **Next Track Spawn Frame** | Jump to where a new track starts (useful for proofreading) |
+| **Next Video** | Switch to the next video in the project |
+| **Go to Frame...** | Jump to a specific frame number |
+| **Select to Frame...** | Select a clip from current frame to a specified frame |
+
+### View
+
+| Command | Description |
+|---------|-------------|
+| **Color Predicted Instances** | Toggle coloring predictions by track (enable for proofreading) |
+| **Color Palette** | Choose colors for instances (see note below) |
+| **Apply Distinct Colors To** | Color by tracks, nodes, or edges |
+| **Show Instances** | Toggle visibility of all instances |
+| **Show Non-Visible Nodes** | Toggle visibility of occluded/missing nodes |
+| **Show Node Names** | Toggle node name labels |
+| **Show Edges** | Toggle edge visibility |
+| **Edge Style** | Lines or wedges (wedges show orientation) |
+| **Trail Length** | Show instance movement trails (useful for detecting swaps) |
+| **Fit Instances to View** | Auto-zoom to instances in each frame |
+| **Seekbar Header** | Plot information above the seekbar |
+| **Crop Size Overlay** | Show the crop region for top-down training pipelines |
+
+!!! note "Color palettes"
+    - **"alphabet"** has 26 visually distinct colors
+    - Palettes ending with **"+"** don't cycle (useful for proofreading—"five+" shows track 4+ as orange)
+    - Customize palettes in `~/.sleap/colors.yaml`
+
+### Labels
+
+| Command | Description |
+|---------|-------------|
+| **Add Instance** | Add an instance to the current frame |
+| **Instance Placement Method** | Choose how new instances are positioned ("Best" uses predictions first) |
+| **Delete Instance** | Delete the selected instance |
+| **Set Instance Track** | Assign selected instance to a different track |
+| **Propagate Track Labels** | Apply track changes to all subsequent frames |
+| **Transpose Instance Tracks** | Swap tracks between two instances |
+| **Delete Instance and Track** | Delete all instances in a track across all frames |
+| **Custom Instance Delete...** | Delete instances matching specific criteria |
+| **Select Next Instance** | Cycle through instances in the frame |
+| **Clear Selection** | Deselect the current instance |
+
+### Predict
+
+| Command | Description |
+|---------|-------------|
+| **Run Training...** | Train models from your labeled data |
+| **Run Inference...** | Generate predictions using trained models |
+| **Evaluate Metrics for Trained Models...** | View recall, precision, and other metrics |
+| **Add Instances from All Predictions on Current Frame** | Convert all predictions to editable instances |
+| **Delete All Predictions...** | Remove all predictions from current video |
+| **Delete All Predictions from Clip...** | Remove predictions from selected frame range |
+| **Delete All Predictions from Area...** | Remove predictions within a rectangular region |
+| **Delete All Predictions with Low Score...** | Remove predictions below a score threshold |
+| **Delete All Predictions beyond Frame Limit...** | Keep only top N predictions per frame |
+| **Delete Predictions on User-Labeled Frames** | Remove predictions from frames with user labels |
+| **Export Video with Visual Annotations...** | Export video with poses overlaid |
+
+!!! tip "Random sample (current video)"
+    When running inference, you can now choose "Random sample (current video)" to predict on a random subset of frames from just the current video.
+
+### Analyze
+
+| Command | Description |
+|---------|-------------|
+| **Instance Size Distribution...** | View bounding box size distribution (helps choose crop sizes) |
+| **Label QC...** | Open the [Label Quality Control](../reference/quality-control.md) panel to find annotation errors |
+
+### Help
+
+| Command | Description |
+|---------|-------------|
+| **Keyboard Shortcuts** | View and customize shortcuts |
+| **Check for Updates** | Check GitHub for newer SLEAP versions and shows a dialog with release notes if an update is available |
+
+---
+
+## Analysis Widgets
+
+### Instance Size Distribution
+
+Access via **Analyze → Instance Size Distribution...** or the toolbar.
 
-## File
+This widget shows the distribution of instance bounding box sizes in your labeled data. Use it to:
 
-"**New...**", "**Open...**", "Save, and "**Save As...**" have their usual behavior.
+- **Choose crop sizes** for top-down models—crop size should encompass most instances
+- **Identify outliers** that may indicate labeling errors
+- **Verify consistency** across your labeled frames
 
-"**Import...**" allows you to import the data external formats into a new SLEAP dataset. This includes [COCO] keypoint detection (`.json` files), [DeepLabCut] (`.csv`), [DeepPoseKit] (`.h5`), and [LEAP] (`.mat`).
+For a detailed walkthrough including rotation augmentation, statistics interpretation, and programmatic access, see [Instance Size Distribution Guide](../guides/instance-size-distribution.md).
 
-"**Merge Data From...**" allows you to copy labels and/or predictions from another SLEAP dataset into the currently open project. This is useful because you can only train on data from a single SLEAP dataset, so you may need to import data before training. For instance, suppose you've trained a model and use it to get predictions on another video. You then open the predictions file in the GUI and realize that you'd like to correct some of the predictions and add those corrections to your training data. You can do this by importing data from the predictions file into the SLEAP project which has your training data.
+### Crop Size Overlay
 
-"**Add Videos...**" allows you to add videos to your currently open project.
+Enable via **View → Crop Size Overlay**.
 
-"**Replace Videos...**" allows you to *swap* the videos currently in your project with other videos. This is useful if you want to have your project access copies of the videos at a different path, e.g., if you copy the videos between a network drive and a local drive and want to change which is used by your project. This can also be used if you want to replace you videos with copies that have been re-encoded, cropped, or edited in some other way that doesn't affect the frame numbers (since your annotations will be placed directly on the corresponding frames of the new video).
+Shows the crop region that will be used for top-down training pipelines, similar to the receptive field overlay. Helps verify your crop size setting captures the full animal.
 
-## Go
+### Label QC
 
-"**Next Labeled Frame**" will take you to the next frame of the video which has any labeled data—either labels added by the user or predictions.
+Access via **Analyze → Label QC...**
 
-"**Next User Labeled Frame**" will take you to the next frame which has labels added by the user, skipping any frames which are unlabeled or have only predictions.
+This panel uses statistical anomaly detection to automatically find potential labeling errors in your dataset. It flags instances with unusual edge lengths, joint angles, node spacing, or other features that deviate from the norm.
 
-"**Next Suggestion**" will take you to the next frame in the list of suggested frames. If you are currently on a suggested frame, it will take you to the next frame in the list, which may not be a later frame in the video (or even a frame in the same video). If you are not currently on a suggested frame, it will take you to the nearest subsequent suggested frame.
+Use it to:
 
-"**Next Track Spawn Frame**" will take you to the next frame on which a new track starts—i.e., a predicted instance which were not able to identify as the same instance from some prior frame. This is useful when proofreading predictions, since you can skip between track spawn frames and then manually join the new track with one of the pre-existing tracks from prior frames.
+- **Catch errors before training**—find labeling mistakes early
+- **Verify proofreading**—check tracking corrections after proofreading
+- **Identify systematic issues**—see patterns in labeling errors
 
-"**Next Video**" will show the next video in the project (if your project has multiple videos). All the videos are listed in the "Videos" window.
+For a complete guide including sensitivity tuning, issue types, and programmatic access, see [Label Quality Control Guide](../guides/label-quality-control.md).
 
-"**Go to Frame...**" allows you to go to a specific frame (in the current video) by frame number. It's also handy if you want to copy the current frame number to the clipboard.
+---
 
-"**Select to Frame...**" allows you to select the clip from the current frame to a specified frame. If you want to select from frames X to Y, you can use **Go to** to go to X then **Select to** to select from X to Y.
+## Mouse Controls
 
+| Action | How |
+|--------|-----|
+| Zoom in/out | Mouse wheel on image |
+| Pan image | Left-click + drag |
+| Toggle node visibility | Right-click on node |
+| Add instance | Right-click elsewhere on image |
+| Zoom to region | Alt + left-click + drag |
+| Zoom out | Alt + double-click |
+| Move entire instance | Alt + drag on node |
+| Rotate entire instance | Alt + mouse wheel on node |
+| Create instance from prediction | Double-click on predicted instance |
+| Add missing nodes to instance | Double-click on editable instance |
+| Select instance | Click on instance |
+| Clear selection | Click elsewhere |
+| Duplicate instance | Ctrl + drag on instance |
 
-## View
+!!! note "macOS"
+    Substitute **Option** for **Alt** and **Command** for **Control**.
 
-"**Color Predicted Instances**" allows you to toggle whether *predicted* instances are all shown in yellow, or whether to apply distinct colors to (e.g.) track identities. You should turn this on when proofreading predictions for a video.
+---
 
-"**Color Palette**" allows you to choose the palette which will be used for coloring instances. Most of the palettes cycle colors, so that if there are five colors in the palette, the sixth item to color will be the same as the first. A few things to know:
+## Keyboard Navigation
 
-- The "alphabet" palette has 26 visually distinct colors, which can be useful when there are many items to color.
-- If the palette name ends with "+", the colors won't cycle and everything beyond the number of colors in the palette will use the last color in the palette. This is especially useful for proofreading when you're trying to merge all the track identities in the first few tracks (assuming you have a small number of instances in each frame). In particular, the "five+" palette will show any instance in the fourth or subsequent track as orange.
-- Color palettes can be customized by modifying the `colors.yaml` file that SLEAP creates inside the `.sleap` directory in your home directory. You can add your own palette or modify those already present in the file. Each color in a palette is listed on it's own line as r,g,b values (between 0 and 255).
+| Key | Action |
+|-----|--------|
+| **→** / **←** | Move one frame forward/back |
+| **Ctrl + →** / **←** | Move medium step (4 frames) |
+| **Ctrl + Alt + →** / **←** | Move large step (100 frames) |
+| **Home** / **End** | First / last frame |
+| **Shift + navigation** | Select frames while moving |
+| **1-9** | Select instance by number |
+| **Ctrl (hold)** | Show tracks legend |
+| **Escape** | Deselect all |
 
-"**Apply Distinct Colors To**" allows you to determine whether distinct colors are used for distinct tracks (instance identities), nodes, or edges. Try it!
+---
 
-"**Show Instances**" toggles the visibility of all instances in the frame. Useful for quickly hiding overlapping predictions.
+## Seekbar Controls
 
-"**Show Non-Visible Nodes**" toggles the visibility of "non-visible" nodes. Non-visible here means they are landmarks that were manually marked as occluded or not present. Hiding them is useful when inspecting manual labels with many missing nodes.
+| Action | How |
+|--------|-----|
+| Select frame range | Shift + drag |
+| Clear selection | Shift + click |
+| Zoom to range | Alt + drag |
+| Zoom out (show all) | Alt + click |
 
-"**Show Node Names**" allows you to toggle the visibility of the node names. This is useful if you have lots of nearby instances or very dense skeletons and the node names make it hard to see where the nodes are located.
-
-"**Show Edges**" allows you to toggle the visibility of the edges which connect the nodes. This can be useful when you have lots of edges which make it hard to see the features of animals in your video.
-
-"**Edge Style**" controls whether edges are drawn as thin lines or as wedges which indicate the [`orientation`](../guides/tracking-and-proofreading.md/#orientation) of the instance (as well as the direction of the part affinity field which would be used to predict the connection between nodes when using a "bottom-up" approach).
-
-"**Trail Length**" allows you to show a trail of where each instance was located in prior frames (the length of the trail is the number of prior frames). This can be useful when proofreading predictions since it can help you detect swaps in the identities of animals across frames. By default, you can only select trail lengths of up to 250 frames. You can use a custom trail length by modifying the default length in the `preferences.yaml` file. However, using trail lengths longer than about 500 frames can result in significant lag.
-
-"**Fit Instances to View**" allows you to toggle whether the view is auto-zoomed to the instances in each frame. This can be useful when proofreading predictions.
-
-"**Seekbar Header**" allows you to plot relevant information above the seekbar. Note that the seekbar is not updated when you modify instances; it only updates when you select a new seekbar header.
-
-"**Videos**", "**Skeleton**", "**Instances**", and "**Labeling Suggestions**" allow you to toggle which information windows are shown (by default these are docked to the right side of the main GUI window).
-
-## Labels
-
-"**Add Instance**" will add an instance to the current frame. You can also add an instance by right-clicking within the frame. For predicted instances, you can also "convert" the predicted instance to a regular, editable instance by double-clicking on the predicted instance (the predictions are still there, but they won't be shown unless you delete the editable instance you just created).
-
-"**Instance Placement Method**" allows you to pick how we determine where to place the instance and its nodes on the video frame. "Best" (the default) will first check for predicted instances in the current frame and create a new editable instance from one of the predicted instances (if you add multiple instances, it will do this for each predicted instance in turn). Otherwise, it will copy the location from another instance in a prior or the current frame, or will use a force-directed graph algorithm to place the nodes. You can also choose the "average" method which creates an "average" instance from the instances you've already labeled.
-
-"**Delete Instance**" will delete the currently selected instance (the selected instance will have an outline drawn around it and will be highlighted in the "Instances" window).
-
-"**Set Instance Track**" sets the track for the currently selected instance. If the new track already has an instance assigned to it, then the tracks are swapped (the other instance is assigned to the track currently assigned to the selected instance). These changes are applied to instances in the same tracks in every subsequent frame, not just the current frame.
-
-"**Propagate Track Labels**" propagates manual track selection (via proofreading) for the entirety of the selected instance's track. If selected, the track switch of an instance in the current frame will be applied in all subsequent frames. Otherwise, the track switch of an instance will only be applied in the current frame.
-
-"**Transpose Instance Tracks**" swaps the tracks assigned to two instances. If there are only two instances in the current frame, then this command will be applied to those. If there are more then two instances, then you'll be prompted to select the two instances in sequence. (This has the same functionality as selecting an instance and using "**Set Instance Track**" with the track of the other instance).
-
-"**Delete Instance and Track**" deletes all instances in the track of the currently selected instance. This applied to *all* frames in the current video.
-
-"**Custom Instance Delete...**" allows you to delete all the instances which meet criteria you specify: whether they are user instances or predicted instances, which frames they are on, and which track identities they have.
-
-"**Select Next Instance**" allows you to cycle through the instances in the current frame.
-
-"**Clear Selection**" allows you to deselect the selected instance.
-
-## Predict
-
-"**Run Training...**" allows you to train a set of models from the data in your open project, and then optionally predict on some frames in the project.
-
-"**Run Inference...**" allows you to generate predictions using a pre-trained set of models. Any trained models in the `models` directory next to your current project will be listed, and you also have the option to select models saved elsewhere.
-
-"**Evaluate Metrics for Trained Models...**" provides you with information to evaluate all of your trained models. For example, you can see the recall and precision of predictions on frames with ground truth validation data (i.e., data withheld when training).
-
-"**Add Instances from All Predictions on Current Frame**" converts ever predicted instance on the current frame into a user editable instance (which allows you to make corrections and/or use it for training).
-
-"**Delete All Predictions...**" deletes *all* predicted instances across *all* frames in the current video. (You'll be asked to confirm before the instances are deleted.)
-
-"**Delete All Predictions from Clip...**" deletes all instances from within a selected range of frames. You can select a clip by shift-dragging in the seekbar (or shift + other movement key).
-
-"**Delete All Predictions from Area...**" deletes all instances which are entirely within some rectangular area on any frame in the current video. You'll be asked to select the rectangle, and then asked to confirm before instances are deleted. This is useful when there's something in the video which is visually similar to the animal instances and which creates many false-positives.
-
-"**Delete All Predictions with Low Score...**" deletes all instances with a prediction score below the specified value. You'll be asked for the value, and then asked to confirm before instances are deleted. Instance scores are shown in the "Instances" table and below the selected instance in the current frame.
-
-"**Delete All Predictions beyond Frame Limit...**" deletes the lowest scoring instances beyond some set number of instances in each frame. For example, if you know that there are only two animals in the video, this would let you keep just the two best predicted instances. You'll be asked for the number of instances to keep, and then asked to confirm before instances are deleted.
-
-"**Export Video with Visual Annotations...**" allows you to export a video clip with any instances drawn on the frame (much as you can see in the GUI). If you select a clip in the seekbar, just those frames will be included in the new video; otherwise the whole (current) video will be used.
-
-## Help
-
-"**Keyboard Shortcuts**" allows you to view and change keyboard shortcuts for common menu and GUI actions.
-
-## Application GUI
-
-## Mouse
-
-**Mouse wheel** on image: zoom in / out
-
-**Left-click (hold) + drag** on image: drag image
-
-**Right-click** (or control + click) on node: Toggle visibility
-
-**Right-click** (or control + click) elsewhere on image: Add instance (with pop-up menu)
-
-**Alt + left-click (hold) + drag** on image: Zoom into region
-
-**Alt + double-click**: Zoom out
-
-**Alt + left-click (hold) + drag** on node (or node label): Move entire instance
-
-**Alt + left-click (hold) + mouse wheel** on node (or node label): Rotate entire instance
-
-(On a Mac, substitute **Option** for **Alt**.)
-
-**Double-click** on predicted instance: Create new editable instance from prediction
-
-**Double-click** on editable instance: Any missing nodes (nodes added to the skeleton after this instance was created) will be added and marked as "non-visible"
-
-**Click** on instance: Select that instance
-
-**Click** elsewhere on image: Clear selection
-
-**Control + left-click (hold) + drag** on instance: Duplicate the selected instance and drag the entire copied instance
-
-## Navigation Keys
-
-**Right arrow**: Move one frame forward
-
-**Left arrow**: Move one frame back
-
-**Control + Right arrow**: Move a *medium* step forward (4 frames by default)
-
-**Control + Left arrow**: Move a *medium* step backward (4 frames by default)
-
-**Control + Alt + Right arrow**: Move a *large* step forward (100 frames by default)
-
-**Control + Alt + Left arrow**: Move a *large* step backward (100 frames by default)
-
-**Home**: Move to the first frame of the video
-
-**End**: Move to the last frame of the video
-
-**Shift** + *any navigation key*: Select the frames over which you've moved
-
-!!! note
-      These keys are the defaults; you can configure them with **Keyboard Shortcuts** in the **Help** menu.
-   
-
-
-
-
-## Selection Keys
-
-*Number* (e.g., **2**): Select the instance corresponding to that number
-
-**Control (hold)** while instance is selected: Show color-coded list of numbered
-tracks (**Show tracks legend** key)
-
-(On a Mac, substitute **Control** for **Command**.)
-
-**Escape**: Deselect all instances
-
-## Seekbar
-
-**Shift + drag**: Select a range of frames
-
-**Shift + left-click**: Clear frame selection
-
-**Alt + left-click (hold) + drag**: Zoom into a range of frames
-
-**Alt + left-click**: Zoom out so that all frames are visible in seekbar
-
+---
 
 ## Labeling Suggestions
 
-There are various methods to generate a list "suggested" frames for labeling or proofreading.
+Generate suggested frames for labeling via **Labeling Suggestions** panel:
 
-The **sample** method is a quick way to get some number of frames for every video in your project. You can tell it how many samples (frames) to take from each video, and whether they should be evenly spaced throughout a video (the "stride" sampling method) or randomly distributed.
+| Method | Description |
+|--------|-------------|
+| **Sample** | Evenly spaced ("stride") or random frames from each video |
+| **Image Features** | Visually distinctive frames for training diversity (slower) |
+| **Prediction Score** | Frames with low-confidence predictions (for proofreading) |
+| **Velocity** | Frames where instances move unusually fast (may indicate tracking errors) |
 
-The **image feature** method uses various algorithms to give you visually distinctive frames, since you will be able to train more robust models if the frames you've labeled are more representative of the visual variations in your videos. Generating suggestions based on image features can be slow.
-
-The **prediction score** method will identify frames which have more than some number of instances predicted and where the instance prediction score is below some threshold. This method can be useful when proofreading frame-by-frame prediction results. The instance score depends on your specific skeleton so you'll need to look at the instance scores you're getting to decide an appropriate threshold.
-
-The **velocity** method will identify frames where a predicted instance appears to move more than is typical in the video. This is based on the tracking results, so it can be useful for finding frames where the tracker incorrectly matched up two identities (since this will make the identity "jump").
+---
 
 [coco]: http://cocodataset.org/#format-data
 [deeplabcut]: http://deeplabcut.org

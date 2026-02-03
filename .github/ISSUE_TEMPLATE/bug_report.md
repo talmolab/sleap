@@ -6,7 +6,7 @@ labels: bug
 
 <!-- Thank you for contributing. These HTML comments will not render in the issue, but you can delete them once you've read them if you prefer! -->
 
-# Bug description
+## Bug description
 
 <!-- Use this section to clearly and concisely describe the bug. -->
 
@@ -18,48 +18,58 @@ labels: bug
 
 <!-- Tell us what actually happens. -->
 
-## Your personal set up
+## How to reproduce
 
-<!--
-Tell us a little about the system you're using.
-Please include information about how you installed.
- -->
+<!-- Use this section to describe the steps that a user would take to experience this bug. -->
 
--   OS:
-<!-- [e.g. ubuntu 20.04, macOS 11.0] -->
--   Version(s):
-<!-- e.g. [SLEAP v1.4.1, python 3.8] --->
--   SLEAP installation method (listed [here](https://docs.sleap.ai/latest/installation/#installation-methods)):
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
 
-<details><summary>Environment packages</summary>
-<!-- For reproduction, it's useful to have the full environment. For example, the output of `pip freeze` or `conda list` --->
+## Screenshots
+
+<!-- Provide any relevant screenshots -->
+
+## System diagnostics
+
+<!-- Run `sleap doctor` and paste the output below. This helps us understand your setup. -->
+
+<details><summary>Output of <code>sleap doctor</code></summary>
 
 ```
-# paste output of `pip freeze` or `conda list` here
+SLEAP System Diagnostics
+========================
+Generated: 2026-01-30 12:00:00
+
+[Platform]
+  OS:        Darwin 24.6.0
+  Platform:  macOS-15.7.3-arm64-arm-64bit-Mach-O
+  ...
+
+[Python]
+  Version:     3.13.7
+  ...
+
+[GPU / CUDA]
+  PyTorch:       v2.10.0 (MPS)
+  ...
+
+[Packages]
+  sleap:          v1.6.0
+  sleap-io:       v0.6.3
+  sleap-nn:       v0.1.0a4
+  ...
 ```
 
 </details>
 
 <details><summary>Logs</summary>
-<!--
-Please share any applicable terminal logs. optionally share output from sleap-diagnostic
--->
+
+<!-- Paste any relevant terminal logs or error messages here -->
 
 ```
 # paste relevant logs here, if any
 ```
 
 </details>
-
-## Screenshots
-
-<!-- Provide any relevant screenshots -->
-
-## How to reproduce
-
-<!-- Use this section to describe the steps that a user would take to experience this bug. eg:-->
-
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error

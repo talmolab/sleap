@@ -6,6 +6,14 @@ This is especially important for tracking where making even one mistake results 
 
 You can read more about the most common mistakes made by the tracking algorithm [here](../learnings/main-mistakes-by-tracking.md). But for this tutorial, we will see how to handle switches.
 
+!!! tip "New in SLEAP v1.6+"
+
+    SLEAP v1.6 introduces automated quality control tools to help you find potential errors:
+
+    - **[Label Quality Control](../guides/label-quality-control.md)**: Automatically detects potential annotation errors using statistical anomaly detection. The system learns what "normal" poses look like in your data and flags instances that deviate significantly—useful for catching labeling mistakes, unusual poses, or tracking errors.
+
+    - **[Instance Size Distribution](../guides/instance-size-distribution.md)**: Analyzes the bounding box sizes of your labeled instances to help you choose the optimal crop size for top-down models. Click on outliers to navigate directly to unusually large or small instances that may need review.
+
 1. To make it easier to spot switches, you can configure how SLEAP displays the predictions.
 
     Adjust the following settings:
