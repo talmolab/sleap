@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.sleap.ai/dev/reference/evaluation_metrics/">
+        <link rel="canonical" href="https://docs.sleap.ai/dev/guides/instance-size-distribution/">
       
       
-        <link rel="prev" href="../command-line-interfaces/">
+        <link rel="prev" href="../label-quality-control/">
       
       
-        <link rel="next" href="../../api/">
+        <link rel="next" href="../run-training-and-inference-on-colab/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Evaluation metrics - SLEAP Documentation</title>
+        <title>Instance Size Distribution - SLEAP Documentation</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#evaluation-metrics" class="md-skip">
+        <a href="#instance-size-distribution" class="md-skip">
           Skip to content
         </a>
       
@@ -98,7 +98,7 @@
 
   
 
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="SLEAP Documentation" class="md-header__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Evaluation metrics
+              Instance Size Distribution
             
           </span>
         </div>
@@ -214,13 +214,207 @@
     
   </nav>
   
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../overview/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorial/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Tutorial
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../guides-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../notebooks/notebooks-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Notebooks
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../learnings/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Learning
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/datasets/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../help/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Help
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
-        
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -234,8 +428,10 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="SLEAP Documentation" class="md-nav__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -371,6 +567,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -700,8 +899,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -719,18 +920,28 @@
       
         
       
+        
+      
+        
+      
     
     
     
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -748,7 +959,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -766,7 +977,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/guides-overview/" class="md-nav__link">
+      <a href="../guides-overview/" class="md-nav__link">
         
   
   
@@ -794,7 +1005,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/migrating-to-sleap-1-5/" class="md-nav__link">
+      <a href="../migrating-to-sleap-1-5/" class="md-nav__link">
         
   
   
@@ -822,7 +1033,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/importing-predictions-for-labeling/" class="md-nav__link">
+      <a href="../importing-predictions-for-labeling/" class="md-nav__link">
         
   
   
@@ -850,7 +1061,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/tracking-and-proofreading/" class="md-nav__link">
+      <a href="../tracking-and-proofreading/" class="md-nav__link">
         
   
   
@@ -878,7 +1089,259 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/run-training-and-inference-on-colab/" class="md-nav__link">
+      <a href="../label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-the-widget" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessing the Widget
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recompute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recompute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rotation-augmentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rotation Augmentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scatter-clickable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scatter (clickable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#histogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histogram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selected-instance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selected Instance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Statistics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-a-crop-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a Crop Size
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-with-crop-size-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using with Crop Size Visualization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic Access
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run-training-and-inference-on-colab/" class="md-nav__link">
         
   
   
@@ -906,7 +1369,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/creating-a-custom-training-profile/" class="md-nav__link">
+      <a href="../creating-a-custom-training-profile/" class="md-nav__link">
         
   
   
@@ -934,7 +1397,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guides/running-sleap-remotely/" class="md-nav__link">
+      <a href="../running-sleap-remotely/" class="md-nav__link">
         
   
   
@@ -991,10 +1454,11 @@
       
         
       
-        
+    
+    
+    
       
-    
-    
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1264,34 +1728,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../notebooks/Interactive_and_realtime_inference/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Interactive and realtime inference
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data/" class="md-nav__link">
         
   
@@ -1369,14 +1805,11 @@
       
         
       
-        
-      
-        
-      
-        
-      
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1386,8 +1819,9 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
+          <div class="md-nav__link md-nav__container">
+            <a href="../../learnings/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -1401,8 +1835,14 @@
   
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
@@ -1478,34 +1918,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../learnings/training-options/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Training Options
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../learnings/skeleton-design/" class="md-nav__link">
         
   
@@ -1513,35 +1925,7 @@
   <span class="md-ellipsis">
     
   
-    Skeleton design
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../learnings/configuring-models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Configuring models
+    Skeleton Design
   
 
     
@@ -1569,7 +1953,7 @@
   <span class="md-ellipsis">
     
   
-    Prediction Assisted Labeling
+    Prediction-Assisted Labeling
   
 
     
@@ -1597,35 +1981,7 @@
   <span class="md-ellipsis">
     
   
-    Types of mistakes in tracking code
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../learnings/troubleshoot-workflows/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Troubleshooting workflows
+    Tracking Mistakes
   
 
     
@@ -1653,7 +2009,7 @@
   <span class="md-ellipsis">
     
   
-    Export Data For Analysis
+    Export for Analysis
   
 
     
@@ -1678,10 +2034,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -1698,12 +2052,15 @@
     
     
     
+      
+      
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
           <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
@@ -1724,7 +2081,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1742,7 +2099,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../datasets/" class="md-nav__link">
+      <a href="../../reference/datasets/" class="md-nav__link">
         
   
   
@@ -1770,7 +2127,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../command-line-interfaces/" class="md-nav__link">
+      <a href="../../reference/command-line-interfaces/" class="md-nav__link">
         
   
   
@@ -1795,44 +2152,17 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Evaluation metrics
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../reference/quality-control.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Evaluation metrics
+    Label Quality Control
   
 
     
@@ -1841,81 +2171,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#distance-metrics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Distance Metrics
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#object-keypoint-similarity-oks" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Object-keypoint similarity (OKS)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#percentage-of-correct-keypoints-pck-metrics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Percentage of Correct Keypoints (PCK) metrics
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#visibility-metrics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Visibility metrics
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#voc-metrics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        VOC metrics
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1936,6 +2191,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -2080,10 +2338,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#distance-metrics" class="md-nav__link">
+  <a href="#accessing-the-widget" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Distance Metrics
+        Accessing the Widget
       
     </span>
   </a>
@@ -2091,10 +2349,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#object-keypoint-similarity-oks" class="md-nav__link">
+  <a href="#recompute" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Object-keypoint similarity (OKS)
+        Recompute
       
     </span>
   </a>
@@ -2102,10 +2360,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#percentage-of-correct-keypoints-pck-metrics" class="md-nav__link">
+  <a href="#rotation-augmentation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Percentage of Correct Keypoints (PCK) metrics
+        Rotation Augmentation
       
     </span>
   </a>
@@ -2113,10 +2371,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#visibility-metrics" class="md-nav__link">
+  <a href="#visualization" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Visibility metrics
+        Visualization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Visualization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#scatter-clickable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scatter (clickable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#histogram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Histogram
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selected-instance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selected Instance
       
     </span>
   </a>
@@ -2124,10 +2421,65 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#voc-metrics" class="md-nav__link">
+  <a href="#statistics" class="md-nav__link">
     <span class="md-ellipsis">
       
-        VOC metrics
+        Statistics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-a-crop-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a Crop Size
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tips
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-with-crop-size-visualization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using with Crop Size Visualization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic Access
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
       
     </span>
   </a>
@@ -2154,60 +2506,135 @@
   
 
 
-<div class="md-source-file"><a href="../evaluation_metrics.md" title="View markdown source" class="md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6m4 18H6V4h7v5h5v11M13 9V3.5L18.5 9H13Z"/></svg></a></div>
-<h1 id="evaluation-metrics">Evaluation Metrics<a class="headerlink" href="#evaluation-metrics" title="Permanent link">&para;</a></h1>
-<p>Here, we explain the various evaluation metrics we output at the end of running inference with a trained SLEAP model. We report 5 broad categories of metrics:</p>
+<div class="md-source-file"><a href="../instance-size-distribution.md" title="View markdown source" class="md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6m4 18H6V4h7v5h5v11M13 9V3.5L18.5 9H13Z"/></svg></a></div>
+<h1 id="instance-size-distribution">Instance Size Distribution<a class="headerlink" href="#instance-size-distribution" title="Permanent link">&para;</a></h1>
+<p><em>Case: You want to determine the optimal crop size for top-down models.</em></p>
+<p>When using top-down pose estimation pipelines, SLEAP crops around each detected instance before estimating pose. Choosing the right crop size is important:</p>
 <ul>
-<li><a href="#distance-metrics">Distance metrics</a></li>
-<li><a href="#object-keypoint-similarity-oks">Object Keypoint similarity (OKS)</a></li>
-<li><a href="#percentage-of-correct-keypoints-pck-metrics">Percentage of Correct Keypoints (PCK) metrics</a></li>
-<li><a href="#visibility-metrics">Visibility metrics</a></li>
-<li><a href="#voc-metrics">VOC metrics</a></li>
+<li><strong>Too small</strong>: Parts of the animal may be cut off</li>
+<li><strong>Too large</strong>: Wastes computation and may include other animals</li>
 </ul>
-<h2 id="distance-metrics">Distance Metrics<a class="headerlink" href="#distance-metrics" title="Permanent link">&para;</a></h2>
-<p>This metric computes the Euclidean distance between pairs of predicted and ground-truth (gt) instances. For each instance pair, we calculate the L2 norm of the difference between the predicted and corresponding ground-truth keypoints. The following statistics are reported:</p>
+<p>The Instance Size Distribution widget helps you analyze your labeled data to choose an appropriate crop size.</p>
+<h2 id="accessing-the-widget">Accessing the Widget<a class="headerlink" href="#accessing-the-widget" title="Permanent link">&para;</a></h2>
+<p>From the GUI: <strong>Analyze</strong> → <strong>Instance Size Distribution...</strong></p>
+<p>This opens a dialog window showing the size distribution of all user-labeled instances in your project.</p>
+<p><img alt="Instance Size Distribution dialog before loading data" src="../../assets/images/instancesd_preview.png" /></p>
+<p><img alt="Instance Size Distribution dialog with data loaded" src="../../assets/images/instancesd_example.png" /></p>
+<h2 id="recompute">Recompute<a class="headerlink" href="#recompute" title="Permanent link">&para;</a></h2>
+<p>Click the <strong>Recompute</strong> button to recalculate sizes from your current labels. This is useful if you've added or modified labels since opening the dialog.</p>
+<p>The widget only analyzes user-labeled instances (not predicted instances) to give you accurate statistics based on your ground truth annotations.</p>
+<h2 id="rotation-augmentation">Rotation Augmentation<a class="headerlink" href="#rotation-augmentation" title="Permanent link">&para;</a></h2>
+<p>The <strong>Rotation Augmentation</strong> controls let you preview how rotation augmentation during training will affect the required crop size.</p>
+<p>When you rotate an instance, its bounding box grows to accommodate the rotated skeleton. This setting helps you understand what crop size you'll need if using rotation augmentation.</p>
+<p><strong>Preset options:</strong></p>
 <ul>
-<li>
-<p><em><code>Avg_dist</code></em>: Mean Euclidean distance across all (pred, gt) pairs.</p>
-</li>
-<li>
-<p><em><code>Dist@k</code></em>: Percentile-based distance metrics which includes the distance at the 50<sup>th</sup>, 75<sup>th</sup>, 90<sup>th</sup>, 95<sup>th</sup>, and 99<sup>th</sup> percentiles (denoted as p50, p75, p90, p95, p99).</p>
-</li>
+<li><strong>Off</strong>: No rotation applied. Shows the raw bounding box sizes.</li>
+<li><strong>&plusmn;15</strong>: Simulates &plusmn;15 degree rotation augmentation (common for videos with limited rotation).</li>
+<li><strong>&plusmn;180</strong>: Simulates full rotation augmentation (common for overhead/top-down views).</li>
+<li><strong>Custom</strong>: Enables the custom angle spinner to set any angle from 0-180 degrees.</li>
 </ul>
-<p>These metrics provide insight into the distribution of how far off the predictions are from the ground-truth key-points.</p>
-<h2 id="object-keypoint-similarity-oks">Object-keypoint similarity (OKS)<a class="headerlink" href="#object-keypoint-similarity-oks" title="Permanent link">&para;</a></h2>
-<p>This returns the mean OKS score between every pair of ground truth and
-predicted instance, ranging from 0 to 1.0 and 1.0 indicating a perfect match. OKS provides a measure of similarity between ground-truth and precicted pose by taking into account the instance size (scale) and node visibility.</p>
-<p>OKS is computed by measuring the Euclidean distance between each predicted keypoint and its corresponding ground-truth keypoint. This distance is then normalized based on the scale of the object (bounding box area for the instance) and standard-deviation that defines the spread in the localization accuracy of each node. For each node, keypoint similarity is computed by taking the negative expoenent of the normalized distance. Mean OKS is the average of keypoint similarities across all visible nodes.</p>
-<p>The implementation is based off of the descriptions in: <a href="https://arxiv.org/abs/1707.05388">Ronch &amp; Perona. "Benchmarking and Error Diagnosis in Multi-Instance Pose Estimation." ICCV (2017)</a>.</p>
-<h2 id="percentage-of-correct-keypoints-pck-metrics">Percentage of Correct Keypoints (PCK) metrics<a class="headerlink" href="#percentage-of-correct-keypoints-pck-metrics" title="Permanent link">&para;</a></h2>
-<p>This metric measures the fraction of keypoints that fall within a certain pixel distance (threshold) from the ground-truth location. This is useful to evaluate how precise the predicted points are. The following are generated using PCK metric:</p>
+<p>When using rotation augmentation in training, set this to match your training configuration to see the effective crop sizes you'll need.</p>
+<h2 id="visualization">Visualization<a class="headerlink" href="#visualization" title="Permanent link">&para;</a></h2>
+<p>The center plot shows the distribution of instance sizes. You can switch between two views:</p>
+<h3 id="scatter-clickable">Scatter (clickable)<a class="headerlink" href="#scatter-clickable" title="Permanent link">&para;</a></h3>
+<p>The default view shows each instance as a point:</p>
 <ul>
-<li><em><code>PCKs</code></em>: PCK on each predicted instances for each node at different thresholds. (Thresholds: [1, 2, 3, ..., 10])</li>
-<li><em><code>mPCK part</code></em>: Mean PCK per node averaged over all predicted instances across thresholds.</li>
-<li><em><code>mPCK</code></em>: Mean PCK across all predicted nodes and thresholds.</li>
+<li><strong>X-axis</strong>: Size in pixels (the larger dimension of the bounding box)</li>
+<li><strong>Y-axis</strong>: Instance index (ordered by position in the labels file)</li>
+<li><strong>Point colors</strong>: Colored by relative size (blue = near median, red = larger than median)</li>
+<li><strong>Vertical lines</strong>: Show statistics:</li>
+<li><strong>Green dashed</strong>: Median size</li>
+<li><strong>Blue dotted</strong>: Mean size</li>
+<li><strong>Red solid</strong>: Maximum size</li>
 </ul>
-<h2 id="visibility-metrics">Visibility metrics<a class="headerlink" href="#visibility-metrics" title="Permanent link">&para;</a></h2>
-<p>This metric evaluates the visibility accuracy of the predicted nodes. It measures how well the model identifies whether the keypoint is present or missing - independent of its spatial accuracy (i.e. distance from ground-truth). This is useful for evaluating models on datasets with occlusions (NaN nodes).</p>
-<p>The following statistics are computed across all matched instance pairs:</p>
+<p><strong>Clicking a point</strong> selects that instance and navigates to it in the main video player, making it easy to inspect outliers.</p>
+<h3 id="histogram">Histogram<a class="headerlink" href="#histogram" title="Permanent link">&para;</a></h3>
+<p>An alternative view showing the count distribution:</p>
 <ul>
-<li><em><code>True positives (TP)</code></em>: Node is visible in both ground-truth and prediction.</li>
-<li><em><code>False positives (FP)</code></em>: Node is missing in ground-truth but visible in prediction.</li>
-<li><em><code>True negatives (TN)</code></em>: Node is missing in both ground-truth and prediction.</li>
-<li><em><code>False negatives (FN)</code></em>: Node is visible in ground-truth but missing in prediction.</li>
-<li><em><code>Precision (TP / (TP + FP))</code></em>: Proportion of predicted visible nodes that are correct.</li>
-<li><em><code>Recall (TP / (TP + FN))</code></em>: Proportion of actual visible nodes that were correctly predicted.</li>
+<li><strong>X-axis</strong>: Size in pixels</li>
+<li><strong>Y-axis</strong>: Count (number of instances in each bin)</li>
+<li><strong>Vertical lines</strong>: Same statistics as scatter view (median, mean, max)</li>
 </ul>
-<h2 id="voc-metrics">VOC metrics<a class="headerlink" href="#voc-metrics" title="Permanent link">&para;</a></h2>
-<p>The following VOC-style metrics are generated using either OKS or PCK as the matching scores and a set of thresholds where a predicted instance is considered as a True Postive if it's match score is greater than the threshold else it is counted as a False Positive. </p>
+<p><strong>Histogram options</strong> (enabled when Histogram is selected):</p>
 <ul>
-<li><em><code>Average Precision (AP)</code></em>: Average of best precisions over fixed set of recall thresholds, at each match score threshold.</li>
-<li><em><code>Average Recall (AR)</code></em>: Maximum recall achieved at each match score threshold.</li>
-<li><em><code>Mean Average Precision (mAP)</code></em>: Mean of average precisions across match thresholds.</li>
-<li><em><code>Mean Average Recall (mAR)</code></em>: Mean of average recalls across match thresholds.</li>
+<li><strong>Bins</strong>: Number of histogram bins (5-100, default 30)</li>
+<li><strong>X-min</strong>: Minimum x-axis value, or "Auto" for automatic range</li>
+<li><strong>X-max</strong>: Maximum x-axis value, or "Auto" for automatic range</li>
 </ul>
-<p>To know more about how to generate these metrics using SLEAP APIs, take a look at the <a href="../../notebooks/Model_evaluation/">model evaluation notebook</a>. 
-Start evaluating your SLEAPs!</p>
+<p>Use the range controls to zoom in on a specific size range if needed.</p>
+<h2 id="selected-instance">Selected Instance<a class="headerlink" href="#selected-instance" title="Permanent link">&para;</a></h2>
+<p>When you click a point in the scatter plot, the <strong>Selected Instance</strong> panel shows:</p>
+<ul>
+<li><strong>Frame</strong>: The frame index where the instance appears</li>
+<li><strong>Instance</strong>: The instance index within that frame</li>
+<li><strong>Video</strong>: The video index (for multi-video projects)</li>
+<li><strong>Raw Size</strong>: The bounding box size without rotation (with width × height dimensions)</li>
+<li><strong>Rotated Size</strong>: The effective size with the current rotation setting applied</li>
+</ul>
+<p>This helps you understand both the original annotation size and how it will grow with rotation augmentation.</p>
+<h2 id="statistics">Statistics<a class="headerlink" href="#statistics" title="Permanent link">&para;</a></h2>
+<p>The <strong>Statistics</strong> panel shows summary statistics for all instances:</p>
+<ul>
+<li><strong>Count</strong>: Total number of user-labeled instances</li>
+<li><strong>Range</strong>: Minimum and maximum sizes in pixels</li>
+<li><strong>Mean &plusmn; Std</strong>: Average size with standard deviation</li>
+<li><strong>Median</strong>: The middle value (50<sup>th</sup> percentile)</li>
+<li><strong>90<sup>th</sup>/95<sup>th</sup>/99<sup>th</sup></strong>: Percentile values for choosing crop sizes</li>
+<li><strong>Outliers (&gt;2 sigma)</strong>: Count of instances more than 2 standard deviations above the mean</li>
+</ul>
+<p>These statistics update when you change the rotation setting.</p>
+<h2 id="choosing-a-crop-size">Choosing a Crop Size<a class="headerlink" href="#choosing-a-crop-size" title="Permanent link">&para;</a></h2>
+<p>Use the statistics to choose an appropriate crop size:</p>
+<ol>
+<li><strong>95<sup>th</sup> percentile</strong> is a common choice—it covers 95% of instances while excluding extreme outliers</li>
+<li><strong>Add 10-20% padding</strong> for animals near frame edges or to account for prediction uncertainty</li>
+<li><strong>Consider rotation</strong>: If using rotation augmentation, set the rotation preview to match and use those statistics</li>
+</ol>
+<p>For example, if your 95<sup>th</sup> percentile with &plusmn;180 rotation is 200px, a crop size of 220-240px would be reasonable.</p>
+<h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Consistent animal sizes</strong>: If your animals are similar sizes, the distribution will be tight and crop size selection is straightforward</li>
+<li><strong>Variable sizes</strong>: If sizes vary significantly (e.g., adults and juveniles), consider using a larger crop size or filtering your training data</li>
+<li><strong>Multiple videos</strong>: The widget analyzes all videos together. If recording conditions vary, click through outliers to see if they come from specific videos</li>
+<li><strong>Inspect outliers</strong>: Click on the largest points in the scatter plot to check if they represent real variation or labeling errors</li>
+</ul>
+<h2 id="using-with-crop-size-visualization">Using with Crop Size Visualization<a class="headerlink" href="#using-with-crop-size-visualization" title="Permanent link">&para;</a></h2>
+<p>After choosing a crop size, you can visualize it in the main view:</p>
+<ol>
+<li>Open the training dialog (<strong>Predict</strong> → <strong>Run Training...</strong>)</li>
+<li>The crop size overlay will show the crop region on your video</li>
+<li>Scrub through frames to verify the crop captures the full animal</li>
+</ol>
+<h2 id="programmatic-access">Programmatic Access<a class="headerlink" href="#programmatic-access" title="Permanent link">&para;</a></h2>
+<p>For scripting or automation, you can compute instance sizes programmatically:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sleap_io</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sio</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">sleap.gui.learning.size</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_instance_sizes</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Load labels</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">labels</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="s2">&quot;labels.slp&quot;</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Compute sizes for user-labeled instances</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">sizes</span> <span class="o">=</span> <span class="n">compute_instance_sizes</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">user_instances_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># Get raw sizes</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="n">raw_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">raw_size</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">])</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;95th percentile: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">raw_sizes</span><span class="p">,</span><span class="w"> </span><span class="mi">95</span><span class="p">)</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">px&quot;</span><span class="p">)</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># With rotation augmentation (+/-180 degrees)</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">rotated_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">get_rotated_size</span><span class="p">(</span><span class="mi">180</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">])</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;95th percentile with rotation: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">rotated_sizes</span><span class="p">,</span><span class="w"> </span><span class="mi">95</span><span class="p">)</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">px&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Each <code>InstanceSizeInfo</code> object contains:
+- <code>video_idx</code>, <code>frame_idx</code>, <code>instance_idx</code>: Location identifiers
+- <code>raw_width</code>, <code>raw_height</code>: Bounding box dimensions
+- <code>raw_size</code>: Maximum of width and height
+- <code>get_rotated_size(angle)</code>: Size needed with rotation augmentation</p>
+<h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://nn.sleap.ai/latest/reference/models/">Configuring Models</a> - Full details on crop size and other model parameters</li>
+<li><a href="../creating-a-custom-training-profile/">Creating a Custom Training Profile</a> - How to save your crop size settings</li>
+</ul>
 
 
 
@@ -2280,6 +2707,14 @@ Start evaluating your SLEAPs!</p>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"/></svg>
     </a>
   
+    
+    
+    
+    
+    <a href="mailto:talmo@salk.edu" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
 </div>
       
     </div>
@@ -2295,7 +2730,7 @@ Start evaluating your SLEAPs!</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

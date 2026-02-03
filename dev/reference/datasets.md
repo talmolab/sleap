@@ -9,7 +9,24 @@ For the full set of labeled datasets and trained models reported in the SLEAP pa
 !!! hint
     Need a quick testing clip? [Here's a video of a pair of mice in a standard home cage setting.](https://storage.googleapis.com/sleap-data/sandbox/sleap-mice-demo/mice.mp4)
 
-## `fly32`
+---
+
+## Summary
+
+| Dataset | Animal | Nodes | Animals | Identity | Labels |
+|---------|--------|-------|---------|----------|--------|
+| [`fly32`](#fly32) | Fruit fly | 32 | 1 | ✘ | 1,500 |
+| [`mice_of`](#mice_of) | Mice | 11 | 1-5 | ✘ | 2,950 |
+| [`mice_hc`](#mice_hc) | Mice | 5 | 2 | ✘ | 2,948 |
+| [`bees`](#bees) | Bumblebees | 21 | 2 | ✘ | 1,604 |
+| [`flies13`](#flies13) | Fruit flies | 13 | 2 | ✔ | 4,000 |
+| [`gerbils`](#gerbils) | Gerbils | 14 | 4 | ✔ | 1,588 |
+
+---
+
+## Single Animal
+
+### `fly32`
 ![fly32](../assets/images/example.fly32.jpg)
 
 | Name          | `fly32` |
@@ -27,26 +44,11 @@ For the full set of labeled datasets and trained models reported in the SLEAP pa
 | Example       | [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/clips/072212_173836%400-3200.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/BermanFlies/clips/072212_173836%400-3200.slp) |
 | Credit        | [Berman et al. (2014)](https://royalsocietypublishing.org/doi/10.1098/rsif.2014.0672), [Pereira et al. (2019)](https://www.nature.com/articles/s41592-018-0234-5), [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Talmo Pereira, Gordon Berman, Joshua Shaevitz |
 
+---
 
-## `flies13`
-![flies13](../assets/images/example.flies13.jpg)
+## Multi-Animal (without identity)
 
-| Name          | `flies13` |
-|---------------|-----------|
-| Description   | Freely interacting pairs of virgin male and female fruit flies (*Drosophila melanogaster*, NM91 strain) 3 to 5 days post-eclosion. Animals frequently engage in courtship behavior. |
-| Videos        | 30        |
-| Image size    | 1024 x 1024 x 1 |
-| FPS           | 150       |
-| Resolution    | 30.3 px / mm |
-| Skeleton      | 13 nodes  |
-| Num Animals   | 2         |
-| Identity      | ✔         |
-| Labels        | 2000 frames, 4000 instances |
-| Download      | [Train (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp) / [Validation (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/val.pkg.slp) / [Test (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/test.pkg.slp) |
-| Example       | [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/clips/talk_title_slide%4013150-14500.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/clips/talk_title_slide%4013150-14500.slp) |
-| Credit        | [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Junyu Li, Shruthi Ravindranath, Talmo Pereira, Mala Murthy |
-
-## `mice_of`
+### `mice_of`
 ![mice_of](../assets/images/example.mice_of.jpg)
 
 | Name          | `mice_of` |
@@ -64,7 +66,7 @@ For the full set of labeled datasets and trained models reported in the SLEAP pa
 | Example       | [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/clips/OFTsocial5mice-0000-00%4015488-18736.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/wang_4mice_john/clips/OFTsocial5mice-0000-00%4015488-18736.slp) |
 | Credit        | [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), John D'Uva, Mikhail Kislin, Samuel S.-H. Wang |
 
-## `mice_hc`
+### `mice_hc`
 ![mice_hc](../assets/images/example.mice_hc.jpg)
 
 | Name          | `mice_hc` |
@@ -82,7 +84,7 @@ For the full set of labeled datasets and trained models reported in the SLEAP pa
 | Example       | [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/clips/20200111_USVpairs_court1_M1_F1_top-01112020145828-0000%400-2560.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/eleni_mice/clips/20200111_USVpairs_court1_M1_F1_top-01112020145828-0000%400-2560.slp) |
 | Credit        | [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Eleni Papadoyannis, Mala Murthy, Annegret Falkner |
 
-## `bees`
+### `bees`
 ![bees](../assets/images/example.bees.jpg)
 
 | Name          | `bees`    |
@@ -100,7 +102,29 @@ For the full set of labeled datasets and trained models reported in the SLEAP pa
 | Example       | [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/yan_bees/clips/bees_demo%4021000-23000.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/yan_bees/clips/bees_demo%4021000-23000.slp) |
 | Credit        | [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Grace McKenzie-Smith, Z. Yan Wang, Joshua Shaevitz, Sarah Kocher |
 
-## `gerbils`
+---
+
+## Multi-Animal (with identity)
+
+### `flies13`
+![flies13](../assets/images/example.flies13.jpg)
+
+| Name          | `flies13` |
+|---------------|-----------|
+| Description   | Freely interacting pairs of virgin male and female fruit flies (*Drosophila melanogaster*, NM91 strain) 3 to 5 days post-eclosion. Animals frequently engage in courtship behavior. |
+| Videos        | 30        |
+| Image size    | 1024 x 1024 x 1 |
+| FPS           | 150       |
+| Resolution    | 30.3 px / mm |
+| Skeleton      | 13 nodes  |
+| Num Animals   | 2         |
+| Identity      | ✔         |
+| Labels        | 2000 frames, 4000 instances |
+| Download      | [Train (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/train.pkg.slp) / [Validation (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/val.pkg.slp) / [Test (`.pkg.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/tracking_split2/test.pkg.slp) |
+| Example       | [Clip (`.mp4`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/clips/talk_title_slide%4013150-14500.mp4) / [Tracking (`.slp`)](https://storage.googleapis.com/sleap-data/datasets/wt_gold.13pt/clips/talk_title_slide%4013150-14500.slp) |
+| Credit        | [Pereira et al. (2022)](https://www.nature.com/articles/s41592-022-01426-1), Junyu Li, Shruthi Ravindranath, Talmo Pereira, Mala Murthy |
+
+### `gerbils`
 ![gerbils](../assets/images/example.gerbils.jpg)
 
 | Name          | `gerbils` |

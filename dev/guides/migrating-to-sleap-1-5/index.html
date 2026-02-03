@@ -98,7 +98,7 @@
 
   
 
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="SLEAP Documentation" class="md-header__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -214,13 +214,207 @@
     
   </nav>
   
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../overview/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorial/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Tutorial
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../guides-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../notebooks/notebooks-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Notebooks
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../learnings/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Learning
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/datasets/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../help/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Help
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
-        
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -234,8 +428,10 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="SLEAP Documentation" class="md-nav__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -371,6 +567,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -721,18 +920,28 @@
       
         
       
+        
+      
+        
+      
     
     
     
+      
+        
+        
+      
+      
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -944,6 +1153,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#whats-new-in-v16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's New in v1.6
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What&#39;s New in v1.6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unified-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label-quality-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label Quality Control
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instance-size-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instance Size Distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#onnxtensorrt-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ONNX/TensorRT Export
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -996,6 +1277,62 @@
     
   
     Tracking and proofreading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../instance-size-distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
   
 
     
@@ -1129,10 +1466,11 @@
       
         
       
-        
+    
+    
+    
       
-    
-    
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1402,34 +1740,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../notebooks/Interactive_and_realtime_inference/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Interactive and realtime inference
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data/" class="md-nav__link">
         
   
@@ -1507,14 +1817,11 @@
       
         
       
-        
-      
-        
-      
-        
-      
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1524,8 +1831,9 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
+          <div class="md-nav__link md-nav__container">
+            <a href="../../learnings/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -1539,8 +1847,14 @@
   
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
@@ -1616,34 +1930,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../learnings/training-options/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Training Options
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../learnings/skeleton-design/" class="md-nav__link">
         
   
@@ -1651,35 +1937,7 @@
   <span class="md-ellipsis">
     
   
-    Skeleton design
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../learnings/configuring-models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Configuring models
+    Skeleton Design
   
 
     
@@ -1707,7 +1965,7 @@
   <span class="md-ellipsis">
     
   
-    Prediction Assisted Labeling
+    Prediction-Assisted Labeling
   
 
     
@@ -1735,35 +1993,7 @@
   <span class="md-ellipsis">
     
   
-    Types of mistakes in tracking code
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../learnings/troubleshoot-workflows/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Troubleshooting workflows
+    Tracking Mistakes
   
 
     
@@ -1791,7 +2021,7 @@
   <span class="md-ellipsis">
     
   
-    Export Data For Analysis
+    Export for Analysis
   
 
     
@@ -1833,6 +2063,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1934,14 +2167,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/evaluation_metrics/" class="md-nav__link">
+      <a href="../../reference/quality-control.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Evaluation metrics
+    Label Quality Control
   
 
     
@@ -1970,6 +2203,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -2202,6 +2438,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#whats-new-in-v16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's New in v1.6
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What&#39;s New in v1.6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#unified-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified CLI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#label-quality-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Label Quality Control
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instance-size-distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instance Size Distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#onnxtensorrt-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ONNX/TensorRT Export
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#additional-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Additional Improvements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2255,6 +2563,37 @@
 <ul>
 <li><strong>GUI Support</strong>: SLEAP now uses a new <u>YAML-based</u> config file structure, but you can still upload and work with old SLEAP JSON files in the GUI. For details on converting legacy SLEAP 1.4 config/JSON files to the new YAML format, see our <a href="https://nn.sleap.ai/latest/config/#converting-legacy-sleap-14-configjson-to-sleap-nn-yaml">conversion guide</a>.</li>
 <li><strong>Using TensorFlow Model Weights</strong>: Continue to support running inference on SLEAP &lt;1.4 TensorFlow model weights (UNet backbone only). Check <a href="https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support">using legacy models</a> for more details.</li>
+</ul>
+<h2 id="whats-new-in-v16">What's New in v1.6<a class="headerlink" href="#whats-new-in-v16" title="Permanent link">&para;</a></h2>
+<p>SLEAP 1.6 builds on the v1.5 foundation with additional features and improvements:</p>
+<h3 id="unified-cli">Unified CLI<a class="headerlink" href="#unified-cli" title="Permanent link">&para;</a></h3>
+<p>The new <code>sleap</code> command provides a single entry point for all SLEAP functionality:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap<span class="w">                    </span><span class="c1"># Launch the GUI</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>sleap<span class="w"> </span>doctor<span class="w">             </span><span class="c1"># System diagnostics</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>sleap<span class="w"> </span>train<span class="w"> </span>...<span class="w">          </span><span class="c1"># Training (via sleap-nn)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>sleap<span class="w"> </span>track<span class="w"> </span>...<span class="w">          </span><span class="c1"># Inference (via sleap-nn)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>sleap<span class="w"> </span>show<span class="w"> </span>labels.slp<span class="w">    </span><span class="c1"># View labels summary (via sleap-io)</span>
+</span></code></pre></div>
+<p>See <a href="../../reference/command-line-interfaces/">Command Line Interfaces</a> for the full list of commands.</p>
+<h3 id="label-quality-control">Label Quality Control<a class="headerlink" href="#label-quality-control" title="Permanent link">&para;</a></h3>
+<p>New <strong>Analyze → Label QC...</strong> menu for automated detection of labeling errors including:
+- Temporal jitter (unstable predictions across frames)
+- Visibility inconsistencies
+- Scale anomalies
+- Potential identity swaps</p>
+<p>See <a href="../label-quality-control/">Label Quality Control</a> for details.</p>
+<h3 id="instance-size-distribution">Instance Size Distribution<a class="headerlink" href="#instance-size-distribution" title="Permanent link">&para;</a></h3>
+<p>New <strong>Analyze → Instance Size Distribution...</strong> widget helps determine optimal crop sizes for top-down models by analyzing the distribution of instance bounding box sizes in your labeled data.</p>
+<p>See <a href="../instance-size-distribution/">Instance Size Distribution</a> for details.</p>
+<h3 id="onnxtensorrt-export">ONNX/TensorRT Export<a class="headerlink" href="#onnxtensorrt-export" title="Permanent link">&para;</a></h3>
+<p>Export trained models to ONNX or TensorRT format for 3-6x faster inference:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>--model<span class="w"> </span>models/my_model<span class="w"> </span>--format<span class="w"> </span>onnx
+</span></code></pre></div>
+<h3 id="additional-improvements">Additional Improvements<a class="headerlink" href="#additional-improvements" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Real-time inference progress</strong>: Live FPS and ETA display during inference</li>
+<li><strong>Filter overlapping instances</strong>: New controls in training/inference dialogs</li>
+<li><strong>Crop size visualization</strong>: Overlay showing crop region for top-down models</li>
 </ul>
 <p><em>For a complete list of changes, see our <a href="../../changelog/">Changelog</a>.</em></p>
 
@@ -2329,6 +2668,14 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"/></svg>
     </a>
   
+    
+    
+    
+    
+    <a href="mailto:talmo@salk.edu" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
 </div>
       
     </div>
@@ -2344,7 +2691,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

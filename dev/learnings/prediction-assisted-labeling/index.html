@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://docs.sleap.ai/dev/learnings/prediction-assisted-labeling/">
       
       
-        <link rel="prev" href="../configuring-models/">
+        <link rel="prev" href="../skeleton-design/">
       
       
         <link rel="next" href="../main-mistakes-by-tracking/">
@@ -25,7 +25,7 @@
     
     
       
-        <title>Prediction Assisted Labeling - SLEAP Documentation</title>
+        <title>Prediction-Assisted Labeling - SLEAP Documentation</title>
       
     
     
@@ -98,7 +98,7 @@
 
   
 
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="SLEAP Documentation" class="md-header__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Prediction Assisted Labeling
+              Prediction-Assisted Labeling
             
           </span>
         </div>
@@ -214,13 +214,207 @@
     
   </nav>
   
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../overview/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorial/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Tutorial
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/guides-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../notebooks/notebooks-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Notebooks
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Learning
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/datasets/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../help/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Help
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
-        
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -234,8 +428,10 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="SLEAP Documentation" class="md-nav__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -371,6 +567,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -719,8 +918,15 @@
       
         
       
+        
+      
+        
+      
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -878,6 +1084,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../guides/label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/instance-size-distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../guides/run-training-and-inference-on-colab/" class="md-nav__link">
         
   
@@ -991,10 +1253,11 @@
       
         
       
-        
+    
+    
+    
       
-    
-    
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1264,34 +1527,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../notebooks/Interactive_and_realtime_inference/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Interactive and realtime inference
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data/" class="md-nav__link">
         
   
@@ -1371,25 +1606,26 @@
       
         
       
-        
+    
+    
+    
       
         
-      
         
       
+      
     
     
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -1403,8 +1639,14 @@
   
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
@@ -1480,34 +1722,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../training-options/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Training Options
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../skeleton-design/" class="md-nav__link">
         
   
@@ -1515,35 +1729,7 @@
   <span class="md-ellipsis">
     
   
-    Skeleton design
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../configuring-models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Configuring models
+    Skeleton Design
   
 
     
@@ -1573,6 +1759,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prediction-Assisted Labeling
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1580,7 +1784,7 @@
   <span class="md-ellipsis">
     
   
-    Prediction Assisted Labeling
+    Prediction-Assisted Labeling
   
 
     
@@ -1589,6 +1793,80 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-active-learning-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Active Learning Loop
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-seekbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Understanding the Seekbar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#correcting-predictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Correcting Predictions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1609,35 +1887,7 @@
   <span class="md-ellipsis">
     
   
-    Types of mistakes in tracking code
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../troubleshoot-workflows/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Troubleshooting workflows
+    Tracking Mistakes
   
 
     
@@ -1665,7 +1915,7 @@
   <span class="md-ellipsis">
     
   
-    Export Data For Analysis
+    Export for Analysis
   
 
     
@@ -1707,6 +1957,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1808,14 +2061,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/evaluation_metrics/" class="md-nav__link">
+      <a href="../../reference/quality-control.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Evaluation metrics
+    Label Quality Control
   
 
     
@@ -1844,6 +2097,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1981,6 +2237,69 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-active-learning-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Active Learning Loop
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-seekbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Understanding the Seekbar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#correcting-predictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Correcting Predictions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next Steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2000,43 +2319,109 @@
 
 
 <div class="md-source-file"><a href="../prediction-assisted-labeling.md" title="View markdown source" class="md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6m4 18H6V4h7v5h5v11M13 9V3.5L18.5 9H13Z"/></svg></a></div>
-<h1 id="prediction-assisted-labeling">Prediction-assisted labeling<a class="headerlink" href="#prediction-assisted-labeling" title="Permanent link">&para;</a></h1>
-<p><em>Prediction-assisted labeling</em> has two main goals. First, it speeds up the labeling
-process as it is faster to correct a predicted instance which is mostly
-correct than it is to add a new instance from scratch. Second, it
-provides feedback about where your model does well and where it does
-poorly, and this should give you a better idea of which frames will be
-most useful to label.</p>
-<p>The GUI doesn’t yet give you a way to monitor the progress during inference,
-although it will alert you if an error occurs during inference.</p>
-<p>When inference finishes, you’ll be told how many instances were
-predicted. Suggested frames with predicted instances will be marked in
-red on the seekbar.</p>
-<h1 id="reviewing-and-fixing-predictions">Reviewing and fixing predictions<a class="headerlink" href="#reviewing-and-fixing-predictions" title="Permanent link">&para;</a></h1>
-<p>After you’ve successfully trained models and predicted some instances,
-you’ll get a message that inference has finished.
-Predictions will be marked with a thin black line on the seekbar, while frames
-that you manually labeled will be marked with a thicker black line. (For
-"suggested" frames, manually labeled frames will have a dark blue line and
-predicted frames will have a lighter blue.)</p>
-<p>Predicted instances will <em>not</em> be used for future model training unless you
-correct the predictions in the GUI.</p>
-<p><img alt="" src="../../assets/images/fixing-predictions.gif" /></p>
-<p>Predicted instances in the frame are displayed in grey with yellow
-nodes. To edit a prediction, you’ll need to replace it with an editable
-instance. <strong>Double-click</strong> the predicted instance and it will be converted into a regular instance.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>All node labels on the regular instance will be colored red.
-After moving nodes, the node labels will colored green. This is just a visual indicator
-to keep track of which nodes have been moved from the original prediction.</p>
+<h1 id="prediction-assisted-labeling">Prediction-Assisted Labeling<a class="headerlink" href="#prediction-assisted-labeling" title="Permanent link">&para;</a></h1>
+<p>Prediction-assisted labeling accelerates your workflow by using model predictions to bootstrap new labels.</p>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li><strong>Faster labeling</strong> — Correcting a mostly-correct prediction is quicker than labeling from scratch</li>
+<li><strong>Targeted feedback</strong> — See where your model succeeds and fails, helping you choose the most useful frames to label</li>
+</ul>
+<hr />
+<h2 id="the-active-learning-loop">The Active Learning Loop<a class="headerlink" href="#the-active-learning-loop" title="Permanent link">&para;</a></h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────────────────────┐
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                                                         │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   Label frames  →  Train model  →  Predict  →  Correct  │
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│        ↑                                          │     │
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│        └──────────────────────────────────────────┘     │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│                                                         │
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>└─────────────────────────────────────────────────────────┘
+</span></code></pre></div>
+<ol>
+<li><strong>Label</strong> a small set of frames manually</li>
+<li><strong>Train</strong> a model on your labels</li>
+<li><strong>Predict</strong> on suggested or unlabeled frames</li>
+<li><strong>Correct</strong> the predictions to create new training data</li>
+<li><strong>Repeat</strong> until accuracy is satisfactory</li>
+</ol>
+<hr />
+<h2 id="understanding-the-seekbar">Understanding the Seekbar<a class="headerlink" href="#understanding-the-seekbar" title="Permanent link">&para;</a></h2>
+<p>After running inference, the seekbar shows different markers:</p>
+<table>
+<thead>
+<tr>
+<th>Marker</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Thick black line</strong></td>
+<td>Manually labeled frame</td>
+</tr>
+<tr>
+<td><strong>Thin black line</strong></td>
+<td>Frame with predictions</td>
+</tr>
+<tr>
+<td><strong>Dark blue line</strong></td>
+<td>Suggested frame with manual labels</td>
+</tr>
+<tr>
+<td><strong>Light blue line</strong></td>
+<td>Suggested frame with predictions</td>
+</tr>
+<tr>
+<td><strong>Red marker</strong></td>
+<td>Suggested frame ready for review</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="correcting-predictions">Correcting Predictions<a class="headerlink" href="#correcting-predictions" title="Permanent link">&para;</a></h2>
+<p>Predicted instances appear in <strong>grey with yellow nodes</strong>. To edit them:</p>
+<ol>
+<li><strong>Double-click</strong> the predicted instance to convert it to an editable instance</li>
+<li>Adjust the nodes as needed</li>
+<li>Save your changes</li>
+</ol>
+<p><img alt="Fixing predictions" src="../../assets/images/fixing-predictions.gif" /></p>
+<div class="admonition tip">
+<p class="admonition-title">Visual feedback</p>
+<p>After converting a prediction:</p>
+<ul>
+<li><strong>Red nodes</strong> = unchanged from prediction</li>
+<li><strong>Green nodes</strong> = manually adjusted</li>
+</ul>
+<p>This helps you track which nodes you've reviewed.</p>
 </div>
-<p>You can now edit the instance as before. Once you’ve added and/or
-corrected more instances, you can repeat the process:
-train a new model, predict on more frames, correct those predictions,
-and so on. You’ll want to regularly generate new frame suggestions,
-since active learning will return predictions for just these frames.</p>
-<p>After you have accurate frame-by-frame prediction, you’re ready to predict for entire video clips and to track animal identities. We use a variety of heuristic algorithms for tracking identities across time (see <a href="../../guides/tracking-and-proofreading/#tracking-methods">Tracking methods</a> for more details). SLEAP also includes a graphical proof-reading tool for quickly assessing the accuracy of tracking and correcting problems.</p>
+<div class="admonition warning">
+<p class="admonition-title">Predictions don't train automatically</p>
+<p>Predicted instances are <strong>not</strong> used for training until you convert and correct them. Always double-click to convert before making edits.</p>
+</div>
+<hr />
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p><strong>Generate new suggestions regularly</strong> — Active learning works best with fresh suggestions based on your latest model</p>
+</li>
+<li>
+<p><strong>Focus on failure cases</strong> — Prioritize frames where predictions are wrong or uncertain</p>
+</li>
+<li>
+<p><strong>Don't over-correct</strong> — If a prediction is close enough, a small adjustment is fine</p>
+</li>
+<li>
+<p><strong>Iterate frequently</strong> — Several rounds of train → predict → correct typically yields better results than one large labeling session</p>
+</li>
+</ol>
+<hr />
+<h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
+<p>Once you have accurate frame-by-frame predictions, you're ready to:</p>
+<ul>
+<li><strong>Run inference on full videos</strong> — Predict poses across entire clips</li>
+<li><strong>Track identities</strong> — Link instances across frames (see <a href="../../guides/tracking-and-proofreading/#tracking-methods">Tracking methods</a>)</li>
+<li><strong>Proofread tracks</strong> — Use the proofreading tools to fix tracking errors</li>
+</ul>
 
 
 
@@ -2109,6 +2494,14 @@ since active learning will return predictions for just these frames.</p>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"/></svg>
     </a>
   
+    
+    
+    
+    
+    <a href="mailto:talmo@salk.edu" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
 </div>
       
     </div>
@@ -2124,7 +2517,7 @@ since active learning will return predictions for just these frames.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

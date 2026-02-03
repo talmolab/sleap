@@ -98,18 +98,27 @@ The cloned folder/tutorial data will be located on the Desktop under the name **
 1. Open a terminal. Then launch the SLEAP GUI by typing this command followed by <kbd>Enter</kbd> or <kbd>Return</kbd>:
 
     ```bash
-    uv run sleap-label
+    sleap
     ```
 
-    !!! note "If you installed SLEAP with **pip**"
-        Make sure to first activate the SLEAP conda environment:
-        ```bash
-        conda activate sleap
-        ```
+    !!! note "Development installation"
+        If you installed SLEAP for development (via `uv sync`), activate the environment first:
 
-        Then you can launch the GUI with:
+        === "Linux/macOS"
+            ```bash
+            source .venv/bin/activate
+            sleap
+            ```
+
+        === "Windows (PowerShell)"
+            ```powershell
+            .venv\Scripts\Activate.ps1
+            sleap
+            ```
+
+        Or run without activating:
         ```bash
-        sleap-label
+        uv run sleap
         ```
 
     ![](../assets/images/tutorial/open-gui.png)
@@ -119,8 +128,8 @@ The cloned folder/tutorial data will be located on the Desktop under the name **
     ![](../assets/images/tutorial/add-videos.png)
 
 
-3. **Open** the mice.mp4 from the git cloned folder **sleap-tutorial-data-main**. For future reference, SLEAP currently supports mp4, avi, and h5 files[^1].
-[^1]: SLEAP currently supports mp4, avi, and h5 files. For mp4 and avi files, you’ll be asked whether to import the video as grayscale. For h5 files, you’ll be asked the dataset and whether the video is stored with channels first or last.
+3. **Open** the mice.mp4 from the git cloned folder **sleap-tutorial-data-main**. For future reference, SLEAP supports a wide range of video and image formats[^1].
+[^1]: SLEAP supports common video formats (mp4, avi, mov, mkv), HDF5 files (h5, hdf5), image sequences (png, jpg, jpeg, bmp), and TIFF stacks (tif, tiff). For video files, you may be asked whether to import as grayscale. For HDF5 files, you'll be asked the dataset and whether the video is stored with channels first or last. See the [sleap-io documentation](https://io.sleap.ai) for full details on supported formats.
 
 
 

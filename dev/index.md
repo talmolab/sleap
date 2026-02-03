@@ -1,59 +1,87 @@
 # Social LEAP Estimates Animal Poses (SLEAP)
-![SLEAP Logo](assets/images/sleap_movie.gif)
 
-SLEAP is an open-source deep-learning based framework for multi-animal pose tracking ([Pereira et al., Nature Methods, 2022](https://www.nature.com/articles/s41592-022-01426-1)). It can be used to track any type or number of animals and includes an advanced labeling/training GUI for active learning and proofreading.
+<div class="hero" markdown>
+![SLEAP pose estimation demo](assets/images/sleap_movie.gif)
+</div>
 
+<div class="badges" markdown>
+[![GitHub stars](https://img.shields.io/github/stars/talmolab/sleap?style=flat&logo=github)](https://github.com/talmolab/sleap)
+[![Release](https://img.shields.io/github/v/release/talmolab/sleap?label=Latest&color=green)](https://github.com/talmolab/sleap/releases/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/sleap?color=orange)
+[![PyPI](https://img.shields.io/pypi/v/sleap?label=PyPI&color=blue)](https://pypi.org/project/sleap)
+[![Nature Methods](https://img.shields.io/badge/Nature%20Methods-2022-purple)](https://www.nature.com/articles/s41592-022-01426-1)
+</div>
 
-!!! warning "Documentation for New SLEAP Versions"
-    This documentation is for the **latest version of SLEAP**.  
-    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
+**SLEAP** is an open-source deep learning framework for multi-animal pose tracking ([Pereira et al., Nature Methods, 2022](https://www.nature.com/articles/s41592-022-01426-1)). It provides an end-to-end workflow from labeling to trained models, with a purpose-built GUI for active learning and proofreading.
 
+## ✨ Features
 
-!!! tip "New in SLEAP 1.5"
-    Check out our [migration notes](guides/migrating-to-sleap-1-5.md) to learn about the latest features including UV-based installation, PyTorch backend, and new standalone libraries!
+- **Easy installation** – One-line install with support for all major OSes
+- **Powerful GUI** – Human-in-the-loop workflow for rapidly labeling large datasets
+- **Flexible models** – Single and multi-animal pose estimation with top-down and bottom-up strategies
+- **Customizable architectures** – Neural networks that deliver accurate predictions with very few labels
+- **Fast training** – 15-60 mins on a single GPU for typical datasets
+- **Fast inference** – Up to 600+ FPS batch processing, <10ms realtime latency
+- **Modern backends** – [`sleap-io`](https://io.sleap.ai) for data handling and PyTorch-based [`sleap-nn`](https://nn.sleap.ai) for training
 
+**Let's Get Some SLEAP!** 🐭🐭
 
-## Features
+---
 
-- Easy, one-line installation with support for all OSes
+## 📚 Explore the Docs
 
-- Purpose-built GUI and human-in-the-loop workflow for rapidly labeling large datasets
+<div class="grid cards" markdown>
 
-- Single- and multi-animal pose estimation with *top-down* and *bottom-up* training strategies
+-   :material-school:{ .lg .middle } **Tutorial**
 
-- Customizable neural network architectures that deliver *accurate predictions* with *very few* labels
+    ---
 
-- Fast training: 15 to 60 mins on a single GPU for a typical dataset
+    Step-by-step guide from labeling to tracking.
 
-- Fast inference: up to 600+ FPS for batch, <10ms latency for realtime
+    [:octicons-arrow-right-24: Start Learning](tutorial/overview.md)
 
-- Support for remote training/inference workflow (for using SLEAP without GPUs)
+-   :material-book-open-variant:{ .lg .middle } **Guides**
 
-- Flexible developer API for building integrated apps and customization
+    ---
 
-- Two independent backends-- [`sleap-nn`](https://nn.sleap.ai) and [`sleap-io`](https://io.sleap.ai) for training/inference pipelines & handling SLEAP files respectively
+    Advanced workflows and best practices.
 
-<!-- # TODO: Update training time taken DS -->
+    [:octicons-arrow-right-24: Explore Guides](guides/guides-overview.md)
 
-!!! tip "`sleap-nn` Backend"
-    The SLEAP GUI can be installed and used independently of the `sleap-nn` backend for **labeling**. However, for training and inference workflows, it is important that you have sleap-nn installed with the correct **PyTorch and CUDA versions** according to your machine (ex. CPU or GPU).
-    
-    Learn more about `sleap-nn` [here](https://nn.sleap.ai).
+-   :material-notebook:{ .lg .middle } **Notebooks**
 
-!!! tip "`sleap-io` Backend"
-    For working with SLEAP files **directly from a CLI**, it is best to use `sleap-io`.
-    
-    Learn more about `sleap-io` [here](https://io.sleap.ai).
+    ---
 
-## Get some SLEAP
+    Jupyter notebooks for training, analysis, and more.
 
-SLEAP is installed as a Python package. We strongly recommend using [uv](https://docs.astral.sh/uv/) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) to install SLEAP in its own environment.
+    [:octicons-arrow-right-24: Browse Notebooks](notebooks/notebooks-overview.md)
 
-You can find the latest version of SLEAP in the [Releases](https://github.com/talmolab/sleap/releases) page.
+-   :material-lightbulb-on:{ .lg .middle } **Learning**
+
+    ---
+
+    GUI, training options, skeleton design, and more.
+
+    [:octicons-arrow-right-24: Deep Dive](learnings/system-overview.md)
+
+-   :material-bookshelf:{ .lg .middle } **Reference**
+
+    ---
+
+    CLI, datasets, and full API.
+
+    [:octicons-arrow-right-24: Reference Docs](api/index.md)
+
+</div>
+
+---
+
+## 🚀 Get some SLEAP!
 
 ### Quick start
 
-Install [`uv`](https://github.com/astral-sh/uv) first - an ultra-fast Python package manager:
+Install [`uv`](https://github.com/astral-sh/uv) first:
+
 ```bash
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -62,117 +90,132 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-!!! warning "Python 3.14 is not yet supported"
-    SLEAP currently supports **Python 3.11, 3.12, and 3.13**. **Python 3.14 is not yet tested or supported.** `uv` will use the system-installed python by default. If you have python 3.14 installed on your system, then specify the Python version (<=3.13) in the installation command.  
-    For example:
+Then install SLEAP:
+
+=== "Windows/Linux (CUDA 12.8)"
+
     ```bash
-    uv tool install --python 3.13 "sleap[nn]"  ...
+    uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
     ```
-    Replace `...` with the rest of your install command as needed.
+
+=== "macOS / CPU-only"
+
+    ```bash
+    uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+    ```
+
+Launch the GUI:
 
 ```bash
-# Windows/ Linux CUDA 12.8
-uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
-
-# MacOS / CPU-only
-uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
+sleap label
 ```
 
-Run the SLEAP GUI after installation!
-```bash
-sleap
-```
+[:octicons-arrow-right-24: Full installation instructions](installation.md)
 
-See the docs for [full installation instructions](installation.md).
+### Learn to SLEAP
 
+- **Learn step-by-step:** [Tutorial](tutorial/overview.md)
+- **Learn more advanced usage:** [Guides](guides/guides-overview.md) and [Notebooks](notebooks/notebooks-overview.md)
+- **Learn by watching:** [ABL:AOC 2023 Workshop](https://www.youtube.com/watch?v=BfW-HgeDfMI) and [MIT CBMM Tutorial](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking)
+- **Learn by reading:** [Paper (Pereira et al., Nature Methods, 2022)](https://www.nature.com/articles/s41592-022-01426-1) and [Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020)](https://rdcu.be/caH3H)
+- **Learn from others:** [Discussions on Github](https://github.com/talmolab/sleap/discussions)
 
-## Learn to SLEAP
+---
 
-- **Learn step-by-step: [Tutorial](tutorial/overview.md)**
-- **Learn more advanced usage: [Guides](guides/guides-overview.md) and [Notebooks](notebooks/notebooks-overview.md)**
-- **Learn by watching: [ABL:AOC 2023 Workshop](https://www.youtube.com/watch?v=BfW-HgeDfMI) and [MIT CBMM Tutorial](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking)**
-- **Learn by reading: [Paper (Pereira et al., Nature Methods, 2022)](https://www.nature.com/articles/s41592-022-01426-1) and [Review on behavioral quantification (Pereira et al., Nature Neuroscience, 2020)](https://rdcu.be/caH3H)**
-- **Learn from others: [Discussions on Github](https://github.com/talmolab/sleap/discussions)**
+## 🔄 Coming from SLEAP 1.4 or earlier?
+
+!!! tip "New in SLEAP v1.5+"
+    SLEAP v1.5+ introduced major changes including UV-based installation, PyTorch backend via `sleap-nn`, and modular data workflows with `sleap-io`. Check out [Migration Guide](guides/migrating-to-sleap-1-5.md)!
+
+| SLEAP ≤ 1.4 | SLEAP 1.5+ |
+|-------------|------------|
+| Conda installation | UV or pip installation |
+| TensorFlow backend | PyTorch backend (`sleap-nn`) |
+| Monolithic package | Modular: GUI + `sleap-nn` + `sleap-io` |
+
+!!! warning "Legacy Documentation"
+    If you are using SLEAP version 1.4.1 or earlier, please visit the [legacy documentation](https://legacy.sleap.ai).
+
+---
+
+## Get Help
+
+<div class="grid cards" markdown>
+
+-   :material-help-circle:{ .lg } **Help Page**
+
+    Common issues and solutions. [View Help](help.md)
+
+-   :fontawesome-brands-github:{ .lg } **Report Issues**
+
+    Found a bug? [Create an issue](https://github.com/talmolab/sleap/issues/new?template=bug_report.md)
+
+-   :material-forum:{ .lg } **Discussions**
+
+    Questions? [Start a discussion](https://github.com/talmolab/sleap/discussions)
+
+</div>
+
+---
 
 ## References
 
-SLEAP is the successor to the single-animal pose estimation software [LEAP](https://github.com/talmo/leap) ([Pereira et al., Nature Methods, 2019](https://www.nature.com/articles/s41592-018-0234-5)).
+SLEAP is the successor to the single-animal pose estimation software [LEAP (Pereira et al., Nature Methods, 2019)](https://www.nature.com/articles/s41592-018-0234-5). If you use SLEAP in your research, please cite:
 
-If you use SLEAP in your research, please cite:
+> T.D. Pereira, N. Tabris, A. Matsliah, D. M. Turner, J. Li, S. Ravindranath, E. S. Papadoyannis, E. Normand, D. S. Deutsch, Z. Y. Wang, G. C. McKenzie-Smith, C. C. Mitelut, M. D. Castro, J. D'Uva, M. Kislin, D. H. Sanes, S. D. Kocher, S. S-H, A. L. Falkner, J. W. Shaevitz, and M. Murthy. **SLEAP: A deep learning system for multi-animal pose tracking.** *Nature Methods*, 19(4), 2022. [:octicons-link-external-16:](https://www.nature.com/articles/s41592-022-01426-1)
 
+??? note "BibTeX"
 
-
-    
-    T.D. Pereira, N. Tabris, A. Matsliah, D. M. Turner, J. Li, S. Ravindranath, E. S. Papadoyannis, E. Normand, D. S. Deutsch, Z. Y. Wang, G. C. McKenzie-Smith, C. C. Mitelut, M. D. Castro, J. D’Uva, M. Kislin, D. H. Sanes, S. D. Kocher, S. S-H, A. L. Falkner, J. W. Shaevitz, and M. Murthy. Sleap: A deep learning system for multi-animal pose tracking. Nature Methods, 19(4), 2022
-
-
-## BibTeX
-
-
-    
+    ```bibtex
     @ARTICLE{Pereira2022sleap,
        title={SLEAP: A deep learning system for multi-animal pose tracking},
-       author={Pereira, Talmo D and
-          Tabris, Nathaniel and
-          Matsliah, Arie and
-          Turner, David M and
-          Li, Junyu and
-          Ravindranath, Shruthi and
-          Papadoyannis, Eleni S and
-          Normand, Edna and
-          Deutsch, David S and
-          Wang, Z. Yan and
-          McKenzie-Smith, Grace C and
-          Mitelut, Catalin C and
-          Castro, Marielisa Diez and
-          D'Uva, John and
-          Kislin, Mikhail and
-          Sanes, Dan H and
-          Kocher, Sarah D and
-          Samuel S-H and
-          Falkner, Annegret L and
-          Shaevitz, Joshua W and
-          Murthy, Mala},
+       author={Pereira, Talmo D and Tabris, Nathaniel and Matsliah, Arie and
+          Turner, David M and Li, Junyu and Ravindranath, Shruthi and
+          Papadoyannis, Eleni S and Normand, Edna and Deutsch, David S and
+          Wang, Z. Yan and McKenzie-Smith, Grace C and Mitelut, Catalin C and
+          Castro, Marielisa Diez and D'Uva, John and Kislin, Mikhail and
+          Sanes, Dan H and Kocher, Sarah D and Samuel S-H and
+          Falkner, Annegret L and Shaevitz, Joshua W and Murthy, Mala},
        journal={Nature Methods},
        volume={19},
        number={4},
        year={2022},
        publisher={Nature Publishing Group}
     }
-    
-## Contact
+    ```
 
-Follow [@talmop](https://x.com/talmop) on [X](https://x.com) for news and updates!
-
-**Technical issue with the software?**
-
-1. Check the [Help page](help.md).
-2. Ask the community via [discussions on Github](https://github.com/talmolab/sleap/discussions).
-3. Search the [issues on GitHub](https://github.com/talmolab/sleap/issues) or open a new one.
-
-**General inquiries?**
-Reach out to [talmo@salk.edu](mailto:talmo@salk.edu).
+---
 
 ## Contributors
-
-- **Talmo Pereira**, Salk Institute for Biological Studies
-- **Liezl Maree**, Salk Institute for Biological Studies
-- **Arlo Sheridan**, Salk Institute for Biological Studies
-- **Arie Matsliah**, Princeton Neuroscience Institute, Princeton University
-- **Nat Tabris**, Princeton Neuroscience Institute, Princeton University
-- **David Turner**, Research Computing and Princeton Neuroscience Institute, Princeton University
-- **Joshua Shaevitz**, Physics and Lewis-Sigler Institute, Princeton University
-- **Mala Murthy**, Princeton Neuroscience Institute, Princeton University
 
 SLEAP was created in the [Murthy](https://murthylab.princeton.edu) and [Shaevitz](https://shaevitzlab.princeton.edu) labs at the [Princeton Neuroscience Institute](https://pni.princeton.edu) at Princeton University.
 
 SLEAP is currently being developed and maintained in the [Talmo Lab](https://talmolab.org) at the [Salk Institute for Biological Studies](https://salk.edu), in collaboration with the Murthy and Shaevitz labs at Princeton University.
 
-This work was made possible through our funding sources, including:
+??? note "Contributors & Funding"
 
-- NIH BRAIN Initiative R01 NS104899
-- Princeton Innovation Accelerator Fund
+    **Contributors.**
+
+    - **Talmo Pereira**, Salk Institute for Biological Studies
+    - **Liezl Maree**, Salk Institute for Biological Studies
+    - **Arlo Sheridan**, Salk Institute for Biological Studies
+    - **Arie Matsliah**, Princeton Neuroscience Institute, Princeton University
+    - **Nat Tabris**, Princeton Neuroscience Institute, Princeton University
+    - **David Turner**, Research Computing and Princeton Neuroscience Institute, Princeton University
+    - **Joshua Shaevitz**, Physics and Lewis-Sigler Institute, Princeton University
+    - **Mala Murthy**, Princeton Neuroscience Institute, Princeton University
+
+    **Funding**
+
+    This work was made possible through our funding sources, including:
+
+    - NIH BRAIN Initiative R01 NS104899
+    - Princeton Innovation Accelerator Fund
+
+---
 
 ## License
 
-SLEAP is released under a [Clear BSD License](https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE) and is intended for research/academic use only. For commercial use, please contact: **Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256**.
+SLEAP is released under a [Clear BSD License](https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE) and is intended for research/academic use only.
+
+For commercial use, please contact: **Laurie Tzodikov** (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.

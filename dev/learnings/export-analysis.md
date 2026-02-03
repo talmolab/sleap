@@ -1,32 +1,102 @@
-# Export Data For Analysis
+# Export for Analysis
 
-The easiest way to work with the data from SLEAP is to export an HDF5 file by choosing "**Export Analysis HDF5...**" in the "File" menu.
+!!! note "New to exporting?"
+    If you're just getting started, see the [Exporting the Results](../tutorial/exporting-the-results.md) tutorial for a guided introduction.
 
-See [`sleap.io.convert`](../../api/io/convert/#sleap.io.convert) for an explanation of the datasets inside the file.
+SLEAP provides multiple ways to export your pose tracking data for downstream analysis.
 
-## MATLAB
+!!! tip "Comprehensive format documentation"
+    For detailed format specifications, all supported formats, and programmatic access, see the [sleap-io formats documentation](https://io.sleap.ai/latest/formats/).
 
-You can read this file in MATLAB like this:
+---
 
-```matlab
-occupancy_matrix = h5read('path/to/analysis.h5','/track_occupancy')
-tracks_matrix = h5read('path/to/analysis.h5','/tracks')
+## Quick Export from GUI
+
+The easiest way to export data is through the **File** menu:
+
+| Menu Option | Output Format | Best For |
+|-------------|---------------|----------|
+| **Export Analysis HDF5...** | `.h5` | MATLAB, NumPy arrays |
+| **Export Analysis CSV...** | `.csv` | Spreadsheets, pandas |
+| **Export NWB...** | `.nwb` | Neuroscience data sharing |
+
+---
+
+## Command-Line Conversion
+
+For batch processing or scripting, use the `sleap convert` command:
+
+```bash
+# Convert to CSV
+sleap convert predictions.slp -o analysis.csv
+
+# Convert to NWB (Neurodata Without Borders)
+sleap convert predictions.slp -o data.nwb
+
+# Convert to COCO format
+sleap convert predictions.slp -o annotations.json --to coco
+
+# Create a portable package with embedded frames
+sleap convert labels.slp -o labels.pkg.slp --embed user
+
+# Export to Ultralytics YOLO format
+sleap convert labels.slp -o yolo_dataset/ --to ultralytics
 ```
 
-See [`here`](https://www.mathworks.com/help/matlab/ref/h5read.html) for more information about working with HDF5 files in MATLAB.
+See `sleap convert --help` or the [sleap-io CLI documentation](https://io.sleap.ai/latest/cli/#sio-convert) for all options.
 
-## Python
-
-To read the file in Python you'll first need to install the [`h5py package`](http://docs.h5py.org/en/stable/). You can then read data from the file like this:
-    ```
-    import h5py
-    with h5py.File('path/to/analysis.h5', 'r') as f:
-        occupancy_matrix = f['track_occupancy'][:]
-        tracks_matrix = f['tracks'][:]
-
-    print(occupancy_matrix.shape)
-    print(tracks_matrix.shape)
+!!! note "Analysis HDF5"
+    Analysis HDF5 export is available via the **GUI** or **Python API**:
+    ```python
+    import sleap_io as sio
+    labels = sio.load_slp("predictions.slp")
+    sio.save_analysis_h5(labels, "analysis.h5")
     ```
 
+---
 
-**Note**: The datasets are stored column-major as expected by MATLAB. This means that if you're working with the file in Python you may want to first transpose the datasets so they match the shapes described in [`sleap.io.convert`](../../api/io/convert/#sleap.io.convert).
+## Analysis HDF5 Format
+
+The Analysis HDF5 format exports pose data as dense NumPy arrays, optimized for MATLAB and Python.
+
+### Reading in MATLAB
+
+```matlab
+tracks = h5read('analysis.h5', '/tracks');
+occupancy = h5read('analysis.h5', '/track_occupancy');
+node_names = h5read('analysis.h5', '/node_names');
+
+% Get coordinates for track 1, node 1, frame 100
+x = tracks(1, 1, 1, 100);
+y = tracks(1, 2, 1, 100);
+```
+
+### Reading in Python
+
+```python
+import h5py
+
+with h5py.File('analysis.h5', 'r') as f:
+    tracks = f['tracks'][:]             # (n_tracks, 2, n_nodes, n_frames)
+    occupancy = f['track_occupancy'][:]  # (n_frames, n_tracks)
+    node_names = [n.decode() for n in f['node_names'][:]]
+
+print(f"Tracks shape: {tracks.shape}")
+print(f"Nodes: {node_names}")
+```
+
+For dataset schemas, axis ordering presets, and advanced options, see the [sleap-io Analysis HDF5 documentation](https://io.sleap.ai/latest/formats/#sleap-analysis-hdf5-format-h5).
+
+---
+
+## Supported Formats
+
+| Format | Extension | CLI | Python API | Documentation |
+|--------|-----------|:---:|:----------:|---------------|
+| **Analysis HDF5** | `.h5` | — | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#sleap-analysis-hdf5-format-h5) |
+| **CSV** | `.csv` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#csv-format-csv) |
+| **NWB** | `.nwb` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#nwb-format-nwb) |
+| **COCO** | `.json` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#coco-format-json) |
+| **Label Studio** | `.json` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#label-studio-format-json) |
+| **Ultralytics** | directory | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#ultralytics-yolo-format) |
+| **JABS** | `.h5` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#jabs-format-h5) |

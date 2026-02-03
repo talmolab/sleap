@@ -1,132 +1,191 @@
 # Help
 
-Stuck? Can't get SLEAP to run? Crashing? Try the recommended tips below.
+Stuck? Can't get SLEAP to run? Crashing? Try the tips below.
+
+**First step:** Run `sleap doctor` to check your installation.
+
+---
 
 ## Installation
 
-### I can't get SLEAP to install!
+<details class="plain" markdown>
+<summary>I can't get SLEAP to install!</summary>
 
 Have you tried all of the steps in the [installation instructions](installation.md)?
 
-If so, please feel free to [start a discussion](https://github.com/talmolab/sleap/discussions) or [open an issue](https://github.com/talmolab/sleap/issues) and tell us how you're trying to install it, what error messages you're getting and which operating system you're on.
+If so, please [start a discussion](https://github.com/talmolab/sleap/discussions) or [open an issue](https://github.com/talmolab/sleap/issues) and tell us:
 
-### Can I install it on a computer without a GPU?
+- How you're trying to install it
+- What error messages you're getting
+- Which operating system you're on
+- Output of `sleap doctor` (if available)
 
-Yes! You can install SLEAP as you normally would using the `conda` or `pip`-based methods and the GPU support will be ignored.
+</details>
 
-### What if I already have CUDA set up on my system?
+<details class="plain" markdown>
+<summary>Can I install it on a computer without a GPU?</summary>
 
-You can use the system CUDA installation by following the [Install SLEAP](installation.md#install-sleap) instructions.
+Yes! Install SLEAP normally using `uv` and the GPU support will be ignored. Use `--torch-backend cpu` to explicitly install CPU-only:
 
-Note that you will need to use a version compatible with **TensorFlow 2.6+** (**CUDA Toolkit v11.3** and **cuDNN v8.2**).
+```bash
+uv tool install --python 3.13 "sleap[nn]" --prerelease allow --torch-backend cpu
+```
+
+</details>
+
+<details class="plain" markdown>
+<summary>What if I already have CUDA set up on my system?</summary>
+
+SLEAP 1.5+ uses PyTorch, which bundles its own CUDA libraries. Your system CUDA installation is not used. The `--torch-backend auto` flag will detect your GPU and install the appropriate PyTorch version.
+
+</details>
+
 
 ## Usage
 
-### How do I use SLEAP?
+<details class="plain" markdown>
+<summary>How do I use SLEAP?</summary>
 
 If you're new to pose tracking in general, check out [this talk](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking) or our review in _[Nature Neuroscience](https://rdcu.be/caH3H)_.
 
-If you're just new to SLEAP, we suggest starting with the [high-level overview](overview.md) and then following the [tutorial](tutorial/overview.md).
+If you're just new to SLEAP, start with the [high-level overview](overview.md) and then follow the [tutorial](tutorial/overview.md).
 
 Once you get the hang of it, check out the [guides](guides/guides-overview.md) for more detailed info.
 
-### Does my data need to be in a particular format?
+</details>
 
-SLEAP supports a large number of formats, including all video formats and imported data from DeepLabCut and others.
+<details class="plain" markdown>
+<summary>Does my data need to be in a particular format?</summary>
 
-Many types of video acquisition software, however, do not save videos in a format suitable for computer vision-based processing. A very common issue is that videos are not **reliably seekable**, meaning that you may not get the same data when trying to read a particular frame index. This is because many video formats are optimized for realtime and sequential playback and save space by reconstructing the image using data in adjacent frames. The consequence is that you may not get the exact same image depending on what the last frame you read was. Check out [this blog post](http://blog.loopbio.com/video-io-1-introduction.html) for more details.
+SLEAP supports many formats, including all common video formats and imported data from DeepLabCut and others.
 
-If you think you may be affected by this issue, or just want to be safe, re-encode your videos using the following command:
+However, some video acquisition software saves videos in formats not suitable for computer vision processing. A common issue is that videos are not **reliably seekable**—you may not get the same data when reading a particular frame index. This is because many video formats reconstruct images using data from adjacent frames.
 
-```sh
+If you think you may be affected, re-encode your videos:
+
+```bash
 ffmpeg -y -i "input.mp4" -c:v libx264 -pix_fmt yuv420p -preset superfast -crf 23 "output.mp4"
 ```
 
-Breaking down what this does:
+**Options explained:**
 
-- `-i "input.mp4"`: Specifies the path to the input file. Replace this with your video. Can be `.avi` or any other video format.
-- `-c:v libx264`: Sets the video compression to use H264.
-- `-pix_fmt yuv420p`: Necessary for playback on some systems.
-- `-preset superfast`: Sets a number of parameters that enable reliable seeking.
-- `-crf 23`: Sets the quality of the output video. Lower numbers are less lossy, but result in larger files. A CRF of 15 is nearly lossless, while 30 will be highly compressed.
-- `"output.mp4"`: The name of the output video file (must end in `.mp4`).
+- `-c:v libx264`: H264 compression
+- `-pix_fmt yuv420p`: Compatibility with all players
+- `-preset superfast`: Enables reliable seeking
+- `-crf 23`: Quality level (15 = nearly lossless, 30 = highly compressed)
 
-If you don't have `ffmpeg` on your system, you can install it using `conda install ffmpeg` or by downloading it from the [official website](https://ffmpeg.org/download.html).
+If you don't have `ffmpeg`, install it from [ffmpeg.org](https://ffmpeg.org/download.html) or via your package manager.
 
-### I get strange results where the poses appear to be correct but shifted relative to the image.
+</details>
 
-This is most likely an issue with the video compression format. [`See above`](#does-my-data-need-to-be-in-a-particular-format).
+<details class="plain" markdown>
+<summary>I get strange results where poses appear correct but shifted relative to the image</summary>
 
-### How do I get predictions out?
+This is most likely a video compression issue. Re-encode your video using the ffmpeg command above.
 
-See [export-analysis](learnings/export-analysis.md) and [sleap-convert](reference/command-line-interfaces.md/#sleap-convert).
+</details>
 
-### What do I do with the output of SLEAP?
+<details class="plain" markdown>
+<summary>How do I get predictions out?</summary>
 
-Check out the [Analysis examples](notebooks/Analysis_examples.ipynb) notebooks.
+See [Export Data for Analysis](learnings/export-analysis.md) and [CLI Reference](reference/command-line-interfaces.md).
 
-## Getting more help
+</details>
 
-### I've found a bug or have another problem!
+<details class="plain" markdown>
+<summary>What do I do with the output of SLEAP?</summary>
 
-Feel free to [start a discussion](https://github.com/talmolab/sleap/discussions) to get help from the developers and community.
-Or [open an issue](https://github.com/talmolab/sleap/issues) and we'll get back to you as soon as we can!
+Check out the [Analysis examples](notebooks/Analysis_examples.ipynb) notebook for working with pose data in Python.
 
-### Can I just talk to someone?
+</details>
 
-SLEAP is a complex machine learning system intended for general use, so it's possible that we failed to consider the specifics of the situation in which you may be interested in using it with.
 
-Feel free to reach out to us at `talmo@salk.edu` if you have a question that isn't covered here.
+## Troubleshooting Workflows
+
+SLEAP can work with any type of data, but sometimes tweaking configurations or parameters helps improve performance.
+
+### Stage 1: Getting Started
+
+When starting off, troubleshoot the model type and basic configurations if you can't get results after initial training:
+
+![Stage 1 troubleshooting workflow](assets/images/troubleshooting_stage1.png)
+
+See [Configuring Models](https://nn.sleap.ai/latest/reference/models/) for more information on model types.
+
+### Stage 2: Refining Models
+
+Once you have enough labeled frames and a working model, refine by selecting frames that represent problem areas (overlapping animals, unusual poses):
+
+![Stage 2 troubleshooting workflow](assets/images/troubleshooting_stage2.png)
+
+### Stage 3: Fine-Tuning
+
+In later stages, squeeze out additional performance by tuning hyperparameters:
+
+![Stage 3 troubleshooting workflow](assets/images/troubleshooting_stage3.png)
+
+---
+
+## Getting More Help
+
+<details class="plain" markdown>
+<summary>I've found a bug or have another problem!</summary>
+
+1. Run `sleap doctor` and copy the output
+2. [Start a discussion](https://github.com/talmolab/sleap/discussions) to get help from developers and community
+3. Or [open an issue](https://github.com/talmolab/sleap/issues) if you've found a bug
+
+</details>
+
+<details class="plain" markdown>
+<summary>Can I just talk to someone?</summary>
+
+SLEAP is a complex machine learning system, and we may not have considered your specific use case.
+
+Feel free to reach out at `talmo@salk.edu` if you have a question that isn't covered here.
+
+</details>
+
 
 ## Improving SLEAP
 
-### How can I help improve SLEAP?
+**How can you help?**
 
-- Tell your friends about SLEAP! We also love to hear stories about what worked or didn't work, or your experience if you came from other software tools (`talmo@salk.edu`).
+- **Tell your friends!** We love hearing stories about what worked or didn't work (`talmo@salk.edu`)
+- **[Cite our paper](https://www.nature.com/articles/s41592-022-01426-1)** in your publications
+- **Share ideas** for new features in the [Discussion forum](https://github.com/talmolab/sleap/discussions/categories/ideas)
+- **Contribute code!** See our [contribution guidelines](contribute.md)
 
-- [Cite our paper](https://www.nature.com/articles/s41592-022-01426-1)! Here's a BibTeX citation for your reference manager:
+??? note "BibTeX"
 
-## BibTeX
-
+    ```bibtex
     @ARTICLE{Pereira2022sleap,
-        title={SLEAP: A deep learning system for multi-animal pose tracking},
-        author={Pereira, Talmo D and
-            Tabris, Nathaniel and
-            Matsliah, Arie and
-            Turner, David M and
-            Li, Junyu and
-            Ravindranath, Shruthi and
-            Papadoyannis, Eleni S and
-            Normand, Edna and
-            Deutsch, David S and
-            Wang, Z. Yan and
-            McKenzie-Smith, Grace C and
-            Mitelut, Catalin C and
-            Castro, Marielisa Diez and
-            D'Uva, John and
-            Kislin, Mikhail and
-            Sanes, Dan H and
-            Kocher, Sarah D and
-            Samuel S-H and
-            Falkner, Annegret L and
-            Shaevitz, Joshua W and
-            Murthy, Mala},
-        journal={Nature Methods},
-        volume={19},
-        number={4},
-        year={2022},
-        publisher={Nature Publishing Group}
-        
+       title={SLEAP: A deep learning system for multi-animal pose tracking},
+       author={Pereira, Talmo D and Tabris, Nathaniel and Matsliah, Arie and
+          Turner, David M and Li, Junyu and Ravindranath, Shruthi and
+          Papadoyannis, Eleni S and Normand, Edna and Deutsch, David S and
+          Wang, Z. Yan and McKenzie-Smith, Grace C and Mitelut, Catalin C and
+          Castro, Marielisa Diez and D'Uva, John and Kislin, Mikhail and
+          Sanes, Dan H and Kocher, Sarah D and Samuel S-H and
+          Falkner, Annegret L and Shaevitz, Joshua W and Murthy, Mala},
+       journal={Nature Methods},
+       volume={19},
+       number={4},
+       year={2022},
+       publisher={Nature Publishing Group}
     }
+    ```
 
-- Share new ideas for new features or improvements in the [Discussion forum](https://github.com/talmolab/sleap/discussions/categories/ideas).
+---
 
-- Contribute some code! See our [contribution guidelines](contribute.md) for more info.
+## Usage Data
 
-## What is usage data?
+To help us improve SLEAP, you may allow us to collect basic and **anonymous** usage data. If enabled from the **Help** menu, the SLEAP GUI will transmit information such as which version of Python and operating system you are running.
 
-To help us improve SLEAP, you may allow us to collect basic and **anonymous** usage data. If enabled from the **Help** menu, the SLEAP GUI will transmit information such as which version of Python and operating system you are running SLEAP on.
+This helps us:
 
-This helps us understand on which types of computers SLEAP is being used so we can ensure that our software is maximally accessible to the broadest userbase possible, for example, by telling us whether it's safe to update our dependencies without breaking SLEAP for most users. Collecting usage data also helps us get a sense for how often SLEAP is being used so that we can report its impact to external grant funding agencies.
+- Understand which systems SLEAP is used on
+- Ensure updates don't break compatibility
+- Report usage to grant funding agencies
 
-You can opt out at any time from the menu (this preference will be stored). If you want to prevent these data from being shared with us, you can launch the GUI with `sleap-label --no-usage-data`. Usage data is only shared when the GUI is used, not the API or CLIs. You can check out the [source code](https://github.com/talmolab/sleap/blob/develop/sleap/gui/web.py) to see exactly what data is collected.
+You can opt out at any time from the menu. To prevent data sharing entirely, launch with `sleap-label --no-usage-data`. Usage data is only shared from the GUI, not the API or CLIs. See the [source code](https://github.com/talmolab/sleap/blob/develop/sleap/gui/web.py) for exactly what is collected.

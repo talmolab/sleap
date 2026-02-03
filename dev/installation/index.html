@@ -98,7 +98,7 @@
 
   
 
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href=".." title="SLEAP Documentation" class="md-header__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -214,13 +214,207 @@
     
   </nav>
   
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../overview/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../tutorial/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Tutorial
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../guides/guides-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../notebooks/notebooks-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Notebooks
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../learnings/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Learning
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/datasets/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../help/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Help
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
-        
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -234,8 +428,10 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href=".." title="SLEAP Documentation" class="md-nav__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -616,14 +812,25 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Programmatic Usage">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pip-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pip Installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pip Installation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#sleap-io" class="md-nav__link">
+  <a href="#create-a-conda-environment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        sleap-io
+        Create a conda environment
       
     </span>
   </a>
@@ -631,10 +838,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#sleap-nn" class="md-nav__link">
+  <a href="#install-with-pip" class="md-nav__link">
     <span class="md-ellipsis">
       
-        sleap-nn
+        Install with pip
       
     </span>
   </a>
@@ -654,67 +861,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#verify-your-installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verify your installation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#-torch-backend-not-recognized" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        --torch-backend not recognized
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#force-a-clean-reinstall" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Force a clean reinstall
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#installation-seems-stuck" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation seems stuck
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#still-stuck" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Still stuck?
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -757,6 +903,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1105,8 +1254,15 @@
       
         
       
+        
+      
+        
+      
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1264,6 +1420,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../guides/label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/instance-size-distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../guides/run-training-and-inference-on-colab/" class="md-nav__link">
         
   
@@ -1377,10 +1589,11 @@
       
         
       
-        
+    
+    
+    
       
-    
-    
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1650,34 +1863,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../notebooks/Interactive_and_realtime_inference/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Interactive and realtime inference
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data/" class="md-nav__link">
         
   
@@ -1755,14 +1940,11 @@
       
         
       
-        
-      
-        
-      
-        
-      
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1772,8 +1954,9 @@
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
+          <div class="md-nav__link md-nav__container">
+            <a href="../learnings/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -1787,8 +1970,14 @@
   
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
@@ -1864,34 +2053,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../learnings/training-options/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Training Options
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../learnings/skeleton-design/" class="md-nav__link">
         
   
@@ -1899,35 +2060,7 @@
   <span class="md-ellipsis">
     
   
-    Skeleton design
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../learnings/configuring-models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Configuring models
+    Skeleton Design
   
 
     
@@ -1955,7 +2088,7 @@
   <span class="md-ellipsis">
     
   
-    Prediction Assisted Labeling
+    Prediction-Assisted Labeling
   
 
     
@@ -1983,35 +2116,7 @@
   <span class="md-ellipsis">
     
   
-    Types of mistakes in tracking code
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../learnings/troubleshoot-workflows/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Troubleshooting workflows
+    Tracking Mistakes
   
 
     
@@ -2039,7 +2144,7 @@
   <span class="md-ellipsis">
     
   
-    Export Data For Analysis
+    Export for Analysis
   
 
     
@@ -2081,6 +2186,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -2182,14 +2290,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../reference/evaluation_metrics/" class="md-nav__link">
+      <a href="../reference/quality-control.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Evaluation metrics
+    Label Quality Control
   
 
     
@@ -2218,6 +2326,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -2598,14 +2709,25 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Programmatic Usage">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pip-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pip Installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pip Installation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#sleap-io" class="md-nav__link">
+  <a href="#create-a-conda-environment" class="md-nav__link">
     <span class="md-ellipsis">
       
-        sleap-io
+        Create a conda environment
       
     </span>
   </a>
@@ -2613,10 +2735,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#sleap-nn" class="md-nav__link">
+  <a href="#install-with-pip" class="md-nav__link">
     <span class="md-ellipsis">
       
-        sleap-nn
+        Install with pip
       
     </span>
   </a>
@@ -2636,67 +2758,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#verify-your-installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verify your installation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#-torch-backend-not-recognized" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        --torch-backend not recognized
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#force-a-clean-reinstall" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Force a clean reinstall
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#installation-seems-stuck" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Installation seems stuck
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#still-stuck" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Still stuck?
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2723,6 +2784,10 @@
 <div class="md-source-file"><a href="../installation.md" title="View markdown source" class="md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6m4 18H6V4h7v5h5v11M13 9V3.5L18.5 9H13Z"/></svg></a></div>
 <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
 <p>SLEAP is a tool for tracking animal poses in video. This guide will get you up and running.</p>
+<div class="admonition warning">
+<p class="admonition-title">Using SLEAP 1.4 or earlier?</p>
+<p>This guide is for SLEAP 1.5+. For older versions using conda, see the <a href="https://legacy.sleap.ai">legacy documentation</a>.</p>
+</div>
 <p><strong>What do you want to do?</strong></p>
 <ul>
 <li><a href="#install-sleap"><strong>Use SLEAP</strong></a> (most users)</li>
@@ -2730,6 +2795,7 @@
 <li><a href="#pre-release-versions"><strong>Try pre-release features</strong></a></li>
 <li><a href="#development-setup"><strong>Develop or contribute</strong></a></li>
 <li><a href="#programmatic-usage"><strong>Use SLEAP as a library</strong></a></li>
+<li><a href="#pip-installation"><strong>Install with pip</strong></a> (alternate method)</li>
 </ul>
 <hr />
 <h2 id="before-you-start">Before You Start<a class="headerlink" href="#before-you-start" title="Permanent link">&para;</a></h2>
@@ -2786,8 +2852,17 @@
 <hr />
 <h2 id="install-sleap">Install SLEAP<a class="headerlink" href="#install-sleap" title="Permanent link">&para;</a></h2>
 <p>One command works on all platforms. It automatically detects your GPU and installs the right version of PyTorch.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="admonition success">
+<p class="admonition-title">Quick Install</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
+<p>Check the <a href="#version-compatibility">version compatibility table</a> for the latest versions.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Python version matters</p>
+<p>If you don't have Python installed, <code>uv</code> will automatically download one. Without <code>--python 3.13</code>, it may download Python 3.14 which <strong>SLEAP does not support yet</strong>.</p>
+<p>Always include <code>--python 3.13</code> (or <code>--python 3.12</code>) in your install command.</p>
+</div>
 <p>That's it! SLEAP is now available system-wide. Run it from any terminal:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap
 </span></code></pre></div>
@@ -2813,10 +2888,13 @@
 </span></code></pre></div>
 <p>This shows your system info, package versions, and confirms GPU detection.</p>
 <h3 id="just-viewing-or-annotating-no-training">Just viewing or annotating (no training)<a class="headerlink" href="#just-viewing-or-annotating-no-training" title="Permanent link">&para;</a></h3>
+<div class="admonition tip">
+<p class="admonition-title">Try SLEAP without installing</p>
 <p>If you only need to view and annotate data without training models, you don't even need to install anything:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uvx<span class="w"> </span>sleap<span class="w"> </span>labels.slp
 </span></code></pre></div>
 <p>This runs SLEAP directly without a permanent installation. Replace <code>labels.slp</code> with your file, or omit it to open SLEAP with an empty project.</p>
+</div>
 <hr />
 <h2 id="updating">Updating<a class="headerlink" href="#updating" title="Permanent link">&para;</a></h2>
 <h3 id="check-your-current-version">Check your current version<a class="headerlink" href="#check-your-current-version" title="Permanent link">&para;</a></h3>
@@ -2836,7 +2914,7 @@
 </span></code></pre></div>
 <h3 id="upgrade-to-a-specific-version">Upgrade to a specific version<a class="headerlink" href="#upgrade-to-a-specific-version" title="Permanent link">&para;</a></h3>
 <p>If you need specific versions (for reproducibility or to match a collaborator), reinstall:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 <p>This replaces the existing installation with the exact versions specified.</p>
 <h3 id="downgrade">Downgrade<a class="headerlink" href="#downgrade" title="Permanent link">&para;</a></h3>
@@ -2853,7 +2931,7 @@
 <li>Something is broken and you want a completely fresh environment</li>
 <li>Installing from local source code (to pick up changes)</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 </details>
 <hr />
@@ -2873,6 +2951,11 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>1.6.0a3</td>
+<td>0.6.3</td>
+<td>0.1.0a4</td>
+</tr>
 <tr>
 <td>1.6.0a2</td>
 <td>0.6.2</td>
@@ -2929,7 +3012,7 @@
 </tr>
 </tbody>
 </table>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>cu128
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>cu128
 </span></code></pre></div>
 </details>
 <hr />
@@ -2985,39 +3068,70 @@
 <hr />
 <h2 id="programmatic-usage">Programmatic Usage<a class="headerlink" href="#programmatic-usage" title="Permanent link">&para;</a></h2>
 <p>The <code>sleap</code> package is primarily the GUI application. For scripting and automation, use these libraries:</p>
-<h3 id="sleap-io">sleap-io<a class="headerlink" href="#sleap-io" title="Permanent link">&para;</a></h3>
-<p>For working with <code>.slp</code> files, labels, skeletons, and videos programmatically. Use this for loading predictions, extracting coordinates, filtering data, merging projects, and custom analysis pipelines.</p>
-<p>Documentation and installation: <a href="https://io.sleap.ai">io.sleap.ai</a></p>
-<h3 id="sleap-nn">sleap-nn<a class="headerlink" href="#sleap-nn" title="Permanent link">&para;</a></h3>
-<p>For training models, running inference, and evaluating predictions programmatically. Use this for custom training workflows, batch inference, and integration with other ML pipelines.</p>
-<p>Documentation and installation: <a href="https://nn.sleap.ai">nn.sleap.ai</a></p>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Use for</th>
+<th>Docs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>sleap-io</strong></td>
+<td>Working with <code>.slp</code> files, labels, skeletons, videos, merging projects, custom analysis</td>
+<td><a href="https://io.sleap.ai">io.sleap.ai</a></td>
+</tr>
+<tr>
+<td><strong>sleap-nn</strong></td>
+<td>Training models, running inference, evaluating predictions, batch processing</td>
+<td><a href="https://nn.sleap.ai">nn.sleap.ai</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="pip-installation">Pip Installation<a class="headerlink" href="#pip-installation" title="Permanent link">&para;</a></h2>
+<p>For users who prefer pip over uv, or need to integrate SLEAP into an existing environment.</p>
+<h3 id="create-a-conda-environment">Create a conda environment<a class="headerlink" href="#create-a-conda-environment" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>sleap_env
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>conda<span class="w"> </span>activate<span class="w"> </span>sleap_env
+</span></code></pre></div>
+<h3 id="install-with-pip">Install with pip<a class="headerlink" href="#install-with-pip" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># CPU only</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="c1"># NVIDIA GPU (CUDA 12.8)</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128
+</span></code></pre></div>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
-<h3 id="verify-your-installation">Verify your installation<a class="headerlink" href="#verify-your-installation" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>sleap<span class="w"> </span>doctor
-</span></code></pre></div>
-<p>This is always the first step. It shows:</p>
-<ul>
-<li>SLEAP version and all package versions</li>
-<li>Python version</li>
-<li>GPU detection status</li>
-<li>System information</li>
-</ul>
-<h3 id="-torch-backend-not-recognized"><code>--torch-backend</code> not recognized<a class="headerlink" href="#-torch-backend-not-recognized" title="Permanent link">&para;</a></h3>
-<p>Update uv:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>uv<span class="w"> </span>self<span class="w"> </span>update
-</span></code></pre></div>
-<h3 id="force-a-clean-reinstall">Force a clean reinstall<a class="headerlink" href="#force-a-clean-reinstall" title="Permanent link">&para;</a></h3>
-<p>If something is broken:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.2&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a2&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
-</span></code></pre></div>
-<h3 id="installation-seems-stuck">Installation seems stuck<a class="headerlink" href="#installation-seems-stuck" title="Permanent link">&para;</a></h3>
+<p><strong>First step:</strong> Run <code>sleap doctor</code> and check the output for errors.</p>
+<details class="note">
+<summary><code>--torch-backend</code> not recognized</summary>
+<p>Update uv to the latest version:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>uv<span class="w"> </span>self<span class="w"> </span>update
+</span></code></pre></div></p>
+</details>
+<details class="note">
+<summary>Force a clean reinstall</summary>
+<p>If something is broken:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+</span></code></pre></div></p>
+</details>
+<details class="note">
+<summary>Installation seems stuck</summary>
 <p>Large packages like PyTorch take time. Installation can take 5-15 minutes on slower connections. Wait up to 30 minutes before cancelling.</p>
-<h3 id="still-stuck">Still stuck?<a class="headerlink" href="#still-stuck" title="Permanent link">&para;</a></h3>
+</details>
+<details class="note">
+<summary>GPU not detected</summary>
+<p>If <code>sleap doctor</code> shows no GPU:</p>
 <ol>
-<li>Run <code>sleap doctor</code> and copy the output</li>
-<li>Ask for help at <a href="https://github.com/talmolab/sleap/discussions">github.com/talmolab/sleap/discussions</a></li>
+<li><strong>Check driver</strong>: Run <code>nvidia-smi</code>. If it fails, <a href="https://www.nvidia.com/drivers">install drivers</a></li>
+<li><strong>Driver version</strong>: CUDA 12.8 requires driver 525+</li>
+<li><strong>Try explicit backend</strong>: Use <code>--torch-backend cu128</code> instead of <code>auto</code></li>
 </ol>
+</details>
+<p><strong>Still stuck?</strong> Run <code>sleap doctor</code>, copy output, and ask at <a href="https://github.com/talmolab/sleap/discussions">GitHub Discussions</a></p>
 
 
 
@@ -3090,6 +3204,14 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"/></svg>
     </a>
   
+    
+    
+    
+    
+    <a href="mailto:talmo@salk.edu" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
 </div>
       
     </div>
@@ -3105,7 +3227,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>

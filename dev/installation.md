@@ -2,6 +2,9 @@
 
 SLEAP is a tool for tracking animal poses in video. This guide will get you up and running.
 
+!!! warning "Using SLEAP 1.4 or earlier?"
+    This guide is for SLEAP 1.5+. For older versions using conda, see the [legacy documentation](https://legacy.sleap.ai).
+
 **What do you want to do?**
 
 - [**Use SLEAP**](#install-sleap) (most users)
@@ -9,6 +12,7 @@ SLEAP is a tool for tracking animal poses in video. This guide will get you up a
 - [**Try pre-release features**](#pre-release-versions)
 - [**Develop or contribute**](#development-setup)
 - [**Use SLEAP as a library**](#programmatic-usage)
+- [**Install with pip**](#pip-installation) (alternate method)
 
 ---
 
@@ -74,9 +78,17 @@ SLEAP uses `uv` to manage installation. It's a fast, modern package manager that
 
 One command works on all platforms. It automatically detects your GPU and installs the right version of PyTorch.
 
-```bash
-uv tool install --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend auto
-```
+!!! success "Quick Install"
+    ```bash
+    uv tool install --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+    ```
+
+    Check the [version compatibility table](#version-compatibility) for the latest versions.
+
+!!! warning "Python version matters"
+    If you don't have Python installed, `uv` will automatically download one. Without `--python 3.13`, it may download Python 3.14 which **SLEAP does not support yet**.
+
+    Always include `--python 3.13` (or `--python 3.12`) in your install command.
 
 That's it! SLEAP is now available system-wide. Run it from any terminal:
 
@@ -109,13 +121,14 @@ This shows your system info, package versions, and confirms GPU detection.
 
 ### Just viewing or annotating (no training)
 
-If you only need to view and annotate data without training models, you don't even need to install anything:
+!!! tip "Try SLEAP without installing"
+    If you only need to view and annotate data without training models, you don't even need to install anything:
 
-```bash
-uvx sleap labels.slp
-```
+    ```bash
+    uvx sleap labels.slp
+    ```
 
-This runs SLEAP directly without a permanent installation. Replace `labels.slp` with your file, or omit it to open SLEAP with an empty project.
+    This runs SLEAP directly without a permanent installation. Replace `labels.slp` with your file, or omit it to open SLEAP with an empty project.
 
 ---
 
@@ -156,7 +169,7 @@ uv tool upgrade sleap --upgrade-package sleap-io --upgrade-package sleap-nn
 If you need specific versions (for reproducibility or to match a collaborator), reinstall:
 
 ```bash
-uv tool install --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend auto
+uv tool install --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
 ```
 
 This replaces the existing installation with the exact versions specified.
@@ -182,7 +195,7 @@ uv tool uninstall sleap
     - Installing from local source code (to pick up changes)
 
     ```bash
-    uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend auto
+    uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
     ```
 
 ---
@@ -203,6 +216,7 @@ The SLEAP ecosystem has three packages that work together:
 
 | SLEAP | sleap-io | sleap-nn |
 |-------|----------|----------|
+| 1.6.0a3 | 0.6.3 | 0.1.0a4 |
 | 1.6.0a2 | 0.6.2 | 0.1.0a2 |
 | 1.6.0a1 | 0.6.1 | 0.1.0a1 |
 | 1.6.0a0 | 0.6.0 | 0.1.0a0 |
@@ -222,7 +236,7 @@ Always use compatible versions when pinning.
     | `xpu` | Intel GPUs |
 
     ```bash
-    uv tool install --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend cu128
+    uv tool install --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend cu128
     ```
 
 ---
@@ -302,56 +316,60 @@ Re-run with `--reinstall` after making changes to pick them up.
 
 The `sleap` package is primarily the GUI application. For scripting and automation, use these libraries:
 
-### sleap-io
+| Library | Use for | Docs |
+|---------|---------|------|
+| **sleap-io** | Working with `.slp` files, labels, skeletons, videos, merging projects, custom analysis | [io.sleap.ai](https://io.sleap.ai) |
+| **sleap-nn** | Training models, running inference, evaluating predictions, batch processing | [nn.sleap.ai](https://nn.sleap.ai) |
 
-For working with `.slp` files, labels, skeletons, and videos programmatically. Use this for loading predictions, extracting coordinates, filtering data, merging projects, and custom analysis pipelines.
+---
 
-Documentation and installation: [io.sleap.ai](https://io.sleap.ai)
+## Pip Installation
 
-### sleap-nn
+For users who prefer pip over uv, or need to integrate SLEAP into an existing environment.
 
-For training models, running inference, and evaluating predictions programmatically. Use this for custom training workflows, batch inference, and integration with other ML pipelines.
+### Create a conda environment
 
-Documentation and installation: [nn.sleap.ai](https://nn.sleap.ai)
+```bash
+conda create -n sleap_env
+conda activate sleap_env
+```
+
+### Install with pip
+
+```bash
+# CPU only
+pip install "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cpu
+
+# NVIDIA GPU (CUDA 12.8)
+pip install "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cu128
+```
 
 ---
 
 ## Troubleshooting
 
-### Verify your installation
+**First step:** Run `sleap doctor` and check the output for errors.
 
-```bash
-sleap doctor
-```
+??? note "`--torch-backend` not recognized"
+    Update uv to the latest version:
+    ```bash
+    uv self update
+    ```
 
-This is always the first step. It shows:
+??? note "Force a clean reinstall"
+    If something is broken:
+    ```bash
+    uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+    ```
 
-- SLEAP version and all package versions
-- Python version
-- GPU detection status
-- System information
+??? note "Installation seems stuck"
+    Large packages like PyTorch take time. Installation can take 5-15 minutes on slower connections. Wait up to 30 minutes before cancelling.
 
-### `--torch-backend` not recognized
+??? note "GPU not detected"
+    If `sleap doctor` shows no GPU:
 
-Update uv:
+    1. **Check driver**: Run `nvidia-smi`. If it fails, [install drivers](https://www.nvidia.com/drivers)
+    2. **Driver version**: CUDA 12.8 requires driver 525+
+    3. **Try explicit backend**: Use `--torch-backend cu128` instead of `auto`
 
-```bash
-uv self update
-```
-
-### Force a clean reinstall
-
-If something is broken:
-
-```bash
-uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a2" --with "sleap-io==0.6.2" --with "sleap-nn==0.1.0a2" --prerelease allow --torch-backend auto
-```
-
-### Installation seems stuck
-
-Large packages like PyTorch take time. Installation can take 5-15 minutes on slower connections. Wait up to 30 minutes before cancelling.
-
-### Still stuck?
-
-1. Run `sleap doctor` and copy the output
-2. Ask for help at [github.com/talmolab/sleap/discussions](https://github.com/talmolab/sleap/discussions)
+**Still stuck?** Run `sleap doctor`, copy output, and ask at [GitHub Discussions](https://github.com/talmolab/sleap/discussions)

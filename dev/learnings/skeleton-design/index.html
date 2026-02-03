@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://docs.sleap.ai/dev/learnings/skeleton-design/">
       
       
-        <link rel="prev" href="../training-options/">
+        <link rel="prev" href="../gui/">
       
       
-        <link rel="next" href="../configuring-models/">
+        <link rel="next" href="../prediction-assisted-labeling/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Skeleton design - SLEAP Documentation</title>
+        <title>Skeleton Design - SLEAP Documentation</title>
       
     
     
@@ -98,7 +98,7 @@
 
   
 
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="SLEAP Documentation" class="md-header__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Skeleton design
+              Skeleton Design
             
           </span>
         </div>
@@ -214,13 +214,207 @@
     
   </nav>
   
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../overview/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tutorial/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Tutorial
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../guides/guides-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../notebooks/notebooks-overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Notebooks
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Learning
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../reference/datasets/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../help/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Help
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
 </header>
     
     <div class="md-container" data-md-component="container">
       
       
-        
-          
         
       
       <main class="md-main" data-md-component="main">
@@ -234,8 +428,10 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="SLEAP Documentation" class="md-nav__button md-logo" aria-label="SLEAP Documentation" data-md-component="logo">
       
@@ -371,6 +567,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -719,8 +918,15 @@
       
         
       
+        
+      
+        
+      
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -878,6 +1084,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../guides/label-quality-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Label Quality Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/instance-size-distribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance Size Distribution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../guides/run-training-and-inference-on-colab/" class="md-nav__link">
         
   
@@ -991,10 +1253,11 @@
       
         
       
-        
+    
+    
+    
       
-    
-    
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1264,34 +1527,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../notebooks/Interactive_and_realtime_inference/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Interactive and realtime inference
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data/" class="md-nav__link">
         
   
@@ -1371,25 +1606,26 @@
       
         
       
-        
+    
+    
+    
       
         
-      
         
       
+      
     
     
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -1403,8 +1639,14 @@
   
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
@@ -1477,34 +1719,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../training-options/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Training Options
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -1524,7 +1738,7 @@
   <span class="md-ellipsis">
     
   
-    Skeleton design
+    Skeleton Design
   
 
     
@@ -1542,7 +1756,7 @@
   <span class="md-ellipsis">
     
   
-    Skeleton design
+    Skeleton Design
   
 
     
@@ -1568,10 +1782,149 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#tips" class="md-nav__link">
+  <a href="#skeleton-components" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tips
+        Skeleton Components
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Guidelines
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design Guidelines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing Nodes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#designing-edges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Designing Edges
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modifying-skeletons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifying Skeletons
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modifying Skeletons">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding Nodes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removing-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removing Nodes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modifying-edges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifying Edges
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mouse-simple" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mouse (simple)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fly-detailed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fly (detailed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Mistakes
       
     </span>
   </a>
@@ -1594,34 +1947,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuring-models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Configuring models
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../prediction-assisted-labeling/" class="md-nav__link">
         
   
@@ -1629,7 +1954,7 @@
   <span class="md-ellipsis">
     
   
-    Prediction Assisted Labeling
+    Prediction-Assisted Labeling
   
 
     
@@ -1657,35 +1982,7 @@
   <span class="md-ellipsis">
     
   
-    Types of mistakes in tracking code
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../troubleshoot-workflows/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Troubleshooting workflows
+    Tracking Mistakes
   
 
     
@@ -1713,7 +2010,7 @@
   <span class="md-ellipsis">
     
   
-    Export Data For Analysis
+    Export for Analysis
   
 
     
@@ -1755,6 +2052,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1856,14 +2156,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/evaluation_metrics/" class="md-nav__link">
+      <a href="../../reference/quality-control.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Evaluation metrics
+    Label Quality Control
   
 
     
@@ -1892,6 +2192,9 @@
       
     
     
+    
+      
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -2036,10 +2339,149 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#tips" class="md-nav__link">
+  <a href="#skeleton-components" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tips
+        Skeleton Components
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Guidelines
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design Guidelines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing Nodes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#designing-edges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Designing Edges
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modifying-skeletons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifying Skeletons
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modifying Skeletons">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding Nodes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removing-nodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removing Nodes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modifying-edges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modifying Edges
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mouse-simple" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mouse (simple)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fly-detailed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fly (detailed)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-mistakes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Mistakes
       
     </span>
   </a>
@@ -2067,24 +2509,119 @@
 
 
 <div class="md-source-file"><a href="../skeleton-design.md" title="View markdown source" class="md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6m4 18H6V4h7v5h5v11M13 9V3.5L18.5 9H13Z"/></svg></a></div>
-<h1 id="skeleton-design">Skeleton design<a class="headerlink" href="#skeleton-design" title="Permanent link">&para;</a></h1>
-<p>In SLEAP, skeletons are defined as a set of <em>nodes</em> (landmarks types) and <em>edges</em> (connections between landmarks).</p>
-<p><strong>Nodes</strong> are essentially just a list of body part names. The actual naming doesn't matter; SLEAP just uses their relative order to keep track of which body part is which in the labels and in trained models.</p>
-<p><strong>Edges</strong> describe the way that the nodes are connected. Each edge is represented by a <em>source</em> and <em>destination</em> node. With the exception of bottom-up models, these edges serve primarily for visualization.</p>
-<p>In bottom-up models, the edges are important and must connect all nodes to one another.</p>
-<h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h2>
-<p><strong>How do I choose the best skeleton for my data?</strong></p>
-<p>In general, here are the rules of thumb you want to follow for designing an ideal skeleton:</p>
+<h1 id="skeleton-design">Skeleton Design<a class="headerlink" href="#skeleton-design" title="Permanent link">&para;</a></h1>
+<p>A well-designed skeleton is crucial for accurate pose estimation. This guide covers best practices for creating effective skeletons in SLEAP.</p>
+<hr />
+<h2 id="skeleton-components">Skeleton Components<a class="headerlink" href="#skeleton-components" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Nodes</strong></td>
+<td>Body part landmarks (e.g., "nose", "tail_base")</td>
+<td>Define what points to track</td>
+</tr>
+<tr>
+<td><strong>Edges</strong></td>
+<td>Connections between nodes</td>
+<td>Visualization + bottom-up grouping</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Node naming</p>
+<p>Node names are for your reference only—SLEAP uses their order internally. Choose descriptive names that make labeling intuitive.</p>
+</div>
+<hr />
+<h2 id="design-guidelines">Design Guidelines<a class="headerlink" href="#design-guidelines" title="Permanent link">&para;</a></h2>
+<h3 id="choosing-nodes">Choosing Nodes<a class="headerlink" href="#choosing-nodes" title="Permanent link">&para;</a></h3>
+<p>Choose nodes that will be easy to locate in new images. It's important to be as consistent as possible about the relative placement of body parts.</p>
+<h3 id="designing-edges">Designing Edges<a class="headerlink" href="#designing-edges" title="Permanent link">&para;</a></h3>
+<p>Edges connect nodes into a graph structure. For most models, edges are primarily for <strong>visualization</strong>. However, for <strong>bottom-up models</strong> (using part affinity fields), edges are critical and must connect all nodes to one another.</p>
+<div class="admonition tip">
+<p class="admonition-title">Shallow trees work best</p>
+<p>Create a shallow hierarchy with few parent nodes. If a parent node isn't detected, its children can't be grouped correctly in bottom-up inference.</p>
+</div>
+<p><strong>Good structure:</strong>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>        head
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>       / | \
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    nose ear  ear
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>      |
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    spine
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>   /  |  \
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a> leg leg tail
+</span></code></pre></div></p>
+<p><strong>Avoid deep chains:</strong>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>head → neck → spine → hip → leg → foot → toe  ❌
+</span></code></pre></div></p>
+<hr />
+<h2 id="modifying-skeletons">Modifying Skeletons<a class="headerlink" href="#modifying-skeletons" title="Permanent link">&para;</a></h2>
+<h3 id="adding-nodes">Adding Nodes<a class="headerlink" href="#adding-nodes" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Choose <em>nodes</em> that will be easy to locate in new images. It's important to be as consistent as possible about the relative placement of body parts.</li>
-<li>When choosing <em>edges</em>, try to form a shallow tree. This is because it's preferable to have fewer parent nodes, since if they are not detected, their children nodes cannot be grouped appropriately.</li>
+<li>Add the new node(s) to your skeleton definition</li>
+<li><strong>Double-click</strong> an existing instance (on the video frame) to edit it</li>
+<li>New nodes will be added and marked as "non-visible"</li>
+<li><strong>Right-click</strong> each new node to make it visible, then drag to the correct location</li>
 </ol>
-<p><strong>Can I add or remove nodes in the skeleton after I've already created instances?</strong></p>
-<p>Yes.</p>
-<p>Removing nodes is straightforward: just remove them. If you're using part affinity fields for inference, you should make sure that the skeleton graph is still connected.</p>
-<p>Adding nodes is a little more complicated. First add the nodes to your skeleton. Then, to add these nodes to any instance which already exists, you'll need to <strong>double-click</strong> on the instance (on the video frame image). The new nodes will be added and marked as "non-visible"; you'll need to <strong>right-click</strong> on each node you want to make visible, and move it to the correct location.</p>
-<p><strong>Can I add or remove edges in the skeleton after I've already created instances?</strong></p>
-<p>Yes, adding or removing edges is straightforward and the change will be applied to all instances.</p>
+<h3 id="removing-nodes">Removing Nodes<a class="headerlink" href="#removing-nodes" title="Permanent link">&para;</a></h3>
+<p>Simply delete the node from the skeleton. Existing instances will update automatically.</p>
+<div class="admonition warning">
+<p class="admonition-title">Part affinity fields</p>
+<p>If using part affinity fields (bottom-up inference), ensure your skeleton graph remains fully connected after removing nodes.</p>
+</div>
+<h3 id="modifying-edges">Modifying Edges<a class="headerlink" href="#modifying-edges" title="Permanent link">&para;</a></h3>
+<p>Add or remove edges freely—changes apply to all instances automatically. Edges don't affect existing labels, only visualization and bottom-up inference.</p>
+<hr />
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
+<h3 id="mouse-simple">Mouse (simple)<a class="headerlink" href="#mouse-simple" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Nodes: nose, left_ear, right_ear, spine_mid, tail_base
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Edges: nose→left_ear, nose→right_ear, nose→spine_mid, spine_mid→tail_base
+</span></code></pre></div>
+<h3 id="fly-detailed">Fly (detailed)<a class="headerlink" href="#fly-detailed" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Nodes: head, thorax, abdomen, wing_L, wing_R, leg_L1, leg_L2, leg_L3, leg_R1, leg_R2, leg_R3
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Edges: head→thorax, thorax→abdomen, thorax→wing_L, thorax→wing_R,
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>       thorax→leg_L1, thorax→leg_L2, thorax→leg_L3,
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>       thorax→leg_R1, thorax→leg_R2, thorax→leg_R3
+</span></code></pre></div>
+<hr />
+<h2 id="common-mistakes">Common Mistakes<a class="headerlink" href="#common-mistakes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Problem</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Too many nodes</td>
+<td>Slower labeling, harder training</td>
+<td>Start with 5-10 essential nodes</td>
+</tr>
+<tr>
+<td>Deep edge chains</td>
+<td>Poor grouping in bottom-up</td>
+<td>Use shallow tree structure</td>
+</tr>
+<tr>
+<td>Ambiguous landmarks</td>
+<td>Inconsistent labels</td>
+<td>Choose anatomically distinct points</td>
+</tr>
+<tr>
+<td>Symmetric naming confusion</td>
+<td>Mixing up left/right</td>
+<td>Use clear prefixes: <code>L_</code>, <code>R_</code> or <code>left_</code>, <code>right_</code></td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -2157,6 +2694,14 @@
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M357.2 48h70.6L273.6 224.2 455 464H313L201.7 318.6 74.5 464H3.8l164.9-188.5L-5.2 48h145.6l100.5 132.9zm-24.8 373.8h39.1L119.1 88h-42z"/></svg>
     </a>
   
+    
+    
+    
+    
+    <a href="mailto:talmo@salk.edu" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
 </div>
       
     </div>
@@ -2172,7 +2717,7 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.tracking", "toc.follow", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tooltips", "content.code.select", "content.footnote.tooltips"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>

@@ -1,64 +1,105 @@
-# Overview
+# SLEAP Workflow
 
-![Workflow](assets/images/workflow.png)
+<div class="hero" markdown>
+![SLEAP Workflow](assets/images/workflow.png)
+</div>
 
-In a nutshell, SLEAP allows you to train and use deep learning-based models that can automatically track the movements of any body parts of any number or type of animal from recorded videos. This enables precise and quantitative analysis of behavioral data.
+SLEAP enables you to train deep learning models that automatically track body parts of any animal from video for precise and quantitative analysis of behavioral data. This page walks through the typical end-to-end workflow.
 
-!!! warning "Documentation for New SLEAP Versions"
-    This documentation is for the **latest version of SLEAP**.  
-    If you are using **SLEAP version 1.4.1 or earlier**, please visit the [legacy documentation](https://legacy.sleap.ai).
+!!! tip "New to SLEAP?"
+    Follow along with the hands-on [Tutorial](tutorial/overview.md) to learn each step in detail.
 
-Below is a high-level overview of a typical end-to-end workflow in SLEAP. You can also step through this workflow yourself in the [Tutorial](tutorial/overview.md) section.
+---
 
-1. **Creating a new project and importing video file(s)**
-    You may import all or part of the video clips from your experiment footage. These video files will be used to build a ground-truth dataset and train the machine learning model that estimates animal pose.
+## 📁 Phase 1: Setup
 
-    See [Importing new data](tutorial/importing-data.md).
+### 1. Create a project and import videos
 
-2. **Defining animal skeleton(s)**
-    In this step you will define the animal skeleton by listing its body parts and their connections.
+Import video clips from your experiment footage. These will be used to build your training dataset.
 
-    See [Defining Animal Skeleton](tutorial/importing-data.md/#configure-skeleton).
+[:octicons-arrow-right-24: Importing new data](tutorial/importing-data.md)
 
-3. **Selecting frames from imported video(s) for initial labeling**
-    Next you will select the initial set of frames for the labeling activity. SLEAP provides several options for selecting frames based on sampling or image features.
+### 2. Define the skeleton
 
-    See [Selecting Frames](tutorial/initial-labeling.md/#generate-suggestions).
+List the body parts you want to track and how they connect to each other.
 
-4. **Manually labeling animal pose(s) in selected frames**
-    Labeling is the activity of mapping skeleton body parts to animal instances in the selected frames. This is the most laborious part, however SLEAP helps accelerate the process with a purpose-built user interface and iterative human-in-the-loop process that involves training machine learning models on partially labeled data and manually correcting its predictions.
+[:octicons-arrow-right-24: Defining Animal Skeleton](tutorial/importing-data.md/#configure-skeleton)
 
-    See [Labeling First Frame](tutorial/initial-labeling.md/#labeling-the-first-frame).
+---
 
-5. **Training a machine learning model using the labeled frames**
-    After you labeled a few frames you can train a machine learning model. SLEAP supports several approaches for training, each with its own set of parameters that can be configured.
+## 🏷️ Phase 2: Label
 
-    See [Initial Training](tutorial/training-a-model.md).
+### 3. Select frames for labeling
 
-6. **Applying the trained model to predict animal poses in unlabeled frames (inference)**
-    Once the training is complete, the trained model is applied to all unlabeled frames to predict animal pose (this step is also called *inference*). The accuracy of these predictions depends on many parameters, among them the quality of the labeling work, amount of labeled frames, and the configuration of the training job.
+Choose an initial set of frames to label. SLEAP provides sampling methods based on image features to help you pick diverse frames.
 
-7. **Refining the predicted labels manually, and repeating the training step until desired model accuracy is achieved**
-    In this step you can inspect the predictions and correct them - this is similar to the labeling step, but should be easier since the predictions place the skeletons approximately right.
+[:octicons-arrow-right-24: Selecting Frames](tutorial/initial-labeling.md/#generate-suggestions)
 
-    See [Assisted Labeling](tutorial/correcting-predictions.md/#labeling-from-predictions).
+### 4. Label animal poses
 
-8. **[Optional] Importing additional videos from your experiment, and applying the trained model to predict animal poses**
-    Once the machine learning model performance is satisfactory (w.r.t. pose estimation quality), the next step is to predict the animal poses across all video frames from your experiment. This step is only needed if not all video(s) were imported in the first step.
+Manually place skeleton body parts on animals in each frame. This is the most time-intensive step, but SLEAP's GUI makes it fast.
 
-    See [Import predictions for labeling](guides/importing-predictions-for-labeling.md).
+[:octicons-arrow-right-24: Labeling First Frame](tutorial/initial-labeling.md/#labeling-the-first-frame)
 
-9. **Applying the tracking algorithm to track animal instances across frames**
-    Tracking associates animal instances in consequent frames. Here too SLEAP provides several algorithms for tracking with their own configuration parameters.
+---
 
-    See [Track new data](tutorial/tracking-new-data.md).
+## 🧠 Phase 3: Train
 
-10. **Proofreading and potentially correcting instance tracks**
-     This is a manual step where you can use SLEAP GUI to verify that the tracking is accurate, and make corrections as needed.
+### 5. Train the model
 
-     See [Track Proofreading](tutorial/proofreading.md) for types of errors that may occur and how to correct them.
+Train a neural network on your labeled frames. SLEAP supports multiple model architectures and training configurations.
 
-11. **Exporting data for analysis**
-     Finally you can export the generated data (including animal instance occupancy matrices and tracks) for further analysis (e.g. in Matlab or Python).
+[:octicons-arrow-right-24: Initial Training](tutorial/training-a-model.md)
 
-     See [Export Analysis](tutorial/exporting-the-results.md) and example [Notebooks](notebooks/Analysis_examples.ipynb) for details.
+### 6. Run inference
+
+Apply the trained model to predict poses on unlabeled frames. Prediction quality depends on label quality, quantity, and training settings.
+
+### 7. Refine and repeat
+
+Inspect predictions, correct errors, and retrain. This human-in-the-loop cycle rapidly improves model accuracy.
+
+[:octicons-arrow-right-24: Assisted Labeling](tutorial/correcting-predictions.md/#labeling-from-predictions)
+
+!!! info "Active Learning"
+    You typically only need to label **100-500 frames** to get accurate predictions on thousands of frames. Each correction you make improves the model.
+
+---
+
+## 🚀 Phase 4: Deploy
+
+### 8. Process additional videos
+
+Once your model performs well, apply it to all your experiment videos.
+
+[:octicons-arrow-right-24: Import predictions for labeling](guides/importing-predictions-for-labeling.md)
+
+### 9. Track identities
+
+Link detections across frames to create continuous tracks for each animal. SLEAP provides several tracking algorithms.
+
+[:octicons-arrow-right-24: Track new data](tutorial/tracking-new-data.md)
+
+### 10. Proofread tracks
+
+Review tracking results in the GUI and fix any identity swaps or errors.
+
+[:octicons-arrow-right-24: Track Proofreading](tutorial/proofreading.md)
+
+### 11. Export for analysis
+
+Export pose data and tracks for downstream analysis in Python, MATLAB, or other tools.
+
+[:octicons-arrow-right-24: Export Analysis](tutorial/exporting-the-results.md)
+
+[:octicons-arrow-right-24: Example Notebooks](notebooks/Analysis_examples.ipynb)
+
+---
+
+## Next Steps
+
+[:octicons-arrow-right-24: Start the Tutorial](tutorial/overview.md) – Step-by-step walkthrough of the complete workflow
+
+[:octicons-arrow-right-24: Skeleton Design](learnings/skeleton-design.md) – Tips for designing effective skeletons
+
+[:octicons-arrow-right-24: Model Configuration](https://nn.sleap.ai/latest/reference/models/) – Choose the right model type for your data

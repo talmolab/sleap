@@ -1,30 +1,97 @@
-# Skeleton design
+# Skeleton Design
 
-In SLEAP, skeletons are defined as a set of *nodes* (landmarks types) and *edges* (connections between landmarks).
+A well-designed skeleton is crucial for accurate pose estimation. This guide covers best practices for creating effective skeletons in SLEAP.
 
-**Nodes** are essentially just a list of body part names. The actual naming doesn't matter; SLEAP just uses their relative order to keep track of which body part is which in the labels and in trained models.
+---
 
-**Edges** describe the way that the nodes are connected. Each edge is represented by a *source* and *destination* node. With the exception of bottom-up models, these edges serve primarily for visualization.
+## Skeleton Components
 
-In bottom-up models, the edges are important and must connect all nodes to one another.
+| Component | Description | Role |
+|-----------|-------------|------|
+| **Nodes** | Body part landmarks (e.g., "nose", "tail_base") | Define what points to track |
+| **Edges** | Connections between nodes | Visualization + bottom-up grouping |
 
-## Tips
+!!! note "Node naming"
+    Node names are for your reference only—SLEAP uses their order internally. Choose descriptive names that make labeling intuitive.
 
-**How do I choose the best skeleton for my data?**
+---
 
-In general, here are the rules of thumb you want to follow for designing an ideal skeleton:
+## Design Guidelines
 
-1. Choose *nodes* that will be easy to locate in new images. It's important to be as consistent as possible about the relative placement of body parts.
-2. When choosing *edges*, try to form a shallow tree. This is because it's preferable to have fewer parent nodes, since if they are not detected, their children nodes cannot be grouped appropriately.
+### Choosing Nodes
 
-**Can I add or remove nodes in the skeleton after I've already created instances?**
+Choose nodes that will be easy to locate in new images. It's important to be as consistent as possible about the relative placement of body parts.
 
-Yes.
+### Designing Edges
 
-Removing nodes is straightforward: just remove them. If you're using part affinity fields for inference, you should make sure that the skeleton graph is still connected.
+Edges connect nodes into a graph structure. For most models, edges are primarily for **visualization**. However, for **bottom-up models** (using part affinity fields), edges are critical and must connect all nodes to one another.
 
-Adding nodes is a little more complicated. First add the nodes to your skeleton. Then, to add these nodes to any instance which already exists, you'll need to **double-click** on the instance (on the video frame image). The new nodes will be added and marked as "non-visible"; you'll need to **right-click** on each node you want to make visible, and move it to the correct location.
+!!! tip "Shallow trees work best"
+    Create a shallow hierarchy with few parent nodes. If a parent node isn't detected, its children can't be grouped correctly in bottom-up inference.
 
-**Can I add or remove edges in the skeleton after I've already created instances?**
+**Good structure:**
+```
+        head
+       / | \
+    nose ear  ear
+      |
+    spine
+   /  |  \
+ leg leg tail
+```
 
-Yes, adding or removing edges is straightforward and the change will be applied to all instances.
+**Avoid deep chains:**
+```
+head → neck → spine → hip → leg → foot → toe  ❌
+```
+
+---
+
+## Modifying Skeletons
+
+### Adding Nodes
+
+1. Add the new node(s) to your skeleton definition
+2. **Double-click** an existing instance (on the video frame) to edit it
+3. New nodes will be added and marked as "non-visible"
+4. **Right-click** each new node to make it visible, then drag to the correct location
+
+### Removing Nodes
+
+Simply delete the node from the skeleton. Existing instances will update automatically.
+
+!!! warning "Part affinity fields"
+    If using part affinity fields (bottom-up inference), ensure your skeleton graph remains fully connected after removing nodes.
+
+### Modifying Edges
+
+Add or remove edges freely—changes apply to all instances automatically. Edges don't affect existing labels, only visualization and bottom-up inference.
+
+---
+
+## Examples
+
+### Mouse (simple)
+```
+Nodes: nose, left_ear, right_ear, spine_mid, tail_base
+Edges: nose→left_ear, nose→right_ear, nose→spine_mid, spine_mid→tail_base
+```
+
+### Fly (detailed)
+```
+Nodes: head, thorax, abdomen, wing_L, wing_R, leg_L1, leg_L2, leg_L3, leg_R1, leg_R2, leg_R3
+Edges: head→thorax, thorax→abdomen, thorax→wing_L, thorax→wing_R,
+       thorax→leg_L1, thorax→leg_L2, thorax→leg_L3,
+       thorax→leg_R1, thorax→leg_R2, thorax→leg_R3
+```
+
+---
+
+## Common Mistakes
+
+| Mistake | Problem | Solution |
+|---------|---------|----------|
+| Too many nodes | Slower labeling, harder training | Start with 5-10 essential nodes |
+| Deep edge chains | Poor grouping in bottom-up | Use shallow tree structure |
+| Ambiguous landmarks | Inconsistent labels | Choose anatomically distinct points |
+| Symmetric naming confusion | Mixing up left/right | Use clear prefixes: `L_`, `R_` or `left_`, `right_` |
