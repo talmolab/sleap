@@ -1992,7 +1992,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             "data_config.augmentation_config.geometric.rotation_max"
         )
         rot_p = key_val_dict.get("data_config.augmentation_config.geometric.rotation_p")
-        if rot_p is None or rot_p == 0:
+        affine_p = key_val_dict.get(
+            "data_config.augmentation_config.geometric.affine_p"
+        )
+
+        # Check rotation_p first, fall back to affine_p for legacy configs
+        effective_rot_p = rot_p if rot_p is not None else affine_p
+
+        if effective_rot_p is None or effective_rot_p == 0:
             key_val_dict["_rotation_preset"] = "Off"
         elif rot_min is not None and rot_max is not None:
             # Check for symmetric presets
@@ -2008,6 +2015,28 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 # Asymmetric (rare) - use Custom with max as angle
                 key_val_dict["_rotation_preset"] = "Custom"
                 key_val_dict["_rotation_custom_angle"] = max(abs(rot_min), abs(rot_max))
+
+        # Reverse-map scale settings to _scale_enabled checkbox
+        scale_p = key_val_dict.get("data_config.augmentation_config.geometric.scale_p")
+        scale_min = key_val_dict.get(
+            "data_config.augmentation_config.geometric.scale_min"
+        )
+        scale_max = key_val_dict.get(
+            "data_config.augmentation_config.geometric.scale_max"
+        )
+
+        # Check scale_p first, fall back to affine_p for legacy configs
+        effective_scale_p = scale_p if scale_p is not None else affine_p
+
+        # Scale is enabled if probability > 0 AND min != max (actual scaling occurs)
+        scale_enabled = (
+            effective_scale_p is not None
+            and effective_scale_p > 0
+            and scale_min is not None
+            and scale_max is not None
+            and scale_min != scale_max
+        )
+        key_val_dict["_scale_enabled"] = scale_enabled
 
         self.set_fields_from_key_val_dict(key_val_dict)
 
