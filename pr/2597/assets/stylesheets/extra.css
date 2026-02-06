@@ -192,6 +192,15 @@
   padding: 0.5em 0;
 }
 
+/* Changelog - prevent long lines from overflowing */
+.md-content pre {
+  overflow-x: auto;
+}
+
+.md-content code {
+  word-break: break-word;
+}
+
 /* Colored phase icons */
 .icon-blue { color: #2196F3; }
 .icon-green { color: #4CAF50; }

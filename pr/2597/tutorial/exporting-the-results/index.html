@@ -263,17 +263,20 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../../installation/" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../installation/" class="md-tabs__link">
+          
   
   
     
   
   Installation
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -515,6 +518,62 @@
   
   
   
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../installation/" class="md-nav__link">
         
@@ -532,6 +591,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -902,6 +997,17 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sleap-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sleap-io
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#nwb" class="md-nav__link">
@@ -2222,6 +2328,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#sleap-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sleap-io
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#nwb" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2284,6 +2401,10 @@
 <p>These <code>.slp</code> files are not intended for final use in analysis since they require SLEAP to be parsed appropriately.</p>
 <p>Once you're ready to analyze your results, you have several options for different file formats for export. While these do not contain all the metadata used during the labeling and training stage, they are more convenient for analysis and portable for use in different downstream softwares and libraries.</p>
 <p>The main options we provide are listed below. We recommend exporting your proofread predictions to each of these formats so you can explore your data in the next step of the tutorial.</p>
+<h2 id="sleap-io">sleap-io<a class="headerlink" href="#sleap-io" title="Permanent link">&para;</a></h2>
+<p>For programmatic export and conversion, you can use <a href="https://io.sleap.ai" target="_blank">sleap-io</a>, which provides a command-line tool (<code>sio</code>) and Python API for converting <code>.slp</code> files to various formats including NWB, HDF5, CSV, and more.</p>
+<p>This is especially useful for batch processing, scripting, or integrating SLEAP exports into automated pipelines.</p>
+<p>See the <a href="https://io.sleap.ai/latest/cli/#sio-export" target="_blank">sleap-io export documentation</a> for full usage details.</p>
 <h2 id="nwb">NWB<a class="headerlink" href="#nwb" title="Permanent link">&para;</a></h2>
 <p>The <a href="https://www.nwb.org/" target="_blank">Neurodata Without Borders (NWB) </a> format provides a data standard for describing and storing neural and behavioral data.</p>
 <p>We strongly recommend using NWB as it affords tremendous advantages in terms of portability, standardization, reproducibility and compatibility with a broader scientific software ecosystem. For example, NWB formatted data can be hosted for free in the <a href="https://www.dandiarchive.org/" target="_blank">DANDI Archive </a>.</p>
