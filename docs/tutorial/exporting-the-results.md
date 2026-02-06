@@ -11,6 +11,14 @@ Once you're ready to analyze your results, you have several options for differen
 
 The main options we provide are listed below. We recommend exporting your proofread predictions to each of these formats so you can explore your data in the next step of the tutorial.
 
+## sleap-io
+
+For programmatic export and conversion, you can use <a href="https://io.sleap.ai" target="_blank">sleap-io</a>, which provides a command-line tool (`sio`) and Python API for converting `.slp` files to various formats including NWB, HDF5, CSV, and more.
+
+This is especially useful for batch processing, scripting, or integrating SLEAP exports into automated pipelines.
+
+See the <a href="https://io.sleap.ai/latest/cli/#sio-export" target="_blank">sleap-io export documentation</a> for full usage details.
+
 ## NWB
 
 The <a href="https://www.nwb.org/" target="_blank">Neurodata Without Borders (NWB) </a> format provides a data standard for describing and storing neural and behavioral data.
