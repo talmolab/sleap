@@ -32,6 +32,14 @@
 
 <div class="grid cards" markdown>
 
+-   :material-map:{ .lg .middle } **Workflow Overview**
+
+    ---
+
+    End-to-end workflow with links to all resources.
+
+    [:octicons-arrow-right-24: View Workflow](overview.md)
+
 -   :material-school:{ .lg .middle } **Tutorial**
 
     ---
@@ -92,17 +100,9 @@ powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 Then install SLEAP:
 
-=== "Windows/Linux (CUDA 12.8)"
-
-    ```bash
-    uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cu128 --index https://pypi.org/simple
-    ```
-
-=== "macOS / CPU-only"
-
-    ```bash
-    uv tool install "sleap[nn]" --index https://download.pytorch.org/whl/cpu --index https://pypi.org/simple
-    ```
+```bash
+uv tool install --python 3.13 "sleap[nn]" --torch-backend auto
+```
 
 Launch the GUI:
 

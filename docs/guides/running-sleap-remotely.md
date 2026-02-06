@@ -32,13 +32,31 @@ Our guide to [creating a custom training profile](creating-a-custom-training-pro
 Once you have your training job package (or labels package and training profile), you can run training using the [`sleap-nn train`](https://nn.sleap.ai/latest/training/#using-cli) command like so:
 
 ```sh
-sleap-nn train --config-name <config_name> --config-dir <path/to/config> "data_config.train_labels_path=[<path/to/slp/file>]" trainer_config.ckpt_dir="models" trainer_config.run_name=<run_name>
+sleap-nn train --config <path/to/config.yaml> "data_config.train_labels_path=[<path/to/slp/file>]" trainer_config.ckpt_dir="models" trainer_config.run_name=<run_name>
 ```
 
 The model will be saved in the `models/` directory within the same directory as the **training job package** (in this case, `models/run_name/`).
 
 !!! note
-    If you exported the training package as a ZIP file, it contains both the `.pkg.slp` and `.yaml` files necessary to train with the configuration you selected in the GUI. Before running the [`sleap-nn train`](https://nn.sleap.ai/latest/training/#using-cli) command, make sure to unzip this file.
+    If you exported the training package as a ZIP file, it contains both the `.pkg.slp` and `.yaml` files necessary to train with the configuration you selected in the GUI. Before running the [`sleap-nn train`](https://nn.sleap.ai/latest/training/#using-cli) command, make sure to unzip this file:
+
+    === "macOS/Linux"
+
+        ```bash
+        unzip training_job.zip -d training_job
+        ```
+
+    === "Windows (PowerShell)"
+
+        ```powershell
+        Expand-Archive -Path training_job.zip -DestinationPath training_job
+        ```
+
+    === "Windows (Command Prompt)"
+
+        ```cmd
+        tar -xf training_job.zip -C training_job
+        ```
 
 ## Remote inference
 
@@ -86,10 +104,7 @@ For this example, let's suppose you're working with an HDF5 video at `path/to/vi
 To run inference, you'll call [`sleap-nn track`](https://nn.sleap.ai/latest/inference/#run-inference-with-cli) with the paths to each trained model and your video file, like so:
 
 ```sh
-sleap-nn track -i path/to/video.mp4 \
---video_dataset video --video_input_format channels_last \
--m path/to/models/centroid \
--m path/to/models/centered-instance
+sleap-nn track -i path/to/video.mp4 --video_dataset video --video_input_format channels_last -m path/to/models/centroid -m path/to/models/centered-instance
 ```
 
 This will run inference on the entire video. If you only want to run inference on some range of frames, you can specify this with the `--frames 123-456` command-line argument.

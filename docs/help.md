@@ -88,7 +88,7 @@ This is most likely a video compression issue. Re-encode your video using the ff
 <details class="plain" open markdown>
 <summary>How do I get predictions out?</summary>
 
-See [Export Data for Analysis](learnings/export-analysis.md) and [CLI Reference](reference/command-line-interfaces.md).
+See [Exporting the Results](tutorial/exporting-the-results.md) and [CLI Reference](reference/command-line-interfaces.md).
 
 </details>
 
