@@ -185,7 +185,9 @@ click.rich_click.COMMAND_GROUPS = {
         {"name": "Data Inspection", "commands": ["show", "filenames"]},
         {
             "name": "Data Transformation",
-            "commands": ["convert", "export", "split", "unsplit", "merge", "trim", "fix"],
+            "commands": [
+                "convert", "export", "split", "unsplit", "merge", "trim", "fix"
+            ],
         },
         {"name": "Frame Management", "commands": ["embed", "unembed"]},
         {"name": "Video Processing", "commands": ["reencode", "transform", "render"]},
