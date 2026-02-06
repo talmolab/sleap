@@ -1899,8 +1899,6 @@
       
         
       
-        
-      
     
     
     
@@ -2091,34 +2089,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../learnings/export-analysis/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Export for Analysis
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -2134,8 +2104,6 @@
   
     
     
-      
-        
       
         
       
@@ -2250,34 +2218,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../reference/quality-control.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Label Quality Control
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
       
@@ -2296,7 +2236,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2318,14 +2258,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_4" id="__nav_8_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3575,9 +3515,9 @@ os.chdir("/content/drive/My Drive/sleap")
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">sleap</span><span class="o">-</span><span class="n">nn</span> <span class="n">train</span> <span class="o">--</span><span class="n">config</span><span class="o">-</span><span class="n">name</span> <span class="n">bottomup</span> <span class="o">--</span><span class="n">config</span><span class="o">-</span><span class="nb">dir</span> <span class="s2">"."</span> <span class="s2">"data_config.train_labels_path=[colab.pkg.slp]"</span> <span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="o">=</span><span class="s2">"."</span> <span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span><span class="o">=</span><span class="s2">"colab_demo.bottomup"</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">sleap</span><span class="o">-</span><span class="n">nn</span> <span class="n">train</span> <span class="o">--</span><span class="n">config</span> <span class="n">bottomup</span><span class="o">.</span><span class="n">yaml</span> <span class="s2">"data_config.train_labels_path=[colab.pkg.slp]"</span> <span class="n">trainer_config</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="o">=</span><span class="s2">"."</span> <span class="n">trainer_config</span><span class="o">.</span><span class="n">run_name</span><span class="o">=</span><span class="s2">"colab_demo.bottomup"</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">!sleap-nn train --config-name bottomup --config-dir "." "data_config.train_labels_path=[colab.pkg.slp]" trainer_config.ckpt_dir="." trainer_config.run_name="colab_demo.bottomup"</div>
+<div class="clipboard-copy-txt" id="cell-4">!sleap-nn train --config bottomup.yaml "data_config.train_labels_path=[colab.pkg.slp]" trainer_config.ckpt_dir="." trainer_config.run_name="colab_demo.bottomup"</div>
 </div>
 </div>
 </div>
@@ -3591,8 +3531,8 @@ os.chdir("/content/drive/My Drive/sleap")
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>If instead of bottom-up you've chosen the top-down pipeline (with two training configs), you would need to invoke two separate training jobs in sequence:</p>
-<p><code>!sleap-nn train --config-name centroid --config-dir "." "data_config.train_labels_path=[colab.pkg.slp]" trainer_config.ckpt_dir="." trainer_config.run_name="colab_demo.centroid"</code></p>
-<p><code>!sleap-nn train --config-name centered_instance --config-dir "." "data_config.train_labels_path=[colab.pkg.slp]" trainer_config.ckpt_dir="." trainer_config.run_name="colab_demo.centered_instance"</code></p>
+<p><code>!sleap-nn train --config centroid.yaml "data_config.train_labels_path=[colab.pkg.slp]" trainer_config.ckpt_dir="." trainer_config.run_name="colab_demo.centroid"</code></p>
+<p><code>!sleap-nn train --config centered_instance.yaml "data_config.train_labels_path=[colab.pkg.slp]" trainer_config.ckpt_dir="." trainer_config.run_name="colab_demo.centered_instance"</code></p>
 </div>
 </div>
 </div>

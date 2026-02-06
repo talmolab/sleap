@@ -94,7 +94,7 @@ The SLEAP labeling interface is launched via the `sleap label` command (or legac
 | Command | Description |
 |---------|-------------|
 | **Instance Size Distribution...** | View bounding box size distribution (helps choose crop sizes) |
-| **Label QC...** | Open the [Label Quality Control](../reference/quality-control.md) panel to find annotation errors |
+| **Label QC...** | Open the [Label Quality Control](../guides/label-quality-control.md) panel to find annotation errors |
 
 ### Help
 

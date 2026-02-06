@@ -1756,8 +1756,6 @@
       
         
       
-        
-      
     
     
     
@@ -1948,34 +1946,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../learnings/export-analysis/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Export for Analysis
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1991,8 +1961,6 @@
   
     
     
-      
-        
       
         
       
@@ -2107,34 +2075,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../reference/quality-control.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Label Quality Control
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
       
@@ -2153,7 +2093,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2175,14 +2115,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_4" id="__nav_8_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2342,12 +2282,28 @@
 </ul>
 <p>(There will also be a <code>train-script.sh</code> file with the command-line command you could use to train your dataset using these training profiles, and possibly an <code>inference-script.sh</code> file if you selected frames for inference after training.)</p>
 <p>If you're running training on a remote machine (including Colab), export your training job package into the remote machine. Then call:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config-name<span class="w"> </span>profile.yaml<span class="w"> </span>--config-dir<span class="w"> </span>/path/to/yaml<span class="w"> </span><span class="s2">&quot;data_config.train_labels_path=[path/to/dataset.pkg.slp]&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>/path/to/profile.yaml<span class="w"> </span><span class="s2">&quot;data_config.train_labels_path=[path/to/dataset.pkg.slp]&quot;</span>
 </span></code></pre></div>
 <p>for each model you want to train (where <code>path/to/custom/profile.yaml</code> should be replaced with the path to your custom training profile and <code>path/to/dataset.pkg.slp</code> replaced with the path to your training job package). See our guide to <a href="../running-sleap-remotely/">remote training</a> for more details.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If you exported the training package as a ZIP file, it contains both the <code>.pkg.slp</code> and <code>.yaml</code> files necessary to train with the configuration you selected in the GUI. Before running the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command, make sure to unzip this file.</p>
+<p>If you exported the training package as a ZIP file, it contains both the <code>.pkg.slp</code> and <code>.yaml</code> files necessary to train with the configuration you selected in the GUI. Before running the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command, make sure to unzip this file:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">macOS/Linux</label><label for="__tabbed_1_2">Windows (PowerShell)</label><label for="__tabbed_1_3">Windows (Command Prompt)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>unzip<span class="w"> </span>training_job.zip<span class="w"> </span>-d<span class="w"> </span>training_job
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">Expand-Archive</span> <span class="n">-Path</span> <span class="n">training_job</span><span class="p">.</span><span class="n">zip</span> <span class="n">-DestinationPath</span> <span class="n">training_job</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>tar -xf training_job.zip -C training_job
+</span></code></pre></div>
+</div>
+</div>
+</div>
 </div>
 <h3 id="training-hardware-support">Training Hardware support<a class="headerlink" href="#training-hardware-support" title="Permanent link">&para;</a></h3>
 <p>SLEAP supports training on:</p>

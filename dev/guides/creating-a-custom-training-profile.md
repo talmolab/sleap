@@ -34,13 +34,31 @@ If you're running training on a remote machine (including Colab), export your tr
 
 
 ```bash
-sleap-nn train --config-name profile.yaml --config-dir /path/to/yaml "data_config.train_labels_path=[path/to/dataset.pkg.slp]"
+sleap-nn train --config /path/to/profile.yaml "data_config.train_labels_path=[path/to/dataset.pkg.slp]"
 ```
 
 for each model you want to train (where `path/to/custom/profile.yaml` should be replaced with the path to your custom training profile and `path/to/dataset.pkg.slp` replaced with the path to your training job package). See our guide to [remote training](running-sleap-remotely.md) for more details.
 
 !!! note
-    If you exported the training package as a ZIP file, it contains both the `.pkg.slp` and `.yaml` files necessary to train with the configuration you selected in the GUI. Before running the [`sleap-nn train`](https://nn.sleap.ai/latest/training/#using-cli) command, make sure to unzip this file.
+    If you exported the training package as a ZIP file, it contains both the `.pkg.slp` and `.yaml` files necessary to train with the configuration you selected in the GUI. Before running the [`sleap-nn train`](https://nn.sleap.ai/latest/training/#using-cli) command, make sure to unzip this file:
+
+    === "macOS/Linux"
+
+        ```bash
+        unzip training_job.zip -d training_job
+        ```
+
+    === "Windows (PowerShell)"
+
+        ```powershell
+        Expand-Archive -Path training_job.zip -DestinationPath training_job
+        ```
+
+    === "Windows (Command Prompt)"
+
+        ```cmd
+        tar -xf training_job.zip -C training_job
+        ```
 
 ### Training Hardware support
 

@@ -119,7 +119,7 @@ sleap train [OPTIONS] <config.yaml>
 
 # Examples
 sleap train config.yaml                    # Train with config file
-sleap train --config-dir configs/ --config-name baseline
+sleap train --config configs/baseline.yaml
 ```
 
 [:octicons-arrow-right-24: Full training documentation](https://nn.sleap.ai/latest/training/)
@@ -388,11 +388,11 @@ These commands provide the same functionality as `sleap train` and `sleap track`
 
 **sleap-nn-train:**
 ```bash
-sleap-nn-train --config-name <config> --config-dir <path> [overrides]
+sleap-nn-train --config <config.yaml> [overrides]
 
 # Examples
-sleap-nn-train --config-name baseline --config-dir /path/to/config/
-sleap-nn-train -c baseline -d /path/to/config/ trainer_config.max_epochs=100
+sleap-nn-train --config /path/to/config/baseline.yaml
+sleap-nn-train --config baseline.yaml trainer_config.max_epochs=100
 ```
 
 **sleap-nn-track:**

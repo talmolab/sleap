@@ -1756,8 +1756,6 @@
       
         
       
-        
-      
     
     
     
@@ -1948,34 +1946,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../learnings/export-analysis/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Export for Analysis
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1991,8 +1961,6 @@
   
     
     
-      
-        
       
         
       
@@ -2107,34 +2075,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../reference/quality-control.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Label Quality Control
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
       
@@ -2153,7 +2093,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_3" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2175,14 +2115,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_8_4" id="__nav_8_4_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_8_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_3">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2344,12 +2284,28 @@
 <p>Our guide to <a href="../creating-a-custom-training-profile/">creating a custom training profile</a> explains how to use the GUI to export custom training profiles. You can also use the <code>initial_config.yaml</code> file saved from previous training run as a template for a new training config. You can copy the <code>yaml</code> file and edit it in any text editor.</p>
 <p><strong>Command-line training</strong>:</p>
 <p>Once you have your training job package (or labels package and training profile), you can run training using the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command like so:</p>
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config-name<span class="w"> </span>&lt;config_name&gt;<span class="w"> </span>--config-dir<span class="w"> </span>&lt;path/to/config&gt;<span class="w"> </span><span class="s2">&quot;data_config.train_labels_path=[&lt;path/to/slp/file&gt;]&quot;</span><span class="w"> </span>trainer_config.ckpt_dir<span class="o">=</span><span class="s2">&quot;models&quot;</span><span class="w"> </span>trainer_config.run_name<span class="o">=</span>&lt;run_name&gt;
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>&lt;path/to/config.yaml&gt;<span class="w"> </span><span class="s2">&quot;data_config.train_labels_path=[&lt;path/to/slp/file&gt;]&quot;</span><span class="w"> </span>trainer_config.ckpt_dir<span class="o">=</span><span class="s2">&quot;models&quot;</span><span class="w"> </span>trainer_config.run_name<span class="o">=</span>&lt;run_name&gt;
 </span></code></pre></div>
 <p>The model will be saved in the <code>models/</code> directory within the same directory as the <strong>training job package</strong> (in this case, <code>models/run_name/</code>).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If you exported the training package as a ZIP file, it contains both the <code>.pkg.slp</code> and <code>.yaml</code> files necessary to train with the configuration you selected in the GUI. Before running the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command, make sure to unzip this file.</p>
+<p>If you exported the training package as a ZIP file, it contains both the <code>.pkg.slp</code> and <code>.yaml</code> files necessary to train with the configuration you selected in the GUI. Before running the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command, make sure to unzip this file:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">macOS/Linux</label><label for="__tabbed_1_2">Windows (PowerShell)</label><label for="__tabbed_1_3">Windows (Command Prompt)</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>unzip<span class="w"> </span>training_job.zip<span class="w"> </span>-d<span class="w"> </span>training_job
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">Expand-Archive</span> <span class="n">-Path</span> <span class="n">training_job</span><span class="p">.</span><span class="n">zip</span> <span class="n">-DestinationPath</span> <span class="n">training_job</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>tar -xf training_job.zip -C training_job
+</span></code></pre></div>
+</div>
+</div>
+</div>
 </div>
 <h2 id="remote-inference">Remote inference<a class="headerlink" href="#remote-inference" title="Permanent link">&para;</a></h2>
 <p><em>Case: You already have models and you want to run inference on a different machine using a command-line interface.</em></p>
@@ -2382,10 +2338,7 @@ This allows you to run inference on older models without needing to retrain them
 <p>For this example, let's suppose you're working with an HDF5 video at <code>path/to/video.mp4</code>.</p>
 <p><strong>Command-line inference</strong>:</p>
 <p>To run inference, you'll call <a href="https://nn.sleap.ai/latest/inference/#run-inference-with-cli"><code>sleap-nn track</code></a> with the paths to each trained model and your video file, like so:</p>
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>path/to/video.mp4<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>--video_dataset<span class="w"> </span>video<span class="w"> </span>--video_input_format<span class="w"> </span>channels_last<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>-m<span class="w"> </span>path/to/models/centroid<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>-m<span class="w"> </span>path/to/models/centered-instance
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>path/to/video.mp4<span class="w"> </span>--video_dataset<span class="w"> </span>video<span class="w"> </span>--video_input_format<span class="w"> </span>channels_last<span class="w"> </span>-m<span class="w"> </span>path/to/models/centroid<span class="w"> </span>-m<span class="w"> </span>path/to/models/centered-instance
 </span></code></pre></div>
 <p>This will run inference on the entire video. If you only want to run inference on some range of frames, you can specify this with the <code>--frames 123-456</code> command-line argument.</p>
 <p>This will give you predictions frame-by-frame, but will not connect those predictions across frames into <code>tracks</code>. If you want cross-frame identity tracking, set <code>--tracking</code> argument. For optical flow, use <code>--use_flow</code>. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use <code>--features centroids --scoring_method euclidean_dist</code>.</p>
