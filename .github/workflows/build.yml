@@ -5,10 +5,7 @@ on:
   release:
     types:
       - published
-  # # Modify and uncomment below to manually trigger build:
-  # push:
-  #   branches:
-  #     - talmo/v1.4.2
+  workflow_dispatch: # Manual trigger for re-runs
 
 jobs:
   pypi:
