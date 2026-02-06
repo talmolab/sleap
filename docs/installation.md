@@ -346,6 +346,52 @@ pip install "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cu128
 
 ---
 
+## Model Export (ONNX)
+
+To export trained models to ONNX format for deployment, you need additional dependencies.
+
+[:octicons-arrow-right-24: Learn more about exporting models](https://nn.sleap.ai/latest/guides/export/)
+
+### Install export dependencies
+
+If you installed SLEAP as a tool:
+
+```bash
+# Add ONNX export support (CPU runtime)
+uv tool install --python 3.13 "sleap[nn,nn-export]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+
+# Add ONNX export support (GPU runtime - faster inference)
+uv tool install --python 3.13 "sleap[nn,nn-export-gpu]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+```
+
+If you're using a development setup:
+
+```bash
+# CPU ONNX runtime
+uv sync --extra nn --extra nn-export
+
+# GPU ONNX runtime (for faster inference)
+uv sync --extra nn --extra nn-export-gpu
+```
+
+### TensorRT (Linux/Windows only)
+
+For NVIDIA TensorRT support on Linux or Windows:
+
+```bash
+# Development setup
+uv sync --extra nn-cuda128 --extra nn-tensorrt
+
+# Tool install
+uv tool install --python 3.13 "sleap[nn,nn-tensorrt]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend cu128
+```
+
+!!! note
+    TensorRT is not supported on macOS.
+
+
+---
+
 ## Troubleshooting
 
 **First step:** Run `sleap doctor` and check the output for errors.
