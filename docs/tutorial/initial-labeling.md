@@ -73,7 +73,7 @@ Let's save the project with what we've done so far:
 2. In the dialog that appears, click **Save**.
 
 !!! tip
-    Don't forget to save often (<kbd>Ctrl+S</kbd> or **File** → **Save**) so you don't lose your progress!
+    Don't forget to save often (<kbd>Cmd+S</kbd> or **File** → **Save**) so you don't lose your progress!
 
 You did it!
 
