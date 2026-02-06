@@ -261,17 +261,20 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../installation/" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item">
+        <a href="../installation/" class="md-tabs__link">
+          
   
   
     
   
   Installation
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -513,6 +516,62 @@
   
   
   
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../installation/" class="md-nav__link">
         
@@ -530,6 +589,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2417,7 +2512,7 @@
 <p><strong>First step:</strong> Run <code>sleap doctor</code> to check your installation.</p>
 <hr />
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<details class="plain">
+<details class="plain" open="open">
 <summary>I can't get SLEAP to install!</summary>
 <p>Have you tried all of the steps in the <a href="../installation/">installation instructions</a>?</p>
 <p>If so, please <a href="https://github.com/talmolab/sleap/discussions">start a discussion</a> or <a href="https://github.com/talmolab/sleap/issues">open an issue</a> and tell us:</p>
@@ -2428,24 +2523,24 @@
 <li>Output of <code>sleap doctor</code> (if available)</li>
 </ul>
 </details>
-<details class="plain">
+<details class="plain" open="open">
 <summary>Can I install it on a computer without a GPU?</summary>
 <p>Yes! Install SLEAP normally using <code>uv</code> and the GPU support will be ignored. Use <code>--torch-backend cpu</code> to explicitly install CPU-only:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>cpu
 </span></code></pre></div>
 </details>
-<details class="plain">
+<details class="plain" open="open">
 <summary>What if I already have CUDA set up on my system?</summary>
 <p>SLEAP 1.5+ uses PyTorch, which bundles its own CUDA libraries. Your system CUDA installation is not used. The <code>--torch-backend auto</code> flag will detect your GPU and install the appropriate PyTorch version.</p>
 </details>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
-<details class="plain">
+<details class="plain" open="open">
 <summary>How do I use SLEAP?</summary>
 <p>If you're new to pose tracking in general, check out <a href="https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking">this talk</a> or our review in <em><a href="https://rdcu.be/caH3H">Nature Neuroscience</a></em>.</p>
 <p>If you're just new to SLEAP, start with the <a href="../overview/">high-level overview</a> and then follow the <a href="../tutorial/overview/">tutorial</a>.</p>
 <p>Once you get the hang of it, check out the <a href="../guides/guides-overview/">guides</a> for more detailed info.</p>
 </details>
-<details class="plain">
+<details class="plain" open="open">
 <summary>Does my data need to be in a particular format?</summary>
 <p>SLEAP supports many formats, including all common video formats and imported data from DeepLabCut and others.</p>
 <p>However, some video acquisition software saves videos in formats not suitable for computer vision processing. A common issue is that videos are not <strong>reliably seekable</strong>—you may not get the same data when reading a particular frame index. This is because many video formats reconstruct images using data from adjacent frames.</p>
@@ -2461,15 +2556,15 @@
 </ul>
 <p>If you don't have <code>ffmpeg</code>, install it from <a href="https://ffmpeg.org/download.html">ffmpeg.org</a> or via your package manager.</p>
 </details>
-<details class="plain">
+<details class="plain" open="open">
 <summary>I get strange results where poses appear correct but shifted relative to the image</summary>
 <p>This is most likely a video compression issue. Re-encode your video using the ffmpeg command above.</p>
 </details>
-<details class="plain">
+<details class="plain" open="open">
 <summary>How do I get predictions out?</summary>
 <p>See <a href="../learnings/export-analysis/">Export Data for Analysis</a> and <a href="../reference/command-line-interfaces/">CLI Reference</a>.</p>
 </details>
-<details class="plain">
+<details class="plain" open="open">
 <summary>What do I do with the output of SLEAP?</summary>
 <p>Check out the <a href="../notebooks/Analysis_examples/">Analysis examples</a> notebook for working with pose data in Python.</p>
 </details>
@@ -2487,7 +2582,7 @@
 <p><img alt="Stage 3 troubleshooting workflow" src="../assets/images/troubleshooting_stage3.png" /></p>
 <hr />
 <h2 id="getting-more-help">Getting More Help<a class="headerlink" href="#getting-more-help" title="Permanent link">&para;</a></h2>
-<details class="plain">
+<details class="plain" open="open">
 <summary>I've found a bug or have another problem!</summary>
 <ol>
 <li>Run <code>sleap doctor</code> and copy the output</li>
@@ -2495,7 +2590,7 @@
 <li>Or <a href="https://github.com/talmolab/sleap/issues">open an issue</a> if you've found a bug</li>
 </ol>
 </details>
-<details class="plain">
+<details class="plain" open="open">
 <summary>Can I just talk to someone?</summary>
 <p>SLEAP is a complex machine learning system, and we may not have considered your specific use case.</p>
 <p>Feel free to reach out at <code>talmo@salk.edu</code> if you have a question that isn't covered here.</p>

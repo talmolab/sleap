@@ -27,7 +27,7 @@ Run `sleap --help` to see all available commands, or `sleap <command> --help` fo
 | [`sleap train`](#sleap-train) | Train pose estimation models |
 | [`sleap track`](#sleap-track) | Run inference and tracking |
 | [`sleap eval`](#other-neural-network-commands) | Evaluate predictions against ground truth |
-| [`sleap export`](#other-neural-network-commands) | Export model for deployment |
+| [`sleap export-model`](#other-neural-network-commands) | Export model for deployment |
 | [`sleap predict`](#other-neural-network-commands) | Run inference with exported model |
 | [`sleap system`](#other-neural-network-commands) | Show sleap-nn system information |
 
@@ -36,6 +36,7 @@ Run `sleap --help` to see all available commands, or `sleap <command> --help` fo
 | Command | Description |
 |---------|-------------|
 | [`sleap convert`](#sleap-convert) | Convert between pose data formats |
+| [`sleap export`](#sleap-export) | Export pose data for analysis (CSV, HDF5) |
 | [`sleap show`](#sleap-show) | Print labels file summary |
 | [`sleap render`](#sleap-render) | Render predictions as video or image |
 | [`sleap merge`](#sleap-merge) | Merge multiple labels files |
@@ -142,7 +143,7 @@ sleap track -i video.mp4 -m models/centroid/ -m models/instance/ --tracking
 | Command | Description |
 |---------|-------------|
 | `sleap eval` | Evaluate model predictions against ground truth |
-| `sleap export` | Export model to ONNX for deployment |
+| `sleap export-model` | Export model to ONNX for deployment |
 | `sleap predict` | Run inference with exported ONNX model |
 | `sleap system` | Show sleap-nn system information |
 
@@ -175,6 +176,39 @@ sleap convert annotations.json -o labels.slp --from coco  # COCO to SLP
 
 - **Input:** slp, nwb, coco, labelstudio, alphatracker, jabs, dlc, ultralytics, leap
 - **Output:** slp, nwb, coco, labelstudio, jabs, ultralytics, csv
+
+### `sleap export`
+
+Export pose data to analysis-ready formats (CSV, HDF5).
+
+Unlike `convert` which transforms between label formats, `export` creates dense outputs optimized for analysis with full control over frame padding, video selection, and output structure.
+
+```bash
+sleap export [OPTIONS] <input> -o <output>
+
+# Examples
+sleap export predictions.slp -o analysis.csv      # Export as CSV
+sleap export predictions.slp -o analysis.h5       # Export as HDF5
+sleap export labels.slp -o sparse.csv --no-empty-frames  # Only frames with instances
+sleap export multi.slp -o export.csv -v 0         # Export specific video
+sleap export multi.slp -o export.csv -v all       # Export all videos
+sleap export large.slp -o data.csv --chunk-size 10000  # Memory-efficient
+```
+
+**Key options:**
+
+| Option | Description |
+|--------|-------------|
+| `-o, --output` | Output file path (required) |
+| `--format csv\|h5` | Output format (inferred from extension if not specified) |
+| `--csv-format` | CSV layout: `sleap`, `dlc`, `points`, `instances`, `frames` (default) |
+| `--h5-dim-order` | HDF5 axis ordering: `matlab` (SLEAP-compatible) or `standard` |
+| `-v, --video` | Video index (0, 1, ...) or `all` for multi-video files |
+| `--start, --end` | Frame range (inclusive start, exclusive end) |
+| `--no-empty-frames` | Only include frames with instances (sparse output) |
+| `--chunk-size` | Write CSV in chunks for large files |
+
+[:octicons-arrow-right-24: Full export documentation](https://io.sleap.ai/latest/cli/#sio-export)
 
 ### `sleap show`
 

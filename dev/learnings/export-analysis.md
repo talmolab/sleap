@@ -22,14 +22,38 @@ The easiest way to export data is through the **File** menu:
 
 ---
 
-## Command-Line Conversion
+## Command-Line Export
 
-For batch processing or scripting, use the `sleap convert` command:
+For batch processing or scripting, use the `sleap export` command for analysis-ready outputs:
 
 ```bash
-# Convert to CSV
-sleap convert predictions.slp -o analysis.csv
+# Export to CSV (dense, with empty frames padded)
+sleap export predictions.slp -o analysis.csv
 
+# Export to Analysis HDF5
+sleap export predictions.slp -o analysis.h5
+
+# Export only frames with instances (sparse)
+sleap export predictions.slp -o sparse.csv --no-empty-frames
+
+# Export specific video from multi-video file
+sleap export multi.slp -o video0.csv -v 0
+
+# Export all videos from multi-video file
+sleap export multi.slp -o batch.csv -v all
+# Creates: batch.video0.csv, batch.video1.csv, ...
+
+# Memory-efficient chunked export for large files
+sleap export large.slp -o analysis.csv --chunk-size 10000
+```
+
+See `sleap export --help` or the [sleap-io CLI documentation](https://io.sleap.ai/latest/cli/#sio-export) for all options.
+
+## Command-Line Conversion
+
+For converting between different label formats, use the `sleap convert` command:
+
+```bash
 # Convert to NWB (Neurodata Without Borders)
 sleap convert predictions.slp -o data.nwb
 
@@ -44,14 +68,6 @@ sleap convert labels.slp -o yolo_dataset/ --to ultralytics
 ```
 
 See `sleap convert --help` or the [sleap-io CLI documentation](https://io.sleap.ai/latest/cli/#sio-convert) for all options.
-
-!!! note "Analysis HDF5"
-    Analysis HDF5 export is available via the **GUI** or **Python API**:
-    ```python
-    import sleap_io as sio
-    labels = sio.load_slp("predictions.slp")
-    sio.save_analysis_h5(labels, "analysis.h5")
-    ```
 
 ---
 
@@ -93,7 +109,7 @@ For dataset schemas, axis ordering presets, and advanced options, see the [sleap
 
 | Format | Extension | CLI | Python API | Documentation |
 |--------|-----------|:---:|:----------:|---------------|
-| **Analysis HDF5** | `.h5` | — | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#sleap-analysis-hdf5-format-h5) |
+| **Analysis HDF5** | `.h5` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#sleap-analysis-hdf5-format-h5) |
 | **CSV** | `.csv` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#csv-format-csv) |
 | **NWB** | `.nwb` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#nwb-format-nwb) |
 | **COCO** | `.json` | ✅ | ✅ | [sleap-io docs](https://io.sleap.ai/latest/formats/#coco-format-json) |

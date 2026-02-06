@@ -68,15 +68,14 @@ Once Git is installed, you're ready to proceed!
 
 Navigate to **Desktop** folder, to clone the git repository. This step ensures tutorial data is saved in **Desktop**:  
 
-=== "Windows"  
-    ```sh  
-    cd C:\Users\YourUsername\Desktop  
-    ```  
-    Replace `YourUsername` with your actual Windows username.  
+=== "Windows"
+    ```sh
+    cd Desktop
+    ```
 
-=== "MacOS & Linux"  
-    ```sh  
-    cd ~/Desktop  
+=== "MacOS & Linux"
+    ```sh
+    cd ~/Desktop
     ```  
 
 ### 4. Clone the Repository  
@@ -93,6 +92,8 @@ The cloned folder/tutorial data will be located on the Desktop under the name **
  - **mice.mp4**: The main video file for training the model.
  - **new_data**: This folder will be used later in [Step 6](tracking-new-data.md).
 
+![](../assets/images/tutorial/sleap-tutorial-data.png)
+
 ## Import videos into SLEAP
 
 1. Open a terminal. Then launch the SLEAP GUI by typing this command followed by <kbd>Enter</kbd> or <kbd>Return</kbd>:
@@ -100,26 +101,6 @@ The cloned folder/tutorial data will be located on the Desktop under the name **
     ```bash
     sleap
     ```
-
-    !!! note "Development installation"
-        If you installed SLEAP for development (via `uv sync`), activate the environment first:
-
-        === "Linux/macOS"
-            ```bash
-            source .venv/bin/activate
-            sleap
-            ```
-
-        === "Windows (PowerShell)"
-            ```powershell
-            .venv\Scripts\Activate.ps1
-            sleap
-            ```
-
-        Or run without activating:
-        ```bash
-        uv run sleap
-        ```
 
     ![](../assets/images/tutorial/open-gui.png)
 

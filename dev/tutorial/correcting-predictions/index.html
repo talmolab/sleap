@@ -263,17 +263,20 @@
   
   
   
-    <li class="md-tabs__item">
-      <a href="../../installation/" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../installation/" class="md-tabs__link">
+          
   
   
     
   
   Installation
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -515,6 +518,62 @@
   
   
   
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../../installation/" class="md-nav__link">
         
@@ -532,6 +591,42 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -2377,7 +2472,7 @@
 <div class="md-source-file"><a href="../correcting-predictions.md" title="View markdown source" class="md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6m4 18H6V4h7v5h5v11M13 9V3.5L18.5 9H13Z"/></svg></a></div>
 <h1 id="5-correcting-predictions">5. Correcting predictions<a class="headerlink" href="#5-correcting-predictions" title="Permanent link">&para;</a></h1>
 <p>In <a href="../training-a-model/">the previous step</a>, we trained a model with a single labeled frame and used that model to generate predictions on the remaining unlabeled frames.</p>
-<p>In this step, we will learn the <a href="../../learnings/prediction-assisted-labeling/"><strong>human-in-the-loop</strong></a> labeling workflow, in which we correct predictions rather than labeling from scratch. Once we've labeled enough frames, we'll train a new model which will produce more accurate predictions that require fewer corrections. Each time you repeat this process. </p>
+<p>In this step, we will learn the <a href="../../learnings/prediction-assisted-labeling/"><strong>human-in-the-loop</strong></a> labeling workflow, in which we correct predictions rather than labeling from scratch. Once we've labeled enough frames, we'll train a new model which will produce more accurate predictions that require fewer corrections.</p>
 <h2 id="save-a-new-version">Save a new version<a class="headerlink" href="#save-a-new-version" title="Permanent link">&para;</a></h2>
 <p>It's a good idea to save frequently so you don't lose your work, but sometimes we want to be able to go back to a specific version of the project.</p>
 <p>This is particularly useful in case we want to go back to the state that the project was in when we trained a model so that we can reproduce the process.</p>
@@ -2394,7 +2489,7 @@
 </ol>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>You can quickly create new versions using the keyboard by pressing <kbd>ctrl+shift+s</kbd> → <kbd>enter</kbd></p>
+<p>You can quickly create new versions using the keyboard by pressing <kbd>cmd+shift+s</kbd> → <kbd>enter</kbd></p>
 </div>
 <p>Nice! Now we can always go back to this version of the labeling project if we need to.</p>
 <h2 id="labeling-from-predictions">Labeling from predictions<a class="headerlink" href="#labeling-from-predictions" title="Permanent link">&para;</a></h2>
@@ -2441,10 +2536,6 @@
 <p class="admonition-title">Warning</p>
 <p>Sometimes nodes will be incorrectly predicted as not visible. Don't forget to toggle them to be visible when correcting predictions!</p>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For future reference, There’s no need to be consistent about which animal you label with which instance for the case of multiple animals. For instance, suppose you have a male and a female. It’s fine to label the male with the blue instance in some frames and the orange instance in others. Tracking (and track proofreading) is the final stage in the workflow and occurs after predicting body part locations.</p>
-</div>
 <h3 id="keyboard-shortcuts">Keyboard shortcuts<a class="headerlink" href="#keyboard-shortcuts" title="Permanent link">&para;</a></h3>
 <p>SLEAP has lots of keyboard shortcuts to help speed up the labeling process.</p>
 <p>Navigating the menus will help to find which features have a keyboard shortcut associated with them.</p>
@@ -2458,14 +2549,14 @@
 <p>In the menu bar at the top, click <strong>Predict</strong> → <strong>Run Training...</strong> to open the training pipeline configuration window.</p>
 </li>
 <li>
-<p>Go to the <strong>Centroid Model Configuration</strong> tab. You'll notice that the previous model configuration we trained with will be preloaded. This helps you as tune settings across iterations.</p>
+<p>Go to the <strong>Centroid Model Configuration</strong> tab. You'll notice that the previous model configuration we trained with will be preloaded. This helps you as you tune settings across iterations.</p>
 <p>Let's reset to one of the built-in baseline configurations (<code>baseline.centroid</code>) by selecting it from the dropdown:</p>
 <p><img alt="" src="../../assets/images/tutorial/reset-to-baseline-centroid.gif" /></p>
 </li>
 <li>
 <p>Next, adjust a couple of the settings for the centroid model:</p>
 <p><strong>Plateau Patience</strong> → <strong>10</strong> <sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup></p>
-<p><strong>Rotation Min/Max Angle</strong> → <strong>-180/180</strong> <sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup></p>
+<p><strong>Rotation</strong> → <strong>±180°</strong> <sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup></p>
 <p><strong>Sigma for Centroids</strong> → <strong>3</strong> <sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup></p>
 <p><img alt="" src="../../assets/images/tutorial/second-train-centroid.png" /></p>
 </li>
@@ -2473,7 +2564,7 @@
 <p>Head over to the <strong>Centered Instance Model Configuration</strong> tab.</p>
 <p>We'll again reset the configuration by selecting the <code>baseline_large_rf.topdown</code> <sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup> profile.</p>
 <p>Then, tweak the following settings:</p>
-<p><strong>Rotation Min/Max Angle</strong> → <strong>-180/180</strong> <sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup></p>
+<p><strong>Rotation</strong> → <strong>±180°</strong> <sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup></p>
 <p><img alt="" src="../../assets/images/tutorial/second-train-centered-instance.png" /></p>
 </li>
 <li>

@@ -14,7 +14,7 @@
         <link rel="prev" href="../overview/">
       
       
-        <link rel="next" href="../tutorial/overview/">
+        <link rel="next" href="../changelog/">
       
       
         
@@ -265,17 +265,20 @@
     
   
   
-    <li class="md-tabs__item md-tabs__item--active">
-      <a href="./" class="md-tabs__link">
-        
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
   
   
     
   
   Installation
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -511,6 +514,67 @@
     
       
       
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
   
   
     
@@ -906,6 +970,42 @@
     </ul>
   
 </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -2932,7 +3032,7 @@
 <p>One command works on all platforms. It automatically detects your GPU and installs the right version of PyTorch.</p>
 <div class="admonition success">
 <p class="admonition-title">Quick Install</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 <p>Check the <a href="#version-compatibility">version compatibility table</a> for the latest versions.</p>
 </div>
@@ -2951,9 +3051,9 @@
 <li><code>--python 3.13</code> — Uses Python 3.13</li>
 <li><code>sleap[nn]</code> — Installs SLEAP with neural network support for training</li>
 <li><code>--with "sleap-io==..."</code> — Pins dependency versions for compatibility</li>
-<li><code>--prerelease allow</code> — Required for alpha/beta versions</li>
 <li><code>--torch-backend auto</code> — Automatically detects your GPU (NVIDIA, AMD, Intel, or CPU)</li>
 </ul>
+<p>For pre-release versions (e.g., <code>sleap-nn==0.1.0a4</code>), add <code>--prerelease allow</code>.</p>
 </details>
 <details class="tip">
 <summary>Getting an error about <code>--torch-backend</code>?</summary>
@@ -2992,7 +3092,7 @@
 </span></code></pre></div>
 <h3 id="upgrade-to-a-specific-version">Upgrade to a specific version<a class="headerlink" href="#upgrade-to-a-specific-version" title="Permanent link">&para;</a></h3>
 <p>If you need specific versions (for reproducibility or to match a collaborator), reinstall:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 <p>This replaces the existing installation with the exact versions specified.</p>
 <h3 id="downgrade">Downgrade<a class="headerlink" href="#downgrade" title="Permanent link">&para;</a></h3>
@@ -3009,7 +3109,7 @@
 <li>Something is broken and you want a completely fresh environment</li>
 <li>Installing from local source code (to pick up changes)</li>
 </ul>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 </details>
 <hr />
@@ -3029,6 +3129,11 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>1.6.0</td>
+<td>0.6.4</td>
+<td>0.1.0</td>
+</tr>
 <tr>
 <td>1.6.0a3</td>
 <td>0.6.3</td>
@@ -3090,7 +3195,7 @@
 </tr>
 </tbody>
 </table>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>cu128
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>cu128
 </span></code></pre></div>
 </details>
 <hr />
@@ -3188,10 +3293,10 @@
 <h3 id="install-export-dependencies">Install export dependencies<a class="headerlink" href="#install-export-dependencies" title="Permanent link">&para;</a></h3>
 <p>If you installed SLEAP as a tool:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="c1"># Add ONNX export support (CPU runtime)</span>
-</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-export]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-export]==1.6.0&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>
 </span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a><span class="c1"># Add ONNX export support (GPU runtime - faster inference)</span>
-</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-export-gpu]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+</span><span id="__span-29-5"><a id="__codelineno-29-5" name="__codelineno-29-5" href="#__codelineno-29-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-export-gpu]==1.6.0&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 <p>If you're using a development setup:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1"># CPU ONNX runtime</span>
@@ -3206,7 +3311,7 @@
 </span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn-cuda128<span class="w"> </span>--extra<span class="w"> </span>nn-tensorrt
 </span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>
 </span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a><span class="c1"># Tool install</span>
-</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-tensorrt]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>cu128
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-tensorrt]==1.6.0&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>cu128
 </span></code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -3224,7 +3329,7 @@
 <details class="note">
 <summary>Force a clean reinstall</summary>
 <p>If something is broken:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0a3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0a4&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.0&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div></p>
 </details>
 <details class="note">
