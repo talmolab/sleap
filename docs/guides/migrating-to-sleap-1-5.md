@@ -75,7 +75,7 @@ See [Instance Size Distribution](instance-size-distribution.md) for details.
 Export trained models to ONNX or TensorRT format for 3-6x faster inference:
 
 ```bash
-sleap export --model models/my_model --format onnx
+sleap export-model models/my_model --format onnx
 ```
 
 ### Additional Improvements

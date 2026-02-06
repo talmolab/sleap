@@ -27,7 +27,7 @@ Run `sleap --help` to see all available commands, or `sleap <command> --help` fo
 | [`sleap train`](#sleap-train) | Train pose estimation models |
 | [`sleap track`](#sleap-track) | Run inference and tracking |
 | [`sleap eval`](#other-neural-network-commands) | Evaluate predictions against ground truth |
-| [`sleap export`](#other-neural-network-commands) | Export model for deployment |
+| [`sleap export-model`](#other-neural-network-commands) | Export model for deployment |
 | [`sleap predict`](#other-neural-network-commands) | Run inference with exported model |
 | [`sleap system`](#other-neural-network-commands) | Show sleap-nn system information |
 
@@ -142,7 +142,7 @@ sleap track -i video.mp4 -m models/centroid/ -m models/instance/ --tracking
 | Command | Description |
 |---------|-------------|
 | `sleap eval` | Evaluate model predictions against ground truth |
-| `sleap export` | Export model to ONNX for deployment |
+| `sleap export-model` | Export model to ONNX for deployment |
 | `sleap predict` | Run inference with exported ONNX model |
 | `sleap system` | Show sleap-nn system information |
 

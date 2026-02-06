@@ -642,7 +642,7 @@ def export(
         sleap-nn-export /path/to/model -o exports/my_model --format both
         sleap-nn-export /path/to/centroid /path/to/instance -o exports/topdown
     """
-    _warn_deprecated("sleap-nn-export", "sleap export")
+    _warn_deprecated("sleap-nn-export", "sleap export-model")
 
     try:
         from sleap_nn.export.cli import export as sleap_nn_export
