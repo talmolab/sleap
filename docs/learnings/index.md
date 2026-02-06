@@ -64,14 +64,6 @@ Deep dive into SLEAP concepts, workflows, and best practices. These guides go be
 
     [:octicons-arrow-right-24: Read more](prediction-assisted-labeling.md)
 
--   **Export Data for Analysis**
-
-    ---
-
-    Get your pose data out of SLEAP for downstream analysis.
-
-    [:octicons-arrow-right-24: Read more](export-analysis.md)
-
 </div>
 
 ---
