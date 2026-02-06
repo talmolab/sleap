@@ -2,7 +2,7 @@
 
 In [the previous step](training-a-model.md), we trained a model with a single labeled frame and used that model to generate predictions on the remaining unlabeled frames.
 
-In this step, we will learn the [**human-in-the-loop**](../learnings/prediction-assisted-labeling.md) labeling workflow, in which we correct predictions rather than labeling from scratch. Once we've labeled enough frames, we'll train a new model which will produce more accurate predictions that require fewer corrections. Each time you repeat this process. 
+In this step, we will learn the [**human-in-the-loop**](../learnings/prediction-assisted-labeling.md) labeling workflow, in which we correct predictions rather than labeling from scratch. Once we've labeled enough frames, we'll train a new model which will produce more accurate predictions that require fewer corrections.
 
 ## Save a new version
 
@@ -21,7 +21,7 @@ To save a new version:
     ![](../assets/images/tutorial/v2-save.png)
 
 !!! tip
-    You can quickly create new versions using the keyboard by pressing <kbd>ctrl+shift+s</kbd> → <kbd>enter</kbd>
+    You can quickly create new versions using the keyboard by pressing <kbd>cmd+shift+s</kbd> → <kbd>enter</kbd>
 
 Nice! Now we can always go back to this version of the labeling project if we need to.
 
@@ -82,9 +82,6 @@ Nodes marked as not visible (denoted by the gray and italicized font with a dark
 !!! warning
     Sometimes nodes will be incorrectly predicted as not visible. Don't forget to toggle them to be visible when correcting predictions!
 
-!!! note
-    For future reference, There’s no need to be consistent about which animal you label with which instance for the case of multiple animals. For instance, suppose you have a male and a female. It’s fine to label the male with the blue instance in some frames and the orange instance in others. Tracking (and track proofreading) is the final stage in the workflow and occurs after predicting body part locations.
-
 ### Keyboard shortcuts
 
 SLEAP has lots of keyboard shortcuts to help speed up the labeling process.
@@ -103,7 +100,7 @@ Since last time was a special case where we were training with a single image, l
 
 1. In the menu bar at the top, click **Predict** → **Run Training...** to open the training pipeline configuration window.
 
-2. Go to the **Centroid Model Configuration** tab. You'll notice that the previous model configuration we trained with will be preloaded. This helps you as tune settings across iterations.
+2. Go to the **Centroid Model Configuration** tab. You'll notice that the previous model configuration we trained with will be preloaded. This helps you as you tune settings across iterations.
 
     Let's reset to one of the built-in baseline configurations (`baseline.centroid`) by selecting it from the dropdown:
 
@@ -115,7 +112,7 @@ Since last time was a special case where we were training with a single image, l
 
     [^1]: SLEAP will stop training early when a plateau is detected in the validation loss to prevent overfitting. Setting the patience to 10 results in earlier stopping for faster training runs.
 
-    **Rotation Min/Max Angle** → **-180/180** [^2]
+    **Rotation** → **±180°** [^2]
 
     [^2]: During training, we apply augmentations to the raw images and corresponding poses to generate variants of the labeled data. Since we have an overhead perspective in this video, it is appropriate to apply rotations across the full range of angles and will help to promote generalization.
 
@@ -133,7 +130,7 @@ Since last time was a special case where we were training with a single image, l
 
     Then, tweak the following settings:
 
-    **Rotation Min/Max Angle** → **-180/180** [^5]
+    **Rotation** → **±180°** [^5]
 
     [^5]: During training, we apply augmentations to the raw images and corresponding poses to generate variants of the labeled data. Since we have an overhead perspective in this video, it is appropriate to apply rotations across the full range of angles and will help to promote generalization.
 

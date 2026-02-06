@@ -128,7 +128,9 @@ copyright: >
 nav:
   - Home: index.md
   - Overview: overview.md
-  - Installation: installation.md
+  - Installation:
+      - Installation: installation.md
+      - Changelog: changelog.md
   - Tutorial: 
       - Overview: tutorial/overview.md
       - Setup: tutorial/setup.md

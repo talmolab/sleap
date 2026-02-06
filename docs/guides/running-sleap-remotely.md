@@ -3,7 +3,7 @@
 You need three things to run training:
 
 !!! note
-        If you only need to run training and inference from the command line, you do **not** need to install the full SLEAP package—just installing `sleap-nn` is sufficient.
+    If you only need to run training and inference from the command line, you do **not** need to install the full SLEAP package—just installing `sleap-nn` is sufficient.
 
 1. You need to install `sleap-nn` on the remote machine where you'll run training.
 2. Labels and images to use for training.

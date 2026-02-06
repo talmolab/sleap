@@ -8,7 +8,7 @@ Stuck? Can't get SLEAP to run? Crashing? Try the tips below.
 
 ## Installation
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>I can't get SLEAP to install!</summary>
 
 Have you tried all of the steps in the [installation instructions](installation.md)?
@@ -22,7 +22,7 @@ If so, please [start a discussion](https://github.com/talmolab/sleap/discussions
 
 </details>
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>Can I install it on a computer without a GPU?</summary>
 
 Yes! Install SLEAP normally using `uv` and the GPU support will be ignored. Use `--torch-backend cpu` to explicitly install CPU-only:
@@ -33,7 +33,7 @@ uv tool install --python 3.13 "sleap[nn]" --prerelease allow --torch-backend cpu
 
 </details>
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>What if I already have CUDA set up on my system?</summary>
 
 SLEAP 1.5+ uses PyTorch, which bundles its own CUDA libraries. Your system CUDA installation is not used. The `--torch-backend auto` flag will detect your GPU and install the appropriate PyTorch version.
@@ -43,7 +43,7 @@ SLEAP 1.5+ uses PyTorch, which bundles its own CUDA libraries. Your system CUDA 
 
 ## Usage
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>How do I use SLEAP?</summary>
 
 If you're new to pose tracking in general, check out [this talk](https://cbmm.mit.edu/video/decoding-animal-behavior-through-pose-tracking) or our review in _[Nature Neuroscience](https://rdcu.be/caH3H)_.
@@ -54,7 +54,7 @@ Once you get the hang of it, check out the [guides](guides/guides-overview.md) f
 
 </details>
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>Does my data need to be in a particular format?</summary>
 
 SLEAP supports many formats, including all common video formats and imported data from DeepLabCut and others.
@@ -78,21 +78,21 @@ If you don't have `ffmpeg`, install it from [ffmpeg.org](https://ffmpeg.org/down
 
 </details>
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>I get strange results where poses appear correct but shifted relative to the image</summary>
 
 This is most likely a video compression issue. Re-encode your video using the ffmpeg command above.
 
 </details>
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>How do I get predictions out?</summary>
 
 See [Export Data for Analysis](learnings/export-analysis.md) and [CLI Reference](reference/command-line-interfaces.md).
 
 </details>
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>What do I do with the output of SLEAP?</summary>
 
 Check out the [Analysis examples](notebooks/Analysis_examples.ipynb) notebook for working with pose data in Python.
@@ -128,7 +128,7 @@ In later stages, squeeze out additional performance by tuning hyperparameters:
 
 ## Getting More Help
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>I've found a bug or have another problem!</summary>
 
 1. Run `sleap doctor` and copy the output
@@ -137,7 +137,7 @@ In later stages, squeeze out additional performance by tuning hyperparameters:
 
 </details>
 
-<details class="plain" markdown>
+<details class="plain" open markdown>
 <summary>Can I just talk to someone?</summary>
 
 SLEAP is a complex machine learning system, and we may not have considered your specific use case.

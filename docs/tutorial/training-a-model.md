@@ -47,7 +47,7 @@ Even though we've only labeled a single frame so far, let's see what happens whe
 
     [^4]: SLEAP training occurs in epochs, where one epoch consists of the larger of `(number of training images) / (batch size)` or `200` batches. With larger dataset sizes, one epoch is one pass over the training data. Normally, SLEAP will stop training early when a plateau is detected in the validation loss to prevent overfitting, but since we're training with a single image, we'll set this manually to enable a quick and dirty training run.
 
-    **Rotation Min/Max Angle** → **-180/180** [^5]
+    **Rotation** → **±180°** [^5]
 
     [^5]: During training, we apply augmentations to the raw images and corresponding poses to generate variants of the labeled data. Since we have an overhead perspective in this video, it is appropriate to apply rotations across the full range of angles and will help to promote generalization.
 
@@ -59,7 +59,7 @@ Even though we've only labeled a single frame so far, let's see what happens whe
 
     [^6]: SLEAP training occurs in epochs, where one epoch consists of the larger of `(number of training images) / (batch size)` or `200` batches. With larger dataset sizes, one epoch is one pass over the training data. Normally, SLEAP will stop training early when a plateau is detected in the validation loss to prevent overfitting, but since we're training with a single image, we'll set this manually to enable a quick and dirty training run.
 
-    **Rotation Min/Max Angle** → **-180/180** [^7]
+    **Rotation** → **±180°** [^7]
 
     [^7]: During training, we apply augmentations to the raw images and corresponding poses to generate variants of the labeled data. Since we have an overhead perspective in this video, it is appropriate to apply rotations across the full range of angles and will help to promote generalization.
 
