@@ -186,7 +186,13 @@ click.rich_click.COMMAND_GROUPS = {
         {
             "name": "Data Transformation",
             "commands": [
-                "convert", "export", "split", "unsplit", "merge", "trim", "fix"
+                "convert",
+                "export",
+                "split",
+                "unsplit",
+                "merge",
+                "trim",
+                "fix",
             ],
         },
         {"name": "Frame Management", "commands": ["embed", "unembed"]},
