@@ -201,6 +201,51 @@ name = "pypi"
 url = "https://pypi.org/simple"
 explicit = true
 
+# Static metadata for TensorRT packages to avoid running their stub setup.py
+# during cross-platform lockfile generation (stubs fail on macOS).
+# See: https://github.com/astral-sh/uv/issues/13942
+#
+# We provide metadata for both cu12 and cu13 variants since:
+#   - Older torch-tensorrt versions depend directly on tensorrt-cu12
+#   - Newer torch-tensorrt versions use the tensorrt metapackage which depends on cu13
+#
+# The tensorrt metapackage metadata assumes cu13 (for tensorrt >=10.13).
+
+[[tool.uv.dependency-metadata]]
+name = "tensorrt"
+requires-dist = ["tensorrt-cu13"]
+
+# CUDA 12 variant packages (for older torch-tensorrt direct dependencies)
+[[tool.uv.dependency-metadata]]
+name = "tensorrt-cu12"
+requires-dist = ["tensorrt-cu12-bindings", "tensorrt-cu12-libs"]
+
+[[tool.uv.dependency-metadata]]
+name = "tensorrt-cu12-bindings"
+
+[[tool.uv.dependency-metadata]]
+name = "tensorrt-cu12-libs"
+requires-dist = ["nvidia-cuda-runtime-cu12"]
+
+# CUDA 13 variant packages (for tensorrt >=10.13)
+[[tool.uv.dependency-metadata]]
+name = "tensorrt-cu13"
+requires-dist = ["tensorrt-cu13-bindings", "tensorrt-cu13-libs"]
+
+[[tool.uv.dependency-metadata]]
+name = "tensorrt-cu13-bindings"
+
+[[tool.uv.dependency-metadata]]
+name = "tensorrt-cu13-libs"
+requires-dist = ["nvidia-cuda-runtime-cu12"]
+
+# Common CUDA runtime dependency
+[[tool.uv.dependency-metadata]]
+name = "nvidia-cuda-runtime-cu12"
+
+[[tool.uv.dependency-metadata]]
+name = "nvidia-cuda-runtime"
+
 [tool.setuptools.packages.find]
 exclude = ["tests", "tests.*", "docs"]
 
