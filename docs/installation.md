@@ -80,7 +80,7 @@ One command works on all platforms. It automatically detects your GPU and instal
 
 !!! success "Quick Install"
     ```bash
-    uv tool install --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+    uv tool install --python 3.13 "sleap[nn]==1.6.0" --with "sleap-io==0.6.4" --with "sleap-nn==0.1.0" --torch-backend auto
     ```
 
     Check the [version compatibility table](#version-compatibility) for the latest versions.
@@ -102,8 +102,9 @@ A window should open within a few seconds.
     - `--python 3.13` — Uses Python 3.13
     - `sleap[nn]` — Installs SLEAP with neural network support for training
     - `--with "sleap-io==..."` — Pins dependency versions for compatibility
-    - `--prerelease allow` — Required for alpha/beta versions
     - `--torch-backend auto` — Automatically detects your GPU (NVIDIA, AMD, Intel, or CPU)
+
+    For pre-release versions (e.g., `sleap-nn==0.1.0a4`), add `--prerelease allow`.
 
 ??? tip "Getting an error about `--torch-backend`?"
     Update uv to the latest version:
@@ -169,7 +170,7 @@ uv tool upgrade sleap --upgrade-package sleap-io --upgrade-package sleap-nn
 If you need specific versions (for reproducibility or to match a collaborator), reinstall:
 
 ```bash
-uv tool install --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+uv tool install --python 3.13 "sleap[nn]==1.6.0" --with "sleap-io==0.6.4" --with "sleap-nn==0.1.0" --torch-backend auto
 ```
 
 This replaces the existing installation with the exact versions specified.
@@ -195,7 +196,7 @@ uv tool uninstall sleap
     - Installing from local source code (to pick up changes)
 
     ```bash
-    uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+    uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0" --with "sleap-io==0.6.4" --with "sleap-nn==0.1.0" --torch-backend auto
     ```
 
 ---
@@ -216,6 +217,7 @@ The SLEAP ecosystem has three packages that work together:
 
 | SLEAP | sleap-io | sleap-nn |
 |-------|----------|----------|
+| 1.6.0 | 0.6.4 | 0.1.0 |
 | 1.6.0a3 | 0.6.3 | 0.1.0a4 |
 | 1.6.0a2 | 0.6.2 | 0.1.0a2 |
 | 1.6.0a1 | 0.6.1 | 0.1.0a1 |
@@ -236,7 +238,7 @@ Always use compatible versions when pinning.
     | `xpu` | Intel GPUs |
 
     ```bash
-    uv tool install --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend cu128
+    uv tool install --python 3.13 "sleap[nn]==1.6.0" --with "sleap-io==0.6.4" --with "sleap-nn==0.1.0" --torch-backend cu128
     ```
 
 ---
@@ -358,10 +360,10 @@ If you installed SLEAP as a tool:
 
 ```bash
 # Add ONNX export support (CPU runtime)
-uv tool install --python 3.13 "sleap[nn,nn-export]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+uv tool install --python 3.13 "sleap[nn,nn-export]==1.6.0" --with "sleap-io==0.6.4" --with "sleap-nn==0.1.0" --torch-backend auto
 
 # Add ONNX export support (GPU runtime - faster inference)
-uv tool install --python 3.13 "sleap[nn,nn-export-gpu]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+uv tool install --python 3.13 "sleap[nn,nn-export-gpu]==1.6.0" --with "sleap-io==0.6.4" --with "sleap-nn==0.1.0" --torch-backend auto
 ```
 
 If you're using a development setup:
@@ -383,7 +385,7 @@ For NVIDIA TensorRT support on Linux or Windows:
 uv sync --extra nn-cuda128 --extra nn-tensorrt
 
 # Tool install
-uv tool install --python 3.13 "sleap[nn,nn-tensorrt]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend cu128
+uv tool install --python 3.13 "sleap[nn,nn-tensorrt]==1.6.0" --with "sleap-io==0.6.4" --with "sleap-nn==0.1.0" --torch-backend cu128
 ```
 
 !!! note
@@ -405,7 +407,7 @@ uv tool install --python 3.13 "sleap[nn,nn-tensorrt]==1.6.0a3" --with "sleap-io=
 ??? note "Force a clean reinstall"
     If something is broken:
     ```bash
-    uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0a3" --with "sleap-io==0.6.3" --with "sleap-nn==0.1.0a4" --prerelease allow --torch-backend auto
+    uv tool install --reinstall --python 3.13 "sleap[nn]==1.6.0" --with "sleap-io==0.6.4" --with "sleap-nn==0.1.0" --torch-backend auto
     ```
 
 ??? note "Installation seems stuck"
