@@ -179,7 +179,7 @@ click.rich_click.COMMAND_GROUPS = {
         {"name": "Application", "commands": ["label", "doctor"]},
         {
             "name": "Neural Network",
-            "commands": ["train", "track", "eval", "export", "predict", "system"],
+            "commands": ["train", "track", "eval", "export-model", "predict", "system"],
         },
         {"name": "Data Inspection", "commands": ["show", "filenames"]},
         {
@@ -1137,12 +1137,12 @@ if _SLEAP_NN_AVAILABLE:
     cli.add_command(wrap_nn_command(nn_train), name="train")
     cli.add_command(wrap_nn_command(nn_track), name="track")
     cli.add_command(wrap_nn_command(nn_eval), name="eval")
-    cli.add_command(wrap_nn_command(nn_export), name="export")
+    cli.add_command(wrap_nn_command(nn_export), name="export-model")
     cli.add_command(wrap_nn_command(nn_predict), name="predict")
     cli.add_command(wrap_nn_command(nn_system), name="system")
 else:
     # Register stub commands that show helpful error messages
-    for cmd_name in ["train", "track", "eval", "export", "predict", "system"]:
+    for cmd_name in ["train", "track", "eval", "export-model", "predict", "system"]:
         cli.add_command(_make_nn_stub(cmd_name), name=cmd_name)
 
 
