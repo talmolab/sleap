@@ -142,9 +142,11 @@ sleap track -i video.mp4 -m models/centroid/ -m models/instance/ --tracking
 | Command | Description |
 |---------|-------------|
 | `sleap eval` | Evaluate model predictions against ground truth |
-| `sleap export` | Export model for deployment |
-| `sleap predict` | Run inference with exported model |
+| `sleap export` | Export model to ONNX for deployment |
+| `sleap predict` | Run inference with exported ONNX model |
 | `sleap system` | Show sleap-nn system information |
+
+[:octicons-arrow-right-24: Exporting models to ONNX](https://nn.sleap.ai/latest/guides/export/)
 
 [:octicons-arrow-right-24: Full sleap-nn CLI documentation](https://nn.sleap.ai/latest/reference/cli/)
 
