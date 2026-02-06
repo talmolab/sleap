@@ -57,6 +57,7 @@ from sleap_io.io.cli import (
     trim as sio_trim,
     reencode as sio_reencode,
     transform as sio_transform,
+    export as sio_export,
 )
 
 # Import sleap-nn CLI commands for integration (optional, requires sleap-nn)
@@ -184,7 +185,15 @@ click.rich_click.COMMAND_GROUPS = {
         {"name": "Data Inspection", "commands": ["show", "filenames"]},
         {
             "name": "Data Transformation",
-            "commands": ["convert", "split", "unsplit", "merge", "trim", "fix"],
+            "commands": [
+                "convert",
+                "export",
+                "split",
+                "unsplit",
+                "merge",
+                "trim",
+                "fix",
+            ],
         },
         {"name": "Frame Management", "commands": ["embed", "unembed"]},
         {"name": "Video Processing", "commands": ["reencode", "transform", "render"]},
@@ -1099,6 +1108,7 @@ cli.add_command(wrap_sio_command(sio_unembed), name="unembed")
 cli.add_command(wrap_sio_command(sio_trim), name="trim")
 cli.add_command(wrap_sio_command(sio_reencode), name="reencode")
 cli.add_command(wrap_sio_command(sio_transform), name="transform")
+cli.add_command(wrap_sio_command(sio_export), name="export")
 
 
 # =============================================================================
