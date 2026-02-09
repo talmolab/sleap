@@ -324,10 +324,18 @@ def setup_new_run_folder(
     """
     run_path = None
     if config.trainer_config.save_ckpt:
-        # Generate fresh run name: YYMMDD_HHMMSS.{base_run_name}
-        run_name = get_timestamp()
-        if isinstance(base_run_name, str):
-            run_name = run_name + "." + base_run_name
+        # Check if user specified a custom run_name in the config
+        user_run_name = OmegaConf.select(
+            config, "trainer_config.run_name", default=None
+        )
+        if user_run_name and user_run_name not in ("", "None"):
+            # Use user-specified run_name
+            run_name = user_run_name
+        else:
+            # Generate fresh run name: YYMMDD_HHMMSS.{base_run_name}
+            run_name = get_timestamp()
+            if isinstance(base_run_name, str):
+                run_name = run_name + "." + base_run_name
 
         # Build run path (always use fresh name, don't prepend old run_name)
         run_path = (Path(config.trainer_config.ckpt_dir) / run_name).as_posix()
@@ -765,8 +773,18 @@ def write_pipeline_files(
     config_info_list: List[ConfigFileInfo],
     inference_params: Dict[str, Any],
     items_for_inference: ItemsForInference,
+    num_user_labeled_frames: Optional[int] = None,
 ):
-    """Writes the config files and scripts for manually running pipeline."""
+    """Writes the config files and scripts for manually running pipeline.
+
+    Args:
+        output_dir: Directory to write the files to.
+        labels_filename: Path to the labels file.
+        config_info_list: List of ConfigFileInfo objects for each model.
+        inference_params: Dictionary of inference parameters.
+        items_for_inference: ItemsForInference object with inference targets.
+        num_user_labeled_frames: Number of user-labeled frames (for default run name).
+    """
 
     # Use absolute path for all files that aren't contained in the output dir.
     labels_filename = os.path.abspath(labels_filename)
@@ -786,13 +804,11 @@ def write_pipeline_files(
             cfg_run_name = OmegaConf.select(
                 cfg_info.config, "trainer_config.run_name", default=""
             )
-            # Append head_name to run_name if it exists and is valid
-            if cfg_run_name and cfg_run_name != "None":
-                cfg_info.config.trainer_config.run_name = (
-                    cfg_run_name + cfg_info.head_name
-                )
-            else:
-                cfg_info.config.trainer_config.run_name = cfg_info.head_name
+            # If user provided a custom run_name, preserve it as-is.
+            # If not, clear it so setup_new_run_folder will generate default
+            # with format: timestamp.head_name
+            if not cfg_run_name or cfg_run_name == "None":
+                cfg_info.config.trainer_config.run_name = None
 
     training_jobs = []
     for cfg_info in config_info_list:
@@ -811,7 +827,13 @@ def write_pipeline_files(
             # is the main reason we're setting it to the output directory rather
             # than just using normpath.
             # cfg_info.config.outputs.runs_folder = ""
-            ckpt_path = setup_new_run_folder(cfg_info.config)
+            # Build base_run_name: head_name.n=X (matches training behavior)
+            base_run_name = cfg_info.head_name
+            if num_user_labeled_frames is not None:
+                base_run_name = f"{cfg_info.head_name}.n={num_user_labeled_frames}"
+            ckpt_path = setup_new_run_folder(
+                cfg_info.config, base_run_name=base_run_name
+            )
             cfg_info.config.trainer_config.run_name = Path(ckpt_path).name
             cfg_info.config.trainer_config.ckpt_dir = Path(ckpt_path).parent.as_posix()
             # training.setup_new_run_folder(

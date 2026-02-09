@@ -1427,6 +1427,7 @@ class LearningDialog(QtWidgets.QDialog):
             config_info_list=config_info_list,
             inference_params=pipeline_form_data,
             items_for_inference=items_for_inference,
+            num_user_labeled_frames=len(self.labels.user_labeled_frames),
         )
 
     def export_package(self, output_path: Optional[str] = None, gui: bool = True):
