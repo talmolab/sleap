@@ -595,7 +595,7 @@ class TrainingConfigFilesWidget(FieldComboWidget):
 
     def doFileSelection(self):
         """Shows file browser to add training profile for given model type."""
-        filters = ["JSON (*.json)", "YAML (*.yaml;*.yml)"]
+        filters = ["JSON (*.json)", "YAML (*.yaml *.yml)"]
         filename, _ = FileDialog.open(
             None,
             dir=None,

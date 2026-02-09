@@ -324,10 +324,18 @@ def setup_new_run_folder(
     """
     run_path = None
     if config.trainer_config.save_ckpt:
-        # Generate fresh run name: YYMMDD_HHMMSS.{base_run_name}
-        run_name = get_timestamp()
-        if isinstance(base_run_name, str):
-            run_name = run_name + "." + base_run_name
+        # Check if user specified a custom run_name in the config
+        user_run_name = OmegaConf.select(
+            config, "trainer_config.run_name", default=None
+        )
+        if user_run_name and user_run_name not in ("", "None"):
+            # Use user-specified run_name
+            run_name = user_run_name
+        else:
+            # Generate fresh run name: YYMMDD_HHMMSS.{base_run_name}
+            run_name = get_timestamp()
+            if isinstance(base_run_name, str):
+                run_name = run_name + "." + base_run_name
 
         # Build run path (always use fresh name, don't prepend old run_name)
         run_path = (Path(config.trainer_config.ckpt_dir) / run_name).as_posix()
