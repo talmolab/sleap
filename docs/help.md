@@ -41,6 +41,75 @@ SLEAP 1.5+ uses PyTorch, which bundles its own CUDA libraries. Your system CUDA 
 </details>
 
 
+## Display / GUI Issues
+
+<details class="plain" open markdown>
+<summary>SLEAP crashes on Linux with <code>ImportError: undefined symbol: _ZN14QObjectPrivateC2Ei, version Qt_6_PRIVATE_API</code></summary>
+
+This error occurs when the system has Qt 6 libraries (e.g., Debian 12 ships Qt 6.4) that conflict with the Qt libraries bundled inside PySide6. The dynamic linker loads the system's older `libQt6DBus.so.6` or `libQt6Core.so.6` instead of PySide6's bundled version, causing a symbol version mismatch.
+
+Common error messages:
+
+```
+ImportError: /usr/lib/x86_64-linux-gnu/libQt6DBus.so.6: undefined symbol: _ZN14QObjectPrivateC2Ei, version Qt_6_PRIVATE_API
+```
+
+**This is fixed automatically in SLEAP v1.6.1+.** On Linux, SLEAP now ensures PySide6's bundled Qt libraries and plugins are loaded before any system or conda-provided Qt libraries.
+
+If you're on an older version, you can work around it by prepending PySide6's Qt library path when launching SLEAP:
+
+```bash
+PYSIDE_QT=$("$(uv tool dir)/sleap/bin/python" -c "import os,PySide6;print(os.path.join(os.path.dirname(PySide6.__file__),'Qt'))") && \
+  LD_LIBRARY_PATH="$PYSIDE_QT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+  QT_PLUGIN_PATH="$PYSIDE_QT/plugins" \
+  sleap
+```
+
+If you suspect the automatic fix is causing issues on your system (e.g., a native Linux desktop that was working before), you can disable it:
+
+```bash
+export SLEAP_SKIP_QT_FIX=1
+sleap
+```
+
+</details>
+
+<details class="plain" open markdown>
+<summary>SLEAP crashes with <code>Could not load the Qt platform plugin "xcb"</code></summary>
+
+This typically has two causes:
+
+**1. Missing `libxcb-cursor0`** (required since Qt 6.5):
+
+```bash
+sudo apt install libxcb-cursor0  # Debian/Ubuntu
+```
+
+**2. OpenCV's Qt plugins conflicting with PySide6's.** The error may mention a path like `.../cv2/qt/plugins`. This happens because `opencv-python` bundles its own Qt and its plugin path takes priority over PySide6's.
+
+SLEAP v1.6.1+ handles this automatically by setting `QT_PLUGIN_PATH` to PySide6's plugins on Linux. If you're on an older version, use the workaround in the entry above.
+
+</details>
+
+<details class="plain" open markdown>
+<summary>SLEAP GUI doesn't work over SSH / X11 forwarding</summary>
+
+When connecting to a remote Linux machine via SSH with X forwarding (`ssh -X` or `ssh -Y`), make sure:
+
+1. **X forwarding is enabled** on both client and server (`X11Forwarding yes` in `/etc/ssh/sshd_config`)
+2. **`DISPLAY` is set** — run `echo $DISPLAY` (should show something like `localhost:10.0`)
+3. **`libxcb-cursor0` is installed** on the remote machine (`sudo apt install libxcb-cursor0`)
+4. **Conda base is deactivated** if active — conda can inject conflicting Qt libraries:
+   ```bash
+   conda deactivate
+   conda config --set auto_activate_base false  # prevent future interference
+   ```
+
+If you still see Qt library errors, see the entries above. Running `sleap doctor` will report your environment details for further debugging.
+
+</details>
+
+
 ## Usage
 
 <details class="plain" open markdown>
