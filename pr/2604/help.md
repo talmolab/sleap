@@ -109,6 +109,43 @@ If you still see Qt library errors, see the entries above. Running `sleap doctor
 
 </details>
 
+<details class="plain" open markdown>
+<summary>Videos fail to load with <code>Could not open codec h264</code> or <code>Failed initializing scaling graph</code></summary>
+
+This can happen on Linux when OpenCV's video decoder picks up incompatible ffmpeg libraries. Common error messages:
+
+```
+[ERROR:0@70.376] global cap_ffmpeg_impl.hpp:1448 open Could not open codec h264, error: -11
+[ERROR:0@70.376] global cap_ffmpeg_impl.hpp:1456 open VIDEOIO/FFMPEG: Failed to initialize VideoCapture
+```
+
+Often preceded by many lines of:
+
+```
+[swscaler @ ...] Failed initializing scaling graph (Resource temporarily unavailable):
+  fmt:yuv420p csp:unknown prim:unknown trc:unknown -> fmt:bgr24 ...
+```
+
+And ultimately:
+
+```
+IndexError: Failed to read frame index 0.
+```
+
+**Fix:** Switch the video backend from OpenCV to imageio-ffmpeg:
+
+```bash
+sleap --video-backend ffmpeg
+```
+
+This persists to your preferences — all future launches will use the FFMPEG backend automatically. You can also use `pyav` as an alternative. To switch back:
+
+```bash
+sleap --video-backend opencv
+```
+
+</details>
+
 
 ## Usage
 
