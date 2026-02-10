@@ -1966,6 +1966,9 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     # Apply video backend: CLI flag overrides saved preference
     import sleap_io as sio
 
+    if args.video_backend:
+        prefs["default video backend"] = args.video_backend
+        prefs.save()
     video_backend = args.video_backend or prefs["default video backend"]
     if video_backend:
         sio.set_default_video_plugin(video_backend)
