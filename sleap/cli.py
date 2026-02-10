@@ -112,6 +112,16 @@ class DefaultGroup(click.RichGroup):
         # If no args and we have a default, insert it
         if not args and self.default_if_no_args and self.default_cmd_name:
             args.insert(0, self.default_cmd_name)
+        # If first arg is a flag (not a subcommand), route to default
+        # so e.g. `sleap --video-backend ffmpeg` works like
+        # `sleap label --video-backend ffmpeg`
+        if (
+            args
+            and args[0].startswith("--")
+            and self.default_cmd_name
+            and args[0] not in ("--help", "-h", "--version")
+        ):
+            args.insert(0, self.default_cmd_name)
         return super().parse_args(ctx, args)
 
     def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
