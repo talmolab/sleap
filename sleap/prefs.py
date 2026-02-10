@@ -42,6 +42,8 @@ class Preferences(object):
         "training num workers": 0,
         "training num devices": None,  # None = auto-detect
         "training accelerator": "auto",
+        # Video backend: None = auto-detect (opencv → FFMPEG → pyav)
+        "default video backend": None,
     }
     _filename = "preferences.yaml"
 

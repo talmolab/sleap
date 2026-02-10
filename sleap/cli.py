@@ -112,6 +112,16 @@ class DefaultGroup(click.RichGroup):
         # If no args and we have a default, insert it
         if not args and self.default_if_no_args and self.default_cmd_name:
             args.insert(0, self.default_cmd_name)
+        # If first arg is a flag (not a subcommand), route to default
+        # so e.g. `sleap --video-backend ffmpeg` works like
+        # `sleap label --video-backend ffmpeg`
+        if (
+            args
+            and args[0].startswith("--")
+            and self.default_cmd_name
+            and args[0] not in ("--help", "-h", "--version")
+        ):
+            args.insert(0, self.default_cmd_name)
         return super().parse_args(ctx, args)
 
     def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
@@ -333,6 +343,12 @@ def cli(ctx: click.Context) -> None:
     is_flag=True,
     help="Enable performance profiling.",
 )
+@click.option(
+    "--video-backend",
+    type=click.Choice(["opencv", "FFMPEG", "pyav"], case_sensitive=False),
+    default=None,
+    help="Video backend plugin. Overrides saved preference.",
+)
 def label(
     labels_path: Optional[str],
     verbose: bool,
@@ -340,6 +356,7 @@ def label(
     no_usage_data: bool,
     nonnative: bool,
     profiling: bool,
+    video_backend: Optional[str],
 ) -> None:
     """Launch the SLEAP labeling GUI.
 
@@ -365,6 +382,8 @@ def label(
         args.append("--nonnative")
     if profiling:
         args.append("--profiling")
+    if video_backend:
+        args.extend(["--video-backend", video_backend])
 
     # Import and call the existing GUI launcher
     from sleap.gui.app import main as gui_main
