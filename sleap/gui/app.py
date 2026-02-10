@@ -1928,6 +1928,12 @@ def create_sleap_label_parser():
         const=True,
         default=False,
     )
+    parser.add_argument(
+        "--video-backend",
+        help="Video backend plugin: opencv, FFMPEG, or pyav.",
+        type=str,
+        default=None,
+    )
 
     return parser
 
@@ -1956,6 +1962,13 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
 
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
+
+    # Apply video backend: CLI flag overrides saved preference
+    import sleap_io as sio
+
+    video_backend = args.video_backend or prefs["default video backend"]
+    if video_backend:
+        sio.set_default_video_plugin(video_backend)
 
     app = create_app()
 

@@ -333,6 +333,12 @@ def cli(ctx: click.Context) -> None:
     is_flag=True,
     help="Enable performance profiling.",
 )
+@click.option(
+    "--video-backend",
+    type=click.Choice(["opencv", "FFMPEG", "pyav"], case_sensitive=False),
+    default=None,
+    help="Video backend plugin. Overrides saved preference.",
+)
 def label(
     labels_path: Optional[str],
     verbose: bool,
@@ -340,6 +346,7 @@ def label(
     no_usage_data: bool,
     nonnative: bool,
     profiling: bool,
+    video_backend: Optional[str],
 ) -> None:
     """Launch the SLEAP labeling GUI.
 
@@ -365,6 +372,8 @@ def label(
         args.append("--nonnative")
     if profiling:
         args.append("--profiling")
+    if video_backend:
+        args.extend(["--video-backend", video_backend])
 
     # Import and call the existing GUI launcher
     from sleap.gui.app import main as gui_main
