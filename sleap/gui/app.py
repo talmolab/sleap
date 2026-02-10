@@ -62,10 +62,11 @@ if (
     os.execve(sys.executable, [sys.executable] + sys.argv, env)
 
 # Fix Linux Qt library conflicts with system/conda/OpenCV-bundled Qt.
-# PySide6 (pip) bundles Qt 6.x but the system (e.g. Debian 12 ships Qt 6.4) or OpenCV may
-# have incompatible Qt libraries that get loaded first. We prepend PySide6's bundled Qt lib
-# and plugin paths so the dynamic linker resolves all Qt symbols from the same version.
-# LD_LIBRARY_PATH is read at process startup, so we must re-exec like the macOS fix above.
+# PySide6 (pip) bundles Qt 6.x but the system (e.g. Debian 12 ships
+# Qt 6.4) or OpenCV may have incompatible Qt libraries that get loaded
+# first. We prepend PySide6's bundled Qt lib and plugin paths so the
+# dynamic linker resolves all Qt symbols from the same version.
+# LD_LIBRARY_PATH is read at process startup, so we must re-exec.
 # Set SLEAP_SKIP_QT_FIX=1 to disable this fix if it causes issues on your system.
 if (
     sys.platform.startswith("linux")
