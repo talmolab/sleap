@@ -680,11 +680,14 @@ class LearningDialog(QtWidgets.QDialog):
         set_anchor = False
 
         # Map pipeline names to their anchor_part config keys
+        _ci = "model_config.head_configs.centered_instance.confmaps.anchor_part"
+        _mct = "model_config.head_configs.multi_class_topdown.confmaps.anchor_part"
+        _cen = "model_config.head_configs.centroid.confmaps.anchor_part"
         pipeline_anchor_keys = {
-            "top-down": "model_config.head_configs.centered_instance.confmaps.anchor_part",
-            "top-down-id": "model_config.head_configs.multi_class_topdown.confmaps.anchor_part",
-            "bottom-up": "model_config.head_configs.centroid.confmaps.anchor_part",
-            "bottom-up-id": "model_config.head_configs.centroid.confmaps.anchor_part",
+            "top-down": _ci,
+            "top-down-id": _mct,
+            "bottom-up": _cen,
+            "bottom-up-id": _cen,
         }
 
         # Determine the current pipeline's anchor key
