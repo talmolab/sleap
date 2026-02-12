@@ -302,13 +302,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         """
         widgets = self.fields
         for name, val in data.items():
-            # print(f"Attempting to set {name} to {val}")
             if name in widgets:
-                # print(f"set {name} to {val} ({type(val)})")
                 self.set_widget_value(widgets[name], val)
-            else:
-                # print(f"cannot set {name} for {widgets}")
-                pass
 
         for stacked_widget in self.stacked:
             stacked_widget.set_form_data(data)

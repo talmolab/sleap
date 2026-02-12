@@ -679,27 +679,34 @@ class LearningDialog(QtWidgets.QDialog):
         anchor_part = None
         set_anchor = False
 
-        if "model_config.head_configs.centroid.confmaps.anchor_part" in source_data:
-            anchor_part = source_data[
-                "model_config.head_configs.centroid.confmaps.anchor_part"
-            ]
+        # Map pipeline names to their anchor_part config keys
+        pipeline_anchor_keys = {
+            "top-down": "model_config.head_configs.centered_instance.confmaps.anchor_part",
+            "top-down-id": "model_config.head_configs.multi_class_topdown.confmaps.anchor_part",
+            "bottom-up": "model_config.head_configs.centroid.confmaps.anchor_part",
+            "bottom-up-id": "model_config.head_configs.centroid.confmaps.anchor_part",
+        }
+
+        # Determine the current pipeline's anchor key
+        current_pipeline = source_data.get("_pipeline", "")
+        current_anchor_key = pipeline_anchor_keys.get(current_pipeline)
+
+        # First, try to get the anchor_part from the current pipeline's key
+        if current_anchor_key and current_anchor_key in source_data:
+            anchor_part = source_data[current_anchor_key]
             set_anchor = True
-        elif (
-            "model_config.head_configs.centered_instance.confmaps.anchor_part"
-            in source_data
-        ):
-            anchor_part = source_data[
-                "model_config.head_configs.centered_instance.confmaps.anchor_part"
+        else:
+            # Fallback: check all anchor keys (for head tab changes, etc.)
+            anchor_keys = [
+                "model_config.head_configs.centroid.confmaps.anchor_part",
+                "model_config.head_configs.centered_instance.confmaps.anchor_part",
+                "model_config.head_configs.multi_class_topdown.confmaps.anchor_part",
             ]
-            set_anchor = True
-        elif (
-            "model_config.head_configs.multi_class_topdown.confmaps.anchor_part"
-            in source_data
-        ):
-            anchor_part = source_data[
-                "model_config.head_configs.multi_class_topdown.confmaps.anchor_part"
-            ]
-            set_anchor = True
+            for key in anchor_keys:
+                if key in source_data:
+                    anchor_part = source_data[key]
+                    set_anchor = True
+                    break
 
         # Use None instead of empty string/list
         anchor_part = anchor_part or None
