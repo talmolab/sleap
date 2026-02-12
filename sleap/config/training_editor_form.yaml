@@ -288,6 +288,16 @@ model:
     name: model_config.head_configs.bottomup.pafs.loss_weight
     type: double
   multi_class_topdown:
+  - default: null
+    help: Text name of a body part (node) to use as the anchor point. If None, the
+      midpoint of the bounding box of all visible instance points will be used as
+      the anchor. The bounding box midpoint will also be used if the anchor part is
+      specified but not visible in the instance. Setting a reliable anchor point can
+      significantly improve topdown model accuracy as they benefit from a consistent
+      geometry of the body parts relative to the center of the image.
+    label: Anchor Part
+    name: model_config.head_configs.multi_class_topdown.confmaps.anchor_part
+    type: optional_list
   - default: 1.5
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
       Smaller values are more precise but may be difficult to learn as they have a
