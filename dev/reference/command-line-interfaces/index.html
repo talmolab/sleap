@@ -2831,6 +2831,7 @@
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>sleap<span class="w"> </span>label<span class="w">                  </span><span class="c1"># Same as above</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>sleap<span class="w"> </span>my_project.slp<span class="w">         </span><span class="c1"># Open existing project</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>sleap<span class="w"> </span>label<span class="w"> </span>--reset<span class="w">          </span><span class="c1"># Reset GUI preferences</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>sleap<span class="w"> </span>--video-backend<span class="w"> </span>ffmpeg<span class="w"> </span><span class="c1"># Use imageio-ffmpeg for video</span>
 </span></code></pre></div>
 <p><strong>Options:</strong></p>
 <table>
@@ -2856,6 +2857,10 @@
 <tr>
 <td><code>--nonnative</code></td>
 <td>Use non-native file dialogs</td>
+</tr>
+<tr>
+<td><code>--video-backend</code></td>
+<td>Video backend plugin: <code>opencv</code>, <code>FFMPEG</code>, or <code>pyav</code>. Persists to preferences on use.</td>
 </tr>
 </tbody>
 </table>

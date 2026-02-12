@@ -66,6 +66,7 @@ sleap                        # Launch empty GUI
 sleap label                  # Same as above
 sleap my_project.slp         # Open existing project
 sleap label --reset          # Reset GUI preferences
+sleap --video-backend ffmpeg # Use imageio-ffmpeg for video
 ```
 
 **Options:**
@@ -76,6 +77,7 @@ sleap label --reset          # Reset GUI preferences
 | `--reset` | Reset GUI preferences to defaults |
 | `--no-usage-data` | Disable anonymous usage data collection |
 | `--nonnative` | Use non-native file dialogs |
+| `--video-backend` | Video backend plugin: `opencv`, `FFMPEG`, or `pyav`. Persists to preferences on use. |
 
 ---
 

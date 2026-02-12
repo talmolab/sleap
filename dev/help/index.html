@@ -2194,6 +2194,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#display-gui-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Display / GUI Issues
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2326,6 +2337,17 @@
     <span class="md-ellipsis">
       
         Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#display-gui-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Display / GUI Issues
       
     </span>
   </a>
@@ -2473,6 +2495,68 @@
 <summary>What if I already have CUDA set up on my system?</summary>
 <p>SLEAP 1.5+ uses PyTorch, which bundles its own CUDA libraries. Your system CUDA installation is not used. The <code>--torch-backend auto</code> flag will detect your GPU and install the appropriate PyTorch version.</p>
 </details>
+<h2 id="display-gui-issues">Display / GUI Issues<a class="headerlink" href="#display-gui-issues" title="Permanent link">&para;</a></h2>
+<details class="plain" open="open">
+<summary>SLEAP crashes on Linux with <code>ImportError: undefined symbol: _ZN14QObjectPrivateC2Ei, version Qt_6_PRIVATE_API</code></summary>
+<p>This error occurs when the system has Qt 6 libraries (e.g., Debian 12 ships Qt 6.4) that conflict with the Qt libraries bundled inside PySide6. The dynamic linker loads the system's older <code>libQt6DBus.so.6</code> or <code>libQt6Core.so.6</code> instead of PySide6's bundled version, causing a symbol version mismatch.</p>
+<p>Common error messages:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ImportError: /usr/lib/x86_64-linux-gnu/libQt6DBus.so.6: undefined symbol: _ZN14QObjectPrivateC2Ei, version Qt_6_PRIVATE_API
+</span></code></pre></div>
+<p><strong>This is fixed automatically in SLEAP v1.6.1+.</strong> On Linux, SLEAP now ensures PySide6's bundled Qt libraries and plugins are loaded before any system or conda-provided Qt libraries.</p>
+<p>If you're on an older version, you can work around it by prepending PySide6's Qt library path when launching SLEAP:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">PYSIDE_QT</span><span class="o">=</span><span class="k">$(</span><span class="s2">&quot;</span><span class="k">$(</span>uv<span class="w"> </span>tool<span class="w"> </span>dir<span class="k">)</span><span class="s2">/sleap/bin/python&quot;</span><span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import os,PySide6;print(os.path.join(os.path.dirname(PySide6.__file__),&#39;Qt&#39;))&quot;</span><span class="k">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nv">LD_LIBRARY_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$PYSIDE_QT</span><span class="s2">/lib</span><span class="si">${</span><span class="nv">LD_LIBRARY_PATH</span><span class="p">:+:</span><span class="nv">$LD_LIBRARY_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nv">QT_PLUGIN_PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$PYSIDE_QT</span><span class="s2">/plugins&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>sleap
+</span></code></pre></div>
+<p>If you suspect the automatic fix is causing issues on your system (e.g., a native Linux desktop that was working before), you can disable it:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">SLEAP_SKIP_QT_FIX</span><span class="o">=</span><span class="m">1</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>sleap
+</span></code></pre></div>
+</details>
+<details class="plain" open="open">
+<summary>SLEAP crashes with <code>Could not load the Qt platform plugin "xcb"</code></summary>
+<p>This typically has two causes:</p>
+<p><strong>1. Missing <code>libxcb-cursor0</code></strong> (required since Qt 6.5):</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>libxcb-cursor0<span class="w">  </span><span class="c1"># Debian/Ubuntu</span>
+</span></code></pre></div>
+<p><strong>2. OpenCV's Qt plugins conflicting with PySide6's.</strong> The error may mention a path like <code>.../cv2/qt/plugins</code>. This happens because <code>opencv-python</code> bundles its own Qt and its plugin path takes priority over PySide6's.</p>
+<p>SLEAP v1.6.1+ handles this automatically by setting <code>QT_PLUGIN_PATH</code> to PySide6's plugins on Linux. If you're on an older version, use the workaround in the entry above.</p>
+</details>
+<details class="plain" open="open">
+<summary>SLEAP GUI doesn't work over SSH / X11 forwarding</summary>
+<p>When connecting to a remote Linux machine via SSH with X forwarding (<code>ssh -X</code> or <code>ssh -Y</code>), make sure:</p>
+<ol>
+<li><strong>X forwarding is enabled</strong> on both client and server (<code>X11Forwarding yes</code> in <code>/etc/ssh/sshd_config</code>)</li>
+<li><strong><code>DISPLAY</code> is set</strong> — run <code>echo $DISPLAY</code> (should show something like <code>localhost:10.0</code>)</li>
+<li><strong><code>libxcb-cursor0</code> is installed</strong> on the remote machine (<code>sudo apt install libxcb-cursor0</code>)</li>
+<li><strong>Conda base is deactivated</strong> if active — conda can inject conflicting Qt libraries:
+   <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>conda<span class="w"> </span>deactivate
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w"> </span>auto_activate_base<span class="w"> </span><span class="nb">false</span><span class="w">  </span><span class="c1"># prevent future interference</span>
+</span></code></pre></div></li>
+</ol>
+<p>If you still see Qt library errors, see the entries above. Running <code>sleap doctor</code> will report your environment details for further debugging.</p>
+</details>
+<details class="plain" open="open">
+<summary>Videos fail to load with <code>Could not open codec h264</code> or <code>Failed initializing scaling graph</code></summary>
+<p>This can happen on Linux when OpenCV's video decoder picks up incompatible ffmpeg libraries. Common error messages:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>[ERROR:0@70.376] global cap_ffmpeg_impl.hpp:1448 open Could not open codec h264, error: -11
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>[ERROR:0@70.376] global cap_ffmpeg_impl.hpp:1456 open VIDEOIO/FFMPEG: Failed to initialize VideoCapture
+</span></code></pre></div>
+<p>Often preceded by many lines of:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>[swscaler @ ...] Failed initializing scaling graph (Resource temporarily unavailable):
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>  fmt:yuv420p csp:unknown prim:unknown trc:unknown -&gt; fmt:bgr24 ...
+</span></code></pre></div>
+<p>And ultimately:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>IndexError: Failed to read frame index 0.
+</span></code></pre></div>
+<p><strong>Fix:</strong> Switch the video backend from OpenCV to imageio-ffmpeg:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sleap<span class="w"> </span>--video-backend<span class="w"> </span>ffmpeg
+</span></code></pre></div>
+<p>This persists to your preferences — all future launches will use the FFMPEG backend automatically. You can also use <code>pyav</code> as an alternative. To switch back:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sleap<span class="w"> </span>--video-backend<span class="w"> </span>opencv
+</span></code></pre></div>
+</details>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
 <details class="plain" open="open">
 <summary>How do I use SLEAP?</summary>
@@ -2485,7 +2569,7 @@
 <p>SLEAP supports many formats, including all common video formats and imported data from DeepLabCut and others.</p>
 <p>However, some video acquisition software saves videos in formats not suitable for computer vision processing. A common issue is that videos are not <strong>reliably seekable</strong>—you may not get the same data when reading a particular frame index. This is because many video formats reconstruct images using data from adjacent frames.</p>
 <p>If you think you may be affected, re-encode your videos:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ffmpeg<span class="w"> </span>-y<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;input.mp4&quot;</span><span class="w"> </span>-c:v<span class="w"> </span>libx264<span class="w"> </span>-pix_fmt<span class="w"> </span>yuv420p<span class="w"> </span>-preset<span class="w"> </span>superfast<span class="w"> </span>-crf<span class="w"> </span><span class="m">23</span><span class="w"> </span><span class="s2">&quot;output.mp4&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>ffmpeg<span class="w"> </span>-y<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;input.mp4&quot;</span><span class="w"> </span>-c:v<span class="w"> </span>libx264<span class="w"> </span>-pix_fmt<span class="w"> </span>yuv420p<span class="w"> </span>-preset<span class="w"> </span>superfast<span class="w"> </span>-crf<span class="w"> </span><span class="m">23</span><span class="w"> </span><span class="s2">&quot;output.mp4&quot;</span>
 </span></code></pre></div>
 <p><strong>Options explained:</strong></p>
 <ul>
@@ -2545,21 +2629,21 @@
 </ul>
 <details class="note">
 <summary>BibTeX</summary>
-<div class="language-bibtex highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nc">@ARTICLE</span><span class="p">{</span><span class="nl">Pereira2022sleap</span><span class="p">,</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">   </span><span class="na">title</span><span class="p">=</span><span class="s">{SLEAP: A deep learning system for multi-animal pose tracking}</span><span class="p">,</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">   </span><span class="na">author</span><span class="p">=</span><span class="s">{Pereira, Talmo D and Tabris, Nathaniel and Matsliah, Arie and</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s">      Turner, David M and Li, Junyu and Ravindranath, Shruthi and</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s">      Papadoyannis, Eleni S and Normand, Edna and Deutsch, David S and</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="s">      Wang, Z. Yan and McKenzie-Smith, Grace C and Mitelut, Catalin C and</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="s">      Castro, Marielisa Diez and D&#39;Uva, John and Kislin, Mikhail and</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="s">      Sanes, Dan H and Kocher, Sarah D and Samuel S-H and</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="s">      Falkner, Annegret L and Shaevitz, Joshua W and Murthy, Mala}</span><span class="p">,</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">   </span><span class="na">journal</span><span class="p">=</span><span class="s">{Nature Methods}</span><span class="p">,</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">   </span><span class="na">volume</span><span class="p">=</span><span class="s">{19}</span><span class="p">,</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">   </span><span class="na">number</span><span class="p">=</span><span class="s">{4}</span><span class="p">,</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">   </span><span class="na">year</span><span class="p">=</span><span class="s">{2022}</span><span class="p">,</span>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">   </span><span class="na">publisher</span><span class="p">=</span><span class="s">{Nature Publishing Group}</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="p">}</span>
+<div class="language-bibtex highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="nc">@ARTICLE</span><span class="p">{</span><span class="nl">Pereira2022sleap</span><span class="p">,</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">   </span><span class="na">title</span><span class="p">=</span><span class="s">{SLEAP: A deep learning system for multi-animal pose tracking}</span><span class="p">,</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">   </span><span class="na">author</span><span class="p">=</span><span class="s">{Pereira, Talmo D and Tabris, Nathaniel and Matsliah, Arie and</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="s">      Turner, David M and Li, Junyu and Ravindranath, Shruthi and</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="s">      Papadoyannis, Eleni S and Normand, Edna and Deutsch, David S and</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="s">      Wang, Z. Yan and McKenzie-Smith, Grace C and Mitelut, Catalin C and</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="s">      Castro, Marielisa Diez and D&#39;Uva, John and Kislin, Mikhail and</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="s">      Sanes, Dan H and Kocher, Sarah D and Samuel S-H and</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="s">      Falkner, Annegret L and Shaevitz, Joshua W and Murthy, Mala}</span><span class="p">,</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">   </span><span class="na">journal</span><span class="p">=</span><span class="s">{Nature Methods}</span><span class="p">,</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">   </span><span class="na">volume</span><span class="p">=</span><span class="s">{19}</span><span class="p">,</span>
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="w">   </span><span class="na">number</span><span class="p">=</span><span class="s">{4}</span><span class="p">,</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">   </span><span class="na">year</span><span class="p">=</span><span class="s">{2022}</span><span class="p">,</span>
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="w">   </span><span class="na">publisher</span><span class="p">=</span><span class="s">{Nature Publishing Group}</span>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="p">}</span>
 </span></code></pre></div>
 </details>
 <hr />
