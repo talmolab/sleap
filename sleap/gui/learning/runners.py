@@ -864,11 +864,12 @@ def write_pipeline_files(
                 )
 
                 # Add a line to the script for training this model
+                # Quote values to handle special characters in Hydra overrides
                 train_script += (
                     f"sleap train --config-name {new_cfg_filename} "
                     f"--config-dir . "
-                    f"trainer_config.ckpt_dir={Path(ckpt_path).parent.as_posix()} "
-                    f"trainer_config.run_name={Path(ckpt_path).name} "
+                    f"trainer_config.ckpt_dir='{Path(ckpt_path).parent.as_posix()}' "
+                    f"trainer_config.run_name='{Path(ckpt_path).name}' "
                     "\n"
                 )
 
