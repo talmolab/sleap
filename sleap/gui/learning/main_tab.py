@@ -130,7 +130,7 @@ PIPELINE_OPTIONS_TRAINING = [
             ),
             (
                 "model_config.head_configs.multi_class_bottomup.class_maps.sigma",
-                "Sigma for Edges",
+                "Sigma for Identity",
                 15.0,
             ),
         ],
