@@ -1601,8 +1601,14 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         # Connect augmentation checkboxes to show/hide their parameter fields
         self._setup_augmentation_param_toggles()
 
+        # Connect optimization checkboxes to show/hide their parameter fields
+        self._setup_optimization_param_toggles()
+
         # Hide crop size for non-cropping model types
         self._setup_crop_size_visibility()
+
+        # Hide OHKM fields for centroid models (single-point prediction)
+        self._setup_ohkm_visibility()
 
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
@@ -1878,6 +1884,61 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             checkbox.stateChanged.connect(update_fn)
             update_fn(checkbox.isChecked())  # Set initial state
 
+    def _setup_optimization_param_toggles(self):
+        """Connect optimization checkboxes to show/hide their parameter fields.
+
+        When a checkbox is unchecked, its parameter fields are hidden to reduce
+        visual clutter. This applies to:
+        - Early stopping: min_delta and patience fields
+        - OHKM: min_hard_keypoints and max_hard_keypoints fields
+        """
+        opt_form = self.form_widgets["optimization"]
+        form_layout = opt_form.form_layout
+
+        # Define which checkbox controls which parameter fields
+        toggle_groups = {
+            "trainer_config.early_stopping.stop_training_on_plateau": [
+                "trainer_config.early_stopping.min_delta",
+                "trainer_config.early_stopping.patience",
+            ],
+            "trainer_config.online_hard_keypoint_mining.online_mining": [
+                "trainer_config.online_hard_keypoint_mining.min_hard_keypoints",
+                "trainer_config.online_hard_keypoint_mining.max_hard_keypoints",
+            ],
+        }
+
+        for checkbox_name, param_fields in toggle_groups.items():
+            checkbox = opt_form.fields.get(checkbox_name)
+            if checkbox is None:
+                continue
+
+            # Collect the parameter field widgets and their labels
+            param_widgets = []
+            for field_name in param_fields:
+                field = opt_form.fields.get(field_name)
+                if field is not None:
+                    # Get the label for this field from the form layout
+                    label = form_layout.labelForField(field)
+                    param_widgets.append((field, label))
+
+            if not param_widgets:
+                continue
+
+            # Create update function that captures the widgets
+            def make_update_visibility(widgets):
+                def update_visibility(state):
+                    visible = bool(state)
+                    for field, label in widgets:
+                        field.setVisible(visible)
+                        if label is not None:
+                            label.setVisible(visible)
+
+                return update_visibility
+
+            update_fn = make_update_visibility(param_widgets)
+            checkbox.stateChanged.connect(update_fn)
+            update_fn(checkbox.isChecked())  # Set initial state
+
     def _setup_crop_size_visibility(self):
         """Hide crop size field for model types that don't use cropping.
 
@@ -1898,6 +1959,33 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             crop_field.setVisible(False)
             if crop_label is not None:
                 crop_label.setVisible(False)
+
+    def _setup_ohkm_visibility(self):
+        """Hide OHKM fields for centroid models.
+
+        Online Hard Keypoint Mining (OHKM) is only relevant for models that predict
+        multiple keypoints. Centroid models predict a single point per instance,
+        so the concept of "hard vs easy keypoints" doesn't apply.
+        """
+        if self.head != "centroid":
+            return  # Keep visible for all other model types
+
+        opt_form = self.form_widgets["optimization"]
+        form_layout = opt_form.form_layout
+
+        ohkm_fields = [
+            "trainer_config.online_hard_keypoint_mining.online_mining",
+            "trainer_config.online_hard_keypoint_mining.min_hard_keypoints",
+            "trainer_config.online_hard_keypoint_mining.max_hard_keypoints",
+        ]
+
+        for field_name in ohkm_fields:
+            field = opt_form.fields.get(field_name)
+            if field is not None:
+                label = form_layout.labelForField(field)
+                field.setVisible(False)
+                if label is not None:
+                    label.setVisible(False)
 
     def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
         self._load_config(cfg_info)
