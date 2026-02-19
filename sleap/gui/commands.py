@@ -3158,7 +3158,14 @@ class DeleteNode(EditCommand):
     @staticmethod
     def do_action(context: CommandContext, params: dict):
         node = context.state["selected_node"]
-        context.state["skeleton"].remove_node(node)
+        skeleton = context.state["skeleton"]
+
+        if context.labels is not None:
+            # Use Labels.remove_nodes() to properly update all instances
+            context.labels.remove_nodes([node], skeleton=skeleton)
+        else:
+            # Fallback when no labels (e.g., skeleton-only editing)
+            skeleton.remove_node(node)
 
 
 class SetNodeName(EditCommand):

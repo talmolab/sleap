@@ -20,6 +20,7 @@ from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
     AddInstance,
     CommandContext,
+    DeleteNode,
     ExportAnalysisFile,
     ExportDatasetWithImages,
     ExportFullPackage,
@@ -609,6 +610,104 @@ def test_OpenSkeleton(
     fly32_skeleton = OpenSkeleton.load_skeleton(fly32_json)
     OpenSkeleton.do_action(context, params)
     assert_skeletons_match(labels.skeleton, fly32_skeleton)
+
+
+def test_DeleteNode_updates_instances(centered_pair_predictions: Labels, tmpdir):
+    """Test that DeleteNode properly updates instance point data.
+
+    This is a regression test for GitHub Discussion #2500 where removing nodes from
+    a skeleton did not update instance point data, causing file corruption that
+    prevented the file from being loaded.
+
+    The bug occurred because DeleteNode called skeleton.remove_node() directly,
+    which only updates the skeleton but NOT the instance point arrays. The fix
+    is to use Labels.remove_nodes() which properly calls Instance.update_skeleton()
+    to update all instances.
+    """
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_copy, labels_load_file
+
+    # Create a copy to avoid mutating the fixture
+    labels = labels_copy(centered_pair_predictions)
+
+    # Get original state
+    original_skeleton = labels.skeleton
+    original_num_nodes = len(original_skeleton.nodes)
+
+    # Pick a node to delete (use a middle node to test index handling)
+    node_to_delete = original_skeleton.nodes[1]  # Second node
+    node_name_to_delete = node_to_delete.name
+
+    # Set up command context
+    context = CommandContext.from_labels(labels)
+    context.state["skeleton"] = original_skeleton
+    context.state["selected_node"] = node_to_delete
+
+    # Execute the DeleteNode command
+    DeleteNode.do_action(context, params={})
+
+    # Verify skeleton was updated
+    assert len(labels.skeleton.nodes) == original_num_nodes - 1
+    assert node_name_to_delete not in labels.skeleton.node_names
+
+    # Verify ALL instances have updated point arrays that match the new skeleton
+    for lf in labels.labeled_frames:
+        for inst in lf.instances:
+            # Instance points should have the same number of points as skeleton nodes
+            assert len(inst.points) == len(labels.skeleton.nodes), (
+                f"Instance has {len(inst.points)} points but skeleton has "
+                f"{len(labels.skeleton.nodes)} nodes. "
+                "Instance point data was not updated when node was deleted!"
+            )
+            # Point names should match skeleton node names
+            assert list(inst.points["name"]) == labels.skeleton.node_names, (
+                "Instance point names do not match skeleton node names!"
+            )
+
+    # Save and reload to verify file is not corrupted
+    save_path = Path(tmpdir) / "test_delete_node.slp"
+    labels.save(str(save_path))
+
+    # This should NOT raise an error - the bug caused a ValueError here
+    reloaded_labels = labels_load_file(str(save_path))
+
+    # Verify reloaded data is correct
+    assert len(reloaded_labels.skeleton.nodes) == original_num_nodes - 1
+    assert node_name_to_delete not in reloaded_labels.skeleton.node_names
+    assert len(reloaded_labels.labeled_frames) == len(labels.labeled_frames)
+
+    # Verify all reloaded instances have correct point counts
+    for lf in reloaded_labels.labeled_frames:
+        for inst in lf.instances:
+            assert len(inst.points) == len(reloaded_labels.skeleton.nodes)
+
+
+def test_DeleteNode_without_labels():
+    """Test that DeleteNode still works when no Labels object is available.
+
+    When editing a skeleton without a Labels context (e.g., in a skeleton-only
+    editor), the command should fall back to calling skeleton.remove_node()
+    directly.
+    """
+    # Create a standalone skeleton (not associated with Labels)
+    skeleton = Skeleton(
+        nodes=["head", "neck", "tail"],
+        edges=[("head", "neck"), ("neck", "tail")],
+    )
+
+    # Set up command context without labels
+    context = CommandContext.from_labels(None)
+    context.state["skeleton"] = skeleton
+    context.state["selected_node"] = skeleton.nodes[1]  # "neck"
+
+    # Execute the DeleteNode command
+    DeleteNode.do_action(context, params={})
+
+    # Verify skeleton was updated
+    assert len(skeleton.nodes) == 2
+    assert "neck" not in skeleton.node_names
+    assert skeleton.node_names == ["head", "tail"]
+    # Edge from head to neck should be removed
+    assert len(skeleton.edges) == 0
 
 
 def test_SaveProjectAs(centered_pair_predictions: Labels, tmpdir):
