@@ -522,9 +522,9 @@ class ReceptiveFieldWidget(QtWidgets.QWidget):
         if self._labels is None:
             return None
 
-        skeleton = self._labels.skeleton
-        if skeleton is None:
+        if not self._labels.skeletons:
             return None
+        skeleton = self._labels.skeletons[0]
 
         if head_name == "confmaps":
             # One channel per keypoint
