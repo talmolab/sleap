@@ -1333,15 +1333,19 @@ class MainWindow(QMainWindow):
             suggestion_status_text = ""
             suggestion_list = self.labels.suggestions
             if suggestion_list:
-                labeled_count = 0
-                for suggestion in suggestion_list:
-                    lf = self.labels.find(
-                        suggestion.video,
-                        suggestion.frame_idx,  # ), use_cache=True
-                    )
-                    lf = lf[0] if lf else None
-                    if lf is not None and lf.has_user_instances:
-                        labeled_count += 1
+                # Build set of (video, frame_idx) for frames with user instances
+                # O(m) where m = labeled frames, then O(n) lookups for n suggestions
+                # Total: O(n + m) instead of O(n * m) from calling find() per suggestion
+                user_labeled_frames = {
+                    (lf.video, lf.frame_idx)
+                    for lf in self.labels
+                    if lf.has_user_instances
+                }
+                labeled_count = sum(
+                    1
+                    for suggestion in suggestion_list
+                    if (suggestion.video, suggestion.frame_idx) in user_labeled_frames
+                )
                 prc = (labeled_count / len(suggestion_list)) * 100
                 suggestion_status_text = (
                     f"{labeled_count}/{len(suggestion_list)} labeled ({prc:.1f}%)"
