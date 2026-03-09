@@ -21,16 +21,16 @@ data_config:
   augmentation_config:
     intensity:
       uniform_noise_min: 0.0
-      uniform_noise_max: 1.0
+      uniform_noise_max: 0.04
       uniform_noise_p: 0.0
-      gaussian_noise_mean: 5.0
-      gaussian_noise_std: 1.0
+      gaussian_noise_mean: 0.0
+      gaussian_noise_std: 0.02
       gaussian_noise_p: 0.0
-      contrast_min: 0.5
-      contrast_max: 2.0
+      contrast_min: 0.9
+      contrast_max: 1.1
       contrast_p: 0.0
-      brightness_min: 0.0
-      brightness_max: 2.0
+      brightness_min: 0.9
+      brightness_max: 1.1
       brightness_p: 0.0
     geometric:
       rotation_min: -180.0
