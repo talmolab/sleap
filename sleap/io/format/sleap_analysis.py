@@ -95,11 +95,19 @@ class SleapAnalysisAdaptor(Adaptor):
                 used. If there are no :py:class:`LabeledFrame`s in the `video`,
                 then no analysis file will be written.
         """
-        sio.save_analysis_h5(
-            source_object,
-            filename,
-            video=video,
-            labels_path=source_path,
-            all_frames=True,
-            preset="matlab",  # SLEAP-compatible format
-        )
+        try:
+            sio.save_analysis_h5(
+                source_object,
+                filename,
+                video=video,
+                labels_path=source_path,
+                all_frames=True,
+                preset="matlab",  # SLEAP-compatible format
+            )
+        except ValueError as e:
+            # Handle case where video has no labeled frames
+            # sleap-io raises ValueError, but we silently skip like old behavior
+            if "No labeled frames" in str(e):
+                print("No labeled frames in video. Skipping analysis export.")
+            else:
+                raise

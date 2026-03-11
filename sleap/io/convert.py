@@ -161,28 +161,40 @@ def main(args: list = None):
             import sleap_io as sio
 
             for video, output_path in zip(vids, outnames):
-                sio.save_csv(
-                    labels,
-                    output_path,
-                    format="sleap",
-                    video=video,
-                    include_score=True,
-                    include_empty=True,
-                    save_metadata=True,
-                )
+                try:
+                    sio.save_csv(
+                        labels,
+                        output_path,
+                        format="sleap",
+                        video=video,
+                        include_score=True,
+                        include_empty=True,
+                        save_metadata=True,
+                    )
+                except ValueError as e:
+                    if "No labeled frames" in str(e):
+                        print(f"No labeled frames in {video.filename}. Skipping.")
+                    else:
+                        raise
 
         else:
             import sleap_io as sio
 
             for video, output_path in zip(vids, outnames):
-                sio.save_analysis_h5(
-                    labels,
-                    output_path,
-                    video=video,
-                    labels_path=args.input_path,
-                    all_frames=True,
-                    preset="matlab",
-                )
+                try:
+                    sio.save_analysis_h5(
+                        labels,
+                        output_path,
+                        video=video,
+                        labels_path=args.input_path,
+                        all_frames=True,
+                        preset="matlab",
+                    )
+                except ValueError as e:
+                    if "No labeled frames" in str(e):
+                        print(f"No labeled frames in {video.filename}. Skipping.")
+                    else:
+                        raise
 
     elif len(args.outputs) > 0:
         print(f"Output SLEAP dataset: {args.outputs[0]}")
