@@ -158,28 +158,30 @@ def main(args: list = None):
                 outnames.append(dflt_name)
 
         if "csv" in args.format:
-            from sleap.info.write_tracking_h5 import main as write_analysis
+            import sleap_io as sio
 
             for video, output_path in zip(vids, outnames):
-                write_analysis(
+                sio.save_csv(
                     labels,
-                    output_path=output_path,
-                    labels_path=args.input_path,
-                    all_frames=True,
+                    output_path,
+                    format="sleap",
                     video=video,
-                    csv=True,
+                    include_score=True,
+                    include_empty=True,
+                    save_metadata=True,
                 )
 
         else:
-            from sleap.info.write_tracking_h5 import main as write_analysis
+            import sleap_io as sio
 
             for video, output_path in zip(vids, outnames):
-                write_analysis(
+                sio.save_analysis_h5(
                     labels,
-                    output_path=output_path,
+                    output_path,
+                    video=video,
                     labels_path=args.input_path,
                     all_frames=True,
-                    video=video,
+                    preset="matlab",
                 )
 
     elif len(args.outputs) > 0:
