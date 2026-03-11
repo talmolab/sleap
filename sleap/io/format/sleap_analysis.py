@@ -1,23 +1,20 @@
-"""
-Adaptor to read and write analysis HDF5 files.
+"""Adaptor to read and write analysis HDF5 files.
 
 These contain location and track data, but lack other metadata included in a
 full SLEAP dataset file.
 
-Note that this adaptor will use default track names and skeleton node names
-if these cannot be read from the HDF5 (some files have these, some don't).
+This adaptor uses sleap-io for both reading and writing analysis HDF5 files,
+providing a consistent format with additional metadata like dimension labels
+and skeleton symmetries.
 
 To determine whether this adaptor can read a file, we check it's an HDF5 file
 with a `track_occupancy` dataset.
 """
 
-import numpy as np
-
 from typing import Union
 
-from sleap_io import Labels, Video, LabeledFrame
-from sleap_io import Skeleton
-from sleap_io.model.instance import Track
+from sleap_io import Labels, Video
+import sleap_io as sio
 
 from .adaptor import Adaptor, SleapObjectType
 from .filehandle import FileHandle
@@ -66,72 +63,18 @@ class SleapAnalysisAdaptor(Adaptor):
         *args,
         **kwargs,
     ) -> Labels:
-        connect_adj_nodes = False
+        """Reads analysis HDF5 file using sleap-io.
 
-        if video is None:
-            raise ValueError("Cannot read analysis hdf5 if no video specified.")
+        Args:
+            file: The file handle for the HDF5 file.
+            video: The video to associate with the data. Can be a Video object
+                or a path string.
 
-        if not isinstance(video, Video):
-            video = Video.from_filename(video)
-
-        f = file.file
-        tracks_matrix = f["tracks"][:].T
-
-        # shape: frames * nodes * 2 * tracks
-        frame_count, node_count, _, track_count = tracks_matrix.shape
-
-        if "track_names" in f and len(f["track_names"]):
-            track_names_list = f["track_names"][:].T
-            tracks = [
-                Track(name=track_name.decode()) for track_name in track_names_list
-            ]
-        else:
-            tracks = [Track(name=f"track_{i}") for i in range(track_count)]
-
-        if "node_names" in f:
-            node_names_dset = f["node_names"][:].T
-            node_names = [name.decode() for name in node_names_dset]
-        else:
-            node_names = [f"node {i}" for i in range(node_count)]
-
-        skeleton = Skeleton()
-        last_node_name = None
-        for node_name in node_names:
-            skeleton.add_node(node_name)
-            if connect_adj_nodes and last_node_name:
-                skeleton.add_edge(last_node_name, node_name)
-            last_node_name = node_name
-
-        frames = []
-        for frame_idx in range(frame_count):
-            instances = []
-            for track_idx in range(track_count):
-                points = tracks_matrix[frame_idx, ..., track_idx]
-                if not np.all(np.isnan(points)):
-                    point_scores = np.ones(len(points))
-                    # make everything a PredictedInstance since the usual use
-                    # case is to export predictions for analysis
-                    from sleap.sleap_io_adaptors.instance_utils import (
-                        predicted_instance_from_numpy_compat,
-                    )
-
-                    instances.append(
-                        predicted_instance_from_numpy_compat(
-                            points=points,
-                            point_confidences=point_scores,
-                            skeleton=skeleton,
-                            track=tracks[track_idx],
-                            instance_score=1,
-                        )
-                    )
-            if instances:
-                frames.append(
-                    LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
-                )
-
-        labels = Labels(labeled_frames=frames)
-        labels.update()
-        return labels
+        Returns:
+            Labels object with loaded pose data.
+        """
+        # Use sleap-io's load_analysis_h5 which handles all format variants
+        return sio.load_analysis_h5(file.filename, video=video)
 
     @classmethod
     def write(
@@ -146,17 +89,25 @@ class SleapAnalysisAdaptor(Adaptor):
         Args:
             filename: The filename for the output file.
             source_object: The :py:class:`Labels` from which to get data from.
-            video: The :py:class:`Video` from which toget data from. If no `video` is
+            source_path: Path to the source labels file (stored as metadata).
+            video: The :py:class:`Video` from which to get data from. If no `video` is
                 specified, then the first video in `source_object` videos list will be
-                used. If there are no :py:class:`Labeled Frame`s in the `video`,
+                used. If there are no :py:class:`LabeledFrame`s in the `video`,
                 then no analysis file will be written.
         """
-        from sleap.info.write_tracking_h5 import main as write_analysis
-
-        write_analysis(
-            labels=source_object,
-            output_path=filename,
-            labels_path=source_path,
-            all_frames=True,
-            video=video,
-        )
+        try:
+            sio.save_analysis_h5(
+                source_object,
+                filename,
+                video=video,
+                labels_path=source_path,
+                all_frames=True,
+                preset="matlab",  # SLEAP-compatible format
+            )
+        except ValueError as e:
+            # Handle case where video has no labeled frames
+            # sleap-io raises ValueError, but we silently skip like old behavior
+            if "No labeled frames" in str(e):
+                print("No labeled frames in video. Skipping analysis export.")
+            else:
+                raise
