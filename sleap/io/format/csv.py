@@ -62,19 +62,23 @@ class CSVAdaptor(format.adaptor.Adaptor):
                 used. If there are no :py:class:`LabeledFrame`s in the `video`,
                 then no analysis file will be written.
         """
-        try:
-            sio.save_csv(
-                source_object,
-                filename,
-                format="sleap",
-                video=video,
-                include_score=True,
-                include_empty=True,  # Include all frames from 0 to last labeled
-                save_metadata=True,
-            )
-        except ValueError as e:
-            # Handle case where video has no labeled frames
-            if "No labeled frames" in str(e):
+        # Resolve video
+        if video is None:
+            video = source_object.videos[0] if source_object.videos else None
+
+        # Check for labeled frames before exporting (sleap-io may not raise error)
+        if video is not None:
+            labeled_frames = source_object.find(video)
+            if not labeled_frames:
                 print("No labeled frames in video. Skipping CSV export.")
-            else:
-                raise
+                return
+
+        sio.save_csv(
+            source_object,
+            filename,
+            format="sleap",
+            video=video,
+            include_score=True,
+            include_empty=True,  # Include all frames from 0 to last labeled
+            save_metadata=True,
+        )

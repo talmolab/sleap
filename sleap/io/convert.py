@@ -161,21 +161,21 @@ def main(args: list = None):
             import sleap_io as sio
 
             for video, output_path in zip(vids, outnames):
-                try:
-                    sio.save_csv(
-                        labels,
-                        output_path,
-                        format="sleap",
-                        video=video,
-                        include_score=True,
-                        include_empty=True,
-                        save_metadata=True,
-                    )
-                except ValueError as e:
-                    if "No labeled frames" in str(e):
-                        print(f"No labeled frames in {video.filename}. Skipping.")
-                    else:
-                        raise
+                # Check for labeled frames before exporting
+                labeled_frames = labels.find(video)
+                if not labeled_frames:
+                    print(f"No labeled frames in {video.filename}. Skipping.")
+                    continue
+
+                sio.save_csv(
+                    labels,
+                    output_path,
+                    format="sleap",
+                    video=video,
+                    include_score=True,
+                    include_empty=True,
+                    save_metadata=True,
+                )
 
         else:
             import sleap_io as sio
