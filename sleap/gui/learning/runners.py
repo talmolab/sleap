@@ -332,10 +332,13 @@ def setup_new_run_folder(
             # Use user-specified run_name
             run_name = user_run_name
         else:
-            # Generate fresh run name: YYMMDD_HHMMSS.{base_run_name}
+            # Generate fresh run name: YYMMDD_HHMMSS
             run_name = get_timestamp()
-            if isinstance(base_run_name, str):
-                run_name = run_name + "." + base_run_name
+
+        # Always append base_run_name suffix (contains model type like "centroid.n=10")
+        # This ensures unique names for multi-model pipelines like top-down
+        if isinstance(base_run_name, str):
+            run_name = run_name + "." + base_run_name
 
         # Build run path (always use fresh name, don't prepend old run_name)
         run_path = (Path(config.trainer_config.ckpt_dir) / run_name).as_posix()
