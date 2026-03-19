@@ -3,6 +3,7 @@
 import abc
 import attr
 import os
+import sys
 from omegaconf import OmegaConf
 from copy import deepcopy
 import psutil
@@ -1298,8 +1299,14 @@ def train_subprocess(
             OmegaConf.save(cfg, (Path(temp_dir) / f"{cfg_file_name}.yaml").as_posix())
 
             # Build CLI arguments for training
+            # Use `python -m` invocation instead of entry point script to ensure
+            # __main__.__spec__ is set. This is required for PyTorch Lightning's
+            # DDP multi-GPU training on Windows/macOS where multiprocessing uses
+            # "spawn" and needs to know what module to re-import in child processes.
             cli_args = [
-                "sleap",
+                sys.executable,
+                "-m",
+                "sleap.cli",
                 "train",
                 "--config-name",
                 f"{cfg_file_name}",
