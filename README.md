@@ -2,7 +2,6 @@
 [![Coverage](https://codecov.io/gh/talmolab/sleap/branch/develop/graph/badge.svg?token=oBmTlGIQRn)](https://codecov.io/gh/talmolab/sleap)
 [![Documentation](https://img.shields.io/badge/Documentation-sleap.ai-lightgrey)](https://docs.sleap.ai)
 [![Downloads](https://static.pepy.tech/personalized-badge/sleap?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=PyPI%20Downloads)](https://pepy.tech/project/sleap)
-[![Conda Downloads](https://img.shields.io/conda/dn/sleap/sleap?label=Conda%20Downloads)](https://anaconda.org/sleap/sleap)
 [![Stable version](https://img.shields.io/github/v/release/talmolab/sleap?label=stable)](https://github.com/talmolab/sleap/releases/)
 [![Latest version](https://img.shields.io/github/v/release/talmolab/sleap?include_prereleases&label=latest)](https://github.com/talmolab/sleap/releases/)
 
@@ -26,7 +25,7 @@
 
 ## Get some SLEAP
 
-SLEAP is installed as a Python package. We strongly recommend using [uv](https://docs.astral.sh/uv/) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main) to install SLEAP in its own environment.
+SLEAP is installed as a Python package. We strongly recommend using [uv](https://docs.astral.sh/uv/) to install SLEAP in its own environment.
 
 You can find the latest version of SLEAP in the [Releases](https://github.com/talmolab/sleap/releases) page.
 
@@ -137,13 +136,16 @@ If you use SLEAP in your research, please cite:
 **General inquiries?**
 Reach out to [talmo@salk.edu](mailto:talmo@salk.edu).
 
-## Contributors
+## Maintainers
 
-* **Talmo Pereira**, Salk Institute for Biological Studies
 * **Divya Murali**, Salk Institute for Biological Studies
-* **Elizabeth Berrigan**, Salk Institute for Biological Studies
 * **Amick Licup**, Salk Institute for Biological Studies
+* **Elizabeth Berrigan**, Salk Institute for Biological Studies
 * **Andrew Park**, Salk Institute for Biological Studies
+* **Tom Han**, Salk Institute for Biological Studies
+* **Talmo Pereira**, Salk Institute for Biological Studies
+
+### Contributors
 * **Liezl Maree**, Salk Institute for Biological Studies
 * **Arlo Sheridan**, Salk Institute for Biological Studies
 * **Arie Matsliah**, Princeton Neuroscience Institute, Princeton University
@@ -154,7 +156,7 @@ Reach out to [talmo@salk.edu](mailto:talmo@salk.edu).
 
 SLEAP was created in the [Murthy](https://murthylab.princeton.edu) and [Shaevitz](https://shaevitzlab.princeton.edu) labs at the [Princeton Neuroscience Institute](https://pni.princeton.edu) at Princeton University.
 
-SLEAP is currently being developed and maintained in the [Talmo Lab](https://talmolab.org) at the [Salk Institute for Biological Studies](https://salk.edu), in collaboration with the Murthy and Shaevitz labs at Princeton University.
+SLEAP is currently being developed and maintained in the [Talmo Lab](https://talmolab.org) at the [Salk Institute for Biological Studies](https://salk.edu).
 
 This work was made possible through our funding sources, including:
 
@@ -164,7 +166,9 @@ This work was made possible through our funding sources, including:
 
 ## License
 
-SLEAP is released under a [Clear BSD License](https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE) and is intended for research/academic use only. For commercial use, please contact: **Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256**.
+<!-- SLEAP is released under a [Clear BSD License](https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE) and is intended for research/academic use only. For commercial use, please contact: **Laurie Tzodikov (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256**. -->
+
+SLEAP is released under a [BSD 3-Clause Clear License](LICENSE).
 
 ## Links
 
