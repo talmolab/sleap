@@ -1227,7 +1227,14 @@ class ExportAnalysisFile(AppCommand):
         for video in videos:
             # Create the filename
             video_idx = labels.videos.index(video)
-            vn = Path(video.filename)
+            # ImageVideo backends return a list[str] for filename; use the first
+            # path as the representative name for output file naming.
+            video_filename = (
+                video.filename[0]
+                if isinstance(video.filename, list)
+                else video.filename
+            )
+            vn = Path(video_filename)
             default_name = str(
                 Path(
                     dirname,
@@ -2727,7 +2734,14 @@ class ReplaceVideo(EditCommand):
             import_params = import_item["params"]
 
             # TODO: Will need to create a new backend if import has different extension.
-            if Path(video.filename).suffix != Path(import_params["filename"]).suffix:
+            # ImageVideo backends return a list[str] for filename; use the first path
+            # as the representative name for the extension check.
+            video_filename = (
+                video.filename[0]
+                if isinstance(video.filename, list)
+                else video.filename
+            )
+            if Path(video_filename).suffix != Path(import_params["filename"]).suffix:
                 raise TypeError(
                     "Importing videos with different extensions is not supported."
                 )
@@ -2759,10 +2773,18 @@ class ReplaceVideo(EditCommand):
 
                 # Message to warn users that labels will be removed if proceed
                 if last_lf_frame > last_vid_frame:
+                    # ImageVideo backends return a list[str] for filename; use the
+                    # first path as the representative name for display.
+                    cur_fn = (
+                        video.filename[0]
+                        if isinstance(video.filename, list)
+                        else video.filename
+                    )
+                    cur_name = Path(cur_fn).name
                     message = (
                         "<p><strong>Warning:</strong> Replacing this video will "
                         f"remove {len(lfs)} labeled frames.</p>"
-                        f"<p><em>Current video</em>: <b>{Path(video.filename).name}</b>"
+                        f"<p><em>Current video</em>: <b>{cur_name}</b>"
                         f" (last label at frame {last_lf_frame})<br>"
                         f"<em>Replacement video</em>: <b>{Path(path).name}"
                         f"</b> ({last_vid_frame} frames)</p>"
@@ -2779,8 +2801,13 @@ class ReplaceVideo(EditCommand):
             ).exec_()
             return False
 
-        # Select the videos we want to swap
-        old_paths = [video.filename for video in context.labels.videos]
+        # Select the videos we want to swap.
+        # ImageVideo backends return a list[str] for filename; use the first path
+        # so MissingFilesDialog can treat each entry as a single file path.
+        old_paths = [
+            video.filename[0] if isinstance(video.filename, list) else video.filename
+            for video in context.labels.videos
+        ]
         paths = list(old_paths)
         okay = MissingFilesDialog(filenames=paths, replace=True).exec_()
         if not okay:
