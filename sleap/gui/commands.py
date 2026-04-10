@@ -2775,15 +2775,16 @@ class ReplaceVideo(EditCommand):
                 if last_lf_frame > last_vid_frame:
                     # ImageVideo backends return a list[str] for filename; use the
                     # first path as the representative name for display.
-                    current_video_filename = (
+                    cur_fn = (
                         video.filename[0]
                         if isinstance(video.filename, list)
                         else video.filename
                     )
+                    cur_name = Path(cur_fn).name
                     message = (
                         "<p><strong>Warning:</strong> Replacing this video will "
                         f"remove {len(lfs)} labeled frames.</p>"
-                        f"<p><em>Current video</em>: <b>{Path(current_video_filename).name}</b>"
+                        f"<p><em>Current video</em>: <b>{cur_name}</b>"
                         f" (last label at frame {last_lf_frame})<br>"
                         f"<em>Replacement video</em>: <b>{Path(path).name}"
                         f"</b> ({last_vid_frame} frames)</p>"
