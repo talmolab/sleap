@@ -206,6 +206,10 @@ class RenderClipDialog(QtWidgets.QDialog):
         self.preview._do_render()
         # Update frame range limits
         self._update_frame_range_limits()
+        # Re-read source fps — may differ between videos in a multi-video
+        # project, and the match-source-fps label/value tracks the active one.
+        if hasattr(self, "match_source_fps"):
+            self._refresh_match_source_fps()
 
     def _update_frame_range_limits(self):
         """Update frame range spinboxes based on current video."""
@@ -418,10 +422,25 @@ class RenderClipDialog(QtWidgets.QDialog):
 
         # FPS
         self.fps = QtWidgets.QSpinBox()
-        self.fps.setRange(1, 120)
+        self.fps.setRange(1, 240)
         self.fps.setValue(30)
         self.fps.setToolTip("Output video frame rate")
         layout.addRow("FPS:", self.fps)
+
+        # "Match source FPS" — keeps the output real-time relative to the
+        # source. Defaults on when the source fps is readable; otherwise the
+        # checkbox is disabled and the spinbox holds whatever default the user
+        # picks.
+        self.match_source_fps = QtWidgets.QCheckBox("Match source video FPS")
+        self.match_source_fps.setToolTip(
+            "When checked, the output FPS matches the source video so the "
+            "rendered clip plays at the same real-time speed as the original. "
+            "Uncheck to set the output FPS manually."
+        )
+        self.match_source_fps.setChecked(True)
+        self.match_source_fps.toggled.connect(self._on_match_source_fps_toggled)
+        layout.addRow("", self.match_source_fps)
+        self._refresh_match_source_fps()
 
         # Open when done
         self.open_when_done = QtWidgets.QCheckBox("Open video when done")
@@ -429,6 +448,63 @@ class RenderClipDialog(QtWidgets.QDialog):
         layout.addRow("", self.open_when_done)
 
         return group
+
+    def _source_fps(self) -> float | None:
+        """Return the source video's fps, or ``None`` if unavailable.
+
+        Older / malformed video backends may not expose ``fps`` or may raise
+        when queried; callers must treat ``None`` as "unknown".
+        """
+        video = self.video
+        if video is None:
+            return None
+        try:
+            backend = getattr(video, "backend", None)
+            if backend is None:
+                return None
+            fps = getattr(backend, "fps", None)
+            return float(fps) if fps else None
+        except Exception:
+            return None
+
+    def _refresh_match_source_fps(self):
+        """Update the match-source-fps checkbox label / enabled state / value
+        based on the currently selected video.
+        """
+        src = self._source_fps()
+        if src is None:
+            self.match_source_fps.setText("Match source video FPS (unavailable)")
+            # Avoid emitting toggled() while we flip state.
+            self.match_source_fps.blockSignals(True)
+            self.match_source_fps.setChecked(False)
+            self.match_source_fps.blockSignals(False)
+            self.match_source_fps.setEnabled(False)
+            self.fps.setEnabled(True)
+            return
+
+        self.match_source_fps.setEnabled(True)
+        # ``%g`` avoids a trailing ".0" for integer rates like 120.
+        self.match_source_fps.setText(f"Match source video FPS ({src:g})")
+        if self.match_source_fps.isChecked():
+            self.fps.setValue(int(round(src)))
+            self.fps.setEnabled(False)
+        else:
+            self.fps.setEnabled(True)
+
+    def _on_match_source_fps_toggled(self, checked: bool):
+        if checked:
+            src = self._source_fps()
+            if src is None:
+                # Nothing to match — bail by unchecking.
+                self.match_source_fps.blockSignals(True)
+                self.match_source_fps.setChecked(False)
+                self.match_source_fps.blockSignals(False)
+                self.fps.setEnabled(True)
+                return
+            self.fps.setValue(int(round(src)))
+            self.fps.setEnabled(False)
+        else:
+            self.fps.setEnabled(True)
 
     def _create_buttons(self) -> QtWidgets.QWidget:
         """Create dialog buttons (fixed at bottom, outside scroll area)."""
@@ -572,22 +648,25 @@ class RenderClipDialog(QtWidgets.QDialog):
         """Get list of frame indices to render.
 
         Returns:
-            List of frame indices to include in the rendered video.
+            Sorted list of frame indices to include in the rendered video.
+            Sorting is required because ``Labels.labeled_frames`` is not
+            guaranteed to be in frame order, and ``sio.render_video()`` writes
+            frames in the order given by ``frame_inds``.
         """
         if self.range_all.isChecked():
             # All labeled frames for current video
-            return [
+            return sorted(
                 lf.frame_idx
                 for lf in self.labels.labeled_frames
                 if self.video is None or lf.video == self.video
-            ]
+            )
         else:
             # Custom range - all labeled frames within range
             start = self.start_frame.value()
             end = self.end_frame.value()
-            return [
+            return sorted(
                 lf.frame_idx
                 for lf in self.labels.labeled_frames
                 if (self.video is None or lf.video == self.video)
                 and start <= lf.frame_idx <= end
-            ]
+            )

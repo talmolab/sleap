@@ -1576,6 +1576,10 @@ class ExportLabeledClip(AppCommand):
         # Collect parameters from dialog
         params["video_filename"] = dialog.get_output_path()
         params["frame_indices"] = dialog.get_frame_indices()
+        # Capture the dialog's selected video — it may differ from the main
+        # window's selection when the user picks a different source in the
+        # multi-video selector.
+        params["video"] = dialog.video
         export_params = dialog.get_export_params()
 
         # Map dialog params to render params
@@ -1604,7 +1608,7 @@ class ExportLabeledClip(AppCommand):
             params: Export parameters from ask().
         """
         labels = context.state["labels"]
-        video = context.state["video"]
+        video = params.get("video", context.state["video"])
 
         # Build render parameters
         render_params = {
@@ -1885,6 +1889,31 @@ class RenderVideoThread(QtCore.QThread):
                 self.error.emit(str(e))
 
 
+def _labels_with_visible_instances(labels, video):
+    """Return a shallow copy of ``labels`` with used predictions hidden.
+
+    ``sio.render_video`` faithfully draws every instance in each
+    ``LabeledFrame``. When a user corrects a ``PredictedInstance``, SLEAP
+    leaves the prediction in place and links a new user ``Instance`` to it via
+    ``from_predicted``. Without filtering, both get drawn and the rendered
+    clip shows two overlapping skeletons for the same animal. ``Labels``
+    objects are otherwise preserved so tracks, centroids, masks, rois etc.
+    still flow through.
+
+    Only frames whose ``video`` matches are filtered; other frames are passed
+    through unchanged so the result can still be used for unrelated purposes.
+    """
+    import attr
+
+    new_lfs = []
+    for lf in labels.labeled_frames:
+        if video is None or lf.video is video:
+            new_lfs.append(attr.evolve(lf, instances=get_instances_to_show(lf)))
+        else:
+            new_lfs.append(lf)
+    return attr.evolve(labels, labeled_frames=new_lfs)
+
+
 def render_video_gui(
     labels,
     filename: str,
@@ -1906,6 +1935,10 @@ def render_video_gui(
     Returns:
         The filename if successful, "canceled" if canceled by user.
     """
+    # Hide predictions that were already converted into user instances so they
+    # aren't rendered as ghost skeletons alongside their user counterparts.
+    labels = _labels_with_visible_instances(labels, video)
+
     # Calculate total frames for progress
     if frame_inds is not None:
         total_frames = len(frame_inds)
