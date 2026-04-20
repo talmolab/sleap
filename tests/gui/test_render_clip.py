@@ -84,7 +84,9 @@ def test_labels_with_visible_instances_hides_used_predictions():
 
     # video_a/frame 0: prediction hidden, only user instance visible.
     out_corrected = next(
-        lf for lf in filtered.labeled_frames if lf.video is video_a and lf.frame_idx == 0
+        lf
+        for lf in filtered.labeled_frames
+        if lf.video is video_a and lf.frame_idx == 0
     )
     assert len(out_corrected.instances) == 1
     assert isinstance(out_corrected.instances[0], sio.Instance)
@@ -92,7 +94,9 @@ def test_labels_with_visible_instances_hides_used_predictions():
 
     # video_a/frame 1: orphan prediction kept.
     out_orphan = next(
-        lf for lf in filtered.labeled_frames if lf.video is video_a and lf.frame_idx == 1
+        lf
+        for lf in filtered.labeled_frames
+        if lf.video is video_a and lf.frame_idx == 1
     )
     assert len(out_orphan.instances) == 1
     assert isinstance(out_orphan.instances[0], sio.PredictedInstance)
