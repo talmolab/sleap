@@ -51,9 +51,7 @@ def test_labels_with_visible_instances_hides_used_predictions():
 
     # Frame 1: only a raw prediction -> kept.
     pred_orphan = _pred(skel, (30.0, 40.0))
-    lf_orphan = sio.LabeledFrame(
-        video=video_a, frame_idx=1, instances=[pred_orphan]
-    )
+    lf_orphan = sio.LabeledFrame(video=video_a, frame_idx=1, instances=[pred_orphan])
 
     # Frame 2 (different video): prediction + user pair, must also be filtered
     # because we pass video=None (means "filter all videos").

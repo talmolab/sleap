@@ -473,9 +473,7 @@ class RenderClipDialog(QtWidgets.QDialog):
         """
         src = self._source_fps()
         if src is None:
-            self.match_source_fps.setText(
-                "Match source video FPS (unavailable)"
-            )
+            self.match_source_fps.setText("Match source video FPS (unavailable)")
             # Avoid emitting toggled() while we flip state.
             self.match_source_fps.blockSignals(True)
             self.match_source_fps.setChecked(False)
