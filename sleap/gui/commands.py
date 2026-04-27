@@ -4259,6 +4259,13 @@ class AddInstance(EditCommand):
                 new_instance[node]["name"] = node
             else:
                 has_missing_nodes = True
+                # Initialize the skipped point with NaN xy and visible=False so
+                # downstream `add_*_nodes` gates fire and the buffer is not
+                # left holding uninitialized memory from `Instance.empty()`.
+                new_instance[node]["xy"] = np.array([np.nan, np.nan])
+                new_instance[node]["visible"] = False
+                new_instance[node]["complete"] = False
+                new_instance[node]["name"] = node
 
         return has_missing_nodes
 
@@ -4458,10 +4465,15 @@ class AddMissingInstanceNodes(EditCommand):
                 input_arrays[node_idx] = input_array
             else:
                 x, y = instance.points[node_idx]["xy"]
-                visible = instance.points[node_idx]["visible"]
-                complete = instance.points[node_idx]["complete"]
+                # Use distinct names so we don't shadow the `visible` function
+                # parameter -- otherwise a per-node visibility from this branch
+                # bleeds into the if-branch on later iterations and overrides
+                # the caller-requested default (which is how NaN-coord
+                # predicted nodes were ending up with visible=True).
+                point_visible = instance.points[node_idx]["visible"]
+                point_complete = instance.points[node_idx]["complete"]
                 input_arrays[node_idx] = np.array(
-                    (np.array([x, y]), visible, complete, node_name),
+                    (np.array([x, y]), point_visible, point_complete, node_name),
                     dtype=[
                         ("xy", "<f8", (2,)),
                         ("visible", "bool"),
@@ -4582,11 +4594,16 @@ class AddUserInstancesFromPredictions(EditCommand):
             from_predicted=copy_instance,
         )
 
-        # Copy point data from prediction
+        # Copy point data from prediction. Predicted nodes that were not
+        # detected have NaN coordinates; mark those as not visible so the
+        # user instance starts in a well-defined state.
         for i, node in enumerate(copy_instance.skeleton.node_names):
             pred_point = copy_instance.points[i]
+            xy_is_nan = bool(np.any(np.isnan(pred_point["xy"])))
             new_instance.points[i]["xy"] = pred_point["xy"]
-            new_instance.points[i]["visible"] = pred_point["visible"]
+            new_instance.points[i]["visible"] = (
+                bool(pred_point["visible"]) and not xy_is_nan
+            )
             new_instance.points[i]["complete"] = False
 
         return new_instance
