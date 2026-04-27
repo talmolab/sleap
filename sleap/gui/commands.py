@@ -4465,10 +4465,15 @@ class AddMissingInstanceNodes(EditCommand):
                 input_arrays[node_idx] = input_array
             else:
                 x, y = instance.points[node_idx]["xy"]
-                visible = instance.points[node_idx]["visible"]
-                complete = instance.points[node_idx]["complete"]
+                # Use distinct names so we don't shadow the `visible` function
+                # parameter -- otherwise a per-node visibility from this branch
+                # bleeds into the if-branch on later iterations and overrides
+                # the caller-requested default (which is how NaN-coord
+                # predicted nodes were ending up with visible=True).
+                point_visible = instance.points[node_idx]["visible"]
+                point_complete = instance.points[node_idx]["complete"]
                 input_arrays[node_idx] = np.array(
-                    (np.array([x, y]), visible, complete, node_name),
+                    (np.array([x, y]), point_visible, point_complete, node_name),
                     dtype=[
                         ("xy", "<f8", (2,)),
                         ("visible", "bool"),

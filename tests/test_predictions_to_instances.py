@@ -26,7 +26,11 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     get_unused_predictions,
     get_instances_to_show,
 )
-from sleap.gui.commands import AddInstance, AddUserInstancesFromPredictions
+from sleap.gui.commands import (
+    AddInstance,
+    AddMissingInstanceNodes,
+    AddUserInstancesFromPredictions,
+)
 
 
 @pytest.fixture
@@ -511,6 +515,76 @@ class TestNaNPredictedNodeVisibilityBug:
             new_instance.points[head_idx]["xy"], np.array([10.0, 20.0])
         )
         assert bool(new_instance.points[head_idx]["visible"]) is True
+
+    def test_add_random_nodes_does_not_leak_visible_across_iterations(
+        self, simple_skeleton, prediction_with_nan_node
+    ):
+        """`add_random_nodes` must not let one node's visibility bleed into the next.
+
+        Regression for the variable-shadowing bug: the function parameter
+        `visible` was reassigned inside the loop's else branch, so a valid
+        node (visible=True) processed before a NaN node would clobber the
+        local `visible` and the NaN node's if-branch would write
+        visible=True instead of the requested False. End result: NaN
+        predicted nodes appeared as visible user labels in the GUI.
+        """
+        from PySide6 import QtCore
+
+        # Run set_visible_nodes first to set up the new instance the same
+        # way `AddInstance.create_new_instance` would after my upstream fix:
+        # valid nodes copied with visible=True, NaN nodes initialized with
+        # xy=NaN/visible=False.
+        new_instance = Instance.empty(
+            skeleton=simple_skeleton,
+            from_predicted=prediction_with_nan_node,
+        )
+
+        class _StubVideo:
+            shape = (1, 480, 640, 3)
+
+        class _StubPlayer:
+            @staticmethod
+            def getVisibleRect():
+                return QtCore.QRectF(0.0, 0.0, 640.0, 480.0)
+
+        class _StubApp:
+            player = _StubPlayer()
+
+        class _StubLabels:
+            videos = [_StubVideo()]
+
+        class _StubContext:
+            labels = _StubLabels()
+            app = _StubApp()
+            state = {"video": _StubVideo(), "skeleton": simple_skeleton}
+
+        AddInstance.set_visible_nodes(
+            context=_StubContext(),
+            copy_instance=prediction_with_nan_node,
+            new_instance=new_instance,
+            mark_complete=False,
+            init_method="best",
+        )
+
+        # Now run add_random_nodes with visible=False (the value that the
+        # double-click-from-prediction flow passes in via fill_missing_nodes).
+        AddMissingInstanceNodes.add_random_nodes(
+            _StubContext(), new_instance, visible=False
+        )
+
+        names = list(new_instance.points["name"])
+        thorax_idx = names.index("thorax")
+        head_idx = names.index("head")
+        abdomen_idx = names.index("abdomen")
+
+        # NaN-pred node must be invisible regardless of where it falls in
+        # iteration order relative to the valid nodes.
+        assert bool(new_instance.points[thorax_idx]["visible"]) is False, (
+            "NaN-pred node must remain invisible after add_random_nodes"
+        )
+        # Valid nodes must remain visible (their predicted xy is preserved).
+        assert bool(new_instance.points[head_idx]["visible"]) is True
+        assert bool(new_instance.points[abdomen_idx]["visible"]) is True
 
 
 class TestOriginalPredictionNotRemovedBug:
