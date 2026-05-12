@@ -3211,6 +3211,15 @@ class NewNode(EditCommand):
         # Add the node to the skeleton
         context.state["skeleton"].add_node(part_name)
 
+        # The GUI's state["skeleton"] is an orphan until something attaches it to
+        # labels.skeletons. Without this, a skeleton edited only via the side
+        # panel (no labeled instances) is silently dropped on save (#2684).
+        if (
+            context.labels is not None
+            and context.state["skeleton"] not in context.labels.skeletons
+        ):
+            context.labels.skeletons.append(context.state["skeleton"])
+
 
 class DeleteNode(EditCommand):
     topics = [UpdateTopic.skeleton]
@@ -3280,6 +3289,15 @@ class NewEdge(EditCommand):
 
         # Add edge
         context.state["skeleton"].add_edge(src_node, dst_node)
+
+        # Safety net for #2684: ensure the GUI's state["skeleton"] is attached
+        # to labels.skeletons so the edge is persisted on save even if NewNode
+        # didn't run (e.g., nodes added through other paths).
+        if (
+            context.labels is not None
+            and context.state["skeleton"] not in context.labels.skeletons
+        ):
+            context.labels.skeletons.append(context.state["skeleton"])
 
 
 class DeleteEdge(EditCommand):

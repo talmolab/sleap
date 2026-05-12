@@ -26,6 +26,8 @@ from sleap.gui.commands import (
     ExportFullPackage,
     ExportVideoClip,
     ImportDeepLabCutFolder,
+    NewEdge,
+    NewNode,
     RemoveVideo,
     ReplaceVideo,
     OpenSkeleton,
@@ -708,6 +710,89 @@ def test_DeleteNode_without_labels():
     assert skeleton.node_names == ["head", "tail"]
     # Edge from head to neck should be removed
     assert len(skeleton.edges) == 0
+
+
+def test_NewNode_attaches_skeleton_to_labels():
+    """Issue #2684: clicking New Node on a fresh project must attach the
+    GUI's state["skeleton"] to labels.skeletons so it persists on save.
+    """
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+    # Mirrors MainWindow.__init__: an orphan Skeleton in state, not in labels.
+    context.state["skeleton"] = Skeleton()
+    assert labels.skeletons == []
+
+    NewNode.do_action(context, params={})
+
+    assert len(labels.skeletons) == 1
+    assert labels.skeletons[0] is context.state["skeleton"]
+    assert "new_part" in context.state["skeleton"].node_names
+
+
+def test_NewNode_does_not_duplicate_skeleton():
+    """Repeated NewNode calls must not append the same skeleton multiple times."""
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+    context.state["skeleton"] = Skeleton()
+
+    NewNode.do_action(context, params={})
+    NewNode.do_action(context, params={})
+    NewNode.do_action(context, params={})
+
+    assert len(labels.skeletons) == 1
+    assert len(context.state["skeleton"].nodes) == 3
+
+
+def test_NewNode_persists_skeleton_across_save_reload(tmpdir):
+    """Issue #2684 end-to-end: NewNode + save + reload must round-trip
+    the skeleton without requiring any labeled instances.
+    """
+    import sleap_io as sio
+
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+    context.state["skeleton"] = Skeleton()
+    context.state["labels"] = labels
+
+    NewNode.do_action(context, params={})
+
+    fn = str(PurePath(tmpdir, "test_skeleton_only.slp"))
+    sio.save_file(labels, fn)
+    reloaded = sio.load_file(fn)
+
+    assert len(reloaded.skeletons) == 1
+    assert "new_part" in reloaded.skeletons[0].node_names
+
+
+def test_NewNode_without_labels():
+    """NewNode must not crash when there is no labels context (skeleton-only
+    editing). The skeleton itself should still be mutated.
+    """
+    context = CommandContext.from_labels(None)
+    context.state["skeleton"] = Skeleton()
+
+    NewNode.do_action(context, params={})
+
+    assert "new_part" in context.state["skeleton"].node_names
+
+
+def test_NewEdge_attaches_skeleton_to_labels():
+    """Safety net for #2684: NewEdge also ensures the skeleton is attached
+    to labels.skeletons.
+    """
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+    context.state["skeleton"] = skeleton
+    assert labels.skeletons == []
+
+    NewEdge.do_action(context, params={"src_node": "a", "dst_node": "b"})
+
+    assert len(labels.skeletons) == 1
+    assert labels.skeletons[0] is skeleton
+    assert len(skeleton.edges) == 1
 
 
 def test_SaveProjectAs(centered_pair_predictions: Labels, tmpdir):
