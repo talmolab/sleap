@@ -43,13 +43,13 @@ SLEAP is a tool for tracking animal poses in video. This guide will get you up a
 
 ### Install uv
 
-SLEAP uses `uv` to manage installation. It's a fast, modern package manager that handles everything automatically—including GPU detection.
+SLEAP uses `uv` to manage installation. It's a fast, modern package manager that handles everything automatically—including GPU detection. The commands below come from the [official `uv` installation guide](https://docs.astral.sh/uv/getting-started/installation/).
 
 === "Windows"
     1. Press the **Windows key**, type `PowerShell`, press **Enter**
     2. Paste this command and press **Enter**:
     ```powershell
-    irm https://astral.sh/uv/install.ps1 | iex
+    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
     ```
     3. **Close and reopen** PowerShell
     4. Verify: `uv --version`
