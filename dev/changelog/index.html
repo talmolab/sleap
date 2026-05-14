@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.6">
     
     
       
@@ -663,6 +663,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#v163" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.6.3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#v162" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -975,17 +986,6 @@
     <span class="md-ellipsis">
       
         v1.2.2
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#v121" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        v1.2.1
       
     </span>
   </a>
@@ -2532,6 +2532,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#v163" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.6.3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#v162" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2844,17 +2855,6 @@
     <span class="md-ellipsis">
       
         v1.2.2
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#v121" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        v1.2.1
       
     </span>
   </a>
@@ -2931,6 +2931,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#v163" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v1.6.3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#v162" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3249,17 +3260,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#v121" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        v1.2.1
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -3279,6 +3279,58 @@
 
 <div class="md-source-file"><a href="../changelog.md" title="View markdown source" class="md-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6m4 18H6V4h7v5h5v11M13 9V3.5L18.5 9H13Z"/></svg></a></div>
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<h2 id="v163"><a href="https://github.com/talmolab/sleap/releases/tag/v1.6.3">v1.6.3</a><a class="headerlink" href="#v163" title="Permanent link">&para;</a></h2>
+<h1>SLEAP v1.6.3</h1>
+<p>SLEAP v1.6.3 is a patch release with bug fixes for training launch, multi-video clip rendering, GUI exports for image-directory projects, prediction-to-user-label conversion, and updated dependencies (sleap-io 0.7.0 with a unified annotation architecture, sleap-nn 0.2.0 with negative-frame training and faster CLI startup).</p>
+<p><strong>Quick install/upgrade:</strong></p>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="uv tool install --python 3.13 &quot;sleap[nn]==1.6.3&quot; --torch-backend auto"><pre>uv tool install --python 3.13 <span class="pl-s"><span class="pl-pds">"</span>sleap[nn]==1.6.3<span class="pl-pds">"</span></span> --torch-backend auto</pre></div>
+<p>See the <a href="https://github.com/talmolab/sleap/releases/tag/v1.6.0">v1.6.0 release notes</a> for full details on the latest major release.</p>
+<hr>
+<h2>Bug Fixes</h2>
+<h3>Fix multi-GPU training from GUI on Windows and macOS (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4103608467" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/2660" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/2660/hovercard" href="https://github.com/talmolab/sleap/pull/2660">#2660</a>)</h3>
+<p>Fixed multi-GPU training failing to launch from the GUI on Windows and macOS with <code>ValueError: __main__.__spec__ is None</code>. Training subprocesses are now invoked as a Python module (<code>python -m sleap.cli train</code>) instead of through the entry-point script, which lets PyTorch Lightning's DDP strategy correctly spawn worker processes.</p>
+<h3>Fix top-down training overwriting models when using a custom run name (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4096634400" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/2659" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/2659/hovercard" href="https://github.com/talmolab/sleap/pull/2659">#2659</a>)</h3>
+<p>Fixed a bug where top-down training with a custom <code>run_name</code> saved both the centroid and centered-instance models into the same folder, causing the second model to overwrite the first and breaking inference. The model-type suffix (e.g., <code>.centroid.n=42</code>, <code>.centered_instance.n=42</code>) is now always appended so each model gets its own run folder.</p>
+<h3>Fix NaN-predicted nodes converting to visible user labels (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4337815561" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/2676" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/2676/hovercard" href="https://github.com/talmolab/sleap/pull/2676">#2676</a>)</h3>
+<p>Fixed a bug where double-clicking a <code>PredictedInstance</code> (or running "Add instances from all predictions") could place nodes with NaN-predicted coordinates at random on-screen locations marked as visible, instead of as invisible user labels at a sensible fallback location. Two stacked bugs along the conversion path were fixed: uninitialized memory from <code>Instance.empty()</code> was leaking into "missing" node slots, and a parameter-shadowing bug in <code>add_random_nodes</code> could leak <code>visible=True</code> from a previously processed valid node onto subsequent NaN nodes.</p>
+<h3>Fix multi-video clip rendering: deduplication, frame order, source video, and FPS (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4298686797" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/2671" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/2671/hovercard" href="https://github.com/talmolab/sleap/pull/2671">#2671</a>)</h3>
+<p>Fixed four independent bugs in the Render Video Clip dialog that combined to produce double skeletons, out-of-order frames, the wrong source video, and clips played at 1/4 real time on multi-video projects. User-corrected predictions are now deduplicated before rendering, frames are written in sorted order, the dialog's video selection is honored over the main-window selection, and a new "Match source video FPS" checkbox (on by default) keeps high-fps behavioral footage at real speed instead of clamping to 30 fps.</p>
+<h3>Fix crashes in export and replace-video dialogs for image-directory projects (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4242128896" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/2669" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/2669/hovercard" href="https://github.com/talmolab/sleap/pull/2669">#2669</a>)</h3>
+<p>Fixed <code>TypeError</code> crashes in File &gt; Export Analysis HDF5..., Export Analysis CSV..., and Replace Videos... when a project contained <code>ImageVideo</code> (image-directory) backends. These commands previously assumed <code>video.filename</code> was a single string, but <code>ImageVideo</code> returns a list of per-frame image paths; affected sites now normalize to a representative path before use.</p>
+<h3>Fix incorrect intensity augmentation defaults in training profiles (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4046694530" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/2647" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/2647/hovercard" href="https://github.com/talmolab/sleap/pull/2647">#2647</a>)</h3>
+<p>Fixed legacy default values for intensity augmentation parameters (Gaussian noise, uniform noise, contrast, brightness) in all nine bundled training profiles, which would have produced unusable training images (fully black or washed-out) if the corresponding augmentations were enabled. Defaults are now standardized to a conservative range matching sleap-nn. Most users are unaffected because these augmentations are off by default, but anyone who had manually enabled them should now get sensible behavior.</p>
+<hr>
+<h2>Other</h2>
+<h3>Use sleap-io for analysis HDF5 and CSV exports (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4060981964" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/2649" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/2649/hovercard" href="https://github.com/talmolab/sleap/pull/2649">#2649</a>)</h3>
+<p>Refactored analysis HDF5 and CSV export (from the GUI and <code>sleap-convert</code>) to use sleap-io's <code>save_analysis_h5()</code> and <code>save_csv()</code> functions, replacing SLEAP's internal implementations. Output files remain backwards compatible (MATLAB axis ordering preserved), and exports from the SLEAP GUI now produce identical files to those from the sleap-io CLI.</p>
+<h3>Revise README badges and contributors section (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="4107377662" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/2661" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/2661/hovercard" href="https://github.com/talmolab/sleap/pull/2661">#2661</a>)</h3>
+<p>Removed the Conda downloads badge and reorganized the contributors section in the project README. Documentation/metadata change only; no user-facing functionality affected.</p>
+<hr>
+<h2>Dependency Updates</h2>
+<h3>sleap-io 0.6.5 → 0.7.0</h3>
+<ul>
+<li><strong>Unified annotation architecture</strong>: <code>Instance</code>, <code>BoundingBox</code>, <code>LabelImage</code>, <code>SegmentationMask</code>, <code>ROI</code>, and <code>Centroid</code> are now first-class annotation types nested inside <code>LabeledFrame</code>, each with <code>User*</code> (ground-truth) and <code>Predicted*</code> (with <code>score</code>) variants and a uniform <code>tracking_score</code> field.</li>
+<li><strong>First-class instance segmentation</strong>: New <code>LabelImage</code> type for Cellpose / StarDist / Mask R-CNN / SAM workflows, with streaming write, lazy read, multi-resolution <code>scale</code>/<code>offset</code> metadata, batch constructors (<code>from_stack</code>, <code>from_binary_masks</code>), and segmentation overlay rendering (API + <code>sio render --overlay</code>).</li>
+<li><strong>First-class detection</strong>: New <code>BoundingBox</code> type with <code>x1/y1/x2/y2</code> representation and full I/O across SLP, COCO, Ultralytics, GeoJSON, and JABS, plus rotated-box rendering.</li>
+<li><strong>3D pose data structures</strong>: New <code>Identity</code> (cross-session animal identity), <code>Instance3D</code>, and <code>PredictedInstance3D</code> for multi-camera workflows that round-trip with sleap-io.js and luc3d.</li>
+<li><strong>New format support</strong>: Norpix <code>.seq</code> video files, TrackMate CSV reader (auto-detected by <code>sio convert</code>), h5wasm/sleap-io.js-written SLP files, and GeoJSON ROI I/O.</li>
+<li><strong>Performance</strong>: O(1) frame and track index lookups across <code>Labels</code>, plus chunked SLP v2.2 label-image storage delivering ~43x faster writes and zero-decompression label-image merge.</li>
+</ul>
+<p>See the <a href="https://github.com/talmolab/sleap-io/releases/tag/v0.7.0">sleap-io v0.7.0 release notes</a> for full details.</p>
+<h3>sleap-nn 0.1.3 → 0.2.0</h3>
+<ul>
+<li><strong>sleap-io v0.7.0 adoption</strong>: Pinned to <code>&gt;=0.7.0,&lt;0.8.0</code> to pick up the unified <code>User*</code>/<code>Predicted*</code> annotation architecture (drives the minor version bump).</li>
+<li><strong>Negative frame training</strong>: Opt-in <code>use_negative_frames</code> lets user-confirmed empty frames suppress false-positive detections on SingleInstance, Centroid, BottomUp, and BottomUpMultiClass models, with per-sample loss metrics and cache-safe loading on Lustre/DDP/containers.</li>
+<li><strong>Config picker parity and smarter defaults</strong>: <code>sleap-nn config &lt;slp&gt;</code> (TUI) now emits byte-identical YAML to the web-app config picker for all six pipelines, with corrected augmentation/head/trainer schema, matching <code>max_stride</code> recommendations, defaults flipped to <strong>Cache to Memory + 2 workers</strong>, and a simplified <code>--pipeline topdown</code> that emits paired centroid + centered_instance configs.</li>
+<li><strong><code>sleap-nn info</code> CLI</strong>: New subcommand prints a rich summary of any trained model directory — architecture, hyperparameters, training results, and evaluation metrics.</li>
+<li><strong>Simpler install and faster CLI</strong>: <code>torch</code>/<code>torchvision</code> are now default dependencies (no <code>[torch]</code> extra needed; new <code>[cpu]</code>/<code>[gpu]</code> extras), and lazy imports cut <code>sleap-nn -h</code> startup from ~8s to ~1.2s.</li>
+<li><strong>Training and inference fixes</strong>: ConvNeXt ONNX export no longer crashes on odd intermediate feature maps, multi-GPU training launched from GUIs is fixed via a <code>__main__.__spec__</code> re-spawn check, <code>check_memory()</code> no longer reads every HDF5 frame (~21 min → &lt;1 s), intensity augmentation defaults are back on the correct 0–1 scale, and node count / confidence filters now apply in track-only mode.</li>
+<li><strong>Tracking robustness</strong>: <code>hungarian_matching()</code> no longer crashes on all-NaN cost matrices; non-finite values are replaced with large finite placeholders.</li>
+<li><strong>Export and checkpoint metadata</strong>: <code>ExportMetadata</code> now carries an <code>anchor_part</code> field, and saved <code>initial_config.yaml</code>/<code>training_config.yaml</code> always reflect the running <code>sleap_nn.__version__</code> at checkpoint time. TensorRT/ONNX export pipeline picked up additional bug fixes and broader test coverage.</li>
+</ul>
+<p>See the <a href="https://github.com/talmolab/sleap-nn/releases/tag/v0.1.3">sleap-nn v0.1.3</a> and <a href="https://github.com/talmolab/sleap-nn/releases/tag/v0.2.0">v0.2.0</a> release notes for full details.</p>
+<hr>
+<p><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/talmolab/sleap/compare/v1.6.2...v1.6.3"><tt>v1.6.2...v1.6.3</tt></a></p>
 <h2 id="v162"><a href="https://github.com/talmolab/sleap/releases/tag/v1.6.2">v1.6.2</a><a class="headerlink" href="#v162" title="Permanent link">&para;</a></h2>
 <h1>SLEAP v1.6.2</h1>
 <p>SLEAP v1.6.2 is a patch release with bug fixes for GUI performance, data integrity, training configuration, and updated dependencies.</p>
@@ -5715,37 +5767,6 @@ Recalculate crop size if user-specified crop size indivisible by max stride (<a 
 <li>Fix topological sorting to always start with root node (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1180253845" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/688" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/688/hovercard" href="https://github.com/talmolab/sleap/pull/688">#688</a>)</li>
 <li>Create unique default shortcuts (fixes <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1175817162" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/686" data-hovercard-type="issue" data-hovercard-url="/talmolab/sleap/issues/686/hovercard" href="https://github.com/talmolab/sleap/issues/686">#686</a>) (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1181278327" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/690" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/690/hovercard" href="https://github.com/talmolab/sleap/pull/690">#690</a>)</li>
 <li>Fix formatting to read and save tracking scores (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1189011621" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/693" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/693/hovercard" href="https://github.com/talmolab/sleap/pull/693">#693</a>)</li>
-</ul>
-<h2 id="v121"><a href="https://github.com/talmolab/sleap/releases/tag/v1.2.1">v1.2.1</a><a class="headerlink" href="#v121" title="Permanent link">&para;</a></h2>
-<p>Stable release of SLEAP v1.2.1. This release contains a small number of hotfixes. See the <a href="https://github.com/murthylab/sleap/releases/tag/v1.2.0">release notes for v1.2.0</a> for previous major changes.</p>
-<h1>Quick install</h1>
-<p><strong><code>conda</code> (Windows/Linux/GPU)</strong>:</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.1"><pre class="notranslate"><code>conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.2.1
-</code></pre></div>
-<p><strong><code>pip</code> (any OS)</strong>:</p>
-<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="pip install sleap==1.2.1"><pre class="notranslate"><code>pip install sleap==1.2.1
-</code></pre></div>
-<p>See the <a href="https://sleap.ai/installation.html" rel="nofollow">Installation page</a> in the docs for more info.</p>
-<h1>Full changelog</h1>
-<ul>
-<li>
-<p>Add support for new maDLC labels format (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1171279202" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/678" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/678/hovercard" href="https://github.com/talmolab/sleap/pull/678">#678</a>)</p>
-<ul>
-<li>Fixes <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1170615231" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/676" data-hovercard-type="issue" data-hovercard-url="/talmolab/sleap/issues/676/hovercard" href="https://github.com/talmolab/sleap/issues/676">#676</a></li>
-</ul>
-</li>
-<li>
-<p>Enable TensorFlow 2.8 support (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1174842549" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/683" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/683/hovercard" href="https://github.com/talmolab/sleap/pull/683">#683</a>)</p>
-<ul>
-<li>Fixes Colab support (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1172677519" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/680" data-hovercard-type="issue" data-hovercard-url="/talmolab/sleap/issues/680/hovercard" href="https://github.com/talmolab/sleap/issues/680">#680</a>)</li>
-</ul>
-</li>
-<li>
-<p>Add experimental support for supervised ID models (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="1171623851" data-permission-text="Title is private" data-url="https://github.com/talmolab/sleap/issues/679" data-hovercard-type="pull_request" data-hovercard-url="/talmolab/sleap/pull/679/hovercard" href="https://github.com/talmolab/sleap/pull/679">#679</a>)</p>
-<ul>
-<li><strong>Note:</strong> This is being released for backward compatibility, but it should be considered strictly experimental. It is not yet available in the GUI. Full functionality will be documented in a future release.</li>
-</ul>
-</li>
 </ul>
 
 
