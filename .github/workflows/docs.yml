@@ -8,9 +8,11 @@ on:
     branches:
       - develop
 
-# Ensure only one docs deployment runs at a time to prevent gh-pages push conflicts
+# Serialize all gh-pages pushes (this workflow and pr-preview.yml's deploy/cleanup
+# jobs share the same group) so simultaneous pushes don't race and trip
+# "rejected (fetch first)". See talmolab/sleap#2689.
 concurrency:
-  group: docs-deployment
+  group: gh-pages-write
   cancel-in-progress: false
 
 jobs:

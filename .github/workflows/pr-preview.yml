@@ -27,6 +27,11 @@ jobs:
     name: Deploy Preview
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
+    # Serialize gh-pages pushes against docs.yml and the cleanup job to avoid
+    # racing on the gh-pages branch. See talmolab/sleap#2689.
+    concurrency:
+      group: gh-pages-write
+      cancel-in-progress: false
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -98,6 +103,10 @@ jobs:
     name: Cleanup Preview
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
+    # Same shared gh-pages-write lock as the deploy job and docs.yml.
+    concurrency:
+      group: gh-pages-write
+      cancel-in-progress: false
     steps:
       - name: Checkout gh-pages
         uses: actions/checkout@v4
