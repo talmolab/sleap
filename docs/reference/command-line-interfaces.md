@@ -124,7 +124,7 @@ sleap train config.yaml                    # Train with config file
 sleap train --config configs/baseline.yaml
 ```
 
-[:octicons-arrow-right-24: Full training documentation](https://nn.sleap.ai/latest/training/)
+[:octicons-arrow-right-24: Full training documentation](https://nn.sleap.ai/latest/guides/training/)
 
 ### `sleap track`
 
@@ -138,7 +138,7 @@ sleap track -i video.mp4 -m models/centroid/
 sleap track -i video.mp4 -m models/centroid/ -m models/instance/ --tracking
 ```
 
-[:octicons-arrow-right-24: Full inference documentation](https://nn.sleap.ai/latest/inference/)
+[:octicons-arrow-right-24: Full inference documentation](https://nn.sleap.ai/latest/guides/inference/)
 
 ### Other Neural Network Commands
 
