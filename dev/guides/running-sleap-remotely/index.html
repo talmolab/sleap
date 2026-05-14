@@ -2283,13 +2283,13 @@
 <p>sleap-nn comes with "default" training profiles for training confidence maps, part affinity fields, centroids, or top-down confidence maps (which allow multi-instance inference without using part affinity fields). Any file in the <a href="https://github.com/talmolab/sleap-nn/tree/main/docs/sample_configs">sample configs</a> can be downloaded/ used, and path to the config file is passed to <code>sleap-nn train</code> CLI.</p>
 <p>Our guide to <a href="../creating-a-custom-training-profile/">creating a custom training profile</a> explains how to use the GUI to export custom training profiles. You can also use the <code>initial_config.yaml</code> file saved from previous training run as a template for a new training config. You can copy the <code>yaml</code> file and edit it in any text editor.</p>
 <p><strong>Command-line training</strong>:</p>
-<p>Once you have your training job package (or labels package and training profile), you can run training using the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command like so:</p>
+<p>Once you have your training job package (or labels package and training profile), you can run training using the <a href="https://nn.sleap.ai/latest/guides/training/#using-cli"><code>sleap-nn train</code></a> command like so:</p>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>&lt;path/to/config.yaml&gt;<span class="w"> </span><span class="s2">&quot;data_config.train_labels_path=[&lt;path/to/slp/file&gt;]&quot;</span><span class="w"> </span>trainer_config.ckpt_dir<span class="o">=</span><span class="s2">&quot;models&quot;</span><span class="w"> </span>trainer_config.run_name<span class="o">=</span>&lt;run_name&gt;
 </span></code></pre></div>
 <p>The model will be saved in the <code>models/</code> directory within the same directory as the <strong>training job package</strong> (in this case, <code>models/run_name/</code>).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>If you exported the training package as a ZIP file, it contains both the <code>.pkg.slp</code> and <code>.yaml</code> files necessary to train with the configuration you selected in the GUI. Before running the <a href="https://nn.sleap.ai/latest/training/#using-cli"><code>sleap-nn train</code></a> command, make sure to unzip this file:</p>
+<p>If you exported the training package as a ZIP file, it contains both the <code>.pkg.slp</code> and <code>.yaml</code> files necessary to train with the configuration you selected in the GUI. Before running the <a href="https://nn.sleap.ai/latest/guides/training/#using-cli"><code>sleap-nn train</code></a> command, make sure to unzip this file:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">macOS/Linux</label><label for="__tabbed_1_2">Windows (PowerShell)</label><label for="__tabbed_1_3">Windows (Command Prompt)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -2328,7 +2328,7 @@
 <div class="admonition note">
 <p class="admonition-title">Legacy SLEAP Model Support</p>
 <p>SLEAP-NN supports running inference on models trained with legacy SLEAP (version 1.4.1 or earlier).<br />
-You can use the <code>sleap-nn track</code> command with legacy model files (<code>.h5</code> and <code>.json</code>) as described in the <a href="https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support">Legacy SLEAP Model Support documentation</a>.<br />
+You can use the <code>sleap-nn track</code> command with legacy model files (<code>.h5</code> and <code>.json</code>) as described in the <a href="https://nn.sleap.ai/latest/guides/inference/#legacy-sleap-model-support">Legacy SLEAP Model Support documentation</a>.<br />
 This allows you to run inference on older models without needing to retrain them with the new backend.</p>
 </div>
 <p>Inference will run in different modes depending on the output types of the models you supply. See the instructions for <a href="https://nn.sleap.ai/latest/reference/models/">Model Configuration</a>.</p>
@@ -2337,12 +2337,12 @@ This allows you to run inference on older models without needing to retrain them
 <p>sleap-nn (which uses <code>sleap-io</code>) uses OpenCV to read a variety of video formats including <code>mp4</code> and <code>avi</code> files. You'll just need the file path to run inference on such a video file.</p>
 <p>For this example, let's suppose you're working with an HDF5 video at <code>path/to/video.mp4</code>.</p>
 <p><strong>Command-line inference</strong>:</p>
-<p>To run inference, you'll call <a href="https://nn.sleap.ai/latest/inference/#run-inference-with-cli"><code>sleap-nn track</code></a> with the paths to each trained model and your video file, like so:</p>
+<p>To run inference, you'll call <a href="https://nn.sleap.ai/latest/guides/inference/#running-inference"><code>sleap-nn track</code></a> with the paths to each trained model and your video file, like so:</p>
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>path/to/video.mp4<span class="w"> </span>--video_dataset<span class="w"> </span>video<span class="w"> </span>--video_input_format<span class="w"> </span>channels_last<span class="w"> </span>-m<span class="w"> </span>path/to/models/centroid<span class="w"> </span>-m<span class="w"> </span>path/to/models/centered-instance
 </span></code></pre></div>
 <p>This will run inference on the entire video. If you only want to run inference on some range of frames, you can specify this with the <code>--frames 123-456</code> command-line argument.</p>
 <p>This will give you predictions frame-by-frame, but will not connect those predictions across frames into <code>tracks</code>. If you want cross-frame identity tracking, set <code>--tracking</code> argument. For optical flow, use <code>--use_flow</code>. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use <code>--features centroids --scoring_method euclidean_dist</code>.</p>
-<p>It's also be possible to run tracking separately after you've generated a predictions file (see <a href="https://nn.sleap.ai/latest/inference/#track-only-workflow"><code>Track-only workflow</code></a>). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.</p>
+<p>It's also be possible to run tracking separately after you've generated a predictions file (see <a href="https://nn.sleap.ai/latest/guides/tracking/#track-only-mode"><code>Track-only workflow</code></a>). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.</p>
 <p>When inference is finished, it will save the predictions in a new slp file. This file has the same format as a standard SLEAP project file, and you can use the GUI to proofread this file or merge the predictions into an existing SLEAP project. The file will be in the same directory as the video and the filename will be <code>{video filename}.predictions.slp</code>.</p>
 
 
