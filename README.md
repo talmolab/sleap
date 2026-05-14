@@ -47,14 +47,14 @@ You can find the latest version of SLEAP in the [Releases](https://github.com/ta
 
 **`uv tool install` (any OS):**
 
-First, install [`uv`](https://github.com/astral-sh/uv) if you haven't already:
+First, install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) if you haven't already:
 
 ```bash
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Windows
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
 Then install SLEAP:

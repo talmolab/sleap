@@ -29,7 +29,7 @@ Our guide to [creating a custom training profile](creating-a-custom-training-pro
 
 **Command-line training**:
 
-Once you have your training job package (or labels package and training profile), you can run training using the [`sleap-nn train`](https://nn.sleap.ai/latest/training/#using-cli) command like so:
+Once you have your training job package (or labels package and training profile), you can run training using the [`sleap-nn train`](https://nn.sleap.ai/latest/guides/training/#using-cli) command like so:
 
 ```sh
 sleap-nn train --config <path/to/config.yaml> "data_config.train_labels_path=[<path/to/slp/file>]" trainer_config.ckpt_dir="models" trainer_config.run_name=<run_name>
@@ -38,7 +38,7 @@ sleap-nn train --config <path/to/config.yaml> "data_config.train_labels_path=[<p
 The model will be saved in the `models/` directory within the same directory as the **training job package** (in this case, `models/run_name/`).
 
 !!! note
-    If you exported the training package as a ZIP file, it contains both the `.pkg.slp` and `.yaml` files necessary to train with the configuration you selected in the GUI. Before running the [`sleap-nn train`](https://nn.sleap.ai/latest/training/#using-cli) command, make sure to unzip this file:
+    If you exported the training package as a ZIP file, it contains both the `.pkg.slp` and `.yaml` files necessary to train with the configuration you selected in the GUI. Before running the [`sleap-nn train`](https://nn.sleap.ai/latest/guides/training/#using-cli) command, make sure to unzip this file:
 
     === "macOS/Linux"
 
@@ -85,7 +85,7 @@ You'll need both of these files for each model you're going to use for inference
 
 !!! note "Legacy SLEAP Model Support"
     SLEAP-NN supports running inference on models trained with legacy SLEAP (version 1.4.1 or earlier).  
-    You can use the `sleap-nn track` command with legacy model files (`.h5` and `.json`) as described in the [Legacy SLEAP Model Support documentation](https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support).  
+    You can use the `sleap-nn track` command with legacy model files (`.h5` and `.json`) as described in the [Legacy SLEAP Model Support documentation](https://nn.sleap.ai/latest/guides/inference/#legacy-sleap-model-support).  
     This allows you to run inference on older models without needing to retrain them with the new backend.
 
 
@@ -101,7 +101,7 @@ For this example, let's suppose you're working with an HDF5 video at `path/to/vi
 
 **Command-line inference**:
 
-To run inference, you'll call [`sleap-nn track`](https://nn.sleap.ai/latest/inference/#run-inference-with-cli) with the paths to each trained model and your video file, like so:
+To run inference, you'll call [`sleap-nn track`](https://nn.sleap.ai/latest/guides/inference/#running-inference) with the paths to each trained model and your video file, like so:
 
 ```sh
 sleap-nn track -i path/to/video.mp4 --video_dataset video --video_input_format channels_last -m path/to/models/centroid -m path/to/models/centered-instance
@@ -111,6 +111,6 @@ This will run inference on the entire video. If you only want to run inference o
 
 This will give you predictions frame-by-frame, but will not connect those predictions across frames into `tracks`. If you want cross-frame identity tracking, set `--tracking` argument. For optical flow, use `--use_flow`. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use `--features centroids --scoring_method euclidean_dist`.
 
-It's also be possible to run tracking separately after you've generated a predictions file (see [`Track-only workflow`](https://nn.sleap.ai/latest/inference/#track-only-workflow)). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.
+It's also be possible to run tracking separately after you've generated a predictions file (see [`Track-only workflow`](https://nn.sleap.ai/latest/guides/tracking/#track-only-mode)). This makes it easy to try different tracking methods and parameters without needing to re-run the full inference process.
 
 When inference is finished, it will save the predictions in a new slp file. This file has the same format as a standard SLEAP project file, and you can use the GUI to proofread this file or merge the predictions into an existing SLEAP project. The file will be in the same directory as the video and the filename will be `{video filename}.predictions.slp`.
