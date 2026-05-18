@@ -3949,9 +3949,7 @@ class GenerateSuggestions(EditCommand):
 
         result = {"status": None, "suggestions": None, "error": None}
 
-        worker = GenerateSuggestionsThread(
-            labels=context.labels, params=params
-        )
+        worker = GenerateSuggestionsThread(labels=context.labels, params=params)
 
         def on_finished(suggestions):
             result["status"] = "finished"
