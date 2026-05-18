@@ -576,7 +576,27 @@ class InstancesDock(DockWidget):
             name_prefix="",
             model=self.model,
         )
+
+        # Apply initial visibility for the optional "mean node score" column,
+        # and keep it in sync with the View-menu toggle.
+        self._apply_mean_node_score_visibility()
+        self.main_window.state.connect(
+            "show mean node score",
+            lambda _: self._apply_mean_node_score_visibility(),
+        )
+
         return self.table
+
+    def _apply_mean_node_score_visibility(self) -> None:
+        """Hide or show the 'mean node score' column based on the View toggle."""
+        if not hasattr(self, "table") or self.table is None:
+            return
+        try:
+            col_idx = self.model.properties.index("mean node score")
+        except ValueError:
+            return
+        show = bool(self.main_window.state.get("show mean node score", default=False))
+        self.table.setColumnHidden(col_idx, not show)
 
     def lay_everything_out(self) -> None:
         self.wgt_layout.addWidget(self.table)

@@ -474,7 +474,7 @@ class LabeledFrameTableModel(GenericTableModel):
         labels: `Labels` datasource
     """
 
-    properties = ("points", "track", "score", "skeleton")
+    properties = ("points", "track", "score", "mean node score", "skeleton")
 
     def object_to_items(self, labeled_frame: LabeledFrame):
         if not labeled_frame:
@@ -492,10 +492,24 @@ class LabeledFrameTableModel(GenericTableModel):
         if hasattr(instance, "score"):
             score = str(round(instance.score, 2))
 
+        mean_node_score = ""
+        pts = getattr(instance, "points", None)
+        if pts is not None and getattr(pts, "dtype", None) is not None:
+            names = pts.dtype.names or ()
+            if "score" in names and "xy" in names:
+                # Visibility = non-NaN xy (matches sleap-nn's filter definition
+                # and the "Points" column above).
+                visible = ~np.isnan(pts["xy"]).any(axis=1)
+                visible_scores = pts["score"][visible]
+                visible_scores = visible_scores[~np.isnan(visible_scores)]
+                if visible_scores.size > 0:
+                    mean_node_score = f"{float(np.mean(visible_scores)):.2f}"
+
         return dict(
             points=points,
             track=track_name,
             score=score,
+            **{"mean node score": mean_node_score},
             skeleton=instance.skeleton.name,
         )
 
