@@ -99,9 +99,10 @@ def test_toVal(qtbot, slider_width, x_value, handle_width, min_value, max_value)
     # Now call the actual function with the specified center setting.
     actual_val = slider._toVal(x_value)
 
-    assert (
-        actual_val == expected_val
-    ), f"For x={x_value}, handle_width={actual_handle_width}, slider_width={slider_width}, "
+    assert actual_val == expected_val, (
+        f"For x={x_value}, handle_width={actual_handle_width}, "
+        f"slider_width={slider_width}, "
+    )
 
 
 def test_slider_width_property(qtbot):
