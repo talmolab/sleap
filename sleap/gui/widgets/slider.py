@@ -373,8 +373,27 @@ class VideoSlider(QtWidgets.QGraphicsView):
             x += self.handle.rect().width() / 2.0
         return x
 
-    def _toVal(self, x: float, center=False) -> float:
-        """Converts x position to slider value."""
+    def _toVal(self, x: float) -> float:
+        """
+        Converts x position to slider value.
+
+        Args:
+            x: x position on the slider.
+            center: Whether to offset by half the width of the handle.
+
+        Returns:
+            Slider value (frame index).
+        """
+        if x is None:
+            raise ValueError("x position cannot be None")
+
+        # Force conversion to float here.
+        try:
+            val = float(x)
+        except (TypeError, ValueError):
+            raise ValueError(f"x position must be a number, got {x}")
+
+        # Proceed with arithmetic only after we have a valid float.
         val = x
         val /= self._slider_width
         val *= max(1, self._val_max - self._val_min)
@@ -385,7 +404,8 @@ class VideoSlider(QtWidgets.QGraphicsView):
     @property
     def _slider_width(self) -> float:
         """Returns visual width of slider."""
-        return self.box_rect.width() - self.handle.rect().width()
+        width = self.box_rect.width()
+        return width
 
     @property
     def slider_visible_value_range(self) -> float:
@@ -525,7 +545,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         """
         x = max(x, 0)
         x = min(x, self.box_rect.width())
-        anchor_val = self._toVal(x, center=True)
+        anchor_val = self._toVal(x)
 
         if len(self._selection) % 2 == 0:
             self.startSelection(anchor_val)
@@ -550,9 +570,9 @@ class VideoSlider(QtWidgets.QGraphicsView):
 
     def moveZoomDrag(self, x: float, y: float):
         if getattr(self, "_zoom_start_val", None) is None:
-            self._zoom_start_val = self._toVal(x, center=True)
+            self._zoom_start_val = self._toVal(x)
 
-        current_val = self._toVal(x, center=True)
+        current_val = self._toVal(x)
 
         self._draw_zoom_box(current_val, self._zoom_start_val)
 
@@ -560,7 +580,7 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.zoom_box.hide()
 
         val_a = self._zoom_start_val
-        val_b = self._toVal(x, center=True)
+        val_b = self._toVal(x)
 
         val_start = min(val_a, val_b)
         val_end = max(val_a, val_b)
