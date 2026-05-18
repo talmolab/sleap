@@ -1597,7 +1597,7 @@ def test_remove_video_uses_identity_not_content_matching(centered_pair_predictio
 
 
 class TestGenerateSuggestionsThread:
-    """Tests for GenerateSuggestionsThread (runs suggestion generation off main thread)."""
+    """Tests for GenerateSuggestionsThread."""
 
     def test_thread_emits_finished_with_suggestions(self, qtbot, centered_pair_labels):
         """Thread should emit finished signal with suggestion list on success."""
