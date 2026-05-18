@@ -4336,9 +4336,13 @@ class AddInstance(EditCommand):
             prev_idx = AddInstance.get_previous_frame_index(context)
 
             if prev_idx is not None:
-                prev_instances = context.labels.find(
+                prev_lf = context.labels.find(
                     context.state["video"], prev_idx, return_new=True
-                )[0].instances
+                )[0]
+                # Prefer user-corrected instances over their predicted
+                # counterparts so "Copy Prior Frame" picks up edits the user
+                # made in the previous frame (#1065).
+                prev_instances = AddInstance._effective_prior_instances(prev_lf)
                 if len(prev_instances) > len(context.state["labeled_frame"].instances):
                     # If more instances in previous frame than current, then use the
                     # first unmatched instance.
@@ -4380,6 +4384,17 @@ class AddInstance(EditCommand):
             return
 
         return next_idx
+
+    @staticmethod
+    def _effective_prior_instances(
+        prev_lf: LabeledFrame,
+    ) -> List[Union[Instance, PredictedInstance]]:
+        # When a user corrects a prediction the original PredictedInstance
+        # stays on the frame alongside the new user Instance. Returning raw
+        # `lf.instances` would let "Copy Prior Frame" land on the stale
+        # prediction; prefer the user version of each animal and drop
+        # predictions whose user counterpart is already present.
+        return list(prev_lf.user_instances) + list(prev_lf.unused_predictions)
 
 
 class SetInstancePointLocations(EditCommand):
