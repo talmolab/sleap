@@ -188,6 +188,7 @@ class MainWindow(QMainWindow):
         self.state["last_interacted_frame"] = None
         self.state["filename"] = None
         self.state["show non-visible nodes"] = prefs["show non-visible nodes"]
+        self.state["show mean node score"] = prefs["show mean node score"]
         self.state["show instances"] = True
         self.state["show labels"] = True
         self.state["show edges"] = True
@@ -275,6 +276,7 @@ class MainWindow(QMainWindow):
         prefs["window state"] = self.saveState()
         prefs["marker size"] = self.state["marker size"]
         prefs["show non-visible nodes"] = self.state["show non-visible nodes"]
+        prefs["show mean node score"] = self.state["show mean node score"]
         prefs["node label size"] = self.state["node label size"]
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
@@ -699,6 +701,7 @@ class MainWindow(QMainWindow):
         )
         add_menu_check_item(viewMenu, "show labels", "Show Node Names")
         add_menu_check_item(viewMenu, "show edges", "Show Edges")
+        add_menu_check_item(viewMenu, "show mean node score", "Show Mean Node Score")
 
         add_submenu_choices(
             menu=viewMenu,
