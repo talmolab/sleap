@@ -378,35 +378,46 @@ class LossPlot(MplCanvas):
     def _calculate_ylim(self, y: np.ndarray, dy: float = 0.02):
         """Calculates y-axis limits.
 
+        For log scale, padding is computed in log space so the visible loss band
+        is not compressed by a hard ``1e-8`` floor. For linear scale, padding is
+        proportional to the data range.
+
         Args:
             y: Array of y data to fit the limits to.
-            dy: The padding to add to the limits.
+            dy: Unused; padding is recomputed from the data range/spread.
 
         Returns:
             Tuple of the minimum and maximum y-axis limits.
         """
 
-        if self.ignore_outliers:
-            dy = np.ptp(y) * 0.02
-            # Set Y scale to exclude outliers
-            q1, q3 = np.quantile(y, (0.25, 0.75))
-            iqr = q3 - q1  # Interquartile range
-            y_min = q1 - iqr * 1.5
-            y_max = q3 + iqr * 1.5
+        y = np.asarray(y)
 
-            # Keep within range of data
-            y_min = max(y_min, min(y) - dy)
-            y_max = min(y_max, max(y) + dy)
-        else:
-            # Set Y scale to show all points
-            dy = np.ptp(y) * 0.02
-            y_min = min(y) - dy
-            y_max = max(y) + dy
-
-        # For log scale, low cannot be 0
         if self.log_scale:
-            y_min = max(y_min, 1e-8)
+            # Work in log space so padding is symmetric on a log axis.
+            y_pos = y[y > 0]
+            if y_pos.size == 0:
+                return 1e-8, 1.0
+            log_y = np.log10(y_pos)
+            if self.ignore_outliers and log_y.size >= 4:
+                q1, q3 = np.quantile(log_y, (0.25, 0.75))
+                iqr = q3 - q1
+                log_min = max(q1 - 1.5 * iqr, log_y.min())
+                log_max = min(q3 + 1.5 * iqr, log_y.max())
+            else:
+                log_min, log_max = log_y.min(), log_y.max()
+            pad = (log_max - log_min) * 0.02 if log_max > log_min else 0.05
+            return 10 ** (log_min - pad), 10 ** (log_max + pad)
 
+        # Linear scale (unchanged behavior).
+        dy = np.ptp(y) * 0.02
+        if self.ignore_outliers:
+            q1, q3 = np.quantile(y, (0.25, 0.75))
+            iqr = q3 - q1
+            y_min = max(q1 - iqr * 1.5, y.min() - dy)
+            y_max = min(q3 + iqr * 1.5, y.max() + dy)
+        else:
+            y_min = y.min() - dy
+            y_max = y.max() + dy
         return y_min, y_max
 
     def _set_title_space(self):
@@ -611,6 +622,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.zmq_ports = zmq_ports
 
         self.batches_to_show = -1  # -1 to show all
+        self.batch_subsample = 1  # stride applied to batch markers (1 = show all)
         self._ignore_outliers = False
         self._log_scale = True
         self.message_poll_time_ms = 20  # ms
@@ -728,6 +740,21 @@ class LossViewer(QtWidgets.QMainWindow):
             self.batches_to_show_field = field
             control_layout.addWidget(self.batches_to_show_field)
 
+            control_layout.addWidget(QtWidgets.QLabel("Batch Subsample:"))
+
+            # Dropdown to thin out batch markers (1=all, 10=every 10th, 100=every 100th)
+            field = QtWidgets.QComboBox()
+            self.batch_subsample_options = ["1", "10", "100"]
+            for opt in self.batch_subsample_options:
+                field.addItem(opt)
+            if str(self.batch_subsample) in self.batch_subsample_options:
+                field.setCurrentText(str(self.batch_subsample))
+            field.currentIndexChanged.connect(
+                lambda x: self._set_batch_subsample(self.batch_subsample_options[x])
+            )
+            self.batch_subsample_field = field
+            control_layout.addWidget(self.batch_subsample_field)
+
             control_layout.addStretch(1)
 
             # WandB URL label (hidden until URL is received)
@@ -836,6 +863,22 @@ class LossViewer(QtWidgets.QMainWindow):
             self.batches_to_show = int(batches)
         else:
             self.batches_to_show = -1
+
+    def _set_batch_subsample(self, stride: str):
+        """Set the subsampling stride for batch markers.
+
+        Stored data (``self.X``/``self.Y``) is preserved; only the points sent
+        to the scatter series are thinned. The most recent batch point is
+        always kept so progress remains visible.
+
+        Args:
+            stride: Stride as a string. ``"1"`` shows every batch; ``"10"``
+                shows every 10th; ``"100"`` shows every 100th.
+        """
+        if stride.isdigit() and int(stride) >= 1:
+            self.batch_subsample = int(stride)
+        else:
+            self.batch_subsample = 1
 
     def _set_start_time(self, t0: float):
         """Mark the start flag and time of the run.
@@ -1028,6 +1071,11 @@ class LossViewer(QtWidgets.QMainWindow):
                         self.X[-self.batches_to_show :],
                         self.Y[-self.batches_to_show :],
                     )
+
+                # Subsample batch markers (preserve the most recent point).
+                if self.batch_subsample > 1 and len(xs) > self.batch_subsample:
+                    xs = xs[:: -self.batch_subsample][::-1]
+                    ys = ys[:: -self.batch_subsample][::-1]
 
                 # Set data, resize and redraw the plot
                 self._set_data_on_scatter(xs, ys, which)
