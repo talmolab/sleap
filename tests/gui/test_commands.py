@@ -1337,6 +1337,99 @@ def test_newInstance(qtbot, centered_pair_predictions: Labels):
     assert np.all(diff == offset)
 
 
+def _build_prior_frame_labels(
+    centered_pair_predictions: Labels,
+) -> tuple[Labels, LabeledFrame, LabeledFrame, PredictedInstance, Instance]:
+    """Build a two-frame Labels where frame 0 has a user correction of a prediction.
+
+    Returns (labels, prev_lf, curr_lf, pred_inst, user_inst).
+    """
+    labels = deepcopy(centered_pair_predictions)
+    skeleton = labels.skeleton
+    video = labels.videos[0]
+
+    # Frame 0: one prediction + a user instance derived from it (simulating the
+    # user having corrected the prediction).
+    prev_lf = LabeledFrame(video=video, frame_idx=0)
+    pred_inst = PredictedInstance.from_numpy(
+        np.array([[10.0, 10.0]] * len(skeleton.nodes)),
+        point_scores=np.ones(len(skeleton.nodes)),
+        score=0.9,
+        skeleton=skeleton,
+    )
+    user_inst = Instance.from_numpy(
+        np.array([[100.0, 200.0]] * len(skeleton.nodes)),
+        skeleton=skeleton,
+        from_predicted=pred_inst,
+    )
+    prev_lf.instances = [pred_inst, user_inst]
+
+    # Frame 1: empty.
+    curr_lf = LabeledFrame(video=video, frame_idx=1)
+
+    labels.labeled_frames = [prev_lf, curr_lf]
+    return labels, prev_lf, curr_lf, pred_inst, user_inst
+
+
+def test_copy_prior_frame_prefers_user_instance(qtbot, centered_pair_predictions):
+    """Copy Prior Frame must pick the user-corrected instance, not the original
+    prediction it was derived from (#1065)."""
+    labels, prev_lf, curr_lf, pred_inst, user_inst = _build_prior_frame_labels(
+        centered_pair_predictions
+    )
+
+    main_window = MainWindow(labels=labels)
+    context = main_window.commands
+    context.state["labeled_frame"] = curr_lf
+    context.state["frame_idx"] = curr_lf.frame_idx
+    context.state["skeleton"] = labels.skeleton
+    context.state["video"] = labels.videos[0]
+
+    copy_instance, from_predicted, from_prev_frame = (
+        AddInstance.find_instance_to_copy_from(
+            context, copy_instance=None, init_method="prior_frame"
+        )
+    )
+
+    assert copy_instance is user_inst
+    assert from_predicted is None
+    assert from_prev_frame is True
+
+
+def test_effective_prior_instances_drops_used_predictions(centered_pair_predictions):
+    """The helper should hide each prediction whose user counterpart is in frame."""
+    _, prev_lf, _, pred_inst, user_inst = _build_prior_frame_labels(
+        centered_pair_predictions
+    )
+    effective = AddInstance._effective_prior_instances(prev_lf)
+    assert effective == [user_inst]
+    assert pred_inst not in effective
+
+
+def test_effective_prior_instances_keeps_unmatched_predictions(
+    centered_pair_predictions,
+):
+    """A prediction with no user counterpart must remain so a second animal can
+    still be copied across."""
+    labels, prev_lf, _, pred_inst, user_inst = _build_prior_frame_labels(
+        centered_pair_predictions
+    )
+    skeleton = labels.skeleton
+
+    extra_pred = PredictedInstance.from_numpy(
+        np.array([[50.0, 50.0]] * len(skeleton.nodes)),
+        point_scores=np.ones(len(skeleton.nodes)),
+        score=0.8,
+        skeleton=skeleton,
+    )
+    prev_lf.instances = [pred_inst, user_inst, extra_pred]
+
+    effective = AddInstance._effective_prior_instances(prev_lf)
+    assert user_inst in effective
+    assert extra_pred in effective
+    assert pred_inst not in effective
+
+
 def test_ExportLabelsSubset(
     tmp_path, centered_pair_predictions: Labels, small_robot_mp4_vid: Video
 ):
