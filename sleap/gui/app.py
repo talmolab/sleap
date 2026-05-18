@@ -701,9 +701,7 @@ class MainWindow(QMainWindow):
         )
         add_menu_check_item(viewMenu, "show labels", "Show Node Names")
         add_menu_check_item(viewMenu, "show edges", "Show Edges")
-        add_menu_check_item(
-            viewMenu, "show mean node score", "Show Mean Node Score"
-        )
+        add_menu_check_item(viewMenu, "show mean node score", "Show Mean Node Score")
 
         add_submenu_choices(
             menu=viewMenu,
