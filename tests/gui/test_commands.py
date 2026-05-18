@@ -25,6 +25,7 @@ from sleap.gui.commands import (
     ExportDatasetWithImages,
     ExportFullPackage,
     ExportVideoClip,
+    GenerateSuggestionsThread,
     ImportDeepLabCutFolder,
     NewEdge,
     NewNode,
@@ -1593,3 +1594,74 @@ def test_remove_video_uses_identity_not_content_matching(centered_pair_predictio
     assert len(remaining_suggestions_video3) == 1, (
         "Suggestions for video3 should NOT have been deleted!"
     )
+
+
+class TestGenerateSuggestionsThread:
+    """Tests for GenerateSuggestionsThread (runs suggestion generation off main thread)."""
+
+    def test_thread_emits_finished_with_suggestions(self, qtbot, centered_pair_labels):
+        """Thread should emit finished signal with suggestion list on success."""
+        labels = centered_pair_labels
+        params = {
+            "method": "sample",
+            "target": "all videos",
+            "videos": labels.videos,
+            "per_video": 5,
+            "sampling_method": "random",
+        }
+
+        worker = GenerateSuggestionsThread(labels=labels, params=params)
+        with qtbot.waitSignal(worker.finished, timeout=10000) as blocker:
+            worker.start()
+
+        suggestions = blocker.args[0]
+        assert isinstance(suggestions, list)
+        assert len(suggestions) > 0
+
+    def test_thread_emits_error_on_invalid_method(self, qtbot, centered_pair_labels):
+        """Thread should emit error signal when suggest() raises."""
+        labels = centered_pair_labels
+        params = {
+            "method": "nonexistent_method",
+            "target": "all videos",
+            "videos": labels.videos,
+        }
+
+        worker = GenerateSuggestionsThread(labels=labels, params=params)
+        with qtbot.waitSignal(worker.error, timeout=10000) as blocker:
+            worker.start()
+
+        error_msg = blocker.args[0]
+        assert isinstance(error_msg, str)
+        assert len(error_msg) > 0
+
+    def test_thread_does_not_block_event_loop(self, qtbot, centered_pair_labels):
+        """Main event loop should remain responsive while thread is running."""
+        labels = centered_pair_labels
+        params = {
+            "method": "sample",
+            "target": "all videos",
+            "videos": labels.videos,
+            "per_video": 5,
+            "sampling_method": "random",
+        }
+
+        worker = GenerateSuggestionsThread(labels=labels, params=params)
+        events_processed = []
+
+        def on_finished(suggestions):
+            events_processed.append("finished")
+
+        worker.finished.connect(on_finished)
+
+        with qtbot.waitSignal(worker.finished, timeout=10000):
+            worker.start()
+            # Process events while waiting — this would hang if suggest() was
+            # still on the main thread.
+            from qtpy import QtWidgets
+
+            for _ in range(10):
+                QtWidgets.QApplication.instance().processEvents()
+                worker.wait(5)
+
+        assert "finished" in events_processed
