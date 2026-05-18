@@ -115,20 +115,20 @@ def test_slider_width_property(qtbot):
     # Test various box_rect widths
     for width in [800, 1000, 1200, 1500]:
         slider.box_rect.setWidth(width)  # Simulate setting the visual width
-        assert (
-            slider._slider_width == width
-        ), f"Expected _slider_width to be {width}, but got {slider._slider_width}"
+        assert slider._slider_width == width, (
+            f"Expected _slider_width to be {width}, but got {slider._slider_width}"
+        )
 
     # Test edge cases with very small and large widths
     slider.box_rect.setWidth(0)
-    assert (
-        slider._slider_width == 0
-    ), "Expected _slider_width to be 0 when box_rect width is 0"
+    assert slider._slider_width == 0, (
+        "Expected _slider_width to be 0 when box_rect width is 0"
+    )
 
     slider.box_rect.setWidth(10000)
-    assert (
-        slider._slider_width == 10000
-    ), "Expected _slider_width to handle large values correctly"
+    assert slider._slider_width == 10000, (
+        "Expected _slider_width to handle large values correctly"
+    )
 
 
 @pytest.mark.parametrize(
