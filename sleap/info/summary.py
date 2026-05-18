@@ -8,8 +8,13 @@ import numpy as np
 
 from typing import Callable, Dict
 
-from sleap.io.dataset import Labels
-from sleap.io.video import Video
+from sleap.sleap_io_adaptors.lf_labels_utils import get_track_occupancy
+from sleap_io import LabeledFrame
+from sleap_io import Labels
+from sleap_io import Video
+from sleap.sleap_io_adaptors.skeleton_utils import node_to_index
+from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
+from sleap.sleap_io_adaptors.instance_utils import get_centroid
 
 
 @attr.s(auto_attribs=True)
@@ -55,10 +60,10 @@ class StatisticSeries:
 
         for lf in self.labels.find(video):
             val = reduce_funct(
-                point.score
+                point["score"]
                 for inst in lf
                 for point in inst.points
-                if hasattr(inst, "score")
+                if "score" in inst.points.dtype.names
             )
             series[lf.frame_idx] = val
         return series
@@ -134,16 +139,15 @@ class StatisticSeries:
             The series dictionary (see class docs for details)
         """
         reduce_funct = dict(sum=np.sum, mean=np.nanmean, max=np.max)[reduction]
-
-        track_count = self.labels.get_track_count(video)
+        track_count = len(get_track_occupancy(self.labels, video))
 
         try:
-            primary_node_idx = self.labels.skeletons[0].node_to_index(primary_node)
+            primary_node_idx = node_to_index(self.labels.skeletons[0], primary_node)
         except ValueError:
             print(f"Unable to locate node {primary_node} so using node 0")
             primary_node_idx = 0
 
-        last_frame_idx = video.num_frames - 1
+        last_frame_idx = get_last_frame_idx(video)
         location_matrix = np.full(
             (last_frame_idx + 1, track_count, 2), np.nan, dtype=float
         )
@@ -166,7 +170,12 @@ class StatisticSeries:
                     if inst.track is not None:
                         track_idx = self.labels.tracks.index(inst.track)
                         if track_idx < track_count:
-                            point = inst.points_array[primary_node_idx, :2]
+                            from sleap.sleap_io_adaptors.instance_utils import (
+                                instance_get_points_array,
+                            )
+
+                            points_array = instance_get_points_array(inst)
+                            point = points_array[primary_node_idx, :2]
                             location_matrix[frame_idx, track_idx] = point
 
                             if not np.all(np.isnan(point)):
@@ -202,7 +211,7 @@ class StatisticSeries:
             if len(instances) < 2:
                 return np.nan
             # centroids for all instances in frame
-            centroids = np.array([inst.centroid for inst in instances])
+            centroids = np.array([get_centroid(inst) for inst in instances])
             # calculate distance between each pair of instance centroids
             distances = np.linalg.norm(
                 centroids[np.newaxis, :, :] - centroids[:, np.newaxis, :], axis=-1
@@ -238,10 +247,16 @@ class StatisticSeries:
         val = 0
         for inst in lf:
             if last_lf is not None:
-                last_inst = last_lf.find(track=inst.track)
+                from sleap.sleap_io_adaptors.lf_labels_utils import labeled_frame_find
+
+                last_inst = labeled_frame_find(last_lf, track=inst.track)
                 if last_inst:
-                    points_a = inst.points_array
-                    points_b = last_inst[0].points_array
+                    from sleap.sleap_io_adaptors.instance_utils import (
+                        instance_get_points_array,
+                    )
+
+                    points_a = instance_get_points_array(inst)
+                    points_b = instance_get_points_array(last_inst[0])
                     point_dist = np.linalg.norm(points_a - points_b, axis=1)
                     inst_dist = reduce_function(point_dist)
                     val += inst_dist if not np.isnan(inst_dist) else 0

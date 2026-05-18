@@ -1,5 +1,8 @@
-include sleap/config/*.yaml
-include sleap/training_profiles/*.json
+include README.md
+include LICENSE
+include pyproject.toml
 
-prune tests/*
-prune docs/*
+recursive-exclude docs *
+recursive-exclude tests *
+prune docs
+prune tests

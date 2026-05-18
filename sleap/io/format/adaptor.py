@@ -7,8 +7,6 @@ from typing import List
 
 import attr
 
-from sleap.io.format.filehandle import FileHandle
-
 
 class SleapObjectType(Enum):
     """Types of files that an adaptor could read/write."""
@@ -52,7 +50,7 @@ class Adaptor:
         """Human-reading name of the file format"""
         raise NotImplementedError
 
-    def can_read_file(self, file: FileHandle) -> bool:
+    def can_read_file(self, file) -> bool:
         """Returns whether this adaptor can read this file."""
         raise NotImplementedError
 
@@ -68,7 +66,7 @@ class Adaptor:
         """Returns whether this adaptor supports writing."""
         raise NotImplementedError
 
-    def read(self, file: FileHandle) -> object:
+    def read(self, file) -> object:
         """Reads the file and returns the appropriate deserialized object."""
         raise NotImplementedError
 
@@ -82,9 +80,9 @@ class Adaptor:
         """Returns whether this adaptor can write format of this filename."""
 
         # We don't match the ext against the result of os.path.splitext because
-        # we want to match extensions like ".json.zip".
+        # we want to match extensions like ".pkg.slp".
 
-        return filename.endswith(tuple(self.all_exts))
+        return str(filename).endswith(tuple(self.all_exts))
 
     @property
     def formatted_ext_options(self):

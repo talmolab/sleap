@@ -1,5 +1,8 @@
 """Module for creating dock widgets for the `MainWindow`."""
 
+import base64
+from io import BytesIO
+import json
 from typing import Callable, Iterable, List, Optional, Type, Union
 
 from qtpy import QtGui
@@ -18,6 +21,8 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from PIL import Image
+
 from sleap.gui.dataviews import (
     GenericTableModel,
     GenericTableView,
@@ -30,7 +35,9 @@ from sleap.gui.dataviews import (
 )
 from sleap.gui.dialogs.formbuilder import YamlFormWidget
 from sleap.gui.widgets.views import CollapsibleWidget
-from sleap.skeleton import Skeleton, SkeletonDecoder
+
+# from sleap.skeleton import Skeleton, SkeletonDecoder
+from sleap_io.io.skeleton import SkeletonDecoder
 from sleap.util import find_files_by_suffix, get_package_file
 
 
@@ -350,7 +357,7 @@ class SkeletonDock(DockWidget):
         hb.setAlignment(self.skeleton_preview_image, Qt.AlignLeft)
 
         self.skeleton_description = QLabel(
-            f'<strong>Description:</strong> {main_window.state["skeleton_description"]}'
+            f"<strong>Description:</strong> {main_window.state['skeleton_description']}"
         )
         self.skeleton_description.setWordWrap(True)
         hb.addWidget(self.skeleton_description)
@@ -361,9 +368,8 @@ class SkeletonDock(DockWidget):
         vb.addWidget(hbw)
 
         def updatePreviewImage(preview_image_bytes: bytes):
-
             # Decode the preview image
-            preview_image = SkeletonDecoder.decode_preview_image(preview_image_bytes)
+            preview_image = decode_preview_image(preview_image_bytes)
 
             # Create a QImage from the Image
             preview_image = QtGui.QImage(
@@ -377,14 +383,42 @@ class SkeletonDock(DockWidget):
 
             self.skeleton_preview_image.setPixmap(preview_image)
 
+        def decode_preview_image(img_b64: bytes, return_bytes: bool = False):
+            """Decode a skeleton preview img byte string repr to a `PIL.Image`
+
+            Args:
+                img_b64: a byte string representation of a skeleton preview image
+                return_bytes: whether to return the decoded image as bytes
+
+            Returns:
+                Either a PIL.Image of the skeleton preview image or the decoded image
+                as bytes
+                (if `return_bytes` is True).
+            """
+            bytes = base64.b64decode(img_b64)
+            if return_bytes:
+                return bytes
+
+            buffer = BytesIO(bytes)
+            img = Image.open(buffer)
+            return img
+
         def update_skeleton_preview(idx: int):
-            skel = Skeleton.load_json(skeletons_json_files[idx])
+            with open(skeletons_json_files[idx], "r") as f:
+                skeleton_data = json.load(f)
+            skel = SkeletonDecoder().decode(data=skeleton_data["nx_graph"])
+            description = f"{skel.name}"
             main_window.state["skeleton_description"] = (
-                f"<strong>Description:</strong> {skel.description}<br><br>"
-                f"<strong>Nodes ({len(skel)}):</strong> {', '.join(skel.node_names)}"
+                f"<strong>Skeleton name:</strong> {description}<br><br>"
+                f"<strong>Nodes({len(skel.node_names)}):</strong>"
+                f"{', '.join(skel.node_names)}"
             )
             self.skeleton_description.setText(main_window.state["skeleton_description"])
-            updatePreviewImage(skel.preview_image)
+            updatePreviewImage(
+                decode_preview_image(
+                    skeleton_data["preview_image"]["py/b64"], return_bytes=True
+                )
+            )
 
         self.skeleton_templates.currentIndexChanged.connect(update_skeleton_preview)
         update_skeleton_preview(idx=0)
@@ -542,7 +576,27 @@ class InstancesDock(DockWidget):
             name_prefix="",
             model=self.model,
         )
+
+        # Apply initial visibility for the optional "mean node score" column,
+        # and keep it in sync with the View-menu toggle.
+        self._apply_mean_node_score_visibility()
+        self.main_window.state.connect(
+            "show mean node score",
+            lambda _: self._apply_mean_node_score_visibility(),
+        )
+
         return self.table
+
+    def _apply_mean_node_score_visibility(self) -> None:
+        """Hide or show the 'mean node score' column based on the View toggle."""
+        if not hasattr(self, "table") or self.table is None:
+            return
+        try:
+            col_idx = self.model.properties.index("mean node score")
+        except ValueError:
+            return
+        show = bool(self.main_window.state.get("show mean node score", default=False))
+        self.table.setColumnHidden(col_idx, not show)
 
     def lay_everything_out(self) -> None:
         self.wgt_layout.addWidget(self.table)

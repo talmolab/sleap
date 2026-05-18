@@ -8,7 +8,7 @@ The typical use-case is to show predictions for each training epoch on the
 training/validation images. For this use-case, there's a factory method which
 creates widgets with relevant filters from a given training run path.
 """
-from sleap import Video
+
 from sleap.gui.widgets.video import QtVideoPlayer
 
 from qtpy import QtWidgets
@@ -16,6 +16,7 @@ from qtpy import QtWidgets
 import glob
 import os
 from typing import List, Optional, Text, Tuple
+from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
 
 
 class QtImageDirectoryWidget(QtVideoPlayer):
@@ -92,18 +93,23 @@ class QtImageDirectoryWidget(QtVideoPlayer):
             if self.video is None:
                 was_on_last_image = True
                 self.show()
-            elif self.state["frame_idx"] == self.video.last_frame_idx:
+            elif self.state["frame_idx"] == get_last_frame_idx(self.video):
                 was_on_last_image = True
 
             self.files = files
-            self.video = Video.from_image_filenames(filenames=files)
+            import sleap_io as sio
+
+            self.video = sio.load_video(files, plugin="imageio")
             self.load_video(video=self.video)
 
             if was_on_last_image:
-                self.state["frame_idx"] = self.video.last_frame_idx
+                self.state["frame_idx"] = get_last_frame_idx(self.video)
             elif self.state["frame_idx"]:
+                # self.state["frame_idx"] = min(
+                #     self.state["frame_idx"], self.video.last_frame_idx
+                # )
                 self.state["frame_idx"] = min(
-                    self.state["frame_idx"], self.video.last_frame_idx
+                    self.state["frame_idx"], get_last_frame_idx(self.video)
                 )
 
     @classmethod

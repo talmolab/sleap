@@ -45,8 +45,8 @@ def test_video_import_detect_grayscale():
     )
     data = importer.get_data()
 
-    assert data[0]["params"]["grayscale"] == True
-    assert data[1]["params"]["grayscale"] == False
+    assert data[0]["params"]["grayscale"]
+    assert not data[1]["params"]["grayscale"]
 
 
 def test_video_import_detect_h5_shape():
@@ -58,7 +58,4 @@ def test_video_import_detect_h5_shape():
     assert data[0]["params"]["input_format"] == "channels_first"
 
     assert importer.import_widgets[0].video is not None
-    assert importer.import_widgets[0].video.num_frames == 42
-    assert importer.import_widgets[0].video.height == 512
-    assert importer.import_widgets[0].video.width == 512
-    assert importer.import_widgets[0].video.channels == 1
+    assert importer.import_widgets[0].video.shape == (42, 512, 512, 1)

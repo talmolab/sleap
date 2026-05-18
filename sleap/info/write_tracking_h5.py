@@ -31,27 +31,30 @@ import h5py as h5
 import numpy as np
 import pandas as pd
 
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple
 
-from sleap.io.dataset import Labels
-from sleap.io.video import Video
-from sleap import PredictedInstance
-
-
-def get_tracks_as_np_strings(labels: Labels) -> List[np.string_]:
-    """Get list of track names as `np.string_`."""
-    return [np.string_(track.name) for track in labels.tracks]
+from sleap_io import Labels, PredictedInstance
+from sleap_io import Video
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    make_video_callback,
+    load_labels_video_search,
+)
 
 
-def get_nodes_as_np_strings(labels: Labels) -> List[np.string_]:
-    """Get list of node names as `np.string_`."""
-    return [np.string_(node.name) for node in labels.skeletons[0].nodes]
+def get_tracks_as_np_strings(labels: Labels) -> List[bytes]:
+    """Get list of track names as bytes."""
+    return [track.name.encode("utf-8") for track in labels.tracks]
 
 
-def get_edges_as_np_strings(labels: Labels) -> List[Tuple[np.string_, np.string_]]:
-    """Get list of edge names as `np.string_`."""
+def get_nodes_as_np_strings(labels: Labels) -> List[bytes]:
+    """Get list of node names as bytes."""
+    return [node.name.encode("utf-8") for node in labels.skeletons[0].nodes]
+
+
+def get_edges_as_np_strings(labels: Labels) -> List[Tuple[bytes, bytes]]:
+    """Get list of edge names as bytes."""
     return [
-        (np.string_(src_name), np.string_(dst_name))
+        (src_name.encode("utf-8"), dst_name.encode("utf-8"))
         for (src_name, dst_name) in labels.skeletons[0].edge_names
     ]
 
@@ -92,9 +95,9 @@ def get_occupancy_and_points_matrices(
         if video is None:
             video = labels.videos[0]
     except IndexError:
-        print(f"There are no videos in this project. No occupancy matrix to return.")
+        print("There are no videos in this project. No occupancy matrix to return.")
         return
-    labeled_frames = labels.get(video)
+    labeled_frames = labels.find(video)
 
     frame_idxs = [lf.frame_idx for lf in labeled_frames]
     frame_idxs.sort()
@@ -158,8 +161,8 @@ def get_occupancy_and_points_matrices(
 
     if warning_flag:
         print(
-            "\nWarning! "
-            "There are more than one instances per track on a single frame.\n"
+            "\nWarning! There are more than one instances per track on a "
+            "single frame.\n"
         )
 
     for lf, inst in lfs_instances:
@@ -177,10 +180,17 @@ def get_occupancy_and_points_matrices(
         occupancy_matrix[track_i, frame_i] = 1
 
         locations_matrix[frame_i, ..., track_i] = inst.numpy()
+        tracking_scores[frame_i, ..., track_i] = inst.tracking_score
         if type(inst) == PredictedInstance:
-            point_scores[frame_i, ..., track_i] = inst.scores
+            from sleap.sleap_io_adaptors.instance_utils import instance_get_scores
+
+            scores = instance_get_scores(inst)
+            if scores is not None:
+                point_scores[frame_i, ..., track_i] = scores
+            else:
+                # Fallback to NaN if no scores available
+                point_scores[frame_i, ..., track_i] = np.nan
             instance_scores[frame_i, ..., track_i] = inst.score
-            tracking_scores[frame_i, ..., track_i] = inst.tracking_score
 
     return (
         occupancy_matrix,
@@ -218,7 +228,6 @@ def remove_empty_tracks_from_matrices(
 
     # Ignore unoccupied tracks
     if np.sum(~occupied_track_mask):
-
         print(f"ignoring {np.sum(~occupied_track_mask)} empty tracks")
 
         occupancy_matrix = occupancy_matrix[occupied_track_mask]
@@ -259,7 +268,7 @@ def write_occupancy_file(
     """
 
     with h5.File(output_path, "w") as f:
-        print(f"\nExporting to SLEAP Analysis file...")
+        print("\nExporting to SLEAP Analysis file...")
         for key, val in data_dict.items():
             print(f"\t{key}: ", end="")
             if isinstance(val, np.ndarray):
@@ -288,7 +297,6 @@ def write_occupancy_file(
 
 
 def write_csv_file(output_path, data_dict):
-
     """Write CSV file with data from given dictionary.
 
     Args:
@@ -384,7 +392,7 @@ def main(
         if video is None:
             video = labels.videos[0]
     except IndexError:
-        print(f"There are no videos in this project. Output file will not be written.")
+        print("There are no videos in this project. Output file will not be written.")
         return
 
     try:
@@ -397,8 +405,8 @@ def main(
         ) = get_occupancy_and_points_matrices(labels, all_frames, video)
     except TypeError:
         print(
-            f"No labeled frames in {video.filename}. "
-            "Skipping the analysis for this video."
+            f"No labeled frames in {video.filename}. Skipping the analysis for "
+            "this video."
         )
         return
 
@@ -429,7 +437,7 @@ def main(
         instance_scores=instance_scores,
         tracking_scores=tracking_scores,
         labels_path=str(labels_path),  # NoneType cannot be written to hdf5.
-        video_path=video.backend.filename,
+        video_path=video.filename,
         video_ind=labels.videos.index(video),
         provenance=json.dumps(labels.provenance),  # dict cannot be written to hdf5.
     )
@@ -455,8 +463,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    video_callback = Labels.make_video_callback([os.path.dirname(args.data_path)])
-    labels = Labels.load_file(args.data_path, video_search=video_callback)
+    video_callback = make_video_callback([os.path.dirname(args.data_path)])
+    labels = load_labels_video_search(args.data_path, video_search=video_callback)
 
     output_path = re.sub("(\\.json(\\.zip)?|\\.h5|\\.slp)$", "", args.data_path)
     output_path = output_path + ".tracking.h5"

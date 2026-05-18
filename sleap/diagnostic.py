@@ -30,7 +30,7 @@ def call(command):
             command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True
         )
         print_(result.stdout.decode())
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         print_(f"unable to locate {command[0]}")
     except subprocess.CalledProcessError as e:
         print_(f"call to {command[0]} failed")
@@ -54,10 +54,11 @@ def system_section():
 
     label("utc", datetime.datetime.utcnow())
     label("python", platform.python_version())
-    label(
-        "system",
-        f"{platform.system()}, {platform.machine()}, {platform.release()}, {platform.version()}",
+    system_info = (
+        f"{platform.system()}, {platform.machine()}, "
+        f"{platform.release()}, {platform.version()}"
     )
+    label("system", system_info)
     label("path", os.getenv("PATH"))
 
 
@@ -74,7 +75,7 @@ def imports_section():
         if hasattr(sleap, "__version__"):
             sleap_version = sleap.__version__
         label("sleap version", sleap_version)
-    except:
+    except Exception:
         label("sleap import", False)
 
     try:
@@ -85,7 +86,7 @@ def imports_section():
 
         call_self(["--gui-check"])
 
-    except:
+    except Exception:
         label("pyside2 import", False)
 
     try:
@@ -96,34 +97,36 @@ def imports_section():
 
         call_self(["--gui-check"])
 
-    except:
+    except Exception:
         label("pyside6 import", False)
 
     try:
-        import cv2
-
         label("cv2 import", True)
-    except:
+    except Exception:
         label("cv2 import", False)
 
 
 def tensorflow_section():
     header("TENSORFLOW")
-    try:
-        import tensorflow as tf
+    label("tensorflow import", False)
+    label("tensorflow", "Neural network functionality has been removed")
 
-        label("tensorflow import", True)
-        label("tensorflow version", tf.__version__)
-        label("tensorflow path", tf.__file__)
-        try:
-            label("gpus", tf.config.list_physical_devices("GPU"))
-        except:
-            try:
-                label("gpus", tf.test.is_gpu_available())
-            except:
-                print_("could not determine if there is gpu")
-    except:
-        label("tensorflow import", False)
+
+def pytorch_section():
+    header("PYTORCH")
+    try:
+        import torch
+
+        label("pytorch import", True)
+        label("pytorch version", torch.__version__)
+        label("pytorch path", torch.__file__)
+        label("cuda available", torch.cuda.is_available())
+        if torch.cuda.is_available():
+            label("cuda device count", torch.cuda.device_count())
+            for i in range(torch.cuda.device_count()):
+                label(f"cuda device {i} name", torch.cuda.get_device_name(i))
+    except Exception:
+        label("pytorch import", False)
 
 
 def package_section():
@@ -149,7 +152,8 @@ def get_diagnostics(output_path=None):
     system_section()
     imports_section()
     git_section()
-    tensorflow_section()
+    # tensorflow_section()
+    pytorch_section()
     package_section()
     nvidia_section()
 
@@ -161,10 +165,10 @@ def get_diagnostics(output_path=None):
 
 
 def gui_check():
-    from PySide2.QtWidgets import QApplication
+    from qtpy.QtWidgets import QApplication
 
-    QApplication()
-    print("successfully created PySide2.QtWidgets.QApplication instance")
+    QApplication([])
+    print("successfully created QApplication instance")
 
 
 def main():

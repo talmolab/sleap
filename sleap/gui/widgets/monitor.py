@@ -1,10 +1,11 @@
 """GUI for monitoring training progress interactively."""
 
+from __future__ import annotations
+
 import logging
 from time import perf_counter
 from typing import Dict, Optional, Tuple
 
-import attr
 import jsonpickle
 import numpy as np
 import zmq
@@ -14,7 +15,6 @@ from qtpy import QtCore, QtWidgets
 
 from sleap.gui.utils import find_free_port
 from sleap.gui.widgets.mpl import MplCanvas
-from sleap.nn.config.training_job import TrainingJobConfig
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class LossPlot(MplCanvas):
         )
 
         # Initialize line series for epoch training loss
-        self.series["epoch_loss"] = self._init_series(
+        self.series["train_loss"] = self._init_series(
             series_type=self.axes.plot,
             name="Epoch Training Loss",
             color=COLOR_TRAIN + (255,),
@@ -160,7 +160,7 @@ class LossPlot(MplCanvas):
             x: The x-coordinate of the data point.
             y: The y-coordinate of the data point.
             which: The type of data point. Possible values are:
-                * "epoch_loss"
+                * "train_loss"
                 * "val_loss"
         """
 
@@ -222,18 +222,16 @@ class LossPlot(MplCanvas):
         mean_epoch_time_sec: int = None,
         eta_ten_epochs_min: int = None,
         epochs_in_plateau: int = None,
-        plateau_patience: int = None,
+        plateau_patience: int | None = None,
         epoch_in_plateau_flag: bool = False,
         best_val_x: int = None,
         best_val_y: float = None,
         epoch_size: int = None,
     ):
-
         # Add training epoch and runtime info
         title = self._get_training_epoch_and_runtime_text(epoch, dt_min, dt_sec)
 
         if last_epoch_val_loss is not None:
-
             if penultimate_epoch_val_loss is not None:
                 # Add mean epoch time and ETA for next 10 epochs
                 eta_text = self._get_eta_text(
@@ -254,7 +252,7 @@ class LossPlot(MplCanvas):
 
             # Add best epoch validation loss if available
             if best_val_x is not None:
-                best_epoch = (best_val_x // epoch_size) + 1
+                best_epoch = best_val_x // epoch_size
                 best_val_text = self._get_best_validation_loss_text(
                     best_val_y, best_epoch
                 )
@@ -415,7 +413,7 @@ class LossPlot(MplCanvas):
         """Set up the title space.
 
         Returns:
-            The height of the title space as a decimal fraction of the total figure height.
+            Height of the title space as a decimal fraction of the total figure height.
         """
 
         # Set a dummy title of the plot
@@ -453,7 +451,7 @@ class LossPlot(MplCanvas):
         self.axes.set_xlim(0, 1)
         self.axes.set_xlabel("Batches", fontweight="bold", fontsize="small")
 
-        # Set the x-label in the center of the axes and some amount above the bottom of the figure
+        # Set x-label in the center of the axes and some amount above bottom of fig
         blended_transform = mtransforms.blended_transform_factory(
             self.axes.transAxes, self.fig.transFigure
         )
@@ -487,7 +485,7 @@ class LossPlot(MplCanvas):
         """Set up the legend.
 
         Returns:
-            Tuple of the width and height of the legend as a decimal fraction of the total figure width and height.
+            Tuple of the h,w of legend as a decimal fraction of the total figure h, w.
         """
 
         # Move the legend outside the plot on the upper left
@@ -507,11 +505,10 @@ class LossPlot(MplCanvas):
         # Transform the bounding box to figure coordinates
         bbox = bbox.transformed(self.fig.transFigure.inverted())
 
-        # Calculate the width and height of the legend as a percentage of the total figure width and height
+        # Calculate the h,w of legend as a percentage of the total figure h, w.
         return bbox.width, bbox.height
 
     def _setup_major_gridlines(self):
-
         # Set the outline color of the plot to gray
         for spine in self.axes.spines.values():
             spine.set_edgecolor("#d3d3d3")  # Light gray color
@@ -554,7 +551,6 @@ class LossPlot(MplCanvas):
         border_color: Optional[Tuple[int, int, int]] = None,
         zorder: Optional[int] = None,
     ):
-
         # Set the color
         color = [c / 255.0 for c in color]  # Normalize color values to [0, 1]
 
@@ -595,6 +591,7 @@ class LossViewer(QtWidgets.QMainWindow):
         zmq_ports: Dict = None,
         zmq_context: Optional[zmq.Context] = None,
         show_controller=True,
+        auto_open_wandb: bool = False,
         parent=None,
     ):
         super().__init__(parent)
@@ -603,6 +600,9 @@ class LossViewer(QtWidgets.QMainWindow):
         self.stop_button = None
         self.cancel_button = None
         self.canceled = False
+        self.auto_open_wandb = auto_open_wandb
+        self.wandb_url: Optional[str] = None
+        self._wandb_label: Optional[QtWidgets.QLabel] = None
 
         # Set up ZMQ ports for communication.
         zmq_ports = zmq_ports or dict()
@@ -664,13 +664,17 @@ class LossViewer(QtWidgets.QMainWindow):
     def reset(
         self,
         what: str = "",
-        config: TrainingJobConfig = attr.ib(factory=TrainingJobConfig),
+        plateau_patience: int | None = None,
+        plateau_min_delta: float | None = None,
     ):
         """Reset all chart series.
 
         Args:
             what: String identifier indicating which job type the current run
                 corresponds to.
+            plateau_patience: Number of epochs to wait in plateau before stopping.
+            plateau_min_delta: Minimum change in validation loss to be considered
+                significant (absolute threshold).
         """
         self.canvas = LossPlot(
             width=5,
@@ -682,7 +686,7 @@ class LossViewer(QtWidgets.QMainWindow):
 
         self.mp_series = dict()
         self.mp_series["batch"] = self.canvas.series["batch"]
-        self.mp_series["epoch_loss"] = self.canvas.series["epoch_loss"]
+        self.mp_series["train_loss"] = self.canvas.series["train_loss"]
         self.mp_series["val_loss"] = self.canvas.series["val_loss"]
         self.mp_series["val_loss_best"] = self.canvas.series["val_loss_best"]
 
@@ -726,6 +730,12 @@ class LossViewer(QtWidgets.QMainWindow):
 
             control_layout.addStretch(1)
 
+            # WandB URL label (hidden until URL is received)
+            self._wandb_label = QtWidgets.QLabel()
+            self._wandb_label.setOpenExternalLinks(True)
+            self._wandb_label.setVisible(False)
+            control_layout.addWidget(self._wandb_label)
+
             self.stop_button = QtWidgets.QPushButton("Stop Early")
             self.stop_button.clicked.connect(self._stop)
             control_layout.addWidget(self.stop_button)
@@ -741,7 +751,8 @@ class LossViewer(QtWidgets.QMainWindow):
         wid.setLayout(layout)
         self.setCentralWidget(wid)
 
-        self.config = config
+        self.plateau_patience = plateau_patience
+        self.plateau_min_delta = plateau_min_delta
         self.X = []
         self.Y = []
         self.best_val_x = None
@@ -761,6 +772,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.epoch_in_plateau_flag = False
         self.last_batch_number = 0
         self.is_running = False
+        self.best_epoch_loss = None
 
     def set_message(self, text: str):
         """Set the chart title text."""
@@ -851,7 +863,7 @@ class LossViewer(QtWidgets.QMainWindow):
                 mean_epoch_time_sec=self.mean_epoch_time_sec,
                 eta_ten_epochs_min=self.eta_ten_epochs_min,
                 epochs_in_plateau=self.epochs_in_plateau,
-                plateau_patience=self.config.optimization.early_stopping.plateau_patience,
+                plateau_patience=self.plateau_patience,
                 epoch_in_plateau_flag=self.epoch_in_plateau_flag,
                 best_val_x=self.best_val_x,
                 best_val_y=self.best_val_y,
@@ -875,7 +887,7 @@ class LossViewer(QtWidgets.QMainWindow):
                 a new training session (when we're training multiple types
                 of models in a sequence, as for the top-down pipeline).
             * logs - dictionary with data relevant for plotting, can include
-                * loss
+                * train_loss
                 * val_loss
 
         Args:
@@ -893,9 +905,13 @@ class LossViewer(QtWidgets.QMainWindow):
                 self._set_start_time(perf_counter())
                 self.current_job_output_type = msg["what"]
 
+                # Handle WandB URL if present
+                wandb_url = msg.get("wandb_url")
+                if wandb_url:
+                    self._on_wandb_url_received(wandb_url)
+
             # Make sure message matches current training job.
             if msg.get("what", "") == self.current_job_output_type:
-
                 if not self.is_timer_running:
                     # We must have missed the train_begin message, so start timer now.
                     self._set_start_time(perf_counter())
@@ -906,18 +922,25 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.epoch = msg["epoch"]
                 elif msg["event"] == "epoch_end":
                     self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
-                    self._add_datapoint(
-                        (self.epoch + 1) * self.epoch_size,
-                        msg["logs"]["loss"],
-                        "epoch_loss",
+                    # Support both sleap-nn naming (train/loss) and legacy (train_loss)
+                    train_loss = msg["logs"].get(
+                        "train/loss", msg["logs"].get("train_loss")
                     )
-                    if "val_loss" in msg["logs"].keys():
+                    if train_loss is not None:
+                        self._add_datapoint(
+                            x=(self.epoch + 1) * self.epoch_size,
+                            y=train_loss,
+                            which="train_loss",
+                        )
+                    # Support both sleap-nn naming (val/loss) and legacy (val_loss)
+                    val_loss = msg["logs"].get("val/loss", msg["logs"].get("val_loss"))
+                    if val_loss is not None:
                         # update variables and add points to plot
                         self.penultimate_epoch_val_loss = self.last_epoch_val_loss
-                        self.last_epoch_val_loss = msg["logs"]["val_loss"]
+                        self.last_epoch_val_loss = val_loss
                         self._add_datapoint(
                             (self.epoch + 1) * self.epoch_size,
-                            msg["logs"]["val_loss"],
+                            val_loss,
                             "val_loss",
                         )
                         # calculate timing and flags at new epoch
@@ -930,27 +953,39 @@ class LossViewer(QtWidgets.QMainWindow):
                             )
                             self.eta_ten_epochs_min = (mean_epoch_time * 10) // 60
 
-                            val_loss_delta = (
-                                self.penultimate_epoch_val_loss
-                                - self.last_epoch_val_loss
-                            )
-                            self.epoch_in_plateau_flag = (
-                                val_loss_delta
-                                < self.config.optimization.early_stopping.plateau_min_delta
-                            ) or (self.best_val_y < self.last_epoch_val_loss)
+                            if self.best_epoch_loss is None:
+                                self.best_epoch_loss = self.last_epoch_val_loss
+
+                            if self.plateau_min_delta is not None:
+                                # Plateau check using absolute threshold mode in torch
+                                is_better = (
+                                    self.last_epoch_val_loss
+                                    < self.best_epoch_loss - self.plateau_min_delta
+                                )
+                            else:
+                                is_better = (
+                                    self.last_epoch_val_loss < self.best_epoch_loss
+                                )
+
+                            self.epoch_in_plateau_flag = not is_better
                             self.epochs_in_plateau = (
                                 self.epochs_in_plateau + 1
                                 if self.epoch_in_plateau_flag
                                 else 0
                             )
+                            if is_better:
+                                self.best_epoch_loss = self.last_epoch_val_loss
                     self.on_epoch.emit()
                 elif msg["event"] == "batch_end":
                     self.last_batch_number = msg["batch"]
-                    self._add_datapoint(
-                        (self.epoch * self.epoch_size) + msg["batch"],
-                        msg["logs"]["loss"],
-                        "batch",
-                    )
+                    # Support both sleap-nn naming (loss) and legacy (train_loss)
+                    batch_loss = msg["logs"].get("loss", msg["logs"].get("train_loss"))
+                    if batch_loss is not None:
+                        self._add_datapoint(
+                            x=(self.epoch * self.epoch_size) + msg["batch"],
+                            y=batch_loss,
+                            which="batch",
+                        )
 
             # Check for messages again (up to times_to_check times).
             if times_to_check > 0:
@@ -969,7 +1004,7 @@ class LossViewer(QtWidgets.QMainWindow):
             y: The loss value.
             which: Type of data point we're adding. Possible values are:
                 * "batch" (loss for the batch)
-                * "epoch_loss" (loss for the entire epoch)
+                * "train_loss" (loss for the entire epoch)
                 * "val_loss" (validation loss for the epoch)
         """
         if which == "batch":
@@ -999,7 +1034,6 @@ class LossViewer(QtWidgets.QMainWindow):
                 self._resize_axes(xs, ys)
 
         else:
-
             if which == "val_loss":
                 if self.best_val_y is None or y < self.best_val_y:
                     self.best_val_x = x
@@ -1034,7 +1068,7 @@ class LossViewer(QtWidgets.QMainWindow):
             x: The x-coordinate of the data point.
             y: The y-coordinate of the data point.
             which: The type of data point. Possible values are:
-                * "epoch_loss"
+                * "train_loss"
                 * "val_loss"
         """
 
@@ -1102,6 +1136,26 @@ class LossViewer(QtWidgets.QMainWindow):
         if not self.ctx_given and self.ctx is not None:
             self.ctx.term()
             self.ctx = None
+
+    def _on_wandb_url_received(self, url: str):
+        """Handle received WandB run URL.
+
+        Args:
+            url: The WandB run URL.
+        """
+        import webbrowser
+
+        self.wandb_url = url
+        logger.info(f"WandB run URL: {url}")
+
+        # Update the clickable label
+        if self._wandb_label is not None:
+            self._wandb_label.setText(f'<a href="{url}">WandB Run</a>')
+            self._wandb_label.setVisible(True)
+
+        # Auto-open in browser if enabled
+        if self.auto_open_wandb:
+            webbrowser.open(url)
 
     def _set_end(self):
         """Mark the end of the run."""

@@ -21,7 +21,7 @@ method while passing the user-selected params as the named parameters: ::
 """
 
 from qtpy.QtCore import Qt, QRectF, Signal
-from qtpy.QtWidgets import QApplication, QLayout, QVBoxLayout, QHBoxLayout, QFrame
+from qtpy.QtWidgets import QLayout, QVBoxLayout, QHBoxLayout, QFrame
 from qtpy.QtWidgets import QDialog, QWidget, QLabel, QScrollArea
 from qtpy.QtWidgets import (
     QPushButton,
@@ -32,22 +32,22 @@ from qtpy.QtWidgets import (
 )
 
 from sleap.gui.widgets.video import GraphicsView
-from sleap.io.video import (
-    Video,
+from sleap_io import Video
+from sleap_io.io.video_reading import (
     MediaVideo,
     HDF5Video,
-    NumpyVideo,
-    ImgStoreVideo,
-    SingleImageVideo,
-    available_video_exts,
+    ImageVideo,
+    TiffVideo,
 )
+from sleap.sleap_io_adaptors.video_utils import available_video_exts
 from sleap.gui.dialogs.filedialog import FileDialog
 
 import h5py
-import qimage2ndarray
 import cv2
+import numpy as np
 
 from typing import Any, Dict, List, Optional
+from sleap.gui.widgets.video import ndarray_to_qimage
 
 
 class ImportVideos:
@@ -67,7 +67,8 @@ class ImportVideos:
         2. Show import parameter dialog with widget for each file.
 
         Args:
-            filenames: List of filenames. If not provided, a file browser GUI will appear.
+            filenames: List of the filenames. If not provided, a file browser GUI will
+                appear.
 
         Returns:
             List with dict of the parameters for each file to import.
@@ -75,13 +76,11 @@ class ImportVideos:
         messages = dict() if messages is None else messages
 
         if filenames is None:
-
             any_video_exts = " ".join(["*." + ext for ext in available_video_exts()])
             media_video_exts = " ".join(["*." + ext for ext in MediaVideo.EXTS])
             hdf5_video_exts = " ".join(["*." + ext for ext in HDF5Video.EXTS])
-            numpy_video_exts = " ".join(["*." + ext for ext in NumpyVideo.EXTS])
-            imgstore_video_exts = " ".join(["*." + ext for ext in ImgStoreVideo.EXTS])
-            siv_video_exts = " ".join(["*." + ext for ext in SingleImageVideo.EXTS])
+            image_video_exts = " ".join(["*." + ext for ext in ImageVideo.EXTS])
+            tiff_video_exts = " ".join(["*." + ext for ext in TiffVideo.EXTS])
 
             filenames, filter = FileDialog.openMultiple(
                 None,
@@ -90,9 +89,8 @@ class ImportVideos:
                 f"Any Video ({any_video_exts});;"
                 f"Media ({media_video_exts});;"
                 f"HDF5 ({hdf5_video_exts});;"
-                f"Numpy ({numpy_video_exts});;"
-                f"ImgStore ({imgstore_video_exts});;"
-                f"Single image ({siv_video_exts});;"
+                f"Image ({image_video_exts});;"
+                f"TIFF ({tiff_video_exts});;"
                 "Any File (*.*)",
             )
 
@@ -136,7 +134,7 @@ class ImportParamDialog(QDialog):
             {
                 "video_type": "hdf5",
                 "match": ",".join(HDF5Video.EXTS),
-                "video_class": Video.from_hdf5,
+                "video_class": Video.from_filename,
                 "params": [
                     {
                         "name": "dataset",
@@ -155,18 +153,18 @@ class ImportParamDialog(QDialog):
             {
                 "video_type": "mp4",
                 "match": ",".join(MediaVideo.EXTS),
-                "video_class": Video.from_media,
+                "video_class": Video.from_filename,
                 "params": [{"name": "grayscale", "type": "check"}],
             },
             {
-                "video_type": "imgstore",
-                "match": ",".join(ImgStoreVideo.EXTS),
+                "video_type": "image",
+                "match": ",".join(ImageVideo.EXTS),
                 "video_class": Video.from_filename,
                 "params": [],
             },
             {
-                "video_type": "single_image",
-                "match": ",".join(SingleImageVideo.EXTS),
+                "video_type": "tiff",
+                "match": ",".join(TiffVideo.EXTS),
                 "video_class": Video.from_filename,
                 "params": [{"name": "grayscale", "type": "check"}],
             },
@@ -408,7 +406,8 @@ class ImportItemWidget(QFrame):
             self.preview_widget.load_video(self.video)
         except Exception as e:
             print(f"Unable to load video with these parameters. Error: {e}")
-            # if we got an error showing video with those settings, clear the video preview
+            # if we got an error showing video with those settings, clear the video
+            # preview
             self.video = None
             self.preview_widget.clear_video()
 
@@ -527,7 +526,7 @@ class ImportParamWidget(QWidget):
         param_list = self.import_type["params"]
         for param in param_list:
             name = param["name"]
-            type = param["type"]
+            param["type"]
 
             if hasattr(video, name):
                 val = getattr(video, name)
@@ -557,7 +556,7 @@ class ImportParamWidget(QWidget):
         try:
             with h5py.File(self.file_path, "r") as f:
                 options = self._find_h5_datasets("", f)
-        except Exception as e:
+        except Exception:
             options = []
         return options
 
@@ -624,11 +623,12 @@ class VideoPreviewWidget(QWidget):
         """Load the video preview and display label text."""
         self.video = video
         self.frame_idx = initial_frame
+        n_frames, height, width, channels = self.video.shape
         label = "(%d, %d), %d f, %d c" % (
-            self.video.width,
-            self.video.height,
-            self.video.frames,
-            self.video.channels,
+            width,
+            height,
+            n_frames,
+            channels,
         )
         self.video_label.setText(label)
         if plot:
@@ -640,7 +640,7 @@ class VideoPreviewWidget(QWidget):
             return
 
         # Get image data
-        frame = self.video.get_frame(idx)
+        frame = self.video[idx]
 
         # Re-size the preview image
         height, width = frame.shape[:2]
@@ -652,8 +652,15 @@ class VideoPreviewWidget(QWidget):
         # Clear existing objects
         self.view.clear()
 
-        # Convert ndarray to QImage
-        image = qimage2ndarray.array2qimage(frame)
+        # Ensure frame has 3 dimensions for ndarray_to_qimage
+        if frame.ndim == 2:
+            frame = np.expand_dims(frame, axis=-1)
+
+        # TODO: Look into this -- BGR to RGB should be handled by the video backend
+        # Convert BGR to RGB if image has 3 channels
+        # if frame.shape[-1] == 3:
+        #     frame = frame[..., ::-1]
+        image = ndarray_to_qimage(frame)
 
         # Display image
         self.view.setImage(image)

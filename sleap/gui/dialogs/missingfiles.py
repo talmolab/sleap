@@ -20,6 +20,8 @@ class MissingFilesDialog(QtWidgets.QDialog):
         missing: List[bool] = None,
         replace: bool = False,
         allow_incomplete: bool = False,
+        is_sequence: List[bool] = None,
+        original_filenames: List = None,
         *args,
         **kwargs,
     ):
@@ -30,12 +32,18 @@ class MissingFilesDialog(QtWidgets.QDialog):
 
         Args:
             filenames: List of filenames to find, needn't all be missing.
+                For image sequences, this should contain the first frame path
+                (for display purposes and distinguishability).
             missing: Corresponding list, whether each file is missing. If
                 not given, then we'll check whether each file exists.
             replace: Whether we are replacing files (already found) or
                 locating files (not already found). Affects text in dialog.
             allow_incomplete: Whether to enable "accept" button when there
                 are still missing files.
+            is_sequence: List indicating which entries are image sequences.
+                If None, all entries are treated as regular video files.
+            original_filenames: For image sequences, contains the full list
+                of frame paths. Used for remapping frames to new directory.
 
         Returns:
             None.
@@ -45,6 +53,10 @@ class MissingFilesDialog(QtWidgets.QDialog):
 
         if not missing:
             missing = pathutils.list_file_missing(filenames)
+
+        # Initialize sequence tracking
+        self.is_sequence = is_sequence or [False] * len(filenames)
+        self.original_filenames = original_filenames or filenames
 
         self.filenames = filenames
         self.missing = missing
@@ -84,36 +96,56 @@ class MissingFilesDialog(QtWidgets.QDialog):
         self.setLayout(layout)
 
     def locateFile(self, idx: int):
-        """Shows dialog for user to locate a specific missing file."""
+        """Shows dialog for user to locate a specific missing file.
+
+        For image sequences, the user selects the first frame file.
+        The path prefix change is then applied to other missing files.
+        """
         old_filename = self.filenames[idx]
         _, old_ext = os.path.splitext(old_filename)
 
-        caption = f"Please locate {old_filename}..."
-        filters = [f"Missing file type (*{old_ext})", "Any File (*.*)"]
+        if self.is_sequence[idx]:
+            # Image sequence: user selects first frame file
+            caption = f"Please locate first frame: {Path(old_filename).name}..."
+            filters = [f"Image files (*{old_ext})", "Any File (*.*)"]
+        else:
+            caption = f"Please locate {old_filename}..."
+            filters = [f"Missing file type (*{old_ext})", "Any File (*.*)"]
+
         filters = [filters[0]] if self.replace else filters
         new_filename, _ = FileDialog.open(
             None, dir=None, caption=caption, filter=";;".join(filters)
         )
 
-        path_new_filename = Path(new_filename)
-        paths = [str(PurePath(fn)) for fn in self.filenames]
-        if str(path_new_filename) in paths:
-            # Do not allow same video to be imported more than once.
-            QtWidgets.QMessageBox(
-                text=(
-                    f"The file <b>{path_new_filename.name}</b> cannot be added to the "
-                    "project multiple times."
-                )
-            ).exec_()
-        elif new_filename:
-            # Try using this change to find other missing files
-            self.setFilename(idx, new_filename)
+        if not new_filename:
+            return
 
-            # Redraw the table
-            self.file_table.reset()
+        path_new_filename = Path(new_filename)
+
+        # Check for duplicate (regular videos only)
+        if not self.is_sequence[idx]:
+            paths = [str(PurePath(fn)) for fn in self.filenames]
+            if str(path_new_filename) in paths:
+                QtWidgets.QMessageBox(
+                    text=(
+                        f"The file <b>{path_new_filename.name}</b> cannot be added to "
+                        "the project multiple times."
+                    )
+                ).exec_()
+                return
+
+        # Apply the change - works for both regular videos and sequences
+        # For sequences, the selected file represents the first frame
+        self.setFilename(idx, new_filename)
+
+        # Redraw the table
+        self.file_table.reset()
 
     def setFilename(self, idx: int, filename: str, confirm: bool = True):
-        """Applies change after user finds missing file."""
+        """Applies change after user finds missing file.
+
+        For image sequences, auto-prefix verifies all frames exist before applying.
+        """
         old_filename = self.filenames[idx]
 
         self.filenames[idx] = filename
@@ -125,10 +157,19 @@ class MissingFilesDialog(QtWidgets.QDialog):
         # We'll ask for confirmation for making these changes.
         confirm_callback = None
         if confirm:
-            confirm_callback = lambda: self.confirmAutoReplace(old_prefix, new_prefix)
 
+            def confirm_callback():
+                return self.confirmAutoReplace(old_prefix, new_prefix)
+
+        # Apply prefix change - sequences will have all frames verified
         pathutils.filenames_prefix_change(
-            self.filenames, old_prefix, new_prefix, self.missing, confirm_callback
+            self.filenames,
+            old_prefix,
+            new_prefix,
+            self.missing,
+            confirm_callback,
+            is_sequence=self.is_sequence,
+            original_filenames=self.original_filenames,
         )
 
         # If there are no missing files still, enable the "accept" button

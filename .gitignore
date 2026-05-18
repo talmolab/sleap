@@ -1,3 +1,6 @@
+# Claude
+.claude/settings.local.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -24,6 +27,8 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+uv.lock
+.ruff_cache/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -117,3 +122,20 @@ venv.bak/
 
 # OS generated files
 .DS_Store
+*.analysis.h5
+*.analysis.nix
+tests/data/slp_hdf5/minimal_instance.000_centered_pair_low_quality.analysis.*
+
+# Test artifacts in root
+test*.avi
+
+# Output files
+outputs/
+
+# Temp/scratch files
+plan/
+scratch/
+tmp/
+openspec/
+# Playwright MCP artifacts
+.playwright-mcp/

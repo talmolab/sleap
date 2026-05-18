@@ -12,7 +12,7 @@ from sleap.gui.dataviews import GenericTableModel, GenericTableView
 from sleap.gui.dialogs.filedialog import FileDialog
 from sleap.gui.learning.configs import TrainingConfigsGetter, ConfigFileInfo
 from sleap.gui.learning.dialog import TrainingEditorWidget
-
+from sleap.gui.config_utils import get_backbone_from_omegaconf
 from sleap.gui.widgets.mpl import MplCanvas
 
 from typing import Optional, Text
@@ -58,12 +58,12 @@ class MetricsTableDialog(QtWidgets.QWidget):
         button_layout.addWidget(btn)
 
         btn = QtWidgets.QPushButton("View Hyperparameters")
-        btn.clicked.connect(self._show_model_params)
+        btn.clicked.connect(lambda: self._show_model_params())
         button_layout.addWidget(btn)
         self._view_model_btn = btn
 
         btn = QtWidgets.QPushButton("View Metrics")
-        btn.clicked.connect(self._show_metric_details)
+        btn.clicked.connect(lambda: self._show_metric_details())
         button_layout.addWidget(btn)
         self._view_metrics_btn = btn
 
@@ -178,7 +178,6 @@ class MetricsTableModel(GenericTableModel):
     show_row_numbers = False
 
     def item_to_data(self, obj, cfg: ConfigFileInfo):
-
         if cfg.training_frame_count:
             n_train_str = (
                 f"{cfg.training_instance_count} ({cfg.training_frame_count} frames)"
@@ -193,12 +192,12 @@ class MetricsTableModel(GenericTableModel):
         else:
             n_val_str = ""
 
-        arch_str = cfg.config.model.backbone.which_oneof_attrib_name()
+        arch_str = get_backbone_from_omegaconf(cfg.config)
 
-        backbone = cfg.config.model.backbone.which_oneof()
-        if hasattr(backbone, "max_stride"):
+        backbone = cfg.config.model_config.backbone_config[arch_str]
+        if "max_stride" in backbone:
             arch_str = f"{arch_str}, max stride: {backbone.max_stride}"
-        if hasattr(backbone, "filters"):
+        if "filters" in backbone:
             arch_str = f"{arch_str}, filters: {backbone.filters}"
 
         # scale = cfg.config.data.preprocessing.input_scaling
@@ -283,7 +282,8 @@ class DetailedMetricsDialog(QtWidgets.QWidget):
         if self.metrics:
             for key, val in self.metrics.items():
                 if (
-                    isinstance(val, np.float)
+                    isinstance(val, np.float64)
+                    or isinstance(val, np.int64)
                     or isinstance(val, np.ndarray)
                     and not len(val.shape)
                 ):

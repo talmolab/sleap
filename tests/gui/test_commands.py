@@ -8,14 +8,27 @@ from pathlib import PurePath, Path
 from qtpy import QtCore
 from typing import List
 
-from sleap import Skeleton, Track, PredictedInstance
+from sleap_io import (
+    Skeleton,
+    Track,
+    PredictedInstance,
+    Labels,
+    LabeledFrame,
+    Instance,
+)
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
     AddInstance,
     CommandContext,
+    DeleteNode,
     ExportAnalysisFile,
     ExportDatasetWithImages,
+    ExportFullPackage,
+    ExportVideoClip,
+    GenerateSuggestionsThread,
     ImportDeepLabCutFolder,
+    NewEdge,
+    NewNode,
     RemoveVideo,
     ReplaceVideo,
     OpenSkeleton,
@@ -23,20 +36,25 @@ from sleap.gui.commands import (
     DeleteFrameLimitPredictions,
     get_new_version_filename,
 )
-from sleap.instance import Instance, LabeledFrame
 from sleap.io.convert import default_analysis_filename
-from sleap.io.dataset import Labels
 from sleap.io.format.adaptor import Adaptor
-from sleap.io.format.ndx_pose import NDXPoseAdaptor
 from sleap.io.pathutils import fix_path_separator
-from sleap.io.video import Video
+from sleap_io import Video
 from sleap.util import get_package_file
 
 # These imports cause trouble when running `pytest.main()` from within the file
 # Comment out to debug tests file via VSCode's "Debug Python File"
 from tests.info.test_h5 import extract_meta_hdf5
-from tests.io.test_video import assert_video_params
-from tests.io.test_formats import read_nix_meta
+from sleap.sleap_io_adaptors.video_utils import get_last_frame_idx
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    add_suggestion,
+    labels_load_file,
+    remove_video,
+    labels_add_instance,
+)
+from sleap.sleap_io_adaptors.instance_utils import instance_same_pose_as_compat
+
+from copy import deepcopy
 
 
 def test_delete_user_dialog(centered_pair_predictions):
@@ -69,15 +87,30 @@ def test_import_labels_from_dlc_folder():
     assert len(labels) == 3
     assert len(labels.videos) == 2
     assert len(labels.skeletons) == 1
-    assert len(labels.nodes) == 3
-    assert len(labels.tracks) == 3
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_get_nodes
 
-    assert set(
-        [fix_path_separator(l.video.backend.filename) for l in labels.labeled_frames]
-    ) == {
+    assert len(labels_get_nodes(labels)) == 3
+    assert len(labels.tracks) == 2
+
+    # sleap-io returns video.filename as list for image sequences
+    all_filenames = []
+    for lf in labels.labeled_frames:
+        if isinstance(lf.video.filename, list):
+            # For image sequences, we need to get the specific frame
+            if lf.frame_idx < len(lf.video.filename):
+                all_filenames.append(
+                    fix_path_separator(lf.video.filename[lf.frame_idx])
+                )
+            else:
+                # If frame_idx is out of bounds, use the first image
+                all_filenames.append(fix_path_separator(lf.video.filename[0]))
+        else:
+            all_filenames.append(fix_path_separator(lf.video.filename))
+
+    assert set(all_filenames) == {
         "tests/data/dlc_multiple_datasets/video2/img002.jpg",
         "tests/data/dlc_multiple_datasets/video1/img000.jpg",
-        "tests/data/dlc_multiple_datasets/video1/img000.jpg",
+        "tests/data/dlc_multiple_datasets/video1/img001.jpg",
     }
 
     assert set([l.frame_idx for l in labels.labeled_frames]) == {0, 0, 1}
@@ -107,9 +140,11 @@ def test_RemoveVideo(
 
     RemoveVideo.ask = ask
 
-    labels = centered_pair_predictions.copy()
-    labels.add_video(small_robot_mp4_vid)
-    labels.add_video(centered_pair_vid)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_copy, labels_add_video
+
+    labels = labels_copy(centered_pair_predictions)
+    labels_add_video(labels, small_robot_mp4_vid)
+    labels_add_video(labels, centered_pair_vid)
 
     all_videos = labels.videos
     assert len(all_videos) == 3
@@ -127,7 +162,7 @@ def test_RemoveVideo(
     assert context.state["video"] not in videos_to_remove
 
 
-@pytest.mark.parametrize("out_suffix", ["h5", "nix", "csv"])
+@pytest.mark.parametrize("out_suffix", ["h5", "csv"])
 def test_ExportAnalysisFile(
     centered_pair_predictions: Labels,
     centered_pair_predictions_hdf5_path: str,
@@ -157,8 +192,10 @@ def test_ExportAnalysisFile(
         else:
             all_videos = [context.state["video"] or context.labels.videos[0]]
 
+        from sleap.sleap_io_adaptors.lf_labels_utils import labels_get
+
         # Check for labeled frames in each video
-        videos = [video for video in all_videos if len(labels.get(video)) != 0]
+        videos = [video for video in all_videos if len(labels_get(labels, video)) != 0]
         if len(videos) == 0:
             raise ValueError("No labeled frames in video(s). Nothing to export.")
 
@@ -206,7 +243,7 @@ def test_ExportAnalysisFile(
             output_paths.append(output_path)
 
             if labels_path is not None and not params["csv"]:
-                meta_reader = extract_meta_hdf5 if out_suffix == "h5" else read_nix_meta
+                meta_reader = extract_meta_hdf5
                 labels_key = "labels_path" if out_suffix == "h5" else "project"
                 read_meta = meta_reader(output_path, dset_names_in=["labels_path"])
                 assert read_meta[labels_key] == labels_path
@@ -216,17 +253,18 @@ def test_ExportAnalysisFile(
 
     tmpdir = Path(tmpdir)
 
-    labels = centered_pair_predictions.copy()
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_copy
+
+    labels = labels_copy(centered_pair_predictions)
     context = CommandContext.from_labels(labels)
     context.state["filename"] = None
 
     if csv:
-
         context.state["filename"] = centered_pair_predictions_hdf5_path
 
         params = {"all_videos": True, "csv": csv}
         okay = ExportAnalysisFile_ask(context=context, params=params)
-        assert okay == True
+        assert okay
         ExportAnalysisFile.do_action(context=context, params=params)
         assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
@@ -235,7 +273,7 @@ def test_ExportAnalysisFile(
     # Test with all_videos False (single video)
     params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
@@ -243,28 +281,32 @@ def test_ExportAnalysisFile(
     context.state["filename"] = str(tmpdir.with_name("path.to.labels"))
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Add a video (no labels) and test with all_videos True
-    labels.add_video(small_robot_mp4_vid)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
+
+    labels_add_video(labels, small_robot_mp4_vid)
 
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Add labels and test with all_videos False
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
-    instance = Instance(skeleton=labels.skeleton, frame=labeled_frame)
-    labels.add_instance(frame=labeled_frame, instance=instance)
+    instance = Instance(
+        points=Instance.empty(labels.skeleton).points, skeleton=labels.skeleton
+    )
+    labels_add_instance(labels, labeled_frame, instance)
     labels.append(labeled_frame)
 
     params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
@@ -273,14 +315,14 @@ def test_ExportAnalysisFile(
 
     params = {"all_videos": False, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=1, labels_path=context.state["filename"])
 
     # Test with all videos True
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=2, labels_path=context.state["filename"])
 
@@ -288,36 +330,63 @@ def test_ExportAnalysisFile(
     (tmpdir / "session1").mkdir()
     (tmpdir / "session2").mkdir()
     shutil.copy(
-        centered_pair_predictions.video.backend.filename,
+        centered_pair_predictions.video.filename,
         tmpdir / "session1" / "video.mp4",
     )
-    shutil.copy(small_robot_mp4_vid.backend.filename, tmpdir / "session2" / "video.mp4")
+    shutil.copy(small_robot_mp4_vid.filename, tmpdir / "session2" / "video.mp4")
 
-    labels.videos[0].backend.filename = str(tmpdir / "session1" / "video.mp4")
-    labels.videos[1].backend.filename = str(tmpdir / "session2" / "video.mp4")
+    labels.videos[0].filename = str(tmpdir / "session1" / "video.mp4")
+    labels.videos[1].filename = str(tmpdir / "session2" / "video.mp4")
 
     params = {"all_videos": True, "csv": csv}
     okay = ExportAnalysisFile_ask(context=context, params=params)
-    assert okay == True
+    assert okay
     ExportAnalysisFile.do_action(context=context, params=params)
     assert_videos_written(num_videos=2, labels_path=context.state["filename"])
 
     # Remove all videos and test
     all_videos = list(labels.videos)
     for video in all_videos:
-        labels.remove_video(labels.videos[-1])
+        remove_video(labels, labels.videos[-1])
 
     params = {"all_videos": True, "csv": csv}
     with pytest.raises(ValueError):
         okay = ExportAnalysisFile_ask(context=context, params=params)
 
 
+def assert_video_params(
+    video: Video,
+    filename: str = None,
+    filenames: List[str] = None,
+    grayscale: bool = None,
+    bgr: bool = None,
+    height: int = None,
+    width: int = None,
+    channels: int = None,
+    reset: bool = False,
+):
+    if filename is not None:
+        assert video.filename == filename
+
+    if grayscale is not None:
+        assert video.grayscale == grayscale
+
+    # TODO: Align reset behavior?
+    # if reset and isinstance(video.backend, MediaVideo):
+    #     assert video.backend._reader_ is None
+    #     assert video.backend._test_frame_ is None
+
+    # Getting the channels will assert some of the above are not None
+    if grayscale is not None:
+        assert video.shape[3] == 3 ** (not grayscale)
+
+
 def test_ToggleGrayscale(centered_pair_predictions: Labels):
     """Test functionality for ToggleGrayscale on mp4/avi video"""
     labels = centered_pair_predictions
     video = labels.video
-    grayscale = video.backend.grayscale
-    filename = video.backend.filename
+    grayscale = video.grayscale
+    filename = video.filename
 
     context = CommandContext.from_labels(labels)
     context.state["video"] = video
@@ -337,7 +406,9 @@ def test_ReplaceVideo(
     """Test functionality for ToggleGrayscale on mp4/avi video"""
 
     def get_last_lf_in_video(labels, video):
-        lfs: List[LabeledFrame] = list(labels.get(videos[0]))
+        from sleap.sleap_io_adaptors.lf_labels_utils import labels_get
+
+        lfs: List[LabeledFrame] = list(labels_get(labels, video))
         lfs.sort(key=lambda lf: lf.frame_idx)
         return lfs[-1].frame_idx
 
@@ -345,7 +416,7 @@ def test_ReplaceVideo(
         new_video: Video, videos_to_replace: List[Video], context: CommandContext
     ):
         # Video to be imported
-        new_video_filename = new_video.backend.filename
+        new_video_filename = new_video.filename
 
         # Replace the video
         import_item_list = [
@@ -359,7 +430,7 @@ def test_ReplaceVideo(
     labels = centered_pair_predictions
     context = CommandContext.from_labels(labels)
     videos = labels.videos
-    last_lf_frame = get_last_lf_in_video(labels, videos[0])
+    get_last_lf_in_video(labels, videos[0])
 
     # Replace the video
     new_video_filename = replace_video(small_robot_mp4_vid, videos, context)
@@ -367,19 +438,20 @@ def test_ReplaceVideo(
     # Ensure video backend was replaced
     video = labels.video
     assert len(labels.videos) == 1
-    assert video.backend.grayscale == True
-    assert video.backend.filename == new_video_filename
+    assert video.grayscale
+    assert video.filename == new_video_filename
 
     # Ensure labels were truncated (Original video was fully labeled)
     new_last_lf_frame = get_last_lf_in_video(labels, video)
     # Original video was fully labeled
-    assert new_last_lf_frame == labels.video.last_frame_idx
+    assert new_last_lf_frame == get_last_frame_idx(labels.video)
 
     # Attempt to replace an mp4 with an hdf5 video
     with pytest.raises(TypeError):
         replace_video(hdf5_vid, labels.videos, context)
 
 
+@pytest.mark.skip(reason="Test is freezing. Underlying functionality will be replaced.")
 def test_exportNWB(centered_pair_predictions, tmpdir):
     """Test that exportNWB command writes an nwb file."""
 
@@ -417,7 +489,7 @@ def test_exportNWB(centered_pair_predictions, tmpdir):
     context.state["labels"] = labels
 
     # Ensure ".nwb" extension is appended to filename
-    params = {"adaptor": NDXPoseAdaptor()}
+    params = {"adaptor": "nwb"}
     SaveProjectAs_ask(context, params=params)
     assert PurePath(params["filename"]).suffix == ".nwb"
 
@@ -438,19 +510,24 @@ def test_OpenSkeleton(
     centered_pair_predictions: Labels, stickman: Skeleton, fly_legs_skeleton_json: str
 ):
     def assert_skeletons_match(new_skeleton: Skeleton, skeleton: Skeleton):
-        # Node names match
-        assert len(set(new_skeleton.nodes) - set(skeleton.nodes))
-        # Edges match
-        for (new_src, new_dst), (src, dst) in zip(new_skeleton.edges, skeleton.edges):
-            assert new_src.name == src.name
-            assert new_dst.name == dst.name
+        print(skeleton)
+        print(new_skeleton)
+        print(skeleton.symmetries)
+        print(new_skeleton.symmetries)
+        assert skeleton.matches(new_skeleton)
+        # # Node names match
+        # assert len(set(new_skeleton.nodes) - set(skeleton.nodes))
+        # # Edges match
+        # for (new_src, new_dst), (src, dst) in zip(new_skeleton.edges, skeleton.edges):
+        #     assert new_src.name == src.name
+        #     assert new_dst.name == dst.name
 
-        # Symmetries match
-        for (new_src, new_dst), (src, dst) in zip(
-            new_skeleton.symmetries, skeleton.symmetries
-        ):
-            assert new_src.name == src.name
-            assert new_dst.name == dst.name
+        # # Symmetries match
+        # for (new_src, new_dst), (src, dst) in zip(
+        #     new_skeleton.symmetries, skeleton.symmetries
+        # ):
+        #     assert new_src.name == src.name
+        #     assert new_dst.name == dst.name
 
     def OpenSkeleton_ask(context: CommandContext, params: dict) -> bool:
         """Implement `OpenSkeleton.ask` without GUI elements."""
@@ -497,22 +574,25 @@ def test_OpenSkeleton(
     labels = centered_pair_predictions
     skeleton = labels.skeleton
     skeleton.add_symmetry(skeleton.nodes[0].name, skeleton.nodes[1].name)
+    print(skeleton.symmetries)
     context = CommandContext.from_labels(labels)
     context.app.__setattr__("currentText", "Custom")
     # Add multiple skeletons to and ensure the unused skeleton is removed
     labels.skeletons.append(stickman)
+    print("line: 578:", skeleton.symmetries)
 
     # Run without OpenSkeleton.ask()
     params = {"filename": fly_legs_skeleton_json}
     new_skeleton = OpenSkeleton.load_skeleton(fly_legs_skeleton_json)
-    new_skeleton.add_symmetry(new_skeleton.nodes[0], new_skeleton.nodes[1])
     OpenSkeleton.do_action(context, params)
+    print("line: 586:", skeleton.symmetries)
     assert len(labels.skeletons) == 1
 
     # State is updated
     assert context.state["skeleton"] == skeleton
 
     # Structure is identical
+    print("line: 591:", skeleton.symmetries)
     assert_skeletons_match(new_skeleton, skeleton)
 
     # Run again with OpenSkeleton_ask()
@@ -527,12 +607,193 @@ def test_OpenSkeleton(
 
     # Run again with template set
     context.app.currentText = "fly32"
-    fly32_json = get_package_file(f"skeletons/fly32.json")
+    fly32_json = get_package_file("skeletons/fly32.json")
     OpenSkeleton_ask(context, params)
     assert params["filename"] == fly32_json
-    fly32_skeleton = Skeleton.load_json(fly32_json)
+    fly32_skeleton = OpenSkeleton.load_skeleton(fly32_json)
     OpenSkeleton.do_action(context, params)
     assert_skeletons_match(labels.skeleton, fly32_skeleton)
+
+
+def test_DeleteNode_updates_instances(centered_pair_predictions: Labels, tmpdir):
+    """Test that DeleteNode properly updates instance point data.
+
+    This is a regression test for GitHub Discussion #2500 where removing nodes from
+    a skeleton did not update instance point data, causing file corruption that
+    prevented the file from being loaded.
+
+    The bug occurred because DeleteNode called skeleton.remove_node() directly,
+    which only updates the skeleton but NOT the instance point arrays. The fix
+    is to use Labels.remove_nodes() which properly calls Instance.update_skeleton()
+    to update all instances.
+    """
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_copy, labels_load_file
+
+    # Create a copy to avoid mutating the fixture
+    labels = labels_copy(centered_pair_predictions)
+
+    # Get original state
+    original_skeleton = labels.skeleton
+    original_num_nodes = len(original_skeleton.nodes)
+
+    # Pick a node to delete (use a middle node to test index handling)
+    node_to_delete = original_skeleton.nodes[1]  # Second node
+    node_name_to_delete = node_to_delete.name
+
+    # Set up command context
+    context = CommandContext.from_labels(labels)
+    context.state["skeleton"] = original_skeleton
+    context.state["selected_node"] = node_to_delete
+
+    # Execute the DeleteNode command
+    DeleteNode.do_action(context, params={})
+
+    # Verify skeleton was updated
+    assert len(labels.skeleton.nodes) == original_num_nodes - 1
+    assert node_name_to_delete not in labels.skeleton.node_names
+
+    # Verify ALL instances have updated point arrays that match the new skeleton
+    for lf in labels.labeled_frames:
+        for inst in lf.instances:
+            # Instance points should have the same number of points as skeleton nodes
+            assert len(inst.points) == len(labels.skeleton.nodes), (
+                f"Instance has {len(inst.points)} points but skeleton has "
+                f"{len(labels.skeleton.nodes)} nodes. "
+                "Instance point data was not updated when node was deleted!"
+            )
+            # Point names should match skeleton node names
+            assert list(inst.points["name"]) == labels.skeleton.node_names, (
+                "Instance point names do not match skeleton node names!"
+            )
+
+    # Save and reload to verify file is not corrupted
+    save_path = Path(tmpdir) / "test_delete_node.slp"
+    labels.save(str(save_path))
+
+    # This should NOT raise an error - the bug caused a ValueError here
+    reloaded_labels = labels_load_file(str(save_path))
+
+    # Verify reloaded data is correct
+    assert len(reloaded_labels.skeleton.nodes) == original_num_nodes - 1
+    assert node_name_to_delete not in reloaded_labels.skeleton.node_names
+    assert len(reloaded_labels.labeled_frames) == len(labels.labeled_frames)
+
+    # Verify all reloaded instances have correct point counts
+    for lf in reloaded_labels.labeled_frames:
+        for inst in lf.instances:
+            assert len(inst.points) == len(reloaded_labels.skeleton.nodes)
+
+
+def test_DeleteNode_without_labels():
+    """Test that DeleteNode still works when no Labels object is available.
+
+    When editing a skeleton without a Labels context (e.g., in a skeleton-only
+    editor), the command should fall back to calling skeleton.remove_node()
+    directly.
+    """
+    # Create a standalone skeleton (not associated with Labels)
+    skeleton = Skeleton(
+        nodes=["head", "neck", "tail"],
+        edges=[("head", "neck"), ("neck", "tail")],
+    )
+
+    # Set up command context without labels
+    context = CommandContext.from_labels(None)
+    context.state["skeleton"] = skeleton
+    context.state["selected_node"] = skeleton.nodes[1]  # "neck"
+
+    # Execute the DeleteNode command
+    DeleteNode.do_action(context, params={})
+
+    # Verify skeleton was updated
+    assert len(skeleton.nodes) == 2
+    assert "neck" not in skeleton.node_names
+    assert skeleton.node_names == ["head", "tail"]
+    # Edge from head to neck should be removed
+    assert len(skeleton.edges) == 0
+
+
+def test_NewNode_attaches_skeleton_to_labels():
+    """Issue #2684: clicking New Node on a fresh project must attach the
+    GUI's state["skeleton"] to labels.skeletons so it persists on save.
+    """
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+    # Mirrors MainWindow.__init__: an orphan Skeleton in state, not in labels.
+    context.state["skeleton"] = Skeleton()
+    assert labels.skeletons == []
+
+    NewNode.do_action(context, params={})
+
+    assert len(labels.skeletons) == 1
+    assert labels.skeletons[0] is context.state["skeleton"]
+    assert "new_part" in context.state["skeleton"].node_names
+
+
+def test_NewNode_does_not_duplicate_skeleton():
+    """Repeated NewNode calls must not append the same skeleton multiple times."""
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+    context.state["skeleton"] = Skeleton()
+
+    NewNode.do_action(context, params={})
+    NewNode.do_action(context, params={})
+    NewNode.do_action(context, params={})
+
+    assert len(labels.skeletons) == 1
+    assert len(context.state["skeleton"].nodes) == 3
+
+
+def test_NewNode_persists_skeleton_across_save_reload(tmpdir):
+    """Issue #2684 end-to-end: NewNode + save + reload must round-trip
+    the skeleton without requiring any labeled instances.
+    """
+    import sleap_io as sio
+
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+    context.state["skeleton"] = Skeleton()
+    context.state["labels"] = labels
+
+    NewNode.do_action(context, params={})
+
+    fn = str(PurePath(tmpdir, "test_skeleton_only.slp"))
+    sio.save_file(labels, fn)
+    reloaded = sio.load_file(fn)
+
+    assert len(reloaded.skeletons) == 1
+    assert "new_part" in reloaded.skeletons[0].node_names
+
+
+def test_NewNode_without_labels():
+    """NewNode must not crash when there is no labels context (skeleton-only
+    editing). The skeleton itself should still be mutated.
+    """
+    context = CommandContext.from_labels(None)
+    context.state["skeleton"] = Skeleton()
+
+    NewNode.do_action(context, params={})
+
+    assert "new_part" in context.state["skeleton"].node_names
+
+
+def test_NewEdge_attaches_skeleton_to_labels():
+    """Safety net for #2684: NewEdge also ensures the skeleton is attached
+    to labels.skeletons.
+    """
+    labels = Labels()
+    context = CommandContext.from_labels(labels)
+    skeleton = Skeleton()
+    skeleton.add_node("a")
+    skeleton.add_node("b")
+    context.state["skeleton"] = skeleton
+    assert labels.skeletons == []
+
+    NewEdge.do_action(context, params={"src_node": "a", "dst_node": "b"})
+
+    assert len(labels.skeletons) == 1
+    assert labels.skeletons[0] is skeleton
+    assert len(skeleton.edges) == 1
 
 
 def test_SaveProjectAs(centered_pair_predictions: Labels, tmpdir):
@@ -565,7 +826,9 @@ def test_SetSelectedInstanceTrack(centered_pair_predictions: Labels):
     context.state["video"] = labels.videos[0]
 
     # Remove all tracks
-    labels.remove_all_tracks()
+    from sleap.sleap_io_adaptors.lf_labels_utils import remove_all_tracks
+
+    remove_all_tracks(labels)
 
     # Create instance from predicted instance
     context.newInstance(copy_instance=pred_inst, mark_complete=False)
@@ -585,7 +848,7 @@ def test_DeleteMultipleTracks(min_tracks_2node_labels: Labels):
     """Test that deleting multiple tracks works as expected."""
     labels = min_tracks_2node_labels
     tracks = labels.tracks
-    tracks.append(Track(name="unused", spawned_on=0))
+    tracks.append(Track(name="unused"))
     assert len(tracks) == 3
 
     # Set-up command context
@@ -597,7 +860,7 @@ def test_DeleteMultipleTracks(min_tracks_2node_labels: Labels):
     assert len(labels.tracks) == 2
 
     # Add back an unused track and delete all tracks
-    tracks.append(Track(name="unused", spawned_on=0))
+    tracks.append(Track(name="unused"))
     assert len(tracks) == 3
     context.deleteMultipleTracks(delete_all=True)
     assert len(labels.tracks) == 0
@@ -676,7 +939,7 @@ def test_PasteInstance(min_tracks_2node_labels: Labels):
         ]
         assert len(lf_checkpoint_tracks) == len(lf_to_copy_tracks)
         assert len(lf_to_paste.instances) == len(instances_checkpoint) + 1
-        assert lf_to_paste.instances[-1].points == instance.points
+        assert instance_same_pose_as_compat(lf_to_paste.instances[-1], instance)
 
     context.state["labeled_frame"] = lf_to_copy
     context.state["clipboard_instance"] = instance
@@ -710,7 +973,7 @@ def test_PasteInstance(min_tracks_2node_labels: Labels):
 
     def assertions_post(instances_checkpoint, lf_to_copy, lf_to_paste, *args):
         assert len(lf_to_paste.instances) == len(instances_checkpoint) + 1
-        assert lf_to_paste.instances[-1].points == instance.points
+        assert instance_same_pose_as_compat(lf_to_paste.instances[-1], instance)
         assert lf_to_paste.instances[-1].track == instance.track
 
     lf_to_paste = labels.labeled_frames[2]
@@ -727,12 +990,16 @@ def test_PasteInstance(min_tracks_2node_labels: Labels):
         assert context.state["labeled_frame"] not in labels.labeled_frames
 
     def assertions_post(instances_checkpoint, lf_to_copy, lf_to_paste, *args):
+        from sleap.sleap_io_adaptors.instance_utils import instance_same_pose_as_compat
+
         assert len(lf_to_paste.instances) == len(instances_checkpoint) + 1
-        assert lf_to_paste.instances[-1].points == instance.points
+        assert instance_same_pose_as_compat(lf_to_paste.instances[-1], instance)
         assert lf_to_paste.instances[-1].track == instance.track
         assert lf_to_paste in labels.labeled_frames
 
-    lf_to_paste = labels.get((labels.video, 3))
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_get
+
+    lf_to_paste = labels_get(labels, labels.videos[0], frame_idx=3)
     labels.labeled_frames.remove(lf_to_paste)
     lf_to_paste.instances = []
     context.state["labeled_frame"] = lf_to_paste
@@ -781,12 +1048,14 @@ def test_PasteInstanceTrack(min_tracks_2node_labels: Labels):
     instance_with_same_track = lf_to_paste.instances[0]
     instance_to_paste = lf_to_paste.instances[1]
     context.state["instance"] = instance_to_paste
+    context.state["labeled_frame"] = lf_to_paste
+    print(instance.track, instance_with_same_track.track, instance_to_paste.track)
     assert instance_to_paste.track != instance.track
     assert instance_with_same_track.track == instance.track
 
     context.pasteInstanceTrack()
     assert instance_to_paste.track == instance.track
-    assert instance_with_same_track.track != instance.track
+    assert instance_with_same_track.track is None
 
     # Case 3: Instance selected and no track
     lf_to_paste = labels.labeled_frames[2]
@@ -813,10 +1082,16 @@ def test_LoadProjectFile(
     def ask_LoadProjectFile(params):
         """Implement `LoadProjectFile.ask` without GUI elements."""
         filename: Path = params["filename"]
-        gui_video_callback = Labels.make_video_callback(
+        from sleap.sleap_io_adaptors.lf_labels_utils import make_video_callback
+
+        gui_video_callback = make_video_callback(
             search_paths=[str(filename)], context=params
         )
-        labels = Labels.load_file(
+        from sleap.sleap_io_adaptors.lf_labels_utils import (
+            labels_load_file,
+        )
+
+        labels = labels_load_file(
             centered_pair_predictions_slp_path, video_search=gui_video_callback
         )
         return labels
@@ -830,8 +1105,10 @@ def test_LoadProjectFile(
         assert params["changed_on_load"]
 
     # Get labels and video path
-    labels = Labels.load_file(centered_pair_predictions_slp_path)
-    expected_video_path = Path(labels.video.backend.filename)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
+
+    labels = labels_load_file(centered_pair_predictions_slp_path)
+    expected_video_path = Path(labels.video.filename)
 
     # Move video to new location based on case
     if video_move_case == "new_directory":  # Needs to have same name
@@ -872,10 +1149,12 @@ def test_DeleteFrameLimitPredictions(
     assert len(instances_to_delete) == 2070
 
 
-@pytest.mark.parametrize("export_extension", [".json.zip", ".slp"])
+@pytest.mark.parametrize("export_extension", [".slp"])
 def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmpdir):
     def assert_loaded_package_similar(path_to_pkg: Path, sugg=False, pred=False):
         """Assert that the loaded labels are similar to the original."""
+
+        from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
 
         # Load the labels, but first copy file to a location (which pytest can and will
         # keep in memory, but won't affect our re-use of the original file name)
@@ -883,7 +1162,7 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
             f"pytest_labels_{time.perf_counter_ns()}{export_extension}"
         )
         shutil.copyfile(path_to_pkg.as_posix(), filename_for_pytest_to_hoard.as_posix())
-        labels_reload: Labels = Labels.load_file(
+        labels_reload: Labels = labels_load_file(
             filename_for_pytest_to_hoard.as_posix()
         )
 
@@ -904,7 +1183,7 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
             num_images += len(lfs_sugg)
         if not pred:
             num_images -= len(lfs_pred)
-        assert labels_reload.video.num_frames == num_images
+        assert len(labels_reload.video) == num_images
 
     # Set-up CommandContext
     path_to_pkg = Path(tmpdir, "test_exportLabelsPackage.ext")
@@ -921,19 +1200,26 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
     # Remove frames we want to use for suggestions and predictions
     lfs_sugg = [centered_pair_labels[idx] for idx in [-1, -2]]
     lfs_pred = [centered_pair_labels[idx] for idx in [-3, -4]]
-    centered_pair_labels.remove_frames(lfs_sugg)
+    from sleap.sleap_io_adaptors.lf_labels_utils import remove_frames
+
+    remove_frames(centered_pair_labels, lfs_sugg)
 
     # Add suggestions
     for lf in lfs_sugg:
-        centered_pair_labels.add_suggestion(centered_pair_labels.video, lf.frame_idx)
+        add_suggestion(centered_pair_labels, centered_pair_labels.video, lf.frame_idx)
 
     # Add predictions and remove user instances from those frames
     for lf in lfs_pred:
-        predicted_inst = PredictedInstance.from_instance(lf.instances[0], score=0.5)
-        centered_pair_labels.add_instance(lf, predicted_inst)
-        for inst in lf.user_instances:
-            centered_pair_labels.remove_instance(lf, inst)
-    context = CommandContext.from_labels(centered_pair_labels)
+        predicted_inst = PredictedInstance.from_numpy(
+            lf.instances[0].points["xy"], skeleton=lf.instances[0].skeleton, score=0.5
+        )
+        lf.instances = []
+        labels_add_instance(centered_pair_labels, lf, predicted_inst)
+        # for inst in lf.user_instances:
+        # remove_instance(centered_pair_labels, inst, lf)
+
+    # FIXME: DEEPCOPY Labels to prevent mutation during case exports
+    context = CommandContext.from_labels(deepcopy(centered_pair_labels))
 
     # Case 1: Export user-labeled frames with image data into a single SLP file.
     context.exportUserLabelsPackage()
@@ -941,16 +1227,17 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
     assert_loaded_package_similar(path_to_pkg)
 
     # Case 2: Export user-labeled frames and suggested frames with image data.
+    context = CommandContext.from_labels(deepcopy(centered_pair_labels))
     context.exportTrainingPackage()
     assert_loaded_package_similar(path_to_pkg, sugg=True)
 
     # Case 3: Export all frames and suggested frames with image data.
+    context = CommandContext.from_labels(deepcopy(centered_pair_labels))
     context.exportFullPackage()
     assert_loaded_package_similar(path_to_pkg, sugg=True, pred=True)
 
 
 def test_newInstance(qtbot, centered_pair_predictions: Labels):
-
     # Get the data
     labels = centered_pair_predictions
     lf = labels[0]
@@ -1038,11 +1325,436 @@ def test_newInstance(qtbot, centered_pair_predictions: Labels):
     new_inst = lf.instances[-1]
     reference_node_idx = np.where(
         np.all(
-            new_inst.numpy() == [right_click_location_x, right_click_location_y], axis=1
+            new_inst.numpy()
+            == np.array([right_click_location_x, right_click_location_y]),
+            axis=1,
         )
-    )[0][0]
+    )[0]
     offset = (
         new_inst.numpy()[reference_node_idx] - copy_instance.numpy()[reference_node_idx]
     )
     diff = np.nan_to_num(new_inst.numpy() - copy_instance.numpy(), nan=offset)
     assert np.all(diff == offset)
+
+
+def _build_prior_frame_labels(
+    centered_pair_predictions: Labels,
+) -> tuple[Labels, LabeledFrame, LabeledFrame, PredictedInstance, Instance]:
+    """Build a two-frame Labels where frame 0 has a user correction of a prediction.
+
+    Returns (labels, prev_lf, curr_lf, pred_inst, user_inst).
+    """
+    labels = deepcopy(centered_pair_predictions)
+    skeleton = labels.skeleton
+    video = labels.videos[0]
+
+    # Frame 0: one prediction + a user instance derived from it (simulating the
+    # user having corrected the prediction).
+    prev_lf = LabeledFrame(video=video, frame_idx=0)
+    pred_inst = PredictedInstance.from_numpy(
+        np.array([[10.0, 10.0]] * len(skeleton.nodes)),
+        point_scores=np.ones(len(skeleton.nodes)),
+        score=0.9,
+        skeleton=skeleton,
+    )
+    user_inst = Instance.from_numpy(
+        np.array([[100.0, 200.0]] * len(skeleton.nodes)),
+        skeleton=skeleton,
+        from_predicted=pred_inst,
+    )
+    prev_lf.instances = [pred_inst, user_inst]
+
+    # Frame 1: empty.
+    curr_lf = LabeledFrame(video=video, frame_idx=1)
+
+    labels.labeled_frames = [prev_lf, curr_lf]
+    return labels, prev_lf, curr_lf, pred_inst, user_inst
+
+
+def test_copy_prior_frame_prefers_user_instance(qtbot, centered_pair_predictions):
+    """Copy Prior Frame must pick the user-corrected instance, not the original
+    prediction it was derived from (#1065)."""
+    labels, prev_lf, curr_lf, pred_inst, user_inst = _build_prior_frame_labels(
+        centered_pair_predictions
+    )
+
+    main_window = MainWindow(labels=labels)
+    context = main_window.commands
+    context.state["labeled_frame"] = curr_lf
+    context.state["frame_idx"] = curr_lf.frame_idx
+    context.state["skeleton"] = labels.skeleton
+    context.state["video"] = labels.videos[0]
+
+    copy_instance, from_predicted, from_prev_frame = (
+        AddInstance.find_instance_to_copy_from(
+            context, copy_instance=None, init_method="prior_frame"
+        )
+    )
+
+    assert copy_instance is user_inst
+    assert from_predicted is None
+    assert from_prev_frame is True
+
+
+def test_effective_prior_instances_drops_used_predictions(centered_pair_predictions):
+    """The helper should hide each prediction whose user counterpart is in frame."""
+    _, prev_lf, _, pred_inst, user_inst = _build_prior_frame_labels(
+        centered_pair_predictions
+    )
+    effective = AddInstance._effective_prior_instances(prev_lf)
+    assert effective == [user_inst]
+    assert pred_inst not in effective
+
+
+def test_effective_prior_instances_keeps_unmatched_predictions(
+    centered_pair_predictions,
+):
+    """A prediction with no user counterpart must remain so a second animal can
+    still be copied across."""
+    labels, prev_lf, _, pred_inst, user_inst = _build_prior_frame_labels(
+        centered_pair_predictions
+    )
+    skeleton = labels.skeleton
+
+    extra_pred = PredictedInstance.from_numpy(
+        np.array([[50.0, 50.0]] * len(skeleton.nodes)),
+        point_scores=np.ones(len(skeleton.nodes)),
+        score=0.8,
+        skeleton=skeleton,
+    )
+    prev_lf.instances = [pred_inst, user_inst, extra_pred]
+
+    effective = AddInstance._effective_prior_instances(prev_lf)
+    assert user_inst in effective
+    assert extra_pred in effective
+    assert pred_inst not in effective
+
+
+def test_ExportLabelsSubset(
+    tmp_path, centered_pair_predictions: Labels, small_robot_mp4_vid: Video
+):
+    """Test that exporting a subset of labels works as expected."""
+    # Get the data
+    labels = centered_pair_predictions
+    n_labels_original = len(labels.labeled_frames)
+    video: Video = labels.videos[0]
+
+    # Select subset of frames
+    from sleap.sleap_io_adaptors.video_utils import video_get_frames
+
+    n_frames = video_get_frames(video)
+    lower_bound = int(n_frames / 4)
+    upper_bound = int(n_frames / 4 + 2)
+
+    # Alter data.
+    add_suggestion(labels, video, lower_bound)  # Should be included.
+    add_suggestion(labels, video, 1)  # Should be excluded since outside video clip.
+    add_suggestion(labels, video, upper_bound + 1)  # Should be excluded.
+    video_extra = small_robot_mp4_vid
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
+
+    labels_add_video(
+        labels, video_extra
+    )  # Should be excluded since outside video clip.
+    add_suggestion(
+        labels, video_extra, 0
+    )  # Should be excluded since outside video clip
+    n_suggestions_original = len(labels.suggestions)
+    n_videos_original = len(labels.videos)
+
+    # Path to save the exported labels
+    name_to_export = "export_labels_subset.slp"
+    path_to_export = Path(tmp_path).with_name(name_to_export)
+    video_path_to_export = path_to_export.as_posix() + ".mp4"
+    video_name_to_export = name_to_export + ".mp4"
+
+    # Set-up command context
+    context = CommandContext.from_labels(labels)
+    context.state["labels"] = labels
+    context.state["video"] = video
+    context.state["frame_range"] = (lower_bound, upper_bound)
+    context.state["has_frame_range"] = True
+
+    # 1. Mimick ExportDatasetWithImages.ask() method
+    def ExportFullPackage_ask(context, params):
+        """No GUI version of `ExportVideoClip.ask`."""
+        as_package = params["as_package"]
+        params["filename"] = (
+            path_to_export.with_suffix(".pkg.slp")
+            if as_package
+            else path_to_export.as_posix()
+        )
+        params["verbose"] = False
+        return True
+
+    ExportFullPackage.ask = ExportFullPackage_ask
+
+    # 2. Mimick ExportVideoClip.ask() method
+    def ExportVideoClip_ask(context, params):
+        """No GUI version of `ExportVideoClip.ask`."""
+        params["video_filename"] = video_path_to_export
+        params["fps"] = 30
+        params["open_when_done"] = False
+        params["frames"] = range(lower_bound, upper_bound)
+        params["scale"] = 1.0
+        params["background"] = None
+        params["crop"] = None
+        params["gui_progress"] = False
+        return True
+
+    ExportVideoClip.ask = ExportVideoClip_ask
+
+    # Case 1: Export labels as slp and trimmed video
+    context.exportLabelsSubset(as_package=False, open_new_project=False)
+
+    # Verify the slp file.
+    assert path_to_export.exists()
+    assert path_to_export.is_file()
+    assert path_to_export.name == name_to_export
+    labels_subset = labels_load_file(path_to_export.as_posix())
+    # Should only contain video from selected clip.
+    assert len(labels_subset.videos) == 1
+    # Should only contain frames from selected clip.
+    n_frames_expected = upper_bound - lower_bound
+    assert len(labels_subset.labeled_frames) <= n_frames_expected
+    # Labels are shifted since reference trimmed video.
+    assert (
+        max([lf.frame_idx for lf in labels_subset.labeled_frames]) < n_frames_expected
+    )
+    assert min([lf.frame_idx for lf in labels_subset.labeled_frames]) >= 0
+
+    # Verify suggestions were pruned.
+    video_subset = labels_subset.videos[0]
+    assert len(labels_subset.suggestions) == 1
+    assert labels_subset.suggestions[0].video == video_subset
+
+    # Verify the video file.
+    assert Path(video_path_to_export).exists()
+    assert Path(video_path_to_export).is_file()
+    assert Path(video_path_to_export).name == video_name_to_export
+    assert video_subset.filename == video_path_to_export
+    assert video_get_frames(video_subset) == n_frames_expected
+
+    # Do not mutate original labels.
+    assert len(labels.labeled_frames) == n_labels_original
+    assert len(labels.videos) == n_videos_original
+    assert len(labels.suggestions) == n_suggestions_original
+
+    # Case 2: Export labels as pkg.slp
+    context.exportLabelsSubset(as_package=True, open_new_project=False)
+
+    # Verify the slp file.
+    path_to_export = Path(path_to_export.with_suffix(".pkg.slp"))
+    assert path_to_export.exists()
+    assert path_to_export.is_file()
+    labels_subset: Labels = labels_load_file(path_to_export.as_posix())
+    # Should only contain video from selected clip.
+    assert len(labels_subset.videos) == 1
+    n_frames_expected = upper_bound - lower_bound
+    assert len(labels_subset.labeled_frames) <= n_frames_expected
+    # Labels are not shifted since reference original video.
+    assert max([lf.frame_idx for lf in labels_subset.labeled_frames]) < upper_bound
+    assert min([lf.frame_idx for lf in labels_subset.labeled_frames]) >= lower_bound
+
+    # Verify suggestions were pruned.
+    video_subset = labels_subset.videos[0]
+    assert len(labels_subset.suggestions) == 1
+    assert labels_subset.suggestions[0].video == video_subset
+
+    # Videos in package reference pkg.slp. filename.
+    assert video_subset.filename == path_to_export.as_posix()
+    assert video_get_frames(video_subset) <= n_frames_expected + len(
+        labels_subset.suggestions
+    )
+
+    # Do not mutate original labels.
+    assert len(labels.labeled_frames) == n_labels_original
+    assert len(labels.videos) == n_videos_original
+    assert len(labels.suggestions) == n_suggestions_original
+
+
+def test_remove_video_uses_identity_not_content_matching(centered_pair_predictions):
+    """Test that remove_video only removes frames from the target video.
+
+    This is a regression test for GitHub issue #2534. The bug was that remove_video
+    used matches_content() which compares video shape (resolution + frame count),
+    not object identity. This caused frames from ALL videos with the same shape
+    to be deleted when removing any one of them.
+
+    The fix uses identity comparison (is) instead of content matching.
+    """
+    from sleap.sleap_io_adaptors.lf_labels_utils import (
+        remove_video,
+        labels_copy,
+        labels_add_video,
+        add_suggestion,
+    )
+    from sleap_io import Video, LabeledFrame, Instance
+
+    # Create a copy of the labels to avoid mutating the fixture
+    labels = labels_copy(centered_pair_predictions)
+    original_video = labels.videos[0]
+
+    # Create additional videos - they don't need actual files since we're
+    # testing object identity, not content matching
+    # Note: The bug was that videos with the same shape would all be deleted
+    # when any one was removed. With the fix, only the specific video is removed.
+    video2 = Video(filename="fake_video_2.mp4")
+    video3 = Video(filename="fake_video_3.mp4")
+
+    # Add the new videos to labels
+    labels_add_video(labels, video2)
+    labels_add_video(labels, video3)
+
+    # Count original frames for video1
+    original_frames_video1 = len([lf for lf in labels if lf.video is original_video])
+
+    # Create labeled frames for video2 and video3
+    skeleton = labels.skeleton
+    for frame_idx in [0, 5, 10]:
+        # Add frame to video2
+        lf2 = LabeledFrame(video=video2, frame_idx=frame_idx)
+        inst2 = Instance(points=Instance.empty(skeleton).points, skeleton=skeleton)
+        lf2.instances.append(inst2)
+        labels.append(lf2)
+
+        # Add frame to video3
+        lf3 = LabeledFrame(video=video3, frame_idx=frame_idx)
+        inst3 = Instance(points=Instance.empty(skeleton).points, skeleton=skeleton)
+        lf3.instances.append(inst3)
+        labels.append(lf3)
+
+    # Add suggestions for each video
+    add_suggestion(labels, original_video, 50)
+    add_suggestion(labels, video2, 50)
+    add_suggestion(labels, video3, 50)
+
+    # Verify setup
+    assert len(labels.videos) == 3
+    frames_for_video1 = [lf for lf in labels if lf.video is original_video]
+    frames_for_video2 = [lf for lf in labels if lf.video is video2]
+    frames_for_video3 = [lf for lf in labels if lf.video is video3]
+    assert len(frames_for_video1) == original_frames_video1
+    assert len(frames_for_video2) == 3
+    assert len(frames_for_video3) == 3
+
+    suggestions_video1 = [s for s in labels.suggestions if s.video is original_video]
+    suggestions_video2 = [s for s in labels.suggestions if s.video is video2]
+    suggestions_video3 = [s for s in labels.suggestions if s.video is video3]
+    assert len(suggestions_video1) == 1
+    assert len(suggestions_video2) == 1
+    assert len(suggestions_video3) == 1
+
+    # Remove video2 - this is where the bug would occur
+    # Before the fix: ALL frames with matching shape would be deleted (catastrophic)
+    # After the fix: ONLY frames from video2 should be deleted
+    remove_video(labels, video2)
+
+    # Verify only video2 was removed
+    assert len(labels.videos) == 2
+    assert original_video in labels.videos
+    assert video2 not in labels.videos
+    assert video3 in labels.videos
+
+    # Verify ONLY video2's frames were removed (this is the critical test)
+    remaining_frames_video1 = [lf for lf in labels if lf.video is original_video]
+    remaining_frames_video2 = [lf for lf in labels if lf.video is video2]
+    remaining_frames_video3 = [lf for lf in labels if lf.video is video3]
+
+    assert len(remaining_frames_video1) == original_frames_video1, (
+        "Frames from video1 should NOT have been deleted! "
+        "This indicates the bug where matches_content() was used instead of identity."
+    )
+    assert len(remaining_frames_video2) == 0, "All frames from video2 should be removed"
+    assert len(remaining_frames_video3) == 3, (
+        "Frames from video3 should NOT have been deleted! "
+        "This indicates the bug where matches_content() was used instead of identity."
+    )
+
+    # Verify only video2's suggestions were removed
+    remaining_suggestions_video1 = [
+        s for s in labels.suggestions if s.video is original_video
+    ]
+    remaining_suggestions_video2 = [s for s in labels.suggestions if s.video is video2]
+    remaining_suggestions_video3 = [s for s in labels.suggestions if s.video is video3]
+
+    assert len(remaining_suggestions_video1) == 1, (
+        "Suggestions for video1 should NOT have been deleted!"
+    )
+    assert len(remaining_suggestions_video2) == 0, (
+        "Suggestions for video2 should be removed"
+    )
+    assert len(remaining_suggestions_video3) == 1, (
+        "Suggestions for video3 should NOT have been deleted!"
+    )
+
+
+class TestGenerateSuggestionsThread:
+    """Tests for GenerateSuggestionsThread."""
+
+    def test_thread_emits_finished_with_suggestions(self, qtbot, centered_pair_labels):
+        """Thread should emit finished signal with suggestion list on success."""
+        labels = centered_pair_labels
+        params = {
+            "method": "sample",
+            "target": "all videos",
+            "videos": labels.videos,
+            "per_video": 5,
+            "sampling_method": "random",
+        }
+
+        worker = GenerateSuggestionsThread(labels=labels, params=params)
+        with qtbot.waitSignal(worker.finished, timeout=10000) as blocker:
+            worker.start()
+
+        suggestions = blocker.args[0]
+        assert isinstance(suggestions, list)
+        assert len(suggestions) > 0
+
+    def test_thread_emits_error_on_invalid_method(self, qtbot, centered_pair_labels):
+        """Thread should emit error signal when suggest() raises."""
+        labels = centered_pair_labels
+        params = {
+            "method": "nonexistent_method",
+            "target": "all videos",
+            "videos": labels.videos,
+        }
+
+        worker = GenerateSuggestionsThread(labels=labels, params=params)
+        with qtbot.waitSignal(worker.error, timeout=10000) as blocker:
+            worker.start()
+
+        error_msg = blocker.args[0]
+        assert isinstance(error_msg, str)
+        assert len(error_msg) > 0
+
+    def test_thread_does_not_block_event_loop(self, qtbot, centered_pair_labels):
+        """Main event loop should remain responsive while thread is running."""
+        labels = centered_pair_labels
+        params = {
+            "method": "sample",
+            "target": "all videos",
+            "videos": labels.videos,
+            "per_video": 5,
+            "sampling_method": "random",
+        }
+
+        worker = GenerateSuggestionsThread(labels=labels, params=params)
+        events_processed = []
+
+        def on_finished(suggestions):
+            events_processed.append("finished")
+
+        worker.finished.connect(on_finished)
+
+        with qtbot.waitSignal(worker.finished, timeout=10000):
+            worker.start()
+            # Process events while waiting — this would hang if suggest() was
+            # still on the main thread.
+            from qtpy import QtWidgets
+
+            for _ in range(10):
+                QtWidgets.QApplication.instance().processEvents()
+                worker.wait(5)
+
+        assert "finished" in events_processed

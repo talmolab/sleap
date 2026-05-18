@@ -1,11 +1,10 @@
 from typing import List
-import pytest
-from sleap.gui.suggestions import SuggestionFrame, VideoFrameSuggestions
-from sleap.io.dataset import Labels
-from sleap.io.video import Video
-from sleap.instance import LabeledFrame, PredictedInstance, Track, PredictedPoint
-from sleap.io.dataset import Labels
-from sleap.skeleton import Skeleton
+from sleap.gui.suggestions import VideoFrameSuggestions
+from sleap_io import Video
+from sleap_io import LabeledFrame, Labels, SuggestionFrame
+from sleap_io.model.instance import PredictedInstance, Track
+from sleap_io import Skeleton
+from sleap.sleap_io_adaptors.lf_labels_utils import labels_get, get_instances_to_show
 import numpy as np
 
 
@@ -42,7 +41,7 @@ def test_frame_increment(centered_pair_predictions: Labels):
     # Testing videos that have less frames than desired Samples per Video (stride)
     # Expected result is there should be n suggestions where n is equal to the frames
     # in the video.
-    vid_frames = centered_pair_predictions.video.num_frames
+    vid_frames = len(centered_pair_predictions.video)
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
@@ -102,7 +101,9 @@ def test_video_selection(
     # Testing the functionality of choosing a specific video in a project and
     # only generating suggestions for the video
 
-    centered_pair_predictions.add_video(small_robot_3_frame_vid)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
+
+    labels_add_video(centered_pair_predictions, small_robot_3_frame_vid)
     # Testing suggestion generation from Image Features
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
@@ -120,7 +121,8 @@ def test_video_selection(
         },
     )
     for i in range(len(suggestions)):
-        # Confirming every suggestion is only for the video that is chosen and no other videos
+        # Confirming every suggestion is only for the video that is chosen and no other
+        # videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Testing suggestion generation from Sample
@@ -135,7 +137,8 @@ def test_video_selection(
     )
 
     for i in range(len(suggestions)):
-        # Confirming every suggestion is only for the video that is chosen and no other videos
+        # Confirming every suggestion is only for the video that is chosen and no other
+        # videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Testing suggestion generation from prediction score
@@ -151,7 +154,8 @@ def test_video_selection(
     )
 
     for i in range(len(suggestions)):
-        # Confirming every suggestion is only for the video that is chosen and no other videos
+        # Confirming every suggestion is only for the video that is chosen and no other
+        # videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Testing suggestion generation from velocity
@@ -165,11 +169,12 @@ def test_video_selection(
         },
     )
     for i in range(len(suggestions)):
-        # Confirming every suggestion is only for the video that is chosen and no other videos
+        # Confirming every suggestion is only for the video that is chosen and no other
+        # videos
         assert suggestions[i].video == centered_pair_predictions.videos[0]
 
     # Ensure video target works given suggestions from another video already exist
-    centered_pair_predictions.set_suggestions(suggestions)
+    centered_pair_predictions.suggestions = suggestions
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
@@ -180,7 +185,8 @@ def test_video_selection(
         },
     )
 
-    # Testing suggestion generation from frame chunk targeting selected video or all videos
+    # Testing suggestion generation from frame chunk targeting selected video or all
+    # videos
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
@@ -195,8 +201,9 @@ def test_video_selection(
         assert suggestions[i].video == centered_pair_predictions.videos[1]
 
     # Testing suggestion generation from frame chunk targeting all videos
-    # Clear existing suggestions so that generated suggestions will be kept intact at the uniqueness check step
-    centered_pair_predictions.clear_suggestions()
+    # Clear existing suggestions so that generated suggestions will be kept intact at
+    # the uniqueness check step
+    centered_pair_predictions.suggestions = []
     suggestions = VideoFrameSuggestions.suggest(
         labels=centered_pair_predictions,
         params={
@@ -257,30 +264,66 @@ def assert_suggestions_unique(labels: Labels, new_suggestions: List[SuggestionFr
 
 def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     """Ensure only unique suggestions are returned and that suggestions are appended."""
-    track_a = Track(0, "a")
-    track_b = Track(0, "b")
+    import numpy as np
+
+    def _create_points(point_dict, skeleton):
+        """Helper to convert old dict format to numpy arrays"""
+        points_array = np.full((len(skeleton), 2), np.nan, dtype=np.float32)
+        point_scores = np.full(len(skeleton), 0.0, dtype=np.float32)
+        for node_name, data in point_dict.items():
+            node_idx = skeleton.node_names.index(node_name)
+            xy_coords = data[0] if isinstance(data[0], (list, tuple)) else data[:2]
+            score = (
+                data[1] if len(data) > 1 and isinstance(data[0], (list, tuple)) else 0.5
+            )
+            points_array[node_idx] = xy_coords
+            point_scores[node_idx] = score
+        return points_array, point_scores
+
+    track_a = Track(name="a")
+    track_b = Track(name="b")
+
+    # Frame 0 instances
+    points_a0, scores_a0 = _create_points(
+        {"head": ([1, 2], 0.5), "neck": ([2, 3], 0.5)}, stickman
+    )
+    points_b0, scores_b0 = _create_points(
+        {"head": ([11, 12], 0.5), "neck": ([12, 13], 0.5)}, stickman
+    )
+
+    # Frame 1 instances
+    points_a1, scores_a1 = _create_points(
+        {"head": ([2, 1], 0.5), "neck": ([3, 2], 0.5)}, stickman
+    )
+    points_b1, scores_b1 = _create_points(
+        {"head": ([2, 1], 0.5), "neck": ([3, 2], 0.5)}, stickman
+    )
+
+    # Frame 2 instances
+    points_a2, scores_a2 = _create_points(
+        {"head": ([11, 12], 0.5), "neck": ([12, 13], 0.5)}, stickman
+    )
+    points_b2, scores_b2 = _create_points(
+        {"head": ([1, 2], 0.5), "neck": ([2, 3], 0.5)}, stickman
+    )
 
     lfs = [
         LabeledFrame(
             small_robot_3_frame_vid,
             frame_idx=0,
             instances=[
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_a0,
                     skeleton=stickman,
+                    point_scores=scores_a0,
                     score=0.1,
-                    points=dict(
-                        head=PredictedPoint(1, 2, score=0.5),
-                        neck=PredictedPoint(2, 3, score=0.5),
-                    ),
                     track=track_a,
                 ),
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_b0,
                     skeleton=stickman,
+                    point_scores=scores_b0,
                     score=0.5,
-                    points=dict(
-                        head=PredictedPoint(11, 12, score=0.5),
-                        neck=PredictedPoint(12, 13, score=0.5),
-                    ),
                     track=track_b,
                 ),
             ],
@@ -289,22 +332,18 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
             small_robot_3_frame_vid,
             frame_idx=1,
             instances=[
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_a1,
                     skeleton=stickman,
+                    point_scores=scores_a1,
                     score=0.1,
-                    points=dict(
-                        head=PredictedPoint(2, 1, score=0.5),
-                        neck=PredictedPoint(3, 2, score=0.5),
-                    ),
                     track=track_a,
                 ),
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_b1,
                     skeleton=stickman,
+                    point_scores=scores_b1,
                     score=0.5,
-                    points=dict(
-                        head=PredictedPoint(2, 1, score=0.5),
-                        neck=PredictedPoint(3, 2, score=0.5),
-                    ),
                     track=track_b,
                 ),
             ],
@@ -313,22 +352,18 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
             small_robot_3_frame_vid,
             frame_idx=2,
             instances=[
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_a2,
                     skeleton=stickman,
+                    point_scores=scores_a2,
                     score=0.5,
-                    points=dict(
-                        head=PredictedPoint(11, 12, score=0.5),
-                        neck=PredictedPoint(12, 13, score=0.5),
-                    ),
                     track=track_a,
                 ),
-                PredictedInstance(
+                PredictedInstance.from_numpy(
+                    points_b2,
                     skeleton=stickman,
+                    point_scores=scores_b2,
                     score=0.5,
-                    points=dict(
-                        head=PredictedPoint(1, 2, score=0.5),
-                        neck=PredictedPoint(2, 3, score=0.5),
-                    ),
                     track=track_b,
                 ),
             ],
@@ -347,7 +382,9 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
         },
     )
     assert len(suggestions) == 3
-    labels.append_suggestions(suggestions[0:2])
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_append_suggestions
+
+    labels_append_suggestions(labels, suggestions[0:2])
 
     # Sample with stride method
     suggestions = VideoFrameSuggestions.suggest(
@@ -363,7 +400,7 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     # Check that stride method returns only unique suggestions
     assert len(suggestions) == 1
     assert_suggestions_unique(labels, suggestions)
-    labels.append_suggestions(suggestions)
+    labels_append_suggestions(labels, suggestions)
 
     suggestions = VideoFrameSuggestions.suggest(
         labels=labels,
@@ -392,7 +429,7 @@ def test_append_suggestions(small_robot_3_frame_vid: Video, stickman: Skeleton):
     # Check that random method only returns unique suggestions
     assert len(suggestions) == 1
     assert_suggestions_unique(labels, suggestions)
-    labels.append_suggestions(suggestions)
+    labels_append_suggestions(labels, suggestions)
 
     suggestions = VideoFrameSuggestions.suggest(
         labels=labels,
@@ -474,9 +511,11 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
 
     # Confirming every suggested frame meets criteria
     for sugg in suggestions:
-        lf = labels.get((sugg.video, sugg.frame_idx))
+        lf = labels_get(labels, (sugg.video, sugg.frame_idx))
         pred_instances = [
-            inst for inst in lf.instances_to_show if isinstance(inst, PredictedInstance)
+            inst
+            for inst in get_instances_to_show(lf)
+            if isinstance(inst, PredictedInstance)
         ]
         n_instance_below_score = np.nansum(
             [True for inst in pred_instances if inst.score <= score_limit]
@@ -490,7 +529,7 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
         for lf in lfs:
             pred_instances = [
                 inst
-                for inst in lf.instances_to_show
+                for inst in get_instances_to_show(lf)
                 if isinstance(inst, PredictedInstance)
             ]
             n_instance_below_score = np.nansum(
@@ -500,10 +539,8 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
                 n_instance_below_score <= instance_upper_limit
                 and n_instance_below_score >= instance_lower_limit
             ):
-                temp_suggest = SuggestionFrame(
-                    labels.video, pred_instances[0].frame_idx
-                )
-                if not (temp_suggest in sugg):
+                temp_suggest = SuggestionFrame(labels.video, lf.frame_idx)
+                if temp_suggest not in sugg:
                     return False
 
         return True

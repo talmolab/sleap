@@ -2,12 +2,13 @@
 Dialog for deleting various subsets of instances in dataset.
 """
 
-from sleap import LabeledFrame, Instance
 from sleap.gui.dialogs import formbuilder
+from sleap_io import LabeledFrame, Instance
 
 from qtpy import QtCore, QtWidgets
 
 from typing import List, Text, Tuple
+from sleap.sleap_io_adaptors.lf_labels_utils import remove_instance
 
 
 class DeleteDialog(QtWidgets.QDialog):
@@ -29,7 +30,6 @@ class DeleteDialog(QtWidgets.QDialog):
         *args,
         **kwargs,
     ):
-
         super(DeleteDialog, self).__init__(*args, **kwargs)
 
         self.context = context
@@ -214,27 +214,111 @@ class DeleteDialog(QtWidgets.QDialog):
     def _delete(self, lf_inst_list: List[Tuple[LabeledFrame, Instance]]):
         # Delete the instances
         for lf, inst in lf_inst_list:
-            self.context.labels.remove_instance(lf, inst, in_transaction=True)
-            if not lf.instances:
-                self.context.labels.remove(lf)
+            remove_instance(self.context.labels, instance=inst, lf=lf)
+        self.context.labels.clean()
+        # self.context.labels.update()
 
-        # Update caches since we skipped doing this after each deletion
-        self.context.labels.update_cache()
+        # # Update caches since we skipped doing this after each deletion
+        # self.context.labels.update_cache()
 
         # Log update
         self.context.changestack_push("delete instances")
 
 
-if __name__ == "__main__":
+class DeleteUserFramePredictionsDialog(QtWidgets.QDialog):
+    """Dialog for deleting predictions on frames with user instances.
 
+    This dialog allows users to clean up predictions that were merged into
+    frames that already have user labels, which causes both to be displayed.
+
+    Args:
+        context: The `CommandContext` from which this dialog is being shown.
+    """
+
+    def __init__(self, context: "CommandContext", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.context = context
+        self.setWindowTitle("Delete Predictions on User-Labeled Frames")
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        # Description
+        desc_label = QtWidgets.QLabel(
+            "Delete predictions on frames that already have user-labeled instances.\n"
+            "This cleans up duplicate instances that appear when predictions are\n"
+            "merged into frames with existing user labels."
+        )
+        desc_label.setWordWrap(True)
+        layout.addWidget(desc_label)
+
+        layout.addSpacing(10)
+
+        # Scope group
+        scope_group = QtWidgets.QGroupBox("Scope")
+        scope_layout = QtWidgets.QVBoxLayout(scope_group)
+        self.current_video_radio = QtWidgets.QRadioButton("Current video only")
+        self.all_videos_radio = QtWidgets.QRadioButton("All videos")
+        self.current_video_radio.setChecked(True)
+        scope_layout.addWidget(self.current_video_radio)
+        scope_layout.addWidget(self.all_videos_radio)
+        layout.addWidget(scope_group)
+
+        # Mode group
+        mode_group = QtWidgets.QGroupBox("What to delete")
+        mode_layout = QtWidgets.QVBoxLayout(mode_group)
+
+        self.unlinked_radio = QtWidgets.QRadioButton(
+            "Unlinked predictions only (visible duplicates)"
+        )
+        self.unlinked_radio.setToolTip(
+            "Delete predictions that are NOT linked to any user instance via\n"
+            "'from_predicted'. These are the predictions that appear as duplicates\n"
+            "in the GUI alongside user instances."
+        )
+
+        self.all_radio = QtWidgets.QRadioButton(
+            "All predictions on user-labeled frames"
+        )
+        self.all_radio.setToolTip(
+            "Delete ALL predictions on frames with user instances, including\n"
+            "those that are linked to user instances (hidden from display)."
+        )
+
+        self.unlinked_radio.setChecked(True)
+        mode_layout.addWidget(self.unlinked_radio)
+        mode_layout.addWidget(self.all_radio)
+        layout.addWidget(mode_group)
+
+        layout.addSpacing(10)
+
+        # Buttons
+        buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
+        )
+        buttons.button(QtWidgets.QDialogButtonBox.Ok).setText("Delete")
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    @property
+    def current_video_only(self) -> bool:
+        """Whether to limit deletion to current video only."""
+        return self.current_video_radio.isChecked()
+
+    @property
+    def unlinked_only(self) -> bool:
+        """Whether to only delete unlinked (orphan) predictions."""
+        return self.unlinked_radio.isChecked()
+
+
+if __name__ == "__main__":
     app = QtWidgets.QApplication([])
 
-    from sleap import Labels
+    from sleap_io import load_file
     from sleap.gui.commands import CommandContext
 
-    labels = Labels.load_file(
-        "tests/data/json_format_v2/centered_pair_predictions.json"
-    )
+    labels = load_file("tests/data/json_format_v2/centered_pair_predictions.json")
     context = CommandContext.from_labels(labels)
     context.state["frame_idx"] = 123
     context.state["video"] = labels.videos[0]

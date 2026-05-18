@@ -1,4 +1,3 @@
-import sleap
 import pytest
 
 

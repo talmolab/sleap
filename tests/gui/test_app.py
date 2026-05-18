@@ -3,10 +3,21 @@ from qtpy.QtWidgets import QApplication
 
 from sleap.gui.app import MainWindow
 from sleap.gui.commands import *
+from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    get_instances_to_show,
+    labels_get_suggestions,
+    labels_get,
+    labels_add_video,
+    labels_clear_suggestions,
+)
 
 
 def test_app_workflow(
-    qtbot, centered_pair_vid, small_robot_mp4_vid, min_tracks_2node_labels: Labels
+    qtbot,
+    centered_pair_vid: Video,
+    small_robot_mp4_vid: Video,
+    min_tracks_2node_labels: Labels,
 ):
     app = MainWindow(no_usage_data=True)
 
@@ -55,9 +66,9 @@ def test_app_workflow(
 
     # Add and remove symmetry
     app.commands.setNodeSymmetry(app.state["skeleton"], "b", "c")
-    assert app.state["skeleton"].get_symmetry_name("c") == "b"
+    assert get_symmetry_node(app.state["skeleton"], "c") == "b"
     app.commands.setNodeSymmetry(app.state["skeleton"], "b", "")
-    assert app.state["skeleton"].get_symmetry("c") is None
+    assert get_symmetry_node(app.state["skeleton"], "c") is None
 
     # Remove an edge
     app.skeleton_dock.edges_table.selectRowItem(dict(source="b", destination="c"))
@@ -66,8 +77,8 @@ def test_app_workflow(
     assert len(app.state["skeleton"].edges) == 1
 
     # FIXME: for now we'll bypass the video adding gui
-    app.labels.add_video(centered_pair_vid)
-    app.labels.add_video(small_robot_mp4_vid)
+    labels_add_video(app.labels, centered_pair_vid)
+    labels_add_video(app.labels, small_robot_mp4_vid)
     app.on_data_update([UpdateTopic.video])
 
     assert len(app.labels.videos) == 2
@@ -78,8 +89,8 @@ def test_app_workflow(
     def assert_frame_chunk_suggestion_ui_updated(
         app, frame_to_spinbox, frame_from_spinbox
     ):
-        assert frame_to_spinbox.maximum() == app.state["video"].num_frames
-        assert frame_from_spinbox.maximum() == app.state["video"].num_frames
+        assert frame_to_spinbox.maximum() == len(app.state["video"])
+        assert frame_from_spinbox.maximum() == len(app.state["video"])
 
     method_layout = app.suggestions_dock.suggestions_form_widget.form_layout.fields[
         "method"
@@ -131,13 +142,13 @@ def test_app_workflow(
         inst_27_0, {"a": (15, 20), "b": (15, 40), "c": (40, 40)}
     )
 
-    assert inst_27_0["a"].x == 15
-    assert inst_27_0["a"].y == 20
+    assert inst_27_0["a"]["xy"][0] == 15
+    assert inst_27_0["a"]["xy"][1] == 20
 
     # Toggle node visibility
-    assert inst_27_0["b"].visible
+    assert inst_27_0["b"]["visible"]
     app.commands.setInstancePointVisibility(inst_27_0, "b", False)
-    assert not inst_27_0["b"].visible
+    assert not inst_27_0["b"]["visible"]
 
     # Select and delete instance
     app.state["instance"] = inst_27_1
@@ -155,7 +166,7 @@ def test_app_workflow(
     assert len(app.state["labeled_frame"].instances) == 2
 
     inst_29_0 = app.state["labeled_frame"].instances[0]
-    inst_29_1 = app.state["labeled_frame"].instances[1]
+    app.state["labeled_frame"].instances[1]
 
     app.state["instance"] = inst_29_0
 
@@ -247,7 +258,7 @@ def test_app_workflow(
     app.state["video"] = video_clip
     app.on_data_update([UpdateTopic.all])
     num_samples = 5
-    frame_delta = video_clip.num_frames // num_samples
+    frame_delta = len(video_clip) // num_samples
 
     # Add suggestions
     app.labels.suggestions = VideoFrameSuggestions.suggest(
@@ -272,25 +283,28 @@ def test_app_workflow(
     # Check that frames returned by labeled frames cache are correct
     prev_idx = -frame_delta
     for l_suggestion, st_suggestion in list(
-        zip(app.labels.get_suggestions(), app.suggestions_dock.table.model().items)
+        zip(
+            labels_get_suggestions(app.labels), app.suggestions_dock.table.model().items
+        )
     ):
         assert l_suggestion == st_suggestion["SuggestionFrame"]
-        lf = app.labels.get(
-            (l_suggestion.video, l_suggestion.frame_idx), use_cache=True
+        lf = labels_get(
+            app.labels, (l_suggestion.video, l_suggestion.frame_idx), use_cache=True
         )
         assert type(lf) == LabeledFrame
         assert lf.video == video_clip
         assert lf.frame_idx == prev_idx + frame_delta
         prev_idx = l_suggestion.frame_idx
 
-    # Add video, add frame suggestions, remove the video, verify the frame suggestions are also removed
-    app.labels.add_video(small_robot_mp4_vid)
+    # Add video, add frame suggestions, remove the video, verify the frame suggestions
+    # are also removed
+    labels_add_video(app.labels, small_robot_mp4_vid)
     app.on_data_update([UpdateTopic.video])
 
     assert len(app.labels.videos) == 2
 
     # Generate suggested frames in both videos
-    app.labels.clear_suggestions()
+    labels_clear_suggestions(app.labels)
     num_samples = 3
     app.labels.suggestions = VideoFrameSuggestions.suggest(
         labels=app.labels,
@@ -305,7 +319,7 @@ def test_app_workflow(
     # Verify that suggestions contain frames from both videos
     video_source = []
     for sugg in app.labels.suggestions:
-        if not (sugg.video in video_source):
+        if sugg.video not in video_source:
             video_source.append(sugg.video)
     assert len(video_source) == 2
 
@@ -321,13 +335,13 @@ def test_app_workflow(
         assert sugg.video == video_clip
 
 
-def test_app_new_window(qtbot):
+def test_app_new_window(qtbot, min_labels_slp_path, centered_pair_predictions_slp_path):
     app = QApplication.instance()
     app.closeAllWindows()
     win = MainWindow(no_usage_data=True)
 
-    assert win.commands.has_any_changes == False
-    assert win.state["project_loaded"] == False
+    assert not win.commands.has_any_changes
+    assert not win.state["project_loaded"]
 
     start_wins = sum(
         (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
@@ -335,21 +349,19 @@ def test_app_new_window(qtbot):
 
     # there's no loaded project, so this should load into same window
     OpenProject.do_action(
-        win.commands, dict(filename="tests/data/json_format_v1/centered_pair.json")
+        win.commands, dict(filename=centered_pair_predictions_slp_path)
     )
 
-    assert win.state["project_loaded"] == True
+    assert win.state["project_loaded"]
     wins = sum(
         (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
     )
     assert wins == start_wins
 
     # this time it will open in new window, so current window shouldn't change
-    OpenProject.do_action(
-        win.commands, dict(filename="tests/data/slp_hdf5/minimal_instance.slp")
-    )
+    OpenProject.do_action(win.commands, dict(filename=min_labels_slp_path))
 
-    assert win.state["filename"] == "tests/data/json_format_v1/centered_pair.json"
+    assert win.state["filename"] == centered_pair_predictions_slp_path
 
     wins = sum(
         (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
@@ -368,7 +380,7 @@ def test_app_new_window(qtbot):
 
     # should open in new window
     OpenProject.do_action(
-        win.commands, dict(filename="tests/data/json_format_v1/centered_pair.json")
+        win.commands, dict(filename=centered_pair_predictions_slp_path)
     )
 
     wins = sum(
@@ -425,7 +437,7 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
 
     # Read colors for each instance in view
     # TODO: revisit with LabeledFrame.unused_predictions() & instances_to_show()
-    visible_instances = window.state["labeled_frame"].instances_to_show
+    visible_instances = get_instances_to_show(window.state["labeled_frame"])
     color_of_instances = {}
     for inst in visible_instances:
         item_color = window.color_manager.get_item_color(inst)

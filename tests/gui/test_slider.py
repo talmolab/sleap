@@ -3,7 +3,6 @@ import pytest
 
 
 def test_slider(qtbot, centered_pair_predictions):
-
     labels = centered_pair_predictions
 
     slider = VideoSlider(min=0, max=1200, val=15, marks=(10, 15))

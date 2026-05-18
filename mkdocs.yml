@@ -1,0 +1,178 @@
+site_name: SLEAP Documentation
+site_url: https://docs.sleap.ai/
+repo_url: https://github.com/talmolab/sleap
+edit_uri: edit/develop/docs/
+
+# Custom hooks
+hooks:
+  - hooks/copy_source_markdown.py  # Publish .md sources alongside HTML
+
+theme:
+  name: material
+  logo: assets/sleap-logo.png
+  favicon: assets/favicon.ico
+  fontawesome: true
+  
+
+  palette:
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - scheme: default
+      primary: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.tracking
+    - toc.follow
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tooltips
+    - content.code.select
+    - content.footnote.tooltips
+  
+  icon:
+    set:
+      - material
+
+plugins:
+  - search
+  - mkdocs-jupyter
+  - mike
+  - autorefs
+  - gen-files:
+      scripts:
+        - scripts/gen_ref_pages.py
+        - scripts/gen_changelog.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            summary: true
+            show_root_heading: true
+            docstring_options:
+              returns_multiple_items: false
+            docstring_section_style: table
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - codehilite
+  - footnotes
+  - meta
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences
+  - pymdownx.mark
+  - tables
+
+extra:
+  version:
+    provider: mike
+  social:
+      - icon: fontawesome/brands/github
+        link: https://github.com/talmolab
+      - icon: fontawesome/brands/x-twitter
+        link: https://x.com/talmop
+      - icon: fontawesome/solid/envelope
+        link: mailto:talmo@salk.edu
+
+copyright: >
+  Copyright &copy; 2025 Talmo Lab 
+
+nav:
+  - Home: index.md
+  - Overview: overview.md
+  - Installation:
+      - Installation: installation.md
+      - Changelog: changelog.md
+  - Tutorial: 
+      - Overview: tutorial/overview.md
+      - Setup: tutorial/setup.md
+      - Importing data: tutorial/importing-data.md
+      - Initial labeling: tutorial/initial-labeling.md
+      - Training a model: tutorial/training-a-model.md
+      - Correcting predictions: tutorial/correcting-predictions.md
+      - Tracking new data: tutorial/tracking-new-data.md
+      - Proofreading: tutorial/proofreading.md
+      - Exporting the results: tutorial/exporting-the-results.md
+      - I'm done SLEAPing, now what?: tutorial/i-m-done-sleaping-now-what.md
+  - Guides:
+      - Overview: guides/guides-overview.md
+      - Migrating to SLEAP 1.5+: guides/migrating-to-sleap-1-5.md
+      - Importing predictions for labeling: guides/importing-predictions-for-labeling.md
+      - Tracking and proofreading: guides/tracking-and-proofreading.md
+      - Label Quality Control: guides/label-quality-control.md
+      - Instance Size Distribution: guides/instance-size-distribution.md
+      - Run training and inference on Colab: guides/run-training-and-inference-on-colab.md
+      - Creating a custom training profile: guides/creating-a-custom-training-profile.md
+      - Running SLEAP remotely: guides/running-sleap-remotely.md
+  - Notebooks:
+    - Overview: notebooks/notebooks-overview.md
+    - Training and inference on an example dataset: notebooks/Training_and_inference_on_an_example_dataset.ipynb
+    - Training and inference using Google Drive: notebooks/Training_and_inference_using_Google_Drive.ipynb
+    - Model evaluation: notebooks/Model_evaluation.ipynb
+    - Analysis examples: notebooks/Analysis_examples.ipynb
+    - Data structures: notebooks/Data_structures.ipynb
+    - Post inference tracking: notebooks/Post_inference_tracking.ipynb
+    - Interactive and resumable training: notebooks/Interactive_and_resumable_training.ipynb
+    - Using exported data: notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data.ipynb
+    - Using idTracker.ai with SLEAP: notebooks/sleap_io_idtracker_IDs.ipynb
+  - Learning:
+      - learnings/index.md
+      - System Overview: learnings/system-overview.md
+      - Using GUI: learnings/gui.md
+      - Skeleton Design: learnings/skeleton-design.md
+      - Prediction-Assisted Labeling: learnings/prediction-assisted-labeling.md
+      - Tracking Mistakes: learnings/main-mistakes-by-tracking.md
+  - Reference:
+      - Datasets: reference/datasets.md
+      - Command line interfaces: reference/command-line-interfaces.md
+      - Full API: api/
+      - Changelog: changelog.md
+  - Help: help.md

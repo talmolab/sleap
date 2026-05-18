@@ -25,8 +25,13 @@ from qtpy import QtCore, QtGui, QtWidgets
 
 from sleap.gui.commands import CommandContext
 from sleap.gui.state import GuiState
-from sleap.instance import LabeledFrame
-from sleap.skeleton import Skeleton
+from sleap_io.model.skeleton import Skeleton
+from sleap_io import Video
+from sleap_io import LabeledFrame
+from sleap_io.io.video_reading import VideoBackend
+from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
+from sleap.sleap_io_adaptors.instance_utils import get_nodes_from_instance
+from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -111,7 +116,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         """
         try:
             return [datum["_original_item"] for datum in self._data]
-        except:
+        except Exception:
             return self._data
 
     def get_item_color(self, item: Any, key: str):
@@ -392,13 +397,30 @@ class VideosTableModel(GenericTableModel):
         "channels",
     )
 
-    def item_to_data(self, obj, item: "Video"):
+    def item_to_data(self, obj, item: "VideoBackend"):
         data = {}
+        if isinstance(item, Video):
+            item = item.backend
+
         for property in self.properties:
             if property == "name":
-                data[property] = Path(item.filename).name
+                data[property] = (
+                    Path(item.filename).name
+                    if isinstance(item.filename, str)
+                    else item.filename[0]
+                )
             elif property == "filepath":
-                data[property] = str(Path(item.filename).parent)
+                data[property] = (
+                    str(Path(item.filename).parent)
+                    if isinstance(item.filename, str)
+                    else item.filename[0]
+                )
+            elif property == "height":
+                data[property] = item.img_shape[0]
+            elif property == "width":
+                data[property] = item.img_shape[1]
+            elif property == "channels":
+                data[property] = item.img_shape[2]
             else:
                 data[property] = getattr(item, property)
         return data
@@ -414,7 +436,7 @@ class SkeletonNodesTableModel(GenericTableModel):
         return items
 
     def item_to_data(self, obj, item):
-        return dict(name=item.name, symmetry=obj.get_symmetry_name(item.name))
+        return dict(name=item.name, symmetry=get_symmetry_node(obj, item.name))
 
     def can_set(self, item, key):
         return True
@@ -452,26 +474,42 @@ class LabeledFrameTableModel(GenericTableModel):
         labels: `Labels` datasource
     """
 
-    properties = ("points", "track", "score", "skeleton")
+    properties = ("points", "track", "score", "mean node score", "skeleton")
 
     def object_to_items(self, labeled_frame: LabeledFrame):
         if not labeled_frame:
             return []
-        return labeled_frame.instances_to_show
+        return get_instances_to_show(labeled_frame)
 
     def item_to_data(self, obj, item):
         instance = item
 
-        points = f"{len(instance.nodes)}/{len(instance.skeleton.nodes)}"
+        points = (
+            f"{len(get_nodes_from_instance(instance))}/{len(instance.skeleton.nodes)}"
+        )
         track_name = instance.track.name if instance.track else ""
         score = ""
         if hasattr(instance, "score"):
             score = str(round(instance.score, 2))
 
+        mean_node_score = ""
+        pts = getattr(instance, "points", None)
+        if pts is not None and getattr(pts, "dtype", None) is not None:
+            names = pts.dtype.names or ()
+            if "score" in names and "xy" in names:
+                # Visibility = non-NaN xy (matches sleap-nn's filter definition
+                # and the "Points" column above).
+                visible = ~np.isnan(pts["xy"]).any(axis=1)
+                visible_scores = pts["score"][visible]
+                visible_scores = visible_scores[~np.isnan(visible_scores)]
+                if visible_scores.size > 0:
+                    mean_node_score = f"{float(np.mean(visible_scores)):.2f}"
+
         return dict(
             points=points,
             track=track_name,
             score=score,
+            **{"mean node score": mean_node_score},
             skeleton=instance.skeleton.name,
         )
 
@@ -499,18 +537,18 @@ class SuggestionsTableModel(GenericTableModel):
 
         item_dict["SuggestionFrame"] = item
 
-        video_string = (
-            f"{labels.videos.index(item.video)+1}: "
-            f"{os.path.basename(item.video.filename)}"
-        )
+        video_idx = labels.videos.index(item.video) + 1
+        video_name = os.path.basename(item.video.filename)
+        video_string = f"{video_idx}: {video_name}"
 
-        item_dict["group"] = str(item.group + 1) if item.group is not None else ""
-        item_dict["group_int"] = item.group if item.group is not None else -1
+        item_dict["group"] = "0"
+        item_dict["group_int"] = 0
         item_dict["video"] = video_string
         item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0
 
         # show how many labeled instances are in this frame
-        lf = labels.get((item.video, item.frame_idx), use_cache=True)
+        lf = labels.find(item.video, item.frame_idx)
+        lf = lf[0] if lf else None
         val = 0 if lf is None else len(lf.user_instances)
         val = str(val) if val > 0 else ""
         item_dict["labeled"] = val
@@ -522,7 +560,7 @@ class SuggestionsTableModel(GenericTableModel):
             for inst in lf
             if hasattr(inst, "score")
         ]
-        val = sum(scores) / len(scores) if scores else ""
+        val = float(sum(scores) / len(scores)) if scores else ""
         item_dict["mean score"] = val
 
         return item_dict
@@ -535,7 +573,6 @@ class SuggestionsTableModel(GenericTableModel):
         if prop != "group":
             super(SuggestionsTableModel, self).sort(column_idx, order)
         else:
-
             if not reverse:
                 # Use group_int (int) instead of group (str).
                 self.beginResetModel()
@@ -572,7 +609,7 @@ class SuggestionsTableModel(GenericTableModel):
         # Update order in project (so order can be saved and affects what we
         # consider previous/next suggestion for navigation).
         resorted_suggestions = [item["SuggestionFrame"] for item in self._data]
-        self.context.labels.set_suggestions(resorted_suggestions)
+        self.context.labels.suggestions = resorted_suggestions
 
 
 class SkeletonNodeModel(QtCore.QStringListModel):

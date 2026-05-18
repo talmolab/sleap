@@ -14,7 +14,7 @@ training:
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
   - label: Max Instances
-    name: max_instances
+    name: _max_instances
     type: optional_int
     help: Maximum number of instances per frame.
     none_label: No max
@@ -22,7 +22,7 @@ training:
     range: 1,100
     default: 1
 
-  - name: model.heads.multi_instance.confmaps.sigma
+  - name: model_config.head_configs.bottomup.confmaps.sigma
     label: Sigma for Nodes
     type: double
     default: 5.0
@@ -33,7 +33,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
 
-  - name: model.heads.multi_instance.pafs.sigma
+  - name: model_config.head_configs.bottomup.pafs.sigma
     label: Sigma for Edges
     type: double
     default: 15.0
@@ -54,7 +54,7 @@ training:
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
   - label: Max Instances
-    name: max_instances
+    name: _max_instances
     type: optional_int
     help: Maximum number of instances per frame.
     none_label: No max
@@ -70,7 +70,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Centroids
-    name: model.heads.centroid.sigma
+    name: model_config.head_configs.centroid.confmaps.sigma
     type: double
 
   - default: null
@@ -81,7 +81,7 @@ training:
       significantly improve topdown model accuracy as they benefit from a consistent
       geometry of the body parts relative to the center of the image.
     label: Anchor Part
-    name: model.heads.centered_instance.anchor_part
+    name: model_config.head_configs.centered_instance.confmaps.anchor_part
     type: optional_list
 
   - default: 5.0
@@ -92,7 +92,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Nodes
-    name: model.heads.centered_instance.sigma
+    name: model_config.head_configs.centered_instance.confmaps.sigma
     type: double
 
   multi-animal bottom-up-id:
@@ -103,7 +103,7 @@ training:
       affinity field</u>" head to group the nodes into distinct animal
       instances. It also handles classification and tracking.'
 
-  - name: model.heads.multi_class_bottomup.confmaps.sigma
+  - name: model_config.head_configs.multi_class_bottomup.confmaps.sigma
     label: Sigma for Nodes
     type: double
     default: 5.0
@@ -114,7 +114,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
 
-  - name: model.heads.multi_class_bottomup.class_maps.sigma
+  - name: model_config.head_configs.multi_class_bottomup.class_maps.sigma
     label: Sigma for Edges
     type: double
     default: 15.0
@@ -144,7 +144,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Centroids
-    name: model.heads.centroid.sigma
+    name: model_config.head_configs.centroid.confmaps.sigma
     type: double
 
   - default: null
@@ -155,7 +155,7 @@ training:
       significantly improve topdown model accuracy as they benefit from a consistent
       geometry of the body parts relative to the center of the image.
     label: Anchor Part
-    name: model.heads.multi_class_topdown.confmaps.anchor_part
+    name: model_config.head_configs.multi_class_topdown.confmaps.anchor_part
     type: optional_list
 
   - default: 5.0
@@ -166,7 +166,7 @@ training:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma for Nodes
-    name: model.heads.multi_class_topdown.confmaps.sigma
+    name: model_config.head_configs.multi_class_topdown.confmaps.sigma
     type: double
 
   single animal:
@@ -178,7 +178,7 @@ training:
       For predicting on videos with more than one animal per frame, use a
       multi-animal pipeline (even if your training data has one instance per frame).'
 
-  - name: model.heads.single_instance.sigma
+  - name: model_config.head_configs.single_instance.confmaps.sigma
     label: Sigma for Nodes
     type: double
     default: 5.0
@@ -212,94 +212,130 @@ training:
   type: list
 
 - type: text
-  text: '<b>ZMQ Options</b>'
+  text: '<b>Data Pipeline and Hardware Options</b>'
 
-- name: controller_port
-  label: Controller Port
-  type: int
-  default: 9000
-  range: 1024,65535
+- default: 'Cache in Memory'
+  help: 'Data loading strategy. Stream: Reads frames directly from video as needed (set workers=0). Cache in Memory: Pre-loads all frames into RAM for faster training (recommended). Cache to Disk: Saves frames to disk for reuse across training runs.'
+  label: Data Pipeline Framework
+  name: _data_pipeline_fw
+  options: 'Stream (no caching),Cache in Memory,Cache to Disk'
+  type: list
 
-- name: publish_port
-  label: Publish Port
+- name: trainer_config.train_data_loader.num_workers
+  label: Dataloader Workers
   type: int
-  default: 9001
-  range: 1024,65535
+  default: 0
+  range: 0,16
+  help: Number of subprocesses for data loading. Use 0 for "Stream" mode to avoid race conditions. Use 2-4 with caching modes for faster loading.
+
+- name: trainer_config.trainer_devices
+  label: Number of GPU Devices
+  type: optional_int
+  default: null
+  none_label: Auto
+  help: Number of GPU devices to train on. "Auto" detects available GPUs.
+
+- name: trainer_config.trainer_accelerator
+  label: Accelerator
+  type: list
+  default: "auto"
+  options: auto,cuda,cpu,mps
+  help: Hardware accelerator for training. "auto" uses CUDA if available, otherwise CPU. Use "mps" for Apple Silicon Macs.
+
+- type: text
+  text: '<b>WandB options</b>'
+
+- default: false
+  help: If True, the model training will be logged to WandB.
+  label: Enable WandB for logging
+  name: trainer_config.use_wandb
+  type: bool
+
+- name: trainer_config.wandb.entity
+  label:  Entity Name
+  type: optional_string
+  default: null
+  help: Account name (username or organization).
+
+- name: trainer_config.wandb.project
+  label:  Project Name
+  type: optional_string
+  default: null
+  help: Name for the group of runs.
+
+- name: trainer_config.wandb.api_key
+  label: WandB API Key
+  type: optional_string
+  default: null
+  help: WandB API Key. From https://wandb.ai/authorize. You could also set it in your terminal by exporting the WANDB_API_KEY environment variable or `wandb.login()` in your Python shell.
+  hidden: true
+
+- name: trainer_config.wandb.prv_runid
+  label: Previous Run ID
+  type: optional_string
+  default: null
+  help: Previous run ID if this is a continuation of a previous run that was stopped.
+
+- name: trainer_config.wandb.group
+  label: Group Name
+  type: optional_string
+  default: null
+  help: Grouping within the project.
+
+- name: trainer_config.wandb.save_viz_imgs_wandb
+  label: Upload Viz to WandB
+  type: bool
+  default: false
+  help: If True, sample predictions saved during training will also be uploaded to WandB. Requires both "Enable WandB for logging" and "Visualize Predictions During Training" to be enabled.
 
 - type: text
   text: '<b>Output Options</b>'
 
-- default: ''
-  help: String to prepend to the run name. This is useful to prevent multiple runs
-    started at the same exact time to be mapped to the same folder, or when a fixed
-    run name is specified.
-  label: Run Name Prefix
-  name: outputs.run_name_prefix
-  type: string
+- default: null
+  help: String to set as the run name. ckpts are saved to {Runs folder}/{Run name}. If None, it will be auto-generated {trainer_config.ckpt_dir}/{time_stamp}_{head_name}_n={num_samples}.
+  label: Run Name
+  name: trainer_config.run_name
+  type: optional_string
 - default: models
   help: 'Path to the folder that run data should be stored in. All the data for a
-    single run are stored in the path: "{runs_folder}/{run_name_prefix}{run_name}{run_name_suffix}"
-    These are specified separately to allow the `run_name` to be auto-generated. This
-    can be specified as an absolute or relative path. Relative paths specify a path
-    with respect to the current working directory. Non-existing folders will be created
+    single run are stored in the path: "{Runs folder}/{Run name}". Non-existing folders will be created
     if they do not already exist. Defaults to the "models" subdirectory of the current
     working directory.'
   label: Runs Folder
-  name: outputs.runs_folder
+  name: trainer_config.ckpt_dir
   type: string
-- default: ''
-  help: A list of strings to use as "tags" that can be used to organize multiple runs.
-    These are not used for anything during training or inference, so they can be used
-    to store arbitrary user-specified metadata.
-  label: Tags
-  name: outputs.tags
-  type: string_list
 - default: true
   help: 'If True, the model will be saved at the end of an epoch if the validation
     loss has improved. If enabled, the model will be serialized to: "{run_folder}/best_model.h5"'
   label: Best Model
-  name: outputs.checkpointing.best_model
+  name: trainer_config.save_ckpt
   type: bool
 - default: false
   help: 'If True, the model will be saved at the end of every epoch, regardless of
     whether there was an improvement detected, but will overwrite the previous latest
     model. If enabled, the model will be serialized to: "{run_folder}/latest_model.h5"'
   label: Latest Model
-  name: outputs.checkpointing.latest_model
-  type: bool
-- default: false
-  help: 'If True, the model will be saved at the end of training, whether it was stopped
-    early or finished all epochs. If enabled, the model will be serialized to: "{run_folder}/final_model.h5"'
-  label: Final Model
-  name: outputs.checkpointing.final_model
-  type: bool
-- default: false
-  help: If True, logging data will be written to disk within the run folder. TensorBoard
-    can monitor either the specific run folder, or the parent runs folder that may
-    contain multiple models/runs. Both will be displayed correctly in the dashboard.
-  label: Write Tensorboard Logs
-  name: outputs.tensorboard.write_logs
+  name: trainer_config.model_ckpt.save_last
   type: bool
 
-- name: _save_viz
-  label: Visualize Predictions During Training
+- name: trainer_config.visualize_preds_during_training
+  label: Visualize Predictions
   type: bool
   default: true
+  help: If True, sample predictions will be saved during training for visual inspection.
 
-- name: _keep_viz
-  label: Keep Prediction Visualization Images After Training
+- name: trainer_config.keep_viz
+  label: Keep Viz Images
   type: bool
   default: false
+  help: If True, keep prediction visualization images after training completes. Otherwise they are deleted.
 
 - name: _predict_frames
   label: Predict On
   type: list
   options: current frame,random frames
   default: current frame
-
-- name: _view_datagen
-  label: View Training Image Inputs...
-  type: button
+  help: Which frames to run prediction on for visualization during training. "Current frame" uses the frame currently displayed in the GUI. "Random frames" selects random frames from the labeled data.
 
 inference:
 
@@ -317,7 +353,7 @@ inference:
       nodes for an entire image and a "<u>part affinity field</u>" head to group
       the nodes into distinct animal instances.'
   - label: Max Instances
-    name: max_instances
+    name: _max_instances
     type: optional_int
     help: Maximum number of instances per frame.
     none_label: No max
@@ -333,7 +369,7 @@ inference:
     "<u>centered-instance confidence map</u>" model for predicted node locations
     for each individual animal predicted by the centroid model.'
   - label: Max Instances
-    name: max_instances
+    name: _max_instances
     type: optional_int
     help: Maximum number of instances per frame.
     none_label: No max
@@ -387,11 +423,12 @@ inference:
 
   tracking-only:
 
-- name: batch_size
+- name: _batch_size
   label: Batch Size
   type: int
   default: 4
   range: 1,512
+  help: Number of frames to process in parallel during inference. Higher values can speed up inference by better utilizing GPU parallelism, but require more GPU memory. Reduce if you encounter out-of-memory errors.
 
 - name: tracking.tracker
   label: Tracker (cross-frame identity) Method
@@ -424,10 +461,6 @@ inference:
       This tracker "shifts" instances from previous frames using optical flow
       before matching instances in each frame to the <i>shifted</i> instances from
       prior frames.'
-    # - name: tracking.max_tracking
-    #   label: Limit max number of tracks
-    #   type: bool
-      default: false
     - name: tracking.max_tracks
       label: Max number of tracks
       type: optional_int
@@ -435,20 +468,24 @@ inference:
       default_disabled: true
       range: 1,100
       default: 1
+      help: Maximum number of unique track identities to maintain. Set to limit memory usage and computation for videos with many animals. "No limit" allows unlimited tracks.
     - name: tracking.similarity
       label: Similarity Method
       type: list
-      default: instance
-      options: "instance,normalized_instance,centroid,iou,object keypoint"
+      default: oks
+      options: "oks,iou,centroids"
+      help: Method to compute similarity between instances across frames. OKS (Object Keypoint Similarity) uses all keypoint positions. IoU uses intersection over union of bounding boxes. Centroids uses only the center point distance.
     - name: tracking.match
       label: Matching Method
       type: list
       default: greedy
       options: greedy,hungarian
+      help: Algorithm for assigning track identities across frames. Greedy assigns best matches first (faster). Hungarian finds the optimal global assignment (more accurate but slower).
     - name: tracking.track_window
       label: Elapsed Frame Window
       type: int
       default: 5
+      help: Number of previous frames to consider when matching instances to existing tracks. Larger values help recover from brief occlusions or detection failures but use more memory.
     - name: tracking.robust
       label: 'Robust quantile of similarity scores'
       help: 'For a value between 0 and 1 (excluded), use a robust quantile
@@ -459,47 +496,13 @@ inference:
       none_label: Use max (non-robust)
       range: 0,1
       default: 0.95
-    # - name: tracking.save_shifted_instances
-    #   label: Save shifted instances
-    #   type: bool
-    #   default: false
-    - type: text
-      text: '<b>Kalman filter-based tracking</b>:<br />
-      Uses the above tracking options to track instances for an initial
-      number of frames, then initializes Kalman filters which are used to track
-      instances on subsequent frames.'
-    - name: tracking.kf_init_frame_count
-      label: Enable Filters after Initial Frames
-      type: optional_int
-      none_label: Don't use filters
-      default_disabled: true
-      default: 10
-    - name: tracking.kf_node_indices
-      label: Nodes to use for Tracking
-      type: string
-      default: 0,1,2
-    - type: text
-      text: '<b>Object keypoint similarity options</b>:<br />
-      Only used if this similarity method is selected.'
-    - name: tracking.oks_errors
-      label: Keypoints errors in pixels
-      help: 'Standard error in pixels of the distance for each keypoint.
-      If the list is empty, defaults to 1. If singleton list, each keypoint has
-      the same error. Otherwise, the length should be the same as the number of
-      keypoints in the skeleton.'
-      type: string
-      default:
-    - name: tracking.oks_score_weighting
-      label: Use prediction score for weighting
-      help: 'Use prediction scores to weight the similarity of each keypoint'
-      type: bool
-      default: false
     - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks
       label: Connect Single Track Breaks
       type: bool
       default: false
+      help: If enabled, automatically connect track fragments that have single-frame gaps. This can help recover from brief detection failures.
 
   simple:
     # - type: text
@@ -534,20 +537,24 @@ inference:
       default_disabled: true
       range: 1,100
       default: 1
+      help: Maximum number of unique track identities to maintain. Set to limit memory usage and computation for videos with many animals. "No limit" allows unlimited tracks.
     - name: tracking.similarity
       label: Similarity Method
       type: list
       default: instance
-      options: "instance,normalized_instance,centroid,iou,object keypoint"
+      options: "centroid,iou,object keypoint"
+      help: Method to compute similarity between instances across frames. Centroid uses only the center point distance (fastest). IoU uses intersection over union of bounding boxes. Object keypoint uses all keypoint positions (most accurate).
     - name: tracking.match
       label: Matching Method
       type: list
       default: hungarian
       options: greedy,hungarian
+      help: Algorithm for assigning track identities across frames. Greedy assigns best matches first (faster). Hungarian finds the optimal global assignment (more accurate but slower).
     - name: tracking.track_window
       label: Elapsed Frame Window
       type: int
       default: 5
+      help: Number of previous frames to consider when matching instances to existing tracks. Larger values help recover from brief occlusions or detection failures but use more memory.
     - name: tracking.robust
       label: 'Robust quantile of similarity scores'
       help: 'For a value between 0 and 1 (excluded), use a robust quantile
@@ -559,42 +566,12 @@ inference:
       range: 0,1
       default: 0.95
     - type: text
-      text: '<b>Kalman filter-based tracking</b>:<br />
-        Uses the above tracking options to track instances for an initial
-        number of frames, then initializes Kalman filters which are used to track
-        instances on subsequent frames.'
-    - name: tracking.kf_init_frame_count
-      label: Enable Filters after Initial Frames
-      type: optional_int
-      none_label: Don't use filters
-      default_disabled: true
-      default: 10
-    - name: tracking.kf_node_indices
-      label: Nodes to use for Tracking
-      type: string
-      default: 0,1,2
-    - type: text
-      text: '<b>Object keypoint similarity options</b>:<br />
-      Only used if this similarity method is selected.'
-    - name: tracking.oks_errors
-      label: Keypoints errors in pixels
-      help: 'Standard error in pixels of the distance for each keypoint.
-      If the list is empty, defaults to 1. If singleton list, each keypoint has
-      the same error. Otherwise, the length should be the same as the number of
-      keypoints in the skeleton.'
-      type: string
-      default:
-    - name: tracking.oks_score_weighting
-      label: Use prediction score for weighting
-      help: 'Use prediction scores to weight the similarity of each keypoint'
-      type: bool
-      default: false
-    - type: text
       text: '<b>Post-tracker data cleaning</b>:'
     - name: tracking.post_connect_single_breaks
       label: Connect Single Track Breaks
       type: bool
       default: false
+      help: If enabled, automatically connect track fragments that have single-frame gaps. This can help recover from brief detection failures.
 
 
 
@@ -604,3 +581,4 @@ inference:
   type: list
   options: current frame,random frames
   default: current frame
+  help: Which frames to run prediction on. "Current frame" uses the frame currently displayed in the GUI. "Random frames" selects random frames from the video.

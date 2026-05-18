@@ -9,13 +9,13 @@ handshake there's a good chance early messages will be dropped.
 
 Each message is either dictionary or dictionary + numpy ndarray.
 """
+
 import attr
-import jsonpickle
 import numpy as np
 import time
 import zmq
 
-from typing import Any, Callable, List, Optional, Text
+from typing import Any, List, Optional, Text
 
 
 @attr.s(auto_attribs=True)

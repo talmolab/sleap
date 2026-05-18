@@ -1,5 +1,4 @@
 from sleap.gui.widgets.monitor import LossViewer
-from sleap import TrainingJobConfig
 
 
 def test_monitor_release(qtbot, min_centroid_model_path):
@@ -7,9 +6,9 @@ def test_monitor_release(qtbot, min_centroid_model_path):
     win.show()
 
     # Ensure win loads config correctly
-    config = TrainingJobConfig.load_json(min_centroid_model_path, False)
-    win.reset(what="Model Type", config=config)
-    assert win.config.optimization.early_stopping.plateau_patience == 10
+    win.reset(what="Model Type", plateau_patience=10, plateau_min_delta=1e-06)
+    assert win.plateau_patience == 10
+    assert win.plateau_min_delta == 1e-06
 
     # Ensure zmq port is set correctly
     assert win.zmq_ports["controller_port"] == 9000
@@ -18,7 +17,7 @@ def test_monitor_release(qtbot, min_centroid_model_path):
     win.is_running = True
     win.t0 = 0
     # Enter "last_epoch_val_loss is not None" conditional
-    win.last_epoch_val_loss = win.config.optimization.early_stopping.plateau_min_delta
+    win.last_epoch_val_loss = win.plateau_min_delta
     # Enter "penultimate_epoch_val_loss is not None" conditional
     win.penultimate_epoch_val_loss = win.last_epoch_val_loss
     win.mean_epoch_time_min = 0

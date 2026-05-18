@@ -30,6 +30,7 @@ want to add a new type of supported form field.
 from typing import Any, Dict, List, Optional, Text
 
 import yaml
+from omegaconf import ListConfig
 from qtpy import QtCore, QtWidgets
 
 from sleap.gui.dialogs.filedialog import FileDialog
@@ -65,7 +66,7 @@ class YamlFormWidget(QtWidgets.QGroupBox):
     ):
         super(YamlFormWidget, self).__init__(*args, **kwargs)
 
-        with open(yaml_file, "r") as form_yaml:
+        with open(yaml_file, "r", encoding="utf-8") as form_yaml:
             items_to_create = yaml.load(form_yaml, Loader=yaml.SafeLoader)
 
         self.which_form = which_form
@@ -252,6 +253,9 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
     ):
         super(FormBuilderLayout, self).__init__(*args, **kwargs)
 
+        # Reduce vertical spacing between form rows for more compact layout
+        self.setVerticalSpacing(6)
+
         self.form_text_widget = None
 
         self.buttons = dict()
@@ -298,13 +302,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         """
         widgets = self.fields
         for name, val in data.items():
-            # print(f"Attempting to set {name} to {val}")
             if name in widgets:
-                # print(f"set {name} to {val} ({type(val)})")
                 self.set_widget_value(widgets[name], val)
-            else:
-                # print(f"cannot set {name} for {widgets}")
-                pass
 
         for stacked_widget in self.stacked:
             stacked_widget.set_form_data(data)
@@ -362,9 +361,9 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         elif hasattr(widget, "setValue"):
             widget.setValue(val)
         elif hasattr(widget, "currentText"):
-            widget.setCurrentText(str(val))
+            widget.setCurrentText(str(val) if val is not None else "")
         elif hasattr(widget, "text"):
-            widget.setText(str(val))
+            widget.setText(str(val) if val is not None else "")
         else:
             print(f"don't know how to set value for {widget}")
         # for macOS we need to call repaint (bug in Qt?)
@@ -399,6 +398,8 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
             val = int(val)
         elif widget.property("field_data_type").startswith("file_"):
             val = None if val == "None" else val
+        elif widget.property("field_data_type") == "optional_string":
+            val = None if val == "" else val
         return val
 
     def build_form(self, items_to_create: List[Dict[Text, Any]]):
@@ -475,6 +476,11 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 min, max = 0, item["default"] * 10
                 field.setRange(min, max)
 
+            # Support step size for spinbox (useful for crop_size which should be
+            # divisible by max_stride, typically 32)
+            if "step" in item.keys():
+                field.setSingleStep(int(item["step"]))
+
             field.setValue(item["default"])
             if item.get("default_disabled", False):
                 field.setToNone()
@@ -521,6 +527,7 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
         # string
         elif item["type"] in ("string", "optional_string"):
             field = QtWidgets.QLineEdit()
+            field.setMaximumWidth(400)  # Prevent text fields from stretching too wide
             val = item.get("default", "")
             val = "" if val is None else val
             field.setText(str(val))
@@ -593,7 +600,9 @@ class FormBuilderLayout(QtWidgets.QFormLayout):
                 self.valueChanged.emit()
 
         else:
-            select_file = lambda: print(f"no action set for type {item['type']}")
+
+            def select_file():
+                return print(f"no action set for type {item['type']}")
 
         file_button.clicked.connect(select_file)
         return file_button
@@ -626,6 +635,10 @@ class StackBuilderWidget(QtWidgets.QWidget):
         multi_layout.setFormAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.combo_box = QtWidgets.QComboBox()
         self.stacked_widget = ResizingStackedWidget()
+        # Prevent stacked widget from expanding vertically
+        self.stacked_widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+        )
 
         self.combo_box.activated.connect(self.switch_to_idx)
 
@@ -641,6 +654,10 @@ class StackBuilderWidget(QtWidgets.QWidget):
 
             page_widget = QtWidgets.QGroupBox()
             page_widget.setLayout(self.page_layouts[page])
+            # Prevent vertical expansion - only take space needed for content
+            page_widget.setSizePolicy(
+                QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+            )
 
             self.stacked_widget.addWidget(page_widget)
 
@@ -752,6 +769,9 @@ class OptionalSpinWidget(QtWidgets.QWidget):
 
     def updateState(self, valueChanged=True):
         self.spin_widget.setDisabled(self.check_widget.isChecked())
+        # Force visual refresh to ensure spinbox displays correctly after
+        # enable/disable state change (fixes display not updating on some platforms)
+        self.spin_widget.repaint()
         if valueChanged:
             self.valueChanged.emit()
 
@@ -783,14 +803,35 @@ class OptionalSpinWidget(QtWidgets.QWidget):
         return self.spin_widget.value()
 
     def setValue(self, val):
+        if isinstance(val, ListConfig):
+            if len(val) > 0:
+                val = val[0]
+            else:
+                val = self.noneVal
+
         is_none = self.isNoneVal(val)
+
+        # Block signals temporarily to avoid multiple valueChanged emissions
+        # and ensure state is consistent before any signals fire
+        self.check_widget.blockSignals(True)
+        self.spin_widget.blockSignals(True)
+
         self.check_widget.setChecked(is_none)
         if not is_none:
+            # Enable spinbox before setting value to ensure proper display
+            self.spin_widget.setEnabled(True)
             self.spin_widget.setValue(val)
+
+        self.check_widget.blockSignals(False)
+        self.spin_widget.blockSignals(False)
+
         self.updateState(valueChanged=False)
 
     def setRange(self, min, max):
         self.spin_widget.setRange(min, max)
+
+    def setSingleStep(self, step):
+        self.spin_widget.setSingleStep(step)
 
 
 class FieldComboWidget(QtWidgets.QComboBox):

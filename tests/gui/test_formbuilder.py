@@ -90,7 +90,7 @@ def test_auto_double_widget(qtbot):
     assert widget.value() == 3.2
 
     widget.check_widget.setChecked(True)
-    assert widget.value() is "auto"
+    assert widget.value() == "auto"
 
     widget.check_widget.setChecked(False)
     assert widget.value() == 3.2

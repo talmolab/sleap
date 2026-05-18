@@ -66,10 +66,10 @@ def test_gui_state_bool():
     assert "x" not in state
 
     state.toggle("x")
-    assert state["x"] == True
+    assert state["x"]
 
     state.toggle("x")
-    assert state["x"] == False
+    assert not state["x"]
 
 
 def test_gui_state_delete():

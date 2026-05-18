@@ -1,239 +1,44 @@
 data:
 - default: 0.1
-  help: Fraction of labeled frames to use as a validation set.
+  help: Fraction of labeled frames to use as a validation set. Ignored if "Overfit Mode" is enabled.
   label: Validation fraction
-  name: data.labels.validation_fraction
+  name: data_config.validation_fraction
   type: double
+- default: false
+  help: If enabled, the same data will be used for both training and validation (train = val). This is useful for intentional overfitting on small datasets (fewer than 10 labeled frames) to test model capacity.
+  label: Overfit Mode (train=val)
+  name: data_config.use_same_data_for_val
+  type: bool
+- default: null
+  help: Random seed for reproducible train/validation data splits. Leave empty (Auto) for random seed each run.
+  label: Random Seed
+  name: trainer_config.seed
+  type: optional_int
+  none_label: Auto
 - default: 1.0
-  help: ''
+  help: Rescaling factor applied to input images before training. Values less than 1.0 downsample the image (e.g., 0.5 reduces dimensions by half), which reduces memory usage and speeds up training at the cost of spatial resolution. Set to 1.0 to use original image resolution. Note that crop size and sigma values are relative to the scaled image.
   label: Input Scaling
-  name: data.preprocessing.input_scaling
+  name: data_config.preprocessing.scale
   type: double
 - default: null
   help: Integer size of bounding box height and width to crop out of the full image.
-    This should be greater than the largest size of the instances in pixels. The crop
-    is applied after any input scaling, so be sure to adjust this to changes in the
-    input image scale. If set to None, this will be automatically detected from the
+    This should be greater than the largest size of the instances in pixels. If set to None, this will be automatically detected from the
     data during training or from the model input layer during inference. This must
-    be divisible by the model's max stride (typically 32).
+    be divisible by the model's max stride (typically 32). If input scaling is provided, this crop size is resized to the input scale.
   label: Crop Size
-  name: data.instance_cropping.crop_size
+  name: data_config.preprocessing.crop_size
   type: optional_int
   none_label: Auto
-  range: 0,832
+  range: 32,1024
+  step: 32
 
 model:
 - default: unet
   label: Backbone
   name: _backbone_name
-  options: leap,unet,hourglass,resnet,pretrained_encoder
+  options: unet,convnext,swint
   type: stacked
 
-#####
-  hourglass:
-  - default: 4
-    help: Controls how many stem blocks to use for initial downsampling. These are
-      useful for learned downsampling that is able to retain spatial information while
-      reducing large input image sizes.
-    label: Stem Stride
-    name: model.backbone.hourglass.stem_stride
-    type: int
-  - default: 64
-    help: Determines the number of downsampling blocks in the network, increasing
-      receptive field size at the cost of network size.
-    label: Max Stride
-    name: model.backbone.hourglass.max_stride
-    type: list
-    options: 1,2,4,8,16,32,64,128
-  # - default: 4
-  #   help: Determines the number of upsampling blocks in the network.
-  #   label: Output Stride
-  #   name: model.backbone.hourglass.output_stride
-  #   type: list
-  #   options: 1,2,4,8,16,32,64
-  - default: 128
-    help: ''
-    label: Stem Filters
-    name: model.backbone.hourglass.stem_filters
-    type: int
-  - default: 256
-    help: Base number of filters in the network.
-    label: Filters
-    name: model.backbone.hourglass.filters
-    type: int
-  - default: 128
-    help: ''
-    label: Filter Increase
-    name: model.backbone.hourglass.filter_increase
-    type: int
-  - default: 3
-    help: Number of repeated stacks of the network (excluding the stem).
-    label: Stacks
-    name: model.backbone.hourglass.stacks
-    type: int
-#####
-
-#####
-  leap:
-  - default: 8
-    help: Determines the number of downsampling blocks in the network, increasing
-      receptive field size at the cost of network size.
-    label: Max Stride
-    name: model.backbone.leap.max_stride
-    type: list
-    options: 2,4,8,16,32,64,128
-  # - default: 1
-  #   help: Determines the number of upsampling blocks in the network.
-  #   label: Output Stride
-  #   name: model.backbone.leap.output_stride
-  #   type: list
-  #   options: 1,2,4,8,16,32,64
-  - default: 64
-    help: Base number of filters in the network.
-    label: Filters
-    name: model.backbone.leap.filters
-    type: int
-  - default: 2
-    help: Factor to scale the number of filters by at each block.
-    label: Filters Rate
-    name: model.backbone.leap.filters_rate
-    type: double
-  - default: false
-    help: If True, use bilinear upsampling instead of transposed convolutions for
-      upsampling. This can save computations but may lower overall accuracy.
-    label: Up Interpolate
-    name: model.backbone.leap.up_interpolate
-    type: bool
-  # - default: 1
-  #   help: Number of repeated stacks of the network (excluding the stem).
-  #   label: Stacks
-  #   name: model.backbone.leap.stacks
-  #   type: int
-#####
-
-#####
-  resnet:
-  - default: ResNet50
-    help: 'Name of the ResNetV1 variant. Can be one of: "ResNet50", "ResNet101", or
-      "ResNet152".'
-    label: Version
-    name: model.backbone.resnet.version
-    options: ResNet50,ResNet101,ResNet152
-    type: list
-  - default: frozen
-    help: Controls how the network weights are initialized. If "random", the network
-      is not pretrained. If "frozen", the network uses pretrained weights and keeps
-      them fixed. If "tunable", the network uses pretrained weights and allows them
-      to be trainable.
-    label: Weights
-    name: model.backbone.resnet.weights
-    options: random,frozen,tunable
-    type: list
-  - default: interpolation
-    help: If "transposed_conv", use a strided transposed convolution to perform learnable
-      upsampling. If "interpolation", bilinear upsampling will be used instead.
-    label: Method
-    name: model.backbone.resnet.upsampling.method
-    options: interpolation,transposed_conv
-    type: list
-  - default: null
-    help: If "add", incoming feature tensors form skip connection with upsampled features
-      via element-wise addition. Height/width are matched via stride and a 1x1 linear
-      conv is applied if the channel counts do no match up. If "concatenate", the
-      skip connection is formed via channel-wise concatenation. If None, skip connections
-      will not be formed.
-    label: Skip Connections
-    name: model.backbone.resnet.upsampling.skip_connections
-    options: ',add,concatenate'
-    type: list
-  - default: 2
-    help: The striding of the upsampling *layer* (not tensor). This is typically set
-      to 2, such that the tensor doubles in size with each upsampling step, but can
-      be set higher to upsample to the desired `output_stride` directly in fewer steps.
-    label: Block Stride
-    name: model.backbone.resnet.upsampling.block_stride
-    type: int
-  - default: 64
-    help: Integer that specifies the base number of filters in each convolution layer.
-      This will be scaled by the `filters_rate` at every upsampling step.
-    label: Filters
-    name: model.backbone.resnet.upsampling.filters
-    type: int
-  - default: 1
-    help: Factor to scale the number of filters in the convolution layers after each
-      upsampling step. If set to 1, the number of filters won't change.
-    label: Filters Rate
-    name: model.backbone.resnet.upsampling.filters_rate
-    type: double
-  - default: 2
-    help: If greater than 0, specifies the number of 3x3 convolutions that will be
-      applied after the upsampling step for refinement. These layers can serve the
-      purpose of "mixing" the skip connection fused features, or to refine the current
-      feature map after upsampling, which can help to prevent aliasing and checkerboard
-      effects. If 0, no additional convolutions will be applied.
-    label: Refine Convs
-    name: model.backbone.resnet.upsampling.refine_convs
-    type: int
-  - default: true
-    help: ''
-    label: Batch Norm
-    name: model.backbone.resnet.upsampling.batch_norm
-    type: bool
-  - default: 4
-    help: Size of the kernel for the transposed convolution. No effect if bilinear
-      upsampling is used.
-    label: Transposed Conv Kernel Size
-    name: model.backbone.resnet.upsampling.transposed_conv_kernel_size
-    type: int
-  - default: 32
-    help: Stride of the backbone feature activations. These should be <= 32.
-    label: Max Stride
-    name: model.backbone.resnet.max_stride
-    type: list
-    options: 2,4,8,16,32,64,128
-  # - default: 4
-  #   help: Stride of the final output. If the upsampling branch is not defined, the
-  #     output stride is controlled via dilated convolutions or reduced pooling in the
-  #     backbone.
-  #   label: Output Stride
-  #   name: model.backbone.resnet.output_stride
-  #   type: list
-  #   options: 1,2,4,8,16,32,64
-#####
-
-#####
-#####
-  pretrained_encoder:
-  - label: Encoder
-    name: model.backbone.pretrained_encoder.encoder
-    default: efficientnetb0
-    help: 'Name of the network architecture to use as the encoder.'
-    options: vgg16,vgg19,resnet18,resnet34,resnet50,resnet101,resnet152,resnext50,resnext101,inceptionv3,inceptionresnetv2,densenet121,densenet169,densenet201,seresnet18,seresnet34,seresnet50,seresnet101,seresnet152,seresnext50,seresnext101,senet154,mobilenet,mobilenetv2,efficientnetb0,efficientnetb1,efficientnetb2,efficientnetb3,efficientnetb4,efficientnetb5,efficientnetb6,efficientnetb7
-    type: list
-  - label: Pretrained
-    name: model.backbone.pretrained_encoder.pretrained
-    default: true
-    help: Use ImageNet-pretrained weights for initialization (transfer learning). Model
-      will have randomly initialized weights otherwise.
-    type: bool
-  - label: Decoder filters
-    name: model.backbone.pretrained_encoder.decoder_filters
-    default: 256
-    help: Base number of filters for the upsampling blocks in the decoder.
-    type: int
-  - label: Decoder filters rate
-    name: model.backbone.pretrained_encoder.decoder_filters_rate
-    default: 1.0
-    help: Factor to scale the number of filters by at each consecutive upsampling block
-      in the decoder.
-    type: double
-  # - label: Output Stride
-  #   name: model.backbone.pretrained_encoder.output_stride
-  #   help: Determines the number of upsampling blocks in the network.
-  #   type: list
-  #   options: 1,2,4,8,16
-  #   default: 2
-#####
 
 #####
   unet:
@@ -242,13 +47,13 @@ model:
       These are useful for learned downsampling that is able to retain spatial information
       while reducing large input image sizes.
     label: Stem Stride
-    name: model.backbone.unet.stem_stride
+    name: model_config.backbone_config.unet.stem_stride
     type: optional_int
   - default: 16
     help: Determines the number of downsampling blocks in the network, increasing
       receptive field size at the cost of network size.
     label: Max Stride
-    name: model.backbone.unet.max_stride
+    name: model_config.backbone_config.unet.max_stride
     type: list
     options: 2,4,8,16,32,64,128
   # - default: 1
@@ -260,31 +65,105 @@ model:
   - default: 64
     help: Base number of filters in the network.
     label: Filters
-    name: model.backbone.unet.filters
+    name: model_config.backbone_config.unet.filters
     type: int
   - default: 2
     help: Factor to scale the number of filters by at each block.
     label: Filters Rate
-    name: model.backbone.unet.filters_rate
+    name: model_config.backbone_config.unet.filters_rate
     type: double
   - default: true
     help: If True, add an intermediate block between the downsampling and upsampling
       branch for additional processing for features at the largest receptive field
       size.
     label: Middle Block
-    name: model.backbone.unet.middle_block
+    name: model_config.backbone_config.unet.middle_block
     type: bool
   - default: false
     help: If True, use bilinear upsampling instead of transposed convolutions for
       upsampling. This can save computations but may lower overall accuracy.
     label: Up Interpolate
-    name: model.backbone.unet.up_interpolate
+    name: model_config.backbone_config.unet.up_interpolate
     type: bool
   # - default: 1
   #   help: Number of repeated stacks of the network (excluding the stem).
   #   label: Stacks
   #   name: model.backbone.unet.stacks
   #   type: int
+#####
+
+#####
+  convnext:
+  - default: tiny
+    help: ConvNeXt model variant. Larger models have more parameters and capacity
+      but require more memory and compute. tiny (28M params), small (50M), base (89M), large (198M).
+    label: Model Type
+    name: model_config.backbone_config.convnext.model_type
+    options: tiny,small,base,large
+    type: list
+  - default: false
+    help: Use ImageNet pretrained weights for faster convergence and better performance.
+      Requires RGB input (3 channels). Enable "Ensure RGB" in preprocessing if using grayscale images.
+    label: Use Pretrained Weights
+    name: _convnext_use_pretrained
+    type: bool
+  - default: 3
+    help: Kernel size for the decoder upsampling convolutions.
+    label: Decoder Kernel Size
+    name: model_config.backbone_config.convnext.kernel_size
+    options: 3,5
+    type: list
+  - default: 2.0
+    help: Factor to scale the number of filters in the decoder relative to the encoder.
+    label: Decoder Filters Rate
+    name: model_config.backbone_config.convnext.filters_rate
+    type: double
+  - default: true
+    help: If True, use bilinear interpolation for upsampling in the decoder.
+      If False, use transposed convolutions.
+    label: Up Interpolate
+    name: model_config.backbone_config.convnext.up_interpolate
+    type: bool
+#####
+
+#####
+  swint:
+  - default: tiny
+    help: Swin Transformer model variant. Larger models have more parameters and capacity
+      but require more memory and compute. tiny (28M params), small (50M), base (88M).
+    label: Model Type
+    name: model_config.backbone_config.swint.model_type
+    options: tiny,small,base
+    type: list
+  - default: false
+    help: Use ImageNet pretrained weights for faster convergence and better performance.
+      Requires RGB input (3 channels). Enable "Ensure RGB" in preprocessing if using grayscale images.
+    label: Use Pretrained Weights
+    name: _swint_use_pretrained
+    type: bool
+  - default: 7
+    help: Window size for the Swin Transformer attention mechanism.
+      Larger windows capture more context but use more memory.
+    label: Window Size
+    name: model_config.backbone_config.swint.window_size
+    type: int
+  - default: 3
+    help: Kernel size for the decoder upsampling convolutions.
+    label: Decoder Kernel Size
+    name: model_config.backbone_config.swint.kernel_size
+    options: 3,5
+    type: list
+  - default: 2.0
+    help: Factor to scale the number of filters in the decoder relative to the encoder.
+    label: Decoder Filters Rate
+    name: model_config.backbone_config.swint.filters_rate
+    type: double
+  - default: true
+    help: If True, use bilinear interpolation for upsampling in the decoder.
+      If False, use transposed convolutions.
+    label: Up Interpolate
+    name: model_config.backbone_config.swint.up_interpolate
+    type: bool
 #####
 
 - centered_instance:
@@ -296,7 +175,7 @@ model:
       significantly improve topdown model accuracy as they benefit from a consistent
       geometry of the body parts relative to the center of the image.
     label: Anchor Part
-    name: model.heads.centered_instance.anchor_part
+    name: model_config.head_configs.centered_instance.confmaps.anchor_part
     type: optional_list
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -306,7 +185,7 @@ model:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma
-    name: model.heads.centered_instance.sigma
+    name: model_config.head_configs.centered_instance.confmaps.sigma
     type: double
   - default: 1
     help: The stride of the output confidence maps relative to the input image. This
@@ -315,7 +194,7 @@ model:
       considerably speed up model performance and decrease memory requirements, at
       the cost of decreased spatial resolution.
     label: Output Stride
-    name: model.heads.centered_instance.output_stride
+    name: model_config.head_configs.centered_instance.confmaps.output_stride
     type: list
     options: 1,2,4,8,16,32,64
   centroid:
@@ -327,7 +206,7 @@ model:
       significantly improve topdown model accuracy as they benefit from a consistent
       geometry of the body parts relative to the center of the image.
     label: Anchor Part
-    name: model.heads.centroid.anchor_part
+    name: model_config.head_configs.centroid.confmaps.anchor_part
     type: optional_list
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -337,7 +216,7 @@ model:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma
-    name: model.heads.centroid.sigma
+    name: model_config.head_configs.centroid.confmaps.sigma
     type: double
   - default: 1
     help: The stride of the output confidence maps relative to the input image. This
@@ -346,12 +225,12 @@ model:
       considerably speed up model performance and decrease memory requirements, at
       the cost of decreased spatial resolution.
     label: Output Stride
-    name: model.heads.centroid.output_stride
+    name: model_config.head_configs.centroid.confmaps.output_stride
     type: list
     options: 1,2,4,8,16,32,64
   default: ''
   label: Heads
-  multi_instance:
+  bottomup:
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
       Smaller values are more precise but may be difficult to learn as they have a
@@ -360,7 +239,7 @@ model:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma
-    name: model.heads.multi_instance.confmaps.sigma
+    name: model_config.head_configs.bottomup.confmaps.sigma
     type: double
   - default: 1
     help: The stride of the output confidence maps relative to the input image. This
@@ -369,7 +248,7 @@ model:
       considerably speed up model performance and decrease memory requirements, at
       the cost of decreased spatial resolution.
     label: Output Stride
-    name: model.heads.multi_instance.confmaps.output_stride
+    name: model_config.head_configs.bottomup.confmaps.output_stride
     type: list
     options: 1,2,4,8,16,32,64
   - default: 1.0
@@ -377,7 +256,7 @@ model:
       Increase this to encourage the optimization to focus on improving this specific
       output in multi-head models.
     label: Loss Weight
-    name: model.heads.multi_instance.confmaps.loss_weight
+    name: model_config.head_configs.bottomup.confmaps.loss_weight
     type: double
   - default: 15.0
     help: Spread of the Gaussian distribution that weigh the part affinity fields
@@ -389,7 +268,7 @@ model:
       pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma
-    name: model.heads.multi_instance.pafs.sigma
+    name: model_config.head_configs.bottomup.pafs.sigma
     type: double
   - default: 1
     help: The stride of the output part affinity fields relative to the input image.
@@ -398,7 +277,7 @@ model:
       speed up model performance and decrease memory requirements, at the cost of
       decreased spatial resolution.
     label: Output Stride
-    name: model.heads.multi_instance.pafs.output_stride
+    name: model_config.head_configs.bottomup.pafs.output_stride
     type: list
     options: 1,2,4,8,16,32,64
   - default: 1.0
@@ -406,9 +285,19 @@ model:
       Increase this to encourage the optimization to focus on improving this specific
       output in multi-head models.
     label: Loss Weight
-    name: model.heads.multi_instance.pafs.loss_weight
+    name: model_config.head_configs.bottomup.pafs.loss_weight
     type: double
   multi_class_topdown:
+  - default: null
+    help: Text name of a body part (node) to use as the anchor point. If None, the
+      midpoint of the bounding box of all visible instance points will be used as
+      the anchor. The bounding box midpoint will also be used if the anchor part is
+      specified but not visible in the instance. Setting a reliable anchor point can
+      significantly improve topdown model accuracy as they benefit from a consistent
+      geometry of the body parts relative to the center of the image.
+    label: Anchor Part
+    name: model_config.head_configs.multi_class_topdown.confmaps.anchor_part
+    type: optional_list
   - default: 1.5
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
       Smaller values are more precise but may be difficult to learn as they have a
@@ -417,7 +306,7 @@ model:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma
-    name: model.heads.multi_class_topdown.confmaps.sigma
+    name: model_config.head_configs.multi_class_topdown.confmaps.sigma
     type: double
   - default: 2
     help: The stride of the output confidence maps relative to the input image. This
@@ -426,7 +315,7 @@ model:
       considerably speed up model performance and decrease memory requirements, at
       the cost of decreased spatial resolution.
     label: Output Stride
-    name: model.heads.multi_class_topdown.confmaps.output_stride
+    name: model_config.head_configs.multi_class_topdown.confmaps.output_stride
     type: list
     options: 1,2,4,8,16,32,64
   - default: 1.0
@@ -434,33 +323,33 @@ model:
       Increase this to encourage the optimization to focus on improving this specific
       output in multi-head models.
     label: Loss Weight
-    name: model.heads.multi_class_topdown.confmaps.loss_weight
+    name: model_config.head_configs.multi_class_topdown.confmaps.loss_weight
     type: double
   - default: 3
     help: Number of fully-connected layers before the classification output
       layer. These can help in transforming general image features into
       classification-specific features.
     label: Fully Connected Layers
-    name: model.heads.multi_class_topdown.class_vectors.num_fc_layers
+    name: model_config.head_configs.multi_class_topdown.class_vectors.num_fc_layers
     type: integer
   - default: 64
     help: Number of units (dimensions) in the fully-connected layers before
       classification. Increasing this can improve the representational capacity in
       the pre-classification layers.
     label: Fully Connected Units
-    name: model.heads.multi_class_topdown.class_vectors.num_fc_units
+    name: model_config.head_configs.multi_class_topdown.class_vectors.num_fc_units
     type: integer
   - default: true
     help: Whether to use global max pooling prior to flattening.
     label: Global Pool
-    name: model.heads.multi_class_topdown.class_vectors.global_pool
+    name: model_config.head_configs.multi_class_topdown.class_vectors.global_pool
     type: bool
   - default: 1.0
     help: Scalar float used to weigh the loss term for this head during
       training. Increase this to encourage the optimization to focus on improving
       this specific output in multi-head models.
     label: Loss Weight
-    name: model.heads.multi_class_topdown.class_vectors.loss_weight
+    name: model_config.head_configs.multi_class_topdown.class_vectors.loss_weight
     type: double
   multi_class_bottomup:
   - default: 5.0
@@ -471,7 +360,7 @@ model:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma
-    name: model.heads.multi_class_bottomup.confmaps.sigma
+    name: model_config.head_configs.multi_class_bottomup.confmaps.sigma
     type: double
   - default: 2
     help: The stride of the output confidence maps relative to the input image. This
@@ -480,7 +369,7 @@ model:
       considerably speed up model performance and decrease memory requirements, at
       the cost of decreased spatial resolution.
     label: Output Stride
-    name: model.heads.multi_class_bottomup.confmaps.output_stride
+    name: model_config.head_configs.multi_class_bottomup.confmaps.output_stride
     type: list
     options: 1,2,4,8,16,32,64
   - default: 1.0
@@ -488,7 +377,7 @@ model:
       Increase this to encourage the optimization to focus on improving this specific
       output in multi-head models.
     label: Loss Weight
-    name: model.heads.multi_class_bottomup.confmaps.loss_weight
+    name: model_config.head_configs.multi_class_bottomup.confmaps.loss_weight
     type: double
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -498,7 +387,7 @@ model:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma
-    name: model.heads.multi_class_bottomup.class_maps.sigma
+    name: model_config.head_configs.multi_class_bottomup.class_maps.sigma
     type: double
   - default: 16
     help: The stride of the output class maps relative to the input image. This
@@ -507,7 +396,7 @@ model:
       considerably speed up model performance and decrease memory requirements, at
       the cost of decreased spatial resolution.
     label: Output Stride
-    name: model.heads.multi_class_bottomup.class_maps.output_stride
+    name: model_config.head_configs.multi_class_bottomup.class_maps.output_stride
     type: list
     options: 1,2,4,8,16,32,64
   - default: 2.0
@@ -515,10 +404,10 @@ model:
       Increase this to encourage the optimization to focus on improving this specific
       output in multi-head models.
     label: Loss Weight
-    name: model.heads.multi_class_bottomup.class_maps.loss_weight
+    name: model_config.head_configs.multi_class_bottomup.class_maps.loss_weight
     type: double
   name: _heads_name
-  options: single_instance,centroid,centered_instance,multi_instance,multi_class_topdown,multi_class_bottomup
+  options: single_instance,centroid,centered_instance,bottomup,multi_class_topdown,multi_class_bottomup
   single_instance:
   - default: 5.0
     help: Spread of the Gaussian distribution of the confidence maps as a scalar float.
@@ -528,7 +417,7 @@ model:
       of pixels of the model input image, i.e., the image resolution after any input
       scaling is applied.
     label: Sigma
-    name: model.heads.single_instance.sigma
+    name: model_config.head_configs.single_instance.confmaps.sigma
     type: double
   - default: 1
     help: The stride of the output confidence maps relative to the input image. This
@@ -537,117 +426,101 @@ model:
       considerably speed up model performance and decrease memory requirements, at
       the cost of decreased spatial resolution.
     label: Output Stride
-    name: model.heads.single_instance.output_stride
+    name: model_config.head_configs.single_instance.confmaps.output_stride
     type: list
     options: 1,2,4,8,16,32,64
   type: stacked
 augmentation:
-- default: false
-  help: If True, rotational augmentation will be applied. Rotation is relative to
-    the center of the image. See `imgaug.augmenters.geometric.Affine`.
-  label: Rotate
-  name: optimization.augmentation_config.rotate
-  type: bool
-- default: -180
-  help: Minimum rotation angle in degrees in [-180, 180].
-  label: Rotation Min Angle
-  name: optimization.augmentation_config.rotation_min_angle
-  range: -180,180
-  type: double
-- default: 180
-  help: Maximum rotation angle in degrees in [-180, 180].
-  label: Rotation Max Angle
-  name: optimization.augmentation_config.rotation_max_angle
-  range: -180,180
+# Geometric augmentations
+- default: "±180°"
+  help: "Rotation augmentation range. Off: disabled. ±15°: for side-view cameras where upside-down would be unnatural. ±180°: for top-view/overhead cameras where all orientations are valid."
+  label: Rotation
+  name: _rotation_preset
+  type: list
+  options: "Off,±15°,±180°,Custom"
+- default: 45
+  help: Custom symmetric rotation range in degrees. Images will be rotated randomly between -X and +X degrees. Only used when "Custom" is selected above.
+  label: Custom Rotation (±)
+  name: _rotation_custom_angle
+  range: 1,180
   type: double
 - default: false
-  help: If True, scaling augmentation will be applied. See `imgaug.augmenters.geometric.Affine`.
+  help: Enable random scaling augmentation. Scaling is applied independently with 100% probability when enabled.
   label: Scale
-  name: optimization.augmentation_config.scale
+  name: _scale_enabled
   type: bool
 - default: 0.9
   help: Minimum scaling factor.
   label: Scale Min
-  name: optimization.augmentation_config.scale_min
+  name: data_config.augmentation_config.geometric.scale_min
   type: double
 - default: 1.1
   help: Maximum scaling factor.
   label: Scale Max
-  name: optimization.augmentation_config.scale_max
+  name: data_config.augmentation_config.geometric.scale_max
   type: double
-- label: Random flip
-  default: none
-  type: list
-  name: optimization.augmentation_config.random_flip
-  options: none,horizontal,vertical
-  default: none
-  help: 'Randomly reflect images and instances. IMPORTANT: Left/right symmetric nodes must be indicated in the skeleton or this will lead to incorrect results!'
+# Intensity augmentations
 - default: false
-  help: If True, uniformly distributed noise will be added to the image. This is effectively
-    adding a different random value to each pixel to simulate shot noise. See `imgaug.augmenters.arithmetic.AddElementwise`.
+  help: Enable uniformly distributed noise augmentation.
   label: Uniform Noise
-  name: optimization.augmentation_config.uniform_noise
+  name: _uniform_noise_enabled
   type: bool
 - default: 0.0
   help: Minimum value to add.
+  range: 0.0, 1.0
   label: Uniform Noise Min Val
-  name: optimization.augmentation_config.uniform_noise_min_val
+  name: data_config.augmentation_config.intensity.uniform_noise_min
   type: double
-- default: 10.0
+- default: 0.1
+  range: 0.0, 1.0
   help: Maximum value to add.
   label: Uniform Noise Max Val
-  name: optimization.augmentation_config.uniform_noise_max_val
+  name: data_config.augmentation_config.intensity.uniform_noise_max
   type: double
 - default: false
-  help: If True, normally distributed noise will be added to the image. This is similar
-    to uniform noise, but can provide a tigher bound around a mean noise magnitude.
-    This is applied independently to each pixel. See `imgaug.augmenters.arithmetic.AdditiveGaussianNoise`.
+  help: Enable normally distributed noise augmentation. This is applied independently to each pixel.
   label: Gaussian Noise
-  name: optimization.augmentation_config.gaussian_noise
+  name: _gaussian_noise_enabled
   type: bool
-- default: 5.0
+- default: 0.0
   help: Mean of the distribution to sample from.
   label: Gaussian Noise Mean
-  name: optimization.augmentation_config.gaussian_noise_mean
+  name: data_config.augmentation_config.intensity.gaussian_noise_mean
   type: double
-- default: 1.0
+- default: 0.04
   help: Standard deviation of the distribution to sample from.
   label: Gaussian Noise Stddev
-  name: optimization.augmentation_config.gaussian_noise_stddev
+  name: data_config.augmentation_config.intensity.gaussian_noise_std
   type: double
 - default: false
-  help: If True, gamma constrast adjustment will be applied to the image. This scales
-    all pixel values by `x ** gamma` where `x` is the pixel value in the [0, 1] range.
-    Values in [0, 255] are first scaled to [0, 1]. See `imgaug.augmenters.contrast.GammaContrast`.
+  help: Enable gamma contrast adjustment. This scales all pixel values by x^gamma where x is in [0, 1].
   label: Contrast
-  name: optimization.augmentation_config.contrast
+  name: _contrast_enabled
   type: bool
 - default: 0.5
   help: Minimum gamma to use for augmentation. Reasonable values are in [0.5, 2.0].
   label: Contrast Min Gamma
-  name: optimization.augmentation_config.contrast_min_gamma
+  name: data_config.augmentation_config.intensity.contrast_min
   type: double
 - default: 2.0
   help: Maximum gamma to use for augmentation. Reasonable values are in [0.5, 2.0].
   label: Contrast Max Gamma
-  name: optimization.augmentation_config.contrast_max_gamma
+  name: data_config.augmentation_config.intensity.contrast_max
   type: double
 - default: false
-  help: If True, the image brightness will be augmented. This adjustment simply adds
-    the same value to all pixels in the image to simulate broadfield illumination
-    change. See `imgaug.augmenters.arithmetic.Add`.
+  help: Enable brightness augmentation. This adds the same value to all pixels to simulate illumination change.
   label: Brightness
-  name: optimization.augmentation_config.brightness
+  name: _brightness_enabled
   type: bool
 - default: 0.0
   help: Minimum value to add to all pixels.
   label: Brightness Min Val
-  name: optimization.augmentation_config.brightness_min_val
+  name: data_config.augmentation_config.intensity.brightness_min
   type: double
-- default: 10.0
+- default: 0.2
   help: Maximum value to add to all pixels.
   label: Brightness Max Val
-  name: optimization.augmentation_config.brightness_max_val
+  name: data_config.augmentation_config.intensity.brightness_max
   type: double
 
 optimization:
@@ -659,13 +532,13 @@ optimization:
     may be beneficial to the optimization process when few but varied examples are
     available.
   label: Batch Size
-  name: optimization.batch_size
+  name: trainer_config.train_data_loader.batch_size
   type: int
   range: 1,512
 - default: 100
   help: Maximum number of epochs to train for. Training can be stopped manually or automatically if early stopping is enabled and a plateau is detected.
   label: Epochs
-  name: optimization.epochs
+  name: trainer_config.max_epochs
   type: int
   range: 1,1000
 - default: 0.0001
@@ -674,7 +547,7 @@ optimization:
     on plateau is enabled. If this is too high or too low, the training may fail to
     find good initial local minima to descend.
   label: Initial Learning Rate
-  name: optimization.initial_learning_rate
+  name: trainer_config.optimizer.lr
   type: sci
 
 
@@ -682,17 +555,17 @@ optimization:
 - default: true
   help: If True, the training will terminate automatically when the validation set loss plateaus. This can save time and compute resources when there are minimal improvements to be gained from further training, as well as to prevent training into the overfitting regime.
   label: Stop Training on Plateau
-  name: optimization.early_stopping.stop_training_on_plateau
+  name: trainer_config.early_stopping.stop_training_on_plateau
   type: bool
-- default: 1e-6
+- default: 1e-8
   help: Minimum absolute decrease in the loss in order to consider an epoch as not in a plateau.
   label: Plateau Min. Delta
-  name: optimization.early_stopping.plateau_min_delta
+  name: trainer_config.early_stopping.min_delta
   type: sci
 - default: 10
-  help: Number of epochs without an improvement of at least `plateau_min_delta` in order for a plateau to be detected.
+  help: Number of epochs without an improvement of at least `min_delta` in order for a plateau to be detected.
   label: Plateau Patience
-  name: optimization.early_stopping.plateau_patience
+  name: trainer_config.early_stopping.patience
   type: int
 - default: false
   help: If True, online hard keypoint mining (OHKM) will be enabled. When this is
@@ -702,13 +575,13 @@ optimization:
     body parts that are more difficult to learn. If False, no mining will be performed
     and all keypoints will be weighted equally in the loss.
   label: Online Mining
-  name: optimization.hard_keypoint_mining.online_mining
+  name: trainer_config.online_hard_keypoint_mining.online_mining
   type: bool
 - default: 2
   help: The minimum number of keypoints that will be considered as "hard", even if
     they are not below the `hard_to_easy_ratio`.
   label: Min Hard Keypoints
-  name: optimization.hard_keypoint_mining.min_hard_keypoints
+  name: trainer_config.online_hard_keypoint_mining.min_hard_keypoints
   type: int
 - default: null
   help: The maximum number of hard keypoints to apply scaling to. This can help when
@@ -716,57 +589,32 @@ optimization:
     scaling being applied to most keypoints, which can reduce the impact of hard mining
     altogether.
   label: Max Hard Keypoints
-  name: optimization.hard_keypoint_mining.max_hard_keypoints
+  name: trainer_config.online_hard_keypoint_mining.max_hard_keypoints
   type: optional_int
 outputs:
 - default: ''
-  help: String to prepend to the run name. This is useful to prevent multiple runs
-    started at the same exact time to be mapped to the same folder, or when a fixed
-    run name is specified.
-  label: Run Name Prefix
-  name: outputs.run_name_prefix
+  help: String to set as the run name. ckpts are saved to {trainer_config.ckpt_dir}/{run_name}. If None, it will be auto-generated {trainer_config.ckpt_dir}/{time_stamp}_{head_name}_n={num_samples}.
+  label: Run Name
+  name: trainer_config.run_name
   type: string
 - default: models
   help: 'Path to the folder that run data should be stored in. All the data for a
-    single run are stored in the path: "{runs_folder}/{run_name_prefix}{run_name}{run_name_suffix}"
-    These are specified separately to allow the `run_name` to be auto-generated. This
-    can be specified as an absolute or relative path. Relative paths specify a path
-    with respect to the current working directory. Non-existing folders will be created
+    single run are stored in the path: "{Runs folder}/{Run name}". Non-existing folders will be created
     if they do not already exist. Defaults to the "models" subdirectory of the current
     working directory.'
   label: Runs Folder
-  name: outputs.runs_folder
+  name: trainer_config.ckpt_dir
   type: string
-- default: ''
-  help: A list of strings to use as "tags" that can be used to organize multiple runs.
-    These are not used for anything during training or inference, so they can be used
-    to store arbitrary user-specified metadata.
-  label: Tags
-  name: outputs.tags
-  type: string_list
 - default: true
   help: 'If True, the model will be saved at the end of an epoch if the validation
     loss has improved. If enabled, the model will be serialized to: "{run_folder}/best_model.h5"'
   label: Best Model
-  name: outputs.checkpointing.best_model
+  name: trainer_config.save_ckpt
   type: bool
 - default: false
   help: 'If True, the model will be saved at the end of every epoch, regardless of
     whether there was an improvement detected, but will overwrite the previous latest
     model. If enabled, the model will be serialized to: "{run_folder}/latest_model.h5"'
   label: Latest Model
-  name: outputs.checkpointing.latest_model
-  type: bool
-- default: false
-  help: 'If True, the model will be saved at the end of training, whether it was stopped
-    early or finished all epochs. If enabled, the model will be serialized to: "{run_folder}/final_model.h5"'
-  label: Final Model
-  name: outputs.checkpointing.final_model
-  type: bool
-- default: false
-  help: If True, logging data will be written to disk within the run folder. TensorBoard
-    can monitor either the specific run folder, or the parent runs folder that may
-    contain multiple models/runs. Both will be displayed correctly in the dashboard.
-  label: Write Logs
-  name: outputs.tensorboard.write_logs
+  name: trainer_config.model_ckpt.save_last
   type: bool

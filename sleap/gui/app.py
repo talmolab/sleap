@@ -45,14 +45,52 @@ frame and instances listed in data view table.
 """
 
 import os
-import platform
-import random
+import sys
+
+# Fix macOS Homebrew libpng conflict with ImageIO.
+# Homebrew's libpng can cause bus errors when Qt renders text via CoreText/ImageIO.
+# DYLD_* vars are read at process startup, so we must re-exec with a clean environment.
+# See: https://github.com/talmolab/sleap/issues/TBD
+if (
+    sys.platform == "darwin"
+    and os.environ.get("DYLD_LIBRARY_PATH")
+    and not os.environ.get("_SLEAP_DYLD_FIXED")
+):
+    env = os.environ.copy()
+    del env["DYLD_LIBRARY_PATH"]  # Must delete, not set to ""
+    env["_SLEAP_DYLD_FIXED"] = "1"
+    os.execve(sys.executable, [sys.executable] + sys.argv, env)
+
+# Fix Linux Qt library conflicts with system/conda/OpenCV-bundled Qt.
+# PySide6 (pip) bundles Qt 6.x but the system (e.g. Debian 12 ships
+# Qt 6.4) or OpenCV may have incompatible Qt libraries that get loaded
+# first. We prepend PySide6's bundled Qt lib and plugin paths so the
+# dynamic linker resolves all Qt symbols from the same version.
+# LD_LIBRARY_PATH is read at process startup, so we must re-exec.
+# Set SLEAP_SKIP_QT_FIX=1 to disable this fix if it causes issues on your system.
+if (
+    sys.platform.startswith("linux")
+    and not os.environ.get("_SLEAP_LD_FIXED")
+    and not os.environ.get("SLEAP_SKIP_QT_FIX")
+):
+    import PySide6
+
+    pyside_qt = os.path.join(os.path.dirname(PySide6.__file__), "Qt")
+    pyside_qt_lib = os.path.join(pyside_qt, "lib")
+    pyside_qt_plugins = os.path.join(pyside_qt, "plugins")
+    ld_path = os.environ.get("LD_LIBRARY_PATH", "")
+    qt_plugin_path = os.environ.get("QT_PLUGIN_PATH", "")
+    if pyside_qt_lib not in ld_path or pyside_qt_plugins not in qt_plugin_path:
+        env = os.environ.copy()
+        env["LD_LIBRARY_PATH"] = pyside_qt_lib + ((":" + ld_path) if ld_path else "")
+        env["QT_PLUGIN_PATH"] = pyside_qt_plugins
+        env["_SLEAP_LD_FIXED"] = "1"
+        os.execve(sys.executable, [sys.executable] + sys.argv, env)
+
 import re
-import traceback
 from logging import getLogger
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
-import sys
+from typing import Callable, Dict, List, Optional, Tuple
 import subprocess
 
 from qtpy import QtCore, QtGui
@@ -62,15 +100,13 @@ from qtpy.QtWidgets import QApplication, QMainWindow, QMessageBox
 import sleap
 from sleap.gui.color import ColorManager
 from sleap.gui.commands import CommandContext, UpdateTopic
-from sleap.gui.dialogs.filedialog import FileDialog
-from sleap.gui.dialogs.formbuilder import FormBuilderModalDialog
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.state import GuiState
-from sleap.gui.web import ReleaseChecker, ping_analytics
+from sleap.gui.web import ping_analytics
 from sleap.gui.widgets.docks import (
     InstancesDock,
     SkeletonDock,
@@ -80,12 +116,18 @@ from sleap.gui.widgets.docks import (
 from sleap.gui.widgets.slider import set_slider_marks_from_labels
 from sleap.gui.widgets.video import QtVideoPlayer
 from sleap.info.summary import StatisticSeries
-from sleap.instance import Instance
-from sleap.io.dataset import Labels
-from sleap.io.video import available_video_exts
+from sleap_io.model.instance import Instance
+from sleap_io import Labels, Video
+from sleap.sleap_io_adaptors.video_utils import available_video_exts
 from sleap.prefs import prefs
-from sleap.skeleton import Skeleton
+from sleap_io.model.skeleton import Skeleton
 from sleap.util import parse_uri_path, get_config_file
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    get_labeled_frame_count,
+    get_instances_to_show,
+    find_last,
+    get_video_suggestions,
+)
 
 
 logger = getLogger(__name__)
@@ -146,11 +188,13 @@ class MainWindow(QMainWindow):
         self.state["last_interacted_frame"] = None
         self.state["filename"] = None
         self.state["show non-visible nodes"] = prefs["show non-visible nodes"]
+        self.state["show mean node score"] = prefs["show mean node score"]
         self.state["show instances"] = True
         self.state["show labels"] = True
         self.state["show edges"] = True
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
+        self.state["fit_selection"] = False
         self.state["color predicted"] = prefs["color predicted"]
         self.state["trail_length"] = prefs["trail length"]
         self.state["trail_shade"] = prefs["trail shade"]
@@ -158,6 +202,7 @@ class MainWindow(QMainWindow):
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
         self.state["share usage data"] = prefs["share usage data"]
+        self.state["debug mode"] = False
         self.state["skeleton_preview_image"] = None
         self.state["skeleton_description"] = "No skeleton loaded yet"
         if no_usage_data:
@@ -168,8 +213,6 @@ class MainWindow(QMainWindow):
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
         self.state.connect("show non-visible nodes", self.plotFrame)
-
-        self.release_checker = ReleaseChecker()
 
         if self.state["share usage data"]:
             ping_analytics()
@@ -215,10 +258,25 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """Close application window, prompting for saving as needed."""
+        # Clean up video player resources BEFORE saving preferences.
+        # This prevents a semaphore leak that occurs when restoreState() is used.
+        # The leak happens because restoreState() interferes with proper cleanup
+        # of the multiprocessing.RLock in MediaVideo.
+        if hasattr(self, "player"):
+            # Explicitly close the video to release its resources
+            if hasattr(self.player, "video") and self.player.video is not None:
+                self.player.video.close()
+                self.player.video = None
+
+            # Stop the worker thread
+            if hasattr(self.player, "cleanup"):
+                self.player.cleanup()
+
         # Save window state.
         prefs["window state"] = self.saveState()
         prefs["marker size"] = self.state["marker size"]
         prefs["show non-visible nodes"] = self.state["show non-visible nodes"]
+        prefs["show mean node score"] = self.state["show mean node score"]
         prefs["node label size"] = self.state["node label size"]
         prefs["edge style"] = self.state["edge style"]
         prefs["propagate track labels"] = self.state["propagate track labels"]
@@ -261,7 +319,7 @@ class MainWindow(QMainWindow):
         mime_format = 'application/x-qt-windows-mime;value="FileName"'
         if mime_format in event.mimeData().formats():
             # This only returns the first filename if multiple files are dropped:
-            filename = event.mimeData().data(mime_format).data().decode()
+            event.mimeData().data(mime_format).data().decode()
             event.acceptProposedAction()
 
     def dropEvent(self, event):
@@ -330,7 +388,7 @@ class MainWindow(QMainWindow):
 
         def switch_frame(video):
             """Jump to last labeled frame"""
-            last_label = self.labels.find_last(video)
+            last_label = find_last(self.labels, video)
             if last_label is not None:
                 self.state["frame_idx"] = last_label.frame_idx
             else:
@@ -347,8 +405,8 @@ class MainWindow(QMainWindow):
             frame_to_spinbox = frame_chunk_layout.fields["frame_to"]
             frame_from_spinbox = frame_chunk_layout.fields["frame_from"]
             if video is not None:
-                frame_to_spinbox.setMaximum(video.num_frames)
-                frame_from_spinbox.setMaximum(video.num_frames)
+                frame_to_spinbox.setMaximum(len(video))
+                frame_from_spinbox.setMaximum(len(video))
 
         self.state.connect(
             "video",
@@ -390,7 +448,7 @@ class MainWindow(QMainWindow):
         # check and uncheck submenu items
         def _menu_check_single(menu, item_text):
             """Helper method to select exactly one submenu item."""
-            for menu_item in menu.children():
+            for menu_item in menu.actions():
                 if menu_item.text() == str(item_text):
                     menu_item.setChecked(True)
                 else:
@@ -437,27 +495,9 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             import_types_menu,
-            "import_dpk",
-            "DeepPoseKit dataset...",
-            self.commands.importDPK,
-        )
-        add_menu_item(
-            import_types_menu,
-            "import_at",
-            "AlphaTracker dataset...",
-            self.commands.importAT,
-        )
-        add_menu_item(
-            import_types_menu,
             "import_nwb",
             "NWB dataset...",
             self.commands.importNWB,
-        )
-        add_menu_item(
-            import_types_menu,
-            "import_leap",
-            "LEAP Matlab dataset...",
-            self.commands.importLEAP,
         )
         add_menu_item(
             import_types_menu,
@@ -560,13 +600,13 @@ class MainWindow(QMainWindow):
             goMenu,
             "goto next suggestion",
             "Next Suggestion",
-            self.commands.nextSuggestedFrame,
+            self._goto_next_suggestion_or_flag,
         )
         add_menu_item(
             goMenu,
             "goto prev suggestion",
             "Previous Suggestion",
-            self.commands.prevSuggestedFrame,
+            self._goto_prev_suggestion_or_flag,
         )
         add_menu_item(
             goMenu,
@@ -600,7 +640,7 @@ class MainWindow(QMainWindow):
             "select next",
             "Select Next Instance",
             lambda: self.state.increment_in_list(
-                "instance", self.state["labeled_frame"].instances_to_show
+                "instance", get_instances_to_show(self.state["labeled_frame"])
             ),
         )
         add_menu_item(
@@ -616,7 +656,20 @@ class MainWindow(QMainWindow):
         self.viewMenu = viewMenu  # store as attribute so docks can add items
 
         viewMenu.addSeparator()
-        add_menu_check_item(viewMenu, "fit", "Fit Instances to View")
+        add_menu_check_item(viewMenu, "fit", "Fit View to Instances")
+        add_menu_check_item(viewMenu, "fit_selection", "Fit View to Selection")
+
+        # Make fit and fit_selection mutually exclusive
+        def _on_fit_changed(value):
+            if value:
+                self.state["fit_selection"] = False
+
+        def _on_fit_selection_changed(value):
+            if value:
+                self.state["fit"] = False
+
+        self.state.connect("fit", _on_fit_changed)
+        self.state.connect("fit_selection", _on_fit_selection_changed)
 
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
@@ -648,6 +701,7 @@ class MainWindow(QMainWindow):
         )
         add_menu_check_item(viewMenu, "show labels", "Show Node Names")
         add_menu_check_item(viewMenu, "show edges", "Show Edges")
+        add_menu_check_item(viewMenu, "show mean node score", "Show Mean Node Score")
 
         add_submenu_choices(
             menu=viewMenu,
@@ -749,6 +803,22 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             labelMenu,
+            "extract clip and labels",
+            "Extract Clip and Labels...",
+            lambda: self.commands.exportLabelsSubset(as_package=False),
+        )
+
+        add_menu_item(
+            labelMenu,
+            "extract clip labels package",
+            "Extract Clip Labels Package...",
+            lambda: self.commands.exportLabelsSubset(as_package=True),
+        )
+
+        labelMenu.addSeparator()
+
+        add_menu_item(
+            labelMenu,
             "add instances from all frame predictions",
             "Add Instances from All Predictions on Current Frame",
             self.commands.addUserInstancesFromPredictions,
@@ -811,6 +881,20 @@ class MainWindow(QMainWindow):
             "Delete Predictions beyond Frame Limit...",
             self.commands.deleteFrameLimitPredictions,
         )
+        add_menu_item(
+            labelMenu,
+            "delete user frame predictions",
+            "Delete Predictions on User-Labeled Frames...",
+            self.commands.deleteUserFramePredictions,
+        )
+
+        ### Analyze Menu ###
+
+        analyzeMenu = self.menuBar().addMenu("Analyze")
+        analyzeMenu.addAction(
+            "Instance Size Distribution...", self._open_size_distribution
+        )
+        analyzeMenu.addAction("Label QC...", self._open_label_qc)
 
         ### Tracks Menu ###
 
@@ -819,8 +903,8 @@ class MainWindow(QMainWindow):
         add_menu_check_item(
             tracksMenu, "propagate track labels", "Propagate Track Labels"
         ).setToolTip(
-            "If enabled, setting a track will also apply to subsequent instances of "
-            "the same track."
+            "If enabled, setting a track will also apply to subsequent "
+            "instances of the same track."
         )
         add_menu_item(
             tracksMenu,
@@ -842,7 +926,8 @@ class MainWindow(QMainWindow):
 
         self.delete_multiple_tracks_menu = tracksMenu.addMenu("Delete Multiple Tracks")
         self.delete_multiple_tracks_menu.setToolTip(
-            "Delete either only 'Unused' tracks or 'All' tracks, and update instances. Instances are not removed."
+            "Delete either only 'Unused' tracks or 'All' tracks, and update "
+            "instances. Instances are not removed."
         )
 
         add_menu_item(
@@ -927,13 +1012,6 @@ class MainWindow(QMainWindow):
             self._show_metrics_dialog,
         )
 
-        add_menu_item(
-            predictionMenu,
-            "visualize models",
-            "Visualize Model Outputs...",
-            self._handle_model_overlay_command,
-        )
-
         predictionMenu.addSeparator()
 
         labels_package_menu = predictionMenu.addMenu("Export Labels Package...")
@@ -975,7 +1053,7 @@ class MainWindow(QMainWindow):
             "training on colab",
             "Train on Google Colab...",
             lambda: self.commands.openWebsite(
-                "https://colab.research.google.com/github/talmolab/sleap/blob/main/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
+                "https://colab.research.google.com/github/talmolab/sleap/blob/develop/docs/notebooks/Training_and_inference_using_Google_Drive.ipynb"
             ),
         )
 
@@ -999,27 +1077,21 @@ class MainWindow(QMainWindow):
 
         helpMenu.addSeparator()
 
-        helpMenu.addAction("Latest versions:", self.commands.checkForUpdates)
-        self.state["stable_version_menu"] = helpMenu.addAction(
-            "  Stable: N/A", self.commands.openStableVersion
-        )
-        self.state["stable_version_menu"].setEnabled(False)
-        self.state["prerelease_version_menu"] = helpMenu.addAction(
-            "  Prerelease: N/A", self.commands.openPrereleaseVersion
-        )
-        self.state["prerelease_version_menu"].setEnabled(False)
-        self.commands.checkForUpdates()
+        helpMenu.addAction("Check for Updates...", self._show_update_checker_dialog)
 
         helpMenu.addSeparator()
         usageMenu = helpMenu.addMenu("Improve SLEAP")
         add_menu_check_item(usageMenu, "share usage data", "Share usage data")
         usageMenu.addAction(
             "What is usage data?",
-            lambda: self.commands.openWebsite("https://sleap.ai/help.html#usage-data"),
+            lambda: self.commands.openWebsite(
+                "https://docs.sleap.ai/latest/help/#usage"
+            ),
         )
 
         helpMenu.addSeparator()
         helpMenu.addAction("Keyboard Shortcuts", self._show_keyboard_shortcuts_window)
+        add_menu_check_item(helpMenu, "debug mode", "Debug mode")
 
     def process_events_then(self, action: Callable):
         """Decorates a function with a call to first process events."""
@@ -1038,8 +1110,42 @@ class MainWindow(QMainWindow):
         self.suggestions_dock = SuggestionsDock(self, tab_with=self.videos_dock)
         self.instances_dock = InstancesDock(self, tab_with=self.videos_dock)
 
+        # Create QC dock (hidden by default, shown when user clicks menu item)
+        self._create_qc_dock()
+
         # Bring videos tab forward.
         self.videos_dock.wgt_layout.parent().parent().raise_()
+
+    def _create_qc_dock(self):
+        """Create the QC dock widget (hidden by default)."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
+            """Navigate to the specified frame and highlight instance."""
+            if self.labels is not None and video_idx < len(self.labels.videos):
+                video = self.labels.videos[video_idx]
+                self.commands.gotoVideoAndFrameAndInstance(
+                    video, frame_idx, instance_idx
+                )
+
+        # Create the dock widget (with no labels initially)
+        self._qc_dock = QCDockWidget(
+            labels=None,
+            navigate_callback=navigate_callback,
+            parent=self,
+        )
+
+        # Add to main window's dock area on the right side
+        self.addDockWidget(Qt.RightDockWidgetArea, self._qc_dock)
+
+        # Tabify with other docks on the right side (after instances_dock to be last)
+        self.tabifyDockWidget(self.instances_dock, self._qc_dock)
+
+        # Add toggle action to View menu
+        self.viewMenu.addAction(self._qc_dock.toggleViewAction())
+
+        # Start hidden (closed) - user opens via Analyze menu
+        self._qc_dock.hide()
 
     def _load_overlays(self):
         """Load all standard video overlays."""
@@ -1092,7 +1198,7 @@ class MainWindow(QMainWindow):
         self.state.emit("color predicted")
 
     def _update_gui_state(self):
-        """Enable/disable gui items based on current state."""
+        """Enable/disable GUI items based on the current state."""
         has_selected_instance = self.state["instance"] is not None
         has_selected_node = self.state["selected_node"] is not None
         has_selected_edge = self.state["selected_edge"] is not None
@@ -1127,7 +1233,10 @@ class MainWindow(QMainWindow):
         self._menu_actions["delete instance"].setEnabled(has_selected_instance)
 
         self._menu_actions["delete clip predictions"].setEnabled(has_frame_range)
-        # self._menu_actions["export clip"].setEnabled(has_frame_range)
+
+        # Enable/disable "Extract Clip and Labels" and "Extract Clip Labels Package"
+        self._menu_actions["extract clip and labels"].setEnabled(has_frame_range)
+        self._menu_actions["extract clip labels package"].setEnabled(has_frame_range)
 
         self._menu_actions["transpose"].setEnabled(has_multiple_instances)
 
@@ -1139,8 +1248,11 @@ class MainWindow(QMainWindow):
         self._menu_actions["goto next labeled"].setEnabled(has_labeled_frames)
         self._menu_actions["goto prev labeled"].setEnabled(has_labeled_frames)
 
-        self._menu_actions["goto next suggestion"].setEnabled(has_suggestions)
-        self._menu_actions["goto prev suggestion"].setEnabled(has_suggestions)
+        # Enable suggestion navigation if there are suggestions OR QC flags
+        has_qc_flags = hasattr(self, "_qc_dock") and self._qc_dock.has_flags
+        has_nav_targets = has_suggestions or has_qc_flags
+        self._menu_actions["goto next suggestion"].setEnabled(has_nav_targets)
+        self._menu_actions["goto prev suggestion"].setEnabled(has_nav_targets)
 
         self._menu_actions["goto next track spawn"].setEnabled(has_tracks)
 
@@ -1196,7 +1308,7 @@ class MainWindow(QMainWindow):
             self._update_track_menu()
 
         if _has_topic([UpdateTopic.video]):
-            self.videos_dock.table.model().items = self.labels.videos
+            self.videos_dock.table.model().items = [x for x in self.labels.videos]
 
         if _has_topic([UpdateTopic.skeleton]):
             self.skeleton_dock.nodes_table.model().items = self.state["skeleton"]
@@ -1222,15 +1334,21 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.project_instances, UpdateTopic.suggestions]):
             # update count of suggested frames w/ labeled instances
             suggestion_status_text = ""
-            suggestion_list = self.labels.get_suggestions()
+            suggestion_list = self.labels.suggestions
             if suggestion_list:
-                labeled_count = 0
-                for suggestion in suggestion_list:
-                    lf = self.labels.get(
-                        (suggestion.video, suggestion.frame_idx), use_cache=True
-                    )
-                    if lf is not None and lf.has_user_instances:
-                        labeled_count += 1
+                # Build set of (video, frame_idx) for frames with user instances
+                # O(m) where m = labeled frames, then O(n) lookups for n suggestions
+                # Total: O(n + m) instead of O(n * m) from calling find() per suggestion
+                user_labeled_frames = {
+                    (lf.video, lf.frame_idx)
+                    for lf in self.labels
+                    if lf.has_user_instances
+                }
+                labeled_count = sum(
+                    1
+                    for suggestion in suggestion_list
+                    if (suggestion.video, suggestion.frame_idx) in user_labeled_frames
+                )
                 prc = (labeled_count / len(suggestion_list)) * 100
                 suggestion_status_text = (
                     f"{labeled_count}/{len(suggestion_list)} labeled ({prc:.1f}%)"
@@ -1256,7 +1374,7 @@ class MainWindow(QMainWindow):
         """Called each time a new frame is drawn."""
 
         # Store the current frame_idx and LabeledFrame (or make new, empty object)
-        self.state["frame_idx"] = frame_idx
+        # self.state["frame_idx"] = frame_idx
         self.state["labeled_frame"] = (
             self.labels.find(self.state["video"], frame_idx, return_new=True)[0]
             if frame_idx is not None
@@ -1275,6 +1393,8 @@ class MainWindow(QMainWindow):
 
         if self.state["fit"]:
             player.zoomToFit()
+        elif self.state["fit_selection"]:
+            player.zoomToSelection()
 
         # Update related displays
         self.updateStatusMessage()
@@ -1294,46 +1414,58 @@ class MainWindow(QMainWindow):
         if message is None:
             message = ""
             if len(self.labels.videos) > 0 and current_video is not None:
-                message += f"Video {self.labels.videos.index(current_video)+1}/"
+                for i, video in enumerate(self.labels.videos):
+                    if video.filename == current_video.filename:
+                        same_dataset = (
+                            (video.backend.dataset == current_video.backend.dataset)
+                            if hasattr(video.backend, "dataset")
+                            else True
+                        )  # `dataset` attr exists only for hdf5 backend
+                        # not for mediavideo
+                        if same_dataset:
+                            index = i
+                            break
+                message += f"Video {index + 1}/"
                 message += f"{len(self.labels.videos)}"
                 message += spacer
 
             if current_video is not None:
-                message += f"Frame: {frame_idx+1:,}/{len(current_video):,}"
+                message += f"Frame: {frame_idx + 1:,}/{len(current_video):,}"
 
             if self.player.seekbar.hasSelection():
                 start, end = self.state["frame_range"]
                 message += spacer
-                message += f"Selection: {start+1:,}-{end:,} ({end-start:,} frames)"
+                message += (
+                    f"Selection: {start + 1:,}-{end:,} ({end - start:,} frames)"
+                )
 
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
                 message += str(
-                    self.labels.get_labeled_frame_count(current_video, "user")
+                    get_labeled_frame_count(self.labels, current_video, "user")
                 )
 
                 if len(self.labels.videos) > 1:
                     message += " in video, "
             if len(self.labels.videos) > 1:
-                project_user_frame_count = self.labels.get_labeled_frame_count(
-                    filter="user"
+                project_user_frame_count = get_labeled_frame_count(
+                    self.labels, filter="user"
                 )
                 message += f"{project_user_frame_count} in project"
 
             if current_video is not None:
-                pred_frame_count = self.labels.get_labeled_frame_count(
-                    current_video, "predicted"
+                pred_frame_count = get_labeled_frame_count(
+                    self.labels, current_video, "predicted"
                 )
                 if pred_frame_count:
                     message += f"{spacer}Predicted Frames: {pred_frame_count:,}"
-                    message += (
-                        f" ({pred_frame_count/current_video.num_frames*100:.2f}%)"
-                    )
+                    percentage = pred_frame_count / len(current_video) * 100
+                    message += f" ({percentage:.2f}%)"
                     message += " in video"
 
             lf = self.state["labeled_frame"]
             # TODO: revisit with LabeledFrame.unused_predictions() & instances_to_show()
-            n_instances = 0 if lf is None else len(lf.instances_to_show)
+            n_instances = 0 if lf is None else len(get_instances_to_show(lf))
             message += f"{spacer}Current frame: {n_instances} instances"
             if (n_instances > 0) and not self.state["show instances"]:
                 hide_key = self.shortcuts["show instances"].toString()
@@ -1413,8 +1545,12 @@ class MainWindow(QMainWindow):
         header_functions = {
             "Point Displacement (sum)": data_obj.get_point_displacement_series,
             "Point Displacement (max)": data_obj.get_point_displacement_series,
-            "Primary Point Displacement (sum)": data_obj.get_primary_point_displacement_series,
-            "Primary Point Displacement (max)": data_obj.get_primary_point_displacement_series,
+            "Primary Point Displacement (sum)": (
+                data_obj.get_primary_point_displacement_series
+            ),
+            "Primary Point Displacement (max)": (
+                data_obj.get_primary_point_displacement_series
+            ),
             "Tracking Score (mean)": data_obj.get_tracking_score_series,
             "Tracking Score (min)": data_obj.get_tracking_score_series,
             "Instance Score (sum)": data_obj.get_instance_score_series,
@@ -1471,32 +1607,25 @@ class MainWindow(QMainWindow):
         clip_range = self.state.get("frame_range", default=(0, 0))
 
         selection["clip"] = {current_video: encode_range(*clip_range)}
-        selection["video"] = {current_video: encode_range(0, current_video.num_frames)}
+        selection["video"] = {current_video: encode_range(0, len(current_video))}
         selection["all_videos"] = {
-            video: encode_range(0, video.num_frames) for video in self.labels.videos
+            video: encode_range(0, len(video)) for video in self.labels.videos
         }
 
         selection["suggestions"] = {
-            video: remove_user_labeled(video, self.labels.get_video_suggestions(video))
+            video: remove_user_labeled(video, get_video_suggestions(self.labels, video))
             for video in self.labels.videos
         }
 
+        # For random sample options, store candidate pools (all frames)
+        # Actual sampling is done in the dialog based on sample_count and exclusions
+        # This allows re-sampling when "skip user labeled" checkbox changes
         selection["random"] = {
-            video: remove_user_labeled(
-                video, random.sample(range(video.frames), min(20, video.frames))
-            )
-            for video in self.labels.videos
+            video: list(range(video.shape[0])) for video in self.labels.videos
         }
 
-        if len(self.labels.videos) > 1:
-            selection["random_video"] = {
-                current_video: remove_user_labeled(
-                    current_video,
-                    random.sample(
-                        range(current_video.frames), min(20, current_video.frames)
-                    ),
-                )
-            }
+        # Always provide random_video option (current video sampling)
+        selection["random_video"] = {current_video: list(range(current_video.shape[0]))}
 
         if user_labeled_frames:
             selection["user"] = {
@@ -1504,7 +1633,66 @@ class MainWindow(QMainWindow):
                 for video in self.labels.videos
             }
 
+        # Frames with predictions (for UC2: Refresh Predictions)
+        selection["predicted"] = {
+            video: [
+                lf.frame_idx
+                for lf in self.labels.find(video)
+                if lf.has_predicted_instances
+            ]
+            for video in self.labels.videos
+        }
+
         return selection
+
+    def apply_frame_exclusions(
+        self,
+        frame_selection: Dict[Video, List[int]],
+        exclude_user_labeled: bool = False,
+        exclude_predicted: bool = False,
+    ) -> Dict[Video, List[int]]:
+        """Apply exclusion filters to a frame selection.
+
+        Args:
+            frame_selection: Dictionary mapping videos to lists of frame indices.
+            exclude_user_labeled: If True, exclude frames with user-labeled instances.
+            exclude_predicted: If True, exclude frames with predicted instances.
+
+        Returns:
+            Filtered dictionary with excluded frames removed.
+        """
+        result = {}
+        for video, frames in frame_selection.items():
+            # Handle range-encoded frames (negative second value means range)
+            if isinstance(frames, tuple) and len(frames) == 2:
+                start, end = frames
+                if end < 0:
+                    # Decode range to list
+                    frames = list(range(start, -end))
+                else:
+                    frames = [start, end]
+
+            filtered = set(frames)
+
+            if exclude_user_labeled:
+                user_labeled = {
+                    lf.frame_idx
+                    for lf in self.labels.user_labeled_frames
+                    if lf.video == video
+                }
+                filtered -= user_labeled
+
+            if exclude_predicted:
+                predicted = {
+                    lf.frame_idx
+                    for lf in self.labels.find(video)
+                    if lf.has_predicted_instances
+                }
+                filtered -= predicted
+
+            result[video] = sorted(filtered)
+
+        return result
 
     def _show_learning_dialog(self, mode: str):
         """Helper function to show learning dialog in given mode.
@@ -1530,8 +1718,8 @@ class MainWindow(QMainWindow):
         if not self.state["filename"] or self.state["has_changes"]:
             QMessageBox(
                 text=(
-                    "You have unsaved changes. Please save before running training or "
-                    "inference."
+                    "You have unsaved changes. Please save before running "
+                    "training or inference."
                 )
             ).exec_()
             return
@@ -1546,11 +1734,17 @@ class MainWindow(QMainWindow):
             self._child_windows[mode]._handle_learning_finished.connect(
                 self._handle_learning_finished
             )
+            self._child_windows[mode].navigate_to_instance.connect(
+                self._handle_navigate_to_instance
+            )
         else:
             # Update data in existing dialog widget.
             self._child_windows[mode].labels = self.labels
             self._child_windows[mode].labels_filename = self.state["filename"]
-            self._child_windows[mode].skeleton = self.labels.skeleton
+            try:
+                self._child_windows[mode].skeleton = self.labels.skeleton
+            except ValueError:
+                self._child_windows[mode].skeleton = None
 
         self._child_windows[mode].update_file_lists()
 
@@ -1570,59 +1764,17 @@ class MainWindow(QMainWindow):
         if new_count > 0:
             self.commands.changestack_push("new predictions")
 
+    def _handle_navigate_to_instance(
+        self, video_idx: int, frame_idx: int, instance_idx: int
+    ):
+        """Handle navigation request from training dialog's Size Distribution widget."""
+        if video_idx < len(self.labels.videos):
+            video = self.labels.videos[video_idx]
+            self.commands.gotoVideoAndFrameAndInstance(video, frame_idx, instance_idx)
+
     def _show_metrics_dialog(self):
         self._child_windows["metrics"] = MetricsTableDialog(self.state["filename"])
         self._child_windows["metrics"].show()
-
-    def _handle_model_overlay_command(self):
-        """Gui for adding overlay with live visualization of predictions."""
-        filters = ["Model (*.json)"]
-
-        # Default to opening from models directory from project
-        models_dir = None
-        if self.state["filename"] is not None:
-            models_dir = os.path.join(
-                os.path.dirname(self.state["filename"]), "models/"
-            )
-
-        # Show dialog
-        filename, selected_filter = FileDialog.open(
-            self,
-            dir=models_dir,
-            caption="Import model outputs...",
-            filter=";;".join(filters),
-        )
-
-        if len(filename) == 0:
-            return
-
-        # Model as overlay datasource
-        # This will show live inference results
-
-        from sleap.gui.overlays.base import DataOverlay
-
-        predictor = DataOverlay.make_predictor(filename)
-        show_pafs = False
-
-        # If multi-head model with both confmaps and pafs,
-        # ask user which to show.
-        if (
-            predictor.confidence_maps_key_name
-            and predictor.part_affinity_fields_key_name
-        ):
-            results = FormBuilderModalDialog(form_name="head_type_form").get_results()
-            show_pafs = "Part Affinity" in results["head_type"]
-
-        overlay = DataOverlay.from_predictor(
-            predictor=predictor,
-            video=self.state["video"],
-            player=self.player,
-            show_pafs=show_pafs,
-        )
-
-        self.overlays["inference"] = overlay
-
-        self.plotFrame()
 
     def _handle_instance_double_click(
         self, instance: Instance, event: QtGui.QMouseEvent = None
@@ -1656,6 +1808,81 @@ class MainWindow(QMainWindow):
         """Shows gui for viewing/modifying keyboard shortucts."""
         ShortcutDialog().exec_()
 
+    def _show_update_checker_dialog(self):
+        """Shows the update checker dialog."""
+        from sleap.gui.dialogs.update_checker import UpdateCheckerDialog
+
+        dialog = UpdateCheckerDialog(self)
+        dialog.exec_()
+
+    def _goto_next_suggestion_or_flag(self):
+        """Go to next suggestion or QC flag, depending on which is active.
+
+        If QC dock is visible and is the active tab (or floating) with flags,
+        navigate to the next QC flag. Otherwise, navigate to next suggestion.
+        """
+        if hasattr(self, "_qc_dock") and self._qc_dock.is_active_for_navigation:
+            self._qc_dock.goto_next_flag()
+        else:
+            self.commands.nextSuggestedFrame()
+
+    def _goto_prev_suggestion_or_flag(self):
+        """Go to previous suggestion or QC flag, depending on which is active.
+
+        If QC dock is visible and is the active tab (or floating) with flags,
+        navigate to the previous QC flag. Otherwise, navigate to prev suggestion.
+        """
+        if hasattr(self, "_qc_dock") and self._qc_dock.is_active_for_navigation:
+            self._qc_dock.goto_prev_flag()
+        else:
+            self.commands.prevSuggestedFrame()
+
+    def _open_size_distribution(self):
+        """Opens the instance size distribution analysis dialog."""
+        if self.labels is None or len(self.labels) == 0:
+            QMessageBox.warning(
+                self,
+                "No Labels",
+                "Please load labels with user-labeled instances first.",
+            )
+            return
+
+        from sleap.gui.dialogs.size_distribution import SizeDistributionDialog
+
+        def navigate_callback(video_idx: int, frame_idx: int, instance_idx: int):
+            """Navigate to the specified frame and highlight instance."""
+            if video_idx < len(self.labels.videos):
+                video = self.labels.videos[video_idx]
+                self.commands.gotoVideoAndFrameAndInstance(
+                    video, frame_idx, instance_idx
+                )
+
+        dialog = SizeDistributionDialog(
+            labels=self.labels,
+            navigate_callback=navigate_callback,
+            parent=self,
+        )
+        dialog.show()
+
+    def _open_label_qc(self):
+        """Opens the label QC analysis dock widget.
+
+        The dock widget is tabbed with other right-side docks and can be
+        undocked to float. Its state is saved with the window state.
+        """
+        if self.labels is None or len(self.labels) == 0:
+            QMessageBox.warning(
+                self,
+                "No Labels",
+                "Please load labels with user-labeled instances first.",
+            )
+            return
+
+        # Update labels and show the dock (created at init time)
+        self._qc_dock.update_labels(self.labels)
+        self._qc_dock.show()
+        self._qc_dock.raise_()
+
 
 def create_sleap_label_parser():
     """Creates parser for `sleap-label` command line arguments.
@@ -1687,8 +1914,8 @@ def create_sleap_label_parser():
     parser.add_argument(
         "--reset",
         help=(
-            "Reset GUI state and preferences. Use this flag if the GUI appears "
-            "incorrectly or fails to open."
+            "Reset GUI state and preferences. Use this flag if the GUI "
+            "appears incorrectly or fails to open."
         ),
         action="store_const",
         const=True,
@@ -1700,6 +1927,20 @@ def create_sleap_label_parser():
         action="store_const",
         const=True,
         default=False,
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Show detailed version info including PyTorch and GPU status.",
+        action="store_const",
+        const=True,
+        default=False,
+    )
+    parser.add_argument(
+        "--video-backend",
+        help="Video backend plugin: opencv, FFMPEG, or pyav.",
+        type=str,
+        default=None,
     )
 
     return parser
@@ -1721,14 +1962,24 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
     parser = create_sleap_label_parser()
     args = parser.parse_args(args)
 
+    # Print startup banner immediately for user feedback
+    from sleap.system_info import print_startup_banner
+
+    print_startup_banner(verbose=args.verbose)
+    print("Launching GUI...")
+
     if args.nonnative:
         os.environ["USE_NON_NATIVE_FILE"] = "1"
 
-    if platform.system() == "Darwin":
-        # TODO: Remove this workaround when we update to qtpy >= 5.15.
-        # https://bugreports.qt.io/browse/QTBUG-87014
-        # https://stackoverflow.com/q/64818879
-        os.environ["QT_MAC_WANTS_LAYER"] = "1"
+    # Apply video backend: CLI flag overrides saved preference
+    import sleap_io as sio
+
+    if args.video_backend:
+        prefs["default video backend"] = args.video_backend
+        prefs.save()
+    video_backend = args.video_backend or prefs["default video backend"]
+    if video_backend:
+        sio.set_default_video_plugin(video_backend)
 
     app = create_app()
 
@@ -1739,24 +1990,6 @@ def main(args: Optional[list] = None, labels: Optional[Labels] = None):
         no_usage_data=args.no_usage_data,
     )
     window.showMaximized()
-
-    # Disable GPU in GUI process. This does not affect subprocesses.
-    try:
-        sleap.use_cpu_only()
-    except RuntimeError:  # Visible devices cannot be modified after being initialized
-        logger.warning(
-            "Running processes on the GPU. Restarting your GUI should allow switching "
-            "back to CPU-only mode.\n"
-            "Received the following error when trying to switch back to CPU-only mode:"
-        )
-        traceback.print_exc()
-
-    # Print versions.
-    print()
-    print("Software versions:")
-    sleap.versions()
-    print()
-    print("Happy SLEAPing! :)")
 
     if args.profiling:
         import cProfile

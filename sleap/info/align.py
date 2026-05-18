@@ -28,9 +28,11 @@ which doesn't yet have all points).
 
 
 """
-from sleap import Labels, Instance
+
+from sleap_io.model.instance import Instance, PointsArray
 from typing import List, Tuple
 import numpy as np
+from sleap.sleap_io_adaptors.lf_labels_utils import instances
 
 
 def get_stable_node_pairs(
@@ -116,7 +118,7 @@ def align_instances(
 
     if rotate_on_node_a:
         # Shift so that rotation is "around" node A
-        node_a_pos = points[:, node_a, :][:, np.newaxis, :]
+        node_a_pos = all_points_arrays[:, node_a, :][:, np.newaxis, :]
 
     else:
         # Shift so node A is at fixed position for every instance
@@ -154,7 +156,7 @@ def get_mean_and_std_for_points(
 
 
 def make_mean_instance(
-    aligned_points_arrays: List[np.ndarray], std_thresh: int = 0
+    aligned_points_arrays: List[np.ndarray], skeleton, std_thresh: int = 0
 ) -> Instance:
     mean, stdev = get_mean_and_std_for_points(aligned_points_arrays)
 
@@ -162,20 +164,52 @@ def make_mean_instance(
     if std_thresh:
         mean[stdev > std_thresh] = np.nan
 
-    from sleap import Instance
-    from sleap.instance import Point
-
     OFFSET = 0  # FIXME
 
-    new_instance = Instance(
-        skeleton=labels.skeletons[0],
-        points=[Point(p[0] + OFFSET, p[1] + OFFSET) for p in mean],
-    )
+    # Create points list with the new format: list of ((x, y), visible, complete) tuples
+    points = []
+    for i, p in enumerate(mean):
+        if not np.isnan(p[0][0]) and not np.isnan(p[0][1]):
+            # Create the input array first, then use PointsArray.from_array()
+
+            input_array = np.array(
+                [
+                    (
+                        [p[0][0] + OFFSET, p[0][1] + OFFSET],
+                        True,
+                        False,
+                        skeleton.node_names[i],
+                    )
+                ],
+                dtype=[
+                    ("xy", "<f8", (2,)),
+                    ("visible", "bool"),
+                    ("complete", "bool"),
+                    ("name", "O"),
+                ],
+            )
+            points.append(input_array)  # [x, y, visible, complete]
+        else:
+            # Create the input array first, then use PointsArray.from_array()
+            input_array = np.array(
+                [([np.nan, np.nan], False, False, skeleton.node_names[i])],
+                dtype=[
+                    ("xy", "<f8", (2,)),
+                    ("visible", "bool"),
+                    ("complete", "bool"),
+                    ("name", "O"),
+                ],
+            )
+            points.append(input_array)  # [x, y, visible, complete]
+
+    new_instance = Instance(skeleton=skeleton, points=PointsArray.from_array(points))
     return new_instance
 
 
 def align_instance_points(source_points_array, target_points_array):
     """Transforms source for best fit on to target."""
+    # Convert lists of tuples to numpy arrays and extract x, y coordinates
+    target_points_array = np.array([p for p in target_points_array])
 
     # Find (furthest) pair of points in target to use for alignment
     pairwise_distances = np.linalg.norm(
@@ -211,7 +245,16 @@ def align_instance_points(source_points_array, target_points_array):
 
 def get_instances_points(instances: List[Instance]) -> np.ndarray:
     """Returns single (instance, node, 2) matrix with points for all instances."""
-    return np.stack([inst.points_array for inst in instances])
+    # For sleap_io instances, extract xy coordinates from the points list
+    points_list = []
+    for inst in instances:
+        # Extract xy coordinates from the list of (x, y, visible, ...) tuples
+        xy_coords = np.array(
+            [p["xy"] for p in inst.points]
+        )  # Extract x, y from each tuple
+        points_list.append(xy_coords)
+
+    return np.stack(points_list)
 
 
 def get_template_points_array(instances: List[Instance]) -> np.ndarray:
@@ -227,12 +270,18 @@ def get_template_points_array(instances: List[Instance]) -> np.ndarray:
 
 if __name__ == "__main__":
     # filename = "tests/data/json_format_v2/centered_pair_predictions.json"
-    # filename = "/Volumes/fileset-mmurthy/shruthi/code/sleap_expts/preds/screen_all.5pts_tmp_augment_200122/191210_102108_18159112_rig3_2.preds.h5"
-    filename = "/Volumes/fileset-mmurthy/talmo/wt_gold_labeling/100919.sleap_wt_gold.13pt_init.n=288.junyu.h5"
+    # filename = "/Volumes/fileset-mmurthy/shruthi/code/sleap_expts/preds/"
+    # "screen_all.5pts_tmp_augment_200122/191210_102108_18159112_rig3_2.preds.h5"
+    from sleap_io import load_file
 
-    labels = Labels.load_file(filename)
+    filename = (
+        "/Volumes/fileset-mmurthy/talmo/wt_gold_labeling/"
+        "100919.sleap_wt_gold.13pt_init.n=288.junyu.h5"
+    )
 
-    points = get_instances_points(labels.instances())
+    labels = load_file(filename)
+
+    points = get_instances_points(instances(labels=labels))
     get_stable_node_pairs(points, np.array(labels.skeletons[0].node_names))
 
     # import time
@@ -240,7 +289,9 @@ if __name__ == "__main__":
     # t0 = time.time()
     # labels.add_instance(
     #     frame=labels.find_first(video=labels.videos[0]),
-    #     instance=make_mean_instance(align_instances(points, 12, 0))
+    #     instance=make_mean_instance(
+    #         align_instances(points, 12, 0), labels.skeletons[0]
+    #     )
     # )
     # print(labels.find_first(video=labels.videos[0]))
     # print("time", time.time() - t0)

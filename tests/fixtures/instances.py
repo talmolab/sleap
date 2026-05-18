@@ -1,30 +1,29 @@
 import pytest
 
-from sleap.instance import Instance, LabeledFrame, Point, PredictedInstance
+from sleap_io.model.instance import Instance, PredictedInstance
 
 
 @pytest.fixture
 def instances(skeleton, centered_pair_vid):
-
     # Generate some instances
     NUM_INSTANCES = 500
 
-    video = centered_pair_vid
     instances = []
     for i in range(NUM_INSTANCES):
+        # Create numpy points array for the instance
+        import numpy as np
 
-        instance = Instance(skeleton=skeleton)
-        instance["head"] = Point(i * 1, i * 2)
-        instance["left-wing"] = Point(10 + i * 1, 10 + i * 2)
-        instance["right-wing"] = Point(20 + i * 1, 20 + i * 2)
+        points_array = np.array(
+            [
+                [i * 1, i * 2],
+                [10 + i * 1, 10 + i * 2],
+                [20 + i * 1, 20 + i * 2],
+                [float("nan"), float("nan")],
+            ],
+            dtype=float,
+        )
 
-        # Lets make an NaN entry to test skip_nan as well
-        instance["thorax"]
-
-        # Add a LabeledFrame
-        labeled_frame = LabeledFrame(video=video, frame_idx=i, instances=[instance])
-        instance.frame = labeled_frame
-
+        instance = Instance.from_numpy(points_array, skeleton=skeleton)
         instances.append(instance)
 
     return instances
@@ -32,7 +31,10 @@ def instances(skeleton, centered_pair_vid):
 
 @pytest.fixture
 def predicted_instances(instances):
-    return [PredictedInstance.from_instance(i, 1.0) for i in instances]
+    return [
+        PredictedInstance.from_numpy(i.points["xy"], skeleton=i.skeleton, score=1.0)
+        for i in instances
+    ]
 
 
 @pytest.fixture
@@ -44,25 +46,38 @@ def multi_skel_instances(skeleton, stickman):
     # Generate some instances
     NUM_INSTANCES = 500
 
+    import numpy as np
+
     instances = []
+
+    # First skeleton instances
     for i in range(NUM_INSTANCES):
-        instance = Instance(skeleton=skeleton, video=None, frame_idx=i)
-        instance["head"] = Point(i * 1, i * 2)
-        instance["left-wing"] = Point(10 + i * 1, 10 + i * 2)
-        instance["right-wing"] = Point(20 + i * 1, 20 + i * 2)
+        points_array = np.array(
+            [
+                [i * 1, i * 2],
+                [10 + i * 1, 10 + i * 2],
+                [20 + i * 1, 20 + i * 2],
+                [float("nan"), float("nan")],  # thorax NaN entry for testing
+            ],
+            dtype=float,
+        )
 
-        # Lets make an NaN entry to test skip_nan as well
-        instance["thorax"]
-
+        instance = Instance.from_numpy(points_array, skeleton=skeleton)
         instances.append(instance)
 
     # Setup some instances of the stick man on the same frames
     for i in range(NUM_INSTANCES):
-        instance = Instance(skeleton=stickman, video=None, frame_idx=i)
-        instance["head"] = Point(i * 10, i * 20)
-        instance["body"] = Point(100 + i * 1, 100 + i * 2)
-        instance["left-arm"] = Point(200 + i * 1, 200 + i * 2)
+        # Stickman skeleton typically has different nodes
+        stickman_points = np.array(
+            [
+                [i * 10, i * 20],  # head
+                [100 + i * 1, 100 + i * 2],  # body
+                [200 + i * 1, 200 + i * 2],  # left-arm
+            ],
+            dtype=float,
+        )
 
+        instance = Instance.from_numpy(stickman_points, skeleton=stickman)
         instances.append(instance)
 
     return instances

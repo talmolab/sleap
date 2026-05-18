@@ -1,10 +1,11 @@
 The Clear BSD License
 
-Copyright (c) [2019] [The Trustees of Princeton University]
+Copyright (c) [2019-2025] [Talmo Pereira and The Trustees of Princeton University]
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted for academic and research use only (subject to the limitations in the disclaimer below) provided that the following conditions are met:
+modification, are permitted (subject to the limitations in the disclaimer
+below) provided that the following conditions are met:
 
      * Redistributions of source code must retain the above copyright notice,
      this list of conditions and the following disclaimer.
@@ -29,4 +30,3 @@ BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
 IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
-

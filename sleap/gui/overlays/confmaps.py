@@ -1,8 +1,7 @@
-"""
-Overlay for confidence maps.
+"""GUI overlay for confidence maps (not currently used).
 
-Currently a `DataOverlay` gets data from a model (i.e., it runs inference on the
-current frame) and then uses a `ConfMapsPlot` object to show the resulting
+Previously, a `DataOverlay` class retrieved data from a model (i.e., it ran inference
+on the current frame) and then used a `ConfMapsPlot` object to show the resulting
 confidence maps.
 
 Example: ::
@@ -15,13 +14,15 @@ Example: ::
 from qtpy import QtWidgets, QtCore, QtGui
 
 import numpy as np
-import qimage2ndarray
 
-from sleap.gui.overlays.base import DataOverlay, h5_colors
+from sleap.gui.overlays.base import h5_colors
+from sleap.gui.widgets.video import ndarray_to_qimage
 
 
 class ConfMapsPlot(QtWidgets.QGraphicsObject):
     """QGraphicsObject to display multiple confidence maps in a QGraphicsView.
+
+    Not currently used.
 
     Args:
         frame (numpy.array): Data for one frame of confidence map data.
@@ -69,6 +70,8 @@ class ConfMapsPlot(QtWidgets.QGraphicsObject):
 
 class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
     """QGraphicsPixmapItem object for drawing single channel of confidence map.
+
+    Not currently used.
 
     Args:
         confmap (numpy.array): (h, w) array of one confidence map channel.
@@ -120,14 +123,14 @@ class ConfMapPlot(QtWidgets.QGraphicsPixmapItem):
         frame_composite = np.dstack((frame_r, frame_g, frame_b, frame_a))
 
         # Convert ndarray to QImage
-        image = qimage2ndarray.array2qimage(frame_composite)
+        image = ndarray_to_qimage(frame_composite)
 
         return image
 
 
 def show_confmaps_from_h5(filename, input_format="channels_last", standalone=False):
     """Demo function."""
-    from sleap.io.video import HDF5Video
+    from sleap_io.io.video_reading import HDF5Video
 
     video = HDF5Video(filename, "/box", input_format=input_format)
     conf_data = HDF5Video(
@@ -171,6 +174,5 @@ def demo_confmaps(confmaps, video, scale=None, standalone=False, callback=None):
 
 
 if __name__ == "__main__":
-
     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     show_confmaps_from_h5(data_path, input_format="channels_first", standalone=True)

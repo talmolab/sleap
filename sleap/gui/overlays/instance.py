@@ -1,12 +1,12 @@
 """
 Overlay for showing instances.
 """
+
 import attr
 
 from sleap.gui.overlays.base import BaseOverlay
 from sleap.gui.state import GuiState
-from sleap.gui.widgets.video import QtVideoPlayer
-from sleap.io.dataset import Labels
+from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 
 @attr.s(auto_attribs=True)
@@ -37,7 +37,7 @@ class InstanceOverlay(BaseOverlay):
 
         lf = self.labels.find(video, frame_idx, return_new=True)[0]
 
-        instances = lf.instances_to_show
+        instances = get_instances_to_show(lf)
 
         has_predicted = any((True for inst in instances if hasattr(inst, "score")))
         has_user = any((True for inst in instances if not hasattr(inst, "score")))
@@ -45,6 +45,7 @@ class InstanceOverlay(BaseOverlay):
         for instance in instances:
             self.player.addInstance(
                 instance=instance,
+                frame=lf,
                 markerRadius=self.state.get("marker size", 4),
                 nodeLabelSize=self.state.get("node label size", 12),
                 show_non_visible=self.state.get("show non-visible nodes", default=True),

@@ -2,28 +2,19 @@
 Module for generating lists of suggested frames (for labeling or reviewing).
 """
 
-import attr
 import numpy as np
 import random
 
 from typing import Dict, List, Optional, Union
 
-from sleap.io.video import Video
+from sleap_io import Video, Labels, SuggestionFrame
 from sleap.info.feature_suggestions import (
     FeatureSuggestionPipeline,
     ParallelFeaturePipeline,
 )
+from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 GroupType = int
-
-
-@attr.s(auto_attribs=True, slots=True)
-class SuggestionFrame:
-    """Object for storing a single suggested frame item."""
-
-    video: Video
-    frame_idx: int
-    group: Optional[GroupType] = None
 
 
 class VideoFrameSuggestions(object):
@@ -84,7 +75,7 @@ class VideoFrameSuggestions(object):
         sampling_method: str = "random",
         **kwargs,
     ):
-        """Method to generate suggestions randomly or by taking strides through video."""
+        """Generate suggestions randomly or by taking strides through video."""
         suggestions = []
         sugg_idx_dict: Dict[Video, list] = {video: [] for video in labels.videos}
 
@@ -93,7 +84,7 @@ class VideoFrameSuggestions(object):
 
         for video in videos:
             # Get unique sample space
-            vid_idx = list(range(video.frames))
+            vid_idx = list(range(len(video)))
             vid_sugg_idx = sugg_idx_dict[video]
             unique_idx = list(set(vid_idx) - set(vid_sugg_idx))
             n_frames = len(unique_idx)
@@ -220,7 +211,7 @@ class VideoFrameSuggestions(object):
 
         for i, lf in enumerate(lfs):
             # Scores from visible instances in frame
-            pred_fs = lf.instances_to_show
+            pred_fs = get_instances_to_show(lf)
             frame_scores = np.array(
                 [inst.score for inst in pred_fs if hasattr(inst, "score")]
             )
@@ -231,7 +222,8 @@ class VideoFrameSuggestions(object):
                 n_qualified_instance >= instance_limit_lower
                 and n_qualified_instance <= instance_limit_upper
             ):
-                # idxs saves qualified frame index at corresponding entry, otherwise the entry is -1
+                # idxs saves qualified frame index at corresponding entry,
+                # otherwise the entry is -1
                 idxs[i] = lf.frame_idx
 
         # Finds non-negative entries in idxs
@@ -320,7 +312,7 @@ class VideoFrameSuggestions(object):
         cls, video: Video, labels: "Labels", displacement_threshold: float
     ):
         # Get numpy of shape (frames, tracks, nodes, x, y)
-        labels_numpy = labels.numpy(video=video, all_frames=True, untracked=False)
+        labels_numpy = labels.numpy(video=video, untracked=False)
 
         # Return empty list if not enough frames
         n_frames, n_tracks, n_nodes, _ = labels_numpy.shape
@@ -361,10 +353,11 @@ class VideoFrameSuggestions(object):
             return proposed_suggestions
 
         for video in videos:
-            # Make sure when targeting all videos the from and to do not exceed frame number
-            if frame_from > video.num_frames:
+            # Make sure when targeting all videos the from and to do not exceed
+            # frame number
+            if frame_from > len(video):
                 continue
-            this_video_frame_to = min(frame_to, video.num_frames)
+            this_video_frame_to = min(frame_to, len(video))
             # Generate list of frame numbers
             idx = list(range(frame_from - 1, this_video_frame_to))
             proposed_suggestions.extend(cls.idx_list_to_frame_list(idx, video))
@@ -380,7 +373,7 @@ class VideoFrameSuggestions(object):
     def idx_list_to_frame_list(
         idx_list, video: "Video", group: Optional[GroupType] = None
     ) -> List[SuggestionFrame]:
-        return [SuggestionFrame(video, frame_idx, group) for frame_idx in idx_list]
+        return [SuggestionFrame(video, frame_idx) for frame_idx in idx_list]
 
     @staticmethod
     def filter_unique_suggestions(
@@ -405,12 +398,10 @@ class VideoFrameSuggestions(object):
 
 def demo_gui():
     from sleap.gui.dialogs.formbuilder import YamlFormWidget
-    from sleap import Labels
+    from sleap_io import load_file
     from qtpy.QtWidgets import QApplication
 
-    labels = Labels.load_file(
-        "tests/data/json_format_v2/centered_pair_predictions.json"
-    )
+    labels = load_file("tests/data/json_format_v2/centered_pair_predictions.json")
 
     options_lists = dict(node=labels.skeletons[0].node_names)
 
@@ -425,7 +416,7 @@ def demo_gui():
 
         for suggested_frame in x:
             print(
-                suggested_frame.video.backend.filename,
+                suggested_frame.video.filename,
                 suggested_frame.frame_idx,
                 suggested_frame.group,
             )

@@ -6,12 +6,18 @@ from qtpy import QtCore, QtWidgets, QtGui
 from qtpy.QtGui import QPen, QBrush, QColor, QKeyEvent, QPolygonF, QPainterPath
 
 from sleap.gui.color import ColorManager
+from sleap_io.model.instance import Track
+from sleap_io import Labels, Video
 
 import attr
 import itertools
 import numpy as np
 from enum import Enum
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    get_track_occupancy,
+    get_video_suggestions,
+)
 
 
 # for debug, we can filter out short tracks from slider
@@ -281,7 +287,6 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self.handle.setPos(x, 0)
 
         for mark in self._mark_items.keys():
-
             if mark.type == "track":
                 width_in_frames = mark.end_val - mark.val
                 width = max(2, self._toPos(width_in_frames))
@@ -572,7 +577,6 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._draw_zoom_box(current_val, self._zoom_start_val)
 
     def releaseZoomDrag(self, x, y):
-
         self.zoom_box.hide()
 
         val_a = self._zoom_start_val
@@ -591,7 +595,6 @@ class VideoSlider(QtWidgets.QGraphicsView):
         self._zoom_start_val = None
 
     def setZoomRange(self, start_val: float, end_val: float):
-
         zoom_val_range = end_val - start_val
         if zoom_val_range > 0:
             self.zoom_factor = self.value_range / zoom_val_range
@@ -1254,7 +1257,7 @@ def set_slider_marks_from_labels(
     # Make function which can be used to get tooltip text when hovering
     # over a given value (i.e., frame index) in the slider.
     def get_val_tooltip(idx: int) -> str:
-        tooltip = f"Frame {idx+1}"
+        tooltip = f"Frame {idx + 1}"
 
         frame_mark_types = {mark.type for mark in slider.getMarksAtVal(idx)}
 
@@ -1302,9 +1305,10 @@ def set_slider_marks_from_labels(
     track_row = 0
 
     # Add marks with track
-    track_occupancy = labels.get_track_occupancy(video)
-    for track in labels.tracks:
-        if track in track_occupancy and not track_occupancy[track].is_empty:
+    track_occupancy = get_track_occupancy(labels, video)
+    for tr in labels.tracks:
+        track = tr.name
+        if track in track_occupancy and not track_occupancy[track].is_empty():
             if track_row > 0 and slider._is_track_in_new_column(track_row):
                 slider_marks.append(
                     SliderMark("tick_column", val=track_occupancy[track].start)
@@ -1321,7 +1325,7 @@ def set_slider_marks_from_labels(
                             val=occupancy_range[0],
                             end_val=occupancy_range[1],
                             row=track_row,
-                            color=color_manager.get_track_color(track),
+                            color=color_manager.get_track_color(tr),
                         )
                     )
                 track_row += 1
@@ -1334,7 +1338,7 @@ def set_slider_marks_from_labels(
 
     labeled_marks = {lf.frame_idx for lf in lfs}
     user_labeled = {lf.frame_idx for lf in lfs if len(lf.user_instances)}
-    suggested_frames = set(labels.get_video_suggestions(video))
+    suggested_frames = set(get_video_suggestions(labels, video))
 
     all_simple_frames = set()
     all_simple_frames.update(untracked_frames)

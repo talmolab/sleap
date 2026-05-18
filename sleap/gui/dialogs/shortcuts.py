@@ -35,8 +35,8 @@ class ShortcutDialog(QtWidgets.QDialog):
         """Display information about changes."""
         msg = QtWidgets.QMessageBox()
         msg.setText(
-            "Application must be restarted before changes to keyboard shortcuts take "
-            "effect."
+            "Application must be restarted before changes to keyboard shortcuts "
+            "take effect."
         )
         msg.exec_()
 

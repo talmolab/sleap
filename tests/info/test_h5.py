@@ -4,7 +4,7 @@ import h5py
 import json
 import numpy as np
 
-from pathlib import PurePath, Path
+from pathlib import Path
 from typing import List
 
 from sleap.info.write_tracking_h5 import (
@@ -16,10 +16,14 @@ from sleap.info.write_tracking_h5 import (
     get_edges_as_np_strings,
     main,
 )
-from sleap.io.dataset import Labels
-from sleap.io.video import Video
-from sleap.instance import Instance, Point, PredictedInstance
+from sleap_io import Video, Labels
+from sleap_io.model.instance import Instance
 from sleap.gui.commands import AddUserInstancesFromPredictions
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    find_track_occupancy,
+    remove_video,
+    labels_add_instance,
+)
 
 
 def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: Labels):
@@ -36,13 +40,13 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
 
     def assert_instance_points(points, inst: Instance, track_idx: int, frame_idx: int):
         instance_points = points[frame_idx, :, :, track_idx]
-        for node_idx, _ in enumerate(inst.nodes):
-            assert instance_points[node_idx][0] == inst[node_idx].x
-            assert instance_points[node_idx][1] == inst[node_idx].y
+        for node_idx, _ in enumerate(inst.points):
+            assert instance_points[node_idx][0] == inst.points[node_idx]["xy"][0]
+            assert instance_points[node_idx][1] == inst.points[node_idx]["xy"][1]
 
     names = get_tracks_as_np_strings(centered_pair_predictions)
     assert len(names) == 27
-    assert isinstance(names[0], np.string_)
+    assert isinstance(names[0], (bytes, np.bytes_))
 
     # Check that node names and edges are read correctly
     node_names = [
@@ -74,12 +78,14 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
 
     # Both lines check edge_names are read correctly, but latter is used in bento plugin
     assert edge_names == centered_pair_predictions.skeleton.edge_names
-    for (src_node, dst_node) in edge_names:
+    for src_node, dst_node in edge_names:
         assert src_node in node_names
         assert dst_node in node_names
 
     # Remove the first labeled frame
-    centered_pair_predictions.remove_frame(centered_pair_predictions[0])
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_remove_frame
+
+    labels_remove_frame(centered_pair_predictions, centered_pair_predictions[0])
     assert len(centered_pair_predictions) == 1099
 
     (
@@ -123,9 +129,16 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     # Remove all instances from track 13
     vid = centered_pair_predictions.videos[0]
     track = centered_pair_predictions.tracks[13]
-    instances = centered_pair_predictions.find_track_occupancy(vid, track)
+    instances = find_track_occupancy(centered_pair_predictions, vid, track)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_frames, remove_instance
+
     for instance in instances:
-        centered_pair_predictions.remove_instance(instance.frame, instance)
+        # Find the frame that contains this instance
+        # since instances don't have frame attribute
+        for frame in labels_frames(centered_pair_predictions, video=vid):
+            if instance in frame.instances:
+                remove_instance(centered_pair_predictions, instance, frame)
+                break
 
     # Make sure that this now remove empty track
     (
@@ -158,16 +171,13 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     )
     # Make a minor modification to the user-instance to differentiate
     node_idx = 0
-    user_instance[node_idx] = Point(
-        x=1,
-        y=1,
-        visible=True,
-        complete=True,
-    )
-    centered_pair_predictions.add_instance(lf, user_instance)
+    user_instance[node_idx]["xy"] = np.array([1, 1])
+    user_instance[node_idx]["visible"] = True
+    user_instance[node_idx]["complete"] = True
+    labels_add_instance(centered_pair_predictions, lf, user_instance)
 
     # Add another predicted instance (same track) incase ordering matters
-    centered_pair_predictions.add_instance(lf, lf.predicted_instances[0])
+    labels_add_instance(centered_pair_predictions, lf, lf.predicted_instances[0])
 
     # Ensure user-instance is used in occupancy matrix instead of predicted-instance
     (
@@ -181,7 +191,7 @@ def test_output_matrices(centered_pair_predictions: Labels, min_labels_robot: La
     assert_instance_points(
         points,
         user_instance,
-        track_idx=user_instance.track.spawned_on,
+        track_idx=0,
         frame_idx=lf.frame_idx,
     )
 
@@ -282,7 +292,7 @@ def assert_dset_lens(dset_lens: dict, num_tracks: int, num_frames: int, num_node
 
 
 def assert_dset_metadata(dset_metadata: dict, labels: Labels, video: Video):
-    print(f'\nlabels_path = {dset_metadata["labels_path"]}')
+    print(f"\nlabels_path = {dset_metadata['labels_path']}")
     assert dset_metadata["labels_path"] == str(None)  # No labels path given.
     assert dset_metadata["video_path"] == video.backend.filename
     assert dset_metadata["video_ind"] == labels.videos.index(video)
@@ -292,9 +302,10 @@ def assert_dset_metadata(dset_metadata: dict, labels: Labels, video: Video):
 def test_hdf5_video_arg(
     centered_pair_predictions: Labels, small_robot_mp4_vid: Video, tmpdir
 ):
-
     labels = centered_pair_predictions
-    labels.add_video(small_robot_mp4_vid)
+    from sleap.sleap_io_adaptors.lf_labels_utils import labels_add_video
+
+    labels_add_video(labels, small_robot_mp4_vid)
 
     output_paths = []
     for video in labels.videos:
@@ -313,14 +324,15 @@ def test_hdf5_video_arg(
     assert_dset_metadata(dset_metadata, labels, video=labels.videos[0])
 
     # No file should exist for video with no labeled frames
-    assert Path(output_paths[1]).exists() == False
+    assert not Path(output_paths[1]).exists()
 
     # Add labeled frames to second video, repeat process
     labeled_frame = labels.find(video=labels.videos[1], frame_idx=0, return_new=True)[0]
     instance = AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
         copy_instance=labels[0].predicted_instances[0]
     )
-    labels.add_instance(frame=labeled_frame, instance=instance)
+
+    labels_add_instance(labels, frame=labeled_frame, instance=instance)
     labels.append(labeled_frame)
     print(f"labels.tracks = {labels.tracks}")
     print(f"None in labels.tracks = {None in labels.tracks}")
@@ -338,7 +350,7 @@ def test_hdf5_video_arg(
     # Remove all videos from project and repeat process
     all_videos = list(labels.videos)
     for video in all_videos:
-        labels.remove_video(labels.videos[-1])
+        remove_video(labels, labels.videos[-1])
 
     assert get_occupancy_and_points_matrices(labels=labels, all_frames=True) is None
 
@@ -351,5 +363,5 @@ def test_hdf5_video_arg(
         )
 
     # No files should exist for labels with no videos
-    assert Path(output_paths[0]).exists() == False
-    assert Path(output_paths[1]).exists() == False
+    assert not Path(output_paths[0]).exists()
+    assert not Path(output_paths[1]).exists()

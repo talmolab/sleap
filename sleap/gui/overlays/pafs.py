@@ -12,23 +12,14 @@ import numpy as np
 import itertools
 import math
 
-from sleap.io.video import HDF5Video
+from sleap_io.io.video_reading import HDF5Video
 
-from sleap.gui.overlays.base import DataOverlay, h5_colors
-
-
-class PafOverlay(DataOverlay):
-    """Class show pafs saved in HDF5 (not currently used)."""
-
-    @classmethod
-    def from_h5(cls, filename, input_format="channels_last", **kwargs):
-        return DataOverlay.from_h5(
-            filename, "/pafs", input_format, overlay_class=MultiQuiverPlot, **kwargs
-        )
+from sleap.gui.overlays.base import h5_colors
 
 
 class MultiQuiverPlot(QtWidgets.QGraphicsObject):
-    """QtWidgets.QGraphicsObject to display multiple quiver plots in a QtWidgets.QGraphicsView.
+    """QtWidgets.QGraphicsObject to display multiple quiver plots in a
+    QtWidgets.QGraphicsView.
 
     Args:
         frame (numpy.array): Data for one frame of quiver plot data.
@@ -137,7 +128,6 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
     def _add_arrows(self, min_length=0.01):
         points = []
         if self.field_x is not None and self.field_y is not None:
-
             raw_delta_yx = np.stack((self.field_y, self.field_x), axis=-1)
 
             dim_0 = self.field_x.shape[0] // self.decimation * self.decimation
@@ -166,7 +156,7 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
             # Determine vector endpoint
             x2 = delta_x * self.decimation + loc_x
             y2 = delta_y * self.decimation + loc_y
-            line_length = (delta_x ** 2 + delta_y ** 2) ** 0.5
+            line_length = (delta_x**2 + delta_y**2) ** 0.5
 
             # Determine points for arrow
             arrow_head_size = line_length / 4
@@ -201,7 +191,8 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
 
     def _decimate(self, image: np.array, box: int):
         height = width = box
-        # Source: https://stackoverflow.com/questions/48482317/slice-an-image-into-tiles-using-numpy
+        # Source: https://stackoverflow.com/questions/48482317/
+        # slice-an-image-into-tiles-using-numpy
         _nrows, _ncols, depth = image.shape
         _size = image.size
         _strides = image.strides
@@ -227,7 +218,8 @@ class QuiverPlot(QtWidgets.QGraphicsObject):
         return np.mean(tiles, axis=(2, 3))
 
     def boundingRect(self) -> QtCore.QRectF:
-        """Method called by Qt in order to determine whether object is in visible frame."""
+        """Method called by Qt in order to determine whether object is in
+        visible frame."""
         return QtCore.QRectF(self.rect)
 
     def paint(self, painter, option, widget=None):
@@ -290,7 +282,6 @@ def demo_pafs(pafs, video, decimation=4, scale=None, standalone=False):
 
 
 if __name__ == "__main__":
-
     data_path = "tests/data/hdf5_format_v1/training.scale=0.50,sigma=10.h5"
     input_format = "channels_first"
 

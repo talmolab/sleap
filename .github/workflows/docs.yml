@@ -1,0 +1,69 @@
+name: Deploy MkDocs to GitHub Pages
+
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - develop
+
+# Serialize all gh-pages pushes (this workflow and pr-preview.yml's deploy/cleanup
+# jobs share the same group) so simultaneous pushes don't race and trip
+# "rejected (fetch first)". See talmolab/sleap#2689.
+concurrency:
+  group: gh-pages-write
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    name: Docs
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          uv sync --extra nn-cpu
+
+      - name: Print environment info
+        run: |
+          which python
+          uv pip list
+          uv pip freeze
+
+      - name: Setup Git user
+        run: |
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Build and upload docs (stable release)
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' && !github.event.release.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            uv run mike deploy --update-aliases --allow-empty --push "${{ github.event.release.tag_name }}" latest
+
+      - name: Build and upload docs (pre-release)
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' && github.event.release.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            uv run mike deploy --update-aliases --allow-empty --push "${{ github.event.release.tag_name }}" prerelease
+
+      - name: Build and upload docs (dev)
+        if: ${{ github.event_name == 'push' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            uv run mike deploy --update-aliases --allow-empty --push dev

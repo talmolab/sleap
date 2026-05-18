@@ -19,25 +19,39 @@ def filenames_prefix_change(
     new_prefix,
     missing: bool = None,
     confirm_callback: Optional[Callable] = None,
+    is_sequence: Optional[List[bool]] = None,
+    original_filenames: Optional[List] = None,
 ):
     """
     Finds missing files by changing the initial part of paths.
 
     Args:
         filenames: The list of filenames, needn't all be missing.
+            For image sequences, this contains display paths (first frame).
         old_prefix: Initial part of path to replace.
         new_prefix: Initial part with which to replace it.
         missing: List of which files are known to be missing; if not given,
             then we'll check each file.
         confirm_callback: If given, then we'll call this before applying
             change to confirm that user wants to apply the change.
+        is_sequence: List indicating which entries are image sequences.
+            For sequences, ALL frames must exist at the new location.
+        original_filenames: For image sequences, the full list of frame paths.
+            Used for frame verification when auto-applying prefix changes.
 
     Returns:
         None; `filenames` (and `missing`, if given) have new data.
     """
+    from pathlib import Path
 
     if not filenames or not old_prefix or not new_prefix:
         return
+
+    # Initialize sequence tracking if not provided
+    if is_sequence is None:
+        is_sequence = [False] * len(filenames)
+    if original_filenames is None:
+        original_filenames = filenames
 
     # Ask for confirmation if there's a confirmation callback given
     need_to_ask = True if callable(confirm_callback) else False
@@ -55,20 +69,38 @@ def filenames_prefix_change(
                 try_filename = filename.replace(old_prefix, new_prefix)
                 try_filename = fix_path_separator(try_filename)
 
-                if os.path.exists(try_filename):
-                    # Check if user would like to apply change to all paths
-                    # with the same initial segment.
-                    if need_to_ask and not confirm_callback():
-                        return
+                # For image sequences, check if first frame exists at new location
+                if is_sequence[i]:
+                    frames = original_filenames[i]
+                    if not isinstance(frames, list):
+                        frames = [frames]
 
-                    # We're still here, so we can go ahead and replace
-                    need_to_ask = False
-                    filenames[i] = try_filename
-                    check[i] = False
+                    # Check if first frame exists with the prefix change
+                    if frames:
+                        first_frame = str(frames[0])
+                        if first_frame.startswith(old_prefix):
+                            try_frame = first_frame.replace(old_prefix, new_prefix)
+                            try_frame = fix_path_separator(try_frame)
+                            if not Path(try_frame).exists():
+                                continue  # Skip - first frame not found
+                else:
+                    # Regular video - just check if file exists
+                    if not Path(try_filename).exists():
+                        continue
 
-                    # Save prefix change in config file so that it can be used
-                    # automatically in the future
-                    save_path_prefix_replacement(old_prefix, new_prefix)
+                # Check if user would like to apply change to all paths
+                # with the same initial segment.
+                if need_to_ask and not confirm_callback():
+                    return
+
+                # We're still here, so we can go ahead and replace
+                need_to_ask = False
+                filenames[i] = try_filename
+                check[i] = False
+
+                # Save prefix change in config file so that it can be used
+                # automatically in the future
+                save_path_prefix_replacement(old_prefix, new_prefix)
 
 
 def fix_path_separator(path: str):

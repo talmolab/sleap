@@ -1,31 +1,61 @@
-"""A miscellaneous set of utility functions. 
+"""A miscellaneous set of utility functions.
+
+Note: to avoid circular imports, this file is used for utility functions that do not
+depend on any other modules in the package.
 
 Try not to put things in here unless they really have no other place.
 """
 
+from __future__ import annotations
+
 import json
+import logging
 import os
 import re
 import shutil
 from collections import defaultdict
+import cv2
 from pathlib import Path
-from typing import Any, Dict, Hashable, Iterable, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, Hashable, Iterable, List, Optional
+
 from urllib.parse import unquote, urlparse
 from urllib.request import url2pathname
-
-import attr
-import h5py as h5
-import numpy as np
-import psutil
-import rapidjson
-import yaml
 
 try:
     from importlib.resources import files  # New in 3.9+
 except ImportError:
     from importlib_resources import files  # TODO(LM): Upgrade to importlib.resources.
 
+import attr
+import h5py as h5
+import matplotlib
+
+# matplotlib.pyplot imported lazily in imgfig/plot_img/plot_instance for faster startup
+import numpy as np
+import psutil
+import rapidjson
+import rich.progress
+
+# seaborn imported lazily in plot_instance/plot_instances for faster startup
+import yaml
+
 import sleap.version as sleap_version
+
+logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from rich.progress import Task
+
+
+class RateColumn(rich.progress.ProgressColumn):
+    """Renders the progress rate."""
+
+    def render(self, task: Task) -> rich.progress.Text:
+        """Show progress rate."""
+        speed = task.speed
+        if speed is None:
+            return rich.progress.Text("?", style="progress.data.speed")
+        return rich.progress.Text(f"{speed:.1f} FPS", style="progress.data.speed")
 
 
 def json_loads(json_str: str) -> Dict:
@@ -39,7 +69,7 @@ def json_loads(json_str: str) -> Dict:
     """
     try:
         return rapidjson.loads(json_str)
-    except:
+    except Exception:
         return json.loads(json_str)
 
 
@@ -177,6 +207,28 @@ def frame_list(frame_str: str) -> Optional[List[int]]:
     return [int(x) for x in frame_str.split(",")] if len(frame_str) else None
 
 
+def resize_image(img: np.ndarray, scale: float) -> np.ndarray:
+    """Resizes single image with shape (height, width, channels)."""
+    height, width, channels = img.shape
+    new_height, new_width = int(height // (1 / scale)), int(width // (1 / scale))
+
+    # Note that OpenCV takes shape as (width, height).
+
+    if channels == 1:
+        # opencv doesn't want a single channel to have its own dimension
+        img = cv2.resize(img[:, :], (new_width, new_height))[..., None]
+    else:
+        img = cv2.resize(img, (new_width, new_height))
+
+    return img
+
+
+def resize_images(images: np.ndarray, scale: float) -> np.ndarray:
+    if scale == 1.0:
+        return images
+    return np.stack([resize_image(img, scale) for img in images])
+
+
 def uniquify(seq: Iterable[Hashable]) -> List:
     """Returns unique elements from list, preserving order.
 
@@ -269,20 +321,23 @@ def get_config_file(
 
     desired_path = Path.home() / f".sleap/{sleap_version.__version__}/{shortname}"
 
-    # Make sure there's a ~/.sleap/<version>/ directory to store user version of the config file.
+    # Make sure there's a ~/.sleap/<version>/ directory to store user version of
+    # the config file.
     desired_path.parent.mkdir(parents=True, exist_ok=True)
 
     # If we don't care whether the file exists, just return the path
     if ignore_file_not_found:
         return desired_path
 
-    # If we do care whether the file exists, check the package version of the config file if we can't find the user version.
+    # If we do care whether the file exists, check the package version of the
+    # config file if we can't find the user version.
     if get_defaults or not desired_path.exists():
         package_path = get_package_file(f"config/{shortname}")
         package_path = Path(package_path)
         if not package_path.exists():
             raise FileNotFoundError(
-                f"Cannot locate {shortname} config file at {desired_path} or {package_path}."
+                f"Cannot locate {shortname} config file at {desired_path} or "
+                f"{package_path}."
             )
 
         if get_defaults:
@@ -371,3 +426,211 @@ def find_files_by_suffix(
 def parse_uri_path(uri: str) -> str:
     """Parse a URI starting with 'file:///' to a posix path."""
     return Path(url2pathname(urlparse(unquote(uri)).path)).as_posix()
+
+
+def imgfig(
+    size: float | tuple = 6, dpi: int = 72, scale: float = 1.0
+) -> matplotlib.figure.Figure:
+    """Create a tight figure for image plotting.
+
+    Args:
+        size: Scalar or 2-tuple specifying the (width, height) of the figure in inches.
+            If scalar, will assume equal width and height.
+        dpi: Dots per inch, controlling the resolution of the image.
+        scale: Factor to scale the size of the figure by. This is a convenience for
+            increasing the size of the plot at the same DPI.
+
+    Returns:
+        A matplotlib.figure.Figure to use for plotting.
+    """
+    import matplotlib.pyplot as plt  # Lazy import for faster startup
+
+    if not isinstance(size, (tuple, list)):
+        size = (size, size)
+    fig = plt.figure(figsize=(scale * size[0], scale * size[1]), dpi=dpi)
+    ax = fig.add_axes([0, 0, 1, 1], frameon=False)
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    plt.autoscale(tight=True)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.grid(False)
+    return fig
+
+
+def plot_img(
+    img: np.ndarray, dpi: int = 72, scale: float = 1.0
+) -> matplotlib.figure.Figure:
+    """Plot an image in a tight figure."""
+    if hasattr(img, "numpy"):
+        img = img.numpy()
+
+    if img.shape[0] == 1:
+        # Squeeze out batch singleton dimension.
+        img = img.squeeze(axis=0)
+
+    # Check if image is grayscale (single channel).
+    grayscale = img.shape[-1] == 1
+    if grayscale:
+        # Squeeze out singleton channel.
+        img = img.squeeze(axis=-1)
+
+    # Normalize the range of pixel values.
+    img_min = img.min()
+    img_max = img.max()
+    if img_min < 0.0 or img_max > 1.0:
+        img = (img - img_min) / (img_max - img_min)
+
+    fig = imgfig(
+        size=(float(img.shape[1]) / dpi, float(img.shape[0]) / dpi),
+        dpi=dpi,
+        scale=scale,
+    )
+
+    ax = fig.gca()
+    ax.imshow(
+        img,
+        cmap="gray" if grayscale else None,
+        origin="upper",
+        extent=[-0.5, img.shape[1] - 0.5, img.shape[0] - 0.5, -0.5],
+    )
+    return fig
+
+
+def plot_instance(
+    instance,
+    skeleton=None,
+    cmap=None,
+    color_by_node=False,
+    lw=2,
+    ms=10,
+    bbox=None,
+    scale=1.0,
+    **kwargs,
+):
+    """Plot a single instance with edge coloring."""
+    import matplotlib.pyplot as plt  # Lazy import for faster startup
+    import seaborn as sns  # Lazy import for faster startup
+
+    if cmap is None:
+        cmap = sns.color_palette("tab20")
+
+    if skeleton is None and hasattr(instance, "skeleton"):
+        skeleton = instance.skeleton
+
+    if skeleton is None:
+        color_by_node = True
+    else:
+        if len(skeleton.edges) == 0:
+            color_by_node = True
+
+    if hasattr(instance, "numpy"):
+        inst_pts = instance.numpy()
+    else:
+        inst_pts = instance
+
+    h_lines = []
+    if color_by_node:
+        for k, (x, y) in enumerate(inst_pts):
+            if bbox is not None:
+                x -= bbox[1]
+                y -= bbox[0]
+
+            x *= scale
+            y *= scale
+
+            h_lines_k = plt.plot(x, y, ".", ms=ms, c=cmap[k % len(cmap)], **kwargs)
+            h_lines.append(h_lines_k)
+
+    else:
+        for k, (src_node, dst_node) in enumerate(skeleton.edges):
+            src_pt = instance.points_array[instance.skeleton.node_to_index(src_node)]
+            dst_pt = instance.points_array[instance.skeleton.node_to_index(dst_node)]
+
+            x = np.array([src_pt[0], dst_pt[0]])
+            y = np.array([src_pt[1], dst_pt[1]])
+
+            if bbox is not None:
+                x -= bbox[1]
+                y -= bbox[0]
+
+            x *= scale
+            y *= scale
+
+            h_lines_k = plt.plot(
+                x, y, ".-", ms=ms, lw=lw, c=cmap[k % len(cmap)], **kwargs
+            )
+
+            h_lines.append(h_lines_k)
+
+    return h_lines
+
+
+def plot_instances(
+    instances, skeleton=None, cmap=None, color_by_track=False, tracks=None, **kwargs
+):
+    """Plot a list of instances with identity coloring."""
+    import seaborn as sns  # Lazy import for faster startup
+
+    if cmap is None:
+        cmap = sns.color_palette("tab10")
+
+    if color_by_track and tracks is None:
+        # Infer tracks for ordering if not provided.
+        tracks = set()
+        for instance in instances:
+            tracks.add(instance.track)
+
+        # Sort by spawned frame.
+        tracks = sorted(list(tracks), key=lambda track: track.name)
+
+    h_lines = []
+    for i, instance in enumerate(instances):
+        if color_by_track:
+            if instance.track is None:
+                raise ValueError(
+                    "Instances must have a set track when coloring by track."
+                )
+
+            if instance.track not in tracks:
+                raise ValueError("Instance has a track not found in specified tracks.")
+
+            color = cmap[tracks.index(instance.track) % len(cmap)]
+
+        else:
+            # Color by identity (order in list).
+            color = cmap[i % len(cmap)]
+
+        h_lines_i = plot_instance(instance, skeleton=skeleton, cmap=[color], **kwargs)
+        h_lines.append(h_lines_i)
+
+    return h_lines
+
+
+def show_sleap_nn_installation_message():
+    """Show a Qt popup message about SLEAP-NN installation requirements.
+
+    This function displays a popup window informing users that sleap-nn is not installed
+    and provides instructions for enabling training functionality.
+
+    """
+    from PySide6.QtWidgets import QMessageBox, QApplication
+
+    # Ensure QApplication exists
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+
+    msg_box = QMessageBox()
+    msg_box.setWindowTitle("SLEAP Training Not Available")
+    msg_box.setIcon(QMessageBox.Warning)
+
+    message = (
+        "sleap-nn is not installed. This appears to be a GUI-only installation. "
+        "To enable training, please install SLEAP with the 'nn' dependency. "
+        "See the installation guide: https://docs.sleap.ai/latest/installation/"
+    )
+
+    msg_box.setText(message)
+    msg_box.setStandardButtons(QMessageBox.Ok)
+    msg_box.exec()

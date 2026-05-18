@@ -1,6 +1,5 @@
 import numpy as np
 
-from sleap import Labels
 from sleap.info.metrics import (
     match_instance_lists_nodewise,
     matched_instance_distances,

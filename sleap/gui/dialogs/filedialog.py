@@ -6,7 +6,9 @@ native file dialogs. Native dialogs are usually better but don't work correctly
 on (some?) Ubuntu systems.
 """
 
-import os, re, sys
+import os
+import re
+import sys
 
 from functools import wraps
 from pathlib import Path
@@ -95,7 +97,7 @@ class FileDialog:
         if cls.is_non_native and filter:
             fn = Path(filename)
             # Get extension from filter as list of "*.ext"
-            match = re.findall("\*(\.[a-zA-Z0-9]+)", filter)
+            match = re.findall(r"\*(\.[a-zA-Z0-9]+)", filter)
             if len(match) > 0:
                 # Add first filter extension if none of the filter extensions match
                 add_extension = True
