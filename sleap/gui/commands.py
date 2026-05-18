@@ -3894,6 +3894,27 @@ class SetTrackName(EditCommand):
         track.name = name
 
 
+class GenerateSuggestionsThread(QtCore.QThread):
+    """Background thread for generating frame suggestions without freezing GUI."""
+
+    finished = QtCore.Signal(list)
+    error = QtCore.Signal(str)
+
+    def __init__(self, labels, params, parent=None):
+        super().__init__(parent)
+        self.labels = labels
+        self.params = params
+
+    def run(self):
+        try:
+            suggestions = VideoFrameSuggestions.suggest(
+                labels=self.labels, params=self.params
+            )
+            self.finished.emit(suggestions)
+        except Exception as e:
+            self.error.emit(str(e))
+
+
 class GenerateSuggestions(EditCommand):
     topics = [UpdateTopic.suggestions]
 
@@ -3902,12 +3923,6 @@ class GenerateSuggestions(EditCommand):
         if len(context.labels.videos) == 0:
             print("Error: no videos to generate suggestions for")
             return
-
-        # TODO: Progress bar
-        win = MessageDialog(
-            "Generating list of suggested frames... This may take a few minutes.",
-            context.app,
-        )
 
         if (
             params["target"]
@@ -3921,22 +3936,57 @@ class GenerateSuggestions(EditCommand):
         else:
             params["videos"] = context.labels.videos
 
-        try:
-            new_suggestions = VideoFrameSuggestions.suggest(
-                labels=context.labels, params=params
-            )
+        win = QtWidgets.QProgressDialog(
+            "Generating suggested frames...", "Cancel", 0, 0, context.app
+        )
+        win.setWindowTitle("Generating Suggestions")
+        win.setWindowModality(QtCore.Qt.WindowModal)
+        win.setMinimumDuration(0)
+        win.setCancelButton(None)
+        win.setMinimumWidth(300)
+        win.show()
+        QtWidgets.QApplication.instance().processEvents()
 
-            context.labels.suggestions.extend(new_suggestions)
-        except Exception as e:
-            win.hide()
+        result = {"status": None, "suggestions": None, "error": None}
+
+        worker = GenerateSuggestionsThread(labels=context.labels, params=params)
+
+        def on_finished(suggestions):
+            result["status"] = "finished"
+            result["suggestions"] = suggestions
+
+        def on_error(msg):
+            result["status"] = "error"
+            result["error"] = msg
+
+        worker.finished.connect(on_finished)
+        worker.error.connect(on_error)
+
+        worker.start()
+
+        while worker.isRunning():
+            QtWidgets.QApplication.instance().processEvents()
+            worker.wait(10)
+
+        worker.wait()
+        QtWidgets.QApplication.instance().processEvents()
+
+        worker.finished.disconnect()
+        worker.error.disconnect()
+        worker.deleteLater()
+
+        win.close()
+
+        if result["status"] == "error":
             QtWidgets.QMessageBox(
                 text="An error occurred while generating suggestions. "
                 "Your command line terminal may have more information about "
                 "the error."
             ).exec_()
-            raise e
+            raise RuntimeError(result["error"])
 
-        win.hide()
+        if result["suggestions"]:
+            context.labels.suggestions.extend(result["suggestions"])
 
 
 class AddSuggestion(EditCommand):
