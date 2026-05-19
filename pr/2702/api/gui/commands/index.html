@@ -20124,21 +20124,21 @@ Args:
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>sleap/gui/commands.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-4895">4895</a></span>
-<span class="normal"><a href="#__codelineno-0-4896">4896</a></span>
-<span class="normal"><a href="#__codelineno-0-4897">4897</a></span>
-<span class="normal"><a href="#__codelineno-0-4898">4898</a></span>
-<span class="normal"><a href="#__codelineno-0-4899">4899</a></span>
-<span class="normal"><a href="#__codelineno-0-4900">4900</a></span>
-<span class="normal"><a href="#__codelineno-0-4901">4901</a></span>
-<span class="normal"><a href="#__codelineno-0-4902">4902</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-4895"><a id="__codelineno-0-4895" name="__codelineno-0-4895"></a><span class="k">def</span><span class="w"> </span><span class="nf">copy_to_clipboard</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-0-4896"><a id="__codelineno-0-4896" name="__codelineno-0-4896"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Copy a string to the system clipboard.</span>
-</span><span id="__span-0-4897"><a id="__codelineno-0-4897" name="__codelineno-0-4897"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-4898"><a id="__codelineno-0-4898" name="__codelineno-0-4898"></a><span class="sd">        text: String to copy to clipboard.</span>
-</span><span id="__span-0-4899"><a id="__codelineno-0-4899" name="__codelineno-0-4899"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-4900"><a id="__codelineno-0-4900" name="__codelineno-0-4900"></a>    <span class="n">clipboard</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">clipboard</span><span class="p">()</span>
-</span><span id="__span-0-4901"><a id="__codelineno-0-4901" name="__codelineno-0-4901"></a>    <span class="n">clipboard</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">clipboard</span><span class="o">.</span><span class="n">Clipboard</span><span class="p">)</span>
-</span><span id="__span-0-4902"><a id="__codelineno-0-4902" name="__codelineno-0-4902"></a>    <span class="n">clipboard</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">clipboard</span><span class="o">.</span><span class="n">Clipboard</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-4884">4884</a></span>
+<span class="normal"><a href="#__codelineno-0-4885">4885</a></span>
+<span class="normal"><a href="#__codelineno-0-4886">4886</a></span>
+<span class="normal"><a href="#__codelineno-0-4887">4887</a></span>
+<span class="normal"><a href="#__codelineno-0-4888">4888</a></span>
+<span class="normal"><a href="#__codelineno-0-4889">4889</a></span>
+<span class="normal"><a href="#__codelineno-0-4890">4890</a></span>
+<span class="normal"><a href="#__codelineno-0-4891">4891</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-4884"><a id="__codelineno-0-4884" name="__codelineno-0-4884"></a><span class="k">def</span><span class="w"> </span><span class="nf">copy_to_clipboard</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-0-4885"><a id="__codelineno-0-4885" name="__codelineno-0-4885"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Copy a string to the system clipboard.</span>
+</span><span id="__span-0-4886"><a id="__codelineno-0-4886" name="__codelineno-0-4886"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-4887"><a id="__codelineno-0-4887" name="__codelineno-0-4887"></a><span class="sd">        text: String to copy to clipboard.</span>
+</span><span id="__span-0-4888"><a id="__codelineno-0-4888" name="__codelineno-0-4888"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-4889"><a id="__codelineno-0-4889" name="__codelineno-0-4889"></a>    <span class="n">clipboard</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">clipboard</span><span class="p">()</span>
+</span><span id="__span-0-4890"><a id="__codelineno-0-4890" name="__codelineno-0-4890"></a>    <span class="n">clipboard</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">clipboard</span><span class="o">.</span><span class="n">Clipboard</span><span class="p">)</span>
+</span><span id="__span-0-4891"><a id="__codelineno-0-4891" name="__codelineno-0-4891"></a>    <span class="n">clipboard</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">clipboard</span><span class="o">.</span><span class="n">Clipboard</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -20730,19 +20730,19 @@ referencing video). Defaults to <code>True</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>sleap/gui/commands.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-4880">4880</a></span>
-<span class="normal"><a href="#__codelineno-0-4881">4881</a></span>
-<span class="normal"><a href="#__codelineno-0-4882">4882</a></span>
-<span class="normal"><a href="#__codelineno-0-4883">4883</a></span>
-<span class="normal"><a href="#__codelineno-0-4884">4884</a></span>
-<span class="normal"><a href="#__codelineno-0-4885">4885</a></span>
-<span class="normal"><a href="#__codelineno-0-4886">4886</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-4880"><a id="__codelineno-0-4880" name="__codelineno-0-4880"></a><span class="k">def</span><span class="w"> </span><span class="nf">open_website</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-0-4881"><a id="__codelineno-0-4881" name="__codelineno-0-4881"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Open website in default browser.</span>
-</span><span id="__span-0-4882"><a id="__codelineno-0-4882" name="__codelineno-0-4882"></a>
-</span><span id="__span-0-4883"><a id="__codelineno-0-4883" name="__codelineno-0-4883"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-4884"><a id="__codelineno-0-4884" name="__codelineno-0-4884"></a><span class="sd">        url: URL to open.</span>
-</span><span id="__span-0-4885"><a id="__codelineno-0-4885" name="__codelineno-0-4885"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-4886"><a id="__codelineno-0-4886" name="__codelineno-0-4886"></a>    <span class="n">QtGui</span><span class="o">.</span><span class="n">QDesktopServices</span><span class="o">.</span><span class="n">openUrl</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QUrl</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-4869">4869</a></span>
+<span class="normal"><a href="#__codelineno-0-4870">4870</a></span>
+<span class="normal"><a href="#__codelineno-0-4871">4871</a></span>
+<span class="normal"><a href="#__codelineno-0-4872">4872</a></span>
+<span class="normal"><a href="#__codelineno-0-4873">4873</a></span>
+<span class="normal"><a href="#__codelineno-0-4874">4874</a></span>
+<span class="normal"><a href="#__codelineno-0-4875">4875</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-4869"><a id="__codelineno-0-4869" name="__codelineno-0-4869"></a><span class="k">def</span><span class="w"> </span><span class="nf">open_website</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-0-4870"><a id="__codelineno-0-4870" name="__codelineno-0-4870"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Open website in default browser.</span>
+</span><span id="__span-0-4871"><a id="__codelineno-0-4871" name="__codelineno-0-4871"></a>
+</span><span id="__span-0-4872"><a id="__codelineno-0-4872" name="__codelineno-0-4872"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-4873"><a id="__codelineno-0-4873" name="__codelineno-0-4873"></a><span class="sd">        url: URL to open.</span>
+</span><span id="__span-0-4874"><a id="__codelineno-0-4874" name="__codelineno-0-4874"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-4875"><a id="__codelineno-0-4875" name="__codelineno-0-4875"></a>    <span class="n">QtGui</span><span class="o">.</span><span class="n">QDesktopServices</span><span class="o">.</span><span class="n">openUrl</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QUrl</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
