@@ -258,6 +258,20 @@ class RenderClipDialog(QtWidgets.QDialog):
         range_layout.addStretch()
         layout.addLayout(range_layout)
 
+        # Include-unlabeled toggle. Without this, the render only writes frames
+        # that have a LabeledFrame, so a sparse predictions file collapses to a
+        # short highlight reel instead of an overlay over the original video.
+        self.include_unlabeled = QtWidgets.QCheckBox(
+            "Include unlabeled frames in range"
+        )
+        self.include_unlabeled.setToolTip(
+            "When unchecked, only frames with labeled or predicted instances "
+            "are written to the output video.\n"
+            "When checked, every frame in the selected range is written, with "
+            "skeleton overlays drawn on the frames that have instances."
+        )
+        layout.addWidget(self.include_unlabeled)
+
         # Connect range mode changes
         self.range_custom.toggled.connect(self.start_frame.setEnabled)
         self.range_custom.toggled.connect(self.end_frame.setEnabled)
@@ -637,22 +651,36 @@ class RenderClipDialog(QtWidgets.QDialog):
         params["crf"] = self.crf.value()
         params["open_when_done"] = self.open_when_done.isChecked()
 
-        # Frame range
+        include_unlabeled = self.include_unlabeled.isChecked()
+        if include_unlabeled:
+            params["include_unlabeled"] = True
+
+        # Frame range. sleap-io's `end` is exclusive while the dialog spinbox
+        # is inclusive, so add 1 when forwarding. start/end are only consumed
+        # downstream when frame_inds is None (i.e. include_unlabeled is on).
         if self.range_custom.isChecked():
             params["start"] = self.start_frame.value()
-            params["end"] = self.end_frame.value()
+            params["end"] = self.end_frame.value() + 1
 
         return params
 
-    def get_frame_indices(self) -> list[int]:
+    def get_frame_indices(self) -> list[int] | None:
         """Get list of frame indices to render.
 
         Returns:
-            Sorted list of frame indices to include in the rendered video.
+            Sorted list of frame indices to include in the rendered video, or
+            ``None`` when "Include unlabeled frames" is checked — in that case
+            ``sio.render_video()`` enumerates frames itself from the video and
+            the start/end range, which is required for the unlabeled frames
+            to actually appear in the output.
+
             Sorting is required because ``Labels.labeled_frames`` is not
             guaranteed to be in frame order, and ``sio.render_video()`` writes
             frames in the order given by ``frame_inds``.
         """
+        if self.include_unlabeled.isChecked():
+            return None
+
         if self.range_all.isChecked():
             # All labeled frames for current video
             return sorted(
