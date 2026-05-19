@@ -4758,14 +4758,50 @@ class AddUserInstancesFromAllPredictions(EditCommand):
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        total_added = 0
-        existing_track_names = {track.name for track in context.labels.tracks}
+        labeled_frames = list(context.labels)
+        total_frames = len(labeled_frames)
 
-        for lf in context.labels:
+        if total_frames == 0:
+            return
+
+        qt_app = QtWidgets.QApplication.instance()
+        if qt_app is not None:
+            parent = (
+                context.app
+                if isinstance(context.app, QtWidgets.QWidget)
+                else None
+            )
+            win = QtWidgets.QProgressDialog(
+                "Accepting predictions...",
+                "Cancel",
+                0,
+                total_frames,
+                parent,
+            )
+            win.setWindowTitle("Accept All Predictions")
+            win.setWindowModality(QtCore.Qt.WindowModal)
+            win.setMinimumDuration(0)
+            win.setMinimumWidth(300)
+            win.show()
+            qt_app.processEvents()
+        else:
+            win = None
+
+        total_added = 0
+        existing_track_names = {
+            track.name for track in context.labels.tracks
+        }
+
+        for i, lf in enumerate(labeled_frames):
+            if win is not None and win.wasCanceled():
+                break
+
             for predicted_instance in lf.unused_predictions:
                 make = AddUserInstancesFromPredictions
-                new_instance = make.make_instance_from_predicted_instance(
-                    predicted_instance
+                new_instance = (
+                    make.make_instance_from_predicted_instance(
+                        predicted_instance
+                    )
                 )
                 if new_instance not in lf.instances:
                     lf.instances.append(new_instance)
@@ -4773,10 +4809,20 @@ class AddUserInstancesFromAllPredictions(EditCommand):
 
                 if (
                     new_instance.track is not None
-                    and new_instance.track.name not in existing_track_names
+                    and new_instance.track.name
+                    not in existing_track_names
                 ):
                     context.labels.tracks.append(new_instance.track)
-                    existing_track_names.add(new_instance.track.name)
+                    existing_track_names.add(
+                        new_instance.track.name
+                    )
+
+            if win is not None:
+                win.setValue(i + 1)
+                qt_app.processEvents()
+
+        if win is not None:
+            win.close()
 
         if total_added > 0:
             context.labels.update()
