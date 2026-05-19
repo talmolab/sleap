@@ -4766,11 +4766,7 @@ class AddUserInstancesFromAllPredictions(EditCommand):
 
         qt_app = QtWidgets.QApplication.instance()
         if qt_app is not None:
-            parent = (
-                context.app
-                if isinstance(context.app, QtWidgets.QWidget)
-                else None
-            )
+            parent = context.app if isinstance(context.app, QtWidgets.QWidget) else None
             win = QtWidgets.QProgressDialog(
                 "Accepting predictions...",
                 "Cancel",
@@ -4788,9 +4784,7 @@ class AddUserInstancesFromAllPredictions(EditCommand):
             win = None
 
         total_added = 0
-        existing_track_names = {
-            track.name for track in context.labels.tracks
-        }
+        existing_track_names = {track.name for track in context.labels.tracks}
 
         for i, lf in enumerate(labeled_frames):
             if win is not None and win.wasCanceled():
@@ -4798,10 +4792,8 @@ class AddUserInstancesFromAllPredictions(EditCommand):
 
             for predicted_instance in lf.unused_predictions:
                 make = AddUserInstancesFromPredictions
-                new_instance = (
-                    make.make_instance_from_predicted_instance(
-                        predicted_instance
-                    )
+                new_instance = make.make_instance_from_predicted_instance(
+                    predicted_instance
                 )
                 if new_instance not in lf.instances:
                     lf.instances.append(new_instance)
@@ -4809,13 +4801,10 @@ class AddUserInstancesFromAllPredictions(EditCommand):
 
                 if (
                     new_instance.track is not None
-                    and new_instance.track.name
-                    not in existing_track_names
+                    and new_instance.track.name not in existing_track_names
                 ):
                     context.labels.tracks.append(new_instance.track)
-                    existing_track_names.add(
-                        new_instance.track.name
-                    )
+                    existing_track_names.add(new_instance.track.name)
 
             if win is not None:
                 win.setValue(i + 1)
