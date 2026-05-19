@@ -108,6 +108,15 @@ Review the `,cover` files for your changed modules to ensure adequate coverage.
 
 ## Step 7: Commit Changes
 
+### Pre-commit format+lint gate
+**Always** re-run format and lint on changed files immediately before committing. This catches
+formatting drift from edits made after the initial Step 5 pass:
+```bash
+uv run ruff format sleap tests
+uv run ruff check --fix sleap tests
+```
+If either command modifies files, stage the changes before committing.
+
 ### Commit structure
 Make well-structured, atomic commits:
 - Each commit should be a logical unit of work
@@ -227,6 +236,10 @@ uv run pytest -q --maxfail=1 --cov --cov-branch && rm -f .coverage.* && uv run c
 
 # Find changed files
 git diff --name-only $(git merge-base origin/develop HEAD)
+
+# Pre-commit format+lint gate (always run before committing)
+uv run ruff format sleap tests
+uv run ruff check --fix sleap tests
 
 # Commit
 git add <files>
