@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 from sleap_io import (
+    Labels,
     Skeleton,
     Instance,
     PredictedInstance,
@@ -30,6 +31,7 @@ from sleap.gui.commands import (
     AddInstance,
     AddMissingInstanceNodes,
     AddUserInstancesFromPredictions,
+    AddUserInstancesFromAllPredictions,
 )
 
 
@@ -765,3 +767,133 @@ class TestFullWorkflowIntegration:
             "User instance created by double-click should be visible after "
             "predictions are deleted"
         )
+
+
+class TestAddUserInstancesFromAllPredictions:
+    """Tests for the bulk 'Accept All Predictions' command."""
+
+    def test_converts_predictions_across_multiple_frames(
+        self, simple_skeleton, simple_video
+    ):
+        track1 = Track(name="track1")
+        track2 = Track(name="track2")
+
+        pred1 = PredictedInstance.empty(
+            skeleton=simple_skeleton, track=track1, score=0.9
+        )
+        pred1["head"] = (10.0, 20.0, 0.9)
+        pred1["thorax"] = (15.0, 30.0, 0.85)
+        pred1["abdomen"] = (20.0, 40.0, 0.8)
+
+        pred2 = PredictedInstance.empty(
+            skeleton=simple_skeleton, track=track2, score=0.85
+        )
+        pred2["head"] = (50.0, 60.0, 0.88)
+        pred2["thorax"] = (55.0, 70.0, 0.82)
+        pred2["abdomen"] = (60.0, 80.0, 0.75)
+
+        lf0 = LabeledFrame(video=simple_video, frame_idx=0, instances=[pred1])
+        lf1 = LabeledFrame(video=simple_video, frame_idx=1, instances=[pred2])
+
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[lf0, lf1],
+            tracks=[track1, track2],
+        )
+
+        from sleap.gui.commands import CommandContext
+
+        context = CommandContext.from_labels(labels)
+        AddUserInstancesFromAllPredictions.do_action(context, {})
+
+        # Each frame should now have the original prediction + a new user instance
+        assert len(lf0.instances) == 2
+        assert len(lf1.instances) == 2
+
+        user_insts_f0 = [i for i in lf0.instances if type(i) is Instance]
+        user_insts_f1 = [i for i in lf1.instances if type(i) is Instance]
+        assert len(user_insts_f0) == 1
+        assert len(user_insts_f1) == 1
+
+        assert user_insts_f0[0].from_predicted is pred1
+        assert user_insts_f1[0].from_predicted is pred2
+
+    def test_skips_already_accepted_predictions(self, simple_skeleton, simple_video):
+        track = Track(name="track1")
+
+        pred = PredictedInstance.empty(skeleton=simple_skeleton, track=track, score=0.9)
+        pred["head"] = (10.0, 20.0, 0.9)
+        pred["thorax"] = (15.0, 30.0, 0.85)
+        pred["abdomen"] = (20.0, 40.0, 0.8)
+
+        user_inst = Instance.empty(
+            skeleton=simple_skeleton, track=track, from_predicted=pred
+        )
+        user_inst["head"] = (10.0, 20.0)
+        user_inst["thorax"] = (15.0, 30.0)
+        user_inst["abdomen"] = (20.0, 40.0)
+
+        lf = LabeledFrame(video=simple_video, frame_idx=0, instances=[pred, user_inst])
+
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[lf],
+            tracks=[track],
+        )
+
+        from sleap.gui.commands import CommandContext
+
+        context = CommandContext.from_labels(labels)
+        AddUserInstancesFromAllPredictions.do_action(context, {})
+
+        # Should not add duplicate — prediction is already "used"
+        assert len(lf.instances) == 2
+
+    def test_adds_new_tracks(self, simple_skeleton, simple_video):
+        new_track = Track(name="new_track")
+
+        pred = PredictedInstance.empty(
+            skeleton=simple_skeleton, track=new_track, score=0.9
+        )
+        pred["head"] = (10.0, 20.0, 0.9)
+        pred["thorax"] = (15.0, 30.0, 0.85)
+        pred["abdomen"] = (20.0, 40.0, 0.8)
+
+        lf = LabeledFrame(video=simple_video, frame_idx=0, instances=[pred])
+
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[lf],
+            tracks=[],
+        )
+
+        from sleap.gui.commands import CommandContext
+
+        context = CommandContext.from_labels(labels)
+        AddUserInstancesFromAllPredictions.do_action(context, {})
+
+        assert new_track in labels.tracks
+
+    def test_no_op_when_no_predictions(self, simple_skeleton, simple_video):
+        user_inst = Instance.empty(skeleton=simple_skeleton)
+        user_inst["head"] = (10.0, 20.0)
+        user_inst["thorax"] = (15.0, 30.0)
+        user_inst["abdomen"] = (20.0, 40.0)
+
+        lf = LabeledFrame(video=simple_video, frame_idx=0, instances=[user_inst])
+
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[lf],
+        )
+
+        from sleap.gui.commands import CommandContext
+
+        context = CommandContext.from_labels(labels)
+        AddUserInstancesFromAllPredictions.do_action(context, {})
+
+        assert len(lf.instances) == 1

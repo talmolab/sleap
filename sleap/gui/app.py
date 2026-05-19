@@ -824,6 +824,13 @@ class MainWindow(QMainWindow):
             self.commands.addUserInstancesFromPredictions,
         )
 
+        add_menu_item(
+            labelMenu,
+            "accept all predictions",
+            "Accept All Predictions...",
+            self.commands.addUserInstancesFromAllPredictions,
+        )
+
         labelMenu.addSeparator()
 
         labelMenu.addAction(

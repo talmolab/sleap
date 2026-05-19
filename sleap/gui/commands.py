@@ -649,6 +649,10 @@ class CommandContext:
         """Create user instance from a predicted instance."""
         self.execute(AddUserInstancesFromPredictions)
 
+    def addUserInstancesFromAllPredictions(self):
+        """Create user instances from all predicted instances across all frames."""
+        self.execute(AddUserInstancesFromAllPredictions)
+
     def copyInstance(self):
         """Copy the selected instance to the instance clipboard."""
         self.execute(CopyInstance)
@@ -4746,6 +4750,35 @@ class AddUserInstancesFromPredictions(EditCommand):
             if context.state["labeled_frame"] not in context.labels:
                 context.labels.append(context.state["labeled_frame"])
 
+            context.labels.update()
+
+
+class AddUserInstancesFromAllPredictions(EditCommand):
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        total_added = 0
+        existing_track_names = {track.name for track in context.labels.tracks}
+
+        for lf in context.labels:
+            for predicted_instance in lf.unused_predictions:
+                make = AddUserInstancesFromPredictions
+                new_instance = make.make_instance_from_predicted_instance(
+                    predicted_instance
+                )
+                if new_instance not in lf.instances:
+                    lf.instances.append(new_instance)
+                    total_added += 1
+
+                if (
+                    new_instance.track is not None
+                    and new_instance.track.name not in existing_track_names
+                ):
+                    context.labels.tracks.append(new_instance.track)
+                    existing_track_names.add(new_instance.track.name)
+
+        if total_added > 0:
             context.labels.update()
 
 
