@@ -231,3 +231,79 @@ def test_match_source_fps_checkbox(centered_pair_predictions):
         assert dialog.get_export_params()["fps"] == int(round(src_fps))
     finally:
         dialog.deleteLater()
+
+
+def test_include_unlabeled_returns_none_frame_indices(centered_pair_predictions):
+    """When "Include unlabeled frames" is checked, ``get_frame_indices()``
+    must return ``None`` so that ``sio.render_video()`` enumerates frames
+    from the video instead of restricting output to the labeled-only list.
+    """
+    pytest.importorskip("qtpy.QtWidgets")
+
+    from qtpy import QtWidgets
+
+    from sleap.gui.dialogs.render_clip import RenderClipDialog
+
+    _ = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+
+    labels: sio.Labels = centered_pair_predictions
+    video = labels.videos[0]
+
+    dialog = RenderClipDialog(labels=labels, video=video)
+    try:
+        # Default is unchecked -> falls back to labeled-only behavior.
+        assert not dialog.include_unlabeled.isChecked()
+        assert isinstance(dialog.get_frame_indices(), list)
+
+        # Once checked, the dialog hands over driver responsibility to sleap-io.
+        dialog.include_unlabeled.setChecked(True)
+        assert dialog.get_frame_indices() is None
+    finally:
+        dialog.deleteLater()
+
+
+def test_include_unlabeled_export_params_forward_range(centered_pair_predictions):
+    """Checking "Include unlabeled frames" should add ``include_unlabeled=True``
+    to the export params, and a custom range should be forwarded with an
+    exclusive ``end`` (sleap-io's convention) so the user's inclusive UI value
+    maps correctly.
+    """
+    pytest.importorskip("qtpy.QtWidgets")
+
+    from qtpy import QtWidgets
+
+    from sleap.gui.dialogs.render_clip import RenderClipDialog
+
+    _ = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+
+    labels: sio.Labels = centered_pair_predictions
+    video = labels.videos[0]
+
+    dialog = RenderClipDialog(labels=labels, video=video)
+    try:
+        # Unchecked path: no include_unlabeled key, no start/end.
+        params = dialog.get_export_params()
+        assert "include_unlabeled" not in params
+        assert "start" not in params
+        assert "end" not in params
+
+        # Checked + all-frames radio: include_unlabeled=True, no start/end so
+        # sleap-io renders the whole target video.
+        dialog.include_unlabeled.setChecked(True)
+        dialog.range_all.setChecked(True)
+        params = dialog.get_export_params()
+        assert params["include_unlabeled"] is True
+        assert "start" not in params
+        assert "end" not in params
+
+        # Checked + custom range: include_unlabeled=True with start/end+1 so
+        # the inclusive UI bound maps to sleap-io's exclusive end.
+        dialog.range_custom.setChecked(True)
+        dialog.start_frame.setValue(5)
+        dialog.end_frame.setValue(17)
+        params = dialog.get_export_params()
+        assert params["include_unlabeled"] is True
+        assert params["start"] == 5
+        assert params["end"] == 18
+    finally:
+        dialog.deleteLater()

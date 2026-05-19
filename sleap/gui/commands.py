@@ -1596,6 +1596,9 @@ class ExportLabeledClip(AppCommand):
         params["show_edges"] = export_params.get("show_edges", True)
         params["background"] = export_params.get("background")
         params["open_when_done"] = export_params.get("open_when_done", True)
+        params["include_unlabeled"] = export_params.get("include_unlabeled", False)
+        params["start"] = export_params.get("start")
+        params["end"] = export_params.get("end")
 
         return True
 
@@ -1629,12 +1632,26 @@ class ExportLabeledClip(AppCommand):
         if params.get("background"):
             render_params["background"] = params["background"]
 
+        # When the user opts in to include unlabeled frames, hand sleap-io the
+        # full range instead of a labeled-only frame_inds list — otherwise the
+        # explicit frame_inds would restrict output back to labeled frames.
+        include_unlabeled = params.get("include_unlabeled", False)
+        if include_unlabeled:
+            render_params["include_unlabeled"] = True
+            if params.get("start") is not None:
+                render_params["start"] = params["start"]
+            if params.get("end") is not None:
+                render_params["end"] = params["end"]
+            frame_inds = None
+        else:
+            frame_inds = params.get("frame_indices")
+
         # Render with progress dialog (non-blocking)
         render_video_gui(
             labels=labels,
             filename=params["video_filename"],
             video=video,
-            frame_inds=params.get("frame_indices"),
+            frame_inds=frame_inds,
             render_params=render_params,
             open_when_done=params.get("open_when_done", True),
         )
@@ -1939,9 +1956,20 @@ def render_video_gui(
     # aren't rendered as ghost skeletons alongside their user counterparts.
     labels = _labels_with_visible_instances(labels, video)
 
-    # Calculate total frames for progress
+    # Calculate total frames for progress. When the caller asked for unlabeled
+    # frames to be included we can't infer the count from labeled frames; try
+    # the video shape, then fall back to the labeled-frame count as a starting
+    # estimate (the progress callback corrects ``total`` on its first tick).
     if frame_inds is not None:
         total_frames = len(frame_inds)
+    elif render_params.get("include_unlabeled"):
+        start = render_params.get("start")
+        end = render_params.get("end")
+        if start is not None and end is not None:
+            total_frames = max(end - start, 0)
+        else:
+            video_shape = getattr(video, "shape", None)
+            total_frames = int(video_shape[0]) if video_shape is not None else 0
     else:
         total_frames = len(
             [lf for lf in labels.labeled_frames if video is None or lf.video == video]
