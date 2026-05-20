@@ -683,6 +683,9 @@ class MainWindow(QMainWindow):
                 self.state["fit"] = False
                 self.state["fit_selection"] = False
                 self.player.zoomToActualSize()
+            else:
+                self.player.view.clearZoom()
+                self.player.view.updateViewer()
 
         self.state.connect("fit", _on_fit_changed)
         self.state.connect("fit_selection", _on_fit_selection_changed)
