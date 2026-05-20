@@ -57,12 +57,24 @@ class VideoFrameSuggestions(object):
 
         method = str.replace(params["method"], " ", "_")
         if method_functions.get(method, None) is not None:
-            return method_functions[method](labels=labels, **params)
+            suggestions = method_functions[method](labels=labels, **params)
         else:
             raise ValueError(
                 f"No {'' if method == '_' else method + ' '}method found for "
                 "generating suggestions."
             )
+
+        if params.get("frame_range_enabled", False) and method not in (
+            "frame_chunk",
+            "sample",
+        ):
+            frame_from = max(int(params.get("frame_from", 1)) - 1, 0)
+            frame_to = int(params.get("frame_to", float("inf")))
+            suggestions = [
+                s for s in suggestions if frame_from <= s.frame_idx < frame_to
+            ]
+
+        return suggestions
 
     # Functions corresponding to "method" param
 
@@ -84,7 +96,7 @@ class VideoFrameSuggestions(object):
 
         for video in videos:
             # Get unique sample space
-            vid_idx = list(range(len(video)))
+            vid_idx = cls._get_frame_range(video, **kwargs)
             vid_sugg_idx = sugg_idx_dict[video]
             unique_idx = list(set(vid_idx) - set(vid_sugg_idx))
             n_frames = len(unique_idx)
@@ -368,6 +380,21 @@ class VideoFrameSuggestions(object):
         return suggestions
 
     # Utility functions
+
+    @staticmethod
+    def _get_frame_range(video: "Video", **kwargs) -> list:
+        """Get frame indices for a video, optionally restricted to a range.
+
+        Args:
+            video: The video to get frame indices for.
+            **kwargs: May contain frame_range_enabled, frame_from, frame_to.
+        """
+        frame_from = 0
+        frame_to = len(video)
+        if kwargs.get("frame_range_enabled", False):
+            frame_from = max(int(kwargs.get("frame_from", 1)) - 1, 0)
+            frame_to = min(int(kwargs.get("frame_to", len(video))), len(video))
+        return list(range(frame_from, frame_to))
 
     @staticmethod
     def idx_list_to_frame_list(
