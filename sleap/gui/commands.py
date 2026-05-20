@@ -3620,7 +3620,8 @@ class DeleteFrameLimitPredictions(InstanceDeleteCommand):
     def ask(cls, context: CommandContext, params: Dict) -> bool:
         current_video = context.state["video"]
         dialog = FrameRangeDialog(
-            title="Delete Instances in Frame Range...", max_frame_idx=len(current_video)
+            title="Delete Predictions Outside Frame Range",
+            max_frame_idx=len(current_video),
         )
         results = dialog.get_results()
         if results:

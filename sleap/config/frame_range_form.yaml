@@ -1,13 +1,13 @@
 main:
 
   - name: min_frame_idx
-    label: Minimum frame index
+    label: Keep from frame
     type: int
     range: 1,1000000
     default: 1
 
   - name: max_frame_idx
-    label: Maximum frame index
+    label: Keep to frame
     type: int
     range: 1,1000000
     default: 1000
