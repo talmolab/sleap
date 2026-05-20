@@ -15,6 +15,7 @@ goto last interacted: Ctrl+A
 goto next suggestion: Space
 goto next track spawn: Ctrl+E
 goto next user: Ctrl+U
+goto prev user: Ctrl+Shift+U
 goto next labeled: Alt+Right
 goto prev suggestion: Shift+Space
 goto prev labeled: Alt+Left

@@ -598,6 +598,12 @@ class MainWindow(QMainWindow):
         )
         add_menu_item(
             goMenu,
+            "goto prev user",
+            "Previous User Labeled Frame",
+            self.commands.prevUserLabeledFrame,
+        )
+        add_menu_item(
+            goMenu,
             "goto next suggestion",
             "Next Suggestion",
             self._goto_next_suggestion_or_flag,

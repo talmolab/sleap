@@ -421,6 +421,10 @@ class CommandContext:
         """Goes to next labeled frame with user instances."""
         self.execute(GoNextUserLabeledFrame)
 
+    def prevUserLabeledFrame(self):
+        """Goes to previous labeled frame with user instances."""
+        self.execute(GoPrevUserLabeledFrame)
+
     def lastInteractedFrame(self):
         """Goes to last frame that user interacted with."""
         self.execute(GoLastInteractedFrame)
@@ -2575,6 +2579,23 @@ class GoNextUserLabeledFrame(GoIteratorCommand):
             from_frame_idx=context.state["frame_idx"],
         )
         # Filter to frames with user instances
+        iterate_labeled_frames = filter(
+            lambda lf: lf.has_user_instances, iterate_labeled_frames
+        )
+        return iterate_labeled_frames
+
+
+class GoPrevUserLabeledFrame(GoIteratorCommand):
+    @staticmethod
+    def _get_frame_iterator(context: CommandContext):
+        from sleap.sleap_io_adaptors.lf_labels_utils import iterate_labeled_frames
+
+        iterate_labeled_frames = iterate_labeled_frames(
+            context.labels,
+            context.state["video"],
+            from_frame_idx=context.state["frame_idx"],
+            reverse=True,
+        )
         iterate_labeled_frames = filter(
             lambda lf: lf.has_user_instances, iterate_labeled_frames
         )
