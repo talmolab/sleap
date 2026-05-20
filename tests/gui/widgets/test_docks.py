@@ -48,6 +48,11 @@ def test_videos_dock(
     assert dock.main_window is main_window
     assert dock.wgt_layout is dock.widget().layout()
 
+    # Test that the video edit buttons are wired up
+    assert "add videos" in dock.main_window._buttons
+    assert "replace videos" in dock.main_window._buttons
+    assert "remove video" in dock.main_window._buttons
+
     # Test that videos can be removed
 
     # No videos selected, won't remove anything

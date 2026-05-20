@@ -198,6 +198,7 @@ class VideosDock(DockWidget):
         self.add_button(hb, "Toggle Grayscale", main_window.commands.toggleGrayscale)
         self.add_button(hb, "Show Video", self.table.activateSelected)
         self.add_button(hb, "Add Videos", main_window.commands.addVideo)
+        self.add_button(hb, "Replace Videos", main_window.commands.replaceVideo)
         self.add_button(hb, "Remove Video", main_window.commands.removeVideo)
         hbw = QWidget()
         hbw.setLayout(hb)
