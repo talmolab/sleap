@@ -598,6 +598,11 @@ class InferenceTask:
         if "_batch_size" in self.inference_params:
             cli_args.extend(["--batch_size", str(self.inference_params["_batch_size"])])
 
+        if "_peak_threshold" in self.inference_params:
+            cli_args.extend(
+                ["--peak_threshold", str(self.inference_params["_peak_threshold"])]
+            )
+
         if (
             "_max_instances" in self.inference_params
             and self.inference_params["_max_instances"] is not None
