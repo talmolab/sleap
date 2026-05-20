@@ -1735,6 +1735,7 @@ class MainWindow(QMainWindow):
                 mode,
                 self.state["filename"],
                 self.labels,
+                parent=self,
             )
             self._child_windows[mode]._handle_learning_finished.connect(
                 self._handle_learning_finished

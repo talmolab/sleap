@@ -82,10 +82,11 @@ class LearningDialog(QtWidgets.QDialog):
         labels_filename: Text,
         labels: Optional[Labels] = None,
         skeleton: Optional["Skeleton"] = None,
+        parent=None,
         *args,
         **kwargs,
     ):
-        super(LearningDialog, self).__init__()
+        super(LearningDialog, self).__init__(parent)
 
         # Set window title based on mode
         mode_title = "Training" if mode == "training" else "Inference"
