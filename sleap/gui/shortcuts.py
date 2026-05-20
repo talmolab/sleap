@@ -44,6 +44,7 @@ class Shortcuts(object):
         "goto prev labeled",
         "goto last interacted",
         "goto next user",
+        "goto prev user",
         "goto next suggestion",
         "goto prev suggestion",
         "goto next track spawn",
