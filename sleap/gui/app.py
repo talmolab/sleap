@@ -195,6 +195,7 @@ class MainWindow(QMainWindow):
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["fit_selection"] = False
+        self.state["actual_size"] = False
         self.state["color predicted"] = prefs["color predicted"]
         self.state["trail_length"] = prefs["trail length"]
         self.state["trail_shade"] = prefs["trail shade"]
@@ -664,18 +665,28 @@ class MainWindow(QMainWindow):
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "fit", "Fit View to Instances")
         add_menu_check_item(viewMenu, "fit_selection", "Fit View to Selection")
+        add_menu_check_item(viewMenu, "actual_size", "Actual Size (1:1)")
 
-        # Make fit and fit_selection mutually exclusive
+        # Make fit, fit_selection, and actual_size mutually exclusive
         def _on_fit_changed(value):
             if value:
                 self.state["fit_selection"] = False
+                self.state["actual_size"] = False
 
         def _on_fit_selection_changed(value):
             if value:
                 self.state["fit"] = False
+                self.state["actual_size"] = False
+
+        def _on_actual_size_changed(value):
+            if value:
+                self.state["fit"] = False
+                self.state["fit_selection"] = False
+                self.player.zoomToActualSize()
 
         self.state.connect("fit", _on_fit_changed)
         self.state.connect("fit_selection", _on_fit_selection_changed)
+        self.state.connect("actual_size", _on_actual_size_changed)
 
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "color predicted", "Color Predicted Instances")
@@ -1408,6 +1419,8 @@ class MainWindow(QMainWindow):
             player.zoomToFit()
         elif self.state["fit_selection"]:
             player.zoomToSelection()
+        elif self.state["actual_size"]:
+            player.zoomToActualSize()
 
         # Update related displays
         self.updateStatusMessage()
