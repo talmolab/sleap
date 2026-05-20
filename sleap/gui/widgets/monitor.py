@@ -216,6 +216,8 @@ class LossPlot(MplCanvas):
         epoch: int,
         dt_min: int,
         dt_sec: int,
+        epoch_dt_min: int = None,
+        epoch_dt_sec: int = None,
         last_epoch_val_loss: float = None,
         penultimate_epoch_val_loss: float = None,
         mean_epoch_time_min: int = None,
@@ -229,7 +231,9 @@ class LossPlot(MplCanvas):
         epoch_size: int = None,
     ):
         # Add training epoch and runtime info
-        title = self._get_training_epoch_and_runtime_text(epoch, dt_min, dt_sec)
+        title = self._get_training_epoch_and_runtime_text(
+            epoch, dt_min, dt_sec, epoch_dt_min, epoch_dt_sec
+        )
 
         if last_epoch_val_loss is not None:
             if penultimate_epoch_val_loss is not None:
@@ -261,19 +265,33 @@ class LossPlot(MplCanvas):
         self.set_title(title)
 
     @staticmethod
-    def _get_training_epoch_and_runtime_text(epoch: int, dt_min: int, dt_sec: int):
+    def _get_training_epoch_and_runtime_text(
+        epoch: int,
+        dt_min: int,
+        dt_sec: int,
+        epoch_dt_min: int = None,
+        epoch_dt_sec: int = None,
+    ):
         """Get the training epoch and runtime text to display in the plot.
 
         Args:
             epoch: The current epoch.
             dt_min: The number of minutes since training started.
             dt_sec: The number of seconds since training started.
+            epoch_dt_min: Minutes elapsed in the current epoch.
+            epoch_dt_sec: Seconds elapsed in the current epoch.
         """
-
         runtime_text = (
             r"Training Epoch $\mathbf{" + str(epoch + 1) + r"}$ / "
-            r"Runtime: $\mathbf{" + f"{int(dt_min):02}:{int(dt_sec):02}" + r"}$"
+            r"Total Runtime: $\mathbf{" + f"{int(dt_min):02}:{int(dt_sec):02}" + r"}$"
         )
+
+        if epoch_dt_min is not None and epoch_dt_sec is not None:
+            runtime_text += (
+                r" / Epoch Runtime: $\mathbf{"
+                + f"{int(epoch_dt_min):02}:{int(epoch_dt_sec):02}"
+                + r"}$"
+            )
 
         return runtime_text
 
@@ -786,6 +804,7 @@ class LossViewer(QtWidgets.QMainWindow):
         self.best_val_y = None
 
         self.t0 = None
+        self.epoch_start_time = None
         self.mean_epoch_time_min = None
         self.mean_epoch_time_sec = None
         self.eta_ten_epochs_min = None
@@ -896,10 +915,17 @@ class LossViewer(QtWidgets.QMainWindow):
             dt = perf_counter() - self.t0
             dt_min, dt_sec = divmod(dt, 60)
 
+            epoch_dt_min, epoch_dt_sec = None, None
+            if self.epoch_start_time is not None:
+                epoch_dt = perf_counter() - self.epoch_start_time
+                epoch_dt_min, epoch_dt_sec = divmod(epoch_dt, 60)
+
             self.canvas.update_runtime_title(
                 epoch=self.epoch,
                 dt_min=dt_min,
                 dt_sec=dt_sec,
+                epoch_dt_min=epoch_dt_min,
+                epoch_dt_sec=epoch_dt_sec,
                 last_epoch_val_loss=self.last_epoch_val_loss,
                 penultimate_epoch_val_loss=self.penultimate_epoch_val_loss,
                 mean_epoch_time_min=self.mean_epoch_time_min,
@@ -963,6 +989,7 @@ class LossViewer(QtWidgets.QMainWindow):
                     self._set_end()
                 elif msg["event"] == "epoch_begin":
                     self.epoch = msg["epoch"]
+                    self.epoch_start_time = perf_counter()
                 elif msg["event"] == "epoch_end":
                     self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
                     # Support both sleap-nn naming (train/loss) and legacy (train_loss)
