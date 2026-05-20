@@ -193,6 +193,20 @@ main:
 
     "all videos":
     "current video":
+      - name: frame_range_enabled
+        label: Restrict to frame range
+        type: bool
+        default: false
+      - name: frame_from
+        label: From frame
+        type: int
+        default: 1
+        range: 1, 1000000
+      - name: frame_to
+        label: To frame
+        type: int
+        default: 1000
+        range: 1, 1000000
 
   - name: generate_button
     label: Generate Suggestions
