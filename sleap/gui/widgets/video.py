@@ -620,6 +620,10 @@ class QtVideoPlayer(QWidget):
             return True
         return False
 
+    def zoomToActualSize(self):
+        """Zoom view to 1:1 pixel mapping (actual size)."""
+        self.view.zoomToActualSize()
+
     def setFitZoom(self, value):
         """Zooms or unzooms current view to fit all instances."""
         if self.video:
@@ -1189,6 +1193,17 @@ class GraphicsView(QGraphicsView):
         self.zoomFactor = scale
         self.updateViewer()
         self.centerOn(zoom_rect.center())
+
+    def zoomToActualSize(self):
+        """Zoom to 1:1 pixel mapping so the image displays at native resolution."""
+        if not self.hasImage():
+            return
+        base_w_scale = self.width() / self.sceneRect().width()
+        base_h_scale = self.height() / self.sceneRect().height()
+        base_scale = min(base_w_scale, base_h_scale)
+        if base_scale > 0:
+            self.zoomFactor = 1.0 / base_scale
+            self.updateViewer()
 
     def clearZoom(self):
         """Clear zoom stack. Doesn't update display."""
