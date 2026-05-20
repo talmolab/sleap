@@ -2537,12 +2537,12 @@
 <hr />
 <h2 id="get-some-sleap">🚀 Get some SLEAP!<a class="headerlink" href="#get-some-sleap" title="Permanent link">&para;</a></h2>
 <h3 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h3>
-<p>Install <a href="https://github.com/astral-sh/uv"><code>uv</code></a> first:</p>
+<p>Install <a href="https://docs.astral.sh/uv/getting-started/installation/"><code>uv</code></a> first:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># macOS/Linux</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Windows</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>powershell<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>powershell<span class="w"> </span>-ExecutionPolicy<span class="w"> </span>ByPass<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
 </span></code></pre></div>
 <p>Then install SLEAP:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
@@ -2660,8 +2660,11 @@
 </details>
 <hr />
 <h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">&para;</a></h2>
-<p>SLEAP is released under a <a href="https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE">Clear BSD License</a> and is intended for research/academic use only.</p>
-<p>For commercial use, please contact: <strong>Laurie Tzodikov</strong> (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.</p>
+<!-- SLEAP is released under a [Clear BSD License](https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE) and is intended for research/academic use only.
+
+For commercial use, please contact: **Laurie Tzodikov** (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256. -->
+
+<p>SLEAP is released under a <a href="https://github.com/talmolab/sleap/blob/main/LICENSE">BSD 3-Clause Clear License</a>.</p>
 
 
 

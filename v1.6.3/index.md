@@ -88,14 +88,14 @@
 
 ### Quick start
 
-Install [`uv`](https://github.com/astral-sh/uv) first:
+Install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) first:
 
 ```bash
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Windows
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
 Then install SLEAP:
@@ -216,6 +216,8 @@ SLEAP is currently being developed and maintained in the [Talmo Lab](https://tal
 
 ## License
 
-SLEAP is released under a [Clear BSD License](https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE) and is intended for research/academic use only.
+<!-- SLEAP is released under a [Clear BSD License](https://raw.githubusercontent.com/talmolab/sleap/main/LICENSE) and is intended for research/academic use only.
 
-For commercial use, please contact: **Laurie Tzodikov** (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256.
+For commercial use, please contact: **Laurie Tzodikov** (Assistant Director, Office of Technology Licensing), Princeton University, 609-258-7256. -->
+
+SLEAP is released under a [BSD 3-Clause Clear License](https://github.com/talmolab/sleap/blob/main/LICENSE).

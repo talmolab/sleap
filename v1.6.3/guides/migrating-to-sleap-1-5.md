@@ -27,7 +27,7 @@ PyTorch-based neural network backend for training and inference. Perfect for cus
 ## Torch Backend Changes
 
 ### New Backbones
-SLEAP 1.5 introduces three powerful new backbone architectures (check [here](https://nn.sleap.ai/latest/models/#backbone-architectures) for more details):
+SLEAP 1.5 introduces three powerful new backbone architectures (check [here](https://nn.sleap.ai/latest/reference/models/#backbones) for more details):
 
 - **UNet** - Classic encoder-decoder architecture for precise pose estimation
 - **SwinT** - Swin Transformer for state-of-the-art performance
@@ -36,8 +36,8 @@ SLEAP 1.5 introduces three powerful new backbone architectures (check [here](htt
 ### Legacy Support
 We've maintained full backward compatibility:
 
-- **GUI Support**: SLEAP now uses a new <u>YAML-based</u> config file structure, but you can still upload and work with old SLEAP JSON files in the GUI. For details on converting legacy SLEAP 1.4 config/JSON files to the new YAML format, see our [conversion guide](https://nn.sleap.ai/latest/config/#converting-legacy-sleap-14-configjson-to-sleap-nn-yaml).
-- **Using TensorFlow Model Weights**: Continue to support running inference on SLEAP <1.4 TensorFlow model weights (UNet backbone only). Check [using legacy models](https://nn.sleap.ai/latest/inference/#legacy-sleap-model-support) for more details.
+- **GUI Support**: SLEAP now uses a new <u>YAML-based</u> config file structure, but you can still upload and work with old SLEAP JSON files in the GUI. For details on converting legacy SLEAP 1.4 config/JSON files to the new YAML format, see our [conversion guide](https://nn.sleap.ai/latest/configuration/#converting-from-legacy-sleap).
+- **Using TensorFlow Model Weights**: Continue to support running inference on SLEAP <1.4 TensorFlow model weights (UNet backbone only). Check [using legacy models](https://nn.sleap.ai/latest/guides/inference/#legacy-sleap-model-support) for more details.
 
 
 ## What's New in v1.6

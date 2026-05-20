@@ -2,594 +2,594 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/changelog/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/code-of-conduct/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/contribute/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/help/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/installation/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/overview/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/SUMMARY/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/cli/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/diagnostic/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/legacy_cli_adaptors/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/message/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/nn_cli/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/prefs/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/rangelist/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/system_info/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/util/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/version/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/app/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/color/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/commands/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/config_utils/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dataviews/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/shortcuts/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/state/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/suggestions/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/utils/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/web/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/delete/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/export_clip/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/filedialog/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/formbuilder/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/frame_range/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/importvideos/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/merge/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/message/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/metrics/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/missingfiles/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/qc/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/query/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/render_clip/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/shortcuts/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/size_distribution/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/dialogs/update_checker/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/configs/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/dialog/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/load_legacy_metrics/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/main_tab/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/receptivefield/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/runners/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/size/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/unet_utils/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/learning/wandb_utils/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/overlays/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/overlays/base/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/overlays/confmaps/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/overlays/instance/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/overlays/pafs/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/overlays/tracks/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/docks/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/frame_target_selector/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/imagedir/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/monitor/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/mpl/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/multicheck/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/qc/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/rendering_preview/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/size_distribution/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/slider/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/video/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/video_worker/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/gui/widgets/views/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/info/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/info/align/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/info/feature_suggestions/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/info/labels/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/info/metrics/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/info/summary/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/info/write_tracking_h5/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/convert/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/pathutils/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/visuals/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/format/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/format/adaptor/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/format/csv/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/format/filehandle/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/format/genericjson/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/io/format/sleap_analysis/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/config/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/detector/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/frame_level/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/gmm/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/results/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/features/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/features/baseline/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/features/reference/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/features/skeleton/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/features/structural/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/qc/features/visibility/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/sleap_io_adaptors/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/sleap_io_adaptors/instance_utils/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/sleap_io_adaptors/lf_labels_utils/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/sleap_io_adaptors/skeleton_utils/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/api/sleap_io_adaptors/video_utils/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/guides/creating-a-custom-training-profile/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/guides/guides-overview/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/guides/importing-predictions-for-labeling/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/guides/instance-size-distribution/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/guides/label-quality-control/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/guides/migrating-to-sleap-1-5/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/guides/run-training-and-inference-on-colab/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/guides/running-sleap-remotely/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/guides/tracking-and-proofreading/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/learnings/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/learnings/gui/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/learnings/main-mistakes-by-tracking/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/learnings/prediction-assisted-labeling/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/learnings/skeleton-design/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/learnings/system-overview/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/Analysis_examples/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/Data_structures/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/Interactive_and_resumable_training/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/Model_evaluation/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/Post_inference_tracking/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/SLEAP_Tutorial_at_Cosyne_2024_Using_exported_data/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/Training_and_inference_on_an_example_dataset/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/Training_and_inference_using_Google_Drive/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/notebooks-overview/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/notebooks/sleap_io_idtracker_IDs/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/reference/command-line-interfaces/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/reference/datasets/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/correcting-predictions/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/exporting-the-results/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/i-m-done-sleaping-now-what/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/importing-data/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/initial-labeling/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/overview/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/proofreading/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/setup/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/tracking-new-data/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
     <url>
          <loc>https://docs.sleap.ai/v1.6.3/tutorial/training-a-model/</loc>
-         <lastmod>2026-05-04</lastmod>
+         <lastmod>2026-05-20</lastmod>
     </url>
 </urlset>
