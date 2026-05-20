@@ -854,6 +854,33 @@ class MainTabWidget(QWidget):
             )
             batch_size.setEnabled(False)  # Start disabled since "Default" is checked
 
+            row1.addSpacing(20)
+
+            peak_label = QLabel("Peak Threshold:")
+            row1.addWidget(peak_label)
+
+            peak_threshold = QDoubleSpinBox()
+            peak_threshold.setRange(0.0, 1.0)
+            peak_threshold.setSingleStep(0.05)
+            peak_threshold.setValue(0.2)
+            peak_threshold.setMinimumWidth(60)
+            peak_threshold.setToolTip(
+                "Minimum confidence map value to consider a peak as valid. "
+                "Lower values keep more detections, higher values are stricter."
+            )
+            self._fields["_peak_threshold"] = peak_threshold
+            row1.addWidget(peak_threshold)
+
+            default_peak_cb = QCheckBox("Default")
+            default_peak_cb.setChecked(True)
+            self._fields["_peak_threshold_default"] = default_peak_cb
+            row1.addWidget(default_peak_cb)
+
+            default_peak_cb.stateChanged.connect(
+                lambda state, sb=peak_threshold: sb.setEnabled(not state)
+            )
+            peak_threshold.setEnabled(False)
+
             row1.addStretch()
             layout.addLayout(row1)
 
@@ -1254,6 +1281,10 @@ class MainTabWidget(QWidget):
         # Handle batch_size: if "Default" is checked, omit so CLI uses model default
         if data.get("_batch_size_default", True):
             data.pop("_batch_size", None)
+
+        # Handle peak_threshold: if "Default" is checked, omit so CLI uses its default
+        if data.get("_peak_threshold_default", True):
+            data.pop("_peak_threshold", None)
 
         # Strip placeholder from API key if user didn't change it
         api_key = data.get("trainer_config.wandb.api_key")
