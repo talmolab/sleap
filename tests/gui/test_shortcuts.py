@@ -11,3 +11,6 @@ def test_shortcuts():
     shortcuts["new"] = QKeySequence.fromString("Ctrl+Shift+N")
     assert shortcuts["new"] == QKeySequence.fromString("Ctrl+Shift+N")
     assert list(shortcuts[0:2].keys()) == ["new", "open"]
+
+    # "propagate track labels" toggle shortcut (discussion #1638)
+    assert shortcuts["propagate track labels"] == QKeySequence.fromString("P")

@@ -38,6 +38,7 @@ class Shortcuts(object):
         "delete instance",
         "delete track",
         "transpose",
+        "propagate track labels",
         "select next",
         "clear selection",
         "goto next labeled",

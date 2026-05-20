@@ -307,7 +307,7 @@ When the tracker assigns instances to the wrong tracks (swapping identities betw
 
 **Propagating Fixes:**
 
-Enable **Propagate Track Labels** to apply track changes to all subsequent frames automatically.
+Enable **Propagate Track Labels** (toggle with the **P** shortcut) to apply track changes to all subsequent frames automatically.
 
 ---
 

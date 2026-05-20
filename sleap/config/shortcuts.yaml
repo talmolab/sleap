@@ -34,6 +34,7 @@ show edges: Ctrl+Shift+Tab
 show labels: Ctrl+Tab
 show trails: 
 transpose: Ctrl+T
+propagate track labels: P
 frame next: Right
 frame prev: Left
 frame next medium step: Ctrl+Right
