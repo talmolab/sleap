@@ -62,7 +62,7 @@ class SliderMark:
             filled="blue",
             open="blue",
             predicted=(1, 170, 247),  # light blue
-            negative=(230, 150, 0),  # amber
+            negative=(30, 144, 255),  # dodger blue (matches NegativeFrameOverlay)
             tick="lightGray",
             tick_column="gray",
         )
