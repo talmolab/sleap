@@ -34,6 +34,7 @@ class FrameQC:
     actual_instance_count: int = 0
     duplicate_pairs: list[tuple[int, int]] = field(default_factory=list)
     duplicate_reasons: list[str] = field(default_factory=list)
+    is_negative_with_instances: bool = False
 
 
 @dataclass
@@ -117,10 +118,14 @@ class QCResults:
         return flagged
 
     def get_frame_issues(self) -> list[tuple[FrameKey, FrameQC]]:
-        """Get frames with issues (incomplete or duplicates)."""
+        """Get frames with issues (incomplete, duplicates, or bad negatives)."""
         issues = []
         for key, frame_qc in self.frame_results.items():
-            if frame_qc.is_incomplete or frame_qc.duplicate_pairs:
+            if (
+                frame_qc.is_incomplete
+                or frame_qc.duplicate_pairs
+                or frame_qc.is_negative_with_instances
+            ):
                 issues.append((key, frame_qc))
         return issues
 

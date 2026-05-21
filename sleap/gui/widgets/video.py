@@ -402,6 +402,19 @@ class QtVideoPlayer(QWidget):
                 action_name, lambda params=params: self.context.newInstance(**params)
             )
 
+        if self.context is not None:
+            self.context_menu.addSeparator()
+            negative_action = self.context_menu.addAction(
+                "Mark Frame as Negative",
+                self.context.toggleCurrentFrameNegative,
+            )
+            negative_action.setCheckable(True)
+            current_lf = self.context.state["labeled_frame"]
+            negative_action.setChecked(
+                bool(current_lf is not None and current_lf.is_negative)
+            )
+            self._menu_actions["Mark Frame as Negative"] = negative_action
+
         return self.context_menu
 
     def show_contextual_menu(self, where: QtCore.QPoint):

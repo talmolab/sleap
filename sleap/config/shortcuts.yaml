@@ -20,7 +20,7 @@ goto next labeled: Alt+Right
 goto prev suggestion: Shift+Space
 goto prev labeled: Alt+Left
 learning: Ctrl+L
-mark frame: Ctrl+M
+mark negative: 'N'
 new: Ctrl+N
 next video: Alt+Shift+Right
 open: Ctrl+O

@@ -252,6 +252,49 @@ class TestLabelQCDetector:
         incomplete_frames = [(k, v) for k, v in frame_issues if v.is_incomplete]
         assert len(incomplete_frames) >= 1
 
+    def test_negative_frame_with_instances_flagged(self, skeleton):
+        """A negative frame that still has instances is flagged; a clean one is not."""
+        video = sio.Video.from_filename("test_video.mp4")
+        labels = sio.Labels()
+
+        # Normal frames so the detector has a baseline to fit on.
+        for i in range(20):
+            points = np.array(
+                [[100, 100], [100, 120], [100, 150], [80, 115], [120, 115]],
+                dtype=float,
+            )
+            instance = Instance.from_numpy(points, skeleton=skeleton)
+            labels.append(LabeledFrame(video=video, frame_idx=i, instances=[instance]))
+
+        # Inconsistent: marked negative but still has an instance.
+        bad_inst = Instance.from_numpy(
+            np.array(
+                [[100, 100], [100, 120], [100, 150], [80, 115], [120, 115]],
+                dtype=float,
+            ),
+            skeleton=skeleton,
+        )
+        bad_lf = LabeledFrame(video=video, frame_idx=20, instances=[bad_inst])
+        bad_lf.is_negative = True
+        labels.append(bad_lf)
+
+        # Clean: marked negative and empty.
+        clean_lf = LabeledFrame(video=video, frame_idx=21)
+        clean_lf.is_negative = True
+        labels.append(clean_lf)
+
+        detector = LabelQCDetector()
+        detector.fit(labels)
+        results = detector.score(labels)
+
+        flagged_frame_idxs = {
+            k.frame_idx
+            for k, v in results.get_frame_issues()
+            if v.is_negative_with_instances
+        }
+        assert 20 in flagged_frame_idxs
+        assert 21 not in flagged_frame_idxs
+
     def test_duplicate_detection(self, skeleton):
         """Test detection of duplicate instances."""
         video = sio.Video.from_filename("test_video.mp4")

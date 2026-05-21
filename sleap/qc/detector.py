@@ -14,6 +14,7 @@ from sleap.qc.features.visibility import VisibilityModel
 from sleap.qc.features.reference import NearestNeighborScorer, normalize_pose
 from sleap.qc.frame_level import (
     InstanceCountChecker,
+    check_negative_frame,
     detect_duplicates,
 )
 from sleap.qc.gmm import GMMDetector, ZScoreDetector
@@ -251,7 +252,9 @@ class LabelQCDetector:
 
                 # Frame-level checks
                 frame_key = FrameKey(video_idx, frame_idx)
-                frame_qc = self._check_frame(frame_instances, video_id)
+                frame_qc = self._check_frame(
+                    frame_instances, video_id, is_negative=lf.is_negative
+                )
                 results.frame_results[frame_key] = frame_qc
 
         _report("Complete", 1.0, f"{instance_count} instances scored")
@@ -477,7 +480,12 @@ class LabelQCDetector:
 
         return float(score) if np.isfinite(score) else 0.0, contributions
 
-    def _check_frame(self, instances: list[np.ndarray], video_id: str) -> FrameQC:
+    def _check_frame(
+        self,
+        instances: list[np.ndarray],
+        video_id: str,
+        is_negative: bool = False,
+    ) -> FrameQC:
         """Check frame-level quality."""
         frame_qc = FrameQC()
 
@@ -486,6 +494,11 @@ class LabelQCDetector:
         frame_qc.is_incomplete = count_result["is_incomplete"]
         frame_qc.expected_instance_count = int(count_result["expected_count"])
         frame_qc.actual_instance_count = len(instances)
+
+        # Negative (background) frames should have no instances.
+        frame_qc.is_negative_with_instances = check_negative_frame(
+            is_negative, len(instances)
+        )
 
         # Duplicate detection
         if len(instances) >= 2:

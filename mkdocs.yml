@@ -148,6 +148,7 @@ nav:
       - Importing predictions for labeling: guides/importing-predictions-for-labeling.md
       - Tracking and proofreading: guides/tracking-and-proofreading.md
       - Label Quality Control: guides/label-quality-control.md
+      - Negative Frames: guides/negative-frames.md
       - Instance Size Distribution: guides/instance-size-distribution.md
       - Run training and inference on Colab: guides/run-training-and-inference-on-colab.md
       - Creating a custom training profile: guides/creating-a-custom-training-profile.md

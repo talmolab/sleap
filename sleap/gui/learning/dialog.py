@@ -1340,8 +1340,34 @@ class LearningDialog(QtWidgets.QDialog):
 
                 can_run = False
 
+        # Non-blocking warning: negative frames enabled but none are marked.
+        warning = ""
+        if (
+            self.mode == "training"
+            and self.labels is not None
+            and not self.labels.negative_frames
+        ):
+            uses_negatives = any(
+                self.tabs[tab_name]
+                .get_all_form_data()
+                .get("data_config.use_negative_frames", False)
+                for tab_name in self.shown_tab_names
+                if tab_name in self.tabs
+            )
+            if uses_negatives:
+                warning = (
+                    'The "Use Negative Frames" option is enabled, but no frames '
+                    "are marked as negative, so it will have no effect. Mark "
+                    "frames in the labeling window with Labels &gt; Mark Frame as "
+                    "Negative (N)."
+                )
+
         if not can_run and message:
             message = f"<b>Unable to run:</b><br />{message}"
+        if warning:
+            if message:
+                message += "<br />"
+            message += f"<b>Warning:</b><br />{warning}"
 
         self.message_widget.setText(message)
         self.run_button.setEnabled(can_run)
@@ -1610,6 +1636,12 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         # Hide OHKM fields for centroid models (single-point prediction)
         self._setup_ohkm_visibility()
+
+        # Hide negative-frame fields for model types that ignore them
+        self._setup_negative_frames_visibility()
+
+        # Enable the negative loss weight field only when negative frames are on
+        self._setup_negative_frames_toggle()
 
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
@@ -1987,6 +2019,56 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 field.setVisible(False)
                 if label is not None:
                     label.setVisible(False)
+
+    def _setup_negative_frames_visibility(self):
+        """Hide negative-frame fields for model types that ignore them.
+
+        Negative (background) frames are only used by single_instance, centroid,
+        bottomup, and multi_class_bottomup models. The centered_instance and
+        multi_class_topdown heads ignore them, so the fields are hidden on those
+        tabs to avoid implying an effect that will not happen.
+        """
+        if self.head not in ("centered_instance", "multi_class_topdown"):
+            return  # Keep visible for model types that use negative frames.
+
+        data_form = self.form_widgets["data"]
+        form_layout = data_form.form_layout
+
+        for field_name in (
+            "data_config.use_negative_frames",
+            "data_config.negative_loss_weight",
+        ):
+            field = data_form.fields.get(field_name)
+            if field is not None:
+                label = form_layout.labelForField(field)
+                field.setVisible(False)
+                if label is not None:
+                    label.setVisible(False)
+
+    def _setup_negative_frames_toggle(self):
+        """Enable the negative loss weight field only when negatives are enabled.
+
+        Follows the same pattern as `_setup_overfit_mode_toggle`.
+        """
+        data_form = self.form_widgets["data"]
+        form_layout = data_form.form_layout
+        use_field_name = "data_config.use_negative_frames"
+        weight_field_name = "data_config.negative_loss_weight"
+
+        use_checkbox = data_form.fields.get(use_field_name)
+        weight_widget = data_form.fields.get(weight_field_name)
+
+        if use_checkbox is not None and weight_widget is not None:
+            weight_label = form_layout.labelForField(weight_widget)
+
+            def update_state():
+                enabled = use_checkbox.isChecked()
+                weight_widget.setEnabled(enabled)
+                if weight_label is not None:
+                    weight_label.setEnabled(enabled)
+
+            use_checkbox.stateChanged.connect(update_state)
+            update_state()
 
     def acceptSelectedConfigInfo(self, cfg_info: configs.ConfigFileInfo):
         self._load_config(cfg_info)
