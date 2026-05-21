@@ -25,7 +25,7 @@ frame is background, and it *is* used as a training example.
 Navigate to a frame that contains no animals, then mark it using any of:
 
 - **Menu:** **Labels** → **Mark Frame as Negative**
-- **Keyboard shortcut:** ++ctrl+m++
+- **Keyboard shortcut:** ++n++
 - **Right-click** in the video → **Mark Frame as Negative**
 
 The menu item and context-menu entry are **checkable** — the checkmark shows
