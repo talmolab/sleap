@@ -43,9 +43,12 @@ would otherwise be silently dropped during training).
 
 ## Reviewing negative frames
 
-Negative frames are surfaced in a few places so accidental ones can be caught:
+Negative frames are surfaced in several places so accidental ones can be caught:
 
-- **Seekbar marker:** every negative frame gets an amber tick on the seekbar.
+- **On-canvas overlay:** while you are viewing a negative frame, a thick blue
+  border is drawn around the periphery of the frame with a **"Negative Frame"**
+  caption in the top-left corner.
+- **Seekbar marker:** every negative frame gets a blue tick on the seekbar.
   Hover over it to confirm ("negative (background) frame").
 - **Status bar:** when the current frame is negative, the status bar shows a
   `[NEGATIVE FRAME]` tag.

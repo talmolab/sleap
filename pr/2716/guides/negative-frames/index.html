@@ -2377,9 +2377,12 @@ the negative flag for the same reason.</p>
 unmark it, it is removed from the project entirely (an empty, non-negative frame
 would otherwise be silently dropped during training).</p>
 <h2 id="reviewing-negative-frames">Reviewing negative frames<a class="headerlink" href="#reviewing-negative-frames" title="Permanent link">&para;</a></h2>
-<p>Negative frames are surfaced in a few places so accidental ones can be caught:</p>
+<p>Negative frames are surfaced in several places so accidental ones can be caught:</p>
 <ul>
-<li><strong>Seekbar marker:</strong> every negative frame gets an amber tick on the seekbar.
+<li><strong>On-canvas overlay:</strong> while you are viewing a negative frame, a thick blue
+  border is drawn around the periphery of the frame with a <strong>"Negative Frame"</strong>
+  caption in the top-left corner.</li>
+<li><strong>Seekbar marker:</strong> every negative frame gets a blue tick on the seekbar.
   Hover over it to confirm ("negative (background) frame").</li>
 <li><strong>Status bar:</strong> when the current frame is negative, the status bar shows a
   <code>[NEGATIVE FRAME]</code> tag.</li>
