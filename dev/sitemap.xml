@@ -245,6 +245,10 @@
          <lastmod>2026-05-21</lastmod>
     </url>
     <url>
+         <loc>https://docs.sleap.ai/dev/api/gui/overlays/negative_frame/</loc>
+         <lastmod>2026-05-21</lastmod>
+    </url>
+    <url>
          <loc>https://docs.sleap.ai/dev/api/gui/overlays/pafs/</loc>
          <lastmod>2026-05-21</lastmod>
     </url>
@@ -466,6 +470,10 @@
     </url>
     <url>
          <loc>https://docs.sleap.ai/dev/guides/migrating-to-sleap-1-5/</loc>
+         <lastmod>2026-05-21</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.sleap.ai/dev/guides/negative-frames/</loc>
          <lastmod>2026-05-21</lastmod>
     </url>
     <url>
