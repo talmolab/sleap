@@ -62,6 +62,7 @@ class SliderMark:
             filled="blue",
             open="blue",
             predicted=(1, 170, 247),  # light blue
+            negative=(230, 150, 0),  # amber
             tick="lightGray",
             tick_column="gray",
         )
@@ -111,7 +112,7 @@ class SliderMark:
 
     @property
     def visual_width(self):
-        if self.type in ("open", "filled", "tick"):
+        if self.type in ("open", "filled", "tick", "negative"):
             return 2
         if self.type in ("tick_column", "simple", "predicted"):
             return 1
@@ -1231,6 +1232,7 @@ class SemanticMarkType(Enum):
     suggested_with_user = "filled"
     suggested_with_nothing = "open"
     suggested_with_predicted = "predicted"
+    negative = "negative"
 
 
 def set_slider_marks_from_labels(
@@ -1261,7 +1263,9 @@ def set_slider_marks_from_labels(
 
         frame_mark_types = {mark.type for mark in slider.getMarksAtVal(idx)}
 
-        if SemanticMarkType.user.value in frame_mark_types:
+        if SemanticMarkType.negative.value in frame_mark_types:
+            tooltip += "\nnegative (background) frame"
+        elif SemanticMarkType.user.value in frame_mark_types:
             tooltip += "\nuser labeled"
         elif SemanticMarkType.predicted_no_track.value in frame_mark_types:
             tooltip += "\nprediction without track identity"
@@ -1338,15 +1342,21 @@ def set_slider_marks_from_labels(
 
     labeled_marks = {lf.frame_idx for lf in lfs}
     user_labeled = {lf.frame_idx for lf in lfs if len(lf.user_instances)}
+    negative_frames = {lf.frame_idx for lf in lfs if lf.is_negative}
     suggested_frames = set(get_video_suggestions(labels, video))
 
     all_simple_frames = set()
     all_simple_frames.update(untracked_frames)
     all_simple_frames.update(suggested_frames)
     all_simple_frames.update(user_labeled)
+    all_simple_frames.update(negative_frames)
 
     for frame_idx in all_simple_frames:
-        if frame_idx in suggested_frames:
+        if frame_idx in negative_frames:
+            # Negative frames take priority: they have no instances, so the
+            # only realistic overlap is "suggested + negative".
+            mark_type = SemanticMarkType.negative
+        elif frame_idx in suggested_frames:
             if frame_idx in user_labeled:
                 # suggested frame with user labeled instances
                 mark_type = SemanticMarkType.suggested_with_user

@@ -4,8 +4,9 @@ import sys
 import time
 
 import numpy as np
+import sleap_io as sio
 from pathlib import PurePath, Path
-from qtpy import QtCore
+from qtpy import QtCore, QtWidgets
 from typing import List
 
 from sleap_io import (
@@ -1758,3 +1759,111 @@ class TestGenerateSuggestionsThread:
                 worker.wait(5)
 
         assert "finished" in events_processed
+
+
+def _negative_frame_labels():
+    """Build a minimal Labels with one video and a one-node skeleton."""
+    video = Video.from_filename("test.mp4")
+    skeleton = Skeleton(["A"])
+    labels = Labels(videos=[video], skeletons=[skeleton])
+    return labels, video, skeleton
+
+
+def test_ToggleNegativeFrame_mark_unmark_empty():
+    """Marking a detached empty frame attaches it; unmarking removes it."""
+    labels, video, _ = _negative_frame_labels()
+    context = CommandContext.from_labels(labels)
+
+    # A detached frame, as produced by `Labels.find(..., return_new=True)`.
+    lf = LabeledFrame(video=video, frame_idx=5)
+    context.state["labeled_frame"] = lf
+    context.state["frame_idx"] = 5
+
+    # Mark: the flag is set and the frame is attached to the project.
+    context.toggleCurrentFrameNegative()
+    assert lf.is_negative
+    assert lf in labels
+
+    # Unmark: the now-empty frame is pruned from the project.
+    context.toggleCurrentFrameNegative()
+    assert not lf.is_negative
+    assert lf not in labels
+
+
+def test_ToggleNegativeFrame_confirm_clears_instances(monkeypatch):
+    """Marking a frame with instances clears them after the user confirms."""
+    labels, video, skeleton = _negative_frame_labels()
+    inst = Instance.from_numpy(np.array([[1.0, 2.0]]), skeleton=skeleton)
+    lf = LabeledFrame(video=video, frame_idx=0, instances=[inst])
+    labels.append(lf)
+
+    context = CommandContext.from_labels(labels)
+    context.state["labeled_frame"] = lf
+    context.state["frame_idx"] = 0
+
+    # User confirms the destructive action.
+    monkeypatch.setattr(
+        "sleap.gui.commands.QtWidgets.QMessageBox.warning",
+        lambda *args, **kwargs: QtWidgets.QMessageBox.Yes,
+    )
+    context.toggleCurrentFrameNegative()
+
+    assert lf.is_negative
+    assert len(lf.instances) == 0
+
+
+def test_ToggleNegativeFrame_declined_no_change(monkeypatch):
+    """Declining the confirm dialog leaves the frame untouched."""
+    labels, video, skeleton = _negative_frame_labels()
+    inst = Instance.from_numpy(np.array([[1.0, 2.0]]), skeleton=skeleton)
+    lf = LabeledFrame(video=video, frame_idx=0, instances=[inst])
+    labels.append(lf)
+
+    context = CommandContext.from_labels(labels)
+    context.state["labeled_frame"] = lf
+    context.state["frame_idx"] = 0
+
+    monkeypatch.setattr(
+        "sleap.gui.commands.QtWidgets.QMessageBox.warning",
+        lambda *args, **kwargs: QtWidgets.QMessageBox.No,
+    )
+    context.toggleCurrentFrameNegative()
+
+    assert not lf.is_negative
+    assert len(lf.instances) == 1
+
+
+def test_ToggleNegativeFrame_roundtrip(tmp_path):
+    """The negative flag persists through a save/load round-trip."""
+    labels, video, _ = _negative_frame_labels()
+    context = CommandContext.from_labels(labels)
+
+    lf = LabeledFrame(video=video, frame_idx=7)
+    context.state["labeled_frame"] = lf
+    context.state["frame_idx"] = 7
+    context.toggleCurrentFrameNegative()
+
+    path = str(tmp_path / "negative.slp")
+    sio.save_file(labels, path)
+    reloaded = sio.load_file(path)
+
+    assert len(reloaded.negative_frames) == 1
+    assert reloaded.negative_frames[0].frame_idx == 7
+
+
+def test_AddInstance_clears_negative(qtbot, centered_pair_predictions: Labels):
+    """Adding an instance to a negative frame clears the negative flag."""
+    labels = centered_pair_predictions
+    lf = labels[0]
+    lf.is_negative = True
+
+    main_window = MainWindow(labels=labels)
+    context = main_window.commands
+    context.state["labeled_frame"] = lf
+    context.state["frame_idx"] = lf.frame_idx
+    context.state["skeleton"] = labels.skeleton
+    context.state["video"] = labels.videos[0]
+
+    context.newInstance()
+
+    assert not lf.is_negative

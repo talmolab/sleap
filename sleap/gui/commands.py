@@ -657,6 +657,10 @@ class CommandContext:
         """Create user instances from all predicted instances across all frames."""
         self.execute(AddUserInstancesFromAllPredictions)
 
+    def toggleCurrentFrameNegative(self):
+        """Mark or unmark the current frame as a negative (background) frame."""
+        self.execute(ToggleNegativeFrame)
+
     def copyInstance(self):
         """Copy the selected instance to the instance clipboard."""
         self.execute(CopyInstance)
@@ -4178,6 +4182,9 @@ class AddInstance(EditCommand):
         ):
             context.labels.tracks.append(new_instance.track)
 
+        # A frame with a real instance is not a background frame.
+        context.state["labeled_frame"].is_negative = False
+
         if context.state["labeled_frame"] not in context.labels:
             context.labels.append(context.state["labeled_frame"])
 
@@ -4499,6 +4506,71 @@ class AddInstance(EditCommand):
         # prediction; prefer the user version of each animal and drop
         # predictions whose user counterpart is already present.
         return list(prev_lf.user_instances) + list(prev_lf.unused_predictions)
+
+
+class ToggleNegativeFrame(EditCommand):
+    """Mark or unmark the current frame as a negative (background) frame.
+
+    A negative frame is explicitly marked as containing no animals. It is used
+    as a background training example so the model learns to predict nothing on
+    empty frames, which reduces false positives.
+    """
+
+    topics = [UpdateTopic.frame]
+
+    @staticmethod
+    def ask(context: CommandContext, params: dict) -> bool:
+        lf = context.state["labeled_frame"]
+        if lf is None:
+            return False
+
+        params["was_negative"] = bool(lf.is_negative)
+
+        # Unmarking never needs confirmation.
+        if lf.is_negative:
+            return True
+
+        # Marking a frame that has instances destroys them, so confirm first.
+        n = len(lf.instances)
+        if n > 0:
+            frame_number = (context.state["frame_idx"] or 0) + 1
+            response = QtWidgets.QMessageBox.warning(
+                context.app,
+                "Mark frame as negative",
+                f"Frame {frame_number} has {n} instance(s). Marking it as a "
+                f"negative (background) frame will remove them.\n\nContinue?",
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No,
+            )
+            if response != QtWidgets.QMessageBox.Yes:
+                return False
+
+        return True
+
+    @classmethod
+    def do_action(cls, context: CommandContext, params: dict):
+        lf = context.state["labeled_frame"]
+        if lf is None:
+            return
+
+        if params["was_negative"]:
+            # Unmark the frame.
+            lf.is_negative = False
+            # Drop the now-empty frame so it does not linger as an orphan that
+            # `clean()` / training splits would silently discard.
+            if len(lf.instances) == 0 and lf in context.labels:
+                context.labels.labeled_frames.remove(lf)
+        else:
+            # Mark the frame: clear any instances and flag it.
+            lf.instances = []
+            lf.is_negative = True
+            # The current frame is often a detached `LabeledFrame` (created by
+            # `Labels.find(..., return_new=True)`); attach it or the flag is
+            # lost on the next replot/save.
+            if lf not in context.labels:
+                context.labels.append(lf)
+
+        context.labels.update()
 
 
 class SetInstancePointLocations(EditCommand):

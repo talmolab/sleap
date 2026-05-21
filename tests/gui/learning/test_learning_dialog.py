@@ -710,3 +710,76 @@ class TestDialogSize:
         size = inference_dialog.size()
         assert size.width() > 0
         assert size.height() > 0
+
+
+class TestNegativeFrames:
+    """Tests for the negative-frame training options."""
+
+    def _data_form(self, training_dialog, head):
+        """Add a tab for `head` and return its data form widget."""
+        training_dialog.remove_tabs()
+        training_dialog.tabs.clear()
+        training_dialog.add_tab(head)
+        return training_dialog.tabs[head].form_widgets["data"]
+
+    def test_fields_present_on_supported_head(self, training_dialog):
+        """Both negative-frame fields exist on a supported head."""
+        data_form = self._data_form(training_dialog, "single_instance")
+        assert data_form.fields.get("data_config.use_negative_frames") is not None
+        assert data_form.fields.get("data_config.negative_loss_weight") is not None
+
+    def test_fields_visible_on_supported_head(self, training_dialog):
+        """Negative-frame fields are visible on heads that use them."""
+        data_form = self._data_form(training_dialog, "bottomup")
+        use_field = data_form.fields.get("data_config.use_negative_frames")
+        weight_field = data_form.fields.get("data_config.negative_loss_weight")
+        assert not use_field.isHidden()
+        assert not weight_field.isHidden()
+
+    def test_fields_hidden_on_centered_instance(self, training_dialog):
+        """Negative-frame fields are hidden for centered-instance models."""
+        data_form = self._data_form(training_dialog, "centered_instance")
+        use_field = data_form.fields.get("data_config.use_negative_frames")
+        weight_field = data_form.fields.get("data_config.negative_loss_weight")
+        assert use_field.isHidden()
+        assert weight_field.isHidden()
+
+    def test_fields_hidden_on_multi_class_topdown(self, training_dialog):
+        """Negative-frame fields are hidden for top-down-ID models."""
+        data_form = self._data_form(training_dialog, "multi_class_topdown")
+        use_field = data_form.fields.get("data_config.use_negative_frames")
+        assert use_field.isHidden()
+
+    def test_weight_field_gated_by_checkbox(self, training_dialog):
+        """The negative loss weight field is enabled only when negatives are on."""
+        data_form = self._data_form(training_dialog, "single_instance")
+        use_field = data_form.fields.get("data_config.use_negative_frames")
+        weight_field = data_form.fields.get("data_config.negative_loss_weight")
+
+        # Disabled by default (checkbox off).
+        assert not weight_field.isEnabled()
+
+        use_field.setChecked(True)
+        assert weight_field.isEnabled()
+
+        use_field.setChecked(False)
+        assert not weight_field.isEnabled()
+
+    def test_form_data_uses_config_paths(self, training_dialog):
+        """The fields round-trip to their sleap-nn config paths."""
+        self._data_form(training_dialog, "single_instance")
+        data = training_dialog.tabs["single_instance"].get_all_form_data()
+        assert "data_config.use_negative_frames" in data
+        assert "data_config.negative_loss_weight" in data
+
+    def test_launch_warning_when_no_negative_frames(self, training_dialog):
+        """Enabling negatives with none marked surfaces a warning banner."""
+        training_dialog.set_pipeline("single")
+        tab_name = training_dialog.shown_tab_names[0]
+        data_form = training_dialog.tabs[tab_name].form_widgets["data"]
+        use_field = data_form.fields.get("data_config.use_negative_frames")
+
+        use_field.setChecked(True)
+        training_dialog._validate_pipeline()
+
+        assert "negative" in training_dialog.message_widget.text().lower()

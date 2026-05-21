@@ -88,6 +88,23 @@ class InstanceCountChecker:
         }
 
 
+def check_negative_frame(is_negative: bool, instance_count: int) -> bool:
+    """Check whether a negative frame inconsistently still has instances.
+
+    A negative (background) frame is explicitly marked as containing no animals.
+    If it still has instances, it is either a mislabel or instances were added
+    through a path that did not clear the negative flag.
+
+    Args:
+        is_negative: Whether the frame is marked as a negative frame.
+        instance_count: Number of instances on the frame.
+
+    Returns:
+        True if the frame is marked negative but still has instances.
+    """
+    return bool(is_negative) and instance_count > 0
+
+
 def compute_instance_iou(
     points_a: np.ndarray,
     points_b: np.ndarray,

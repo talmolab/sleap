@@ -821,6 +821,19 @@ class MainWindow(QMainWindow):
 
         labelMenu.addSeparator()
 
+        self.negative_frame_action = labelMenu.addAction(
+            "Mark Frame as Negative",
+            self.commands.toggleCurrentFrameNegative,
+            self.shortcuts["mark negative"],
+        )
+        self.negative_frame_action.setCheckable(True)
+        self.negative_frame_action.setToolTip(
+            "Mark this frame as a negative (background) frame with no animals, "
+            "used as a training example to reduce false positives."
+        )
+
+        labelMenu.addSeparator()
+
         add_menu_item(
             labelMenu,
             "extract clip and labels",
@@ -1328,6 +1341,9 @@ class MainWindow(QMainWindow):
             ]
         ):
             self._update_seekbar_marks()
+            # Toggling the negative-frame flag does not change the plotted
+            # frame, so refresh the status bar (and menu check) explicitly.
+            self.updateStatusMessage()
 
         if _has_topic(
             [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.tracks]
@@ -1500,6 +1516,16 @@ class MainWindow(QMainWindow):
                 self.statusBar().setStyleSheet("color: red")
             else:
                 self.statusBar().setStyleSheet("")
+
+            if lf is not None and lf.is_negative:
+                message += f"{spacer}[NEGATIVE FRAME]"
+
+        # Keep the Labels-menu negative-frame checkmark in sync with the frame.
+        if hasattr(self, "negative_frame_action"):
+            current_lf = self.state["labeled_frame"]
+            self.negative_frame_action.setChecked(
+                bool(current_lf is not None and current_lf.is_negative)
+            )
 
         self.statusBar().showMessage(message)
 

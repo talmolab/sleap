@@ -64,6 +64,21 @@ class TestFrameQC:
         assert frame_qc.expected_instance_count == 2
         assert len(frame_qc.duplicate_pairs) == 1
 
+    def test_negative_with_instances_default(self):
+        """is_negative_with_instances defaults to False."""
+        assert not FrameQC().is_negative_with_instances
+
+    def test_negative_with_instances_in_frame_issues(self):
+        """A negative frame with instances is surfaced by get_frame_issues."""
+        results = QCResults()
+        results.frame_results[FrameKey(0, 0)] = FrameQC()  # Clean frame.
+        results.frame_results[FrameKey(0, 1)] = FrameQC(is_negative_with_instances=True)
+
+        issues = results.get_frame_issues()
+        assert len(issues) == 1
+        assert issues[0][0] == FrameKey(0, 1)
+        assert issues[0][1].is_negative_with_instances
+
 
 class TestQCFlag:
     """Tests for QCFlag."""

@@ -41,6 +41,24 @@ def test_slider(qtbot, centered_pair_predictions):
     assert slider.enabled()
 
 
+def test_slider_negative_frame_mark(qtbot, centered_pair_predictions):
+    """A negative frame produces a `negative`-type seekbar mark."""
+    labels = centered_pair_predictions
+    video = labels.videos[0]
+
+    # Mark an existing labeled frame as negative.
+    lf = labels.find(video)[0]
+    lf.instances = []
+    lf.is_negative = True
+
+    slider = VideoSlider(min=0, max=1200, val=0)
+    set_slider_marks_from_labels(slider, labels, video)
+
+    negative_marks = slider.getMarks("negative")
+    assert len(negative_marks) == 1
+    assert negative_marks[0].val == lf.frame_idx
+
+
 @pytest.mark.parametrize(
     "slider_width, x_value, handle_width, min_value, max_value",
     [

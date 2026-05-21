@@ -35,6 +35,7 @@ class Shortcuts(object):
         "goto frame",
         "select to frame",
         "add instance",
+        "mark negative",
         "delete instance",
         "delete track",
         "transpose",

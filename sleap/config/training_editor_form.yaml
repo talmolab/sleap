@@ -31,6 +31,24 @@ data:
   none_label: Auto
   range: 32,1024
   step: 32
+- default: false
+  help: 'If enabled, frames you explicitly marked as negative (background frames with
+    no instances) are added to the training set. The model learns to predict nothing
+    on them, reducing false positives on empty frames. Mark frames in the labeling
+    window with Labels > Mark Frame as Negative (Ctrl+M). Has no effect for
+    centered-instance and top-down-ID models.'
+  label: Use Negative Frames
+  name: data_config.use_negative_frames
+  type: bool
+- default: 1.0
+  help: 'Relative weight of the loss on negative (background) frames. 1.0 weights them
+    the same as labeled frames; increase above 1.0 if false positives persist, or
+    decrease below 1.0 to reduce their influence. Must be greater than 0. Only used
+    when Use Negative Frames is enabled.'
+  label: Negative Loss Weight
+  name: data_config.negative_loss_weight
+  type: double
+  range: 0.01,100
 
 model:
 - default: unet

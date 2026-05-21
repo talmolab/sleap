@@ -17,6 +17,8 @@
 
 [Label Quality Control](label-quality-control.md) for detecting and fixing labeling errors using automated quality checks.
 
+[Negative Frames](negative-frames.md) for marking empty frames as background training examples to reduce false positives.
+
 [Instance Size Distribution](instance-size-distribution.md) for determining the optimal crop size for top-down models.
 
 [Run training and inference on Colab](run-training-and-inference-on-colab.md) when you have a project with labeled training data and you’d like to run training or inference in a Colab notebook.
