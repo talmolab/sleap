@@ -103,6 +103,7 @@ from sleap.gui.commands import CommandContext, UpdateTopic
 from sleap.gui.dialogs.metrics import MetricsTableDialog
 from sleap.gui.dialogs.shortcuts import ShortcutDialog
 from sleap.gui.overlays.instance import InstanceOverlay
+from sleap.gui.overlays.negative_frame import NegativeFrameOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
 from sleap.gui.state import GuiState
@@ -1200,6 +1201,9 @@ class MainWindow(QMainWindow):
         )
         self.overlays["instance"] = InstanceOverlay(
             labels=self.labels, player=self.player, state=self.state
+        )
+        self.overlays["negative_frame"] = NegativeFrameOverlay(
+            labels=self.labels, player=self.player
         )
 
         # When gui state changes, we also want to set corresponding attribute

@@ -35,7 +35,7 @@ data:
   help: 'If enabled, frames you explicitly marked as negative (background frames with
     no instances) are added to the training set. The model learns to predict nothing
     on them, reducing false positives on empty frames. Mark frames in the labeling
-    window with Labels > Mark Frame as Negative (Ctrl+M). Has no effect for
+    window with Labels > Mark Frame as Negative (N). Has no effect for
     centered-instance and top-down-ID models.'
   label: Use Negative Frames
   name: data_config.use_negative_frames

@@ -1359,7 +1359,7 @@ class LearningDialog(QtWidgets.QDialog):
                     'The "Use Negative Frames" option is enabled, but no frames '
                     "are marked as negative, so it will have no effect. Mark "
                     "frames in the labeling window with Labels &gt; Mark Frame as "
-                    "Negative (Ctrl+M)."
+                    "Negative (N)."
                 )
 
         if not can_run and message:

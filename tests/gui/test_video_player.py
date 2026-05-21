@@ -285,3 +285,32 @@ def test_navigate_highlight(qtbot, small_robot_mp4_vid, centered_pair_labels):
     assert not vp.instances[0].navigate_highlight
 
     assert vp.close()
+
+
+def test_negative_frame_overlay(qtbot, small_robot_mp4_vid):
+    """The negative-frame overlay draws a border + caption only on negatives."""
+    from sleap_io import Labels, LabeledFrame, Skeleton
+
+    from sleap.gui.overlays.negative_frame import NegativeFrameOverlay
+
+    labels = Labels(videos=[small_robot_mp4_vid], skeletons=[Skeleton(["A"])])
+    labels.append(
+        LabeledFrame(video=small_robot_mp4_vid, frame_idx=1, is_negative=True)
+    )
+
+    vp = QtVideoPlayer(small_robot_mp4_vid)
+    qtbot.addWidget(vp)
+    overlay = NegativeFrameOverlay(labels=labels, player=vp)
+
+    # Negative frame: border + caption are added.
+    overlay.add_to_scene(small_robot_mp4_vid, 1)
+    assert len(overlay.items) == 2
+    captions = [
+        item for item in overlay.items if isinstance(item, QtTextWithBackground)
+    ]
+    assert len(captions) == 1
+    assert captions[0].toPlainText() == "Negative Frame"
+
+    # Non-negative frame: nothing is drawn.
+    overlay.redraw(small_robot_mp4_vid, 0)
+    assert overlay.items == []
