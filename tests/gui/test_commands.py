@@ -4,7 +4,6 @@ import sys
 import time
 
 import numpy as np
-import sleap_io as sio
 from pathlib import PurePath, Path
 from qtpy import QtCore, QtWidgets
 from typing import List
@@ -1834,18 +1833,30 @@ def test_ToggleNegativeFrame_declined_no_change(monkeypatch):
 
 
 def test_ToggleNegativeFrame_roundtrip(tmp_path):
-    """The negative flag persists through a save/load round-trip."""
+    """The negative flag persists when saved/loaded via the GUI command path.
+
+    Marks a frame via `ToggleNegativeFrame`, saves through the `SaveProjectAs`
+    command, and reloads through the GUI's `labels_load_file` helper — i.e. the
+    same code paths the Save As / Open menu actions use.
+    """
     labels, video, _ = _negative_frame_labels()
     context = CommandContext.from_labels(labels)
+    context.state["labels"] = labels
+    # `SaveProjectAs.do_action` redraws the frame at the end.
+    context.app.plotFrame = lambda: None
 
     lf = LabeledFrame(video=video, frame_idx=7)
     context.state["labeled_frame"] = lf
     context.state["frame_idx"] = 7
     context.toggleCurrentFrameNegative()
 
+    # Save through the GUI save command.
     path = str(tmp_path / "negative.slp")
-    sio.save_file(labels, path)
-    reloaded = sio.load_file(path)
+    SaveProjectAs.do_action(context, params={"filename": path})
+    assert Path(path).exists()
+
+    # Reload through the GUI's load helper.
+    reloaded = labels_load_file(path)
 
     assert len(reloaded.negative_frames) == 1
     assert reloaded.negative_frames[0].frame_idx == 7
