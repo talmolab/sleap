@@ -1618,6 +1618,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         self.form_widgets["model"].valueChanged.connect(self.update_receptive_field)
         self.form_widgets["data"].valueChanged.connect(self.update_receptive_field)
+        self.form_widgets["augmentation"].valueChanged.connect(
+            self.update_receptive_field
+        )
 
         # Connect overfit mode checkbox to disable validation fraction
         self._setup_overfit_mode_toggle()
@@ -2091,6 +2094,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         data_form_data = get_omegaconf_from_gui_form(
             self.form_widgets["data"].get_form_data()
         )
+
+        aug_form_data = get_omegaconf_from_gui_form(
+            self.form_widgets["augmentation"].get_form_data()
+        )
+        data_form_data = OmegaConf.merge(data_form_data, aug_form_data)
 
         model_cfg = get_omegaconf_from_gui_form(
             self.form_widgets["model"].get_form_data()
