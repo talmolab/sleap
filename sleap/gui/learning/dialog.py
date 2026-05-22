@@ -2095,11 +2095,6 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             self.form_widgets["data"].get_form_data()
         )
 
-        aug_form_data = get_omegaconf_from_gui_form(
-            self.form_widgets["augmentation"].get_form_data()
-        )
-        data_form_data = OmegaConf.merge(data_form_data, aug_form_data)
-
         model_cfg = get_omegaconf_from_gui_form(
             self.form_widgets["model"].get_form_data()
         )
@@ -2116,9 +2111,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 self.head in ("centered_instance", "multi_class_topdown")
                 and self._labels
             ):
-                # Get crop size from config
+                aug_form_data = self.form_widgets["augmentation"].get_form_data()
                 crop_size = receptivefield.compute_crop_size_from_cfg(
-                    data_form_data, model_cfg, self._labels
+                    data_form_data, model_cfg, self._labels, aug_form_data
                 )
 
                 # Get anchor part from the model form data
