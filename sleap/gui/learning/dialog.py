@@ -1618,6 +1618,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         self.form_widgets["model"].valueChanged.connect(self.update_receptive_field)
         self.form_widgets["data"].valueChanged.connect(self.update_receptive_field)
+        self.form_widgets["augmentation"].valueChanged.connect(
+            self.update_receptive_field
+        )
 
         # Connect overfit mode checkbox to disable validation fraction
         self._setup_overfit_mode_toggle()
@@ -2108,9 +2111,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 self.head in ("centered_instance", "multi_class_topdown")
                 and self._labels
             ):
-                # Get crop size from config
+                aug_form_data = self.form_widgets["augmentation"].get_form_data()
                 crop_size = receptivefield.compute_crop_size_from_cfg(
-                    data_form_data, model_cfg, self._labels
+                    data_form_data, model_cfg, self._labels, aug_form_data
                 )
 
                 # Get anchor part from the model form data

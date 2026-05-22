@@ -236,6 +236,8 @@ def find_max_instance_bbox_size(labels: sio.Labels) -> float:
     max_length = 0.0
     for lf in labels:
         for inst in lf.instances:
+            if isinstance(inst, sio.PredictedInstance):
+                continue
             if not inst.is_empty:
                 pts = inst.numpy()
                 diff_x = np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0])
@@ -277,11 +279,13 @@ def find_instance_crop_size(
     if (min_crop_size > 0) and (min_crop_size % maximum_stride == 0):
         return min_crop_size
 
-    # Calculate crop size by iterating over all instances
+    # Calculate crop size by iterating over user-labeled instances only
     min_crop_size_no_pad = min_crop_size - padding
     max_length = 0.0
     for lf in labels:
         for inst in lf.instances:
+            if isinstance(inst, sio.PredictedInstance):
+                continue
             if not inst.is_empty:
                 pts = inst.numpy()
                 diff_x = np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0])
@@ -298,18 +302,68 @@ def find_instance_crop_size(
     return int(crop_size)
 
 
-# Cache for find_instance_crop_size results to avoid expensive recomputation.
-# Key: (labels_id, max_stride), Value: computed crop_size (unscaled)
-_crop_size_cache: dict = {}
+def _compute_padding_from_aug_form(aug_form_data: dict, bbox_size: float) -> int:
+    """Compute augmentation padding from the augmentation form's virtual fields.
+
+    The augmentation form uses virtual fields (_rotation_preset, _scale_enabled)
+    rather than the raw config keys (rotation_p, rotation_min, etc.). This function
+    translates those into the rotation/scale values needed by
+    sleap_nn's compute_augmentation_padding().
+
+    Args:
+        aug_form_data: Dict from form_widgets["augmentation"].get_form_data().
+        bbox_size: Max bounding box dimension from user-labeled instances.
+
+    Returns:
+        Padding in pixels, or 0 if no geometric augmentations are enabled.
+    """
+    preset_to_angle = {"Off": 0.0, "±15°": 15.0, "±180°": 180.0}
+    preset = aug_form_data.get("_rotation_preset", "Off")
+    if preset == "Custom":
+        rot_max = float(aug_form_data.get("_rotation_custom_angle", 0) or 0)
+    else:
+        rot_max = preset_to_angle.get(preset, 0.0)
+
+    scale_enabled = aug_form_data.get("_scale_enabled", False)
+    s_max = (
+        float(
+            aug_form_data.get(
+                "data_config.augmentation_config.geometric.scale_max", 1.0
+            )
+            or 1.0
+        )
+        if scale_enabled
+        else 1.0
+    )
+
+    if rot_max == 0.0 and s_max <= 1.0:
+        return 0
+
+    from sleap_nn.data.instance_cropping import compute_augmentation_padding
+
+    return compute_augmentation_padding(
+        bbox_size, rotation_max=rot_max, scale_max=s_max
+    )
 
 
 def compute_crop_size_from_cfg(
-    data_cfg: OmegaConf, model_cfg: OmegaConf, labels: Optional[sio.Labels] = None
+    data_cfg: OmegaConf,
+    model_cfg: OmegaConf,
+    labels: Optional[sio.Labels] = None,
+    aug_form_data: Optional[dict] = None,
 ) -> int:
     """Computes crop size from model configuration.
 
-    Uses a cache to avoid expensive recomputation of find_instance_crop_size(),
-    which iterates over all instances in the labels.
+    When crop_size is not set (None/auto), computes it from the largest
+    user-labeled instance bounding box plus augmentation padding, matching
+    the logic in sleap-nn's training pipeline.
+
+    Args:
+        data_cfg: Data configuration OmegaConf from the data form.
+        model_cfg: Model configuration OmegaConf from the model form.
+        labels: Labels object for computing instance bounding boxes.
+        aug_form_data: Raw dict from the augmentation form's get_form_data(),
+            used to compute augmentation padding from virtual fields.
     """
     crop_size = data_cfg.data_config.preprocessing.crop_size
     if crop_size is None:
@@ -319,16 +373,16 @@ def compute_crop_size_from_cfg(
                 model_cfg.model_config.backbone_config[backbone].max_stride
             )
 
-            # Check cache first (keyed by labels identity and max_stride)
-            cache_key = (id(labels), max_stride)
-            if cache_key in _crop_size_cache:
-                crop_size = _crop_size_cache[cache_key]
-            else:
-                # Use local implementation (avoids importing sleap_nn/torch)
-                crop_size = find_instance_crop_size(labels, maximum_stride=max_stride)
-                _crop_size_cache[cache_key] = crop_size
+            bbox_size = find_max_instance_bbox_size(labels)
+            padding = (
+                _compute_padding_from_aug_form(aug_form_data, bbox_size)
+                if aug_form_data
+                else 0
+            )
+            crop_size = find_instance_crop_size(
+                labels, padding=padding, maximum_stride=max_stride
+            )
         except Exception:
-            # Handle any errors (e.g., missing backbone config)
             crop_size = None
     if crop_size is not None and data_cfg.data_config.preprocessing.scale is not None:
         crop_size = int(crop_size * data_cfg.data_config.preprocessing.scale)
