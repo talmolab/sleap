@@ -236,6 +236,8 @@ def find_max_instance_bbox_size(labels: sio.Labels) -> float:
     max_length = 0.0
     for lf in labels:
         for inst in lf.instances:
+            if isinstance(inst, sio.PredictedInstance):
+                continue
             if not inst.is_empty:
                 pts = inst.numpy()
                 diff_x = np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0])
@@ -277,11 +279,13 @@ def find_instance_crop_size(
     if (min_crop_size > 0) and (min_crop_size % maximum_stride == 0):
         return min_crop_size
 
-    # Calculate crop size by iterating over all instances
+    # Calculate crop size by iterating over user-labeled instances only
     min_crop_size_no_pad = min_crop_size - padding
     max_length = 0.0
     for lf in labels:
         for inst in lf.instances:
+            if isinstance(inst, sio.PredictedInstance):
+                continue
             if not inst.is_empty:
                 pts = inst.numpy()
                 diff_x = np.nanmax(pts[:, 0]) - np.nanmin(pts[:, 0])
