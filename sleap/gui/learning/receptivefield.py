@@ -307,10 +307,55 @@ def find_instance_crop_size(
 _crop_size_cache: dict = {}
 
 
+def _compute_padding_from_cfg(data_cfg: OmegaConf, bbox_size: float) -> int:
+    """Compute augmentation padding from the data config.
+
+    Mirrors sleap-nn's _setup_preprocessing_config() logic for computing padding
+    from the augmentation settings.
+
+    Args:
+        data_cfg: Data configuration OmegaConf from the training form.
+        bbox_size: Max bounding box dimension from user-labeled instances.
+
+    Returns:
+        Padding in pixels, or 0 if augmentations are disabled.
+    """
+    use_aug = OmegaConf.select(
+        data_cfg, "data_config.use_augmentations_train", default=True
+    )
+    if not use_aug:
+        return 0
+
+    geo = OmegaConf.select(
+        data_cfg, "data_config.augmentation_config.geometric", default=None
+    )
+    if geo is None:
+        return 0
+
+    rotation_p = float(getattr(geo, "rotation_p", 0) or 0)
+    rotation_min = float(getattr(geo, "rotation_min", 0) or 0)
+    rotation_max = float(getattr(geo, "rotation_max", 0) or 0)
+    rot_max = max(abs(rotation_min), abs(rotation_max)) if rotation_p > 0 else 0.0
+
+    scale_p = float(getattr(geo, "scale_p", 0) or 0)
+    scale_max = float(getattr(geo, "scale_max", 1.0) or 1.0)
+    s_max = scale_max if scale_p > 0 else 1.0
+
+    from sleap_nn.data.instance_cropping import compute_augmentation_padding
+
+    return compute_augmentation_padding(
+        bbox_size, rotation_max=rot_max, scale_max=s_max
+    )
+
+
 def compute_crop_size_from_cfg(
     data_cfg: OmegaConf, model_cfg: OmegaConf, labels: Optional[sio.Labels] = None
 ) -> int:
     """Computes crop size from model configuration.
+
+    When crop_size is not set (None/auto), computes it from the largest
+    user-labeled instance bounding box plus augmentation padding, matching
+    the logic in sleap-nn's training pipeline.
 
     Uses a cache to avoid expensive recomputation of find_instance_crop_size(),
     which iterates over all instances in the labels.
@@ -328,8 +373,11 @@ def compute_crop_size_from_cfg(
             if cache_key in _crop_size_cache:
                 crop_size = _crop_size_cache[cache_key]
             else:
-                # Use local implementation (avoids importing sleap_nn/torch)
-                crop_size = find_instance_crop_size(labels, maximum_stride=max_stride)
+                bbox_size = find_max_instance_bbox_size(labels)
+                padding = _compute_padding_from_cfg(data_cfg, bbox_size)
+                crop_size = find_instance_crop_size(
+                    labels, padding=padding, maximum_stride=max_stride
+                )
                 _crop_size_cache[cache_key] = crop_size
         except Exception:
             # Handle any errors (e.g., missing backbone config)

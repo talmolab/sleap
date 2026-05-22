@@ -71,3 +71,15 @@ class TestFindInstanceCropSize:
         assert (
             find_instance_crop_size(labels, maximum_stride=16, min_crop_size=256) == 256
         )
+
+    def test_with_augmentation_padding_matches_sleap_nn(self):
+        """Crop size with aug padding should match sleap-nn's computation."""
+        from sleap_nn.data.instance_cropping import compute_augmentation_padding
+
+        labels = _make_labels([[[0, 0], [100, 50]]])
+        bbox_size = find_max_instance_bbox_size(labels)
+        padding = compute_augmentation_padding(
+            bbox_size, rotation_max=180.0, scale_max=1.1
+        )
+        crop_size = find_instance_crop_size(labels, padding=padding, maximum_stride=16)
+        assert crop_size == 160
