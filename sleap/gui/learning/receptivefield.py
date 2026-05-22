@@ -302,11 +302,6 @@ def find_instance_crop_size(
     return int(crop_size)
 
 
-# Cache for find_instance_crop_size results to avoid expensive recomputation.
-# Key: (labels_id, max_stride), Value: computed crop_size (unscaled)
-_crop_size_cache: dict = {}
-
-
 def _compute_padding_from_cfg(data_cfg: OmegaConf, bbox_size: float) -> int:
     """Compute augmentation padding from the data config.
 
@@ -356,9 +351,6 @@ def compute_crop_size_from_cfg(
     When crop_size is not set (None/auto), computes it from the largest
     user-labeled instance bounding box plus augmentation padding, matching
     the logic in sleap-nn's training pipeline.
-
-    Uses a cache to avoid expensive recomputation of find_instance_crop_size(),
-    which iterates over all instances in the labels.
     """
     crop_size = data_cfg.data_config.preprocessing.crop_size
     if crop_size is None:
@@ -368,17 +360,11 @@ def compute_crop_size_from_cfg(
                 model_cfg.model_config.backbone_config[backbone].max_stride
             )
 
-            # Check cache first (keyed by labels identity and max_stride)
-            cache_key = (id(labels), max_stride)
-            if cache_key in _crop_size_cache:
-                crop_size = _crop_size_cache[cache_key]
-            else:
-                bbox_size = find_max_instance_bbox_size(labels)
-                padding = _compute_padding_from_cfg(data_cfg, bbox_size)
-                crop_size = find_instance_crop_size(
-                    labels, padding=padding, maximum_stride=max_stride
-                )
-                _crop_size_cache[cache_key] = crop_size
+            bbox_size = find_max_instance_bbox_size(labels)
+            padding = _compute_padding_from_cfg(data_cfg, bbox_size)
+            crop_size = find_instance_crop_size(
+                labels, padding=padding, maximum_stride=max_stride
+            )
         except Exception:
             # Handle any errors (e.g., missing backbone config)
             crop_size = None
