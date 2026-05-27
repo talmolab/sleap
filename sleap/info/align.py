@@ -87,6 +87,12 @@ def get_most_stable_node_pair(
 ) -> Tuple[int, int]:
     """Returns pair of nodes which are at stable distance (over min threshold)."""
     all_pairs = get_stable_node_pairs(all_points_arrays, min_dist)
+    if not all_pairs:
+        # No usable pair (e.g. single-node skeleton, or all node distances
+        # below `min_dist`). Callers should short-circuit before this in
+        # normal flows; this guard prevents an IndexError on the degenerate
+        # case (#2718).
+        return 0, 0
     return all_pairs[0]["node_a"], all_pairs[0]["node_b"]
 
 
@@ -260,6 +266,12 @@ def get_instances_points(instances: List[Instance]) -> np.ndarray:
 def get_template_points_array(instances: List[Instance]) -> np.ndarray:
     """Returns mean of aligned points for instances."""
     points = get_instances_points(instances)
+
+    # Alignment via a stable node pair is undefined when the skeleton has
+    # fewer than two nodes. Return the nan-mean across instances directly
+    # so single-node skeletons work in the GUI new-instance flow (#2718).
+    if points.shape[1] < 2:
+        return np.nanmean(points, axis=0)
 
     node_a, node_b = get_most_stable_node_pair(points, min_dist=4.0)
 
