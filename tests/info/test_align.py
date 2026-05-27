@@ -1,5 +1,7 @@
 from sleap.info import align
 import numpy as np
+from sleap_io import Skeleton
+from sleap_io.model.instance import Instance
 from sleap.sleap_io_adaptors.lf_labels_utils import instances
 
 
@@ -45,3 +47,30 @@ def test_align_points():
 
     assert np.allclose(mean[1], [-10, 0], atol=0.1)
     assert np.allclose(mean[2], [-24, -1], atol=0.1)
+
+
+def test_get_template_points_array_single_node():
+    """Single-node skeleton: short-circuit to nan-mean without raising.
+
+    Regression test for #2718 — `get_most_stable_node_pair` previously
+    crashed with IndexError for skeletons with fewer than 2 nodes, which
+    broke creating new instances after the first labeled one in the GUI.
+    """
+    skeleton = Skeleton(nodes=["centroid"])
+    instance_pts = [
+        Instance.from_numpy(np.array([[10.0, 20.0]]), skeleton=skeleton),
+        Instance.from_numpy(np.array([[12.0, 24.0]]), skeleton=skeleton),
+        Instance.from_numpy(np.array([[14.0, 22.0]]), skeleton=skeleton),
+    ]
+
+    out = align.get_template_points_array(instance_pts)
+
+    assert out.shape == (1, 2)
+    assert np.allclose(out, [[12.0, 22.0]])
+
+
+def test_get_most_stable_node_pair_empty_returns_zero():
+    """All-coincident points → no stable pair → (0, 0) instead of IndexError."""
+    points = np.zeros((3, 2, 2))  # 3 instances, 2 nodes, all at origin
+    node_a, node_b = align.get_most_stable_node_pair(points, min_dist=4.0)
+    assert (node_a, node_b) == (0, 0)
