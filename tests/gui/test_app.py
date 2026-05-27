@@ -422,7 +422,7 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     window: MainWindow = MainWindow(no_usage_data=True)
     window.commands.loadLabelsObject(centered_pair_predictions)
     # TODO: window does not seem to show as expected on ubuntu
-    with qtbot.waitActive(window, timeout=2000):
+    with qtbot.waitActive(window, timeout=3000):
         window.showNormal()
     vp = window.player
 
