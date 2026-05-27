@@ -392,7 +392,8 @@ def test_app_new_window(qtbot, min_labels_slp_path, centered_pair_predictions_sl
 
 
 @pytest.mark.skipif(
-    sys.platform.startswith("li"), reason="qtbot.waitActive times out on ubuntu"
+    sys.platform.startswith(("li", "darwin")),
+    reason="qtbot.waitActive times out on ubuntu/macOS",
 )
 def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     def verify_visibility(expected_visibility: bool = True):
@@ -421,7 +422,7 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     # Instantiate the window and load labels
     window: MainWindow = MainWindow(no_usage_data=True)
     window.commands.loadLabelsObject(centered_pair_predictions)
-    # TODO: window does not seem to show as expected on ubuntu
+    # TODO: window does not seem to show as expected on ubuntu/macOS
     with qtbot.waitActive(window, timeout=3000):
         window.showNormal()
     vp = window.player
