@@ -52,7 +52,7 @@ dependencies = [
     "seaborn",
     "requests",
     "matplotlib",
-    "sleap-io[all]>=0.7.0,<0.8.0",
+    "sleap-io[all]>=0.7.1,<0.8.0",
 ]
 
 [tool.setuptools.dynamic]
