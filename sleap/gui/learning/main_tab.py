@@ -13,7 +13,7 @@ Layout sections:
 - Output: grouped checkboxes (training only)
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, Dict, List, Optional, Tuple
 
 from qtpy.QtCore import Qt, Signal
@@ -37,6 +37,7 @@ from qtpy.QtWidgets import (
 )
 
 from sleap.gui.widgets.frame_target_selector import FrameTargetSelector
+from sleap.gui.learning.features import is_centroid_models_enabled
 from sleap.gui.learning.wandb_utils import (
     check_wandb_login_status,
     get_wandb_api_key_help_text,
@@ -211,6 +212,33 @@ PIPELINE_OPTIONS_INFERENCE = PIPELINE_OPTIONS_TRAINING + [
     ),
 ]
 
+# Centroid-only models: training-only, behind a temporary feature flag. This
+# option is deliberately kept out of PIPELINE_OPTIONS_TRAINING /
+# PIPELINE_OPTIONS_INFERENCE and is added at runtime in MainTabWidget.__init__
+# only when the flag is enabled (see features.py).
+CENTROID_PIPELINE_OPTION = PipelineOption(
+    key="centroid",
+    label="centroid",
+    description=(
+        "This pipeline trains a single centroid model that detects one point "
+        "per animal across the full image. It works with single-node "
+        "skeletons. Note that running inference with a centroid-only model is "
+        "not yet supported and is coming in a future release."
+    ),
+    fields=[
+        (
+            "model_config.head_configs.centroid.confmaps.anchor_part",
+            "Anchor Part",
+            None,
+        ),
+        (
+            "model_config.head_configs.centroid.confmaps.sigma",
+            "Sigma for Centroids",
+            5.0,
+        ),
+    ],
+)
+
 
 # =============================================================================
 # MainTabWidget
@@ -239,6 +267,7 @@ class MainTabWidget(QWidget):
         mode: str = "training",
         skeleton: Optional[Any] = None,
         parent: Optional[QWidget] = None,
+        experimental_features: bool = False,
     ):
         """Initialize the main tab widget.
 
@@ -246,10 +275,14 @@ class MainTabWidget(QWidget):
             mode: "training" or "inference"
             skeleton: Skeleton object with node_names for anchor part dropdowns.
             parent: Parent widget.
+            experimental_features: Whether the "Experimental Features" toggle in
+                the Help menu is enabled. Gates the centroid-only pipeline (the
+                SLEAP_ENABLE_CENTROID_MODELS env var remains a developer override).
         """
         super().__init__(parent)
         self._mode = mode
         self._skeleton = skeleton
+        self._experimental_features = experimental_features
         self._fields: Dict[str, QWidget] = {}
         # Store pipeline-specific fields separately to handle duplicate keys
         # across pipelines (e.g., centroid.sigma in top-down and top-down-id)
@@ -259,6 +292,23 @@ class MainTabWidget(QWidget):
             if mode == "training"
             else PIPELINE_OPTIONS_INFERENCE
         )
+        # Centroid-only models: training-only, behind a temporary feature flag.
+        # Remove this block when centroid-only inference lands (see features.py).
+        if mode == "training" and is_centroid_models_enabled(
+            self._experimental_features
+        ):
+            centroid_opt = CENTROID_PIPELINE_OPTION
+            nodes = getattr(self._skeleton, "nodes", None)
+            if nodes is not None and len(nodes) == 1:
+                centroid_opt = replace(
+                    centroid_opt,
+                    fields=[
+                        f
+                        for f in CENTROID_PIPELINE_OPTION.fields
+                        if "anchor_part" not in f[0]
+                    ],
+                )
+            self._pipeline_options = self._pipeline_options + [centroid_opt]
         self._wandb_api_key_placeholder: Optional[str] = None
         self._setup_ui()
         self._connect_signals()
@@ -1191,6 +1241,8 @@ class MainTabWidget(QWidget):
             "top-down-id", or "bottom-up-id".
         """
         label = self._pipeline_combo.currentText()
+        if "centroid" in label:
+            return "centroid"
         if "top-down" in label:
             if "id" not in label:
                 return "top-down"
@@ -1218,6 +1270,7 @@ class MainTabWidget(QWidget):
             "single",
             "top-down-id",
             "bottom-up-id",
+            "centroid",
         ):
             return  # Ignore invalid values
 

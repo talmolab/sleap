@@ -885,3 +885,119 @@ class TestFrameTargetSelectorIntegration:
         with qtbot.waitSignal(training_widget.valueChanged, timeout=1000):
             # Toggle skip user labeled checkbox
             training_widget.frame_target_selector.skip_user_labeled_cb.setChecked(True)
+
+
+# =============================================================================
+# Centroid-Only Pipeline Tests (feature-flagged, training-only)
+# =============================================================================
+
+
+class TestCentroidPipeline:
+    """Tests for the experimental centroid-only training pipeline.
+
+    The pipeline is gated behind the SLEAP_ENABLE_CENTROID_MODELS feature flag
+    and is only offered in training mode. When the flag is off (the default),
+    behavior must be byte-identical to today.
+    """
+
+    @staticmethod
+    def _centroid_labels(combo):
+        """Return list of pipeline labels shown in a combo box."""
+        return [combo.itemText(i) for i in range(combo.count())]
+
+    def test_flag_on_training_has_centroid_option(self, monkeypatch, qtbot):
+        """Flag ON + training mode should expose a 'centroid' option."""
+        monkeypatch.setenv("SLEAP_ENABLE_CENTROID_MODELS", "1")
+        widget = MainTabWidget(mode="training")
+        qtbot.addWidget(widget)
+
+        labels = self._centroid_labels(widget._pipeline_combo)
+        assert any("centroid" in label for label in labels)
+        # The module-level constant must not be mutated by construction.
+        assert len(PIPELINE_OPTIONS_TRAINING) == 5
+
+    def test_flag_on_training_pipeline_round_trips(self, monkeypatch, qtbot):
+        """current_pipeline should set->read round-trip 'centroid'."""
+        monkeypatch.setenv("SLEAP_ENABLE_CENTROID_MODELS", "1")
+        widget = MainTabWidget(mode="training")
+        qtbot.addWidget(widget)
+
+        widget.current_pipeline = "centroid"
+        assert widget.current_pipeline == "centroid"
+
+    def test_flag_on_single_node_hides_anchor_part(self, monkeypatch, qtbot):
+        """Single-node skeleton => centroid page has NO anchor_part field."""
+        from sleap_io import Skeleton
+
+        monkeypatch.setenv("SLEAP_ENABLE_CENTROID_MODELS", "1")
+        single_node = Skeleton(nodes=["centroid"], name="centroid")
+        widget = MainTabWidget(mode="training", skeleton=single_node)
+        qtbot.addWidget(widget)
+
+        centroid_fields = widget._pipeline_fields["centroid"]
+        assert not any("anchor_part" in key for key in centroid_fields)
+        # Sigma field is always present.
+        assert any("sigma" in key for key in centroid_fields)
+
+    def test_flag_on_multi_node_shows_anchor_part(self, monkeypatch, qtbot, skeleton):
+        """Multi-node skeleton => centroid page DOES have anchor_part field."""
+        monkeypatch.setenv("SLEAP_ENABLE_CENTROID_MODELS", "1")
+        widget = MainTabWidget(mode="training", skeleton=skeleton)
+        qtbot.addWidget(widget)
+
+        centroid_fields = widget._pipeline_fields["centroid"]
+        assert any("anchor_part" in key for key in centroid_fields)
+
+    def test_flag_off_training_no_centroid_option(self, monkeypatch, qtbot):
+        """Flag OFF => no 'centroid' option (parity with current behavior)."""
+        monkeypatch.delenv("SLEAP_ENABLE_CENTROID_MODELS", raising=False)
+        widget = MainTabWidget(mode="training")
+        qtbot.addWidget(widget)
+
+        labels = self._centroid_labels(widget._pipeline_combo)
+        assert not any("centroid" in label for label in labels)
+        assert widget._pipeline_combo.count() == len(PIPELINE_OPTIONS_TRAINING)
+
+    def test_flag_on_inference_no_centroid_option(self, monkeypatch, qtbot):
+        """Flag ON + inference mode => no 'centroid' option (training-only)."""
+        monkeypatch.setenv("SLEAP_ENABLE_CENTROID_MODELS", "1")
+        widget = MainTabWidget(mode="inference")
+        qtbot.addWidget(widget)
+
+        labels = self._centroid_labels(widget._pipeline_combo)
+        assert not any("centroid" in label for label in labels)
+        assert widget._pipeline_combo.count() == len(PIPELINE_OPTIONS_INFERENCE)
+
+    def test_param_on_training_has_centroid_option(self, monkeypatch, qtbot):
+        """experimental_features=True + training mode shows a 'centroid' option.
+
+        The env var is cleared so only the parameter drives the gating.
+        """
+        monkeypatch.delenv("SLEAP_ENABLE_CENTROID_MODELS", raising=False)
+        widget = MainTabWidget(mode="training", experimental_features=True)
+        qtbot.addWidget(widget)
+
+        labels = self._centroid_labels(widget._pipeline_combo)
+        assert any("centroid" in label for label in labels)
+        # The module-level constant must not be mutated by construction.
+        assert len(PIPELINE_OPTIONS_TRAINING) == 5
+
+    def test_param_on_inference_no_centroid_option(self, monkeypatch, qtbot):
+        """experimental_features=True + inference mode => no option (training-only)."""
+        monkeypatch.delenv("SLEAP_ENABLE_CENTROID_MODELS", raising=False)
+        widget = MainTabWidget(mode="inference", experimental_features=True)
+        qtbot.addWidget(widget)
+
+        labels = self._centroid_labels(widget._pipeline_combo)
+        assert not any("centroid" in label for label in labels)
+        assert widget._pipeline_combo.count() == len(PIPELINE_OPTIONS_INFERENCE)
+
+    def test_param_off_env_unset_no_centroid_option(self, monkeypatch, qtbot):
+        """experimental_features=False + env unset => no 'centroid' option."""
+        monkeypatch.delenv("SLEAP_ENABLE_CENTROID_MODELS", raising=False)
+        widget = MainTabWidget(mode="training", experimental_features=False)
+        qtbot.addWidget(widget)
+
+        labels = self._centroid_labels(widget._pipeline_combo)
+        assert not any("centroid" in label for label in labels)
+        assert widget._pipeline_combo.count() == len(PIPELINE_OPTIONS_TRAINING)
