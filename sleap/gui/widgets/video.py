@@ -286,9 +286,10 @@ class QtVideoPlayer(QWidget):
 
         # Create the worker thread
         self.worker_thread = FrameLoaderThread()
-        self.worker_thread.debug_mode = self.state["debug mode"]
+        self.worker_thread.debug_mode = self.state["experimental features"]
         self.state.connect(
-            "debug mode", lambda value: self.worker_thread.set_debug_mode(value)
+            "experimental features",
+            lambda value: self.worker_thread.set_debug_mode(value),
         )
 
         # Connect the result signal to display frames
@@ -2316,7 +2317,7 @@ class QtInstance(QGraphicsObject):
         """Duplicate the instance and add it to the scene."""
         # Add instance to the context
         if self.player.context is None:
-            if self.player.state["debug mode"]:
+            if self.player.state["experimental features"]:
                 print("self.player.context is None, cannot duplicate instance")
             return
 

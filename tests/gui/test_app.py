@@ -461,3 +461,36 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
 
     # Toggle instance visibility with shortcut, showing instances
     toggle_and_verify_visibility(True)
+
+
+def test_experimental_features_menu(qtbot):
+    """The help-menu toggle is labeled "Experimental Features" and drives the
+    renamed GUI state key, which still gates the video-worker debug logging.
+    """
+    window: MainWindow = MainWindow(no_usage_data=True)
+
+    # State key was renamed from "debug mode" -> "experimental features".
+    assert "debug mode" not in window.state
+    assert window.state["experimental features"] is False
+
+    # The menu action exists under the renamed key, with the new label, and is
+    # checkable + synced with the state value.
+    action = window._menu_actions["experimental features"]
+    assert action.text() == "Experimental Features"
+    assert action.isCheckable()
+    assert action.isChecked() is False
+
+    # No leftover action labeled with the old name anywhere in the menu bar.
+    all_labels = [a.text() for a in window.menuBar().findChildren(type(action))]
+    assert "Debug mode" not in all_labels
+
+    # Toggling the state updates the menu check and feeds the (unchanged) video
+    # worker debug flag via the renamed state connection.
+    worker = window.player.worker_thread
+    window.state["experimental features"] = True
+    assert action.isChecked() is True
+    assert worker.debug_mode is True
+
+    window.state["experimental features"] = False
+    assert action.isChecked() is False
+    assert worker.debug_mode is False
