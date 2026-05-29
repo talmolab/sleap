@@ -6,11 +6,13 @@ This module tests the main dialog for training/inference configuration.
 import pytest
 from unittest.mock import patch, MagicMock
 
+from qtpy.QtWidgets import QWidget
 
 from sleap_io import Labels, Skeleton, Video
 
 from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
 from sleap.gui.learning.main_tab import MainTabWidget
+from sleap.gui.state import GuiState
 from sleap.gui.widgets.frame_target_selector import (
     FrameTargetSelection,
 )
@@ -192,6 +194,16 @@ class TestPipelineSwitching:
         training_dialog.set_pipeline("bottom-up-id")
         assert training_dialog.current_pipeline == "bottom-up-id"
         assert "multi_class_bottomup" in training_dialog.shown_tab_names
+
+    def test_get_head_names_for_centroid_pipeline(self, training_dialog):
+        """Centroid pipeline should map to a single 'centroid' head."""
+        assert training_dialog._get_head_names_for_pipeline("centroid") == ["centroid"]
+
+    def test_set_pipeline_centroid(self, training_dialog):
+        """Setting centroid pipeline should add exactly one 'centroid' tab."""
+        training_dialog.set_pipeline("centroid")
+        assert training_dialog.current_pipeline == "centroid"
+        assert training_dialog.shown_tab_names == ["centroid"]
 
     def test_pipeline_switch_removes_old_tabs(self, training_dialog):
         """Switching pipelines should remove old tabs."""
@@ -783,3 +795,70 @@ class TestNegativeFrames:
         training_dialog._validate_pipeline()
 
         assert "negative" in training_dialog.message_widget.text().lower()
+
+
+# =============================================================================
+# Experimental Features (centroid-only pipeline gating) Tests
+# =============================================================================
+
+
+class TestExperimentalFeaturesGating:
+    """Tests that the Help-menu 'experimental features' state gates the
+    centroid-only pipeline through the dialog.
+    """
+
+    @staticmethod
+    def _pipeline_labels(dialog):
+        combo = dialog.pipeline_form_widget._pipeline_combo
+        return [combo.itemText(i) for i in range(combo.count())]
+
+    def test_parent_state_on_yields_centroid_option(
+        self,
+        qtbot,
+        minimal_labels,
+        minimal_skeleton,
+        tmp_path,
+        mock_cfg_getter,
+        monkeypatch,
+    ):
+        """A parent whose state['experimental features'] is True exposes a
+        centroid pipeline option (env var unset so only the state drives it).
+        """
+        monkeypatch.delenv("SLEAP_ENABLE_CENTROID_MODELS", raising=False)
+
+        # Parent main-window stub carrying the Help-menu GUI state. Only the
+        # parent is registered with qtbot; the dialog is its Qt child and is
+        # cleaned up via Qt ownership when the parent closes. Registering both
+        # would double-delete the dialog during teardown.
+        parent = QWidget()
+        qtbot.addWidget(parent)
+        parent.state = GuiState()
+        parent.state["experimental features"] = True
+
+        labels_file = tmp_path / "test.slp"
+        labels_file.touch()
+
+        with patch(
+            "sleap.gui.learning.dialog.configs.TrainingConfigsGetter.make_from_labels_filename",
+            return_value=mock_cfg_getter,
+        ):
+            dialog = LearningDialog(
+                mode="training",
+                labels_filename=str(labels_file),
+                labels=minimal_labels,
+                skeleton=minimal_skeleton,
+                parent=parent,
+            )
+
+        assert dialog._experimental_features is True
+        assert any("centroid" in label for label in self._pipeline_labels(dialog))
+
+    def test_no_parent_defaults_off(self, training_dialog, monkeypatch):
+        """A standalone dialog (no parent state) defaults the flag to False and
+        shows no centroid option.
+        """
+        monkeypatch.delenv("SLEAP_ENABLE_CENTROID_MODELS", raising=False)
+        assert training_dialog._experimental_features is False
+        assert not any(
+            "centroid" in label for label in self._pipeline_labels(training_dialog)
+        )

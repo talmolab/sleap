@@ -36,6 +36,7 @@ from sleap.gui.widgets.frame_target_selector import (
     FrameTargetSelection,
 )
 from sleap.gui.learning.main_tab import MainTabWidget
+from sleap.gui.learning.features import is_centroid_models_enabled
 from sleap.gui.learning.wandb_utils import check_wandb_login_status
 
 # List of fields which should show list of skeleton nodes
@@ -149,7 +150,22 @@ class LearningDialog(QtWidgets.QDialog):
         buttons_layout_widget = QtWidgets.QWidget()
         buttons_layout_widget.setLayout(buttons_layout)
 
-        self.pipeline_form_widget = MainTabWidget(mode=mode, skeleton=skeleton)
+        # Thread the Help-menu "Experimental Features" toggle from the parent
+        # main window's GUI state into the pipeline widget so it can gate the
+        # centroid-only pipeline. GuiState.__getitem__ returns None for missing
+        # keys, so standalone/no-parent dialogs safely fall back to False.
+        parent_state = getattr(parent, "state", None)
+        self._experimental_features = (
+            bool(parent_state["experimental features"])
+            if parent_state is not None
+            else False
+        )
+
+        self.pipeline_form_widget = MainTabWidget(
+            mode=mode,
+            skeleton=skeleton,
+            experimental_features=self._experimental_features,
+        )
         if mode == "training":
             tab_label = "Training Pipeline"
         elif mode == "inference":
@@ -689,6 +705,7 @@ class LearningDialog(QtWidgets.QDialog):
             "top-down-id": _mct,
             "bottom-up": _cen,
             "bottom-up-id": _cen,
+            "centroid": _cen,
         }
 
         # Determine the current pipeline's anchor key
@@ -772,6 +789,19 @@ class LearningDialog(QtWidgets.QDialog):
             if recent_cfg_info.head_name in ("multi_class_topdown",):
                 return "top-down-id"
             if recent_cfg_info.head_name in ("centroid", "centered_instance"):
+                # A lone trained centroid head (no centered_instance companion)
+                # maps to the centroid-only pipeline when that experimental
+                # feature is enabled; otherwise it is the top-down centroid
+                # stage. (See features.py; remove with the feature flag.)
+                if (
+                    self.mode == "training"
+                    and is_centroid_models_enabled(self._experimental_features)
+                    and recent_cfg_info.head_name == "centroid"
+                    and not self._cfg_getter.get_filtered_configs(
+                        head_filter="centered_instance", only_trained=True
+                    )
+                ):
+                    return "centroid"
                 return "top-down"
             if recent_cfg_info.head_name in ("bottomup",):
                 return "bottom-up"
@@ -796,6 +826,7 @@ class LearningDialog(QtWidgets.QDialog):
             "top-down-id": ["centroid", "multi_class_topdown"],
             "bottom-up-id": ["multi_class_bottomup"],
             "single": ["single_instance"],
+            "centroid": ["centroid"],
         }
         return pipeline_to_heads.get(pipeline, [])
 
@@ -997,6 +1028,8 @@ class LearningDialog(QtWidgets.QDialog):
                 self.add_tab("multi_class_bottomup")
             elif pipeline == "single":
                 self.add_tab("single_instance")
+            elif pipeline == "centroid":
+                self.add_tab("centroid")
 
             # Apply defaults from previous trained config or video analysis
             self._apply_pipeline_defaults(pipeline)
