@@ -56,9 +56,9 @@ Generated: 2026-01-30 12:00:00
   ...
 
 [Packages]
-  sleap:          v1.6.0
-  sleap-io:       v0.6.3
-  sleap-nn:       v0.1.0a4
+  sleap:          v1.6.3
+  sleap-io:       v0.7.1
+  sleap-nn:       v0.2.0
   ...
 ```
 

@@ -140,6 +140,26 @@ uvx sleap labels.slp
 
     Add `--reinstall` to any install command for a completely fresh environment — use it when something is broken, or when installing from local source.
 
+??? note "Install development versions — latest fixes from GitHub"
+    To pull in unreleased fixes, install SLEAP directly from the `develop` branch:
+    ```bash
+    uv tool install --reinstall --python 3.13 "sleap[nn] @ git+https://github.com/talmolab/sleap@develop" --prerelease allow --torch-backend auto
+    ```
+    Re-run the same command to update to the latest `develop` commit (`--reinstall` re-fetches it).
+
+    To pull a fix from **sleap-io** or **sleap-nn** into your existing install *without* changing SLEAP, reinstall with a git override (their development branch is `main`):
+    ```bash
+    # latest sleap-io
+    uv tool install --reinstall --python 3.13 "sleap[nn]" --with "sleap-io[all] @ git+https://github.com/talmolab/sleap-io@main" --prerelease allow --torch-backend auto
+
+    # latest sleap-nn
+    uv tool install --reinstall --python 3.13 "sleap[nn]" --with "sleap-nn[torch] @ git+https://github.com/talmolab/sleap-nn@main" --prerelease allow --torch-backend auto
+
+    # both at once
+    uv tool install --reinstall --python 3.13 "sleap[nn]" --with "sleap-io[all] @ git+https://github.com/talmolab/sleap-io@main" --with "sleap-nn[torch] @ git+https://github.com/talmolab/sleap-nn@main" --prerelease allow --torch-backend auto
+    ```
+    Development versions may be unstable. If a dependency's dev version isn't compatible with the released SLEAP, install SLEAP from `develop` (first command) as well.
+
 ---
 
 ## Version compatibility
@@ -148,7 +168,7 @@ The SLEAP ecosystem is three packages that release together. Use compatible vers
 
 | SLEAP | sleap-io | sleap-nn |
 |-------|----------|----------|
-| 1.6.3 | 0.7.1 | 0.2.0 |
+| {{ sleap_version }} | {{ sleap_io_version }} | {{ sleap_nn_version }} |
 | 1.6.1 | 0.6.4 | 0.1.0 |
 
 ??? note "Older versions"
@@ -164,7 +184,7 @@ The SLEAP ecosystem is three packages that release together. Use compatible vers
 **Reproducible install** (exact versions — e.g. to match a collaborator):
 
 ```bash
-uv tool install --python 3.13 "sleap[nn]==1.6.3" --with "sleap-io==0.7.1" --with "sleap-nn==0.2.0" --torch-backend auto
+uv tool install --python 3.13 "sleap[nn]=={{ sleap_version }}" --with "sleap-io=={{ sleap_io_version }}" --with "sleap-nn=={{ sleap_nn_version }}" --torch-backend auto
 ```
 
 ??? note "Try a pre-release"
