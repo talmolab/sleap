@@ -6,6 +6,7 @@ edit_uri: edit/develop/docs/
 # Custom hooks
 hooks:
   - hooks/copy_source_markdown.py  # Publish .md sources alongside HTML
+  - hooks/inject_versions.py  # Inject current versions + copyright year
 
 theme:
   name: material
@@ -74,6 +75,12 @@ plugins:
 extra_css:
   - assets/stylesheets/extra.css
 
+extra_javascript:
+  # Auto-selects the Windows/macOS/Linux tab matching the visitor's OS on the
+  # installation page. Scoped to tab groups labeled exactly {Windows, macOS,
+  # Linux}; other OS-tabbed pages use different labels and are untouched.
+  - assets/javascripts/os-tabs.js
+
 markdown_extensions:
   - abbr
   - admonition
@@ -122,8 +129,9 @@ extra:
       - icon: fontawesome/solid/envelope
         link: mailto:talmo@salk.edu
 
+# Static fallback; hooks/inject_versions.py overrides this with the current year at build time.
 copyright: >
-  Copyright &copy; 2025 Talmo Lab 
+  Copyright &copy; 2026 Talmo Lab
 
 nav:
   - Home: index.md

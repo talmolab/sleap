@@ -15,14 +15,14 @@ You will need to enter commands in a **terminal**. If you're unsure how to open 
 
 #### How to open a terminal:  
 !!! hint ""
-    === "Windows"  
-        Open the *Start menu* and search for  **Command Prompt**.
+    === "Windows"
+        Open the *Start menu* and search for **Command Prompt**.
 
-    === "Linux"  
-        Press <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> to open a new terminal.  
+    === "macOS"
+        Press <kbd>Cmd</kbd> + <kbd>Space</kbd>, then type **Terminal** and open it.
 
-    === "MacOS"  
-        Press <kbd>Cmd</kbd> + <kbd>Space</kbd>, then type **Terminal** and open it.  
+    === "Linux"
+        Press <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> to open a new terminal.
 
 ### 2. Check If Git Is Installed  
 
@@ -41,7 +41,7 @@ If you see a version number (e.g., git version 2.39.1), Git is installed, and yo
         2. Run the installer and follow the default settings.
         3. Once installed, restart your terminal and run 'git --version' in terminal to confirm the installation.
 
-    === "MacOS"  
+    === "macOS"
         1. Open a terminal and type:  
             ```sh  
             brew install git  
@@ -51,16 +51,14 @@ If you see a version number (e.g., git version 2.39.1), Git is installed, and yo
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"  
             ```  
 
-    === "Linux (Debian/Ubuntu)"  
-        Open a terminal and type:  
-        ```sh  
-        sudo apt update && sudo apt install git  
-        ```  
-
-    === "Linux (Fedora)"  
-        Open a terminal and type:  
-        ```sh  
-        sudo dnf install git  
+    === "Linux"
+        On **Debian/Ubuntu**:
+        ```sh
+        sudo apt update && sudo apt install git
+        ```
+        On **Fedora**:
+        ```sh
+        sudo dnf install git
         ```
 Once Git is installed, you're ready to proceed!
 
@@ -73,10 +71,15 @@ Navigate to **Desktop** folder, to clone the git repository. This step ensures t
     cd Desktop
     ```
 
-=== "MacOS & Linux"
+=== "macOS"
     ```sh
     cd ~/Desktop
-    ```  
+    ```
+
+=== "Linux"
+    ```sh
+    cd ~/Desktop
+    ```
 
 ### 4. Clone the Repository  
 
