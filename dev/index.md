@@ -107,7 +107,7 @@ uv tool install --python 3.13 "sleap[nn]" --torch-backend auto
 Launch the GUI:
 
 ```bash
-sleap label
+sleap
 ```
 
 [:octicons-arrow-right-24: Full installation instructions](installation.md)
