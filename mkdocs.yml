@@ -74,6 +74,12 @@ plugins:
 extra_css:
   - assets/stylesheets/extra.css
 
+extra_javascript:
+  # Auto-selects the Windows/macOS/Linux tab matching the visitor's OS on the
+  # installation page. Scoped to tab groups labeled exactly {Windows, macOS,
+  # Linux}; other OS-tabbed pages use different labels and are untouched.
+  - assets/javascripts/os-tabs.js
+
 markdown_extensions:
   - abbr
   - admonition
