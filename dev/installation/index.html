@@ -2488,14 +2488,14 @@
 <p>SLEAP tracks animal poses in video. Three commands get you from zero to a running GUI.</p>
 <div class="admonition abstract">
 <p class="admonition-title">TL;DR — already have <code>uv</code>?</p>
-<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Install (auto-detects your GPU)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Upgrade</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>upgrade<span class="w"> </span>sleap
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Develop (editable install of all three repos)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-io<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-nn<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--reinstall<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-io[all]&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-nn[torch]&quot;</span><span class="w"> </span>--torch-backend<span class="o">=</span>auto
+<p><strong>Install</strong> (auto-detects your GPU):
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
+</span></code></pre></div>
+<strong>Upgrade:</strong>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>upgrade<span class="w"> </span>sleap
+</span></code></pre></div>
+<strong>Develop</strong> (editable install of all three repos):
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-io<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-nn<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--reinstall<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-io[all]&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-nn[torch]&quot;</span><span class="w"> </span>--torch-backend<span class="o">=</span>auto
 </span></code></pre></div>
 New here? Follow the <a href="#quick-start">step-by-step quick start</a> below — it installs <code>uv</code> first.</p>
 </div>
@@ -2511,28 +2511,28 @@ New here? Follow the <a href="#quick-start">step-by-step quick start</a> below �
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>Open <strong>PowerShell</strong> (press the <strong>Windows key</strong>, type <code>PowerShell</code>, press <strong>Enter</strong>), then run:
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">powershell</span> <span class="n">-ExecutionPolicy</span> <span class="n">ByPass</span> <span class="n">-c</span> <span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">powershell</span> <span class="n">-ExecutionPolicy</span> <span class="n">ByPass</span> <span class="n">-c</span> <span class="s2">&quot;irm https://astral.sh/uv/install.ps1 | iex&quot;</span>
 </span></code></pre></div>
 <strong>Close and reopen</strong> PowerShell, then check it worked:
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">uv</span> <span class="p">-</span><span class="n">-version</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">uv</span> <span class="p">-</span><span class="n">-version</span>
 </span></code></pre></div>
 You should see <code>uv 0.x.x</code>. If you instead see <code>uv is not recognized</code>, fully close all PowerShell windows and reopen (or restart your computer).</p>
 </div>
 <div class="tabbed-block">
 <p>Open <strong>Terminal</strong> (press <strong>Cmd+Space</strong>, type <code>Terminal</code>, press <strong>Enter</strong>), then run:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </span></code></pre></div>
 <strong>Close and reopen</strong> Terminal, then check it worked:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>--version
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uv<span class="w"> </span>--version
 </span></code></pre></div>
 You should see <code>uv 0.x.x</code>.</p>
 </div>
 <div class="tabbed-block">
 <p>Open a terminal (often <strong>Ctrl+Alt+T</strong>), then run:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 </span></code></pre></div>
 <strong>Close and reopen</strong> the terminal, then check it worked:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>uv<span class="w"> </span>--version
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>uv<span class="w"> </span>--version
 </span></code></pre></div>
 You should see <code>uv 0.x.x</code>.</p>
 </div>
@@ -2540,7 +2540,7 @@ You should see <code>uv 0.x.x</code>.</p>
 </div>
 <h3 id="2-install-sleap">2. Install SLEAP<a class="headerlink" href="#2-install-sleap" title="Permanent link">&para;</a></h3>
 <p>One command works on all platforms — it auto-detects your GPU (NVIDIA, AMD, Intel, or CPU) and installs the matching PyTorch build:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 <p>SLEAP is now available system-wide — no environment to activate.</p>
 <details class="info">
@@ -2553,60 +2553,60 @@ You should see <code>uv 0.x.x</code>.</p>
 <p>Need exact, reproducible versions instead? See <a href="#version-compatibility">Version compatibility</a>.</p>
 </details>
 <h3 id="3-launch-sleap">3. Launch SLEAP<a class="headerlink" href="#3-launch-sleap" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sleap
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sleap
 </span></code></pre></div>
 <p>A window opens within a few seconds. To check your install — package versions and GPU detection:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sleap<span class="w"> </span>doctor
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sleap<span class="w"> </span>doctor
 </span></code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Just viewing or annotating? No install needed.</p>
 <p>To view and label data without training models, run SLEAP straight from <code>uv</code>:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>uvx<span class="w"> </span>sleap<span class="w"> </span>labels.slp
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>uvx<span class="w"> </span>sleap<span class="w"> </span>labels.slp
 </span></code></pre></div>
 Replace <code>labels.slp</code> with your file, or omit it to open an empty project. Training and inference need the full install (<code>sleap[nn]</code>) above.</p>
 </div>
 <hr />
 <h2 id="common-commands">Common commands<a class="headerlink" href="#common-commands" title="Permanent link">&para;</a></h2>
 <p><strong>Upgrade to the latest version:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>upgrade<span class="w"> </span>sleap
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>upgrade<span class="w"> </span>sleap
 </span></code></pre></div>
 <p>This upgrades SLEAP and its dependencies, keeping your original settings (like <code>--torch-backend auto</code>).</p>
 <p><strong>Set up a development install</strong> (editable checkout of all three repos):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-io<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-nn<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--reinstall<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-io[all]&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-nn[torch]&quot;</span><span class="w"> </span>--torch-backend<span class="o">=</span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-io<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-nn<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>sleap<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--reinstall<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-io[all]&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-nn[torch]&quot;</span><span class="w"> </span>--torch-backend<span class="o">=</span>auto
 </span></code></pre></div>
 <p>See <a href="#developer-setup">Developer setup</a> for the step-by-step version.</p>
 <p><strong>Try without installing:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>uvx<span class="w"> </span>sleap<span class="w"> </span>labels.slp
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uvx<span class="w"> </span>sleap<span class="w"> </span>labels.slp
 </span></code></pre></div>
 <details class="note">
 <summary>Manage your install — upgrade one package, pin, downgrade, uninstall</summary>
 <p><strong>Upgrade just a dependency</strong> (e.g. a new <code>sleap-io</code> release but not SLEAP itself):
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>upgrade<span class="w"> </span>sleap<span class="w"> </span>--upgrade-package<span class="w"> </span>sleap-io
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>upgrade<span class="w"> </span>sleap<span class="w"> </span>--upgrade-package<span class="w"> </span>sleap-io
 </span></code></pre></div>
 Repeat <code>--upgrade-package</code> for each one, e.g. <code>--upgrade-package sleap-io --upgrade-package sleap-nn</code>.</p>
 <p><strong>Pin or downgrade to exact versions</strong> — just reinstall, pinning all three packages (see the <a href="#version-compatibility">compatibility table</a>):
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.6.4&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.1.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div></p>
 <p><strong>Uninstall:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>uninstall<span class="w"> </span>sleap
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>uninstall<span class="w"> </span>sleap
 </span></code></pre></div></p>
 <p>Add <code>--reinstall</code> to any install command for a completely fresh environment — use it when something is broken, or when installing from local source.</p>
 </details>
 <details class="note">
 <summary>Install development versions — latest fixes from GitHub</summary>
 <p>To pull in unreleased fixes, install SLEAP directly from the <code>develop</code> branch:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn] @ git+https://github.com/talmolab/sleap@develop&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn] @ git+https://github.com/talmolab/sleap@develop&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 Re-run the same command to update to the latest <code>develop</code> commit (<code>--reinstall</code> re-fetches it).</p>
 <p>To pull a fix from <strong>sleap-io</strong> or <strong>sleap-nn</strong> into your existing install <em>without</em> changing SLEAP, reinstall with a git override (their development branch is <code>main</code>):
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># latest sleap-io</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io[all] @ git+https://github.com/talmolab/sleap-io@main&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1"># latest sleap-nn</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn[torch] @ git+https://github.com/talmolab/sleap-nn@main&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="c1"># both at once</span>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io[all] @ git+https://github.com/talmolab/sleap-io@main&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn[torch] @ git+https://github.com/talmolab/sleap-nn@main&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1"># latest sleap-io</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io[all] @ git+https://github.com/talmolab/sleap-io@main&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># latest sleap-nn</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn[torch] @ git+https://github.com/talmolab/sleap-nn@main&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="c1"># both at once</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io[all] @ git+https://github.com/talmolab/sleap-io@main&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn[torch] @ git+https://github.com/talmolab/sleap-nn@main&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 Development versions may be unstable. If a dependency's dev version isn't compatible with the released SLEAP, install SLEAP from <code>develop</code> (first command) as well.</p>
 </details>
@@ -2679,12 +2679,12 @@ Development versions may be unstable. If a dependency's dev version isn't compat
 </table>
 </details>
 <p><strong>Reproducible install</strong> (exact versions — e.g. to match a collaborator):</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.7.1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.2.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]==1.6.3&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-io==0.7.1&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;sleap-nn==0.2.0&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 <details class="note">
 <summary>Try a pre-release</summary>
 <p>Pre-releases let you try new features early. They may have bugs, so use stable versions for important annotation work.
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div></p>
 </details>
 <details class="note">
@@ -2724,7 +2724,7 @@ Development versions may be unstable. If a dependency's dev version isn't compat
 </tr>
 </tbody>
 </table>
-<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>cu128
+<p><div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>cu128
 </span></code></pre></div>
 Run <code>uv tool install --help</code> for the current list of backend values.</p>
 </details>
@@ -2732,41 +2732,41 @@ Run <code>uv tool install --help</code> for the current list of backend values.<
 <h2 id="developer-setup">Developer setup<a class="headerlink" href="#developer-setup" title="Permanent link">&para;</a></h2>
 <p>For contributors who want to modify SLEAP's source. (A copy-paste one-liner is in <a href="#common-commands">Common commands</a> above.)</p>
 <p><strong>1. Clone the repositories:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-nn
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-io
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="nb">cd</span><span class="w"> </span>sleap
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-nn
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/talmolab/sleap-io
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="nb">cd</span><span class="w"> </span>sleap
 </span></code></pre></div>
 <p><strong>2. Install with editable local packages:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--reinstall
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-io[all]&quot;</span>
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-nn[torch]&quot;</span><span class="w"> </span>--torch-backend<span class="o">=</span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--reinstall
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-io[all]&quot;</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;../sleap-nn[torch]&quot;</span><span class="w"> </span>--torch-backend<span class="o">=</span>auto
 </span></code></pre></div>
 <details class="warning">
 <summary><code>uv sync</code> overwrites editable installs</summary>
 <p>Running <code>uv sync</code> again replaces your local <code>-e</code> installs with PyPI versions. Re-run the two <code>uv pip install -e</code> commands after any <code>uv sync</code>.</p>
 </details>
 <p><strong>3. Run SLEAP</strong> — without activating anything:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>uv<span class="w"> </span>run<span class="w"> </span>sleap
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/
 </span></code></pre></div>
 <p>Or activate the environment first, then run <code>sleap</code> / <code>pytest tests/</code> directly:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Windows</label><label for="__tabbed_2_2">macOS</label><label for="__tabbed_2_3">Linux</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>PowerShell:
-<div class="language-powershell highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
+<div class="language-powershell highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="p">.</span><span class="n">venv</span><span class="p">\</span><span class="n">Scripts</span><span class="p">\</span><span class="n">Activate</span><span class="p">.</span><span class="n">ps1</span>
 </span></code></pre></div>
 Command Prompt:
-<div class="language-bat highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>.venv\Scripts\activate.bat
+<div class="language-bat highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>.venv\Scripts\activate.bat
 </span></code></pre></div></p>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 </span></code></pre></div>
 </div>
 </div>
@@ -2774,7 +2774,7 @@ Command Prompt:
 <details class="note">
 <summary>Run your local dev build from anywhere</summary>
 <p>Install your working copy as a global tool, so <code>sleap</code> runs your local code from any terminal without activating a venv:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;.[nn]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;../sleap-io[all]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;../sleap-nn[torch]&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;.[nn]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;../sleap-io[all]&quot;</span><span class="w"> </span>--with<span class="w"> </span><span class="s2">&quot;../sleap-nn[torch]&quot;</span><span class="w"> </span>--prerelease<span class="w"> </span>allow<span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 Re-run with <code>--reinstall</code> after making changes to pick them up.</p>
 </details>
@@ -2784,7 +2784,7 @@ Re-run with <code>--reinstall</code> after making changes to pick them up.</p>
 <details class="note">
 <summary><code>--torch-backend</code> not recognized</summary>
 <p>Update <code>uv</code> to the latest version:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a>uv<span class="w"> </span>self<span class="w"> </span>update
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>uv<span class="w"> </span>self<span class="w"> </span>update
 </span></code></pre></div></p>
 </details>
 <details class="note">
@@ -2801,7 +2801,7 @@ Re-run with <code>--reinstall</code> after making changes to pick them up.</p>
 </details>
 <details class="note">
 <summary>Start over with a clean install</summary>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
 </span></code></pre></div>
 </details>
 <p><strong>Still stuck?</strong> Run <code>sleap doctor</code>, copy the output, and ask on <a href="https://github.com/talmolab/sleap/discussions">GitHub Discussions</a>.</p>
@@ -2811,34 +2811,34 @@ Re-run with <code>--reinstall</code> after making changes to pick them up.</p>
 <summary>Model export (ONNX / TensorRT)</summary>
 <p>To export trained models for deployment, add the export extras. <a href="https://nn.sleap.ai/latest/guides/export/">Learn more about exporting models</a>.</p>
 <p><strong>Tool install</strong> — add the extra to your install command:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="c1"># ONNX, CPU runtime</span>
-</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-export]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
-</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>
-</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a><span class="c1"># ONNX, GPU runtime (faster inference)</span>
-</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-export-gpu]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
-</span><span id="__span-32-6"><a id="__codelineno-32-6" name="__codelineno-32-6" href="#__codelineno-32-6"></a>
-</span><span id="__span-32-7"><a id="__codelineno-32-7" name="__codelineno-32-7" href="#__codelineno-32-7"></a><span class="c1"># TensorRT (Linux/Windows only) — needs a CUDA backend</span>
-</span><span id="__span-32-8"><a id="__codelineno-32-8" name="__codelineno-32-8" href="#__codelineno-32-8"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-tensorrt]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>cu128
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="c1"># ONNX, CPU runtime</span>
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-export]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
+</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>
+</span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a><span class="c1"># ONNX, GPU runtime (faster inference)</span>
+</span><span id="__span-34-5"><a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-export-gpu]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>auto
+</span><span id="__span-34-6"><a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a>
+</span><span id="__span-34-7"><a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a><span class="c1"># TensorRT (Linux/Windows only) — needs a CUDA backend</span>
+</span><span id="__span-34-8"><a id="__codelineno-34-8" name="__codelineno-34-8" href="#__codelineno-34-8"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.13<span class="w"> </span><span class="s2">&quot;sleap[nn,nn-tensorrt]&quot;</span><span class="w"> </span>--torch-backend<span class="w"> </span>cu128
 </span></code></pre></div></p>
 <p><strong>Developer setup</strong> — add the extra to <code>uv sync</code>:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--extra<span class="w"> </span>nn-export<span class="w">            </span><span class="c1"># ONNX CPU runtime</span>
-</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--extra<span class="w"> </span>nn-export-gpu<span class="w">         </span><span class="c1"># ONNX GPU runtime</span>
-</span><span id="__span-33-3"><a id="__codelineno-33-3" name="__codelineno-33-3" href="#__codelineno-33-3"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn-cuda128<span class="w"> </span>--extra<span class="w"> </span>nn-tensorrt<span class="w">   </span><span class="c1"># TensorRT</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--extra<span class="w"> </span>nn-export<span class="w">            </span><span class="c1"># ONNX CPU runtime</span>
+</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn<span class="w"> </span>--extra<span class="w"> </span>nn-export-gpu<span class="w">         </span><span class="c1"># ONNX GPU runtime</span>
+</span><span id="__span-35-3"><a id="__codelineno-35-3" name="__codelineno-35-3" href="#__codelineno-35-3"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>nn-cuda128<span class="w"> </span>--extra<span class="w"> </span>nn-tensorrt<span class="w">   </span><span class="c1"># TensorRT</span>
 </span></code></pre></div></p>
 <p>TensorRT is not supported on macOS.</p>
 </details>
 <details class="note">
 <summary>Install with pip (alternative)</summary>
 <p>Prefer <code>pip</code>, or integrating SLEAP into an existing environment? Create a virtual environment, then install with the PyTorch index for your hardware:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>python3.13<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>sleap_env
-</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a><span class="c1"># Windows:      sleap_env\Scripts\activate</span>
-</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a><span class="c1"># macOS/Linux:  source sleap_env/bin/activate</span>
-</span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a>
-</span><span id="__span-34-5"><a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a><span class="c1"># CPU only</span>
-</span><span id="__span-34-6"><a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
-</span><span id="__span-34-7"><a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a>
-</span><span id="__span-34-8"><a id="__codelineno-34-8" name="__codelineno-34-8" href="#__codelineno-34-8"></a><span class="c1"># NVIDIA GPU (CUDA 12.8)</span>
-</span><span id="__span-34-9"><a id="__codelineno-34-9" name="__codelineno-34-9" href="#__codelineno-34-9"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a>python3.13<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>sleap_env
+</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a><span class="c1"># Windows:      sleap_env\Scripts\activate</span>
+</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a><span class="c1"># macOS/Linux:  source sleap_env/bin/activate</span>
+</span><span id="__span-36-4"><a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>
+</span><span id="__span-36-5"><a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a><span class="c1"># CPU only</span>
+</span><span id="__span-36-6"><a id="__codelineno-36-6" name="__codelineno-36-6" href="#__codelineno-36-6"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cpu
+</span><span id="__span-36-7"><a id="__codelineno-36-7" name="__codelineno-36-7" href="#__codelineno-36-7"></a>
+</span><span id="__span-36-8"><a id="__codelineno-36-8" name="__codelineno-36-8" href="#__codelineno-36-8"></a><span class="c1"># NVIDIA GPU (CUDA 12.8)</span>
+</span><span id="__span-36-9"><a id="__codelineno-36-9" name="__codelineno-36-9" href="#__codelineno-36-9"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;sleap[nn]&quot;</span><span class="w"> </span>--extra-index-url<span class="w"> </span>https://download.pytorch.org/whl/cu128
 </span></code></pre></div>
 Unlike <code>uv --torch-backend</code>, pip can't guarantee which PyTorch build it picks — if you need a specific CPU/GPU build, prefer the <code>uv</code> install above. A conda environment works too, but <code>uv</code> (or a plain venv) is recommended.</p>
 </details>

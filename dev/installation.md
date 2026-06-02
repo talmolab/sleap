@@ -3,14 +3,16 @@
 SLEAP tracks animal poses in video. Three commands get you from zero to a running GUI.
 
 !!! abstract "TL;DR — already have `uv`?"
+    **Install** (auto-detects your GPU):
     ```bash
-    # Install (auto-detects your GPU)
     uv tool install --python 3.13 "sleap[nn]" --torch-backend auto
-
-    # Upgrade
+    ```
+    **Upgrade:**
+    ```bash
     uv tool upgrade sleap
-
-    # Develop (editable install of all three repos)
+    ```
+    **Develop** (editable install of all three repos):
+    ```bash
     git clone https://github.com/talmolab/sleap && git clone https://github.com/talmolab/sleap-io && git clone https://github.com/talmolab/sleap-nn && cd sleap && uv sync --extra nn --reinstall && uv pip install -e "../sleap-io[all]" && uv pip install -e "../sleap-nn[torch]" --torch-backend=auto
     ```
     New here? Follow the [step-by-step quick start](#quick-start) below — it installs `uv` first.
