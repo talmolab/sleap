@@ -42,22 +42,27 @@ for each model you want to train (where `path/to/custom/profile.yaml` should be 
 !!! note
     If you exported the training package as a ZIP file, it contains both the `.pkg.slp` and `.yaml` files necessary to train with the configuration you selected in the GUI. Before running the [`sleap-nn train`](https://nn.sleap.ai/latest/guides/training/#using-cli) command, make sure to unzip this file:
 
-    === "macOS/Linux"
+    === "Windows"
+
+        PowerShell:
+        ```powershell
+        Expand-Archive -Path training_job.zip -DestinationPath training_job
+        ```
+        Command Prompt:
+        ```cmd
+        tar -xf training_job.zip -C training_job
+        ```
+
+    === "macOS"
 
         ```bash
         unzip training_job.zip -d training_job
         ```
 
-    === "Windows (PowerShell)"
+    === "Linux"
 
-        ```powershell
-        Expand-Archive -Path training_job.zip -DestinationPath training_job
-        ```
-
-    === "Windows (Command Prompt)"
-
-        ```cmd
-        tar -xf training_job.zip -C training_job
+        ```bash
+        unzip training_job.zip -d training_job
         ```
 
 ### Training Hardware support
