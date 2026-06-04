@@ -223,7 +223,7 @@ class LabelQCDetector:
         # Score all instances
         _report("Scoring instances", 0.80, f"0/{total_instances}")
         for video_idx, video in enumerate(labels.videos):
-            video_id = video.filename if video.filename else str(video_idx)
+            video_id = self._video_id(video, video_idx)
             labeled_frames = [lf for lf in labels if lf.video == video]
 
             for lf in labeled_frames:
@@ -514,6 +514,35 @@ class LabelQCDetector:
 
         return frame_qc
 
+    @staticmethod
+    def _video_id(video, video_idx: int) -> str:
+        """Compute a hashable, stable per-video identifier.
+
+        Some video backends (e.g. ``ImageVideo`` from sleap_io) store
+        ``filename`` as a ``list[str]`` (one entry per image frame) rather
+        than a single path. A list is unhashable and would crash the
+        downstream dict-key usage in ``InstanceCountChecker.fit()`` /
+        ``InstanceCountChecker.check()`` with
+        ``TypeError: unhashable type: 'list'``.
+
+        Normalize to a stable string so fit() and score() see the same key.
+
+        Args:
+            video: A ``sleap_io.Video`` (or compatible) object.
+            video_idx: Zero-based index of the video in ``labels.videos``,
+                used as a deterministic fallback identifier.
+
+        Returns:
+            A string that is safe to use as a dict key. For single-file
+            videos this is the filename; for image-sequence videos
+            (or any backend whose ``filename`` is not a non-empty string)
+            it is ``"video_<idx>"``.
+        """
+        filename = getattr(video, "filename", None)
+        if isinstance(filename, str) and filename:
+            return filename
+        return f"video_{video_idx}"
+
     def _collect_frame_counts(
         self, labels: "sio.Labels"
     ) -> tuple[list[int], list[str]]:
@@ -521,7 +550,7 @@ class LabelQCDetector:
         counts = []
         video_ids = []
         for video_idx, video in enumerate(labels.videos):
-            video_id = video.filename if video.filename else str(video_idx)
+            video_id = self._video_id(video, video_idx)
             labeled_frames = [lf for lf in labels if lf.video == video]
 
             for lf in labeled_frames:
