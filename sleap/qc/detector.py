@@ -217,7 +217,7 @@ class LabelQCDetector:
         results = QCResults(feature_names=self.feature_names)
 
         # Count total instances for progress
-        total_instances = sum(len(lf.instances) for lf in labels)
+        total_instances = sum(len(lf.user_instances) for lf in labels)
         instance_count = 0
 
         # Score all instances
@@ -231,7 +231,7 @@ class LabelQCDetector:
 
                 # Collect instances for this frame
                 frame_instances = []
-                for inst_idx, inst in enumerate(lf.instances):
+                for inst_idx, inst in enumerate(lf.user_instances):
                     points = self._instance_to_array(inst)
                     frame_instances.append(points)
 
@@ -278,7 +278,7 @@ class LabelQCDetector:
         """Collect all instances as numpy arrays."""
         instances = []
         for lf in labels:
-            for inst in lf.instances:
+            for inst in lf.user_instances:
                 points = self._instance_to_array(inst)
                 instances.append(points)
         return instances
@@ -525,7 +525,7 @@ class LabelQCDetector:
             labeled_frames = [lf for lf in labels if lf.video == video]
 
             for lf in labeled_frames:
-                counts.append(len(lf.instances))
+                counts.append(len(lf.user_instances))
                 video_ids.append(video_id)
 
         return counts, video_ids

@@ -861,7 +861,7 @@ class QCWidget(QtWidgets.QWidget):
             )
             return
 
-        n_instances = sum(len(lf.instances) for lf in self._labels)
+        n_instances = sum(len(lf.user_instances) for lf in self._labels)
         if n_instances < 2:
             QtWidgets.QMessageBox.warning(
                 self,
@@ -995,7 +995,7 @@ class QCWidget(QtWidgets.QWidget):
             self._stats_label.setText("No labels loaded")
             return
 
-        n_instances = sum(len(lf.instances) for lf in self._labels)
+        n_instances = sum(len(lf.user_instances) for lf in self._labels)
         n_frames = len(self._labels)
 
         if self._results is None:
