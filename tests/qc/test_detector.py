@@ -370,6 +370,91 @@ class TestLabelQCDetector:
         assert sa.n_edges == 4
         assert len(sa.symmetry_pairs) >= 1  # left-wing, right-wing
 
+    def test_predicted_instances_excluded(self, skeleton):
+        """Predicted instances are excluded from QC scoring (only user labels)."""
+        from sleap_io.model.instance import PredictedInstance
+
+        from sleap.qc.results import InstanceKey
+
+        video = sio.Video.from_filename("test_video.mp4")
+        labels = sio.Labels()
+
+        base_points = np.array(
+            [
+                [100, 100],  # head
+                [100, 120],  # thorax
+                [100, 150],  # abdomen
+                [80, 115],  # left-wing
+                [120, 115],  # right-wing
+            ],
+            dtype=float,
+        )
+
+        n_user_frames = 50
+        n_frames_with_predicted = 20  # subset of the user frames
+        n_predicted_only_frames = 5
+
+        # Track which frames have ONLY predicted instances.
+        predicted_only_frame_idxs = set()
+        # Track a frame that has both [user, predicted] to verify inst_idx range.
+        mixed_frame_idx = 5
+
+        # ~50 frames each with ONE user Instance; some also contain a predicted.
+        for frame_idx in range(n_user_frames):
+            points_array = base_points + np.random.randn(5, 2) * 2
+            instances = [Instance.from_numpy(points_array, skeleton=skeleton)]
+
+            if frame_idx < n_frames_with_predicted:
+                pred_points = base_points + np.random.randn(5, 2) * 2
+                instances.append(
+                    PredictedInstance.from_numpy(
+                        pred_points, skeleton=skeleton, score=0.9
+                    )
+                )
+
+            lf = LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+            labels.append(lf)
+
+        # A few EXTRA frames containing ONLY predicted instance(s).
+        for i in range(n_predicted_only_frames):
+            frame_idx = n_user_frames + i
+            predicted_only_frame_idxs.add(frame_idx)
+            pred_points = base_points + np.random.randn(5, 2) * 2
+            instances = [
+                PredictedInstance.from_numpy(pred_points, skeleton=skeleton, score=0.9)
+            ]
+            lf = LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+            labels.append(lf)
+
+        detector = LabelQCDetector()
+        detector.fit(labels)
+        results = detector.score(labels)
+
+        # (a) Number of scored instances == total USER instances (not total).
+        total_user_instances = sum(len(lf.user_instances) for lf in labels)
+        total_instances = sum(len(lf.instances) for lf in labels)
+        assert total_instances > total_user_instances  # sanity: predicteds exist
+        assert total_user_instances == n_user_frames  # one user inst per user frame
+        assert len(results.instance_scores) == total_user_instances
+
+        # (b) No scored InstanceKey references a predicted-only frame.
+        scored_frame_idxs = {key.frame_idx for key in results.instance_scores}
+        assert scored_frame_idxs.isdisjoint(predicted_only_frame_idxs)
+
+        # (c) For a mixed [user, predicted] frame, scored inst_idx values stay
+        # within range(len(user_instances)) for that frame.
+        mixed_lf = next(lf for lf in labels if lf.frame_idx == mixed_frame_idx)
+        assert len(mixed_lf.instances) == 2  # [user, predicted]
+        assert len(mixed_lf.user_instances) == 1
+        mixed_inst_idxs = [
+            key.instance_idx
+            for key in results.instance_scores
+            if isinstance(key, InstanceKey) and key.frame_idx == mixed_frame_idx
+        ]
+        assert mixed_inst_idxs == [0]
+        for inst_idx in mixed_inst_idxs:
+            assert inst_idx in range(len(mixed_lf.user_instances))
+
 
 class TestLabelQCDetectorWithRealData:
     """Integration tests using real data fixtures."""

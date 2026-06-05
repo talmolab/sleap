@@ -239,11 +239,12 @@ class TestQCWidget:
         mock_labels = MagicMock()
         mock_labels.__len__ = MagicMock(return_value=10)
 
-        # Create mock labeled frames with mock instances
+        # Create mock labeled frames with mock instances. Stats count only
+        # user-labeled instances, so mock `user_instances` (not `instances`).
         mock_lf1 = MagicMock()
-        mock_lf1.instances = [MagicMock(), MagicMock()]  # 2 instances
+        mock_lf1.user_instances = [MagicMock(), MagicMock()]  # 2 user instances
         mock_lf2 = MagicMock()
-        mock_lf2.instances = [MagicMock()]  # 1 instance
+        mock_lf2.user_instances = [MagicMock()]  # 1 user instance
         mock_labels.__iter__ = MagicMock(return_value=iter([mock_lf1, mock_lf2]))
 
         widget.set_labels(mock_labels)
