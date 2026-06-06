@@ -223,7 +223,7 @@ class LabelQCDetector:
         # Score all instances
         _report("Scoring instances", 0.80, f"0/{total_instances}")
         for video_idx, video in enumerate(labels.videos):
-            video_id = video.filename if video.filename else str(video_idx)
+            video_id = self._video_id(video, video_idx)
             labeled_frames = [lf for lf in labels if lf.video == video]
 
             for lf in labeled_frames:
@@ -290,6 +290,29 @@ class LabelQCDetector:
         Feature extractors handle NaN values by skipping them in computations.
         """
         return instance.numpy()
+
+    @staticmethod
+    def _video_id(video: "sio.Video", video_idx: int) -> str:
+        """Return a stable, hashable identifier for a video.
+
+        ``Video.filename`` is a list of paths for image-sequence backends
+        (e.g. ``ImageVideo``, as produced by CVAT/COCO imports). A list is
+        unhashable, so it cannot be used as a dict key for the per-video
+        grouping in the frame-level checks. Fall back to the video index,
+        which is unique and stable across ``fit``/``score``.
+
+        Args:
+            video: The video to identify.
+            video_idx: Index of the video within ``labels.videos``.
+
+        Returns:
+            The filename when it is a non-empty string, otherwise the video
+            index as a string.
+        """
+        filename = getattr(video, "filename", None)
+        if isinstance(filename, str) and filename:
+            return filename
+        return str(video_idx)
 
     def _get_visibility_masks(self, instances: list[np.ndarray]) -> np.ndarray:
         """Get visibility masks for all instances."""
@@ -521,7 +544,7 @@ class LabelQCDetector:
         counts = []
         video_ids = []
         for video_idx, video in enumerate(labels.videos):
-            video_id = video.filename if video.filename else str(video_idx)
+            video_id = self._video_id(video, video_idx)
             labeled_frames = [lf for lf in labels if lf.video == video]
 
             for lf in labeled_frames:
