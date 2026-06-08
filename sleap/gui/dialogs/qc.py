@@ -283,6 +283,10 @@ class QCDockWidget(QtWidgets.QDockWidget):
         Args:
             labels: New Labels object.
         """
+        # No-op if the labels object is unchanged so that callers on hot paths
+        # (e.g. on_data_update) don't needlessly reset analysis results.
+        if labels is self._labels:
+            return
         self._labels = labels
         self._widget.set_labels(labels)
 

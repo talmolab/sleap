@@ -1375,6 +1375,15 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
             self.instances_dock.table.model().items = self.state["labeled_frame"]
 
+        if _has_topic([UpdateTopic.project]):
+            # Keep the QC dock pointed at the currently loaded project. The dock
+            # is created once and persists across project loads, so without this
+            # it can hold a stale (or empty) Labels object and report "Need at
+            # least 2 instances" until something re-triggers its visibility sync.
+            # update_labels is a no-op when the labels object is unchanged.
+            if hasattr(self, "_qc_dock"):
+                self._qc_dock.update_labels(self.labels)
+
         if _has_topic([UpdateTopic.suggestions]):
             self.suggestions_dock.table.model().items = self.labels.suggestions
 
