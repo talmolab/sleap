@@ -464,6 +464,62 @@ class TestQCDockWidget:
         assert not dock.isFloating()
         assert "Undock" in dock._dock_button.text()
 
+    def test_update_labels_noop_when_unchanged(self, qtbot):
+        """update_labels should not reset the widget when given the same object."""
+        from sleap.gui.dialogs.qc import QCDockWidget
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels)
+        qtbot.addWidget(dock)
+
+        # Passing the same object should not re-run set_labels (which would
+        # clear any existing analysis results).
+        with patch.object(dock._widget, "set_labels") as mock_set:
+            dock.update_labels(mock_labels)
+            mock_set.assert_not_called()
+
+        # A new object should propagate to the inner widget.
+        other_labels = MagicMock()
+        other_labels.__len__ = MagicMock(return_value=5)
+        other_labels.__iter__ = MagicMock(return_value=iter([]))
+        with patch.object(dock._widget, "set_labels") as mock_set:
+            dock.update_labels(other_labels)
+            mock_set.assert_called_once_with(other_labels)
+
+    def test_qc_dock_repoints_to_newly_loaded_project(self, qtbot, min_labels):
+        """The dock re-points to a project loaded while it holds stale labels.
+
+        Regression test: the dock is created once and persists across project
+        loads. Previously it only refreshed via the Analyze menu or a visibility
+        change, so opening a project while the dock was already visible left it
+        pointing at a stale/empty Labels object, and "Run Analysis" reported
+        "Need at least 2 instances" until something re-synced it.
+
+        ``MainWindow.on_data_update`` now calls ``update_labels`` on the
+        ``UpdateTopic.project`` path; this exercises that call directly (without
+        a full ``MainWindow``, whose video-backed teardown is flaky offscreen).
+        """
+        from sleap.gui.dialogs.qc import QCDockWidget
+        from sleap_io import Labels
+
+        # Start stale: an empty project, as the dock holds before a load.
+        stale = Labels()
+        dock = QCDockWidget(labels=stale)
+        qtbot.addWidget(dock)
+        assert sum(len(lf.user_instances) for lf in dock._widget._labels) == 0
+
+        # Mimic what on_data_update does when a project is loaded.
+        dock.update_labels(min_labels)
+
+        # The dock now tracks the loaded project, so Run Analysis would proceed.
+        assert dock._widget._labels is min_labels
+        n_user = sum(len(lf.user_instances) for lf in dock._widget._labels)
+        assert n_user == sum(len(lf.user_instances) for lf in min_labels)
+        assert n_user >= 2
+
 
 class TestExportToSuggestions:
     """Tests for export_to_suggestions functionality."""
