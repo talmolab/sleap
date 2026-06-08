@@ -1719,10 +1719,7 @@ class MainWindow(QMainWindow):
 
         if not self.state["filename"]:
             QMessageBox(
-                text=(
-                    "Please save your project before running training or "
-                    "inference."
-                )
+                text=("Please save your project before running training or inference.")
             ).exec_()
             return
 
