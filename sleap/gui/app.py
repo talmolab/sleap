@@ -1772,7 +1772,22 @@ class MainWindow(QMainWindow):
             ).exec_()
             return
 
-        if not self.state["filename"] or self.state["has_changes"]:
+        if self.labels is None or len(self.labels.videos) == 0:
+            QMessageBox(
+                text=(
+                    "This project has no videos. Please add a video before "
+                    "running training or inference."
+                )
+            ).exec_()
+            return
+
+        if not self.state["filename"]:
+            QMessageBox(
+                text=("Please save your project before running training or inference.")
+            ).exec_()
+            return
+
+        if self.state["has_changes"]:
             QMessageBox(
                 text=(
                     "You have unsaved changes. Please save before running "
