@@ -12,6 +12,14 @@ from sleap.qc.features.skeleton import SkeletonAnalyzer
 from sleap.qc.features.structural import compute_curvature, compute_convex_hull
 from sleap.qc.features.visibility import VisibilityModel
 from sleap.qc.features.reference import NearestNeighborScorer, normalize_pose
+from sleap.qc.features.chirality import (
+    fit_chirality,
+    compute_chirality,
+    infer_symmetry_pairs_by_name,
+)
+from sleap.qc.features.pose_split import compute_pose_split
+from sleap.qc.features.ordering import compute_chain_ordering, resolve_chains
+from sleap.qc.features.missing_node import score_missing_nodes
 from sleap.qc.frame_level import (
     InstanceCountChecker,
     check_negative_frame,
@@ -27,7 +35,13 @@ if TYPE_CHECKING:
 ProgressCallback = Callable[[str, float, Optional[str]], None]
 
 
-# Additional feature names for v3 features
+# Additional feature names for v3 features.
+#
+# IMPORTANT: the order here is load-bearing. ``_extract_features`` appends the
+# per-instance feature values in exactly this order, and ``_score_instance``
+# maps contributions back to names positionally. Any change here MUST be
+# mirrored by the append order in ``_extract_features`` or fit/score widths and
+# the contribution mapping will diverge.
 V3_FEATURE_NAMES = [
     "max_curvature",
     "curvature_std",
@@ -35,6 +49,11 @@ V3_FEATURE_NAMES = [
     "nn_distance",
     "hull_area_zscore",
     "hull_compactness",
+    # B1 detectors (appended after hull_compactness, in this exact order):
+    "chirality_wrong_fraction",  # (c) whole-instance L/R flip
+    "pose_split_score",  # (d) chimera / pose-split (log1p-compressed)
+    "order_inversion_rate",  # (b) chain ordering
+    "chain_intersection_count",  # (b) chain ordering
 ]
 
 
@@ -85,6 +104,16 @@ class LabelQCDetector:
 
         # Cache for computed statistics
         self._hull_stats: Optional[dict] = None
+
+        # B1 detector fit-time state (set in fit(), consumed in _extract_features
+        # and score()). Initialized empty so _extract_features is safe even if
+        # called before fit() sets them.
+        self._chirality_model: Optional[dict] = None
+        self._symmetry_pairs: list[tuple[int, int]] = []
+        self._axis_nodes: Optional[tuple[int, int]] = None
+        self._ordering_chains: list[list[int]] = []
+        self._adjacency: Optional[dict[int, list[int]]] = None
+        self._co_visibility: Optional[np.ndarray] = None
 
     def fit(
         self,
@@ -156,6 +185,36 @@ class LabelQCDetector:
             "mean": np.mean(hull_areas) if hull_areas else 1.0,
             "std": np.std(hull_areas) if hull_areas else 1.0,
         }
+
+        # B1 fit-time setup. These MUST exist before _extract_all_features runs,
+        # since _extract_features reads them while building the feature matrix.
+        _report("Fitting feature extractors", 0.16, "B1 detectors")
+        sa = self.skeleton_analyzer
+        self._symmetry_pairs = list(sa.symmetry_pairs) or infer_symmetry_pairs_by_name(
+            sa.node_names
+        )
+        # Body axis for chirality must run along MIDLINE (non-symmetric) nodes.
+        # The skeleton's longest graph path can end at a side node (e.g. a
+        # Haunch_left leaf), which biases the axis to one side and makes the
+        # signed-side chirality meaningless (-> false whole-instance-flip flags).
+        # Restrict the spine to non-symmetric nodes for the axis.
+        _sym_idxs = {i for pair in self._symmetry_pairs for i in pair}
+        _midline = [i for i in sa.spine if i not in _sym_idxs]
+        if len(_midline) >= 2:
+            self._axis_nodes = (_midline[0], _midline[-1])
+        elif len(sa.spine) >= 2:
+            self._axis_nodes = (sa.spine[0], sa.spine[-1])
+        else:
+            self._axis_nodes = None
+        self._adjacency = sa.get_adjacency()
+        self._ordering_chains = resolve_chains(
+            sa.node_names, self.config.ordered_chains or None, sa.get_curvature_chains()
+        )
+        self._co_visibility = self.visibility_model.co_visibility_matrix
+        if self.config.should_use_chirality(len(self._symmetry_pairs) >= 1):
+            self._chirality_model = fit_chirality(
+                instances, self._symmetry_pairs, self._axis_nodes
+            )
 
         # Build feature matrix (use LOO NN distances for training)
         _report("Extracting features", 0.20, f"0/{len(instances)}")
@@ -240,8 +299,33 @@ class LabelQCDetector:
                     features = self._extract_features(points)
                     score, contributions = self._score_instance(features)
 
+                    # Pop the forced-issue marker before contributions are
+                    # stored, so feature_contributions stays pure floats.
+                    forced_issue = contributions.pop("_forced_top_issue", None)
+
                     results.instance_scores[key] = score
                     results.feature_contributions[key] = contributions
+
+                    if forced_issue is not None:
+                        results.forced_issues[key] = forced_issue
+
+                    # Missing-node channel (experimental): scored separately from
+                    # the GMM and merged in QCResults.get_flagged.
+                    if (
+                        self.config.use_missing_node_check
+                        and self._co_visibility is not None
+                    ):
+                        _vmask = ~np.isnan(points).any(axis=1)
+                        _mn = score_missing_nodes(
+                            _vmask,
+                            self._co_visibility,
+                            self.skeleton_analyzer.edges,
+                            threshold=self.config.missing_node_prob_threshold,
+                        )
+                        if _mn["missing_node_score"] > 0:
+                            results.channel_scores.setdefault("missing_node", {})[
+                                key
+                            ] = _mn["missing_node_score"]
 
                     # Progress update (every 500 instances)
                     instance_count += 1
@@ -376,6 +460,55 @@ class LabelQCDetector:
         )
         v3_features.extend([hull_area_z, hull["compactness"]])
 
+        # --- B1 detectors. Each block ALWAYS appends a fixed number of values
+        # (emitting 0.0 defaults when its flag is off), so the feature-vector
+        # width is identical at fit and score time. The append order MUST match
+        # V3_FEATURE_NAMES exactly. ---
+
+        # (c) chirality / whole-instance L/R flip
+        if self._chirality_model is not None:
+            v3_features.append(
+                compute_chirality(
+                    points,
+                    self._symmetry_pairs,
+                    self._axis_nodes,
+                    self._chirality_model,
+                )["chirality_wrong_fraction"]
+            )
+        else:
+            v3_features.append(0.0)
+
+        # (d) chimera / pose-split — log1p to tame the unbounded dynamic range
+        # before the GMM
+        if self.config.use_split_detection:
+            _ps = compute_pose_split(
+                points,
+                self._adjacency,
+                self.baseline_extractor.stats.edge_means,
+                self.baseline_extractor.stats.edge_stds,
+            )["split_score"]
+            v3_features.append(float(np.log1p(max(_ps, 0.0))))
+        else:
+            v3_features.append(0.0)
+
+        # (b) chain ordering (experimental)
+        if (
+            self.config.should_use_chain_ordering(
+                self.skeleton_analyzer.max_chain_length
+            )
+            and self._ordering_chains
+        ):
+            _ord = compute_chain_ordering(
+                points,
+                self._ordering_chains,
+                max_turn_angle=np.deg2rad(self.config.chain_turn_angle_deg),
+            )
+            v3_features.extend(
+                [_ord["order_inversion_rate"], float(_ord["chain_intersection_count"])]
+            )
+        else:
+            v3_features.extend([0.0, 0.0])
+
         return np.concatenate([baseline, np.array(v3_features)])
 
     def _extract_all_features(
@@ -505,12 +638,42 @@ class LabelQCDetector:
             scores = self.zscore_detector.score_batch(features_clean.reshape(1, -1))
             score = scores[0] if len(scores) > 0 else 0.0
 
-        # Build contributions dict
+        score = float(score) if np.isfinite(score) else 0.0
+
+        # Build contributions dict (raw feature values keyed by name).
         contributions = {}
         for i, name in enumerate(self.feature_names):
             contributions[name] = float(features[i]) if i < len(features) else 0.0
 
-        return float(score) if np.isfinite(score) else 0.0, contributions
+        # Raise-only hard-rule overrides. These never lower the GMM score; they
+        # only force it up (and record a human-readable issue) when an
+        # unambiguous structural error is present. The chimera (d) detector gets
+        # NO hard rule for now — it relies on its GMM feature
+        # (pose_split_score), which is why there is no clause for it here.
+        forced = None
+        if (
+            self._chirality_model is not None
+            and contributions.get("chirality_wrong_fraction", 0.0)
+            >= self.config.chirality_flip_threshold
+        ):
+            forced = (
+                max(0.9, contributions["chirality_wrong_fraction"]),
+                "Whole-instance L/R flip",
+            )
+        elif self.config.should_use_chain_ordering(
+            self.skeleton_analyzer.max_chain_length
+        ) and (
+            contributions.get("chain_intersection_count", 0.0) >= 1
+            or contributions.get("order_inversion_rate", 0.0)
+            >= self.config.order_inversion_threshold
+        ):
+            forced = (0.9, "Wrong keypoint order along chain")
+
+        if forced is not None:
+            score = max(score, forced[0])
+            contributions["_forced_top_issue"] = forced[1]
+
+        return score, contributions
 
     def _check_frame(
         self,
@@ -534,15 +697,34 @@ class LabelQCDetector:
 
         # Duplicate detection
         if len(instances) >= 2:
-            duplicates = detect_duplicates(
-                instances,
-                iou_threshold=self.config.duplicate_iou_threshold,
-                node_distance_threshold=self.config.duplicate_node_distance_threshold,
-                node_overlap_ratio=self.config.duplicate_node_overlap_ratio,
-            )
+            if self.config.use_duplicate_score:
+                duplicates = detect_duplicates(
+                    instances,
+                    iou_threshold=self.config.duplicate_iou_threshold,
+                    node_distance_threshold=(
+                        self.config.duplicate_node_distance_threshold
+                    ),
+                    node_overlap_ratio=self.config.duplicate_node_overlap_ratio,
+                    edge_means=self.baseline_extractor.stats.edge_means,
+                    duplicate_score_threshold=self.config.duplicate_score_threshold,
+                )
+            else:
+                # Keep current behavior: IOU + node-overlap only. An
+                # unreachable score threshold (> the clamped [0, 1] max) keeps
+                # the always-computed split-duplicate signal from ever firing.
+                duplicates = detect_duplicates(
+                    instances,
+                    iou_threshold=self.config.duplicate_iou_threshold,
+                    node_distance_threshold=(
+                        self.config.duplicate_node_distance_threshold
+                    ),
+                    node_overlap_ratio=self.config.duplicate_node_overlap_ratio,
+                    duplicate_score_threshold=float("inf"),
+                )
             for dup in duplicates:
                 frame_qc.duplicate_pairs.append((dup["index_a"], dup["index_b"]))
                 frame_qc.duplicate_reasons.append(dup["reason"])
+                frame_qc.duplicate_scores.append(dup.get("duplicate_score", 1.0))
 
         return frame_qc
 
