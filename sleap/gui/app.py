@@ -106,7 +106,11 @@ from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.negative_frame import NegativeFrameOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
-from sleap.gui.state import GuiState
+from sleap.gui.state import (
+    GuiState,
+    INSTANCE_HIDDEN_KEY,
+    VIEW_ONLY_INSTANCE_KEY,
+)
 from sleap.gui.web import ping_analytics
 from sleap.gui.widgets.docks import (
     InstancesDock,
@@ -193,6 +197,10 @@ class MainWindow(QMainWindow):
         self.state["show instances"] = True
         self.state["show labels"] = True
         self.state["show edges"] = True
+        # Transient per-instance canvas visibility (Instances dock checkboxes).
+        # Reset on every frame change in `_after_plot_change`; never persisted.
+        self.state[INSTANCE_HIDDEN_KEY] = set()
+        self.state[VIEW_ONLY_INSTANCE_KEY] = None
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["fit_selection"] = False
@@ -1452,6 +1460,14 @@ class MainWindow(QMainWindow):
             if frame_idx is not None
             else None
         )
+
+        # Reset transient per-instance visibility on every frame change:
+        # instances differ per frame and both the canvas and the Instances dock
+        # table rebuild here, so the defaults (all visible, no view-only) are the
+        # natural state for the new frame. Must run BEFORE the overlay redraw
+        # below so the instance overlay applies the cleared state.
+        self.state[INSTANCE_HIDDEN_KEY] = set()
+        self.state[VIEW_ONLY_INSTANCE_KEY] = None
 
         # Show instances, etc, for this frame
         for overlay in self.overlays.values():

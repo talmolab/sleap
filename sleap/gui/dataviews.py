@@ -24,7 +24,12 @@ import numpy as np
 from qtpy import QtCore, QtGui, QtWidgets
 
 from sleap.gui.commands import CommandContext
-from sleap.gui.state import GuiState
+from sleap.gui.state import (
+    GuiState,
+    INSTANCE_HIDDEN_KEY,
+    VIEW_ONLY_INSTANCE_KEY,
+    instance_visible,
+)
 from sleap_io.model.skeleton import Skeleton
 from sleap_io import Video
 from sleap_io import LabeledFrame
@@ -469,12 +474,36 @@ class LabeledFrameTableModel(GenericTableModel):
 
     Allows editing track names.
 
+    In addition to the informational columns, two checkbox columns control
+    per-instance rendering on the video canvas (transient, session-only state;
+    see `sleap.gui.state.instance_visible`):
+
+    - "visibility": checked by default; unchecking hides that instance on the
+      canvas while keeping its row in the table.
+    - "view only": unchecked by default; checking exactly one row makes only
+      that instance visible and disables the whole visibility column. Checking
+      another row's "view only" auto-unchecks the previous (radio-like).
+      Toggling any "visibility" box exits view-only mode.
+
     Args:
         labeled_frame: `LabeledFrame` to show
         labels: `Labels` datasource
     """
 
-    properties = ("points", "track", "score", "mean node score", "skeleton")
+    # The two checkbox columns are appended LAST so existing name-indexed
+    # lookups (e.g. ``properties.index("mean node score")``) stay valid.
+    VISIBILITY_KEY = "visibility"
+    VIEW_ONLY_KEY = "view only"
+
+    properties = (
+        "points",
+        "track",
+        "score",
+        "mean node score",
+        "skeleton",
+        VISIBILITY_KEY,
+        VIEW_ONLY_KEY,
+    )
 
     def object_to_items(self, labeled_frame: LabeledFrame):
         if not labeled_frame:
@@ -526,6 +555,155 @@ class LabeledFrameTableModel(GenericTableModel):
     def set_item(self, item, key, value):
         if key == "track":
             self.context.setTrackName(item.track, value)
+
+    # -- Per-instance visibility checkbox columns -------------------------------
+
+    @property
+    def _checkbox_keys(self):
+        return (self.VISIBILITY_KEY, self.VIEW_ONLY_KEY)
+
+    @property
+    def _vis_state(self) -> GuiState:
+        """The `GuiState` holding the transient visibility keys.
+
+        Uses the command context's `GuiState` (shared with the app and the
+        instance overlay) when available. Falls back to a private `GuiState`
+        when there is no context (e.g. unit tests that build the model without
+        a `MainWindow`), so the checkbox columns still work in isolation.
+        """
+        if self.context is not None and self.context.state is not None:
+            return self.context.state
+        if getattr(self, "_local_vis_state", None) is None:
+            self._local_vis_state = GuiState()
+        return self._local_vis_state
+
+    def _apply_canvas_visibility(self):
+        """Re-apply effective per-instance visibility to the canvas, if any.
+
+        Iterates the live `QtInstance` objects on the player and shows/hides
+        each according to `instance_visible`. No-op when there is no player
+        (headless/unit-test paths), since the overlay re-applies on the next
+        replot regardless.
+        """
+        app = getattr(self.context, "app", None) if self.context else None
+        player = getattr(app, "player", None)
+        if player is None:
+            return
+        state = self._vis_state
+        for qt_inst in player.view.all_instances:
+            qt_inst.setVisible(instance_visible(state, qt_inst.instance))
+
+    def is_visibility_checked(self, instance) -> bool:
+        """Whether the "visibility" box is checked for the given instance."""
+        hidden = self._vis_state.get(INSTANCE_HIDDEN_KEY, default=None)
+        return not hidden or id(instance) not in hidden
+
+    def is_view_only_checked(self, instance) -> bool:
+        """Whether the "view only" box is checked for the given instance."""
+        view_only = self._vis_state.get(VIEW_ONLY_INSTANCE_KEY, default=None)
+        return view_only is not None and id(instance) == view_only
+
+    def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
+        """Overrides Qt method to add checkbox state for the new columns."""
+        if not index.isValid():
+            return None
+
+        key = self.properties[index.column()]
+        if key in self._checkbox_keys:
+            if role == QtCore.Qt.CheckStateRole:
+                instance = self.original_items[index.row()]
+                if key == self.VISIBILITY_KEY:
+                    checked = self.is_visibility_checked(instance)
+                else:
+                    checked = self.is_view_only_checked(instance)
+                return QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked
+            # No text/color/tooltip for the checkbox columns.
+            return None
+
+        return super().data(index, role)
+
+    def flags(self, index: QtCore.QModelIndex):
+        """Overrides Qt method to make the new columns user-checkable.
+
+        The "visibility" column is disabled (greyed out) while a "view only"
+        instance is active, but the row stays selectable so clicking it still
+        selects the instance.
+        """
+        key = self.properties[index.column()]
+        if key not in self._checkbox_keys:
+            return super().flags(index)
+
+        flags = QtCore.Qt.ItemIsSelectable
+        view_only_active = (
+            self._vis_state.get(VIEW_ONLY_INSTANCE_KEY, default=None) is not None
+        )
+        if key == self.VISIBILITY_KEY and view_only_active:
+            # Disabled (greyed out) and not checkable during view-only mode.
+            return flags
+        flags |= QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable
+        return flags
+
+    def setData(self, index: QtCore.QModelIndex, value, role=QtCore.Qt.EditRole):
+        """Overrides Qt method to toggle the per-instance visibility state."""
+        if index.isValid() and role == QtCore.Qt.CheckStateRole:
+            key = self.properties[index.column()]
+            if key in self._checkbox_keys:
+                instance = self.original_items[index.row()]
+                # ``value`` may be a plain int (PySide6 passes 0/2 from the view)
+                # or a ``Qt.CheckState`` enum (e.g. our tests, or other
+                # bindings). ``Qt.CheckState`` is a non-int Enum in PySide6, so
+                # normalize via its ``.value`` before comparing (mirrors the
+                # convention in sleap/gui/dialogs/qc.py:230).
+                checked = getattr(value, "value", value) == QtCore.Qt.Checked.value
+                if key == self.VISIBILITY_KEY:
+                    self._set_visibility(instance, checked)
+                else:
+                    self._set_view_only(instance, checked)
+                return True
+
+        return super().setData(index, value, role)
+
+    def _set_visibility(self, instance, checked: bool):
+        """Toggle an instance's visibility box (also exits view-only mode)."""
+        state = self._vis_state
+        # Spec: clicking any visibility box exits view-only mode.
+        state[VIEW_ONLY_INSTANCE_KEY] = None
+
+        hidden = set(state.get(INSTANCE_HIDDEN_KEY, default=None) or set())
+        if checked:
+            hidden.discard(id(instance))
+        else:
+            hidden.add(id(instance))
+        state[INSTANCE_HIDDEN_KEY] = hidden
+
+        self._refresh_after_toggle()
+
+    def _set_view_only(self, instance, checked: bool):
+        """Toggle an instance's view-only box (radio-like exclusivity)."""
+        state = self._vis_state
+        if checked:
+            # Overwriting auto-unchecks any previously selected view-only row.
+            state[VIEW_ONLY_INSTANCE_KEY] = id(instance)
+        elif state.get(VIEW_ONLY_INSTANCE_KEY, default=None) == id(instance):
+            state[VIEW_ONLY_INSTANCE_KEY] = None
+
+        self._refresh_after_toggle()
+
+    def _refresh_after_toggle(self):
+        """Apply the new state to the canvas and repaint the whole table.
+
+        The full-table ``dataChanged`` re-queries both `data` (checkbox states)
+        and `flags` (so the visibility column greys out / re-enables when
+        view-only mode changes).
+        """
+        self._apply_canvas_visibility()
+        rows = self.rowCount()
+        cols = self.columnCount()
+        if rows and cols:
+            self.dataChanged.emit(
+                self.index(0, 0),
+                self.index(rows - 1, cols - 1),
+            )
 
 
 class SuggestionsTableModel(GenericTableModel):
