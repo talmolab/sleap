@@ -475,9 +475,7 @@ def test_app_drag_and_drop_open(qtbot, centered_pair_predictions_slp_path):
     assert enter.isAccepted()
 
     # Dropping the .slp loads it into the (empty) window.
-    drop = QDropEvent(
-        QPointF(0, 0), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier
-    )
+    drop = QDropEvent(QPointF(0, 0), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier)
     win.dropEvent(drop)
 
     assert win.state["project_loaded"]
