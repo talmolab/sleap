@@ -615,6 +615,9 @@ class InstancesDock(DockWidget):
         self.add_button(
             hb, "Delete Instance", main_window.commands.deleteSelectedInstance
         )
+        self.add_button(
+            hb, "Merge Instance", lambda *_: main_window.commands.mergeInstance()
+        )
 
         hbw = QWidget()
         hbw.setLayout(hb)

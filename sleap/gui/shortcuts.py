@@ -37,6 +37,7 @@ class Shortcuts(object):
         "add instance",
         "mark negative",
         "delete instance",
+        "merge instance",
         "delete track",
         "transpose",
         "propagate track labels",

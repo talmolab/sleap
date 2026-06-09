@@ -673,6 +673,15 @@ class CommandContext:
         """Deletes currently selected instance."""
         self.execute(DeleteSelectedInstance)
 
+    def mergeInstance(self, donor: Optional["Instance"] = None):
+        """Merge another user instance in the frame into the selected one.
+
+        The selected instance is kept (survivor) and gains the donor's labeled
+        keypoints for any nodes it is missing. If `donor` is None and the frame
+        has exactly two user instances, the other one is used as the donor.
+        """
+        self.execute(MergeInstances, donor=donor)
+
     def deleteSelectedInstanceTrack(self):
         """Deletes all instances from track of currently selected instance."""
         self.execute(DeleteSelectedInstanceTrack)
@@ -3783,6 +3792,115 @@ class DeleteSelectedInstanceTrack(EditCommand):
                 track_instances = filter(lambda inst: inst.track == track, lf.instances)
                 for inst in track_instances:
                     remove_instance(context.labels, instance=inst, lf=lf)
+
+
+class MergeInstances(EditCommand):
+    """Merge two user instances in the current frame into a single instance.
+
+    The currently selected instance (``context.state["instance"]``) is the
+    *survivor*. The instance to merge into it is the *donor*, taken from
+    ``params["donor"]``; if no donor is given and the frame has exactly two
+    user instances, the other one is used automatically.
+
+    For every skeleton node, if the survivor's node is missing (NaN coordinates
+    or not visible) and the donor's node is labeled/visible, the donor's
+    ``xy``/``visible``/``complete`` values are copied onto the survivor. This
+    lets a "front keypoints" instance and a "back keypoints" instance be
+    combined into one. The survivor keeps its own track.
+
+    Conflict policy: if BOTH the survivor and the donor have a node
+    labeled/visible, the survivor's value is kept (the donor's value for that
+    node is discarded).
+
+    Scope/behavior decisions:
+        - Only user ``Instance``s participate. ``PredictedInstance``s are never
+          chosen as survivor or donor and are left untouched on the frame.
+        - If there are fewer than two user instances, no donor can be resolved,
+          the survivor is not a user ``Instance``, or required state is
+          missing, this is a no-op (with a status message when running in the
+          GUI).
+        - After merging, the donor is removed from the frame via
+          ``remove_instance`` and ``labels.update()`` is called. There is no
+          dedicated undo (matching ``DeleteSelectedInstance``/``PasteInstance``);
+          ``EditCommand`` only flags the project as having unsaved changes.
+    """
+
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+
+    @staticmethod
+    def _status(context: "CommandContext", message: str):
+        """Post a status message if the app supports it (no-op when headless)."""
+        if hasattr(context.app, "updateStatusMessage"):
+            context.app.updateStatusMessage(message)
+
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+        survivor = context.state["instance"]
+        frame = context.state["labeled_frame"]
+        skeleton = context.state["skeleton"]
+        donor = params.get("donor", None)
+
+        if survivor is None or frame is None or skeleton is None:
+            return
+
+        # Only user instances can be merged (skip PredictedInstance).
+        if type(survivor) is not Instance:
+            MergeInstances._status(
+                context, "Merge Instance: select a user instance first."
+            )
+            return
+
+        user_instances = frame.user_instances
+        if len(user_instances) < 2:
+            MergeInstances._status(
+                context,
+                "Merge Instance: need at least two user instances in the frame.",
+            )
+            return
+
+        # Fast path: exactly two user instances -> donor is the other one.
+        if donor is None and len(user_instances) == 2:
+            donor = next(inst for inst in user_instances if inst is not survivor)
+
+        if donor is None or donor is survivor or type(donor) is not Instance:
+            MergeInstances._status(
+                context, "Merge Instance: no valid instance to merge."
+            )
+            return
+
+        # Guard against mismatched skeletons (all instances in a frame normally
+        # share the project skeleton, but be safe).
+        if not survivor.skeleton.matches(donor.skeleton):
+            MergeInstances._status(
+                context, "Merge Instance: instances have different skeletons."
+            )
+            return
+
+        for node in skeleton.node_names:
+            s_pt = survivor[node]
+            d_pt = donor[node]
+            survivor_missing = bool(np.isnan(s_pt["xy"]).any()) or not bool(
+                s_pt["visible"]
+            )
+            donor_labeled = (not bool(np.isnan(d_pt["xy"]).any())) and bool(
+                d_pt["visible"]
+            )
+            # Conflict policy: only fill nodes the survivor is missing; nodes
+            # the survivor already has are kept as-is.
+            if survivor_missing and donor_labeled:
+                s_pt["xy"][0] = d_pt["xy"][0]
+                s_pt["xy"][1] = d_pt["xy"][1]
+                s_pt["visible"] = d_pt["visible"]
+                s_pt["complete"] = d_pt["complete"]
+
+        # Remove the donor and persist. The donor's pose is never mutated and
+        # the survivor only gains nodes, so the survivor can never collide with
+        # the donor's pose in `remove_instance`.
+        remove_instance(context.labels, instance=donor, lf=frame)
+        context.labels.update()
+
+        # Keep the survivor selected.
+        context.state["instance"] = survivor
 
 
 class DeleteDialogCommand(EditCommand):

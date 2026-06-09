@@ -831,6 +831,13 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             labelMenu,
+            "merge instance",
+            "Merge Instance",
+            lambda: self.commands.mergeInstance(),
+        )
+
+        add_menu_item(
+            labelMenu,
             "custom delete",
             "Custom Instance Delete...",
             self.commands.deleteDialog,
@@ -1278,6 +1285,11 @@ class MainWindow(QMainWindow):
             self.state["labeled_frame"] is not None
             and len(self.state["labeled_frame"].instances) > 1
         )
+        # Merge requires at least two *user* instances (predicted excluded).
+        has_multiple_user_instances = (
+            self.state["labeled_frame"] is not None
+            and len(self.state["labeled_frame"].user_instances) > 1
+        )
         # todo: exclude predicted instances from count
         has_nodes_selected = (
             self.skeleton_dock.skeletonEdgesSrc.currentIndex() > -1
@@ -1299,6 +1311,7 @@ class MainWindow(QMainWindow):
         self._menu_actions["extract clip labels package"].setEnabled(has_frame_range)
 
         self._menu_actions["transpose"].setEnabled(has_multiple_instances)
+        self._menu_actions["merge instance"].setEnabled(has_multiple_user_instances)
 
         self._menu_actions["save"].setEnabled(has_unsaved_changes)
 
