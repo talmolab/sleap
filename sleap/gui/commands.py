@@ -4818,62 +4818,39 @@ class AddUserInstancesFromPredictions(EditCommand):
         return new_instance
 
     @staticmethod
-    def fill_missing_predicted_nodes(
-        context: CommandContext,
-        new_instance: Instance,
-        copy_instance: PredictedInstance,
-    ):
-        """Initialize undetected nodes on a converted prediction instance.
+    def fill_missing_predicted_nodes(new_instance: Instance):
+        """Anchor undetected (NaN) nodes to the body while keeping them hidden.
 
-        ``make_instance_from_predicted_instance`` copies the model's detected
-        keypoints and leaves any node the model did not detect at ``xy=NaN``
-        / ``visible=False``. This fills those missing nodes with sensible,
-        visible positions using the same machinery that initializes a
-        brand-new instance (``AddMissingInstanceNodes.add_best_nodes``):
-        the template is aligned onto the already-detected points (or, when
-        nothing was detected, centered on the current view), and any node
-        still missing falls back to random in-view placement. Filled nodes
-        are marked ``visible=True`` and ``complete=False`` so the user can
-        see and drag them; already-detected points, the track, and the
-        ``from_predicted`` link are left untouched.
+        The model leaves occluded nodes at NaN coordinates, and
+        ``make_instance_from_predicted_instance`` keeps them ``visible=False``
+        (correct -- the converted instance should look like the prediction).
+        But a NaN coordinate renders at a default/garbage location when the user
+        turns on "show non-visible nodes" (``QtInstance`` still creates a node
+        item for every node in that mode, positioned at its ``xy``). Move each
+        missing node onto the centroid of this instance's own *detected*
+        keypoints so it sits on the animal -- ready to drag out -- while staying
+        hidden. Already-detected points, the track, and the ``from_predicted``
+        link are left untouched.
 
-        This is a no-op when there is no GUI ``player`` available (e.g. the
-        headless ``CommandContext.from_labels`` / ``FakeApp`` path used in
-        tests) since the placement machinery needs the visible-rect, and a
-        no-op when every node was already detected.
+        No GUI/player is required, so the single-frame and all-frames/headless
+        conversion paths behave identically. No-op when every node was detected,
+        or when nothing was detected (no anchor to place missing nodes against).
 
         Args:
-            context: The command context.
             new_instance: The user ``Instance`` produced by
                 ``make_instance_from_predicted_instance``; modified in place.
-            copy_instance: The source ``PredictedInstance`` (used for its
-                skeleton).
         """
-        # Nothing to do if every node already has detected coordinates.
-        node_xy = new_instance.numpy()
-        has_missing = bool(np.any(np.all(np.isnan(node_xy), axis=1)))
-        if not has_missing:
+        xy = new_instance.points["xy"]
+        missing = np.isnan(xy).any(axis=1)
+        detected = ~missing
+        if not missing.any() or not detected.any():
             return
 
-        # The placement helpers read context.app.player.getVisibleRect(); in
-        # headless contexts (FakeApp) there is no player, so skip the fill
-        # rather than crash. Mirrors the guard at CommandContext.execute.
-        player = getattr(getattr(context, "app", None), "player", None)
-        if player is None:
-            return
-
-        # add_random_nodes / add_nodes_from_template read context.state
-        # ["skeleton"]; the all-frames path builds the context via
-        # CommandContext.from_labels where it is unset, so populate it.
-        if context.state["skeleton"] is None:
-            context.state["skeleton"] = copy_instance.skeleton
-
-        # Use the same "best" strategy as a brand-new instance: place missing
-        # nodes from an aligned template, then random-fill anything the
-        # template could not provide. Both steps preserve already-detected
-        # (non-NaN) points and only touch the missing ones, marking the
-        # filled nodes visible with complete=False.
-        AddMissingInstanceNodes.add_best_nodes(context, new_instance, visible=True)
+        # Centroid of the detected keypoints -> on the animal.
+        center = np.nanmean(xy[detected], axis=0)
+        new_instance.points["xy"][missing] = center
+        new_instance.points["visible"][missing] = False
+        new_instance.points["complete"][missing] = False
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
@@ -4884,7 +4861,7 @@ class AddUserInstancesFromPredictions(EditCommand):
         unused_predictions = context.state["labeled_frame"].unused_predictions
         for predicted_instance in unused_predictions:
             new_instance = cls.make_instance_from_predicted_instance(predicted_instance)
-            cls.fill_missing_predicted_nodes(context, new_instance, predicted_instance)
+            cls.fill_missing_predicted_nodes(new_instance)
             new_instances.append(new_instance)
 
         # Add the instances
@@ -4947,9 +4924,7 @@ class AddUserInstancesFromAllPredictions(EditCommand):
                 new_instance = make.make_instance_from_predicted_instance(
                     predicted_instance
                 )
-                make.fill_missing_predicted_nodes(
-                    context, new_instance, predicted_instance
-                )
+                make.fill_missing_predicted_nodes(new_instance)
                 if new_instance not in lf.instances:
                     lf.instances.append(new_instance)
                     total_added += 1
