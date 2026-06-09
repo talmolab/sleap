@@ -35,6 +35,27 @@ from sleap.gui.commands import (
 )
 
 
+class _StubState:
+    """Minimal GuiState stand-in: returns None for unset keys.
+
+    Mirrors ``sleap.gui.state.GuiState`` indexing semantics used by the
+    node-placement helpers (``context.state["skeleton"]``), so tests do not
+    need a full GUI state object.
+    """
+
+    def __init__(self, **initial):
+        self._vars = dict(initial)
+
+    def __getitem__(self, key):
+        return self._vars.get(key)
+
+    def __setitem__(self, key, value):
+        self._vars[key] = value
+
+    def __contains__(self, key):
+        return key in self._vars
+
+
 @pytest.fixture
 def simple_skeleton():
     """Create a simple skeleton with 3 nodes."""
@@ -897,3 +918,239 @@ class TestAddUserInstancesFromAllPredictions:
         AddUserInstancesFromAllPredictions.do_action(context, {})
 
         assert len(lf.instances) == 1
+
+
+class TestFillMissingPredictedNodes:
+    """Tests for filling undetected nodes when converting predictions (#2764).
+
+    ``make_instance_from_predicted_instance`` keeps the model's detected
+    keypoints and leaves undetected nodes at ``xy=NaN`` / ``visible=False``.
+    ``AddUserInstancesFromPredictions.fill_missing_predicted_nodes`` then
+    initializes those missing nodes (using the same machinery as a brand-new
+    instance) to visible, draggable positions while preserving the detected
+    points, track, and ``from_predicted`` link.
+
+    These tests provide an offscreen player stub that supplies
+    ``getVisibleRect()`` (the only GUI hook the placement helpers need), so
+    they run headlessly without a real QApplication.
+    """
+
+    @staticmethod
+    def _stub_context(skeleton, labels):
+        """Build a minimal context whose app has an offscreen player.
+
+        Mirrors the ``_StubPlayer``/``_StubApp``/``_StubContext`` pattern used
+        elsewhere in this file. ``labels`` is a real ``Labels`` so the
+        template lookup (``get_template_instance_points``) behaves realistically.
+        """
+        from qtpy import QtCore
+
+        class _StubPlayer:
+            @staticmethod
+            def getVisibleRect():
+                return QtCore.QRectF(0.0, 0.0, 640.0, 480.0)
+
+        class _StubApp:
+            player = _StubPlayer()
+
+        class _StubContext:
+            pass
+
+        ctx = _StubContext()
+        ctx.app = _StubApp()
+        ctx.labels = labels
+        # GuiState-like: __getitem__ returns None for missing keys; emulate
+        # the all-frames path where "skeleton" starts unset so we also cover
+        # the helper populating it from copy_instance.skeleton.
+        ctx.state = _StubState()
+        return ctx
+
+    @pytest.fixture
+    def prediction_with_nan_node(self, simple_skeleton):
+        """PredictedInstance with two detected nodes and one undetected node."""
+        pred = PredictedInstance.empty(skeleton=simple_skeleton, score=0.8)
+        pred["head"] = (10.0, 20.0, 0.9)
+        pred["thorax"] = (np.nan, np.nan, 0.0)
+        pred["abdomen"] = (40.0, 50.0, 0.7)
+        pred.points["visible"] = True
+        return pred
+
+    def test_fills_missing_node_and_preserves_detected(
+        self, simple_skeleton, simple_video, prediction_with_nan_node
+    ):
+        """Undetected node becomes finite + visible; detected ones unchanged."""
+        lf = LabeledFrame(
+            video=simple_video, frame_idx=0, instances=[prediction_with_nan_node]
+        )
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[lf],
+        )
+
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_nan_node
+            )
+        )
+        ctx = self._stub_context(simple_skeleton, labels)
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(
+            ctx, new_inst, prediction_with_nan_node
+        )
+
+        names = list(new_inst.points["name"])
+        head_idx = names.index("head")
+        thorax_idx = names.index("thorax")
+        abdomen_idx = names.index("abdomen")
+
+        # Detected points are untouched and still visible.
+        np.testing.assert_array_equal(
+            new_inst.points[head_idx]["xy"], np.array([10.0, 20.0])
+        )
+        np.testing.assert_array_equal(
+            new_inst.points[abdomen_idx]["xy"], np.array([40.0, 50.0])
+        )
+        assert bool(new_inst.points[head_idx]["visible"]) is True
+        assert bool(new_inst.points[abdomen_idx]["visible"]) is True
+
+        # Previously-undetected node is now finite, visible, and incomplete.
+        thorax_xy = new_inst.points[thorax_idx]["xy"]
+        assert np.all(np.isfinite(thorax_xy)), (
+            f"undetected node should be filled with finite xy; got {thorax_xy!r}"
+        )
+        assert bool(new_inst.points[thorax_idx]["visible"]) is True
+        assert bool(new_inst.points[thorax_idx]["complete"]) is False
+
+        # The from_predicted link is preserved.
+        assert new_inst.from_predicted is prediction_with_nan_node
+
+    def test_all_nodes_detected_is_noop(
+        self, simple_skeleton, simple_video, prediction_with_track
+    ):
+        """When every node is detected, nothing changes."""
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[
+                LabeledFrame(
+                    video=simple_video,
+                    frame_idx=0,
+                    instances=[prediction_with_track],
+                )
+            ],
+        )
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_track
+            )
+        )
+        before = new_inst.numpy().copy()
+        before_vis = new_inst.points["visible"].copy()
+
+        ctx = self._stub_context(simple_skeleton, labels)
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(
+            ctx, new_inst, prediction_with_track
+        )
+
+        np.testing.assert_array_equal(new_inst.numpy(), before)
+        np.testing.assert_array_equal(new_inst.points["visible"], before_vis)
+
+    def test_no_nodes_detected_fills_all_visible(
+        self, simple_skeleton, simple_video
+    ):
+        """When nothing is detected, all nodes are filled and visible.
+
+        The centroid is undefined (no visible nodes) so placement falls back to
+        the current view (the stub's visible rect), exactly like a brand-new
+        instance with no copy source.
+        """
+        pred = PredictedInstance.empty(skeleton=simple_skeleton, score=0.1)
+        pred["head"] = (np.nan, np.nan, 0.0)
+        pred["thorax"] = (np.nan, np.nan, 0.0)
+        pred["abdomen"] = (np.nan, np.nan, 0.0)
+        pred.points["visible"] = True
+
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[
+                LabeledFrame(video=simple_video, frame_idx=0, instances=[pred])
+            ],
+        )
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                pred
+            )
+        )
+        ctx = self._stub_context(simple_skeleton, labels)
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(
+            ctx, new_inst, pred
+        )
+
+        assert np.all(np.isfinite(new_inst.numpy())), (
+            "all nodes should be filled with finite coords when none detected"
+        )
+        assert all(bool(v) for v in new_inst.points["visible"]), (
+            "all filled nodes should be visible"
+        )
+
+    def test_single_node_skeleton_undetected(self, simple_video):
+        """Single-node skeleton with the node undetected gets placed visibly."""
+        skeleton = Skeleton(name="one")
+        skeleton.add_node("center")
+
+        pred = PredictedInstance.empty(skeleton=skeleton, score=0.1)
+        pred["center"] = (np.nan, np.nan, 0.0)
+        pred.points["visible"] = True
+
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[skeleton],
+            labeled_frames=[
+                LabeledFrame(video=simple_video, frame_idx=0, instances=[pred])
+            ],
+        )
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                pred
+            )
+        )
+        ctx = self._stub_context(skeleton, labels)
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(
+            ctx, new_inst, pred
+        )
+
+        assert np.all(np.isfinite(new_inst.numpy()))
+        assert bool(new_inst.points[0]["visible"]) is True
+
+    def test_no_player_is_noop(self, simple_skeleton, prediction_with_nan_node):
+        """Headless context (no player) leaves the instance untouched.
+
+        This is the contract that keeps the bulk ``do_action`` tests (which use
+        ``CommandContext.from_labels`` / ``FakeApp``) passing: without a GUI
+        player there is no visible-rect to place into, so the fill is skipped
+        and the NaN node stays NaN/invisible.
+        """
+        from sleap.gui.commands import CommandContext
+
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_nan_node
+            )
+        )
+        before = new_inst.numpy().copy()
+
+        # FakeApp has no `player` attribute.
+        context = CommandContext.from_labels(
+            Labels(skeletons=[simple_skeleton])
+        )
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(
+            context, new_inst, prediction_with_nan_node
+        )
+
+        names = list(new_inst.points["name"])
+        thorax_idx = names.index("thorax")
+        np.testing.assert_array_equal(
+            new_inst.numpy(), before, err_msg="no-player fill must be a no-op"
+        )
+        assert bool(new_inst.points[thorax_idx]["visible"]) is False
