@@ -1055,9 +1055,7 @@ class TestFillMissingPredictedNodes:
         np.testing.assert_array_equal(new_inst.numpy(), before)
         np.testing.assert_array_equal(new_inst.points["visible"], before_vis)
 
-    def test_no_nodes_detected_fills_all_visible(
-        self, simple_skeleton, simple_video
-    ):
+    def test_no_nodes_detected_fills_all_visible(self, simple_skeleton, simple_video):
         """When nothing is detected, all nodes are filled and visible.
 
         The centroid is undefined (no visible nodes) so placement falls back to
@@ -1078,9 +1076,7 @@ class TestFillMissingPredictedNodes:
             ],
         )
         new_inst = (
-            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
-                pred
-            )
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(pred)
         )
         ctx = self._stub_context(simple_skeleton, labels)
         AddUserInstancesFromPredictions.fill_missing_predicted_nodes(
@@ -1111,9 +1107,7 @@ class TestFillMissingPredictedNodes:
             ],
         )
         new_inst = (
-            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
-                pred
-            )
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(pred)
         )
         ctx = self._stub_context(skeleton, labels)
         AddUserInstancesFromPredictions.fill_missing_predicted_nodes(
@@ -1141,9 +1135,7 @@ class TestFillMissingPredictedNodes:
         before = new_inst.numpy().copy()
 
         # FakeApp has no `player` attribute.
-        context = CommandContext.from_labels(
-            Labels(skeletons=[simple_skeleton])
-        )
+        context = CommandContext.from_labels(Labels(skeletons=[simple_skeleton]))
         AddUserInstancesFromPredictions.fill_missing_predicted_nodes(
             context, new_inst, prediction_with_nan_node
         )
@@ -1154,3 +1146,71 @@ class TestFillMissingPredictedNodes:
             new_inst.numpy(), before, err_msg="no-player fill must be a no-op"
         )
         assert bool(new_inst.points[thorax_idx]["visible"]) is False
+
+    def test_single_frame_do_action_wires_fill_with_player(
+        self, simple_skeleton, simple_video, prediction_with_nan_node
+    ):
+        """``AddUserInstancesFromPredictions.do_action`` runs the fill (wiring).
+
+        The helper-level tests above prove the fill works in isolation, but they
+        would still pass if the ``fill_missing_predicted_nodes`` call were ever
+        removed from ``do_action``. Drive the real ``do_action`` with a context
+        that has a player so the converted user instance's undetected node is
+        actually filled end-to-end.
+        """
+        lf = LabeledFrame(
+            video=simple_video, frame_idx=0, instances=[prediction_with_nan_node]
+        )
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[lf],
+        )
+        ctx = self._stub_context(simple_skeleton, labels)
+        ctx.state["labeled_frame"] = lf
+
+        AddUserInstancesFromPredictions.do_action(ctx, {})
+
+        user = [inst for inst in lf.instances if type(inst) is Instance]
+        assert len(user) == 1
+        new_inst = user[0]
+        names = list(new_inst.points["name"])
+        thorax_idx = names.index("thorax")
+        head_idx = names.index("head")
+
+        # Undetected node filled by the do_action -> fill wiring.
+        assert np.all(np.isfinite(new_inst.points[thorax_idx]["xy"]))
+        assert bool(new_inst.points[thorax_idx]["visible"]) is True
+        assert bool(new_inst.points[thorax_idx]["complete"]) is False
+        # Detected node preserved.
+        np.testing.assert_array_equal(
+            new_inst.points[head_idx]["xy"], np.array([10.0, 20.0])
+        )
+
+    def test_all_frames_do_action_wires_fill_with_player(
+        self, simple_skeleton, simple_video, prediction_with_nan_node
+    ):
+        """``AddUserInstancesFromAllPredictions.do_action`` runs the fill (wiring).
+
+        The all-frames bulk path has no other player-present coverage, so this
+        locks in that it too initializes undetected nodes.
+        """
+        lf = LabeledFrame(
+            video=simple_video, frame_idx=0, instances=[prediction_with_nan_node]
+        )
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[lf],
+        )
+        ctx = self._stub_context(simple_skeleton, labels)
+
+        AddUserInstancesFromAllPredictions.do_action(ctx, {})
+
+        user = [inst for inst in lf.instances if type(inst) is Instance]
+        assert len(user) == 1
+        new_inst = user[0]
+        thorax_idx = list(new_inst.points["name"]).index("thorax")
+        assert np.all(np.isfinite(new_inst.points[thorax_idx]["xy"]))
+        assert bool(new_inst.points[thorax_idx]["visible"]) is True
+        assert bool(new_inst.points[thorax_idx]["complete"]) is False

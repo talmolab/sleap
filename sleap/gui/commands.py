@@ -4873,9 +4873,7 @@ class AddUserInstancesFromPredictions(EditCommand):
         # template could not provide. Both steps preserve already-detected
         # (non-NaN) points and only touch the missing ones, marking the
         # filled nodes visible with complete=False.
-        AddMissingInstanceNodes.add_best_nodes(
-            context, new_instance, visible=True
-        )
+        AddMissingInstanceNodes.add_best_nodes(context, new_instance, visible=True)
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
@@ -4885,12 +4883,8 @@ class AddUserInstancesFromPredictions(EditCommand):
         new_instances = []
         unused_predictions = context.state["labeled_frame"].unused_predictions
         for predicted_instance in unused_predictions:
-            new_instance = cls.make_instance_from_predicted_instance(
-                predicted_instance
-            )
-            cls.fill_missing_predicted_nodes(
-                context, new_instance, predicted_instance
-            )
+            new_instance = cls.make_instance_from_predicted_instance(predicted_instance)
+            cls.fill_missing_predicted_nodes(context, new_instance, predicted_instance)
             new_instances.append(new_instance)
 
         # Add the instances
