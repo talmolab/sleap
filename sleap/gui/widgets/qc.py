@@ -35,6 +35,209 @@ if TYPE_CHECKING:
     from sleap.qc.results import QCResults, QCFlag
 
 
+# Plain-language, biologist-friendly help for each detector. Each entry is
+# (short title, body) and is shown when the user clicks the "?" help button next
+# to a detector in the Detector Settings panel (issue #2769, item 3). The text
+# deliberately avoids math/statistics jargon and describes what the detector
+# catches and what the mistake looks like on a real animal.
+DETECTOR_HELP = {
+    "flip": (
+        "Whole-instance L/R flip",
+        "Flags an animal whose left and right body parts look swapped — for "
+        "example, the left and right ears traced on the wrong sides, so the "
+        "whole pose is mirror-flipped.\n\n"
+        "Use this when you suspect a labeler clicked the left/right parts the "
+        "wrong way around.",
+    ),
+    "chimera": (
+        "Chimera (pose split)",
+        "Flags one animal whose body parts actually belong to two different "
+        "animals — like a single skeleton that jumps from one mouse's head to "
+        "another mouse's tail.\n\n"
+        "This often happens when two animals are close together and the labels "
+        "get mixed up between them.",
+    ),
+    "duplicate": (
+        "Duplicate / split",
+        "Flags two labels that sit almost on top of each other — usually the "
+        "same animal accidentally traced twice, or one animal split into two "
+        "overlapping copies.\n\n"
+        "Review these to delete the extra copy and keep a single clean label.",
+    ),
+    "chain": (
+        "Wrong chain order",
+        "Flags a body part traced out of order along a connected chain, such as "
+        "a tail. Imagine the tail tip placed before the tail base, so the chain "
+        "doubles back on itself instead of running smoothly from base to tip.\n\n"
+        "Helpful for catching tail or limb points clicked in the wrong sequence.",
+    ),
+    "missing": (
+        "Missing labelable node",
+        "Flags an animal that is missing a body part its neighbors usually "
+        "have. For example, most mice in your project have a visible nose, but "
+        "this one is missing its nose label even though the nose looks "
+        "visible.\n\n"
+        "Use this to find parts that were skipped or forgotten during labeling.",
+    ),
+    "appearance": (
+        "Appearance / wrong-object",
+        "Flags a body part placed on the wrong-looking spot in the image — for "
+        "example, a paw point that landed on the bedding or cage floor instead "
+        "of on the animal's fur.\n\n"
+        "It looks at the actual pixels around each point, so it catches points "
+        "dragged off the animal.",
+    ),
+    "insample": (
+        "In-sample model prediction",
+        "Runs a trained pose model on your already-labeled frames and points "
+        "out body parts the model is confident about but that you left "
+        "unlabeled — likely parts that were visible but skipped.\n\n"
+        "Note: this runs full model inference, so it can be slow on large "
+        "projects.",
+    ),
+}
+
+
+# Plain-language sentence templates for the primary issue on a flagged
+# instance, keyed by the raw ``QCFlag.top_issue`` string (issue #2769, item 7).
+# Used to rewrite the Selected Instance / Statistics panels in friendly terms
+# instead of raw feature names. Keys cover the forced hard-rule labels, the
+# per-channel labels, and the inferred issue labels from QCResults; anything not
+# listed falls back to a cleaned-up version of the raw label.
+ISSUE_FRIENDLY = {
+    # Forced hard-rule issues.
+    "Whole-instance L/R flip": "left/right sides look swapped",
+    "Wrong keypoint order along chain": "body parts traced out of order",
+    # Per-channel issues.
+    "Missing labelable node": "a body part looks missing",
+    "Appearance outlier": "a point sits on the wrong-looking spot",
+    "Model expects a labeled part here": "a visible part looks unlabeled",
+    # Inferred (structural / GMM) issues.
+    "Unusual edge length": "two parts are an unusual distance apart",
+    "Unusual proportions": "the body proportions look off",
+    "Unusual joint angle": "a joint bends at an unusual angle",
+    "Unusual pose structure": "the overall pose looks unusual",
+    "Unusual node spacing": "the spacing between parts looks off",
+    "Unusual scale": "the animal looks an unusual size",
+    "Isolated node": "one part sits far from the rest",
+    "Inconsistent spacing": "the spacing between parts is inconsistent",
+    "Likely L/R swap": "left/right sides may be swapped",
+    "Unusual visibility": "an unusual set of parts is visible",
+    "Isolated invisible node": "a part is hidden where you'd expect it shown",
+    "Unusual visibility pattern": "which parts are visible looks unusual",
+    "Unusual pose shape": "the pose shape looks unusual",
+    "Unusual curvature": "the body curves in an unusual way",
+    "Unusual pose extent": "the pose spreads out unusually",
+    "Unknown": "something looks unusual",
+}
+
+
+# Placeholder shown in the Selected Instance panel before a row is chosen.
+SELECT_INSTANCE_PLACEHOLDER = "Click a row in the table to review why it was flagged."
+
+
+def _friendly_issue(top_issue: str) -> str:
+    """Map a raw ``QCFlag.top_issue`` to a short plain-language phrase.
+
+    Args:
+        top_issue: The raw issue label from a QCFlag (e.g.
+            ``"Whole-instance L/R flip"`` or ``"Unusual joint angle"``).
+
+    Returns:
+        A lowercase clause suitable for dropping into a sentence such as
+        "Flagged: <clause> (confidence ...)". Unknown labels fall back to a
+        cleaned-up, lowercased version of the raw text.
+    """
+    if top_issue in ISSUE_FRIENDLY:
+        return ISSUE_FRIENDLY[top_issue]
+    # Fallback: strip any "High " prefix and the underscores from raw feature
+    # names so even unmapped issues read reasonably.
+    cleaned = top_issue
+    if cleaned.startswith("High "):
+        cleaned = cleaned[len("High ") :]
+    cleaned = cleaned.replace("_", " ").strip()
+    return cleaned.lower() if cleaned else "something looks unusual"
+
+
+class CheckableFilterMenu(QtWidgets.QMenu):
+    """A QMenu that stays open while the user toggles its checkable items.
+
+    Used for the multi-select issue-type filter on the flagged-instances list
+    (issue #2769, item 5 / feature request #2758): a plain QMenu closes after
+    every click, which is tedious when ticking several issue types in a row.
+    Here a click on a *checkable* action toggles it in place and keeps the menu
+    open; non-checkable actions (e.g. "Select all") behave normally.
+    """
+
+    def mouseReleaseEvent(self, event):
+        action = self.activeAction()
+        if action is not None and action.isEnabled() and action.isCheckable():
+            # Toggle in place and keep the menu open for more selections.
+            action.trigger()
+            return
+        super().mouseReleaseEvent(event)
+
+
+class CollapsibleGroupBox(QtWidgets.QGroupBox):
+    """A checkable group box whose contents collapse when unchecked.
+
+    Acts as a lightweight collapsible section: the check state of the group box
+    header doubles as an expand/collapse toggle, hiding the body so the panel
+    actually shrinks for a cleaner first-time view (issue #2769, item 4).
+
+    All body widgets live inside a single inner :attr:`content` frame; callers
+    add their layout to ``content`` (e.g. ``QVBoxLayout(group.content)``).
+    Collapsing toggles only the *visibility* of ``content`` -- never its
+    *enabled* state -- so per-widget enabled/disabled logic inside the body
+    keeps working even while collapsed. (A plain checkable QGroupBox would
+    instead disable every descendant when unchecked, which would clobber that
+    logic.)
+
+    Args:
+        title: The header text.
+        collapsed: If True, start collapsed (unchecked) with the body hidden.
+        parent: Parent widget.
+    """
+
+    def __init__(
+        self,
+        title: str = "",
+        collapsed: bool = False,
+        parent: Optional[QtWidgets.QWidget] = None,
+    ):
+        super().__init__(title, parent)
+
+        # Single body frame holding everything the caller adds.
+        self.content = QtWidgets.QWidget(self)
+        outer = QtWidgets.QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(self.content)
+
+        self.setCheckable(True)
+        self.setChecked(not collapsed)
+        # Re-apply collapse state whenever the header is toggled.
+        self.toggled.connect(self._on_toggled)
+        self._on_toggled(self.isChecked())
+
+    def _on_toggled(self, checked: bool):
+        """Show/hide the body to match the header check state."""
+        self.content.setVisible(checked)
+        # A checkable QGroupBox disables its direct children when unchecked;
+        # undo that on the body frame so the body's own enabled-state logic is
+        # preserved (collapse is visibility-only here).
+        self.content.setEnabled(True)
+        # Let the layout reclaim/release the space.
+        self.updateGeometry()
+
+    def apply_collapsed_state(self):
+        """Apply the current check state to body visibility.
+
+        Kept for callers that add children after construction; toggling is
+        already handled on construction and on every header click.
+        """
+        self._on_toggled(self.isChecked())
+
+
 class QCScoreCanvas(Canvas):
     """Matplotlib canvas for displaying QC score distribution.
 
@@ -462,14 +665,263 @@ class QCFeatureCanvas(Canvas):
         self.draw()
 
 
+class QCSkeletonTraceCanvas(Canvas):
+    """Matplotlib canvas that draws a skeleton and traces an ordered chain.
+
+    This is the interactive heart of the chain-order "skeleton tracing" UX
+    (issue #2769, item 2). Instead of typing node names, the user *clicks*
+    nodes in order on a rendered skeleton; each click appends that node to the
+    chain currently being traced, and the canvas highlights the trace in click
+    order with numbered badges so the path is obvious at a glance.
+
+    The skeleton is laid out with a deterministic spring layout (seeded) over
+    the skeleton's nodes/edges so the picture is stable across redraws. Clicking
+    selects the nearest node within a small radius and emits
+    :attr:`node_clicked`; the owning widget owns the chain list and calls
+    :meth:`set_trace` to update the highlighted order.
+
+    Signals:
+        node_clicked: Emitted with the node *name* (str) when the user clicks a
+            node. The owning widget decides whether to append/toggle it in the
+            chain being traced.
+    """
+
+    node_clicked = QtCore.Signal(str)
+
+    def __init__(self, width: int = 5, height: int = 3, dpi: int = 100):
+        """Initialize the canvas.
+
+        Args:
+            width: Figure width in inches.
+            height: Figure height in inches.
+            dpi: Dots per inch for the figure.
+        """
+        self.fig = Figure(figsize=(width, height), dpi=dpi, constrained_layout=True)
+        self.axes = self.fig.add_subplot(111)
+
+        super().__init__(self.fig)
+
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
+        self.setMinimumSize(260, 220)
+
+        # Node display positions keyed by node name: {name: (x, y)}.
+        self._positions: dict = {}
+        self._node_names: list = []
+        self._edges: list = []  # list of (src_name, dst_name)
+        # The chain currently being traced, in click order (node names).
+        self._trace: list = []
+        # Click hit-test radius in data coordinates (spring layout is ~[-1, 1]).
+        self._pick_radius = 0.18
+
+        self.mpl_connect("button_press_event", self._on_click)
+        self.update_plot()
+
+    def set_skeleton(self, node_names: list, edges: list):
+        """Set the skeleton to display and recompute the layout.
+
+        Args:
+            node_names: Ordered list of node-name strings.
+            edges: List of ``(source_name, destination_name)`` tuples.
+        """
+        self._node_names = list(node_names)
+        # Keep only edges whose endpoints are present, as name pairs.
+        valid = set(self._node_names)
+        self._edges = [(s, d) for (s, d) in edges if s in valid and d in valid]
+        self._positions = self._compute_layout()
+        # Drop any traced nodes that no longer exist in this skeleton.
+        self._trace = [n for n in self._trace if n in valid]
+        self.update_plot()
+
+    def _compute_layout(self) -> dict:
+        """Compute a deterministic node layout for the current skeleton.
+
+        Uses a seeded spring layout so the drawing is stable across redraws.
+        Falls back to a simple horizontal line if networkx is unavailable.
+
+        Returns:
+            Dict mapping node name to an ``(x, y)`` position.
+        """
+        if not self._node_names:
+            return {}
+        try:
+            import networkx as nx
+
+            graph = nx.Graph()
+            graph.add_nodes_from(self._node_names)
+            graph.add_edges_from(self._edges)
+            # Seed keeps the picture stable so users build muscle memory.
+            pos = nx.spring_layout(graph, seed=42)
+            return {name: (float(p[0]), float(p[1])) for name, p in pos.items()}
+        except Exception:
+            # Fallback: lay nodes out on a horizontal line in node order.
+            n = len(self._node_names)
+            if n == 1:
+                return {self._node_names[0]: (0.0, 0.0)}
+            return {
+                name: (-1.0 + 2.0 * i / (n - 1), 0.0)
+                for i, name in enumerate(self._node_names)
+            }
+
+    def set_trace(self, trace: list):
+        """Set the chain-in-progress (node names, in click order) and redraw.
+
+        Args:
+            trace: Ordered list of node names currently in the trace.
+        """
+        self._trace = [n for n in trace if n in self._positions]
+        self.update_plot()
+
+    @property
+    def trace(self) -> list:
+        """The current chain-in-progress as an ordered list of node names."""
+        return list(self._trace)
+
+    def update_plot(self):
+        """Redraw the skeleton, edges, and the highlighted trace path."""
+        self.axes.clear()
+        self.axes.set_xticks([])
+        self.axes.set_yticks([])
+        for spine in self.axes.spines.values():
+            spine.set_visible(False)
+
+        if not self._positions:
+            self.axes.text(
+                0.5,
+                0.5,
+                "No skeleton available.\nLoad a project with a skeleton to trace "
+                "a chain,\nor type the chain below.",
+                ha="center",
+                va="center",
+                transform=self.axes.transAxes,
+                fontsize=9,
+                color="gray",
+            )
+            self.draw()
+            return
+
+        # Draw skeleton edges first so nodes sit on top.
+        for src, dst in self._edges:
+            x0, y0 = self._positions[src]
+            x1, y1 = self._positions[dst]
+            self.axes.plot([x0, x1], [y0, y1], color="#ced4da", linewidth=1.2, zorder=1)
+
+        # Draw the trace path (in click order) as a highlighted poly-line.
+        if len(self._trace) >= 2:
+            tx = [self._positions[n][0] for n in self._trace]
+            ty = [self._positions[n][1] for n in self._trace]
+            self.axes.plot(tx, ty, color="#007bff", linewidth=2.5, zorder=2, alpha=0.9)
+
+        # Map node -> 1-based position in the trace (for numbered badges).
+        trace_order = {name: i + 1 for i, name in enumerate(self._trace)}
+
+        # Draw nodes.
+        for name, (x, y) in self._positions.items():
+            in_trace = name in trace_order
+            self.axes.scatter(
+                [x],
+                [y],
+                s=260,
+                facecolor="#007bff" if in_trace else "#e9ecef",
+                edgecolor="#0056b3" if in_trace else "#adb5bd",
+                linewidths=1.5,
+                zorder=3,
+            )
+            # Numbered badge for traced nodes; small name label for all.
+            if in_trace:
+                self.axes.text(
+                    x,
+                    y,
+                    str(trace_order[name]),
+                    ha="center",
+                    va="center",
+                    fontsize=9,
+                    fontweight="bold",
+                    color="white",
+                    zorder=4,
+                )
+            self.axes.annotate(
+                name,
+                xy=(x, y),
+                xytext=(0, 12),
+                textcoords="offset points",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+                color="#212529" if in_trace else "#495057",
+                zorder=4,
+            )
+
+        # Pad the limits so labels are not clipped.
+        xs = [p[0] for p in self._positions.values()]
+        ys = [p[1] for p in self._positions.values()]
+        pad = 0.35
+        self.axes.set_xlim(min(xs) - pad, max(xs) + pad)
+        self.axes.set_ylim(min(ys) - pad, max(ys) + pad)
+        self.axes.set_aspect("equal", adjustable="datalim")
+
+        self.draw()
+
+    def node_at(self, x: float, y: float) -> Optional[str]:
+        """Return the node name nearest to ``(x, y)`` within the pick radius.
+
+        Args:
+            x: X position in data coordinates.
+            y: Y position in data coordinates.
+
+        Returns:
+            The nearest node name within :attr:`_pick_radius`, or None.
+        """
+        best_name = None
+        best_dist = self._pick_radius
+        for name, (nx_, ny_) in self._positions.items():
+            dist = ((nx_ - x) ** 2 + (ny_ - y) ** 2) ** 0.5
+            if dist <= best_dist:
+                best_dist = dist
+                best_name = name
+        return best_name
+
+    def _on_click(self, event):
+        """Emit :attr:`node_clicked` for the node nearest the click, if any."""
+        if event.inaxes != self.axes:
+            return
+        if event.xdata is None or event.ydata is None:
+            return
+        name = self.node_at(event.xdata, event.ydata)
+        if name is not None:
+            self.node_clicked.emit(name)
+
+
 class QCFlagTableModel(QtCore.QAbstractTableModel):
-    """Table model for QC flagged instances."""
+    """Table model for QC flagged instances.
 
-    COLUMNS = ["Frame", "Instance", "Score", "Confidence", "Issue"]
+    The trailing "Reviewed" column (issue #2769, item 6) is a user-toggled
+    checkbox so reviewers can mark and see which flagged instances they have
+    already looked at. The reviewed state is *not* stored on the row: it lives
+    in a shared set of instance keys owned by the widget, so it survives
+    threshold re-filters and issue-type filtering (which rebuild the row list).
+    """
 
-    def __init__(self, parent=None):
+    # "Reviewed" is appended last so the existing data/sort column indices
+    # (Frame=0 ... Issue=4) are unchanged.
+    COLUMNS = ["Frame", "Instance", "Score", "Confidence", "Issue", "Reviewed"]
+    REVIEWED_COL = 5
+
+    def __init__(self, parent=None, reviewed_keys: Optional[set] = None):
+        """Initialize the model.
+
+        Args:
+            parent: Parent QObject.
+            reviewed_keys: Optional shared set of ``instance_key`` tuples that
+                have been marked reviewed. The model reads/writes this set for
+                the Reviewed column so the state is keyed by instance identity
+                (video, frame, instance) rather than row index. If None, a new
+                empty set is created.
+        """
         super().__init__(parent)
         self._items: List["QCFlag"] = []
+        self._reviewed_keys: set = reviewed_keys if reviewed_keys is not None else set()
 
     @property
     def items(self) -> List["QCFlag"]:
@@ -483,6 +935,40 @@ class QCFlagTableModel(QtCore.QAbstractTableModel):
         self._items = value
         self.endResetModel()
 
+    @property
+    def reviewed_keys(self) -> set:
+        """Set of instance keys marked reviewed (shared with the widget)."""
+        return self._reviewed_keys
+
+    def is_reviewed(self, item: "QCFlag") -> bool:
+        """Return True if the given flag's instance is marked reviewed."""
+        return item.instance_key in self._reviewed_keys
+
+    def set_reviewed(self, item: "QCFlag", reviewed: bool):
+        """Mark a flag's instance reviewed/unreviewed and repaint its row.
+
+        Args:
+            item: The flag whose instance reviewed-state to set.
+            reviewed: Target reviewed state.
+        """
+        key = item.instance_key
+        changed = (key in self._reviewed_keys) != bool(reviewed)
+        if reviewed:
+            self._reviewed_keys.add(key)
+        else:
+            self._reviewed_keys.discard(key)
+        if changed and item in self._items:
+            row = self._items.index(item)
+            top = self.index(row, 0)
+            bottom = self.index(row, self.columnCount() - 1)
+            self.dataChanged.emit(top, bottom)
+
+    def reviewed_count(self) -> int:
+        """Number of *currently shown* rows whose instance is reviewed."""
+        return sum(
+            1 for item in self._items if item.instance_key in self._reviewed_keys
+        )
+
     def rowCount(self, parent=None) -> int:
         return len(self._items)
 
@@ -493,6 +979,13 @@ class QCFlagTableModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole and orientation == QtCore.Qt.Horizontal:
             return self.COLUMNS[section]
         return None
+
+    def flags(self, index):
+        base = super().flags(index)
+        if index.isValid() and index.column() == self.REVIEWED_COL:
+            # Reviewed is a user-checkable column.
+            return base | QtCore.Qt.ItemIsUserCheckable
+        return base
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if not index.isValid() or index.row() >= len(self._items):
@@ -512,6 +1005,19 @@ class QCFlagTableModel(QtCore.QAbstractTableModel):
                 return item.confidence.title()
             elif col == 4:  # Issue
                 return item.top_issue.replace("_", " ").title()
+            # Reviewed column shows a checkbox (via CheckStateRole), no text.
+
+        elif role == QtCore.Qt.CheckStateRole:
+            if col == self.REVIEWED_COL:
+                return (
+                    QtCore.Qt.Checked
+                    if item.instance_key in self._reviewed_keys
+                    else QtCore.Qt.Unchecked
+                )
+
+        elif role == QtCore.Qt.TextAlignmentRole:
+            if col == self.REVIEWED_COL:
+                return int(QtCore.Qt.AlignCenter)
 
         elif role == QtCore.Qt.ForegroundRole:
             if col == 2:  # Score column
@@ -528,6 +1034,21 @@ class QCFlagTableModel(QtCore.QAbstractTableModel):
                     return QtGui.QBrush(QtGui.QColor(108, 117, 125))
 
         return None
+
+    def setData(self, index, value, role=QtCore.Qt.EditRole):
+        """Toggle reviewed-state when the user clicks the Reviewed checkbox."""
+        if (
+            index.isValid()
+            and index.column() == self.REVIEWED_COL
+            and role == QtCore.Qt.CheckStateRole
+            and index.row() < len(self._items)
+        ):
+            item = self._items[index.row()]
+            # value may arrive as a Qt.CheckState enum or its int form.
+            reviewed = QtCore.Qt.CheckState(value) == QtCore.Qt.Checked
+            self.set_reviewed(item, reviewed)
+            return True
+        return False
 
     def sort(self, column: int, order: QtCore.Qt.SortOrder = QtCore.Qt.AscendingOrder):
         """Sort the model by the given column.
@@ -552,6 +1073,8 @@ class QCFlagTableModel(QtCore.QAbstractTableModel):
             key = lambda x: conf_order.get(x.confidence, -1)
         elif column == 4:  # Issue (alphabetical)
             key = lambda x: x.top_issue
+        elif column == self.REVIEWED_COL:  # Reviewed (unreviewed first ascending)
+            key = lambda x: x.instance_key in self._reviewed_keys
         else:
             key = lambda x: 0
 
@@ -656,6 +1179,30 @@ class QCWidget(QtWidgets.QWidget):
         self._worker: Optional[QCAnalysisWorker] = None
         self._last_export_dir: Optional[str] = None  # Persist export directory
 
+        # All flagged instances at the current threshold, before the issue-type
+        # filter is applied (item 5). The table shows a filtered subset of this.
+        self._all_flagged: List["QCFlag"] = []
+        # Raw ``top_issue`` strings the user has chosen to SHOW in the table.
+        # None means "no filter yet" -> show everything (item 5).
+        self._visible_issue_types: Optional[set] = None
+        # Checkable filter actions by raw issue, and every issue type seen so
+        # far (so a re-filter can tell genuinely new types from de-selected
+        # ones and default the new ones to shown).
+        self._issue_filter_actions: dict = {}
+        self._issue_filter_seen: set = set()
+        # Session-scoped reviewed-state, keyed by the instance's identity tuple
+        # (video, frame, instance) so it survives threshold/issue re-filters
+        # (item 6). Shared by reference with the table model.
+        self._reviewed_keys: set = set()
+
+        # Ordered chains the user has traced on the skeleton (item 2): each
+        # entry is a list of node names in order. These feed QCConfig together
+        # with any chains typed into the advanced free-text fallback.
+        self._traced_chains: List[List[str]] = []
+        # The chain currently being traced by clicking nodes (node names, in
+        # click order); committed to ``_traced_chains`` via "Add chain".
+        self._trace_in_progress: List[str] = []
+
         self._setup_ui()
         self._connect_signals()
 
@@ -679,12 +1226,19 @@ class QCWidget(QtWidgets.QWidget):
         title_layout.addWidget(self._run_button)
         layout.addLayout(title_layout)
 
-        # Progress bar with status and cancel button (hidden by default)
-        progress_layout = QtWidgets.QHBoxLayout()
+        # Progress area (hidden by default). The status TEXT gets its own line
+        # ABOVE the progress bar so neither is squeezed (issue #2769, item 1).
+        progress_box = QtWidgets.QVBoxLayout()
+        progress_box.setSpacing(2)
+
+        # Status text on its own line.
         self._progress_label = QtWidgets.QLabel("")
         self._progress_label.setVisible(False)
-        progress_layout.addWidget(self._progress_label)
+        self._progress_label.setWordWrap(True)
+        progress_box.addWidget(self._progress_label)
 
+        # Progress bar + Cancel button share the second line.
+        progress_layout = QtWidgets.QHBoxLayout()
         self._progress_bar = QtWidgets.QProgressBar()
         self._progress_bar.setVisible(False)
         self._progress_bar.setTextVisible(True)
@@ -697,7 +1251,8 @@ class QCWidget(QtWidgets.QWidget):
         self._cancel_button.setToolTip("Cancel the running analysis")
         progress_layout.addWidget(self._cancel_button)
 
-        layout.addLayout(progress_layout)
+        progress_box.addLayout(progress_layout)
+        layout.addLayout(progress_box)
 
         # Timer for spinner animation during analysis
         self._spinner_timer = QtCore.QTimer(self)
@@ -739,7 +1294,18 @@ class QCWidget(QtWidgets.QWidget):
         # === Detector settings ===
         self._setup_detector_settings(layout)
 
-        # === Tabbed visualization area ===
+        # === Tabbed visualization area (collapsible) ===
+        # Wrap the charts in a collapsible section so users can hide the heavy
+        # plots for a cleaner panel (issue #2769, item 4). Expanded by default
+        # since the charts are the main view.
+        self._charts_group = CollapsibleGroupBox("Charts", collapsed=False)
+        self._charts_group.setToolTip(
+            "Score, issue-breakdown and feature charts.\n"
+            "Uncheck the header to collapse this section."
+        )
+        charts_layout = QtWidgets.QVBoxLayout(self._charts_group.content)
+        charts_layout.setContentsMargins(6, 4, 6, 6)
+
         self._viz_tabs = QtWidgets.QTabWidget()
         self._viz_tabs.setMinimumHeight(180)
         # Let the tabs shrink when space is limited but not expand unboundedly
@@ -759,14 +1325,54 @@ class QCWidget(QtWidgets.QWidget):
         self._feature_canvas = QCFeatureCanvas(width=6, height=2.2)
         self._viz_tabs.addTab(self._feature_canvas, "Features")
 
-        layout.addWidget(self._viz_tabs)
+        charts_layout.addWidget(self._viz_tabs)
+        layout.addWidget(self._charts_group)
 
         # === Flagged instances table ===
         table_group = QtWidgets.QGroupBox("Flagged Instances")
         table_layout = QtWidgets.QVBoxLayout(table_group)
         table_layout.setContentsMargins(4, 4, 4, 4)
 
-        self._table_model = QCFlagTableModel()
+        # --- Toolbar row above the table: issue-type filter + reviewed count ---
+        # Item 5: a checkable dropdown to include/exclude flagged instances by
+        # issue type. Item 6: a running "X / Y reviewed" counter.
+        toolbar = QtWidgets.QHBoxLayout()
+        toolbar.setContentsMargins(0, 0, 0, 0)
+        toolbar.setSpacing(6)
+
+        toolbar.addWidget(QtWidgets.QLabel("Show:"))
+
+        # Multi-select issue-type filter as a QMenu of checkboxes on a button.
+        self._issue_filter_button = QtWidgets.QToolButton()
+        self._issue_filter_button.setText("Issue types: all")
+        self._issue_filter_button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self._issue_filter_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextOnly)
+        self._issue_filter_button.setToolTip(
+            "Filter the flagged list by issue type.\n"
+            "Tick the issue types you want to see; the table updates live."
+        )
+        # Stays open while the user ticks multiple issue types (item 5).
+        self._issue_filter_menu = CheckableFilterMenu(self._issue_filter_button)
+        self._issue_filter_button.setMenu(self._issue_filter_menu)
+        # Disabled until results exist (nothing to filter yet).
+        self._issue_filter_button.setEnabled(False)
+        toolbar.addWidget(self._issue_filter_button)
+
+        toolbar.addStretch()
+
+        # Running reviewed counter ("12 / 45 reviewed"), item 6.
+        self._reviewed_count_label = QtWidgets.QLabel("0 / 0 reviewed")
+        self._reviewed_count_label.setToolTip(
+            "How many of the flagged instances shown you have marked reviewed.\n"
+            "Tick the Reviewed box (or just navigate to a row) to mark one."
+        )
+        toolbar.addWidget(self._reviewed_count_label)
+
+        table_layout.addLayout(toolbar)
+
+        # Share the reviewed-keys set by reference so the model's Reviewed
+        # column reflects session-scoped, identity-keyed state (item 6).
+        self._table_model = QCFlagTableModel(reviewed_keys=self._reviewed_keys)
         self._table_view = QtWidgets.QTableView()
         self._table_view.setModel(self._table_model)
         self._table_view.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
@@ -775,34 +1381,47 @@ class QCWidget(QtWidgets.QWidget):
         self._table_view.setSortingEnabled(True)
         self._table_view.setMinimumHeight(120)
 
-        # Set column widths
+        # Column widths: stretch the Issue column, keep the trailing Reviewed
+        # checkbox column compact (so it does not grab the leftover width).
         header = self._table_view.horizontalHeader()
-        header.setStretchLastSection(True)
+        header.setStretchLastSection(False)
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QtWidgets.QHeaderView.Stretch)  # Issue
+        header.setSectionResizeMode(
+            QCFlagTableModel.REVIEWED_COL, QtWidgets.QHeaderView.ResizeToContents
+        )
 
         table_layout.addWidget(self._table_view)
         layout.addWidget(table_group, stretch=1)
 
         # === Bottom panel: selected instance info and statistics ===
+        # Both are collapsible (issue #2769, item 4) but expanded by default,
+        # since their plain-language summaries (item 7) are useful to everyone.
         bottom_layout = QtWidgets.QHBoxLayout()
 
         # Selected instance details
-        details_group = QtWidgets.QGroupBox("Selected Instance")
-        details_layout = QtWidgets.QVBoxLayout(details_group)
+        self._details_group = CollapsibleGroupBox("Selected Instance", collapsed=False)
+        self._details_group.setToolTip(
+            "Why the selected instance was flagged.\n"
+            "Uncheck the header to collapse this section."
+        )
+        details_layout = QtWidgets.QVBoxLayout(self._details_group.content)
         details_layout.setContentsMargins(6, 6, 6, 6)
 
-        self._details_label = QtWidgets.QLabel(
-            "Click a row in the table to select an instance"
-        )
+        self._details_label = QtWidgets.QLabel(SELECT_INSTANCE_PLACEHOLDER)
         self._details_label.setWordWrap(True)
         self._details_label.setMinimumHeight(70)
         details_layout.addWidget(self._details_label)
 
-        bottom_layout.addWidget(details_group)
+        bottom_layout.addWidget(self._details_group)
 
         # Statistics panel
-        stats_group = QtWidgets.QGroupBox("Statistics")
-        stats_layout = QtWidgets.QVBoxLayout(stats_group)
+        self._stats_group = CollapsibleGroupBox("Statistics", collapsed=False)
+        self._stats_group.setToolTip(
+            "Summary of how many instances were flagged.\n"
+            "Uncheck the header to collapse this section."
+        )
+        stats_layout = QtWidgets.QVBoxLayout(self._stats_group.content)
         stats_layout.setContentsMargins(6, 6, 6, 6)
 
         self._stats_label = QtWidgets.QLabel("No analysis run yet")
@@ -810,7 +1429,7 @@ class QCWidget(QtWidgets.QWidget):
         self._stats_label.setMinimumHeight(70)
         stats_layout.addWidget(self._stats_label)
 
-        bottom_layout.addWidget(stats_group)
+        bottom_layout.addWidget(self._stats_group)
 
         layout.addLayout(bottom_layout)
 
@@ -821,24 +1440,27 @@ class QCWidget(QtWidgets.QWidget):
         enable/disable and tune each detector for the current project. The
         resulting controls are read by :meth:`_build_qc_config`.
 
+        The group is an advanced panel, so it starts COLLAPSED to keep the
+        first-time view clean (issue #2769, item 4); each detector row carries a
+        plain-language "?" help button (item 3).
+
         Args:
             layout: The parent layout to append the group box to.
         """
-        # Checkable group acts as an expand/collapse header; default expanded.
-        group = QtWidgets.QGroupBox("Detector Settings")
-        group.setCheckable(True)
-        group.setChecked(True)
+        # Collapsible header; advanced panel starts collapsed for a clean view.
+        group = CollapsibleGroupBox("Detector Settings", collapsed=True)
         group.setToolTip(
             "Enable/disable and tune individual QC detectors for this project.\n"
-            "Uncheck the header to collapse this panel."
+            "Click the header to expand; uncheck it to collapse again."
         )
         self._detector_settings_group = group
 
-        grid = QtWidgets.QGridLayout(group)
+        grid = QtWidgets.QGridLayout(group.content)
         grid.setContentsMargins(8, 4, 8, 8)
         grid.setHorizontalSpacing(8)
         grid.setVerticalSpacing(4)
-        # Column 2 (the threshold area) takes any extra width.
+        # Column 2 (the threshold area) takes any extra width. Column 3 holds
+        # the per-detector "?" help buttons at the far right.
         grid.setColumnStretch(2, 1)
         self._detector_settings_grid = grid
 
@@ -860,7 +1482,7 @@ class QCWidget(QtWidgets.QWidget):
         flip_thr_row = self._make_threshold_row(
             [(QtWidgets.QLabel("flip frac ≥"), self._sb_flip_thr)]
         )
-        self._add_detector_row(0, self._cb_flip, flip_thr_row)
+        self._add_detector_row(0, self._cb_flip, flip_thr_row, help_key="flip")
 
         # --- Chimera / pose split, reliable, default-ON (no user threshold) ---
         self._cb_chimera = QtWidgets.QCheckBox("Chimera (pose split)")
@@ -873,7 +1495,7 @@ class QCWidget(QtWidgets.QWidget):
         chimera_note = QtWidgets.QLabel("(no threshold)")
         chimera_note.setEnabled(False)
         chimera_note.setToolTip("Chimera detection has no hard threshold to set.")
-        self._add_detector_row(1, self._cb_chimera, chimera_note)
+        self._add_detector_row(1, self._cb_chimera, chimera_note, help_key="chimera")
 
         # --- Duplicate / split, reliable, default-ON ---
         self._cb_duplicate = QtWidgets.QCheckBox("Duplicate / split")
@@ -893,7 +1515,7 @@ class QCWidget(QtWidgets.QWidget):
         dup_thr_row = self._make_threshold_row(
             [(QtWidgets.QLabel("score ≥"), self._sb_dup_thr)]
         )
-        self._add_detector_row(2, self._cb_duplicate, dup_thr_row)
+        self._add_detector_row(2, self._cb_duplicate, dup_thr_row, help_key="duplicate")
 
         # --- Wrong chain order, experimental, default-OFF ---
         self._cb_chain = QtWidgets.QCheckBox("Wrong chain order")
@@ -924,26 +1546,14 @@ class QCWidget(QtWidgets.QWidget):
                 (QtWidgets.QLabel("inv frac ≥"), self._sb_order_thr),
             ]
         )
-        self._add_detector_row(3, self._cb_chain, chain_thr_row)
+        self._add_detector_row(3, self._cb_chain, chain_thr_row, help_key="chain")
 
-        # Optional user-defined ordered chains for the chain-order detector.
-        self._ordered_chains_edit = QtWidgets.QPlainTextEdit()
-        self._ordered_chains_edit.setPlaceholderText(
-            "One chain per line, node names comma-separated, "
-            "e.g. TTI, Tail_0, Tail_1, Tail_2, TailTip"
-        )
-        self._ordered_chains_edit.setToolTip(
-            "Optional ground-truth ordered node chains for the chain-order "
-            "detector (one chain per line, node names comma-separated).\n"
-            "Leave empty to fall back to auto-detected skeleton chains."
-        )
-        # Keep it compact (about two lines tall).
-        fm = self._ordered_chains_edit.fontMetrics()
-        self._ordered_chains_edit.setMaximumHeight(fm.height() * 3 + 8)
-        chains_label = QtWidgets.QLabel("Ordered chains:")
-        chains_label.setToolTip(self._ordered_chains_edit.toolTip())
-        grid.addWidget(chains_label, 4, 1)
-        grid.addWidget(self._ordered_chains_edit, 4, 2)
+        # Skeleton-tracing UX for defining ordered chains (issue #2769, item 2):
+        # a click-to-trace skeleton plus an ordered chip list, instead of forcing
+        # users to type node names. The advanced free-text box is kept inside it
+        # as a fallback. Spans the full grid width.
+        self._chain_trace_panel = self._build_chain_trace_panel()
+        grid.addWidget(self._chain_trace_panel, 4, 0, 1, 4)
 
         # --- Missing labelable node, experimental, default-OFF ---
         self._cb_missing = QtWidgets.QCheckBox("Missing labelable node")
@@ -963,7 +1573,7 @@ class QCWidget(QtWidgets.QWidget):
         missing_thr_row = self._make_threshold_row(
             [(QtWidgets.QLabel("prob ≥"), self._sb_missing_thr)]
         )
-        self._add_detector_row(5, self._cb_missing, missing_thr_row)
+        self._add_detector_row(5, self._cb_missing, missing_thr_row, help_key="missing")
 
         # --- Appearance / wrong-object (B2 channel), experimental, default-OFF ---
         self._cb_appearance = QtWidgets.QCheckBox("Appearance / wrong-object")
@@ -980,7 +1590,9 @@ class QCWidget(QtWidgets.QWidget):
             "Appearance scoring reads image patches around each node; it has no "
             "hard threshold to tune here."
         )
-        self._add_detector_row(6, self._cb_appearance, appearance_note)
+        self._add_detector_row(
+            6, self._cb_appearance, appearance_note, help_key="appearance"
+        )
 
         # --- In-sample model prediction (B2 channel), experimental, default-OFF ---
         self._cb_insample = QtWidgets.QCheckBox("In-sample model prediction")
@@ -1007,7 +1619,9 @@ class QCWidget(QtWidgets.QWidget):
         insample_picker = self._make_threshold_row(
             [(self._insample_model_edit, self._insample_browse_btn)]
         )
-        self._add_detector_row(7, self._cb_insample, insample_picker)
+        self._add_detector_row(
+            7, self._cb_insample, insample_picker, help_key="insample"
+        )
 
         # Disable each detector's tunable widgets when its checkbox is off.
         self._cb_flip.toggled.connect(self._sb_flip_thr.setEnabled)
@@ -1020,7 +1634,9 @@ class QCWidget(QtWidgets.QWidget):
         def _set_chain_enabled(on: bool):
             self._sb_chain_angle.setEnabled(on)
             self._sb_order_thr.setEnabled(on)
-            self._ordered_chains_edit.setEnabled(on)
+            # The whole skeleton-trace panel (canvas, chip list, saved chains and
+            # the advanced free-text fallback) follows the chain checkbox.
+            self._chain_trace_panel.setEnabled(on)
 
         self._cb_chain.toggled.connect(_set_chain_enabled)
         _set_chain_enabled(self._cb_chain.isChecked())
@@ -1035,7 +1651,299 @@ class QCWidget(QtWidgets.QWidget):
         _set_insample_enabled(self._cb_insample.isChecked())
         self._insample_browse_btn.clicked.connect(self._on_browse_insample_model)
 
+        # Apply the (collapsed) start state now that all children exist so the
+        # panel actually starts hidden for a clean first-time view.
+        group.apply_collapsed_state()
+
         layout.addWidget(group)
+
+    def _build_chain_trace_panel(self) -> QtWidgets.QWidget:
+        """Build the skeleton-tracing UI for defining ordered chains.
+
+        Lets the user define an ordered chain by *clicking nodes in order* on a
+        rendered skeleton (issue #2769, item 2) instead of typing node names.
+        The panel contains:
+
+        * a :class:`QCSkeletonTraceCanvas` (click nodes to build a chain),
+        * a live ordered-chip readout of the chain being traced plus
+          Add / Undo / Clear controls,
+        * a list of saved chains with up/down reorder and remove, and
+        * an advanced, collapsible free-text fallback (the original typed-chain
+          box) for power users / projects with no skeleton.
+
+        Both the traced chains and the free-text box feed
+        :meth:`_build_qc_config` via :meth:`_collect_ordered_chains`.
+
+        Returns:
+            The assembled panel widget.
+        """
+        panel = QtWidgets.QWidget()
+        outer = QtWidgets.QVBoxLayout(panel)
+        outer.setContentsMargins(0, 4, 0, 0)
+        outer.setSpacing(4)
+
+        heading = QtWidgets.QLabel(
+            "<b>Ordered chains</b> — trace a chain by clicking nodes in order "
+            "(e.g. tail base → tail tip):"
+        )
+        heading.setWordWrap(True)
+        heading.setToolTip(
+            "Define the ground-truth order of a connected chain of nodes (like a "
+            "tail or a limb) so the detector can spot points clicked out of "
+            "sequence. Click nodes on the skeleton in the order they should run."
+        )
+        outer.addWidget(heading)
+
+        # --- Interactive skeleton canvas: click nodes in order to trace. ---
+        self._skeleton_canvas = QCSkeletonTraceCanvas(width=5, height=2.6)
+        self._skeleton_canvas.setToolTip(
+            "Click nodes in order to trace a chain. Numbered blue nodes show the "
+            "current order; click 'Add chain' to save it."
+        )
+        outer.addWidget(self._skeleton_canvas)
+
+        # --- Current trace readout (ordered chips) + actions. ---
+        trace_row = QtWidgets.QHBoxLayout()
+        trace_row.setSpacing(4)
+        trace_row.addWidget(QtWidgets.QLabel("Tracing:"))
+
+        self._trace_chips_label = QtWidgets.QLabel("(click nodes to start)")
+        self._trace_chips_label.setWordWrap(True)
+        self._trace_chips_label.setTextFormat(QtCore.Qt.RichText)
+        self._trace_chips_label.setToolTip(
+            "The chain you are currently tracing, in click order."
+        )
+        trace_row.addWidget(self._trace_chips_label, stretch=1)
+
+        self._trace_undo_btn = QtWidgets.QToolButton()
+        self._trace_undo_btn.setText("Undo")
+        self._trace_undo_btn.setToolTip("Remove the last node from the trace.")
+        self._trace_undo_btn.clicked.connect(self._on_trace_undo)
+        trace_row.addWidget(self._trace_undo_btn)
+
+        self._trace_clear_btn = QtWidgets.QToolButton()
+        self._trace_clear_btn.setText("Clear")
+        self._trace_clear_btn.setToolTip("Clear the current trace and start over.")
+        self._trace_clear_btn.clicked.connect(self._on_trace_clear)
+        trace_row.addWidget(self._trace_clear_btn)
+
+        self._trace_add_btn = QtWidgets.QToolButton()
+        self._trace_add_btn.setText("Add chain")
+        self._trace_add_btn.setToolTip(
+            "Save the traced chain to the list of ordered chains below."
+        )
+        self._trace_add_btn.clicked.connect(self._on_trace_add_chain)
+        trace_row.addWidget(self._trace_add_btn)
+
+        outer.addLayout(trace_row)
+
+        # --- Saved chains list with up/down reorder + remove. ---
+        saved_row = QtWidgets.QHBoxLayout()
+        saved_row.setSpacing(4)
+
+        self._chains_list = QtWidgets.QListWidget()
+        self._chains_list.setToolTip(
+            "Ordered chains used by the chain-order detector. Select one to "
+            "reorder or remove it."
+        )
+        self._chains_list.setMaximumHeight(78)
+        self._chains_list.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        saved_row.addWidget(self._chains_list, stretch=1)
+
+        # Vertical button strip for the saved-chains list.
+        chain_btns = QtWidgets.QVBoxLayout()
+        chain_btns.setSpacing(2)
+        self._chain_up_btn = QtWidgets.QToolButton()
+        self._chain_up_btn.setArrowType(QtCore.Qt.UpArrow)
+        self._chain_up_btn.setToolTip("Move the selected chain up.")
+        self._chain_up_btn.clicked.connect(lambda: self._move_selected_chain(-1))
+        chain_btns.addWidget(self._chain_up_btn)
+
+        self._chain_down_btn = QtWidgets.QToolButton()
+        self._chain_down_btn.setArrowType(QtCore.Qt.DownArrow)
+        self._chain_down_btn.setToolTip("Move the selected chain down.")
+        self._chain_down_btn.clicked.connect(lambda: self._move_selected_chain(1))
+        chain_btns.addWidget(self._chain_down_btn)
+
+        self._chain_remove_btn = QtWidgets.QToolButton()
+        self._chain_remove_btn.setText("✕")
+        self._chain_remove_btn.setToolTip("Remove the selected chain.")
+        self._chain_remove_btn.clicked.connect(self._on_remove_selected_chain)
+        chain_btns.addWidget(self._chain_remove_btn)
+        chain_btns.addStretch()
+        saved_row.addLayout(chain_btns)
+
+        outer.addLayout(saved_row)
+
+        # --- Advanced free-text fallback (the original typed-chain box). ---
+        # Kept for power users and projects without a skeleton; collapsed by
+        # default so the trace UI is the primary path.
+        advanced = CollapsibleGroupBox("Advanced: type chains as text", collapsed=True)
+        advanced.setToolTip(
+            "Fallback for typing ordered chains by hand (one chain per line, "
+            "node names comma-separated). Useful when no skeleton is loaded or "
+            "for pasting chains. Combined with any chains traced above."
+        )
+        adv_layout = QtWidgets.QVBoxLayout(advanced.content)
+        adv_layout.setContentsMargins(6, 4, 6, 6)
+
+        self._ordered_chains_edit = QtWidgets.QPlainTextEdit()
+        self._ordered_chains_edit.setPlaceholderText(
+            "One chain per line, node names comma-separated, "
+            "e.g. TTI, Tail_0, Tail_1, Tail_2, TailTip"
+        )
+        self._ordered_chains_edit.setToolTip(
+            "Optional ground-truth ordered node chains for the chain-order "
+            "detector (one chain per line, node names comma-separated).\n"
+            "Combined with any chains traced on the skeleton above. Leave both "
+            "empty to fall back to auto-detected skeleton chains."
+        )
+        # Keep it compact (about three lines tall).
+        fm = self._ordered_chains_edit.fontMetrics()
+        self._ordered_chains_edit.setMaximumHeight(fm.height() * 3 + 8)
+        adv_layout.addWidget(self._ordered_chains_edit)
+        advanced.apply_collapsed_state()
+        outer.addWidget(advanced)
+
+        # Wire the canvas click -> append to the trace.
+        self._skeleton_canvas.node_clicked.connect(self._on_trace_node_clicked)
+
+        # Initialize the readout/buttons for an empty trace.
+        self._refresh_trace_readout()
+        self._refresh_chains_list()
+
+        return panel
+
+    def _on_trace_node_clicked(self, name: str):
+        """Append a clicked node to the chain currently being traced.
+
+        Consecutive duplicate clicks on the same node are ignored so a double
+        click does not insert a degenerate zero-length segment.
+
+        Args:
+            name: The node name that was clicked on the skeleton canvas.
+        """
+        if self._trace_in_progress and self._trace_in_progress[-1] == name:
+            return
+        self._trace_in_progress.append(name)
+        self._refresh_trace_readout()
+
+    def _on_trace_undo(self):
+        """Remove the last node from the chain being traced."""
+        if self._trace_in_progress:
+            self._trace_in_progress.pop()
+            self._refresh_trace_readout()
+
+    def _on_trace_clear(self):
+        """Clear the chain currently being traced."""
+        if self._trace_in_progress:
+            self._trace_in_progress = []
+            self._refresh_trace_readout()
+
+    def _on_trace_add_chain(self):
+        """Commit the traced chain (>= 2 nodes) to the saved-chains list."""
+        chain = list(self._trace_in_progress)
+        if len(chain) < 2:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Trace a chain first",
+                "Click at least two nodes on the skeleton (in order) before "
+                "adding a chain.",
+            )
+            return
+        self._traced_chains.append(chain)
+        self._trace_in_progress = []
+        self._refresh_trace_readout()
+        self._refresh_chains_list()
+
+    def _refresh_trace_readout(self):
+        """Sync the trace chips, canvas highlight, and trace-action buttons."""
+        chain = self._trace_in_progress
+        # Mirror the trace onto the canvas highlight.
+        if hasattr(self, "_skeleton_canvas"):
+            self._skeleton_canvas.set_trace(chain)
+
+        if chain:
+            chips = "  →  ".join(
+                f"<span style='background:#e7f1ff; color:#0056b3; "
+                f"padding:1px 5px; border-radius:6px;'>{i + 1}. {name}</span>"
+                for i, name in enumerate(chain)
+            )
+            self._trace_chips_label.setText(chips)
+        else:
+            self._trace_chips_label.setText(
+                "<span style='color:#6c757d;'>(click nodes to start)</span>"
+            )
+
+        has_any = bool(chain)
+        self._trace_undo_btn.setEnabled(has_any)
+        self._trace_clear_btn.setEnabled(has_any)
+        # Need at least two nodes to make a meaningful chain.
+        self._trace_add_btn.setEnabled(len(chain) >= 2)
+
+    def _refresh_chains_list(self):
+        """Repopulate the saved-chains list from ``_traced_chains``."""
+        self._chains_list.clear()
+        for chain in self._traced_chains:
+            self._chains_list.addItem(" → ".join(chain))
+        has_rows = self._chains_list.count() > 0
+        self._chain_up_btn.setEnabled(has_rows)
+        self._chain_down_btn.setEnabled(has_rows)
+        self._chain_remove_btn.setEnabled(has_rows)
+
+    def _move_selected_chain(self, delta: int):
+        """Move the selected saved chain up or down by one.
+
+        Args:
+            delta: -1 to move up, +1 to move down.
+        """
+        row = self._chains_list.currentRow()
+        if row < 0:
+            return
+        new_row = row + delta
+        if not (0 <= new_row < len(self._traced_chains)):
+            return
+        self._traced_chains[row], self._traced_chains[new_row] = (
+            self._traced_chains[new_row],
+            self._traced_chains[row],
+        )
+        self._refresh_chains_list()
+        self._chains_list.setCurrentRow(new_row)
+
+    def _on_remove_selected_chain(self):
+        """Remove the currently selected saved chain."""
+        row = self._chains_list.currentRow()
+        if 0 <= row < len(self._traced_chains):
+            del self._traced_chains[row]
+            self._refresh_chains_list()
+
+    def _update_skeleton_trace(self):
+        """Push the current project's skeleton into the trace canvas.
+
+        Reads the first skeleton from the loaded labels (if any) and hands its
+        nodes/edges to the :class:`QCSkeletonTraceCanvas` so the user can trace
+        on the real skeleton. Clears the canvas when no skeleton is available.
+
+        Uses ``labels.skeletons`` (a list) rather than the ``labels.skeleton``
+        convenience property, since the latter *raises* when there are zero or
+        multiple skeletons. Any backend hiccup falls back to an empty canvas.
+        """
+        node_names: list = []
+        edges: list = []
+        labels = self._labels
+        try:
+            skeletons = (
+                getattr(labels, "skeletons", None) if labels is not None else None
+            )
+            skeleton = skeletons[0] if skeletons else None
+            if skeleton is not None:
+                node_names = list(skeleton.node_names)
+                edges = [
+                    (edge.source.name, edge.destination.name) for edge in skeleton.edges
+                ]
+        except Exception:
+            node_names, edges = [], []
+        self._skeleton_canvas.set_skeleton(node_names, edges)
 
     def _on_browse_insample_model(self):
         """Open a folder picker and set the in-sample model path line edit."""
@@ -1071,20 +1979,66 @@ class QCWidget(QtWidgets.QWidget):
         grid_row: int,
         checkbox: QtWidgets.QCheckBox,
         threshold_widget: QtWidgets.QWidget,
+        help_key: Optional[str] = None,
     ):
-        """Add a [enable checkbox | name | threshold] row to the settings grid.
+        """Add a [enable checkbox | name | threshold | "?"] row to the grid.
 
         The checkbox carries its own label text, so it spans the enable and
-        name columns; the threshold widget sits in the trailing column.
+        name columns; the threshold widget sits in the trailing column, and an
+        optional plain-language "?" help button sits at the far right.
 
         Args:
             grid_row: Row index in the settings grid.
             checkbox: The enable checkbox (its text is the detector name).
             threshold_widget: Widget holding the detector's threshold control(s).
+            help_key: Key into :data:`DETECTOR_HELP` for the "?" help button. If
+                None, no help button is added for this row.
         """
         grid = self._detector_settings_grid
         grid.addWidget(checkbox, grid_row, 0, 1, 2)
         grid.addWidget(threshold_widget, grid_row, 2)
+        if help_key is not None:
+            grid.addWidget(self._make_help_button(help_key), grid_row, 3)
+
+    def _make_help_button(self, help_key: str) -> QtWidgets.QToolButton:
+        """Create a small "?" button that explains a detector in plain language.
+
+        Args:
+            help_key: Key into :data:`DETECTOR_HELP`.
+
+        Returns:
+            A compact tool button that pops up the detector's explanation
+            (issue #2769, item 3).
+        """
+        button = QtWidgets.QToolButton()
+        button.setText("?")
+        button.setAutoRaise(True)
+        button.setFocusPolicy(QtCore.Qt.NoFocus)
+        button.setCursor(QtCore.Qt.PointingHandCursor)
+        # Keep it small and square so it does not bloat the row.
+        button.setFixedSize(20, 20)
+        title = DETECTOR_HELP.get(help_key, ("", ""))[0]
+        button.setToolTip(f"What does '{title}' catch?")
+        button.setAccessibleName(f"Help for {title}")
+        button.clicked.connect(lambda: self._show_detector_help(help_key))
+        return button
+
+    def _show_detector_help(self, help_key: str):
+        """Show a plain-language explanation of a detector in a popup.
+
+        Args:
+            help_key: Key into :data:`DETECTOR_HELP`.
+        """
+        title, body = DETECTOR_HELP.get(
+            help_key, ("Detector", "No description available.")
+        )
+        box = QtWidgets.QMessageBox(self)
+        box.setIcon(QtWidgets.QMessageBox.Information)
+        box.setWindowTitle(f"{title} — what it catches")
+        box.setText(f"<b>{title}</b>")
+        box.setInformativeText(body)
+        box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        box.exec_()
 
     def _build_qc_config(self) -> "QCConfig":
         """Build a QCConfig from the current detector-settings controls.
@@ -1107,7 +2061,7 @@ class QCWidget(QtWidgets.QWidget):
             use_chain_ordering=self._cb_chain.isChecked(),
             chain_turn_angle_deg=float(self._sb_chain_angle.value()),
             order_inversion_threshold=self._sb_order_thr.value(),
-            ordered_chains=self._parse_ordered_chains(),
+            ordered_chains=self._collect_ordered_chains(),
             use_missing_node_check=self._cb_missing.isChecked(),
             missing_node_prob_threshold=self._sb_missing_thr.value(),
             use_appearance=self._cb_appearance.isChecked(),
@@ -1133,6 +2087,27 @@ class QCWidget(QtWidgets.QWidget):
                 chains.append(names)
         return chains
 
+    def _collect_ordered_chains(self) -> list:
+        """Combine skeleton-traced chains with the advanced free-text chains.
+
+        The chains the user traced by clicking on the skeleton (item 2) come
+        first, followed by any chains typed into the advanced free-text box.
+        Exact duplicate chains are dropped so tracing and then typing the same
+        chain does not double it up.
+
+        Returns:
+            A list of node-name lists for ``QCConfig.ordered_chains``.
+        """
+        chains: list = []
+        seen: set = set()
+        for chain in list(self._traced_chains) + self._parse_ordered_chains():
+            key = tuple(chain)
+            if key in seen:
+                continue
+            seen.add(key)
+            chains.append(list(chain))
+        return chains
+
     def _connect_signals(self):
         """Connect UI signals."""
         self._run_button.clicked.connect(self._on_run_analysis)
@@ -1143,6 +2118,9 @@ class QCWidget(QtWidgets.QWidget):
             self._on_selection_changed
         )
         self._table_view.doubleClicked.connect(self._on_row_double_clicked)
+        # Keep the "X / Y reviewed" counter in sync whenever a Reviewed
+        # checkbox is toggled in the model (item 6).
+        self._table_model.dataChanged.connect(self._update_reviewed_count)
 
     def _update_spinner(self):
         """Update the spinner animation character."""
@@ -1176,12 +2154,26 @@ class QCWidget(QtWidgets.QWidget):
         self._results = None
         self._selected_flag = None
 
+        # Reset the per-results filter/reviewed bookkeeping for a fresh project.
+        self._all_flagged = []
+        self._visible_issue_types = None
+        self._reviewed_keys.clear()
+
+        # Reset the chain being traced (a new project may have a new skeleton);
+        # saved chains are kept so the user does not lose deliberate work.
+        self._trace_in_progress = []
+
         # Update UI
         self._score_canvas.set_scores(np.array([]))
         self._breakdown_canvas.set_issue_counts({})
         self._table_model.items = []
+        self._rebuild_issue_filter_menu([])
+        self._update_reviewed_count()
         self._update_statistics()
-        self._details_label.setText("Click a row in the table to select an instance")
+        self._details_label.setText(SELECT_INSTANCE_PLACEHOLDER)
+        # Refresh the skeleton-trace canvas with this project's skeleton.
+        self._update_skeleton_trace()
+        self._refresh_trace_readout()
 
     def _on_run_analysis(self):
         """Run QC analysis on current labels."""
@@ -1296,17 +2288,32 @@ class QCWidget(QtWidgets.QWidget):
         self._update_statistics()
 
     def _update_flagged_display(self):
-        """Update the flagged instances table and breakdown chart."""
+        """Update the flagged instances table and breakdown chart.
+
+        Re-filters the full flagged list at the current threshold, rebuilds the
+        issue-type filter menu to match the categories now present (item 5),
+        then pushes only the user-selected issue types into the table. The
+        breakdown chart keeps showing the FULL set so the distribution stays
+        complete regardless of which types are toggled in the table.
+        """
         if self._results is None:
             return
 
         threshold = self._threshold_slider.value() / 100.0
         flagged = self._results.get_flagged(threshold=threshold)
+        self._all_flagged = flagged
 
-        # Update table
-        self._table_model.items = flagged
+        # Rebuild the issue-type filter to match the categories now present,
+        # preserving the user's current show/hide choices where possible.
+        # de-dup while keeping first-seen (score-descending) order.
+        present_types = list(dict.fromkeys(f.top_issue for f in flagged))
+        self._rebuild_issue_filter_menu(present_types)
 
-        # Update breakdown chart
+        # Push only the selected issue types into the table (item 5).
+        self._apply_issue_filter()
+
+        # Update breakdown chart from the FULL flagged set (not the filtered
+        # view) so the distribution is always complete.
         issue_counts = {}
         for flag in flagged:
             issue = flag.top_issue.replace("_", " ").title()
@@ -1321,10 +2328,149 @@ class QCWidget(QtWidgets.QWidget):
             self._results.feature_names,
         )
 
+    def _rebuild_issue_filter_menu(self, present_types: List[str]):
+        """Rebuild the issue-type filter menu for the categories present.
+
+        Builds one checkable action per raw ``top_issue`` value currently in the
+        flagged set, labeled with its plain-language category name. The user's
+        previous show/hide choices are preserved for types that still exist;
+        newly appeared types default to shown (item 5).
+
+        Args:
+            present_types: Raw ``top_issue`` strings present in the flagged set,
+                in display order.
+        """
+        menu = self._issue_filter_menu
+        menu.clear()
+        self._issue_filter_actions = {}
+
+        if not present_types:
+            self._visible_issue_types = None
+            self._issue_filter_button.setEnabled(False)
+            self._update_issue_filter_button_text()
+            return
+
+        # Carry over previous selections; default new types to shown.
+        prev = self._visible_issue_types
+        if prev is None:
+            selected = set(present_types)
+        else:
+            selected = {t for t in present_types if t in prev}
+            # Any brand-new type (not seen when prev was captured) starts shown.
+            known = set(prev) | self._issue_filter_seen
+            selected |= {t for t in present_types if t not in known}
+        self._visible_issue_types = selected
+        self._issue_filter_seen = set(present_types)
+
+        # Convenience "All" / "None" actions at the top.
+        all_action = menu.addAction("Select all")
+        all_action.triggered.connect(lambda: self._set_all_issue_types(True))
+        none_action = menu.addAction("Select none")
+        none_action.triggered.connect(lambda: self._set_all_issue_types(False))
+        menu.addSeparator()
+
+        for raw in present_types:
+            label = self._issue_category_label(raw)
+            action = menu.addAction(label)
+            action.setCheckable(True)
+            action.setChecked(raw in selected)
+            # Bind the raw key for this action.
+            action.toggled.connect(
+                lambda checked, key=raw: self._on_issue_type_toggled(key, checked)
+            )
+            self._issue_filter_actions[raw] = action
+
+        self._issue_filter_button.setEnabled(True)
+        self._update_issue_filter_button_text()
+
+    def _issue_category_label(self, raw_issue: str) -> str:
+        """Plain-language menu label for a raw ``top_issue`` category.
+
+        Title-cases the raw label the same way the table's Issue column does so
+        the filter entries read identically to the rows they hide/show.
+
+        Args:
+            raw_issue: The raw ``top_issue`` string.
+
+        Returns:
+            A human-friendly category label.
+        """
+        return raw_issue.replace("_", " ").title()
+
+    def _on_issue_type_toggled(self, raw_issue: str, checked: bool):
+        """Handle a single issue-type checkbox toggle in the filter menu."""
+        if self._visible_issue_types is None:
+            self._visible_issue_types = set()
+        if checked:
+            self._visible_issue_types.add(raw_issue)
+        else:
+            self._visible_issue_types.discard(raw_issue)
+        self._update_issue_filter_button_text()
+        self._apply_issue_filter()
+
+    def _set_all_issue_types(self, checked: bool):
+        """Check or uncheck every issue-type entry at once."""
+        actions = getattr(self, "_issue_filter_actions", {})
+        if checked:
+            self._visible_issue_types = set(actions.keys())
+        else:
+            self._visible_issue_types = set()
+        # Reflect in the checkboxes without re-triggering per-item handlers.
+        for raw, action in actions.items():
+            action.blockSignals(True)
+            action.setChecked(raw in self._visible_issue_types)
+            action.blockSignals(False)
+        self._update_issue_filter_button_text()
+        self._apply_issue_filter()
+
+    def _update_issue_filter_button_text(self):
+        """Update the filter button caption to reflect the active selection."""
+        actions = getattr(self, "_issue_filter_actions", {})
+        total = len(actions)
+        if total == 0:
+            self._issue_filter_button.setText("Issue types: all")
+            return
+        selected = self._visible_issue_types or set()
+        n_sel = sum(1 for raw in actions if raw in selected)
+        if n_sel == total:
+            self._issue_filter_button.setText("Issue types: all")
+        elif n_sel == 0:
+            self._issue_filter_button.setText("Issue types: none")
+        else:
+            self._issue_filter_button.setText(f"Issue types: {n_sel} of {total}")
+
+    def _filtered_flagged(self) -> List["QCFlag"]:
+        """Return the flagged list restricted to the selected issue types."""
+        if self._visible_issue_types is None:
+            return list(self._all_flagged)
+        return [
+            f for f in self._all_flagged if f.top_issue in self._visible_issue_types
+        ]
+
+    def _apply_issue_filter(self):
+        """Push the issue-type-filtered flagged subset into the table model."""
+        self._table_model.items = self._filtered_flagged()
+        self._update_reviewed_count()
+
+    def _update_reviewed_count(self, *args):
+        """Refresh the "X / Y reviewed" counter for the rows currently shown.
+
+        Args:
+            *args: Ignored; lets this slot accept ``dataChanged`` signal args.
+        """
+        total = self._table_model.rowCount()
+        reviewed = self._table_model.reviewed_count()
+        self._reviewed_count_label.setText(f"{reviewed} / {total} reviewed")
+
     def _update_statistics(self):
-        """Update the statistics panel."""
+        """Update the statistics panel in plain language.
+
+        Summarizes the analysis as a short sentence ("45 of 1,200 instances
+        flagged (3.8%). Most common issue: ...") instead of bare numbers
+        (issue #2769, item 7).
+        """
         if self._labels is None:
-            self._stats_label.setText("No labels loaded")
+            self._stats_label.setText("No labels loaded yet.")
             return
 
         n_instances = sum(len(lf.user_instances) for lf in self._labels)
@@ -1332,38 +2478,48 @@ class QCWidget(QtWidgets.QWidget):
 
         if self._results is None:
             self._stats_label.setText(
-                f"<b>Ready to analyze:</b><br/>"
-                f"• {n_instances} instances<br/>"
-                f"• {n_frames} frames"
+                f"Ready to analyze {n_instances:,} instances "
+                f"across {n_frames:,} frames.<br/>"
+                f"Click <b>Run Analysis</b> to find labeling issues."
             )
             return
 
         threshold = self._threshold_slider.value() / 100.0
-        scores = np.array(list(self._results.instance_scores.values()))
         flagged = self._results.get_flagged(threshold=threshold)
         n_flagged = len(flagged)
         pct_flagged = (n_flagged / n_instances * 100) if n_instances > 0 else 0
 
-        # Score statistics
-        mean_score = np.mean(scores) if len(scores) > 0 else 0
-        median_score = np.median(scores) if len(scores) > 0 else 0
-        max_score = np.max(scores) if len(scores) > 0 else 0
+        # Nothing flagged at the current sensitivity: reassure the user.
+        if n_flagged == 0:
+            self._stats_label.setText(
+                f"No issues flagged out of {n_instances:,} instances "
+                f"at this sensitivity.<br/>"
+                f"Drag the Sensitivity slider toward <b>More</b> to flag "
+                f"borderline cases."
+            )
+            return
 
-        # Count by confidence
+        # Most common issue, in the same friendly wording as the table column.
+        issue_counts = {}
+        for flag in flagged:
+            label = flag.top_issue.replace("_", " ").title()
+            issue_counts[label] = issue_counts.get(label, 0) + 1
+        top_label, top_count = max(issue_counts.items(), key=lambda kv: kv[1])
+
+        # High-confidence count gives a sense of how many are clear-cut.
         high_conf = sum(1 for f in flagged if f.confidence == "high")
-        med_conf = sum(1 for f in flagged if f.confidence == "medium")
 
-        # Frame-level issues
-        frame_issues = self._results.get_frame_issues()
-        n_frame_issues = len(frame_issues)
-
-        self._stats_label.setText(
-            f"<b>Flagged:</b> {n_flagged} / {n_instances} ({pct_flagged:.1f}%)<br/>"
-            f"<b>By confidence:</b> {high_conf} high, {med_conf} medium<br/>"
-            f"<b>Frame issues:</b> {n_frame_issues}<br/>"
-            f"<b>Scores:</b> mean={mean_score:.2f}, "
-            f"median={median_score:.2f}, max={max_score:.2f}"
+        lines = [
+            f"<b>{n_flagged:,} of {n_instances:,}</b> instances flagged "
+            f"({pct_flagged:.1f}%).",
+            f"Most common issue: <b>{top_label}</b> ({top_count}).",
+        ]
+        if high_conf:
+            lines.append(f"{high_conf:,} are high-confidence.")
+        lines.append(
+            "<span style='color:#6c757d;'>Click a row to review each one.</span>"
         )
+        self._stats_label.setText("<br/>".join(lines))
 
     def _on_selection_changed(self, selected, deselected):
         """Handle selection change in table."""
@@ -1374,6 +2530,11 @@ class QCWidget(QtWidgets.QWidget):
                 self._selected_flag = self._table_model.items[row]
                 self._update_selected_details()
 
+                # Auto-mark reviewed on navigate: selecting a row jumps the user
+                # to that instance, so count it as "looked at" (item 6). The
+                # model emits dataChanged, refreshing the running counter.
+                self._table_model.set_reviewed(self._selected_flag, True)
+
                 # Navigate to the instance
                 self.navigate_to_instance.emit(
                     self._selected_flag.video_idx,
@@ -1382,9 +2543,7 @@ class QCWidget(QtWidgets.QWidget):
                 )
         else:
             self._selected_flag = None
-            self._details_label.setText(
-                "Click a row in the table to select an instance"
-            )
+            self._details_label.setText(SELECT_INSTANCE_PLACEHOLDER)
 
     def _on_row_double_clicked(self, index):
         """Handle double-click on table row."""
@@ -1398,30 +2557,27 @@ class QCWidget(QtWidgets.QWidget):
             )
 
     def _update_selected_details(self):
-        """Update the selected instance details panel."""
+        """Update the selected instance details panel in plain language.
+
+        Maps the flag's primary issue + score onto a friendly sentence telling
+        the user *why* the instance was flagged and where to find it, instead of
+        showing raw feature names (issue #2769, item 7).
+        """
         if self._selected_flag is None:
-            self._details_label.setText(
-                "Click a row in the table to select an instance"
-            )
+            self._details_label.setText(SELECT_INSTANCE_PLACEHOLDER)
             return
 
         flag = self._selected_flag
 
-        # Get top contributing features
-        contributions = flag.feature_contributions
-        top_features = sorted(contributions.items(), key=lambda x: x[1], reverse=True)[
-            :3
-        ]
-        features_text = "<br/>".join(
-            f"  • {name.replace('_', ' ')}: {value:.3f}" for name, value in top_features
-        )
+        reason = _friendly_issue(flag.top_issue)
+        # Capitalize the first letter of the reason for a readable sentence.
+        reason_sentence = reason[:1].upper() + reason[1:] if reason else reason
 
         self._details_label.setText(
-            f"<b>Frame:</b> {flag.frame_idx} | "
-            f"<b>Instance:</b> {flag.instance_idx}<br/>"
-            f"<b>Score:</b> {flag.score:.3f} ({flag.confidence} confidence)<br/>"
-            f"<b>Primary Issue:</b> {flag.top_issue.replace('_', ' ').title()}<br/>"
-            f"<b>Top Features:</b><br/>{features_text}"
+            f"<b>Flagged:</b> {reason_sentence} "
+            f"(confidence {flag.score:.2f}).<br/>"
+            f"Frame {flag.frame_idx}, instance {flag.instance_idx}.<br/>"
+            f"<span style='color:#6c757d;'>Double-click the row to jump there.</span>"
         )
 
     @property

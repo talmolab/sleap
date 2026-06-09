@@ -2,10 +2,34 @@
 
 from unittest.mock import MagicMock, patch
 
-from qtpy import QtCore
+from qtpy import QtCore, QtWidgets
 
-from sleap.gui.widgets.qc import QCAnalysisWorker, QCFlagTableModel, QCWidget
+from sleap.gui.widgets.qc import (
+    DETECTOR_HELP,
+    CheckableFilterMenu,
+    CollapsibleGroupBox,
+    QCAnalysisWorker,
+    QCFlagTableModel,
+    QCSkeletonTraceCanvas,
+    QCWidget,
+    _friendly_issue,
+)
 from sleap.qc.config import QCConfig
+
+
+def _fake_results(flags):
+    """Build a QCResults-like stub whose get_flagged returns ``flags``.
+
+    Mirrors only the attributes the QCWidget display path touches, so the
+    flagged-list filter/reviewed tests can drive ``_update_flagged_display``
+    without running real detectors.
+    """
+    results = MagicMock()
+    results.get_flagged.return_value = list(flags)
+    results.feature_contributions = {}
+    results.instance_scores = {}
+    results.feature_names = []
+    return results
 
 
 class MockQCFlag:
@@ -35,12 +59,17 @@ class TestQCFlagTableModel:
         assert "Score" in model.COLUMNS
         assert "Issue" in model.COLUMNS
         assert "Confidence" in model.COLUMNS
+        # Reviewed checkmark column (issue #2769, item 6), appended last so the
+        # existing Frame..Issue column indices are unchanged.
+        assert "Reviewed" in model.COLUMNS
+        assert model.COLUMNS[model.REVIEWED_COL] == "Reviewed"
 
     def test_empty_model(self):
         """Test model can be created empty."""
         model = QCFlagTableModel()
         assert model.rowCount() == 0
-        assert model.columnCount() == 5
+        # 5 data columns + the trailing Reviewed checkmark column.
+        assert model.columnCount() == 6
 
     def test_data_display_role(self):
         """Test data retrieval with DisplayRole."""
@@ -906,10 +935,11 @@ class TestQCDetectorSettings:
         widget = QCWidget()
         qtbot.addWidget(widget)
 
-        # Group box header (checkable, expanded by default).
+        # Group box header (checkable). Advanced panel starts COLLAPSED so the
+        # first-time view stays clean (issue #2769, item 4).
         assert widget._detector_settings_group is not None
         assert widget._detector_settings_group.isCheckable()
-        assert widget._detector_settings_group.isChecked()
+        assert not widget._detector_settings_group.isChecked()
 
         # Reliable detectors default-ON.
         assert widget._cb_flip.isChecked()
@@ -1029,14 +1059,20 @@ class TestQCDetectorSettings:
         widget._cb_flip.setChecked(False)
         assert not widget._sb_flip_thr.isEnabled()
 
-        # Chain is off by default -> chain widgets disabled.
+        # Chain is off by default -> chain widgets + skeleton-trace panel
+        # disabled. The advanced free-text edit now lives inside the trace panel
+        # (issue #2769, item 2), so we check the panel's enabled state and the
+        # edit's enabled-state relative to its own collapsible section.
         assert not widget._sb_chain_angle.isEnabled()
         assert not widget._sb_order_thr.isEnabled()
-        assert not widget._ordered_chains_edit.isEnabled()
+        assert not widget._chain_trace_panel.isEnabled()
+        edit_parent = widget._ordered_chains_edit.parent()
         widget._cb_chain.setChecked(True)
         assert widget._sb_chain_angle.isEnabled()
         assert widget._sb_order_thr.isEnabled()
-        assert widget._ordered_chains_edit.isEnabled()
+        assert widget._chain_trace_panel.isEnabled()
+        # The free-text edit is reachable once its advanced section is expanded.
+        assert widget._ordered_chains_edit.isEnabledTo(edit_parent)
 
 
 class TestQCB2DetectorSettings:
@@ -1194,3 +1230,947 @@ class TestQCAnalysisWorkerConfig:
         assert isinstance(captured["config"], QCConfig)
         assert captured["config"].use_chain_ordering is True
         assert captured["config"].ordered_chains == [["A", "B", "C"]]
+
+
+class TestCollapsibleGroupBox:
+    """Tests for the CollapsibleGroupBox helper (issue #2769, item 4)."""
+
+    def test_starts_expanded_by_default(self, qtbot):
+        """Default (collapsed=False) starts checked with the body visible."""
+        box = CollapsibleGroupBox("Title")
+        qtbot.addWidget(box)
+        assert box.isCheckable()
+        assert box.isChecked()
+        assert box.content.isVisible() or not box.isVisible()  # body tracks header
+
+    def test_starts_collapsed_when_requested(self, qtbot):
+        """collapsed=True starts unchecked with the body hidden."""
+        box = CollapsibleGroupBox("Title", collapsed=True)
+        qtbot.addWidget(box)
+        assert not box.isChecked()
+        assert not box.content.isVisible()
+
+    def test_toggle_shows_and_hides_body(self, qtbot):
+        """Toggling the header shows/hides the content frame."""
+        box = CollapsibleGroupBox("Title", collapsed=True)
+        qtbot.addWidget(box)
+        box.show()
+
+        # Expand.
+        box.setChecked(True)
+        assert box.content.isVisible()
+
+        # Collapse again.
+        box.setChecked(False)
+        assert not box.content.isVisible()
+
+    def test_body_children_stay_enabled_when_collapsed(self, qtbot):
+        """Collapsing must not disable body widgets (visibility-only collapse).
+
+        A plain checkable QGroupBox would disable all descendants when
+        unchecked; CollapsibleGroupBox must keep the body enabled so per-widget
+        enable/disable logic survives collapsing.
+        """
+        box = CollapsibleGroupBox("Title", collapsed=True)
+        qtbot.addWidget(box)
+
+        line = QtWidgets.QLineEdit()
+        layout = QtWidgets.QVBoxLayout(box.content)
+        layout.addWidget(line)
+        box.apply_collapsed_state()
+
+        # Even though the box is collapsed, the child's effective enabled state
+        # follows its own flag, not the collapsed header.
+        assert line.isEnabled()
+        line.setEnabled(False)
+        assert not line.isEnabled()
+
+
+class TestQCUXLayout:
+    """Tests for the overall UX/layout revamp (issue #2769, items 1, 3, 4, 7)."""
+
+    # --- Item 1: two-line progress row ------------------------------------
+
+    def test_progress_label_wraps_on_its_own_line(self, qtbot):
+        """Status text wraps and sits separately from the progress bar."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        # Word wrap lets the status text use its own line without squeezing.
+        assert widget._progress_label.wordWrap()
+        # The status label and progress bar are distinct widgets (two lines).
+        assert widget._progress_label is not widget._progress_bar
+
+    # --- Item 3: per-detector "?" help buttons ----------------------------
+
+    def test_detector_help_has_all_detectors(self):
+        """DETECTOR_HELP covers every detector mentioned in #2769."""
+        for key in [
+            "flip",
+            "chimera",
+            "duplicate",
+            "chain",
+            "missing",
+            "appearance",
+            "insample",
+        ]:
+            assert key in DETECTOR_HELP
+            title, body = DETECTOR_HELP[key]
+            assert title and body
+            # Friendly, biologist-facing copy: reasonably descriptive.
+            assert len(body) > 40
+
+    def test_help_buttons_present_for_each_detector(self, qtbot):
+        """A "?" tool button exists in the settings grid for each detector."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        help_buttons = [
+            b
+            for b in widget._detector_settings_group.findChildren(QtWidgets.QToolButton)
+            if b.text() == "?"
+        ]
+        # One per detector row (7 detectors).
+        assert len(help_buttons) == 7
+
+    def test_show_detector_help_pops_message_box(self, qtbot):
+        """Clicking help shows a QMessageBox carrying the plain-language body."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        created = {}
+
+        class FakeBox:
+            def __init__(self, *a, **k):
+                created["instance"] = self
+
+            def setIcon(self, *a):
+                pass
+
+            def setWindowTitle(self, t):
+                created["title"] = t
+
+            def setText(self, t):
+                created["text"] = t
+
+            def setInformativeText(self, t):
+                created["informative"] = t
+
+            def setStandardButtons(self, *a):
+                pass
+
+            def exec_(self):
+                created["shown"] = True
+
+        with patch("sleap.gui.widgets.qc.QtWidgets.QMessageBox") as mock_box:
+            mock_box.side_effect = FakeBox
+            mock_box.Information = 0
+            mock_box.Ok = 0
+            widget._show_detector_help("flip")
+
+        assert created.get("shown")
+        # The informative text is the friendly body for the flip detector.
+        assert created["informative"] == DETECTOR_HELP["flip"][1]
+        assert "left" in created["informative"].lower()
+
+    def test_help_button_click_invokes_help(self, qtbot):
+        """The "?" button is wired to _show_detector_help."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        help_buttons = [
+            b
+            for b in widget._detector_settings_group.findChildren(QtWidgets.QToolButton)
+            if b.text() == "?"
+        ]
+        with patch.object(widget, "_show_detector_help") as mock_help:
+            help_buttons[0].click()
+        mock_help.assert_called_once()
+
+    # --- Item 4: collapsible panels --------------------------------------
+
+    def test_collapsible_panels_exist(self, qtbot):
+        """Charts + Selected Instance + Statistics are collapsible sections."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        for group in (
+            widget._charts_group,
+            widget._details_group,
+            widget._stats_group,
+            widget._detector_settings_group,
+        ):
+            assert isinstance(group, CollapsibleGroupBox)
+
+    def test_detector_settings_collapsed_charts_expanded_by_default(self, qtbot):
+        """Advanced panel starts collapsed; the everyday panels start expanded."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        # Advanced -> collapsed.
+        assert not widget._detector_settings_group.isChecked()
+        # Everyday panels -> expanded.
+        assert widget._charts_group.isChecked()
+        assert widget._details_group.isChecked()
+        assert widget._stats_group.isChecked()
+
+    def test_collapsing_charts_hides_tabs(self, qtbot):
+        """Collapsing the charts group hides the visualization tabs."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget.show()
+
+        assert widget._viz_tabs.isVisible()
+        widget._charts_group.setChecked(False)
+        assert not widget._viz_tabs.isVisible()
+        widget._charts_group.setChecked(True)
+        assert widget._viz_tabs.isVisible()
+
+    # --- Item 7: plain-language Selected Instance + Statistics ------------
+
+    def test_friendly_issue_maps_known_labels(self):
+        """_friendly_issue turns raw issue labels into plain-language clauses."""
+        assert _friendly_issue("Whole-instance L/R flip") == (
+            "left/right sides look swapped"
+        )
+        assert "out of order" in _friendly_issue("Wrong keypoint order along chain")
+        assert _friendly_issue("Unusual joint angle") == (
+            "a joint bends at an unusual angle"
+        )
+
+    def test_friendly_issue_falls_back_gracefully(self):
+        """Unknown / raw labels are cleaned up rather than shown verbatim."""
+        # "High <feature>" fallbacks drop the prefix and underscores.
+        assert _friendly_issue("High pose_split_score") == "pose split score"
+        # A bare unknown label is lowercased.
+        assert _friendly_issue("Some Weird Thing") == "some weird thing"
+
+    def test_selected_details_plain_language(self, qtbot):
+        """Selected Instance panel says WHY in plain language, with location."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        widget._selected_flag = MockQCFlag(
+            video_idx=0,
+            frame_idx=1837,
+            instance_idx=1,
+            score=0.91,
+            confidence="high",
+            top_issue="Whole-instance L/R flip",
+        )
+        widget._update_selected_details()
+        text = widget._details_label.text()
+
+        assert "Flagged:" in text
+        # The clause is capitalized into a sentence.
+        assert "Left/right sides look swapped" in text
+        assert "0.91" in text
+        assert "Frame 1837" in text
+        assert "instance 1" in text
+        # No raw feature names leaking through.
+        assert "edge_zscore" not in text
+
+    def test_statistics_plain_language_summary(self, qtbot):
+        """Statistics panel summarizes counts + most common issue in words."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # 1200 user instances across the labels.
+        mock_lf = MagicMock()
+        mock_lf.user_instances = [MagicMock()] * 1200
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=300)
+        mock_labels.__iter__ = MagicMock(return_value=iter([mock_lf]))
+        widget._labels = mock_labels
+
+        # 45 flagged, most common issue "Unusual joint angle" (x27).
+        flagged = []
+        for i in range(27):
+            flagged.append(MockQCFlag(0, i, 0, 0.95, "high", "Unusual joint angle"))
+        for i in range(18):
+            flagged.append(MockQCFlag(0, 100 + i, 0, 0.72, "medium", "Likely L/R swap"))
+
+        mock_results = MagicMock()
+        mock_results.get_flagged.return_value = flagged
+        widget._results = mock_results
+        widget._threshold_slider.setValue(70)
+
+        widget._update_statistics()
+        text = widget._stats_label.text()
+
+        assert "45" in text and "1,200" in text  # comma-formatted totals
+        assert "3.8%" in text
+        assert "Most common issue" in text
+        assert "Unusual Joint Angle" in text  # titled like the table column
+        assert "(27)" in text
+
+    def test_statistics_no_flags_is_reassuring(self, qtbot):
+        """With nothing flagged, Statistics reassures instead of dumping zeros."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        mock_lf = MagicMock()
+        mock_lf.user_instances = [MagicMock()] * 10
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=5)
+        mock_labels.__iter__ = MagicMock(return_value=iter([mock_lf]))
+        widget._labels = mock_labels
+
+        mock_results = MagicMock()
+        mock_results.get_flagged.return_value = []
+        widget._results = mock_results
+        widget._update_statistics()
+
+        text = widget._stats_label.text()
+        assert "No issues flagged" in text
+
+    def test_statistics_ready_message_before_analysis(self, qtbot):
+        """Pre-analysis Statistics reads as a friendly call to action."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        mock_lf = MagicMock()
+        mock_lf.user_instances = [MagicMock()] * 1500
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=42)
+        mock_labels.__iter__ = MagicMock(return_value=iter([mock_lf]))
+        widget.set_labels(mock_labels)
+
+        text = widget._stats_label.text()
+        assert "Ready to analyze" in text
+        assert "1,500" in text  # comma-formatted
+        assert "Run Analysis" in text
+
+
+class TestQCFlagReviewedColumn:
+    """Tests for the model's Reviewed checkmark column (issue #2769, item 6)."""
+
+    def test_reviewed_column_is_appended_last(self):
+        """Reviewed is the last column; data indices Frame..Issue are unchanged."""
+        model = QCFlagTableModel()
+        assert model.COLUMNS[-1] == "Reviewed"
+        assert model.REVIEWED_COL == len(model.COLUMNS) - 1
+        # The original data columns keep their positions.
+        assert model.COLUMNS[:5] == [
+            "Frame",
+            "Instance",
+            "Score",
+            "Confidence",
+            "Issue",
+        ]
+
+    def test_reviewed_column_is_user_checkable(self):
+        """The Reviewed column carries the user-checkable item flag."""
+        model = QCFlagTableModel()
+        model.items = [MockQCFlag(0, 1, 0, 0.9, "high", "flip")]
+        idx = model.index(0, QCFlagTableModel.REVIEWED_COL)
+        assert model.flags(idx) & QtCore.Qt.ItemIsUserCheckable
+        # Other columns are not user-checkable.
+        other = model.index(0, 0)
+        assert not (model.flags(other) & QtCore.Qt.ItemIsUserCheckable)
+
+    def test_reviewed_defaults_unchecked(self):
+        """A fresh flag shows an unchecked Reviewed box."""
+        model = QCFlagTableModel()
+        model.items = [MockQCFlag(0, 1, 0, 0.9, "high", "flip")]
+        idx = model.index(0, QCFlagTableModel.REVIEWED_COL)
+        assert model.data(idx, QtCore.Qt.CheckStateRole) == QtCore.Qt.Unchecked
+
+    def test_setdata_toggles_reviewed(self):
+        """Setting CheckStateRole marks the flag reviewed and back."""
+        model = QCFlagTableModel()
+        flag = MockQCFlag(0, 1, 0, 0.9, "high", "flip")
+        model.items = [flag]
+        idx = model.index(0, QCFlagTableModel.REVIEWED_COL)
+
+        assert model.setData(idx, QtCore.Qt.Checked, QtCore.Qt.CheckStateRole)
+        assert model.is_reviewed(flag)
+        assert model.data(idx, QtCore.Qt.CheckStateRole) == QtCore.Qt.Checked
+        assert model.reviewed_count() == 1
+
+        assert model.setData(idx, QtCore.Qt.Unchecked, QtCore.Qt.CheckStateRole)
+        assert not model.is_reviewed(flag)
+        assert model.reviewed_count() == 0
+
+    def test_setdata_ignores_non_reviewed_columns(self):
+        """setData on a non-Reviewed column / wrong role is a no-op."""
+        model = QCFlagTableModel()
+        model.items = [MockQCFlag(0, 1, 0, 0.9, "high", "flip")]
+        # Wrong column.
+        assert not model.setData(
+            model.index(0, 0), QtCore.Qt.Checked, QtCore.Qt.CheckStateRole
+        )
+        # Wrong role on the Reviewed column.
+        assert not model.setData(
+            model.index(0, QCFlagTableModel.REVIEWED_COL), "x", QtCore.Qt.EditRole
+        )
+
+    def test_reviewed_state_keyed_by_identity_not_row(self):
+        """Reviewed-state follows the instance identity across row reshuffles."""
+        shared = set()
+        model = QCFlagTableModel(reviewed_keys=shared)
+        f1 = MockQCFlag(0, 1, 0, 0.9, "high", "flip")
+        f2 = MockQCFlag(0, 2, 1, 0.8, "medium", "angle")
+        model.items = [f1, f2]
+
+        model.set_reviewed(f1, True)
+        assert (0, 1, 0) in shared
+
+        # Replace the row list with NEW flag objects that share f1's identity:
+        # the model must still treat that identity as reviewed.
+        f1b = MockQCFlag(0, 1, 0, 0.95, "high", "flip")
+        f3 = MockQCFlag(0, 3, 0, 0.7, "low", "scale")
+        model.items = [f3, f1b]
+        idx_f1b = model.index(1, QCFlagTableModel.REVIEWED_COL)
+        assert model.data(idx_f1b, QtCore.Qt.CheckStateRole) == QtCore.Qt.Checked
+        idx_f3 = model.index(0, QCFlagTableModel.REVIEWED_COL)
+        assert model.data(idx_f3, QtCore.Qt.CheckStateRole) == QtCore.Qt.Unchecked
+
+    def test_reviewed_count_only_counts_shown_rows(self):
+        """reviewed_count reflects only the rows currently in the model."""
+        shared = set()
+        model = QCFlagTableModel(reviewed_keys=shared)
+        f1 = MockQCFlag(0, 1, 0, 0.9, "high", "flip")
+        f2 = MockQCFlag(0, 2, 0, 0.8, "medium", "angle")
+        model.items = [f1, f2]
+        model.set_reviewed(f1, True)
+        model.set_reviewed(f2, True)
+        assert model.reviewed_count() == 2
+
+        # Show only f2's row; the count drops even though f1 is still reviewed.
+        model.items = [f2]
+        assert model.reviewed_count() == 1
+        assert (0, 1, 0) in shared  # f1 remains reviewed in the shared set
+
+    def test_sort_by_reviewed_column(self):
+        """Sorting by the Reviewed column groups reviewed/unreviewed rows."""
+        shared = set()
+        model = QCFlagTableModel(reviewed_keys=shared)
+        f1 = MockQCFlag(0, 1, 0, 0.9, "high", "flip")
+        f2 = MockQCFlag(0, 2, 0, 0.8, "medium", "angle")
+        f3 = MockQCFlag(0, 3, 0, 0.7, "low", "scale")
+        model.items = [f1, f2, f3]
+        model.set_reviewed(f2, True)
+
+        # Ascending: unreviewed (False) first.
+        model.sort(QCFlagTableModel.REVIEWED_COL, QtCore.Qt.AscendingOrder)
+        assert not model.is_reviewed(model.items[0])
+        assert model.is_reviewed(model.items[-1])
+
+        # Descending: reviewed first.
+        model.sort(QCFlagTableModel.REVIEWED_COL, QtCore.Qt.DescendingOrder)
+        assert model.is_reviewed(model.items[0])
+
+
+class TestCheckableFilterMenu:
+    """Tests for the multi-select menu that stays open (issue #2769, item 5)."""
+
+    def test_checkable_action_toggles_without_closing(self, qtbot):
+        """Releasing the mouse on a checkable action toggles it in place."""
+        menu = CheckableFilterMenu()
+        qtbot.addWidget(menu)
+        action = menu.addAction("Type A")
+        action.setCheckable(True)
+        action.setChecked(False)
+
+        # Make it the active action and simulate a mouse release on it.
+        menu.setActiveAction(action)
+        with patch.object(CheckableFilterMenu, "activeAction", return_value=action):
+            # super().mouseReleaseEvent must NOT be called for checkable items;
+            # the action is toggled directly instead.
+            with patch(
+                "sleap.gui.widgets.qc.QtWidgets.QMenu.mouseReleaseEvent"
+            ) as super_release:
+                menu.mouseReleaseEvent(MagicMock())
+        assert action.isChecked()  # toggled on
+        super_release.assert_not_called()  # menu kept open
+
+    def test_non_checkable_action_uses_default_behavior(self, qtbot):
+        """A non-checkable action falls through to the default (closes menu)."""
+        menu = CheckableFilterMenu()
+        qtbot.addWidget(menu)
+        action = menu.addAction("Select all")  # not checkable
+
+        with patch.object(CheckableFilterMenu, "activeAction", return_value=action):
+            with patch(
+                "sleap.gui.widgets.qc.QtWidgets.QMenu.mouseReleaseEvent"
+            ) as super_release:
+                menu.mouseReleaseEvent(MagicMock())
+        super_release.assert_called_once()
+
+
+class TestQCListIssueFilter:
+    """Tests for the flagged-list issue-type filter (issue #2769, item 5)."""
+
+    def _make_widget_with_flags(self, qtbot, flags):
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._results = _fake_results(flags)
+        widget._update_flagged_display()
+        return widget
+
+    def test_filter_button_disabled_until_results(self, qtbot):
+        """The issue-type filter button is disabled before any results exist."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert widget._issue_filter_button is not None
+        assert not widget._issue_filter_button.isEnabled()
+        assert widget._issue_filter_button.text() == "Issue types: all"
+
+    def test_menu_lists_present_issue_types(self, qtbot):
+        """The menu has one checkable entry per issue type present, all shown."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Whole-instance L/R flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Unusual joint angle"),
+            MockQCFlag(0, 3, 0, 0.85, "medium", "Unusual joint angle"),
+            MockQCFlag(0, 4, 0, 0.80, "medium", "Appearance outlier"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        # One action per unique raw issue (3 of them), button enabled.
+        assert widget._issue_filter_button.isEnabled()
+        assert set(widget._issue_filter_actions.keys()) == {
+            "Whole-instance L/R flip",
+            "Unusual joint angle",
+            "Appearance outlier",
+        }
+        # All present and selected by default -> all four rows shown.
+        assert widget._table_model.rowCount() == 4
+        assert widget._issue_filter_button.text() == "Issue types: all"
+        # Menu labels are the friendly, title-cased category names.
+        labels = {a.text() for a in widget._issue_filter_actions.values()}
+        assert "Whole-Instance L/R Flip" in labels
+
+    def test_deselecting_issue_type_filters_table(self, qtbot):
+        """Unchecking an issue type removes those rows from the table live."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Whole-instance L/R flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Unusual joint angle"),
+            MockQCFlag(0, 3, 0, 0.85, "medium", "Unusual joint angle"),
+            MockQCFlag(0, 4, 0, 0.80, "medium", "Appearance outlier"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        widget._on_issue_type_toggled("Unusual joint angle", False)
+        assert widget._table_model.rowCount() == 2
+        shown = {
+            widget._table_model.items[r].top_issue
+            for r in range(widget._table_model.rowCount())
+        }
+        assert shown == {"Whole-instance L/R flip", "Appearance outlier"}
+        assert widget._issue_filter_button.text() == "Issue types: 2 of 3"
+
+    def test_select_none_and_all(self, qtbot):
+        """Select-none empties the table; select-all restores every row."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        widget._set_all_issue_types(False)
+        assert widget._table_model.rowCount() == 0
+        assert widget._issue_filter_button.text() == "Issue types: none"
+
+        widget._set_all_issue_types(True)
+        assert widget._table_model.rowCount() == 2
+        assert widget._issue_filter_button.text() == "Issue types: all"
+
+    def test_filter_selection_survives_threshold_refilter(self, qtbot):
+        """A de-selected issue type stays hidden across a threshold re-filter."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+            MockQCFlag(0, 3, 0, 0.80, "medium", "Appearance"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        # Hide "Flip".
+        widget._on_issue_type_toggled("Flip", False)
+        assert "Flip" not in widget._visible_issue_types
+
+        # Simulate raising the threshold so the 0.80 Appearance flag drops out.
+        widget._results.get_flagged.return_value = [f for f in flags if f.score >= 0.85]
+        widget._update_flagged_display()
+
+        # Flip is still present but remains hidden; only Angle shows.
+        assert set(widget._issue_filter_actions.keys()) == {"Flip", "Angle"}
+        assert widget._visible_issue_types == {"Angle"}
+        shown = {
+            widget._table_model.items[r].top_issue
+            for r in range(widget._table_model.rowCount())
+        }
+        assert shown == {"Angle"}
+
+    def test_breakdown_reflects_full_set_not_filter(self, qtbot):
+        """The Issue Breakdown chart shows ALL flagged, ignoring the table filter."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+            MockQCFlag(0, 3, 0, 0.85, "medium", "Angle"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        widget._on_issue_type_toggled("Angle", False)  # hide Angle in the table
+        # Table shows only Flip now...
+        assert widget._table_model.rowCount() == 1
+        # ...but the breakdown still counts all three (Flip=1, Angle=2).
+        counts = widget._breakdown_canvas._issue_counts
+        assert counts.get("Flip") == 1
+        assert counts.get("Angle") == 2
+
+
+class TestQCListReviewedIntegration:
+    """Widget-level reviewed-state + counter tests (issue #2769, item 6)."""
+
+    def _make_widget_with_flags(self, qtbot, flags):
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._results = _fake_results(flags)
+        widget._update_flagged_display()
+        return widget
+
+    def test_reviewed_counter_widgets_exist(self, qtbot):
+        """The running reviewed counter starts at 0 / 0."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert widget._reviewed_count_label is not None
+        assert widget._reviewed_count_label.text() == "0 / 0 reviewed"
+
+    def test_counter_updates_when_box_checked(self, qtbot):
+        """Ticking a Reviewed box updates the running counter."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+        assert widget._reviewed_count_label.text() == "0 / 2 reviewed"
+
+        idx = widget._table_model.index(0, QCFlagTableModel.REVIEWED_COL)
+        widget._table_model.setData(idx, QtCore.Qt.Checked, QtCore.Qt.CheckStateRole)
+        assert widget._reviewed_count_label.text() == "1 / 2 reviewed"
+
+    def test_navigate_auto_marks_reviewed(self, qtbot):
+        """Selecting a row (navigating) auto-marks that instance reviewed."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        widget._table_view.selectRow(0)
+        qtbot.wait(20)
+        assert widget._table_model.is_reviewed(flags[0])
+        assert widget._reviewed_count_label.text() == "1 / 2 reviewed"
+
+    def test_reviewed_survives_threshold_refilter(self, qtbot):
+        """Reviewed marks persist across a threshold re-filter (identity-keyed)."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+            MockQCFlag(0, 3, 0, 0.80, "medium", "Appearance"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        # Mark the highest-score flag (frame 1) reviewed.
+        idx = widget._table_model.index(0, QCFlagTableModel.REVIEWED_COL)
+        widget._table_model.setData(idx, QtCore.Qt.Checked, QtCore.Qt.CheckStateRole)
+        assert (0, 1, 0) in widget._reviewed_keys
+
+        # Raise threshold so frame-3 (0.80) drops; frame-1 stays and is still
+        # reviewed -> counter is 1 / 2.
+        widget._results.get_flagged.return_value = [f for f in flags if f.score >= 0.85]
+        widget._update_flagged_display()
+        assert (0, 1, 0) in widget._reviewed_keys
+        assert widget._reviewed_count_label.text() == "1 / 2 reviewed"
+
+    def test_reviewed_survives_issue_filter(self, qtbot):
+        """Reviewed marks persist when an issue type is hidden then re-shown."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        # Review the Angle flag.
+        widget._table_model.set_reviewed(flags[1], True)
+        assert widget._reviewed_count_label.text() == "1 / 2 reviewed"
+
+        # Hide Angle: counter now reflects only the shown (Flip) rows.
+        widget._on_issue_type_toggled("Angle", False)
+        assert widget._reviewed_count_label.text() == "0 / 1 reviewed"
+
+        # Re-show Angle: its reviewed mark is intact.
+        widget._on_issue_type_toggled("Angle", True)
+        assert widget._reviewed_count_label.text() == "1 / 2 reviewed"
+        assert widget._table_model.is_reviewed(flags[1])
+
+    def test_set_labels_resets_filter_and_reviewed(self, qtbot):
+        """Loading a new project clears reviewed marks and the issue filter."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+        widget._table_model.set_reviewed(flags[0], True)
+        widget._on_issue_type_toggled("Angle", False)
+        assert widget._reviewed_keys
+        assert widget._visible_issue_types is not None
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=3)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+        widget.set_labels(mock_labels)
+
+        assert widget._reviewed_keys == set()
+        assert widget._visible_issue_types is None
+        assert widget._all_flagged == []
+        assert widget._reviewed_count_label.text() == "0 / 0 reviewed"
+        assert not widget._issue_filter_button.isEnabled()
+
+
+class _FakeNode:
+    """Minimal stand-in for a sleap-io skeleton Node (just a ``.name``)."""
+
+    def __init__(self, name):
+        self.name = name
+
+
+class _FakeEdge:
+    """Minimal stand-in for a sleap-io skeleton Edge (source/destination)."""
+
+    def __init__(self, src, dst):
+        self.source = _FakeNode(src)
+        self.destination = _FakeNode(dst)
+
+
+class _FakeSkeleton:
+    """Minimal skeleton exposing ``node_names`` and ``edges`` like sleap-io."""
+
+    def __init__(self, node_names, edges):
+        self.node_names = list(node_names)
+        self.edges = [_FakeEdge(s, d) for s, d in edges]
+
+
+class TestQCSkeletonTraceCanvas:
+    """Tests for the click-to-trace skeleton canvas (issue #2769, item 2)."""
+
+    def test_starts_empty(self, qtbot):
+        """A fresh canvas has no skeleton and an empty trace."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        assert canvas._positions == {}
+        assert canvas.trace == []
+
+    def test_set_skeleton_lays_out_nodes(self, qtbot):
+        """Setting a skeleton computes a position for every node."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton(["A", "B", "C"], [("A", "B"), ("B", "C")])
+        assert set(canvas._positions.keys()) == {"A", "B", "C"}
+        # Edges are kept as validated name pairs.
+        assert ("A", "B") in canvas._edges
+
+    def test_set_skeleton_drops_unknown_edges(self, qtbot):
+        """Edges referencing missing nodes are filtered out."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton(["A", "B"], [("A", "B"), ("B", "Z")])
+        assert canvas._edges == [("A", "B")]
+
+    def test_set_trace_filters_to_known_nodes(self, qtbot):
+        """set_trace keeps only nodes that exist in the current skeleton."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton(["A", "B", "C"], [])
+        canvas.set_trace(["A", "Q", "C"])
+        assert canvas.trace == ["A", "C"]
+
+    def test_node_at_hit_and_miss(self, qtbot):
+        """node_at returns the nearest node within radius, else None."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton(["A", "B", "C"], [("A", "B"), ("B", "C")])
+        ax, ay = canvas._positions["A"]
+        assert canvas.node_at(ax, ay) == "A"
+        # A point far outside the spring layout extent hits nothing.
+        assert canvas.node_at(999.0, 999.0) is None
+
+    def test_click_emits_node_clicked(self, qtbot):
+        """A button-press over a node emits node_clicked with its name."""
+        from matplotlib.backend_bases import MouseEvent
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton(["A", "B", "C"], [("A", "B"), ("B", "C")])
+        canvas.resize(400, 300)
+        canvas.draw()
+
+        received = []
+        canvas.node_clicked.connect(received.append)
+
+        disp = canvas.axes.transData.transform(canvas._positions["B"])
+        event = MouseEvent("button_press_event", canvas, disp[0], disp[1], button=1)
+        canvas._on_click(event)
+        assert received == ["B"]
+
+    def test_empty_skeleton_redraw_is_safe(self, qtbot):
+        """Updating the plot with no skeleton does not raise."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton([], [])
+        canvas.update_plot()  # Should render the placeholder without error.
+        assert canvas._positions == {}
+
+
+class TestQCChainTracePanel:
+    """Tests for the chain-order skeleton-tracing UI (issue #2769, item 2)."""
+
+    def test_trace_panel_widgets_exist(self, qtbot):
+        """The trace panel and its key controls are constructed."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert widget._chain_trace_panel is not None
+        assert isinstance(widget._skeleton_canvas, QCSkeletonTraceCanvas)
+        assert widget._chains_list is not None
+        # The advanced free-text fallback still exists.
+        assert widget._ordered_chains_edit is not None
+
+    def test_clicking_nodes_builds_trace(self, qtbot):
+        """Node clicks append to the in-progress trace; the canvas mirrors it."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._on_trace_node_clicked("Base")
+        widget._on_trace_node_clicked("Mid")
+        widget._on_trace_node_clicked("Tip")
+        assert widget._trace_in_progress == ["Base", "Mid", "Tip"]
+        assert widget._skeleton_canvas.trace == []  # no skeleton loaded -> filtered
+
+    def test_consecutive_duplicate_click_ignored(self, qtbot):
+        """Clicking the same node twice in a row does not duplicate it."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._on_trace_node_clicked("Base")
+        widget._on_trace_node_clicked("Base")
+        assert widget._trace_in_progress == ["Base"]
+
+    def test_undo_and_clear_trace(self, qtbot):
+        """Undo removes the last node; clear empties the trace."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        for name in ["A", "B", "C"]:
+            widget._on_trace_node_clicked(name)
+        widget._on_trace_undo()
+        assert widget._trace_in_progress == ["A", "B"]
+        widget._on_trace_clear()
+        assert widget._trace_in_progress == []
+
+    def test_add_chain_requires_two_nodes(self, qtbot):
+        """A chain of fewer than two nodes is rejected (warning shown)."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._on_trace_node_clicked("OnlyOne")
+        with patch.object(QtWidgets.QMessageBox, "information") as info:
+            widget._on_trace_add_chain()
+        info.assert_called_once()
+        assert widget._traced_chains == []
+
+    def test_add_chain_commits_and_resets(self, qtbot):
+        """Adding a valid chain stores it and clears the in-progress trace."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        for name in ["Base", "Mid", "Tip"]:
+            widget._on_trace_node_clicked(name)
+        widget._on_trace_add_chain()
+        assert widget._traced_chains == [["Base", "Mid", "Tip"]]
+        assert widget._trace_in_progress == []
+        assert widget._chains_list.count() == 1
+
+    def test_reorder_saved_chains(self, qtbot):
+        """Up/down moves a selected saved chain within the list."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._traced_chains = [["A", "B"], ["C", "D"], ["E", "F"]]
+        widget._refresh_chains_list()
+        widget._chains_list.setCurrentRow(2)
+        widget._move_selected_chain(-1)
+        assert widget._traced_chains == [["A", "B"], ["E", "F"], ["C", "D"]]
+        assert widget._chains_list.currentRow() == 1
+        # Moving past the end is a no-op.
+        widget._chains_list.setCurrentRow(2)
+        widget._move_selected_chain(1)
+        assert widget._traced_chains == [["A", "B"], ["E", "F"], ["C", "D"]]
+
+    def test_remove_saved_chain(self, qtbot):
+        """Removing the selected chain drops it from the list and state."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._traced_chains = [["A", "B"], ["C", "D"]]
+        widget._refresh_chains_list()
+        widget._chains_list.setCurrentRow(0)
+        widget._on_remove_selected_chain()
+        assert widget._traced_chains == [["C", "D"]]
+        assert widget._chains_list.count() == 1
+
+    def test_collect_ordered_chains_merges_traced_and_text(self, qtbot):
+        """Traced chains come first, then free-text chains, de-duplicated."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._traced_chains = [["Base", "Mid", "Tip"]]
+        widget._ordered_chains_edit.setPlainText("Head, Neck\nBase, Mid, Tip")
+        # The duplicate (Base, Mid, Tip) typed after tracing is dropped.
+        assert widget._collect_ordered_chains() == [
+            ["Base", "Mid", "Tip"],
+            ["Head", "Neck"],
+        ]
+
+    def test_build_qc_config_uses_traced_chains(self, qtbot):
+        """Traced chains flow into QCConfig.ordered_chains."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._cb_chain.setChecked(True)
+        widget._traced_chains = [["TTI", "Tail_0", "Tail_1"]]
+        config = widget._build_qc_config()
+        assert config.ordered_chains == [["TTI", "Tail_0", "Tail_1"]]
+
+    def test_set_labels_loads_skeleton_into_canvas(self, qtbot):
+        """Loading labels with a skeleton populates the trace canvas."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        skeleton = _FakeSkeleton(
+            ["TTI", "Tail_0", "Tail_1"], [("TTI", "Tail_0"), ("Tail_0", "Tail_1")]
+        )
+        labels = MagicMock()
+        labels.skeletons = [skeleton]
+        labels.__len__ = MagicMock(return_value=0)
+        labels.__iter__ = MagicMock(return_value=iter([]))
+
+        widget.set_labels(labels)
+        assert set(widget._skeleton_canvas._positions.keys()) == {
+            "TTI",
+            "Tail_0",
+            "Tail_1",
+        }
+
+    def test_set_labels_without_skeleton_clears_canvas(self, qtbot):
+        """Labels whose skeleton access raises leave the canvas empty."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Seed a skeleton, then load labels that expose no usable skeleton.
+        widget._skeleton_canvas.set_skeleton(["A", "B"], [("A", "B")])
+
+        labels = MagicMock()
+        labels.skeletons = []  # no skeletons -> canvas cleared
+        labels.__len__ = MagicMock(return_value=0)
+        labels.__iter__ = MagicMock(return_value=iter([]))
+
+        widget.set_labels(labels)
+        assert widget._skeleton_canvas._positions == {}
+
+    def test_trace_panel_disabled_with_chain_off(self, qtbot):
+        """The trace panel follows the chain detector checkbox."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert not widget._cb_chain.isChecked()
+        assert not widget._chain_trace_panel.isEnabled()
+        widget._cb_chain.setChecked(True)
+        assert widget._chain_trace_panel.isEnabled()
