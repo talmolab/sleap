@@ -86,6 +86,7 @@ def short_sha(sha: Optional[str]) -> str:
     """
     return sha[:SHORT_SHA_LEN] if sha else ""
 
+
 # ASCII art logo
 SLEAP_ASCII = r"""
  ____  _     _____    _    ____

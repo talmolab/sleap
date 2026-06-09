@@ -487,9 +487,7 @@ class TestCommitInfo:
                 "requested_revision": "main",
             },
         }
-        with patch(
-            "importlib.metadata.distribution", return_value=_FakeDist(payload)
-        ):
+        with patch("importlib.metadata.distribution", return_value=_FakeDist(payload)):
             pkg = get_detailed_package_info("sleap")
         assert pkg.source == "git"
         assert pkg.editable is False
@@ -503,9 +501,7 @@ class TestCommitInfo:
             "url": "https://github.com/talmolab/sleap.git",
             "vcs_info": {"vcs": "git", "commit_id": "abcdef1234567890"},
         }
-        with patch(
-            "importlib.metadata.distribution", return_value=_FakeDist(payload)
-        ):
+        with patch("importlib.metadata.distribution", return_value=_FakeDist(payload)):
             pkg = get_detailed_package_info("sleap")
         assert pkg.git_commit == "abcdef1234567890"
         assert pkg.git_branch is None
@@ -519,16 +515,12 @@ class TestCommitInfo:
                 "commit_id": "e08bdad8353fffcacb9d3012f5a052d37381ca73",
             },
         }
-        with patch(
-            "importlib.metadata.distribution", return_value=_FakeDist(payload)
-        ):
+        with patch("importlib.metadata.distribution", return_value=_FakeDist(payload)):
             assert get_sleap_commit() == "e08bdad8"
 
     def test_get_sleap_commit_release_install(self):
         """A plain release install (no direct_url.json) has no commit info."""
-        with patch(
-            "importlib.metadata.distribution", return_value=_FakeDist(None)
-        ):
+        with patch("importlib.metadata.distribution", return_value=_FakeDist(None)):
             assert get_sleap_commit() is None
 
     def test_build_version_line_includes_commit(self):
@@ -573,9 +565,7 @@ class TestCommitInfo:
         release = PackageInfoData(
             name="sleap", version="1.6.3", source="pip", editable=False
         )
-        with patch(
-            "sleap.system_info.get_detailed_package_info", return_value=release
-        ):
+        with patch("sleap.system_info.get_detailed_package_info", return_value=release):
             # Off by default: no network, no commit.
             assert get_sleap_commit() is None
             # On: resolve via the (mocked) GitHub lookup.
@@ -585,9 +575,7 @@ class TestCommitInfo:
             ):
                 assert get_sleap_commit(resolve_remote=True) == "e08bdad8"
             # On but unresolved (offline / no tag): still None, never "".
-            with patch(
-                "sleap.system_info.resolve_tag_commit", return_value=None
-            ):
+            with patch("sleap.system_info.resolve_tag_commit", return_value=None):
                 assert get_sleap_commit(resolve_remote=True) is None
 
     def test_get_sleap_commit_prefers_local_over_remote(self):
@@ -599,9 +587,7 @@ class TestCommitInfo:
             editable=True,
             git_commit="e08bdad8353fffcacb9d3012f5a052d37381ca73",
         )
-        with patch(
-            "sleap.system_info.get_detailed_package_info", return_value=local
-        ):
+        with patch("sleap.system_info.get_detailed_package_info", return_value=local):
             with patch("sleap.system_info.resolve_tag_commit") as mock_resolve:
                 assert get_sleap_commit(resolve_remote=True) == "e08bdad8"
                 mock_resolve.assert_not_called()

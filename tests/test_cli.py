@@ -242,9 +242,7 @@ class TestCLIBasics:
             "sleap.system_info.resolve_tag_commit",
             return_value="e08bdad8353fffcacb9d3012f5a052d37381ca73",
         ):
-            result = runner.invoke(
-                cli, ["doctor", "--commit", "-o", str(output_file)]
-            )
+            result = runner.invoke(cli, ["doctor", "--commit", "-o", str(output_file)])
         assert result.exit_code == 0
         assert "github:v1.6.3@e08bdad8" in output_file.read_text()
 
