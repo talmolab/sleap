@@ -33,7 +33,7 @@ V3_FEATURE_NAMES = [
     "curvature_std",
     "visibility_pattern_score",
     "nn_distance",
-    "hull_area",
+    "hull_area_zscore",
     "hull_compactness",
 ]
 
@@ -284,12 +284,21 @@ class LabelQCDetector:
         return instances
 
     def _instance_to_array(self, instance: "sio.Instance") -> np.ndarray:
-        """Convert instance to (n_nodes, 2) array.
+        """Convert instance to (n_nodes, 2) array with invisible points as NaN.
 
-        Uses Instance.numpy() which returns invisible points as NaN by default.
-        Feature extractors handle NaN values by skipping them in computations.
+        Explicitly passes ``invisible_as_nan=True`` instead of relying on the
+        sleap-io default. Invisible (``visible=False``) nodes must never
+        contribute their stored coordinates to QC geometry features: those
+        coordinates are display-only placeholders (the GUI has to draw an
+        invisible node *somewhere*), and older sleap-io versions defaulted to
+        returning them, which leaked far-off invisible-node coordinates into
+        the edge/angle/distance/hull statistics (see #2753).
+
+        Feature extractors treat NaN as "missing" and skip those nodes, while
+        the downstream visibility mask (``~np.isnan(...)``) still records that
+        the node is invisible, so the visibility-pattern features keep working.
         """
-        return instance.numpy()
+        return instance.numpy(invisible_as_nan=True)
 
     @staticmethod
     def _video_id(video: "sio.Video", video_idx: int) -> str:

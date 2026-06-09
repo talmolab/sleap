@@ -165,7 +165,8 @@ def compute_node_overlap(
         Dictionary with:
         - common_nodes: list of node indices visible in both
         - overlapping_nodes: list of nodes within threshold
-        - mean_distance: mean distance at common nodes
+        - mean_distance / min_distance / max_distance: distance stats at common
+          nodes (all ``inf`` when there are no commonly visible nodes)
         - overlap_ratio: overlapping_nodes / common_nodes
     """
     # Find commonly visible nodes
@@ -179,6 +180,8 @@ def compute_node_overlap(
             "common_nodes": [],
             "overlapping_nodes": [],
             "mean_distance": float("inf"),
+            "min_distance": float("inf"),
+            "max_distance": float("inf"),
             "overlap_ratio": 0.0,
         }
 
