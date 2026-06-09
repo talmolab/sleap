@@ -5444,14 +5444,14 @@ instance, else None), and whether it's from a previous frame.</p>
       </thead>
       <tbody>
             <tr class="doc-section-item">
-              <td><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;fill_missing_predicted_nodes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;new_instance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;copy_instance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;
+              <td><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;fill_missing_predicted_nodes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new_instance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;
 
   &lt;span class=&quot;doc doc-labels&quot;&gt;
       &lt;small class=&quot;doc doc-label doc-label-staticmethod&quot;&gt;&lt;code&gt;staticmethod&lt;/code&gt;&lt;/small&gt;
   &lt;/span&gt; (&lt;code&gt;sleap.gui.commands.AddUserInstancesFromPredictions.fill_missing_predicted_nodes&lt;/code&gt;)" href="#sleap.gui.commands.AddUserInstancesFromPredictions.fill_missing_predicted_nodes">fill_missing_predicted_nodes</a></code></td>
               <td>
                 <div class="doc-md-description">
-                  <p>Initialize undetected nodes on a converted prediction instance.</p>
+                  <p>Anchor undetected (NaN) nodes to the body while keeping them hidden.</p>
                 </div>
               </td>
             </tr>
@@ -5576,30 +5576,7 @@ instance, else None), and whether it's from a previous frame.</p>
 <span class="normal"><a href="#__codelineno-0-4879">4879</a></span>
 <span class="normal"><a href="#__codelineno-0-4880">4880</a></span>
 <span class="normal"><a href="#__codelineno-0-4881">4881</a></span>
-<span class="normal"><a href="#__codelineno-0-4882">4882</a></span>
-<span class="normal"><a href="#__codelineno-0-4883">4883</a></span>
-<span class="normal"><a href="#__codelineno-0-4884">4884</a></span>
-<span class="normal"><a href="#__codelineno-0-4885">4885</a></span>
-<span class="normal"><a href="#__codelineno-0-4886">4886</a></span>
-<span class="normal"><a href="#__codelineno-0-4887">4887</a></span>
-<span class="normal"><a href="#__codelineno-0-4888">4888</a></span>
-<span class="normal"><a href="#__codelineno-0-4889">4889</a></span>
-<span class="normal"><a href="#__codelineno-0-4890">4890</a></span>
-<span class="normal"><a href="#__codelineno-0-4891">4891</a></span>
-<span class="normal"><a href="#__codelineno-0-4892">4892</a></span>
-<span class="normal"><a href="#__codelineno-0-4893">4893</a></span>
-<span class="normal"><a href="#__codelineno-0-4894">4894</a></span>
-<span class="normal"><a href="#__codelineno-0-4895">4895</a></span>
-<span class="normal"><a href="#__codelineno-0-4896">4896</a></span>
-<span class="normal"><a href="#__codelineno-0-4897">4897</a></span>
-<span class="normal"><a href="#__codelineno-0-4898">4898</a></span>
-<span class="normal"><a href="#__codelineno-0-4899">4899</a></span>
-<span class="normal"><a href="#__codelineno-0-4900">4900</a></span>
-<span class="normal"><a href="#__codelineno-0-4901">4901</a></span>
-<span class="normal"><a href="#__codelineno-0-4902">4902</a></span>
-<span class="normal"><a href="#__codelineno-0-4903">4903</a></span>
-<span class="normal"><a href="#__codelineno-0-4904">4904</a></span>
-<span class="normal"><a href="#__codelineno-0-4905">4905</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-4780"><a id="__codelineno-0-4780" name="__codelineno-0-4780"></a><span class="k">class</span><span class="w"> </span><span class="nc">AddUserInstancesFromPredictions</span><span class="p">(</span><span class="n">EditCommand</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-4882">4882</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-4780"><a id="__codelineno-0-4780" name="__codelineno-0-4780"></a><span class="k">class</span><span class="w"> </span><span class="nc">AddUserInstancesFromPredictions</span><span class="p">(</span><span class="n">EditCommand</span><span class="p">):</span>
 </span><span id="__span-0-4781"><a id="__codelineno-0-4781" name="__codelineno-0-4781"></a>    <span class="n">topics</span> <span class="o">=</span> <span class="p">[</span><span class="n">UpdateTopic</span><span class="o">.</span><span class="n">frame</span><span class="p">,</span> <span class="n">UpdateTopic</span><span class="o">.</span><span class="n">project_instances</span><span class="p">]</span>
 </span><span id="__span-0-4782"><a id="__codelineno-0-4782" name="__codelineno-0-4782"></a>
 </span><span id="__span-0-4783"><a id="__codelineno-0-4783" name="__codelineno-0-4783"></a>    <span class="nd">@staticmethod</span>
@@ -5640,91 +5617,68 @@ instance, else None), and whether it's from a previous frame.</p>
 </span><span id="__span-0-4818"><a id="__codelineno-0-4818" name="__codelineno-0-4818"></a>        <span class="k">return</span> <span class="n">new_instance</span>
 </span><span id="__span-0-4819"><a id="__codelineno-0-4819" name="__codelineno-0-4819"></a>
 </span><span id="__span-0-4820"><a id="__codelineno-0-4820" name="__codelineno-0-4820"></a>    <span class="nd">@staticmethod</span>
-</span><span id="__span-0-4821"><a id="__codelineno-0-4821" name="__codelineno-0-4821"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">fill_missing_predicted_nodes</span><span class="p">(</span>
-</span><span id="__span-0-4822"><a id="__codelineno-0-4822" name="__codelineno-0-4822"></a>        <span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span>
-</span><span id="__span-0-4823"><a id="__codelineno-0-4823" name="__codelineno-0-4823"></a>        <span class="n">new_instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span>
-</span><span id="__span-0-4824"><a id="__codelineno-0-4824" name="__codelineno-0-4824"></a>        <span class="n">copy_instance</span><span class="p">:</span> <span class="n">PredictedInstance</span><span class="p">,</span>
-</span><span id="__span-0-4825"><a id="__codelineno-0-4825" name="__codelineno-0-4825"></a>    <span class="p">):</span>
-</span><span id="__span-0-4826"><a id="__codelineno-0-4826" name="__codelineno-0-4826"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize undetected nodes on a converted prediction instance.</span>
-</span><span id="__span-0-4827"><a id="__codelineno-0-4827" name="__codelineno-0-4827"></a>
-</span><span id="__span-0-4828"><a id="__codelineno-0-4828" name="__codelineno-0-4828"></a><span class="sd">        ``make_instance_from_predicted_instance`` copies the model&#39;s detected</span>
-</span><span id="__span-0-4829"><a id="__codelineno-0-4829" name="__codelineno-0-4829"></a><span class="sd">        keypoints and leaves any node the model did not detect at ``xy=NaN``</span>
-</span><span id="__span-0-4830"><a id="__codelineno-0-4830" name="__codelineno-0-4830"></a><span class="sd">        / ``visible=False``. This fills those missing nodes with sensible,</span>
-</span><span id="__span-0-4831"><a id="__codelineno-0-4831" name="__codelineno-0-4831"></a><span class="sd">        visible positions using the same machinery that initializes a</span>
-</span><span id="__span-0-4832"><a id="__codelineno-0-4832" name="__codelineno-0-4832"></a><span class="sd">        brand-new instance (``AddMissingInstanceNodes.add_best_nodes``):</span>
-</span><span id="__span-0-4833"><a id="__codelineno-0-4833" name="__codelineno-0-4833"></a><span class="sd">        the template is aligned onto the already-detected points (or, when</span>
-</span><span id="__span-0-4834"><a id="__codelineno-0-4834" name="__codelineno-0-4834"></a><span class="sd">        nothing was detected, centered on the current view), and any node</span>
-</span><span id="__span-0-4835"><a id="__codelineno-0-4835" name="__codelineno-0-4835"></a><span class="sd">        still missing falls back to random in-view placement. Filled nodes</span>
-</span><span id="__span-0-4836"><a id="__codelineno-0-4836" name="__codelineno-0-4836"></a><span class="sd">        are marked ``visible=True`` and ``complete=False`` so the user can</span>
-</span><span id="__span-0-4837"><a id="__codelineno-0-4837" name="__codelineno-0-4837"></a><span class="sd">        see and drag them; already-detected points, the track, and the</span>
-</span><span id="__span-0-4838"><a id="__codelineno-0-4838" name="__codelineno-0-4838"></a><span class="sd">        ``from_predicted`` link are left untouched.</span>
-</span><span id="__span-0-4839"><a id="__codelineno-0-4839" name="__codelineno-0-4839"></a>
-</span><span id="__span-0-4840"><a id="__codelineno-0-4840" name="__codelineno-0-4840"></a><span class="sd">        This is a no-op when there is no GUI ``player`` available (e.g. the</span>
-</span><span id="__span-0-4841"><a id="__codelineno-0-4841" name="__codelineno-0-4841"></a><span class="sd">        headless ``CommandContext.from_labels`` / ``FakeApp`` path used in</span>
-</span><span id="__span-0-4842"><a id="__codelineno-0-4842" name="__codelineno-0-4842"></a><span class="sd">        tests) since the placement machinery needs the visible-rect, and a</span>
-</span><span id="__span-0-4843"><a id="__codelineno-0-4843" name="__codelineno-0-4843"></a><span class="sd">        no-op when every node was already detected.</span>
-</span><span id="__span-0-4844"><a id="__codelineno-0-4844" name="__codelineno-0-4844"></a>
-</span><span id="__span-0-4845"><a id="__codelineno-0-4845" name="__codelineno-0-4845"></a><span class="sd">        Args:</span>
-</span><span id="__span-0-4846"><a id="__codelineno-0-4846" name="__codelineno-0-4846"></a><span class="sd">            context: The command context.</span>
-</span><span id="__span-0-4847"><a id="__codelineno-0-4847" name="__codelineno-0-4847"></a><span class="sd">            new_instance: The user ``Instance`` produced by</span>
-</span><span id="__span-0-4848"><a id="__codelineno-0-4848" name="__codelineno-0-4848"></a><span class="sd">                ``make_instance_from_predicted_instance``; modified in place.</span>
-</span><span id="__span-0-4849"><a id="__codelineno-0-4849" name="__codelineno-0-4849"></a><span class="sd">            copy_instance: The source ``PredictedInstance`` (used for its</span>
-</span><span id="__span-0-4850"><a id="__codelineno-0-4850" name="__codelineno-0-4850"></a><span class="sd">                skeleton).</span>
-</span><span id="__span-0-4851"><a id="__codelineno-0-4851" name="__codelineno-0-4851"></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="__span-0-4852"><a id="__codelineno-0-4852" name="__codelineno-0-4852"></a>        <span class="c1"># Nothing to do if every node already has detected coordinates.</span>
-</span><span id="__span-0-4853"><a id="__codelineno-0-4853" name="__codelineno-0-4853"></a>        <span class="n">node_xy</span> <span class="o">=</span> <span class="n">new_instance</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-</span><span id="__span-0-4854"><a id="__codelineno-0-4854" name="__codelineno-0-4854"></a>        <span class="n">has_missing</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">node_xy</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
-</span><span id="__span-0-4855"><a id="__codelineno-0-4855" name="__codelineno-0-4855"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_missing</span><span class="p">:</span>
-</span><span id="__span-0-4856"><a id="__codelineno-0-4856" name="__codelineno-0-4856"></a>            <span class="k">return</span>
-</span><span id="__span-0-4857"><a id="__codelineno-0-4857" name="__codelineno-0-4857"></a>
-</span><span id="__span-0-4858"><a id="__codelineno-0-4858" name="__codelineno-0-4858"></a>        <span class="c1"># The placement helpers read context.app.player.getVisibleRect(); in</span>
-</span><span id="__span-0-4859"><a id="__codelineno-0-4859" name="__codelineno-0-4859"></a>        <span class="c1"># headless contexts (FakeApp) there is no player, so skip the fill</span>
-</span><span id="__span-0-4860"><a id="__codelineno-0-4860" name="__codelineno-0-4860"></a>        <span class="c1"># rather than crash. Mirrors the guard at CommandContext.execute.</span>
-</span><span id="__span-0-4861"><a id="__codelineno-0-4861" name="__codelineno-0-4861"></a>        <span class="n">player</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">&quot;app&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;player&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span id="__span-0-4862"><a id="__codelineno-0-4862" name="__codelineno-0-4862"></a>        <span class="k">if</span> <span class="n">player</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-4863"><a id="__codelineno-0-4863" name="__codelineno-0-4863"></a>            <span class="k">return</span>
-</span><span id="__span-0-4864"><a id="__codelineno-0-4864" name="__codelineno-0-4864"></a>
-</span><span id="__span-0-4865"><a id="__codelineno-0-4865" name="__codelineno-0-4865"></a>        <span class="c1"># add_random_nodes / add_nodes_from_template read context.state</span>
-</span><span id="__span-0-4866"><a id="__codelineno-0-4866" name="__codelineno-0-4866"></a>        <span class="c1"># [&quot;skeleton&quot;]; the all-frames path builds the context via</span>
-</span><span id="__span-0-4867"><a id="__codelineno-0-4867" name="__codelineno-0-4867"></a>        <span class="c1"># CommandContext.from_labels where it is unset, so populate it.</span>
-</span><span id="__span-0-4868"><a id="__codelineno-0-4868" name="__codelineno-0-4868"></a>        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-4869"><a id="__codelineno-0-4869" name="__codelineno-0-4869"></a>            <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy_instance</span><span class="o">.</span><span class="n">skeleton</span>
-</span><span id="__span-0-4870"><a id="__codelineno-0-4870" name="__codelineno-0-4870"></a>
-</span><span id="__span-0-4871"><a id="__codelineno-0-4871" name="__codelineno-0-4871"></a>        <span class="c1"># Use the same &quot;best&quot; strategy as a brand-new instance: place missing</span>
-</span><span id="__span-0-4872"><a id="__codelineno-0-4872" name="__codelineno-0-4872"></a>        <span class="c1"># nodes from an aligned template, then random-fill anything the</span>
-</span><span id="__span-0-4873"><a id="__codelineno-0-4873" name="__codelineno-0-4873"></a>        <span class="c1"># template could not provide. Both steps preserve already-detected</span>
-</span><span id="__span-0-4874"><a id="__codelineno-0-4874" name="__codelineno-0-4874"></a>        <span class="c1"># (non-NaN) points and only touch the missing ones, marking the</span>
-</span><span id="__span-0-4875"><a id="__codelineno-0-4875" name="__codelineno-0-4875"></a>        <span class="c1"># filled nodes visible with complete=False.</span>
-</span><span id="__span-0-4876"><a id="__codelineno-0-4876" name="__codelineno-0-4876"></a>        <span class="n">AddMissingInstanceNodes</span><span class="o">.</span><span class="n">add_best_nodes</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">new_instance</span><span class="p">,</span> <span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-0-4877"><a id="__codelineno-0-4877" name="__codelineno-0-4877"></a>
-</span><span id="__span-0-4878"><a id="__codelineno-0-4878" name="__codelineno-0-4878"></a>    <span class="nd">@classmethod</span>
-</span><span id="__span-0-4879"><a id="__codelineno-0-4879" name="__codelineno-0-4879"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">do_action</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span id="__span-0-4880"><a id="__codelineno-0-4880" name="__codelineno-0-4880"></a>        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-4881"><a id="__codelineno-0-4881" name="__codelineno-0-4881"></a>            <span class="k">return</span>
-</span><span id="__span-0-4882"><a id="__codelineno-0-4882" name="__codelineno-0-4882"></a>
-</span><span id="__span-0-4883"><a id="__codelineno-0-4883" name="__codelineno-0-4883"></a>        <span class="n">new_instances</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="__span-0-4884"><a id="__codelineno-0-4884" name="__codelineno-0-4884"></a>        <span class="n">unused_predictions</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unused_predictions</span>
-</span><span id="__span-0-4885"><a id="__codelineno-0-4885" name="__codelineno-0-4885"></a>        <span class="k">for</span> <span class="n">predicted_instance</span> <span class="ow">in</span> <span class="n">unused_predictions</span><span class="p">:</span>
-</span><span id="__span-0-4886"><a id="__codelineno-0-4886" name="__codelineno-0-4886"></a>            <span class="n">new_instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make_instance_from_predicted_instance</span><span class="p">(</span><span class="n">predicted_instance</span><span class="p">)</span>
-</span><span id="__span-0-4887"><a id="__codelineno-0-4887" name="__codelineno-0-4887"></a>            <span class="bp">cls</span><span class="o">.</span><span class="n">fill_missing_predicted_nodes</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">new_instance</span><span class="p">,</span> <span class="n">predicted_instance</span><span class="p">)</span>
-</span><span id="__span-0-4888"><a id="__codelineno-0-4888" name="__codelineno-0-4888"></a>            <span class="n">new_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_instance</span><span class="p">)</span>
-</span><span id="__span-0-4889"><a id="__codelineno-0-4889" name="__codelineno-0-4889"></a>
-</span><span id="__span-0-4890"><a id="__codelineno-0-4890" name="__codelineno-0-4890"></a>        <span class="c1"># Add the instances</span>
-</span><span id="__span-0-4891"><a id="__codelineno-0-4891" name="__codelineno-0-4891"></a>        <span class="k">for</span> <span class="n">new_instance</span> <span class="ow">in</span> <span class="n">new_instances</span><span class="p">:</span>
-</span><span id="__span-0-4892"><a id="__codelineno-0-4892" name="__codelineno-0-4892"></a>            <span class="k">if</span> <span class="n">new_instance</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
-</span><span id="__span-0-4893"><a id="__codelineno-0-4893" name="__codelineno-0-4893"></a>                <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_instance</span><span class="p">)</span>
-</span><span id="__span-0-4894"><a id="__codelineno-0-4894" name="__codelineno-0-4894"></a>
-</span><span id="__span-0-4895"><a id="__codelineno-0-4895" name="__codelineno-0-4895"></a>            <span class="n">existing_tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">track</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">]</span>
-</span><span id="__span-0-4896"><a id="__codelineno-0-4896" name="__codelineno-0-4896"></a>            <span class="k">if</span> <span class="p">(</span>
-</span><span id="__span-0-4897"><a id="__codelineno-0-4897" name="__codelineno-0-4897"></a>                <span class="n">new_instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span id="__span-0-4898"><a id="__codelineno-0-4898" name="__codelineno-0-4898"></a>                <span class="ow">and</span> <span class="n">new_instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_tracks</span>
-</span><span id="__span-0-4899"><a id="__codelineno-0-4899" name="__codelineno-0-4899"></a>            <span class="p">):</span>
-</span><span id="__span-0-4900"><a id="__codelineno-0-4900" name="__codelineno-0-4900"></a>                <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_instance</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
-</span><span id="__span-0-4901"><a id="__codelineno-0-4901" name="__codelineno-0-4901"></a>
-</span><span id="__span-0-4902"><a id="__codelineno-0-4902" name="__codelineno-0-4902"></a>            <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
-</span><span id="__span-0-4903"><a id="__codelineno-0-4903" name="__codelineno-0-4903"></a>                <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">])</span>
-</span><span id="__span-0-4904"><a id="__codelineno-0-4904" name="__codelineno-0-4904"></a>
-</span><span id="__span-0-4905"><a id="__codelineno-0-4905" name="__codelineno-0-4905"></a>            <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</span><span id="__span-0-4821"><a id="__codelineno-0-4821" name="__codelineno-0-4821"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">fill_missing_predicted_nodes</span><span class="p">(</span><span class="n">new_instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
+</span><span id="__span-0-4822"><a id="__codelineno-0-4822" name="__codelineno-0-4822"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Anchor undetected (NaN) nodes to the body while keeping them hidden.</span>
+</span><span id="__span-0-4823"><a id="__codelineno-0-4823" name="__codelineno-0-4823"></a>
+</span><span id="__span-0-4824"><a id="__codelineno-0-4824" name="__codelineno-0-4824"></a><span class="sd">        The model leaves occluded nodes at NaN coordinates, and</span>
+</span><span id="__span-0-4825"><a id="__codelineno-0-4825" name="__codelineno-0-4825"></a><span class="sd">        ``make_instance_from_predicted_instance`` keeps them ``visible=False``</span>
+</span><span id="__span-0-4826"><a id="__codelineno-0-4826" name="__codelineno-0-4826"></a><span class="sd">        (correct -- the converted instance should look like the prediction).</span>
+</span><span id="__span-0-4827"><a id="__codelineno-0-4827" name="__codelineno-0-4827"></a><span class="sd">        But a NaN coordinate renders at a default/garbage location when the user</span>
+</span><span id="__span-0-4828"><a id="__codelineno-0-4828" name="__codelineno-0-4828"></a><span class="sd">        turns on &quot;show non-visible nodes&quot; (``QtInstance`` still creates a node</span>
+</span><span id="__span-0-4829"><a id="__codelineno-0-4829" name="__codelineno-0-4829"></a><span class="sd">        item for every node in that mode, positioned at its ``xy``). Move each</span>
+</span><span id="__span-0-4830"><a id="__codelineno-0-4830" name="__codelineno-0-4830"></a><span class="sd">        missing node onto the centroid of this instance&#39;s own *detected*</span>
+</span><span id="__span-0-4831"><a id="__codelineno-0-4831" name="__codelineno-0-4831"></a><span class="sd">        keypoints so it sits on the animal -- ready to drag out -- while staying</span>
+</span><span id="__span-0-4832"><a id="__codelineno-0-4832" name="__codelineno-0-4832"></a><span class="sd">        hidden. Already-detected points, the track, and the ``from_predicted``</span>
+</span><span id="__span-0-4833"><a id="__codelineno-0-4833" name="__codelineno-0-4833"></a><span class="sd">        link are left untouched.</span>
+</span><span id="__span-0-4834"><a id="__codelineno-0-4834" name="__codelineno-0-4834"></a>
+</span><span id="__span-0-4835"><a id="__codelineno-0-4835" name="__codelineno-0-4835"></a><span class="sd">        No GUI/player is required, so the single-frame and all-frames/headless</span>
+</span><span id="__span-0-4836"><a id="__codelineno-0-4836" name="__codelineno-0-4836"></a><span class="sd">        conversion paths behave identically. No-op when every node was detected,</span>
+</span><span id="__span-0-4837"><a id="__codelineno-0-4837" name="__codelineno-0-4837"></a><span class="sd">        or when nothing was detected (no anchor to place missing nodes against).</span>
+</span><span id="__span-0-4838"><a id="__codelineno-0-4838" name="__codelineno-0-4838"></a>
+</span><span id="__span-0-4839"><a id="__codelineno-0-4839" name="__codelineno-0-4839"></a><span class="sd">        Args:</span>
+</span><span id="__span-0-4840"><a id="__codelineno-0-4840" name="__codelineno-0-4840"></a><span class="sd">            new_instance: The user ``Instance`` produced by</span>
+</span><span id="__span-0-4841"><a id="__codelineno-0-4841" name="__codelineno-0-4841"></a><span class="sd">                ``make_instance_from_predicted_instance``; modified in place.</span>
+</span><span id="__span-0-4842"><a id="__codelineno-0-4842" name="__codelineno-0-4842"></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="__span-0-4843"><a id="__codelineno-0-4843" name="__codelineno-0-4843"></a>        <span class="n">xy</span> <span class="o">=</span> <span class="n">new_instance</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;xy&quot;</span><span class="p">]</span>
+</span><span id="__span-0-4844"><a id="__codelineno-0-4844" name="__codelineno-0-4844"></a>        <span class="n">missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-0-4845"><a id="__codelineno-0-4845" name="__codelineno-0-4845"></a>        <span class="n">detected</span> <span class="o">=</span> <span class="o">~</span><span class="n">missing</span>
+</span><span id="__span-0-4846"><a id="__codelineno-0-4846" name="__codelineno-0-4846"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">missing</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">detected</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+</span><span id="__span-0-4847"><a id="__codelineno-0-4847" name="__codelineno-0-4847"></a>            <span class="k">return</span>
+</span><span id="__span-0-4848"><a id="__codelineno-0-4848" name="__codelineno-0-4848"></a>
+</span><span id="__span-0-4849"><a id="__codelineno-0-4849" name="__codelineno-0-4849"></a>        <span class="c1"># Centroid of the detected keypoints -&gt; on the animal.</span>
+</span><span id="__span-0-4850"><a id="__codelineno-0-4850" name="__codelineno-0-4850"></a>        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="n">detected</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-4851"><a id="__codelineno-0-4851" name="__codelineno-0-4851"></a>        <span class="n">new_instance</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;xy&quot;</span><span class="p">][</span><span class="n">missing</span><span class="p">]</span> <span class="o">=</span> <span class="n">center</span>
+</span><span id="__span-0-4852"><a id="__codelineno-0-4852" name="__codelineno-0-4852"></a>        <span class="n">new_instance</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;visible&quot;</span><span class="p">][</span><span class="n">missing</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-0-4853"><a id="__codelineno-0-4853" name="__codelineno-0-4853"></a>        <span class="n">new_instance</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;complete&quot;</span><span class="p">][</span><span class="n">missing</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-0-4854"><a id="__codelineno-0-4854" name="__codelineno-0-4854"></a>
+</span><span id="__span-0-4855"><a id="__codelineno-0-4855" name="__codelineno-0-4855"></a>    <span class="nd">@classmethod</span>
+</span><span id="__span-0-4856"><a id="__codelineno-0-4856" name="__codelineno-0-4856"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">do_action</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span id="__span-0-4857"><a id="__codelineno-0-4857" name="__codelineno-0-4857"></a>        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-4858"><a id="__codelineno-0-4858" name="__codelineno-0-4858"></a>            <span class="k">return</span>
+</span><span id="__span-0-4859"><a id="__codelineno-0-4859" name="__codelineno-0-4859"></a>
+</span><span id="__span-0-4860"><a id="__codelineno-0-4860" name="__codelineno-0-4860"></a>        <span class="n">new_instances</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-0-4861"><a id="__codelineno-0-4861" name="__codelineno-0-4861"></a>        <span class="n">unused_predictions</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unused_predictions</span>
+</span><span id="__span-0-4862"><a id="__codelineno-0-4862" name="__codelineno-0-4862"></a>        <span class="k">for</span> <span class="n">predicted_instance</span> <span class="ow">in</span> <span class="n">unused_predictions</span><span class="p">:</span>
+</span><span id="__span-0-4863"><a id="__codelineno-0-4863" name="__codelineno-0-4863"></a>            <span class="n">new_instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">make_instance_from_predicted_instance</span><span class="p">(</span><span class="n">predicted_instance</span><span class="p">)</span>
+</span><span id="__span-0-4864"><a id="__codelineno-0-4864" name="__codelineno-0-4864"></a>            <span class="bp">cls</span><span class="o">.</span><span class="n">fill_missing_predicted_nodes</span><span class="p">(</span><span class="n">new_instance</span><span class="p">)</span>
+</span><span id="__span-0-4865"><a id="__codelineno-0-4865" name="__codelineno-0-4865"></a>            <span class="n">new_instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_instance</span><span class="p">)</span>
+</span><span id="__span-0-4866"><a id="__codelineno-0-4866" name="__codelineno-0-4866"></a>
+</span><span id="__span-0-4867"><a id="__codelineno-0-4867" name="__codelineno-0-4867"></a>        <span class="c1"># Add the instances</span>
+</span><span id="__span-0-4868"><a id="__codelineno-0-4868" name="__codelineno-0-4868"></a>        <span class="k">for</span> <span class="n">new_instance</span> <span class="ow">in</span> <span class="n">new_instances</span><span class="p">:</span>
+</span><span id="__span-0-4869"><a id="__codelineno-0-4869" name="__codelineno-0-4869"></a>            <span class="k">if</span> <span class="n">new_instance</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">instances</span><span class="p">:</span>
+</span><span id="__span-0-4870"><a id="__codelineno-0-4870" name="__codelineno-0-4870"></a>                <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_instance</span><span class="p">)</span>
+</span><span id="__span-0-4871"><a id="__codelineno-0-4871" name="__codelineno-0-4871"></a>
+</span><span id="__span-0-4872"><a id="__codelineno-0-4872" name="__codelineno-0-4872"></a>            <span class="n">existing_tracks</span> <span class="o">=</span> <span class="p">[</span><span class="n">track</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">track</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="p">]</span>
+</span><span id="__span-0-4873"><a id="__codelineno-0-4873" name="__codelineno-0-4873"></a>            <span class="k">if</span> <span class="p">(</span>
+</span><span id="__span-0-4874"><a id="__codelineno-0-4874" name="__codelineno-0-4874"></a>                <span class="n">new_instance</span><span class="o">.</span><span class="n">track</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="__span-0-4875"><a id="__codelineno-0-4875" name="__codelineno-0-4875"></a>                <span class="ow">and</span> <span class="n">new_instance</span><span class="o">.</span><span class="n">track</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_tracks</span>
+</span><span id="__span-0-4876"><a id="__codelineno-0-4876" name="__codelineno-0-4876"></a>            <span class="p">):</span>
+</span><span id="__span-0-4877"><a id="__codelineno-0-4877" name="__codelineno-0-4877"></a>                <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">tracks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_instance</span><span class="o">.</span><span class="n">track</span><span class="p">)</span>
+</span><span id="__span-0-4878"><a id="__codelineno-0-4878" name="__codelineno-0-4878"></a>
+</span><span id="__span-0-4879"><a id="__codelineno-0-4879" name="__codelineno-0-4879"></a>            <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+</span><span id="__span-0-4880"><a id="__codelineno-0-4880" name="__codelineno-0-4880"></a>                <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;labeled_frame&quot;</span><span class="p">])</span>
+</span><span id="__span-0-4881"><a id="__codelineno-0-4881" name="__codelineno-0-4881"></a>
+</span><span id="__span-0-4882"><a id="__codelineno-0-4882" name="__codelineno-0-4882"></a>            <span class="n">context</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 </span></code></pre></div></td></tr></table></div>
               </details>
 
@@ -5745,7 +5699,7 @@ instance, else None), and whether it's from a previous frame.</p>
 
 
 <h4 id="sleap.gui.commands.AddUserInstancesFromPredictions.fill_missing_predicted_nodes" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">fill_missing_predicted_nodes</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">new_instance</span><span class="p">,</span> <span class="n">copy_instance</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">fill_missing_predicted_nodes</span><span class="p">(</span><span class="n">new_instance</span><span class="p">)</span></code>
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-staticmethod"><code>staticmethod</code></small>
@@ -5756,22 +5710,20 @@ instance, else None), and whether it's from a previous frame.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Initialize undetected nodes on a converted prediction instance.</p>
-<p><code>make_instance_from_predicted_instance</code> copies the model's detected
-keypoints and leaves any node the model did not detect at <code>xy=NaN</code>
-/ <code>visible=False</code>. This fills those missing nodes with sensible,
-visible positions using the same machinery that initializes a
-brand-new instance (<code>AddMissingInstanceNodes.add_best_nodes</code>):
-the template is aligned onto the already-detected points (or, when
-nothing was detected, centered on the current view), and any node
-still missing falls back to random in-view placement. Filled nodes
-are marked <code>visible=True</code> and <code>complete=False</code> so the user can
-see and drag them; already-detected points, the track, and the
-<code>from_predicted</code> link are left untouched.</p>
-<p>This is a no-op when there is no GUI <code>player</code> available (e.g. the
-headless <code>CommandContext.from_labels</code> / <code>FakeApp</code> path used in
-tests) since the placement machinery needs the visible-rect, and a
-no-op when every node was already detected.</p>
+        <p>Anchor undetected (NaN) nodes to the body while keeping them hidden.</p>
+<p>The model leaves occluded nodes at NaN coordinates, and
+<code>make_instance_from_predicted_instance</code> keeps them <code>visible=False</code>
+(correct -- the converted instance should look like the prediction).
+But a NaN coordinate renders at a default/garbage location when the user
+turns on "show non-visible nodes" (<code>QtInstance</code> still creates a node
+item for every node in that mode, positioned at its <code>xy</code>). Move each
+missing node onto the centroid of this instance's own <em>detected</em>
+keypoints so it sits on the animal -- ready to drag out -- while staying
+hidden. Already-detected points, the track, and the <code>from_predicted</code>
+link are left untouched.</p>
+<p>No GUI/player is required, so the single-frame and all-frames/headless
+conversion paths behave identically. No-op when every node was detected,
+or when nothing was detected (no anchor to place missing nodes against).</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -5787,22 +5739,6 @@ no-op when every node was already detected.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>context</code>
-            </td>
-            <td>
-                  <code><a class="autorefs autorefs-internal" title="&lt;code&gt;CommandContext&lt;/code&gt; (&lt;code&gt;sleap.gui.commands.CommandContext&lt;/code&gt;)" href="#sleap.gui.commands.CommandContext">CommandContext</a></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The command context.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
                 <code>new_instance</code>
             </td>
             <td>
@@ -5812,23 +5748,6 @@ no-op when every node was already detected.</p>
               <div class="doc-md-description">
                 <p>The user <code>Instance</code> produced by
 <code>make_instance_from_predicted_instance</code>; modified in place.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>copy_instance</code>
-            </td>
-            <td>
-                  <code><span title="sleap_io.model.instance.PredictedInstance">PredictedInstance</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The source <code>PredictedInstance</code> (used for its
-skeleton).</p>
               </div>
             </td>
             <td>
@@ -5874,86 +5793,40 @@ skeleton).</p>
 <span class="normal"><a href="#__codelineno-0-4850">4850</a></span>
 <span class="normal"><a href="#__codelineno-0-4851">4851</a></span>
 <span class="normal"><a href="#__codelineno-0-4852">4852</a></span>
-<span class="normal"><a href="#__codelineno-0-4853">4853</a></span>
-<span class="normal"><a href="#__codelineno-0-4854">4854</a></span>
-<span class="normal"><a href="#__codelineno-0-4855">4855</a></span>
-<span class="normal"><a href="#__codelineno-0-4856">4856</a></span>
-<span class="normal"><a href="#__codelineno-0-4857">4857</a></span>
-<span class="normal"><a href="#__codelineno-0-4858">4858</a></span>
-<span class="normal"><a href="#__codelineno-0-4859">4859</a></span>
-<span class="normal"><a href="#__codelineno-0-4860">4860</a></span>
-<span class="normal"><a href="#__codelineno-0-4861">4861</a></span>
-<span class="normal"><a href="#__codelineno-0-4862">4862</a></span>
-<span class="normal"><a href="#__codelineno-0-4863">4863</a></span>
-<span class="normal"><a href="#__codelineno-0-4864">4864</a></span>
-<span class="normal"><a href="#__codelineno-0-4865">4865</a></span>
-<span class="normal"><a href="#__codelineno-0-4866">4866</a></span>
-<span class="normal"><a href="#__codelineno-0-4867">4867</a></span>
-<span class="normal"><a href="#__codelineno-0-4868">4868</a></span>
-<span class="normal"><a href="#__codelineno-0-4869">4869</a></span>
-<span class="normal"><a href="#__codelineno-0-4870">4870</a></span>
-<span class="normal"><a href="#__codelineno-0-4871">4871</a></span>
-<span class="normal"><a href="#__codelineno-0-4872">4872</a></span>
-<span class="normal"><a href="#__codelineno-0-4873">4873</a></span>
-<span class="normal"><a href="#__codelineno-0-4874">4874</a></span>
-<span class="normal"><a href="#__codelineno-0-4875">4875</a></span>
-<span class="normal"><a href="#__codelineno-0-4876">4876</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-4820"><a id="__codelineno-0-4820" name="__codelineno-0-4820"></a><span class="nd">@staticmethod</span>
-</span><span id="__span-0-4821"><a id="__codelineno-0-4821" name="__codelineno-0-4821"></a><span class="k">def</span><span class="w"> </span><span class="nf">fill_missing_predicted_nodes</span><span class="p">(</span>
-</span><span id="__span-0-4822"><a id="__codelineno-0-4822" name="__codelineno-0-4822"></a>    <span class="n">context</span><span class="p">:</span> <span class="n">CommandContext</span><span class="p">,</span>
-</span><span id="__span-0-4823"><a id="__codelineno-0-4823" name="__codelineno-0-4823"></a>    <span class="n">new_instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">,</span>
-</span><span id="__span-0-4824"><a id="__codelineno-0-4824" name="__codelineno-0-4824"></a>    <span class="n">copy_instance</span><span class="p">:</span> <span class="n">PredictedInstance</span><span class="p">,</span>
-</span><span id="__span-0-4825"><a id="__codelineno-0-4825" name="__codelineno-0-4825"></a><span class="p">):</span>
-</span><span id="__span-0-4826"><a id="__codelineno-0-4826" name="__codelineno-0-4826"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize undetected nodes on a converted prediction instance.</span>
-</span><span id="__span-0-4827"><a id="__codelineno-0-4827" name="__codelineno-0-4827"></a>
-</span><span id="__span-0-4828"><a id="__codelineno-0-4828" name="__codelineno-0-4828"></a><span class="sd">    ``make_instance_from_predicted_instance`` copies the model&#39;s detected</span>
-</span><span id="__span-0-4829"><a id="__codelineno-0-4829" name="__codelineno-0-4829"></a><span class="sd">    keypoints and leaves any node the model did not detect at ``xy=NaN``</span>
-</span><span id="__span-0-4830"><a id="__codelineno-0-4830" name="__codelineno-0-4830"></a><span class="sd">    / ``visible=False``. This fills those missing nodes with sensible,</span>
-</span><span id="__span-0-4831"><a id="__codelineno-0-4831" name="__codelineno-0-4831"></a><span class="sd">    visible positions using the same machinery that initializes a</span>
-</span><span id="__span-0-4832"><a id="__codelineno-0-4832" name="__codelineno-0-4832"></a><span class="sd">    brand-new instance (``AddMissingInstanceNodes.add_best_nodes``):</span>
-</span><span id="__span-0-4833"><a id="__codelineno-0-4833" name="__codelineno-0-4833"></a><span class="sd">    the template is aligned onto the already-detected points (or, when</span>
-</span><span id="__span-0-4834"><a id="__codelineno-0-4834" name="__codelineno-0-4834"></a><span class="sd">    nothing was detected, centered on the current view), and any node</span>
-</span><span id="__span-0-4835"><a id="__codelineno-0-4835" name="__codelineno-0-4835"></a><span class="sd">    still missing falls back to random in-view placement. Filled nodes</span>
-</span><span id="__span-0-4836"><a id="__codelineno-0-4836" name="__codelineno-0-4836"></a><span class="sd">    are marked ``visible=True`` and ``complete=False`` so the user can</span>
-</span><span id="__span-0-4837"><a id="__codelineno-0-4837" name="__codelineno-0-4837"></a><span class="sd">    see and drag them; already-detected points, the track, and the</span>
-</span><span id="__span-0-4838"><a id="__codelineno-0-4838" name="__codelineno-0-4838"></a><span class="sd">    ``from_predicted`` link are left untouched.</span>
-</span><span id="__span-0-4839"><a id="__codelineno-0-4839" name="__codelineno-0-4839"></a>
-</span><span id="__span-0-4840"><a id="__codelineno-0-4840" name="__codelineno-0-4840"></a><span class="sd">    This is a no-op when there is no GUI ``player`` available (e.g. the</span>
-</span><span id="__span-0-4841"><a id="__codelineno-0-4841" name="__codelineno-0-4841"></a><span class="sd">    headless ``CommandContext.from_labels`` / ``FakeApp`` path used in</span>
-</span><span id="__span-0-4842"><a id="__codelineno-0-4842" name="__codelineno-0-4842"></a><span class="sd">    tests) since the placement machinery needs the visible-rect, and a</span>
-</span><span id="__span-0-4843"><a id="__codelineno-0-4843" name="__codelineno-0-4843"></a><span class="sd">    no-op when every node was already detected.</span>
-</span><span id="__span-0-4844"><a id="__codelineno-0-4844" name="__codelineno-0-4844"></a>
-</span><span id="__span-0-4845"><a id="__codelineno-0-4845" name="__codelineno-0-4845"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-4846"><a id="__codelineno-0-4846" name="__codelineno-0-4846"></a><span class="sd">        context: The command context.</span>
-</span><span id="__span-0-4847"><a id="__codelineno-0-4847" name="__codelineno-0-4847"></a><span class="sd">        new_instance: The user ``Instance`` produced by</span>
-</span><span id="__span-0-4848"><a id="__codelineno-0-4848" name="__codelineno-0-4848"></a><span class="sd">            ``make_instance_from_predicted_instance``; modified in place.</span>
-</span><span id="__span-0-4849"><a id="__codelineno-0-4849" name="__codelineno-0-4849"></a><span class="sd">        copy_instance: The source ``PredictedInstance`` (used for its</span>
-</span><span id="__span-0-4850"><a id="__codelineno-0-4850" name="__codelineno-0-4850"></a><span class="sd">            skeleton).</span>
-</span><span id="__span-0-4851"><a id="__codelineno-0-4851" name="__codelineno-0-4851"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-4852"><a id="__codelineno-0-4852" name="__codelineno-0-4852"></a>    <span class="c1"># Nothing to do if every node already has detected coordinates.</span>
-</span><span id="__span-0-4853"><a id="__codelineno-0-4853" name="__codelineno-0-4853"></a>    <span class="n">node_xy</span> <span class="o">=</span> <span class="n">new_instance</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-</span><span id="__span-0-4854"><a id="__codelineno-0-4854" name="__codelineno-0-4854"></a>    <span class="n">has_missing</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">node_xy</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)))</span>
-</span><span id="__span-0-4855"><a id="__codelineno-0-4855" name="__codelineno-0-4855"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_missing</span><span class="p">:</span>
-</span><span id="__span-0-4856"><a id="__codelineno-0-4856" name="__codelineno-0-4856"></a>        <span class="k">return</span>
-</span><span id="__span-0-4857"><a id="__codelineno-0-4857" name="__codelineno-0-4857"></a>
-</span><span id="__span-0-4858"><a id="__codelineno-0-4858" name="__codelineno-0-4858"></a>    <span class="c1"># The placement helpers read context.app.player.getVisibleRect(); in</span>
-</span><span id="__span-0-4859"><a id="__codelineno-0-4859" name="__codelineno-0-4859"></a>    <span class="c1"># headless contexts (FakeApp) there is no player, so skip the fill</span>
-</span><span id="__span-0-4860"><a id="__codelineno-0-4860" name="__codelineno-0-4860"></a>    <span class="c1"># rather than crash. Mirrors the guard at CommandContext.execute.</span>
-</span><span id="__span-0-4861"><a id="__codelineno-0-4861" name="__codelineno-0-4861"></a>    <span class="n">player</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">&quot;app&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="s2">&quot;player&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span id="__span-0-4862"><a id="__codelineno-0-4862" name="__codelineno-0-4862"></a>    <span class="k">if</span> <span class="n">player</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-4863"><a id="__codelineno-0-4863" name="__codelineno-0-4863"></a>        <span class="k">return</span>
-</span><span id="__span-0-4864"><a id="__codelineno-0-4864" name="__codelineno-0-4864"></a>
-</span><span id="__span-0-4865"><a id="__codelineno-0-4865" name="__codelineno-0-4865"></a>    <span class="c1"># add_random_nodes / add_nodes_from_template read context.state</span>
-</span><span id="__span-0-4866"><a id="__codelineno-0-4866" name="__codelineno-0-4866"></a>    <span class="c1"># [&quot;skeleton&quot;]; the all-frames path builds the context via</span>
-</span><span id="__span-0-4867"><a id="__codelineno-0-4867" name="__codelineno-0-4867"></a>    <span class="c1"># CommandContext.from_labels where it is unset, so populate it.</span>
-</span><span id="__span-0-4868"><a id="__codelineno-0-4868" name="__codelineno-0-4868"></a>    <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-4869"><a id="__codelineno-0-4869" name="__codelineno-0-4869"></a>        <span class="n">context</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;skeleton&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy_instance</span><span class="o">.</span><span class="n">skeleton</span>
-</span><span id="__span-0-4870"><a id="__codelineno-0-4870" name="__codelineno-0-4870"></a>
-</span><span id="__span-0-4871"><a id="__codelineno-0-4871" name="__codelineno-0-4871"></a>    <span class="c1"># Use the same &quot;best&quot; strategy as a brand-new instance: place missing</span>
-</span><span id="__span-0-4872"><a id="__codelineno-0-4872" name="__codelineno-0-4872"></a>    <span class="c1"># nodes from an aligned template, then random-fill anything the</span>
-</span><span id="__span-0-4873"><a id="__codelineno-0-4873" name="__codelineno-0-4873"></a>    <span class="c1"># template could not provide. Both steps preserve already-detected</span>
-</span><span id="__span-0-4874"><a id="__codelineno-0-4874" name="__codelineno-0-4874"></a>    <span class="c1"># (non-NaN) points and only touch the missing ones, marking the</span>
-</span><span id="__span-0-4875"><a id="__codelineno-0-4875" name="__codelineno-0-4875"></a>    <span class="c1"># filled nodes visible with complete=False.</span>
-</span><span id="__span-0-4876"><a id="__codelineno-0-4876" name="__codelineno-0-4876"></a>    <span class="n">AddMissingInstanceNodes</span><span class="o">.</span><span class="n">add_best_nodes</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">new_instance</span><span class="p">,</span> <span class="n">visible</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-4853">4853</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-4820"><a id="__codelineno-0-4820" name="__codelineno-0-4820"></a><span class="nd">@staticmethod</span>
+</span><span id="__span-0-4821"><a id="__codelineno-0-4821" name="__codelineno-0-4821"></a><span class="k">def</span><span class="w"> </span><span class="nf">fill_missing_predicted_nodes</span><span class="p">(</span><span class="n">new_instance</span><span class="p">:</span> <span class="n">Instance</span><span class="p">):</span>
+</span><span id="__span-0-4822"><a id="__codelineno-0-4822" name="__codelineno-0-4822"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Anchor undetected (NaN) nodes to the body while keeping them hidden.</span>
+</span><span id="__span-0-4823"><a id="__codelineno-0-4823" name="__codelineno-0-4823"></a>
+</span><span id="__span-0-4824"><a id="__codelineno-0-4824" name="__codelineno-0-4824"></a><span class="sd">    The model leaves occluded nodes at NaN coordinates, and</span>
+</span><span id="__span-0-4825"><a id="__codelineno-0-4825" name="__codelineno-0-4825"></a><span class="sd">    ``make_instance_from_predicted_instance`` keeps them ``visible=False``</span>
+</span><span id="__span-0-4826"><a id="__codelineno-0-4826" name="__codelineno-0-4826"></a><span class="sd">    (correct -- the converted instance should look like the prediction).</span>
+</span><span id="__span-0-4827"><a id="__codelineno-0-4827" name="__codelineno-0-4827"></a><span class="sd">    But a NaN coordinate renders at a default/garbage location when the user</span>
+</span><span id="__span-0-4828"><a id="__codelineno-0-4828" name="__codelineno-0-4828"></a><span class="sd">    turns on &quot;show non-visible nodes&quot; (``QtInstance`` still creates a node</span>
+</span><span id="__span-0-4829"><a id="__codelineno-0-4829" name="__codelineno-0-4829"></a><span class="sd">    item for every node in that mode, positioned at its ``xy``). Move each</span>
+</span><span id="__span-0-4830"><a id="__codelineno-0-4830" name="__codelineno-0-4830"></a><span class="sd">    missing node onto the centroid of this instance&#39;s own *detected*</span>
+</span><span id="__span-0-4831"><a id="__codelineno-0-4831" name="__codelineno-0-4831"></a><span class="sd">    keypoints so it sits on the animal -- ready to drag out -- while staying</span>
+</span><span id="__span-0-4832"><a id="__codelineno-0-4832" name="__codelineno-0-4832"></a><span class="sd">    hidden. Already-detected points, the track, and the ``from_predicted``</span>
+</span><span id="__span-0-4833"><a id="__codelineno-0-4833" name="__codelineno-0-4833"></a><span class="sd">    link are left untouched.</span>
+</span><span id="__span-0-4834"><a id="__codelineno-0-4834" name="__codelineno-0-4834"></a>
+</span><span id="__span-0-4835"><a id="__codelineno-0-4835" name="__codelineno-0-4835"></a><span class="sd">    No GUI/player is required, so the single-frame and all-frames/headless</span>
+</span><span id="__span-0-4836"><a id="__codelineno-0-4836" name="__codelineno-0-4836"></a><span class="sd">    conversion paths behave identically. No-op when every node was detected,</span>
+</span><span id="__span-0-4837"><a id="__codelineno-0-4837" name="__codelineno-0-4837"></a><span class="sd">    or when nothing was detected (no anchor to place missing nodes against).</span>
+</span><span id="__span-0-4838"><a id="__codelineno-0-4838" name="__codelineno-0-4838"></a>
+</span><span id="__span-0-4839"><a id="__codelineno-0-4839" name="__codelineno-0-4839"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-4840"><a id="__codelineno-0-4840" name="__codelineno-0-4840"></a><span class="sd">        new_instance: The user ``Instance`` produced by</span>
+</span><span id="__span-0-4841"><a id="__codelineno-0-4841" name="__codelineno-0-4841"></a><span class="sd">            ``make_instance_from_predicted_instance``; modified in place.</span>
+</span><span id="__span-0-4842"><a id="__codelineno-0-4842" name="__codelineno-0-4842"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-4843"><a id="__codelineno-0-4843" name="__codelineno-0-4843"></a>    <span class="n">xy</span> <span class="o">=</span> <span class="n">new_instance</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;xy&quot;</span><span class="p">]</span>
+</span><span id="__span-0-4844"><a id="__codelineno-0-4844" name="__codelineno-0-4844"></a>    <span class="n">missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">xy</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-0-4845"><a id="__codelineno-0-4845" name="__codelineno-0-4845"></a>    <span class="n">detected</span> <span class="o">=</span> <span class="o">~</span><span class="n">missing</span>
+</span><span id="__span-0-4846"><a id="__codelineno-0-4846" name="__codelineno-0-4846"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">missing</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">detected</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+</span><span id="__span-0-4847"><a id="__codelineno-0-4847" name="__codelineno-0-4847"></a>        <span class="k">return</span>
+</span><span id="__span-0-4848"><a id="__codelineno-0-4848" name="__codelineno-0-4848"></a>
+</span><span id="__span-0-4849"><a id="__codelineno-0-4849" name="__codelineno-0-4849"></a>    <span class="c1"># Centroid of the detected keypoints -&gt; on the animal.</span>
+</span><span id="__span-0-4850"><a id="__codelineno-0-4850" name="__codelineno-0-4850"></a>    <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">xy</span><span class="p">[</span><span class="n">detected</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-4851"><a id="__codelineno-0-4851" name="__codelineno-0-4851"></a>    <span class="n">new_instance</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;xy&quot;</span><span class="p">][</span><span class="n">missing</span><span class="p">]</span> <span class="o">=</span> <span class="n">center</span>
+</span><span id="__span-0-4852"><a id="__codelineno-0-4852" name="__codelineno-0-4852"></a>    <span class="n">new_instance</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;visible&quot;</span><span class="p">][</span><span class="n">missing</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-0-4853"><a id="__codelineno-0-4853" name="__codelineno-0-4853"></a>    <span class="n">new_instance</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="s2">&quot;complete&quot;</span><span class="p">][</span><span class="n">missing</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -20799,21 +20672,21 @@ Args:
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>sleap/gui/commands.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-5039">5039</a></span>
-<span class="normal"><a href="#__codelineno-0-5040">5040</a></span>
-<span class="normal"><a href="#__codelineno-0-5041">5041</a></span>
-<span class="normal"><a href="#__codelineno-0-5042">5042</a></span>
-<span class="normal"><a href="#__codelineno-0-5043">5043</a></span>
-<span class="normal"><a href="#__codelineno-0-5044">5044</a></span>
-<span class="normal"><a href="#__codelineno-0-5045">5045</a></span>
-<span class="normal"><a href="#__codelineno-0-5046">5046</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-5039"><a id="__codelineno-0-5039" name="__codelineno-0-5039"></a><span class="k">def</span><span class="w"> </span><span class="nf">copy_to_clipboard</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-0-5040"><a id="__codelineno-0-5040" name="__codelineno-0-5040"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Copy a string to the system clipboard.</span>
-</span><span id="__span-0-5041"><a id="__codelineno-0-5041" name="__codelineno-0-5041"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-5042"><a id="__codelineno-0-5042" name="__codelineno-0-5042"></a><span class="sd">        text: String to copy to clipboard.</span>
-</span><span id="__span-0-5043"><a id="__codelineno-0-5043" name="__codelineno-0-5043"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-5044"><a id="__codelineno-0-5044" name="__codelineno-0-5044"></a>    <span class="n">clipboard</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">clipboard</span><span class="p">()</span>
-</span><span id="__span-0-5045"><a id="__codelineno-0-5045" name="__codelineno-0-5045"></a>    <span class="n">clipboard</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">clipboard</span><span class="o">.</span><span class="n">Clipboard</span><span class="p">)</span>
-</span><span id="__span-0-5046"><a id="__codelineno-0-5046" name="__codelineno-0-5046"></a>    <span class="n">clipboard</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">clipboard</span><span class="o">.</span><span class="n">Clipboard</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-5014">5014</a></span>
+<span class="normal"><a href="#__codelineno-0-5015">5015</a></span>
+<span class="normal"><a href="#__codelineno-0-5016">5016</a></span>
+<span class="normal"><a href="#__codelineno-0-5017">5017</a></span>
+<span class="normal"><a href="#__codelineno-0-5018">5018</a></span>
+<span class="normal"><a href="#__codelineno-0-5019">5019</a></span>
+<span class="normal"><a href="#__codelineno-0-5020">5020</a></span>
+<span class="normal"><a href="#__codelineno-0-5021">5021</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-5014"><a id="__codelineno-0-5014" name="__codelineno-0-5014"></a><span class="k">def</span><span class="w"> </span><span class="nf">copy_to_clipboard</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-0-5015"><a id="__codelineno-0-5015" name="__codelineno-0-5015"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Copy a string to the system clipboard.</span>
+</span><span id="__span-0-5016"><a id="__codelineno-0-5016" name="__codelineno-0-5016"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-5017"><a id="__codelineno-0-5017" name="__codelineno-0-5017"></a><span class="sd">        text: String to copy to clipboard.</span>
+</span><span id="__span-0-5018"><a id="__codelineno-0-5018" name="__codelineno-0-5018"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-5019"><a id="__codelineno-0-5019" name="__codelineno-0-5019"></a>    <span class="n">clipboard</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">clipboard</span><span class="p">()</span>
+</span><span id="__span-0-5020"><a id="__codelineno-0-5020" name="__codelineno-0-5020"></a>    <span class="n">clipboard</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">clipboard</span><span class="o">.</span><span class="n">Clipboard</span><span class="p">)</span>
+</span><span id="__span-0-5021"><a id="__codelineno-0-5021" name="__codelineno-0-5021"></a>    <span class="n">clipboard</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">clipboard</span><span class="o">.</span><span class="n">Clipboard</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -21405,19 +21278,19 @@ referencing video). Defaults to <code>True</code>.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>sleap/gui/commands.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-5024">5024</a></span>
-<span class="normal"><a href="#__codelineno-0-5025">5025</a></span>
-<span class="normal"><a href="#__codelineno-0-5026">5026</a></span>
-<span class="normal"><a href="#__codelineno-0-5027">5027</a></span>
-<span class="normal"><a href="#__codelineno-0-5028">5028</a></span>
-<span class="normal"><a href="#__codelineno-0-5029">5029</a></span>
-<span class="normal"><a href="#__codelineno-0-5030">5030</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-5024"><a id="__codelineno-0-5024" name="__codelineno-0-5024"></a><span class="k">def</span><span class="w"> </span><span class="nf">open_website</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="__span-0-5025"><a id="__codelineno-0-5025" name="__codelineno-0-5025"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Open website in default browser.</span>
-</span><span id="__span-0-5026"><a id="__codelineno-0-5026" name="__codelineno-0-5026"></a>
-</span><span id="__span-0-5027"><a id="__codelineno-0-5027" name="__codelineno-0-5027"></a><span class="sd">    Args:</span>
-</span><span id="__span-0-5028"><a id="__codelineno-0-5028" name="__codelineno-0-5028"></a><span class="sd">        url: URL to open.</span>
-</span><span id="__span-0-5029"><a id="__codelineno-0-5029" name="__codelineno-0-5029"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-5030"><a id="__codelineno-0-5030" name="__codelineno-0-5030"></a>    <span class="n">QtGui</span><span class="o">.</span><span class="n">QDesktopServices</span><span class="o">.</span><span class="n">openUrl</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QUrl</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-4999">4999</a></span>
+<span class="normal"><a href="#__codelineno-0-5000">5000</a></span>
+<span class="normal"><a href="#__codelineno-0-5001">5001</a></span>
+<span class="normal"><a href="#__codelineno-0-5002">5002</a></span>
+<span class="normal"><a href="#__codelineno-0-5003">5003</a></span>
+<span class="normal"><a href="#__codelineno-0-5004">5004</a></span>
+<span class="normal"><a href="#__codelineno-0-5005">5005</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-4999"><a id="__codelineno-0-4999" name="__codelineno-0-4999"></a><span class="k">def</span><span class="w"> </span><span class="nf">open_website</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="__span-0-5000"><a id="__codelineno-0-5000" name="__codelineno-0-5000"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Open website in default browser.</span>
+</span><span id="__span-0-5001"><a id="__codelineno-0-5001" name="__codelineno-0-5001"></a>
+</span><span id="__span-0-5002"><a id="__codelineno-0-5002" name="__codelineno-0-5002"></a><span class="sd">    Args:</span>
+</span><span id="__span-0-5003"><a id="__codelineno-0-5003" name="__codelineno-0-5003"></a><span class="sd">        url: URL to open.</span>
+</span><span id="__span-0-5004"><a id="__codelineno-0-5004" name="__codelineno-0-5004"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-5005"><a id="__codelineno-0-5005" name="__codelineno-0-5005"></a>    <span class="n">QtGui</span><span class="o">.</span><span class="n">QDesktopServices</span><span class="o">.</span><span class="n">openUrl</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QUrl</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
