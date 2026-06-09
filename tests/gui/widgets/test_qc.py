@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from qtpy import QtCore
 
-from sleap.gui.widgets.qc import QCFlagTableModel, QCWidget
+from sleap.gui.widgets.qc import QCAnalysisWorker, QCFlagTableModel, QCWidget
+from sleap.qc.config import QCConfig
 
 
 class MockQCFlag:
@@ -895,3 +896,198 @@ class TestQCDockNavigation:
         main_window.state.get = MagicMock(return_value=False)
         dock._sync_fit_selection_checkbox()
         assert not dock._fit_selection_checkbox.isChecked()
+
+
+class TestQCDetectorSettings:
+    """Tests for the per-detector settings controls and config building."""
+
+    def test_detector_controls_exist_with_defaults(self, qtbot):
+        """Detector controls exist with documented default states."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Group box header (checkable, expanded by default).
+        assert widget._detector_settings_group is not None
+        assert widget._detector_settings_group.isCheckable()
+        assert widget._detector_settings_group.isChecked()
+
+        # Reliable detectors default-ON.
+        assert widget._cb_flip.isChecked()
+        assert widget._cb_chimera.isChecked()
+        assert widget._cb_duplicate.isChecked()
+
+        # Experimental detectors default-OFF.
+        assert not widget._cb_chain.isChecked()
+        assert not widget._cb_missing.isChecked()
+
+        # Threshold spinbox defaults.
+        assert widget._sb_flip_thr.value() == 0.5
+        assert widget._sb_dup_thr.value() == 0.5
+        assert widget._sb_chain_angle.value() == 60
+        assert widget._sb_order_thr.value() == 0.3
+        assert widget._sb_missing_thr.value() == 0.9
+
+        # Ordered-chains edit starts empty.
+        assert widget._ordered_chains_edit.toPlainText() == ""
+
+    def test_chimera_has_no_threshold_widget(self, qtbot):
+        """Chimera detector exposes no tunable threshold spinbox."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert not hasattr(widget, "_sb_chimera_thr")
+
+    def test_build_qc_config_defaults(self, qtbot):
+        """_build_qc_config reflects the default control states."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        config = widget._build_qc_config()
+        assert isinstance(config, QCConfig)
+
+        # Toggles map to the default checkbox states.
+        assert config.use_chirality is True
+        assert config.use_split_detection is True
+        assert config.use_duplicate_score is True
+        assert config.use_chain_ordering is False
+        assert config.use_missing_node_check is False
+
+        # Thresholds map to the default spinbox values.
+        assert config.chirality_flip_threshold == 0.5
+        assert config.duplicate_score_threshold == 0.5
+        assert config.chain_turn_angle_deg == 60.0
+        assert config.order_inversion_threshold == 0.3
+        assert config.missing_node_prob_threshold == 0.9
+
+        # No chains entered by default.
+        assert config.ordered_chains == []
+
+    def test_build_qc_config_reflects_toggles(self, qtbot):
+        """Toggling checkboxes is reflected in the built config."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        widget._cb_flip.setChecked(False)
+        widget._cb_chimera.setChecked(False)
+        widget._cb_duplicate.setChecked(False)
+        widget._cb_missing.setChecked(True)
+
+        config = widget._build_qc_config()
+        assert config.use_chirality is False
+        assert config.use_split_detection is False
+        assert config.use_duplicate_score is False
+        assert config.use_missing_node_check is True
+
+    def test_build_qc_config_reflects_thresholds(self, qtbot):
+        """Changing spinboxes is reflected in the built config."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        widget._sb_flip_thr.setValue(0.75)
+        widget._sb_dup_thr.setValue(0.6)
+        widget._sb_chain_angle.setValue(90)
+        widget._sb_order_thr.setValue(0.45)
+        widget._sb_missing_thr.setValue(0.8)
+
+        config = widget._build_qc_config()
+        assert config.chirality_flip_threshold == 0.75
+        assert config.duplicate_score_threshold == 0.6
+        assert config.chain_turn_angle_deg == 90.0
+        assert config.order_inversion_threshold == 0.45
+        assert config.missing_node_prob_threshold == 0.8
+
+    def test_build_qc_config_parses_ordered_chains(self, qtbot):
+        """Enabling chain order + entering chains populates the config."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        widget._cb_chain.setChecked(True)
+        widget._ordered_chains_edit.setPlainText("A, B, C\nD, E, F")
+
+        config = widget._build_qc_config()
+        assert config.use_chain_ordering is True
+        assert config.ordered_chains == [["A", "B", "C"], ["D", "E", "F"]]
+
+    def test_parse_ordered_chains_strips_and_drops_empties(self, qtbot):
+        """Chain parsing strips whitespace and drops empty lines/tokens."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Blank lines, trailing commas, and extra spaces should be cleaned up.
+        widget._ordered_chains_edit.setPlainText(
+            "  TTI , Tail_0 ,, Tail_1 \n\n  \nHead,Neck,\n"
+        )
+        chains = widget._parse_ordered_chains()
+        assert chains == [["TTI", "Tail_0", "Tail_1"], ["Head", "Neck"]]
+
+    def test_threshold_widgets_disable_when_unchecked(self, qtbot):
+        """A detector's threshold widgets disable when its checkbox is off."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Flip is on by default -> threshold enabled.
+        assert widget._sb_flip_thr.isEnabled()
+        widget._cb_flip.setChecked(False)
+        assert not widget._sb_flip_thr.isEnabled()
+
+        # Chain is off by default -> chain widgets disabled.
+        assert not widget._sb_chain_angle.isEnabled()
+        assert not widget._sb_order_thr.isEnabled()
+        assert not widget._ordered_chains_edit.isEnabled()
+        widget._cb_chain.setChecked(True)
+        assert widget._sb_chain_angle.isEnabled()
+        assert widget._sb_order_thr.isEnabled()
+        assert widget._ordered_chains_edit.isEnabled()
+
+
+class TestQCAnalysisWorkerConfig:
+    """Tests for threading the QCConfig into the analysis worker."""
+
+    def test_worker_stores_config(self, qtbot):
+        """QCAnalysisWorker stores the config passed to it."""
+        labels = MagicMock()
+        cfg = QCConfig()
+        worker = QCAnalysisWorker(labels, config=cfg)
+        assert worker._config is cfg
+
+    def test_worker_config_defaults_to_none(self, qtbot):
+        """QCAnalysisWorker config defaults to None when omitted."""
+        worker = QCAnalysisWorker(MagicMock())
+        assert worker._config is None
+
+    def test_run_analysis_builds_worker_with_config(self, qtbot):
+        """_on_run_analysis builds a worker with a non-None config.
+
+        Patches QCAnalysisWorker to capture the config arg without spinning up
+        the background thread.
+        """
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Tweak a couple of controls so the built config is non-default.
+        widget._cb_chain.setChecked(True)
+        widget._ordered_chains_edit.setPlainText("A, B, C")
+
+        # Provide labels with enough user instances to pass the guard.
+        mock_lf = MagicMock()
+        mock_lf.user_instances = [MagicMock(), MagicMock()]
+        mock_labels = MagicMock()
+        mock_labels.__iter__ = MagicMock(return_value=iter([mock_lf]))
+        widget._labels = mock_labels
+
+        captured = {}
+
+        def fake_worker(labels, config=None, parent=None):
+            captured["labels"] = labels
+            captured["config"] = config
+            # Return a stub that looks like a non-running worker.
+            stub = MagicMock()
+            stub.isRunning.return_value = False
+            return stub
+
+        with patch("sleap.gui.widgets.qc.QCAnalysisWorker", side_effect=fake_worker):
+            widget._on_run_analysis()
+
+        assert captured["labels"] is mock_labels
+        assert isinstance(captured["config"], QCConfig)
+        assert captured["config"].use_chain_ordering is True
+        assert captured["config"].ordered_chains == [["A", "B", "C"]]

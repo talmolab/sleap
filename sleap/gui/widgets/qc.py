@@ -31,6 +31,7 @@ from matplotlib.figure import Figure
 
 if TYPE_CHECKING:
     import sleap_io as sio
+    from sleap.qc.config import QCConfig
     from sleap.qc.results import QCResults, QCFlag
 
 
@@ -561,6 +562,11 @@ class QCFlagTableModel(QtCore.QAbstractTableModel):
 class QCAnalysisWorker(QThread):
     """Worker thread for running QC analysis in background.
 
+    Args:
+        labels: A sleap_io.Labels object to analyze.
+        config: Optional QCConfig controlling which detectors run and their
+            thresholds. If None, the detector falls back to QCConfig() defaults.
+
     Signals:
         progress: Emitted with (step_name, progress_pct, detail) during analysis.
         finished: Emitted with QCResults when analysis completes.
@@ -571,9 +577,10 @@ class QCAnalysisWorker(QThread):
     finished = QSignal(object)  # QCResults
     error = QSignal(str)
 
-    def __init__(self, labels, parent=None):
+    def __init__(self, labels, config=None, parent=None):
         super().__init__(parent)
         self._labels = labels
+        self._config = config
         self._results = None
         self._cancelled = False
 
@@ -593,9 +600,10 @@ class QCAnalysisWorker(QThread):
                 progress_pct = int(progress_fraction * 100)
                 self.progress.emit(step_name, progress_pct, detail or "")
 
-            # Create detector
+            # Create detector (config may be None; LabelQCDetector falls back
+            # to QCConfig() defaults in that case).
             self.progress.emit("Initializing...", 0, "")
-            detector = LabelQCDetector()
+            detector = LabelQCDetector(self._config)
 
             # Fit model with progress callback
             detector.fit(self._labels, progress_callback=progress_callback)
@@ -728,6 +736,9 @@ class QCWidget(QtWidgets.QWidget):
 
         layout.addLayout(threshold_layout)
 
+        # === Detector settings ===
+        self._setup_detector_settings(layout)
+
         # === Tabbed visualization area ===
         self._viz_tabs = QtWidgets.QTabWidget()
         self._viz_tabs.setMinimumHeight(180)
@@ -802,6 +813,258 @@ class QCWidget(QtWidgets.QWidget):
         bottom_layout.addWidget(stats_group)
 
         layout.addLayout(bottom_layout)
+
+    def _setup_detector_settings(self, layout: QtWidgets.QVBoxLayout):
+        """Build the collapsible "Detector Settings" group.
+
+        Exposes the per-detector QCConfig toggles and thresholds so users can
+        enable/disable and tune each detector for the current project. The
+        resulting controls are read by :meth:`_build_qc_config`.
+
+        Args:
+            layout: The parent layout to append the group box to.
+        """
+        # Checkable group acts as an expand/collapse header; default expanded.
+        group = QtWidgets.QGroupBox("Detector Settings")
+        group.setCheckable(True)
+        group.setChecked(True)
+        group.setToolTip(
+            "Enable/disable and tune individual QC detectors for this project.\n"
+            "Uncheck the header to collapse this panel."
+        )
+        self._detector_settings_group = group
+
+        grid = QtWidgets.QGridLayout(group)
+        grid.setContentsMargins(8, 4, 8, 8)
+        grid.setHorizontalSpacing(8)
+        grid.setVerticalSpacing(4)
+        # Column 2 (the threshold area) takes any extra width.
+        grid.setColumnStretch(2, 1)
+        self._detector_settings_grid = grid
+
+        # --- Whole-instance L/R flip (chirality), reliable, default-ON ---
+        self._cb_flip = QtWidgets.QCheckBox("Whole-instance L/R flip")
+        self._cb_flip.setChecked(True)
+        self._cb_flip.setToolTip(
+            "Flag instances whose left/right keypoints look mirror-flipped "
+            "(chirality). Reliable detector; on by default."
+        )
+        self._sb_flip_thr = QtWidgets.QDoubleSpinBox()
+        self._sb_flip_thr.setRange(0.0, 1.0)
+        self._sb_flip_thr.setSingleStep(0.05)
+        self._sb_flip_thr.setValue(0.5)
+        self._sb_flip_thr.setToolTip(
+            "Fraction of symmetric pairs that must look flipped before the "
+            "whole instance is force-flagged (chirality_flip_threshold)."
+        )
+        flip_thr_row = self._make_threshold_row(
+            [(QtWidgets.QLabel("flip frac ≥"), self._sb_flip_thr)]
+        )
+        self._add_detector_row(0, self._cb_flip, flip_thr_row)
+
+        # --- Chimera / pose split, reliable, default-ON (no user threshold) ---
+        self._cb_chimera = QtWidgets.QCheckBox("Chimera (pose split)")
+        self._cb_chimera.setChecked(True)
+        self._cb_chimera.setToolTip(
+            "Flag a single instance whose pose spans two animals (a chimera).\n"
+            "Relies on the learned GMM, so it has no hard threshold to tune."
+        )
+        # No tunable threshold: chimera has no hard rule, the GMM decides.
+        chimera_note = QtWidgets.QLabel("(no threshold)")
+        chimera_note.setEnabled(False)
+        chimera_note.setToolTip("Chimera detection has no hard threshold to set.")
+        self._add_detector_row(1, self._cb_chimera, chimera_note)
+
+        # --- Duplicate / split, reliable, default-ON ---
+        self._cb_duplicate = QtWidgets.QCheckBox("Duplicate / split")
+        self._cb_duplicate.setChecked(True)
+        self._cb_duplicate.setToolTip(
+            "Fold the split-duplicate signal into frame-level duplicate "
+            "detection. Reliable detector; on by default."
+        )
+        self._sb_dup_thr = QtWidgets.QDoubleSpinBox()
+        self._sb_dup_thr.setRange(0.0, 1.0)
+        self._sb_dup_thr.setSingleStep(0.05)
+        self._sb_dup_thr.setValue(0.5)
+        self._sb_dup_thr.setToolTip(
+            "Combined duplicate score at/above which a pair of instances is "
+            "flagged as a duplicate (duplicate_score_threshold)."
+        )
+        dup_thr_row = self._make_threshold_row(
+            [(QtWidgets.QLabel("score ≥"), self._sb_dup_thr)]
+        )
+        self._add_detector_row(2, self._cb_duplicate, dup_thr_row)
+
+        # --- Wrong chain order, experimental, default-OFF ---
+        self._cb_chain = QtWidgets.QCheckBox("Wrong chain order")
+        self._cb_chain.setChecked(False)
+        self._cb_chain.setToolTip(
+            "Flag instances whose keypoints run out of order along an ordered "
+            "chain (e.g. a tail). Experimental; off by default."
+        )
+        self._sb_chain_angle = QtWidgets.QSpinBox()
+        self._sb_chain_angle.setRange(10, 150)
+        self._sb_chain_angle.setSuffix("°")
+        self._sb_chain_angle.setValue(60)
+        self._sb_chain_angle.setToolTip(
+            "Per-node turning angle (degrees) above which a chain node counts "
+            "as an ordering inversion (chain_turn_angle_deg)."
+        )
+        self._sb_order_thr = QtWidgets.QDoubleSpinBox()
+        self._sb_order_thr.setRange(0.0, 1.0)
+        self._sb_order_thr.setSingleStep(0.05)
+        self._sb_order_thr.setValue(0.3)
+        self._sb_order_thr.setToolTip(
+            "Fraction of chain nodes that must be inverted before the instance "
+            "is force-flagged (order_inversion_threshold)."
+        )
+        chain_thr_row = self._make_threshold_row(
+            [
+                (QtWidgets.QLabel("turn ≥"), self._sb_chain_angle),
+                (QtWidgets.QLabel("inv frac ≥"), self._sb_order_thr),
+            ]
+        )
+        self._add_detector_row(3, self._cb_chain, chain_thr_row)
+
+        # Optional user-defined ordered chains for the chain-order detector.
+        self._ordered_chains_edit = QtWidgets.QPlainTextEdit()
+        self._ordered_chains_edit.setPlaceholderText(
+            "One chain per line, node names comma-separated, "
+            "e.g. TTI, Tail_0, Tail_1, Tail_2, TailTip"
+        )
+        self._ordered_chains_edit.setToolTip(
+            "Optional ground-truth ordered node chains for the chain-order "
+            "detector (one chain per line, node names comma-separated).\n"
+            "Leave empty to fall back to auto-detected skeleton chains."
+        )
+        # Keep it compact (about two lines tall).
+        fm = self._ordered_chains_edit.fontMetrics()
+        self._ordered_chains_edit.setMaximumHeight(fm.height() * 3 + 8)
+        chains_label = QtWidgets.QLabel("Ordered chains:")
+        chains_label.setToolTip(self._ordered_chains_edit.toolTip())
+        grid.addWidget(chains_label, 4, 1)
+        grid.addWidget(self._ordered_chains_edit, 4, 2)
+
+        # --- Missing labelable node, experimental, default-OFF ---
+        self._cb_missing = QtWidgets.QCheckBox("Missing labelable node")
+        self._cb_missing.setChecked(False)
+        self._cb_missing.setToolTip(
+            "Flag an instance that is missing a node its peers usually keep. "
+            "Experimental; off by default."
+        )
+        self._sb_missing_thr = QtWidgets.QDoubleSpinBox()
+        self._sb_missing_thr.setRange(0.0, 1.0)
+        self._sb_missing_thr.setSingleStep(0.05)
+        self._sb_missing_thr.setValue(0.9)
+        self._sb_missing_thr.setToolTip(
+            "Minimum expected-visibility probability for an absent node to be "
+            "flagged as suspicious (missing_node_prob_threshold)."
+        )
+        missing_thr_row = self._make_threshold_row(
+            [(QtWidgets.QLabel("prob ≥"), self._sb_missing_thr)]
+        )
+        self._add_detector_row(5, self._cb_missing, missing_thr_row)
+
+        # Disable each detector's tunable widgets when its checkbox is off.
+        self._cb_flip.toggled.connect(self._sb_flip_thr.setEnabled)
+        self._sb_flip_thr.setEnabled(self._cb_flip.isChecked())
+        self._cb_duplicate.toggled.connect(self._sb_dup_thr.setEnabled)
+        self._sb_dup_thr.setEnabled(self._cb_duplicate.isChecked())
+        self._cb_missing.toggled.connect(self._sb_missing_thr.setEnabled)
+        self._sb_missing_thr.setEnabled(self._cb_missing.isChecked())
+
+        def _set_chain_enabled(on: bool):
+            self._sb_chain_angle.setEnabled(on)
+            self._sb_order_thr.setEnabled(on)
+            self._ordered_chains_edit.setEnabled(on)
+
+        self._cb_chain.toggled.connect(_set_chain_enabled)
+        _set_chain_enabled(self._cb_chain.isChecked())
+
+        layout.addWidget(group)
+
+    def _make_threshold_row(self, items: list) -> QtWidgets.QWidget:
+        """Pack labeled threshold widgets into a single compact row widget.
+
+        Args:
+            items: List of (label_widget, control_widget) pairs.
+
+        Returns:
+            A container widget laying the pairs out left-to-right.
+        """
+        container = QtWidgets.QWidget()
+        row = QtWidgets.QHBoxLayout(container)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(4)
+        for label, control in items:
+            row.addWidget(label)
+            row.addWidget(control)
+        row.addStretch()
+        return container
+
+    def _add_detector_row(
+        self,
+        grid_row: int,
+        checkbox: QtWidgets.QCheckBox,
+        threshold_widget: QtWidgets.QWidget,
+    ):
+        """Add a [enable checkbox | name | threshold] row to the settings grid.
+
+        The checkbox carries its own label text, so it spans the enable and
+        name columns; the threshold widget sits in the trailing column.
+
+        Args:
+            grid_row: Row index in the settings grid.
+            checkbox: The enable checkbox (its text is the detector name).
+            threshold_widget: Widget holding the detector's threshold control(s).
+        """
+        grid = self._detector_settings_grid
+        grid.addWidget(checkbox, grid_row, 0, 1, 2)
+        grid.addWidget(threshold_widget, grid_row, 2)
+
+    def _build_qc_config(self) -> "QCConfig":
+        """Build a QCConfig from the current detector-settings controls.
+
+        Reads every per-detector control and maps it onto the corresponding
+        QCConfig field. All fields not exposed in the GUI are left at their
+        QCConfig defaults.
+
+        Returns:
+            A QCConfig reflecting the current control states.
+        """
+        from sleap.qc.config import QCConfig
+
+        return QCConfig(
+            use_chirality=self._cb_flip.isChecked(),
+            chirality_flip_threshold=self._sb_flip_thr.value(),
+            use_split_detection=self._cb_chimera.isChecked(),
+            use_duplicate_score=self._cb_duplicate.isChecked(),
+            duplicate_score_threshold=self._sb_dup_thr.value(),
+            use_chain_ordering=self._cb_chain.isChecked(),
+            chain_turn_angle_deg=float(self._sb_chain_angle.value()),
+            order_inversion_threshold=self._sb_order_thr.value(),
+            ordered_chains=self._parse_ordered_chains(),
+            use_missing_node_check=self._cb_missing.isChecked(),
+            missing_node_prob_threshold=self._sb_missing_thr.value(),
+        )
+
+    def _parse_ordered_chains(self) -> list:
+        """Parse the ordered-chains text box into a list of node-name lists.
+
+        Each non-empty line becomes one chain; node names are split on commas
+        and stripped, with empty names dropped. Empty text yields ``[]``.
+
+        Returns:
+            A list of lists of node-name strings.
+        """
+        text = self._ordered_chains_edit.toPlainText()
+        chains = []
+        for line in text.splitlines():
+            names = [name.strip() for name in line.split(",")]
+            names = [name for name in names if name]
+            if names:
+                chains.append(names)
+        return chains
 
     def _connect_signals(self):
         """Connect UI signals."""
@@ -888,8 +1151,10 @@ class QCWidget(QtWidgets.QWidget):
         self._spinner_idx = 0
         self._spinner_timer.start()
 
-        # Create and start worker thread
-        self._worker = QCAnalysisWorker(self._labels)
+        # Create and start worker thread with the per-detector config from the
+        # Detector Settings controls.
+        config = self._build_qc_config()
+        self._worker = QCAnalysisWorker(self._labels, config=config)
         self._worker.progress.connect(self._on_analysis_progress)
         self._worker.finished.connect(self._on_analysis_finished)
         self._worker.error.connect(self._on_analysis_error)
