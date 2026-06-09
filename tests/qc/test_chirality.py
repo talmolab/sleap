@@ -8,6 +8,7 @@ from sleap.qc.features.chirality import (
     compute_chirality,
     fit_chirality,
     infer_symmetry_pairs_by_name,
+    order_midline_by_pca,
 )
 
 
@@ -193,6 +194,180 @@ class TestInvariance:
         assert compute_chirality(flipped, SYM_PAIRS, AXIS, clean_model)[
             "chirality_wrong_fraction"
         ] == pytest.approx(1.0)
+
+
+# ---------------------------------------------------------------------------
+# Local (spine-relative) midline axis: robustness to body curling.
+#
+# A long-bodied animal whose body curls back on itself is the case that breaks a
+# single STRAIGHT nose->tail axis: a correctly-labeled pair near the curled tail
+# ends up on the "wrong" side of the global chord even though it is on the right
+# side of the LOCAL body direction. The fix measures each pair against the local
+# tangent of the ordered midline polyline.
+#
+# Layout (index : node), a 5-node midline plus two L/R pairs hanging off it:
+#   0..4 : midline m0(nose) .. m4(tail)
+#   5/6  : ear_L / ear_R   (straddle m1)
+#   7/8  : hip_L / hip_R   (straddle m3)
+# ---------------------------------------------------------------------------
+
+CURL_MIDLINE = [0, 1, 2, 3, 4]
+CURL_PAIRS = [(5, 6), (7, 8)]
+CURL_AXIS = (0, 4)  # straight nose->tail anchor (two-node fallback)
+
+
+def _curl_straight_pose() -> np.ndarray:
+    """Canonical, fully extended pose: midline along +x, left = +y, right = -y."""
+    p = np.zeros((9, 2), dtype=float)
+    for k in range(5):
+        p[k] = [k * 4.0, 0.0]
+    p[5] = [4.0, 2.0]  # ear_L
+    p[6] = [4.0, -2.0]  # ear_R
+    p[7] = [12.0, 2.0]  # hip_L
+    p[8] = [12.0, -2.0]  # hip_R
+    return p
+
+
+def _curl_curled_pose() -> np.ndarray:
+    """A correctly-labeled but heavily curled (U-shaped) pose.
+
+    The midline bends back on itself; each pair is placed on its correct side of
+    the *local* body direction (left = +90 deg of travel), which for the curled
+    tail half points the opposite way in global coordinates from the head half.
+    """
+    p = np.zeros((9, 2), dtype=float)
+    mid = np.array([[0, 0], [4, 0], [7, 3], [6, 7], [2, 8]], dtype=float)
+    p[:5] = mid
+    # Ears straddle m1, where travel is ~ +x, so left = +y.
+    p[5] = mid[1] + [0.0, 2.0]
+    p[6] = mid[1] + [0.0, -2.0]
+    # Hips straddle m3, where the body has curled back; left = +90 deg of the
+    # local travel direction (m2 -> m4), which now points roughly -x.
+    d = mid[4] - mid[2]
+    d = d / np.linalg.norm(d)
+    left_normal = np.array([-d[1], d[0]])  # +90 deg = left of travel
+    p[7] = mid[3] + 2.0 * left_normal  # hip_L
+    p[8] = mid[3] - 2.0 * left_normal  # hip_R
+    return p
+
+
+class TestLocalMidlineCurlRobustness:
+    """The local-tangent midline tolerates body curl that the straight axis
+    misreads, while still firing on a genuine whole-instance reflection."""
+
+    @pytest.fixture
+    def curl_models(self):
+        """Models fit on jittered straight poses: one local-midline, one straight.
+
+        Both learn identical canonical sides (the straight extended pose is
+        unambiguous); they differ only in how a *curled* pose is scored.
+        """
+        insts = [_jitter(_curl_straight_pose(), 0.15, i) for i in range(40)]
+        local = fit_chirality(
+            insts, CURL_PAIRS, CURL_MIDLINE, axis_node_indices=CURL_AXIS
+        )
+        straight = fit_chirality(insts, CURL_PAIRS, None, axis_node_indices=CURL_AXIS)
+        return local, straight
+
+    def test_both_models_learn_same_canonical_side(self, curl_models):
+        """Local and straight fits agree on the canonical sides (per design)."""
+        local, straight = curl_models
+        assert local["canonical_side"] == straight["canonical_side"]
+        assert set(local["canonical_side"].keys()) == set(CURL_PAIRS)
+
+    def test_straight_axis_false_positives_on_curl(self, curl_models):
+        """REGRESSION: the straight nose->tail axis flags a correct curled pose.
+
+        This is the false positive the local-midline fix removes; it is asserted
+        here so the failure mode stays documented and detectable.
+        """
+        _, straight = curl_models
+        curled = _curl_curled_pose()
+        result = compute_chirality(
+            curled, CURL_PAIRS, None, straight, axis_node_indices=CURL_AXIS
+        )
+        assert result["n_pairs"] == 2
+        assert result["chirality_wrong_fraction"] == pytest.approx(1.0)
+
+    def test_local_midline_clears_curl(self, curl_models):
+        """The local-tangent midline scores the correct curled pose ~0."""
+        local, _ = curl_models
+        curled = _curl_curled_pose()
+        result = compute_chirality(
+            curled, CURL_PAIRS, CURL_MIDLINE, local, axis_node_indices=CURL_AXIS
+        )
+        assert result["n_pairs"] == 2
+        assert result["chirality_wrong_fraction"] == pytest.approx(0.0)
+
+    def test_local_midline_still_flags_reflected_curl(self, curl_models):
+        """A genuine whole-instance reflection of the curled pose still scores 1.
+
+        Curl-robustness must not cost flip sensitivity: reflecting the curled
+        pose (a real L/R flip) flips every pair's side, so the local method
+        fires fully.
+        """
+        local, _ = curl_models
+        reflected = _curl_curled_pose()
+        reflected[:, 1] *= -1.0  # reflect across the x-axis -> chirality flips
+        result = compute_chirality(
+            reflected, CURL_PAIRS, CURL_MIDLINE, local, axis_node_indices=CURL_AXIS
+        )
+        assert result["n_pairs"] == 2
+        assert result["chirality_wrong_fraction"] == pytest.approx(1.0)
+
+    def test_extended_pose_unaffected(self, curl_models):
+        """The local method leaves an ordinary extended pose at ~0 (clean) and
+        ~1 (whole-instance mirror), matching the straight axis."""
+        local, _ = curl_models
+        clean = _curl_straight_pose()
+        flipped = clean.copy()
+        flipped[:, 1] *= -1.0
+        assert compute_chirality(
+            clean, CURL_PAIRS, CURL_MIDLINE, local, axis_node_indices=CURL_AXIS
+        )["chirality_wrong_fraction"] == pytest.approx(0.0)
+        assert compute_chirality(
+            flipped, CURL_PAIRS, CURL_MIDLINE, local, axis_node_indices=CURL_AXIS
+        )["chirality_wrong_fraction"] == pytest.approx(1.0)
+
+
+class TestOrderMidlineByPCA:
+    """order_midline_by_pca recovers anatomical node order robustly."""
+
+    @pytest.fixture
+    def straight_instances(self):
+        return [_jitter(_curl_straight_pose(), 0.15, i) for i in range(40)]
+
+    def test_recovers_order_from_scrambled_input(self, straight_instances):
+        """Any permutation of the midline indices comes back in axis order."""
+        assert order_midline_by_pca(straight_instances, [4, 2, 0, 3, 1]) == [
+            0,
+            1,
+            2,
+            3,
+            4,
+        ]
+        assert order_midline_by_pca(straight_instances, [3, 1, 4, 0, 2]) == [
+            0,
+            1,
+            2,
+            3,
+            4,
+        ]
+
+    def test_orientation_is_deterministic(self, straight_instances):
+        """Reordering is unique up to (a fixed) reversal: same input order out."""
+        a = order_midline_by_pca(straight_instances, [0, 1, 2, 3, 4])
+        b = order_midline_by_pca(straight_instances, [4, 3, 2, 1, 0])
+        assert a == b
+
+    def test_single_or_empty_returned_unchanged(self, straight_instances):
+        assert order_midline_by_pca(straight_instances, [2]) == [2]
+        assert order_midline_by_pca(straight_instances, []) == []
+
+    def test_no_usable_axis_returns_input_order(self):
+        """All-NaN instances yield no axis, so the input order is preserved."""
+        nan_insts = [np.full((9, 2), np.nan) for _ in range(5)]
+        assert order_midline_by_pca(nan_insts, [3, 1, 2]) == [3, 1, 2]
 
 
 # ---------------------------------------------------------------------------

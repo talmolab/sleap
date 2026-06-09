@@ -43,12 +43,12 @@ from sleap.qc.results import CHANNEL_ISSUE_LABELS, FrameKey, InstanceKey
 # Skeleton / pose fixtures
 # ---------------------------------------------------------------------------
 #
-# Quadruped midline-chain skeleton. The longest path (the SkeletonAnalyzer
-# "spine") runs nose -> ... -> tailtip, so the chirality axis nodes
-# (spine[0], spine[-1]) are the true body midline endpoints, and there are two
-# symmetric pairs (ear_L/R, hip_L/R) -- enough for compute_chirality's
-# min_pairs=2. Symmetry is left UNdefined on the skeleton so the detector must
-# infer it from the _L/_R node names.
+# Quadruped midline-chain skeleton. The non-symmetric nodes (nose, head,
+# spine1, spine2, tailbase, tailtip) form the chirality midline polyline,
+# ordered nose -> tailtip by PCA, and there are two symmetric pairs (ear_L/R,
+# hip_L/R) -- enough for compute_chirality's min_pairs=2. Symmetry is left
+# UNdefined on the skeleton so the detector must infer it from the _L/_R node
+# names.
 QUAD_NAMES = [
     "nose",
     "head",
@@ -308,8 +308,9 @@ class TestPositionalContributionMapping:
         expected = compute_chirality(
             flipped,
             detector._symmetry_pairs,
-            detector._axis_nodes,
+            detector._midline_nodes,
             detector._chirality_model,
+            axis_node_indices=detector._axis_nodes,
         )["chirality_wrong_fraction"]
         assert contributions["chirality_wrong_fraction"] == pytest.approx(expected)
         # A clean whole-instance mirror flip should disagree on every pair.
@@ -345,9 +346,11 @@ class TestFlipEndToEnd:
         detector = LabelQCDetector(QCConfig())  # default config
         detector.fit(labels)
 
-        # Symmetry inferred from names; axis is the spine midline endpoints.
+        # Symmetry inferred from names; midline = ordered non-symmetric nodes.
         assert detector._chirality_model is not None
         assert detector._symmetry_pairs == [(6, 7), (8, 9)]
+        # All six non-symmetric nodes form the midline (not just spine endpoints).
+        assert set(detector._midline_nodes) == {0, 1, 2, 3, 4, 5}
 
         results = detector.score(labels)
         flip_key = InstanceKey(0, flip_frame, 0)

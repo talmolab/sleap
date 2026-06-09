@@ -16,6 +16,7 @@ from sleap.qc.features.chirality import (
     fit_chirality,
     compute_chirality,
     infer_symmetry_pairs_by_name,
+    order_midline_by_pca,
 )
 from sleap.qc.features.pose_split import compute_pose_split
 from sleap.qc.features.ordering import compute_chain_ordering, resolve_chains
@@ -113,6 +114,7 @@ class LabelQCDetector:
         self._chirality_model: Optional[dict] = None
         self._symmetry_pairs: list[tuple[int, int]] = []
         self._axis_nodes: Optional[tuple[int, int]] = None
+        self._midline_nodes: list[int] = []
         self._ordering_chains: list[list[int]] = []
         self._adjacency: Optional[dict[int, list[int]]] = None
         self._co_visibility: Optional[np.ndarray] = None
@@ -199,15 +201,23 @@ class LabelQCDetector:
         self._symmetry_pairs = list(sa.symmetry_pairs) or infer_symmetry_pairs_by_name(
             sa.node_names
         )
-        # Body axis for chirality must run along MIDLINE (non-symmetric) nodes.
-        # The skeleton's longest graph path can end at a side node (e.g. a
-        # Haunch_left leaf), which biases the axis to one side and makes the
-        # signed-side chirality meaningless (-> false whole-instance-flip flags).
-        # Restrict the spine to non-symmetric nodes for the axis.
+        # Chirality measures each symmetric pair against the LOCAL tangent of the
+        # body midline near that pair, so the midline must be the full ORDERED
+        # set of non-symmetric nodes (nose -> tail). Two failure modes to avoid:
+        #   * a single STRAIGHT axis (nose->tail chord) misjudges the side of a
+        #     pair whenever the animal curls, producing false L/R-flip flags;
+        #   * ``sa.spine`` (the skeleton's longest graph path) drops midline
+        #     nodes that hang off a hub on a star topology (e.g. Neck/Trunk),
+        #     and can even end at a side leaf, biasing the axis to one side.
+        # So take ALL non-symmetric nodes and order them by their mean PCA
+        # projection, which recovers nose->tail robustly across topologies.
         _sym_idxs = {i for pair in self._symmetry_pairs for i in pair}
-        _midline = [i for i in sa.spine if i not in _sym_idxs]
-        if len(_midline) >= 2:
-            self._axis_nodes = (_midline[0], _midline[-1])
+        _midline_unordered = [i for i in range(sa.n_nodes) if i not in _sym_idxs]
+        self._midline_nodes = order_midline_by_pca(instances, _midline_unordered)
+        # Two-node anchor fallback for instances where < 2 midline nodes are
+        # visible (compute_chirality then uses these, else a PCA axis).
+        if len(self._midline_nodes) >= 2:
+            self._axis_nodes = (self._midline_nodes[0], self._midline_nodes[-1])
         elif len(sa.spine) >= 2:
             self._axis_nodes = (sa.spine[0], sa.spine[-1])
         else:
@@ -219,7 +229,10 @@ class LabelQCDetector:
         self._co_visibility = self.visibility_model.co_visibility_matrix
         if self.config.should_use_chirality(len(self._symmetry_pairs) >= 1):
             self._chirality_model = fit_chirality(
-                instances, self._symmetry_pairs, self._axis_nodes
+                instances,
+                self._symmetry_pairs,
+                self._midline_nodes,
+                axis_node_indices=self._axis_nodes,
             )
 
         # B2 appearance channel (experimental, default-OFF): build a per-node
@@ -545,8 +558,9 @@ class LabelQCDetector:
                 compute_chirality(
                     points,
                     self._symmetry_pairs,
-                    self._axis_nodes,
+                    self._midline_nodes,
                     self._chirality_model,
+                    axis_node_indices=self._axis_nodes,
                 )["chirality_wrong_fraction"]
             )
         else:

@@ -21,10 +21,25 @@ invariant to translation, uniform scaling, and rotation of the whole instance
 (it only flips under reflection), which is exactly the property needed to
 isolate mirror flips from ordinary pose variation.
 
-The body axis is derived from two midline / non-symmetric anchor nodes (e.g.
-spine endpoints) passed as ``axis_node_indices=(i, j)``; if those anchors are
-missing for a given instance it falls back to the first principal component of
-the visible non-symmetric points.
+**Local (spine-relative) axis.** A single *straight* body axis (e.g. the chord
+from nose to tail-base) misjudges the side of a pair whenever the animal curls:
+a curled-but-correctly-labeled instance then trips the detector. To stay robust
+to body curvature, each symmetric pair is measured against the *local* tangent
+of the body midline near that pair. The midline is supplied as an **ordered**
+list of non-symmetric node indices (nose -> tail), forming a polyline; for each
+pair the pair midpoint is projected onto the nearest midline segment and that
+segment's tangent is used as the local axis in the cross product. With a
+single-segment (two-node) midline this reduces *exactly* to the straight-axis
+sign, so the two-node ``axis_node_indices`` form remains a special case.
+
+The midline polyline is resolved per instance in this order:
+
+1. the visible nodes of ``midline_node_indices`` (the ordered midline), if at
+   least two are visible;
+2. otherwise the two ``axis_node_indices`` anchors, if both are visible
+   (a degenerate single-segment midline);
+3. otherwise the first principal component of the visible non-symmetric points
+   (PCA fallback), as a single-segment midline through their centroid.
 """
 
 from __future__ import annotations
@@ -122,28 +137,145 @@ def _pca_axis(
     return origin, axis_vec
 
 
-def _resolve_axis(
+def _midline_polyline(
     points: np.ndarray,
-    axis_node_indices: Optional[tuple[int, int]],
-    exclude_indices: set[int],
-) -> Optional[tuple[np.ndarray, np.ndarray]]:
-    """Resolve the body axis for a single instance.
-
-    Prefers the two explicit anchor nodes; falls back to PCA of the visible
-    non-symmetric points if the anchors are unavailable or degenerate.
+    midline_node_indices: Optional[list[int]],
+    min_nodes: int = 2,
+) -> Optional[np.ndarray]:
+    """Ordered polyline of the visible midline nodes.
 
     Args:
         points: ``(n_nodes, 2)`` array of coordinates (NaN for invisible).
-        axis_node_indices: Optional ``(i, j)`` anchor node indices defining the
-            axis as ``points[j] - points[i]``.
+        midline_node_indices: Ordered (nose -> tail) non-symmetric node indices
+            forming the body midline.
+        min_nodes: Minimum number of visible midline nodes required to form a
+            usable polyline.
+
+    Returns:
+        An ``(m, 2)`` array of the visible midline points in order (``m >=
+        min_nodes``), or ``None`` if too few midline nodes are visible.
+    """
+    if not midline_node_indices:
+        return None
+    n_nodes = points.shape[0]
+    poly = [
+        points[i]
+        for i in midline_node_indices
+        if 0 <= i < n_nodes and not np.isnan(points[i]).any()
+    ]
+    if len(poly) < min_nodes:
+        return None
+    return np.asarray(poly, dtype=float)
+
+
+def _project_point_to_polyline(
+    point: np.ndarray, polyline: np.ndarray, min_norm: float = 1e-6
+) -> Optional[tuple[np.ndarray, np.ndarray]]:
+    """Project ``point`` onto the nearest segment of ``polyline``.
+
+    Args:
+        point: Length-2 query point (the symmetric-pair midpoint).
+        polyline: ``(m, 2)`` ordered midline points (``m >= 2``).
+        min_norm: Minimum segment length to consider non-degenerate.
+
+    Returns:
+        Tuple of ``(foot, unit_tangent)`` for the nearest segment, where
+        ``foot`` is the (clamped) foot of the perpendicular and ``unit_tangent``
+        is the segment direction oriented nose -> tail, or ``None`` if every
+        segment is degenerate.
+    """
+    best_d2 = np.inf
+    best_foot: Optional[np.ndarray] = None
+    best_tan: Optional[np.ndarray] = None
+    for k in range(len(polyline) - 1):
+        a = polyline[k]
+        b = polyline[k + 1]
+        ab = b - a
+        seg_len2 = float(ab @ ab)
+        if seg_len2 < min_norm * min_norm:
+            continue
+        # Clamp the projection parameter to the segment so the foot stays on it.
+        t = float((point - a) @ ab) / seg_len2
+        t = max(0.0, min(1.0, t))
+        foot = a + t * ab
+        d2 = float((point - foot) @ (point - foot))
+        if d2 < best_d2:
+            best_d2 = d2
+            best_foot = foot
+            best_tan = ab / np.sqrt(seg_len2)
+    if best_tan is None:
+        return None
+    return best_foot, best_tan
+
+
+def _signed_side_local(
+    left_point: np.ndarray,
+    right_point: np.ndarray,
+    polyline: np.ndarray,
+) -> Optional[float]:
+    """Signed side of the left member relative to the local midline tangent.
+
+    Projects the pair *midpoint* onto the nearest midline segment and uses that
+    segment's tangent as the local body axis, returning
+    ``sign(cross(tangent, left_point - foot))``. With a single-segment polyline
+    this is identical to the straight-axis ``sign(cross(axis, left - origin))``.
+
+    Args:
+        left_point: Length-2 coordinate of the pair's left member.
+        right_point: Length-2 coordinate of the pair's right member.
+        polyline: ``(m, 2)`` ordered midline points (``m >= 2``).
+
+    Returns:
+        ``+1.0`` (left of the local tangent), ``-1.0`` (right), ``0.0`` (on the
+        tangent), or ``None`` if either member is invisible or no usable segment
+        exists.
+    """
+    left_point = np.asarray(left_point, dtype=float)
+    right_point = np.asarray(right_point, dtype=float)
+    if np.isnan(left_point).any() or np.isnan(right_point).any():
+        return None
+    midpoint = 0.5 * (left_point + right_point)
+    projected = _project_point_to_polyline(midpoint, polyline)
+    if projected is None:
+        return None
+    foot, tangent = projected
+    rel = left_point - foot
+    cross = float(tangent[0] * rel[1] - tangent[1] * rel[0])
+    return float(np.sign(cross))
+
+
+def _resolve_midline(
+    points: np.ndarray,
+    midline_node_indices: Optional[list[int]],
+    axis_node_indices: Optional[tuple[int, int]],
+    exclude_indices: set[int],
+) -> Optional[np.ndarray]:
+    """Resolve the midline polyline for a single instance.
+
+    Resolution order: the ordered ``midline_node_indices`` (if >= 2 visible),
+    then the two ``axis_node_indices`` anchors (a single-segment midline), then
+    a PCA single-segment midline over the visible non-symmetric points.
+
+    Args:
+        points: ``(n_nodes, 2)`` array of coordinates (NaN for invisible).
+        midline_node_indices: Ordered (nose -> tail) non-symmetric midline node
+            indices.
+        axis_node_indices: Optional ``(i, j)`` anchor node indices, used as a
+            two-node midline fallback.
         exclude_indices: Symmetric-pair node indices to exclude from PCA.
 
     Returns:
-        Tuple of ``(axis_origin, unit_axis_vec)``, or ``None`` if no usable axis
-        could be derived.
+        An ``(m, 2)`` ordered midline polyline (``m >= 2``), or ``None`` if no
+        usable midline could be derived.
     """
+    # 1. Full ordered midline polyline.
+    poly = _midline_polyline(points, midline_node_indices)
+    if poly is not None:
+        return poly
+
     n_nodes = points.shape[0]
 
+    # 2. Two explicit anchor nodes as a single-segment midline.
     if axis_node_indices is not None:
         i, j = axis_node_indices
         if (
@@ -153,74 +285,63 @@ def _resolve_axis(
             and not np.isnan(points[i]).any()
             and not np.isnan(points[j]).any()
         ):
-            origin = points[i].astype(float)
-            axis_vec = _normalize_axis(points[j] - points[i])
-            if axis_vec is not None:
-                return origin, axis_vec
+            seg = np.stack([points[i], points[j]]).astype(float)
+            if float(np.linalg.norm(seg[1] - seg[0])) >= 1e-6:
+                return seg
 
-    # Fall back to PCA of visible non-symmetric points.
-    return _pca_axis(points, exclude_indices=exclude_indices)
-
-
-def _signed_side(
-    point: np.ndarray, origin: np.ndarray, axis_vec: np.ndarray
-) -> Optional[float]:
-    """Signed side of ``point`` relative to the oriented body axis.
-
-    Computes ``sign(cross(axis_vec, point - origin))``, i.e. which side of the
-    directed axis the point lies on (+1 = left of the axis direction, -1 =
-    right, 0 = on the axis).
-
-    Args:
-        point: Length-2 coordinate of the node.
-        origin: Length-2 axis origin.
-        axis_vec: Length-2 (unit) axis direction.
-
-    Returns:
-        ``+1.0``, ``-1.0``, ``0.0``, or ``None`` if ``point`` is invisible.
-    """
-    point = np.asarray(point, dtype=float)
-    if np.isnan(point).any():
+    # 3. PCA single-segment midline through the non-symmetric centroid.
+    pca = _pca_axis(points, exclude_indices=exclude_indices)
+    if pca is None:
         return None
-    rel = point - origin
-    cross = float(axis_vec[0] * rel[1] - axis_vec[1] * rel[0])
-    return float(np.sign(cross))
+    origin, axis_vec = pca
+    return np.stack([origin, origin + axis_vec]).astype(float)
 
 
 def fit_chirality(
     instances: list[np.ndarray],
     symmetry_pairs: list[tuple[int, int]],
+    midline_node_indices: Optional[list[int]] = None,
     axis_node_indices: Optional[tuple[int, int]] = None,
 ) -> dict:
     """Learn the canonical signed side per symmetric pair from training poses.
 
     For each symmetric pair ``(left, right)`` and each training instance where
-    the pair is co-visible and the body axis is resolvable, the signed side of
-    the *left* member relative to the axis is computed. The canonical side is
-    the majority sign across instances (sign of the mean of the per-instance
-    signs).
+    the pair is co-visible and the body midline is resolvable, the signed side
+    of the *left* member relative to the **local** midline tangent is computed.
+    The canonical side is the majority sign across instances (sign of the mean
+    of the per-instance signs).
 
     Args:
         instances: List of ``(n_nodes, 2)`` pose arrays. NaN marks invisible
             nodes. Should be clean / canonical labels (e.g. user-labeled).
         symmetry_pairs: List of ``(left_idx, right_idx)`` symmetric node pairs.
-        axis_node_indices: Optional ``(i, j)`` anchor node indices defining the
-            body axis. If ``None`` (or unavailable for an instance), a PCA axis
-            over the visible non-symmetric points is used.
+        midline_node_indices: Ordered (nose -> tail) list of non-symmetric
+            midline node indices defining the body midline polyline. When at
+            least two of them are visible for an instance, the local tangent of
+            the nearest midline segment is used as that pair's axis. If ``None``
+            or too few are visible, the resolution falls back to
+            ``axis_node_indices`` then to a PCA axis.
+        axis_node_indices: Optional ``(i, j)`` two-node anchor used as a
+            single-segment midline fallback when ``midline_node_indices`` is
+            unavailable for an instance. Passing only this (with
+            ``midline_node_indices=None``) reproduces the original straight-axis
+            behavior exactly.
 
     Returns:
         A model dict with:
 
         - ``"canonical_side"``: ``dict[tuple[int, int], float]`` mapping each
           symmetric pair to its learned canonical side (``+1.0`` or ``-1.0``).
-          Pairs that were never observed with a resolvable axis are omitted.
+          Pairs that were never observed with a resolvable midline are omitted.
         - ``"pair_support"``: ``dict[tuple[int, int], int]`` mapping each pair to
           the number of training instances that contributed to its estimate.
         - ``"symmetry_pairs"``: the (normalized) list of pairs used.
+        - ``"midline_node_indices"``: the ordered midline indices supplied.
         - ``"axis_node_indices"``: the anchor indices supplied at fit time.
         - ``"n_instances"``: number of training instances seen.
     """
     pairs = [tuple(p) for p in symmetry_pairs]
+    midline = list(midline_node_indices) if midline_node_indices else None
     exclude_indices = {idx for pair in pairs for idx in pair}
 
     # Accumulate signed sides of the left member per pair across instances.
@@ -229,10 +350,9 @@ def fit_chirality(
 
     for points in instances:
         points = np.asarray(points, dtype=float)
-        axis = _resolve_axis(points, axis_node_indices, exclude_indices)
-        if axis is None:
+        polyline = _resolve_midline(points, midline, axis_node_indices, exclude_indices)
+        if polyline is None:
             continue
-        origin, axis_vec = axis
 
         for left_idx, right_idx in pairs:
             # Require BOTH members visible so the side reflects a genuine,
@@ -245,7 +365,7 @@ def fit_chirality(
             ):
                 continue
 
-            side = _signed_side(points[left_idx], origin, axis_vec)
+            side = _signed_side_local(points[left_idx], points[right_idx], polyline)
             if side is None or side == 0.0:
                 # On the axis: ambiguous, contributes no chirality information.
                 continue
@@ -268,6 +388,7 @@ def fit_chirality(
         "canonical_side": canonical_side,
         "pair_support": pair_support,
         "symmetry_pairs": pairs,
+        "midline_node_indices": midline,
         "axis_node_indices": axis_node_indices,
         "n_instances": len(instances),
     }
@@ -276,23 +397,29 @@ def fit_chirality(
 def compute_chirality(
     points: np.ndarray,
     symmetry_pairs: list[tuple[int, int]],
-    axis_node_indices: Optional[tuple[int, int]],
+    midline_node_indices: Optional[list[int]],
     model: dict,
+    axis_node_indices: Optional[tuple[int, int]] = None,
     min_pairs: int = 2,
 ) -> dict[str, float]:
     """Score a single instance for a left/right mirror flip.
 
     For each co-visible symmetric pair with a learned canonical side, the signed
-    side of the *left* member relative to the body axis is compared to the
-    learned canonical side. The returned ``chirality_wrong_fraction`` is the
-    fraction of such pairs whose observed side disagrees with the canonical one.
+    side of the *left* member relative to the **local** midline tangent is
+    compared to the learned canonical side. The returned
+    ``chirality_wrong_fraction`` is the fraction of such pairs whose observed
+    side disagrees with the canonical one.
 
     Args:
         points: ``(n_nodes, 2)`` array of coordinates (NaN for invisible).
         symmetry_pairs: List of ``(left_idx, right_idx)`` symmetric node pairs.
-        axis_node_indices: Optional ``(i, j)`` anchor node indices for the body
-            axis. If ``None`` (or unavailable), a PCA axis is used.
+        midline_node_indices: Ordered (nose -> tail) non-symmetric midline node
+            indices for the body midline polyline. If ``None`` or too few are
+            visible, the resolution falls back to ``axis_node_indices`` then to
+            a PCA axis. Must match what was passed to :func:`fit_chirality`.
         model: Model dict returned by :func:`fit_chirality`.
+        axis_node_indices: Optional ``(i, j)`` two-node anchor used as a
+            single-segment midline fallback (see :func:`fit_chirality`).
         min_pairs: Minimum number of scorable co-visible pairs required for a
             meaningful score. Below this, ``chirality_wrong_fraction`` is 0.0.
 
@@ -307,12 +434,12 @@ def compute_chirality(
     canonical_side: dict[tuple[int, int], float] = model.get("canonical_side", {})
 
     pairs = [tuple(p) for p in symmetry_pairs]
+    midline = list(midline_node_indices) if midline_node_indices else None
     exclude_indices = {idx for pair in pairs for idx in pair}
 
-    axis = _resolve_axis(points, axis_node_indices, exclude_indices)
-    if axis is None:
+    polyline = _resolve_midline(points, midline, axis_node_indices, exclude_indices)
+    if polyline is None:
         return {"chirality_wrong_fraction": 0.0, "n_pairs": 0}
-    origin, axis_vec = axis
 
     n_pairs = 0
     n_wrong = 0
@@ -329,7 +456,7 @@ def compute_chirality(
         ):
             continue
 
-        side = _signed_side(points[left_idx], origin, axis_vec)
+        side = _signed_side_local(points[left_idx], points[right_idx], polyline)
         if side is None or side == 0.0:
             # On the axis: ambiguous, do not count for or against a flip.
             continue
@@ -345,6 +472,68 @@ def compute_chirality(
         "chirality_wrong_fraction": float(n_wrong) / float(n_pairs),
         "n_pairs": n_pairs,
     }
+
+
+def order_midline_by_pca(
+    instances: list[np.ndarray],
+    midline_node_indices: list[int],
+    min_points: int = 2,
+) -> list[int]:
+    """Order midline node indices nose -> tail by their mean PCA projection.
+
+    The body midline polyline needs its nodes in anatomical order, but a
+    skeleton's graph topology does not always provide it (a star-topology
+    skeleton, for example, attaches several midline nodes to a single hub with
+    no path between them). This orders the supplied midline nodes by the average
+    of their projections onto the first principal component of the non-symmetric
+    points, which recovers the nose -> tail ordering robustly across topologies.
+
+    The PCA axis has an arbitrary sign; the returned order is therefore unique
+    only up to reversal. Reversing the midline does not change the local-tangent
+    *line* (only its orientation), and the signed-side cross product flips sign
+    consistently for every pair, so the learned canonical sides absorb the
+    choice. The orientation is fixed deterministically (first node gets the
+    smaller mean projection) purely for reproducibility.
+
+    Args:
+        instances: List of ``(n_nodes, 2)`` pose arrays used to estimate the
+            axis (e.g. the training instances).
+        midline_node_indices: Unordered midline (non-symmetric) node indices.
+        min_points: Minimum non-symmetric points needed in an instance for it to
+            contribute to the projection estimate.
+
+    Returns:
+        The midline node indices ordered by mean PCA projection. If no instance
+        yields a usable axis, the input order is returned unchanged.
+    """
+    midline = [int(i) for i in midline_node_indices]
+    if len(midline) < 2:
+        return midline
+
+    exclude_indices: set[int] = set()  # PCA over all non-NaN points of the body
+    proj_sums = {i: 0.0 for i in midline}
+    proj_counts = {i: 0 for i in midline}
+
+    for points in instances:
+        points = np.asarray(points, dtype=float)
+        pca = _pca_axis(points, exclude_indices=exclude_indices, min_points=min_points)
+        if pca is None:
+            continue
+        origin, axis_vec = pca
+        for i in midline:
+            if 0 <= i < points.shape[0] and not np.isnan(points[i]).any():
+                proj_sums[i] += float((points[i] - origin) @ axis_vec)
+                proj_counts[i] += 1
+
+    # Nodes that were never visible keep a neutral 0.0 projection and sort
+    # stably among themselves (Python's sort is stable on ties).
+    if all(c == 0 for c in proj_counts.values()):
+        return midline
+
+    def _mean_proj(i: int) -> float:
+        return proj_sums[i] / proj_counts[i] if proj_counts[i] else 0.0
+
+    return sorted(midline, key=_mean_proj)
 
 
 def _split_lr_token(name: str) -> Optional[tuple[str, str, bool]]:
