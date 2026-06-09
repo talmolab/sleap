@@ -32,6 +32,27 @@ class QCConfig:
             when the longest chain has >= 4 nodes. Experimental, default-OFF.
         use_missing_node_check: Whether to run the missing-node check (a node a
             instance's peers usually keep is absent). Experimental, default-OFF.
+        use_appearance: Whether to run the appearance-outlier channel (a node
+            placed on visually-wrong pixels, e.g. on bedding instead of fur).
+            Needs decoded image frames; scored outside the GMM as the
+            ``"appearance"`` channel. Experimental, default-OFF.
+        appearance_patch_size: Side length (pixels) of the square image patch
+            cut around each node for the appearance descriptor.
+        appearance_min_samples: Minimum number of patch samples a node needs at
+            fit time before the appearance model has an opinion on it.
+        use_insample_prediction: Whether to run the in-sample model-prediction
+            channel (Tier-2 missing-node): run a trained sleap-nn model on the
+            labeled frames and flag unlabeled nodes the model confidently
+            localizes. Scored outside the GMM as the ``"prediction"`` channel.
+            EXPENSIVE (full model inference). Experimental, default-OFF.
+        insample_model_path: Path to a trained sleap-nn model directory for the
+            in-sample prediction channel. Empty disables the channel (no-op).
+        insample_peak_threshold: Peak-finding confidence threshold passed to the
+            in-sample model inference (lower = more candidate peaks).
+        insample_min_confidence: Confidence at/above which a model prediction at
+            an unlabeled node counts as a disagreement (gates the channel score).
+        insample_device: Torch device for the in-sample inference
+            (``"auto"``/``"cpu"``/``"cuda"``/``"mps"``).
         instance_threshold: Threshold for flagging instances (0-1).
             Higher = fewer flags, lower = more flags.
         frame_threshold: Threshold for frame-level checks.
@@ -69,6 +90,9 @@ class QCConfig:
     use_duplicate_score: bool = True  # (a)
     use_chain_ordering: Literal["auto"] | bool = False  # (b) experimental
     use_missing_node_check: bool = False  # (f, Tier-1) experimental
+    # B2 non-GMM channels (default-OFF / experimental).
+    use_appearance: bool = False  # (e) appearance outlier / wrong-object
+    use_insample_prediction: bool = False  # (f, Tier-2) in-sample model prediction
 
     # Thresholds (validated in v4 investigation)
     instance_threshold: float = 0.7  # Default: balanced
@@ -83,6 +107,16 @@ class QCConfig:
     chain_turn_angle_deg: float = 60.0
     order_inversion_threshold: float = 0.3
     missing_node_prob_threshold: float = 0.9
+
+    # B2 appearance-outlier channel settings.
+    appearance_patch_size: int = 7
+    appearance_min_samples: int = 20
+
+    # B2 in-sample model-prediction channel settings.
+    insample_model_path: str = ""
+    insample_peak_threshold: float = 0.2
+    insample_min_confidence: float = 0.5
+    insample_device: str = "auto"
 
     # User-defined ordered chains (lists of node NAMES) for chain-ordering.
     ordered_chains: list = field(default_factory=list)

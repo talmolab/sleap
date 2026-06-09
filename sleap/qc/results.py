@@ -27,7 +27,11 @@ class FrameKey(NamedTuple):
 
 # Human-readable labels for channel-only issues (scored outside the GMM and
 # merged into get_flagged). Keyed by channel name.
-CHANNEL_ISSUE_LABELS = {"missing_node": "Missing labelable node"}
+CHANNEL_ISSUE_LABELS = {
+    "missing_node": "Missing labelable node",
+    "appearance": "Appearance outlier",
+    "prediction": "Model expects a labeled part here",
+}
 
 
 @dataclass

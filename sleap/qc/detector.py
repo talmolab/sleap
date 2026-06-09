@@ -20,6 +20,8 @@ from sleap.qc.features.chirality import (
 from sleap.qc.features.pose_split import compute_pose_split
 from sleap.qc.features.ordering import compute_chain_ordering, resolve_chains
 from sleap.qc.features.missing_node import score_missing_nodes
+from sleap.qc.features.appearance import fit_appearance, score_appearance
+from sleap.qc.insample_prediction import run_insample_prediction
 from sleap.qc.frame_level import (
     InstanceCountChecker,
     check_negative_frame,
@@ -114,6 +116,10 @@ class LabelQCDetector:
         self._ordering_chains: list[list[int]] = []
         self._adjacency: Optional[dict[int, list[int]]] = None
         self._co_visibility: Optional[np.ndarray] = None
+
+        # B2 appearance-channel fit-time state (set in fit() when
+        # use_appearance is on, consumed in score()). None = no appearance model.
+        self._appearance_model: Optional[dict] = None
 
     def fit(
         self,
@@ -216,6 +222,30 @@ class LabelQCDetector:
                 instances, self._symmetry_pairs, self._axis_nodes
             )
 
+        # B2 appearance channel (experimental, default-OFF): build a per-node
+        # appearance model from the labeled frames. Guarded by use_appearance so
+        # the default path never touches (potentially expensive) video decoding.
+        # Each labeled frame is decoded ONCE; undecodable frames are skipped.
+        if self.config.use_appearance:
+            _report("Fitting feature extractors", 0.18, "Appearance model")
+            appearance_pairs = []
+            for video in labels.videos:
+                for lf in [lf for lf in labels if lf.video == video]:
+                    try:
+                        frame = video[lf.frame_idx]
+                    except Exception:
+                        continue
+                    for inst in lf.user_instances:
+                        appearance_pairs.append(
+                            (frame, inst.numpy(invisible_as_nan=True))
+                        )
+            self._appearance_model = fit_appearance(
+                appearance_pairs,
+                n_nodes=self.skeleton_analyzer.n_nodes,
+                patch_size=self.config.appearance_patch_size,
+                min_samples=self.config.appearance_min_samples,
+            )
+
         # Build feature matrix (use LOO NN distances for training)
         _report("Extracting features", 0.20, f"0/{len(instances)}")
         self.feature_names = self._get_feature_names()  # Set first, needed by extract
@@ -288,6 +318,16 @@ class LabelQCDetector:
             for lf in labeled_frames:
                 frame_idx = lf.frame_idx
 
+                # Decode the frame ONCE per labeled frame for the appearance
+                # channel (experimental). Hoisted out of the instance loop so a
+                # frame is never decoded more than once; undecodable -> None.
+                appearance_frame = None
+                if self.config.use_appearance and self._appearance_model is not None:
+                    try:
+                        appearance_frame = lf.video[frame_idx]
+                    except Exception:
+                        appearance_frame = None
+
                 # Collect instances for this frame
                 frame_instances = []
                 for inst_idx, inst in enumerate(lf.user_instances):
@@ -327,6 +367,21 @@ class LabelQCDetector:
                                 key
                             ] = _mn["missing_node_score"]
 
+                    # Appearance channel (experimental): scored against the
+                    # per-node appearance model using the once-decoded frame.
+                    if (
+                        self.config.use_appearance
+                        and self._appearance_model is not None
+                        and appearance_frame is not None
+                    ):
+                        _ap = score_appearance(
+                            appearance_frame, points, self._appearance_model
+                        )
+                        if _ap["appearance_outlier_score"] > 0:
+                            results.channel_scores.setdefault("appearance", {})[key] = (
+                                _ap["appearance_outlier_score"]
+                            )
+
                     # Progress update (every 500 instances)
                     instance_count += 1
                     if instance_count % 500 == 0:
@@ -340,6 +395,25 @@ class LabelQCDetector:
                     frame_instances, video_id, is_negative=lf.is_negative
                 )
                 results.frame_results[frame_key] = frame_qc
+
+        # In-sample model-prediction channel (experimental, Tier-2 missing-node):
+        # ONE batched inference over ALL labeled frames, run after the per-instance
+        # loop completes. run_insample_prediction self-skips (returns an empty
+        # instance_scores) when the model path is falsy, so guarding only on
+        # use_insample_prediction is safe and avoids real inference by default.
+        if self.config.use_insample_prediction:
+            out = run_insample_prediction(
+                labels,
+                model_path=self.config.insample_model_path or "",
+                peak_threshold=self.config.insample_peak_threshold,
+                min_confidence=self.config.insample_min_confidence,
+                device=self.config.insample_device,
+                progress_callback=progress_callback,
+            )
+            for (v_idx, f_idx, i_idx), s in out["instance_scores"].items():
+                results.channel_scores.setdefault("prediction", {})[
+                    InstanceKey(v_idx, f_idx, i_idx)
+                ] = s
 
         _report("Complete", 1.0, f"{instance_count} instances scored")
         return results

@@ -1039,6 +1039,109 @@ class TestQCDetectorSettings:
         assert widget._ordered_chains_edit.isEnabled()
 
 
+class TestQCB2DetectorSettings:
+    """Tests for the two B2 channel controls (appearance + in-sample model)."""
+
+    def test_b2_controls_exist_with_defaults(self, qtbot):
+        """The appearance + in-sample controls exist and default OFF."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Appearance / wrong-object checkbox, experimental default-OFF.
+        assert widget._cb_appearance is not None
+        assert widget._cb_appearance.text() == "Appearance / wrong-object"
+        assert not widget._cb_appearance.isChecked()
+
+        # In-sample model prediction checkbox, experimental default-OFF.
+        assert widget._cb_insample is not None
+        assert widget._cb_insample.text() == "In-sample model prediction"
+        assert not widget._cb_insample.isChecked()
+
+        # Model-path picker exists: a placeholder line edit + a Browse button.
+        assert widget._insample_model_edit is not None
+        assert widget._insample_model_edit.text() == ""
+        assert "model" in widget._insample_model_edit.placeholderText().lower()
+        assert widget._insample_browse_btn is not None
+        assert "Browse" in widget._insample_browse_btn.text()
+
+    def test_insample_tooltip_warns_about_slow_inference(self, qtbot):
+        """The in-sample checkbox tooltip warns that it runs full inference."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        tip = widget._cb_insample.toolTip().lower()
+        assert "inference" in tip
+        assert "slow" in tip
+
+    def test_insample_picker_disabled_when_unchecked(self, qtbot):
+        """The model picker + Browse button disable when in-sample is off."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Off by default -> picker + browse disabled.
+        assert not widget._insample_model_edit.isEnabled()
+        assert not widget._insample_browse_btn.isEnabled()
+
+        # Enabling the checkbox enables both.
+        widget._cb_insample.setChecked(True)
+        assert widget._insample_model_edit.isEnabled()
+        assert widget._insample_browse_btn.isEnabled()
+
+        # Disabling again disables both.
+        widget._cb_insample.setChecked(False)
+        assert not widget._insample_model_edit.isEnabled()
+        assert not widget._insample_browse_btn.isEnabled()
+
+    def test_browse_sets_model_path_from_dialog(self, qtbot):
+        """Clicking Browse opens getExistingDirectory and sets the line edit."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        with patch(
+            "sleap.gui.widgets.qc.QtWidgets.QFileDialog.getExistingDirectory",
+            return_value="/path/to/model",
+        ) as mock_dialog:
+            widget._on_browse_insample_model()
+            mock_dialog.assert_called_once()
+        assert widget._insample_model_edit.text() == "/path/to/model"
+
+    def test_browse_cancel_leaves_path_unchanged(self, qtbot):
+        """Cancelling the folder dialog (empty return) leaves the path empty."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        with patch(
+            "sleap.gui.widgets.qc.QtWidgets.QFileDialog.getExistingDirectory",
+            return_value="",
+        ):
+            widget._on_browse_insample_model()
+        assert widget._insample_model_edit.text() == ""
+
+    def test_build_qc_config_b2_defaults(self, qtbot):
+        """_build_qc_config maps the B2 controls; both channels default OFF."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        config = widget._build_qc_config()
+        assert config.use_appearance is False
+        assert config.use_insample_prediction is False
+        assert config.insample_model_path == ""
+
+    def test_build_qc_config_reflects_b2_toggles(self, qtbot):
+        """Toggling the B2 checkboxes + path is reflected in the built config."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        widget._cb_appearance.setChecked(True)
+        widget._cb_insample.setChecked(True)
+        widget._insample_model_edit.setText("  /models/best  ")
+
+        config = widget._build_qc_config()
+        assert config.use_appearance is True
+        assert config.use_insample_prediction is True
+        # Path is stripped of surrounding whitespace.
+        assert config.insample_model_path == "/models/best"
+
+
 class TestQCAnalysisWorkerConfig:
     """Tests for threading the QCConfig into the analysis worker."""
 

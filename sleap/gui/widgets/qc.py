@@ -965,6 +965,50 @@ class QCWidget(QtWidgets.QWidget):
         )
         self._add_detector_row(5, self._cb_missing, missing_thr_row)
 
+        # --- Appearance / wrong-object (B2 channel), experimental, default-OFF ---
+        self._cb_appearance = QtWidgets.QCheckBox("Appearance / wrong-object")
+        self._cb_appearance.setChecked(False)
+        self._cb_appearance.setToolTip(
+            "Flag a keypoint placed on visually-wrong pixels (e.g. on bedding "
+            "instead of fur), using a per-node image-appearance model. "
+            "Experimental; off by default."
+        )
+        # No tunable hard threshold in the GUI: appearance is a channel score.
+        appearance_note = QtWidgets.QLabel("(image-based)")
+        appearance_note.setEnabled(False)
+        appearance_note.setToolTip(
+            "Appearance scoring reads image patches around each node; it has no "
+            "hard threshold to tune here."
+        )
+        self._add_detector_row(6, self._cb_appearance, appearance_note)
+
+        # --- In-sample model prediction (B2 channel), experimental, default-OFF ---
+        self._cb_insample = QtWidgets.QCheckBox("In-sample model prediction")
+        self._cb_insample.setChecked(False)
+        self._cb_insample.setToolTip(
+            "Run a trained sleap-nn model on the labeled frames and flag "
+            "unlabeled nodes the model confidently localizes (labelable-but-"
+            "skipped parts).\n"
+            "WARNING: runs full model inference and can be slow on large "
+            "projects. Experimental; off by default."
+        )
+        # Model-path picker: a (display-only) line edit plus a Browse button.
+        self._insample_model_edit = QtWidgets.QLineEdit()
+        self._insample_model_edit.setReadOnly(True)
+        self._insample_model_edit.setPlaceholderText("trained sleap-nn model folder")
+        self._insample_model_edit.setToolTip(
+            "Folder of a trained sleap-nn model (with best.ckpt + "
+            "training_config.yaml) to run in-sample. Empty disables the channel."
+        )
+        self._insample_browse_btn = QtWidgets.QPushButton("Browse...")
+        self._insample_browse_btn.setToolTip(
+            "Choose the trained sleap-nn model folder for in-sample prediction."
+        )
+        insample_picker = self._make_threshold_row(
+            [(self._insample_model_edit, self._insample_browse_btn)]
+        )
+        self._add_detector_row(7, self._cb_insample, insample_picker)
+
         # Disable each detector's tunable widgets when its checkbox is off.
         self._cb_flip.toggled.connect(self._sb_flip_thr.setEnabled)
         self._sb_flip_thr.setEnabled(self._cb_flip.isChecked())
@@ -981,7 +1025,27 @@ class QCWidget(QtWidgets.QWidget):
         self._cb_chain.toggled.connect(_set_chain_enabled)
         _set_chain_enabled(self._cb_chain.isChecked())
 
+        # Disable the in-sample model picker + Browse button when its checkbox
+        # is off (mirrors the other detectors' disable-on-uncheck behavior).
+        def _set_insample_enabled(on: bool):
+            self._insample_model_edit.setEnabled(on)
+            self._insample_browse_btn.setEnabled(on)
+
+        self._cb_insample.toggled.connect(_set_insample_enabled)
+        _set_insample_enabled(self._cb_insample.isChecked())
+        self._insample_browse_btn.clicked.connect(self._on_browse_insample_model)
+
         layout.addWidget(group)
+
+    def _on_browse_insample_model(self):
+        """Open a folder picker and set the in-sample model path line edit."""
+        directory = QtWidgets.QFileDialog.getExistingDirectory(
+            self,
+            "Select trained sleap-nn model folder",
+            self._insample_model_edit.text() or "",
+        )
+        if directory:
+            self._insample_model_edit.setText(directory)
 
     def _make_threshold_row(self, items: list) -> QtWidgets.QWidget:
         """Pack labeled threshold widgets into a single compact row widget.
@@ -1046,6 +1110,9 @@ class QCWidget(QtWidgets.QWidget):
             ordered_chains=self._parse_ordered_chains(),
             use_missing_node_check=self._cb_missing.isChecked(),
             missing_node_prob_threshold=self._sb_missing_thr.value(),
+            use_appearance=self._cb_appearance.isChecked(),
+            use_insample_prediction=self._cb_insample.isChecked(),
+            insample_model_path=self._insample_model_edit.text().strip(),
         )
 
     def _parse_ordered_chains(self) -> list:
