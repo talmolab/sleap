@@ -218,13 +218,17 @@ def test_labeled_frame_view_only_exclusivity(qtbot, centered_pair_predictions):
     assert instance_visible(model._vis_state, inst0)
     assert not instance_visible(model._vis_state, inst1)
 
-    # Visibility column should be disabled (greyed out) during view-only.
+    # During view-only the visibility column is greyed but STAYS enabled and
+    # user-checkable, so clicking a visibility box can exit view-only mode (per
+    # the spec). The greying is conveyed via a BackgroundRole brush, not by
+    # disabling the cell (a disabled cell would make the exit gesture
+    # unreachable in the real view).
     vis_col = model.properties.index("visibility")
     flags = model.flags(model.index(0, vis_col))
-    assert not (flags & QtCore.Qt.ItemIsEnabled)
-    assert not (flags & QtCore.Qt.ItemIsUserCheckable)
-    # Row still selectable.
+    assert flags & QtCore.Qt.ItemIsEnabled
+    assert flags & QtCore.Qt.ItemIsUserCheckable
     assert flags & QtCore.Qt.ItemIsSelectable
+    assert model.data(model.index(0, vis_col), QtCore.Qt.BackgroundRole) is not None
 
     # Check view-only on row 1: row 0 auto-unchecks.
     assert _set_checkstate(model, 1, "view only", True)
@@ -290,3 +294,32 @@ def test_labeled_frame_track_column_unaffected(qtbot, centered_pair_predictions)
     # Checkbox columns have no DisplayRole text.
     vis_col = model.properties.index("visibility")
     assert model.data(model.index(0, vis_col), QtCore.Qt.DisplayRole) is None
+
+
+def test_instance_visible_respects_global_show_instances():
+    """Global "show instances" off hides everything (regression for #2755).
+
+    The instance overlay re-applies `instance_visible` on every replot, so if it
+    ignored the global toggle it would override the global Hide. Per-instance
+    state may only further hide instances, never force a globally-hidden one back
+    on.
+    """
+    from sleap.gui.state import GuiState, instance_visible, VIEW_ONLY_INSTANCE_KEY
+
+    state = GuiState()
+    inst_a, inst_b = object(), object()
+
+    # Global on: default per-instance state -> both visible.
+    state["show instances"] = True
+    assert instance_visible(state, inst_a)
+    assert instance_visible(state, inst_b)
+
+    # View-only on A (global on): only A visible.
+    state[VIEW_ONLY_INSTANCE_KEY] = id(inst_a)
+    assert instance_visible(state, inst_a)
+    assert not instance_visible(state, inst_b)
+
+    # Global off: nothing visible, even the view-only instance.
+    state["show instances"] = False
+    assert not instance_visible(state, inst_a)
+    assert not instance_visible(state, inst_b)

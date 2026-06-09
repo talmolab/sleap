@@ -198,9 +198,13 @@ class MainWindow(QMainWindow):
         self.state["show labels"] = True
         self.state["show edges"] = True
         # Transient per-instance canvas visibility (Instances dock checkboxes).
-        # Reset on every frame change in `_after_plot_change`; never persisted.
+        # Reset on each real frame change in `_after_plot_change`; never persisted.
         self.state[INSTANCE_HIDDEN_KEY] = set()
         self.state[VIEW_ONLY_INSTANCE_KEY] = None
+        # (video, frame_idx) of the last plotted frame, so `_after_plot_change`
+        # clears the transient visibility above only when the frame truly changes
+        # (not on same-frame replots like marker-size or add-instance).
+        self._vis_last_frame_key = None
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["fit_selection"] = False
@@ -1461,13 +1465,18 @@ class MainWindow(QMainWindow):
             else None
         )
 
-        # Reset transient per-instance visibility on every frame change:
-        # instances differ per frame and both the canvas and the Instances dock
-        # table rebuild here, so the defaults (all visible, no view-only) are the
-        # natural state for the new frame. Must run BEFORE the overlay redraw
-        # below so the instance overlay applies the cleared state.
-        self.state[INSTANCE_HIDDEN_KEY] = set()
-        self.state[VIEW_ONLY_INSTANCE_KEY] = None
+        # Reset transient per-instance visibility only when the frame actually
+        # changes: the instances (and thus the id()-keyed visibility state)
+        # differ per frame. `_after_plot_change` also fires on same-frame replots
+        # (marker size, add instance, palette, etc.); resetting there would wipe
+        # the user's hide / view-only selections, so gate on the (video,
+        # frame_idx) key. Must run BEFORE the overlay redraw below so the
+        # instance overlay applies the cleared state.
+        frame_key = (self.state["video"], frame_idx)
+        if frame_key != self._vis_last_frame_key:
+            self._vis_last_frame_key = frame_key
+            self.state[INSTANCE_HIDDEN_KEY] = set()
+            self.state[VIEW_ONLY_INSTANCE_KEY] = None
 
         # Show instances, etc, for this frame
         for overlay in self.overlays.values():

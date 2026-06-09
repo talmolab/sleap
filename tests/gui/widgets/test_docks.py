@@ -210,3 +210,50 @@ def test_instances_dock_visibility_columns(qtbot, centered_pair_predictions: Lab
     main_window.state["frame_idx"] = other.frame_idx
     assert main_window.state[VIEW_ONLY_INSTANCE_KEY] is None
     assert main_window.state[INSTANCE_HIDDEN_KEY] == set()
+
+
+def test_instances_dock_visibility_replot_and_global_toggle(
+    qtbot, centered_pair_predictions: Labels
+):
+    """Per-instance visibility survives a same-frame replot and is overridden by
+    the global "show instances" toggle (regressions for #2755)."""
+    from qtpy import QtCore
+
+    main_window = MainWindow(labels=centered_pair_predictions)
+    target = centered_pair_predictions.labeled_frames[13]
+    main_window.state["frame_idx"] = target.frame_idx
+
+    model = main_window.instances_dock.table.model()
+    assert model.rowCount() >= 2
+    inst0 = model.original_items[0]
+    inst1 = model.original_items[1]
+    vis_col = model.properties.index("visibility")
+
+    # Hide instance 0 via its visibility box.
+    model.setData(
+        model.index(0, vis_col), QtCore.Qt.Unchecked, QtCore.Qt.CheckStateRole
+    )
+    assert id(inst0) in main_window.state[INSTANCE_HIDDEN_KEY]
+
+    # A same-frame replot (what a marker-size/add-instance change triggers) must
+    # NOT reset the hide -- only a real frame change does.
+    main_window.plotFrame()
+    assert id(inst0) in main_window.state[INSTANCE_HIDDEN_KEY]
+    qt0 = _qt_instance_for(main_window.player, inst0)
+    qt1 = _qt_instance_for(main_window.player, inst1)
+    assert qt0 is not None and not qt0.isVisible()
+    assert qt1 is not None and qt1.isVisible()
+
+    # Global "show instances" off hides everything, even the still-visible inst1.
+    main_window.state["show instances"] = False
+    qt0 = _qt_instance_for(main_window.player, inst0)
+    qt1 = _qt_instance_for(main_window.player, inst1)
+    assert qt0 is not None and not qt0.isVisible()
+    assert qt1 is not None and not qt1.isVisible()
+
+    # Turning it back on restores per-instance state (inst0 hidden, inst1 shown).
+    main_window.state["show instances"] = True
+    qt0 = _qt_instance_for(main_window.player, inst0)
+    qt1 = _qt_instance_for(main_window.player, inst1)
+    assert qt0 is not None and not qt0.isVisible()
+    assert qt1 is not None and qt1.isVisible()

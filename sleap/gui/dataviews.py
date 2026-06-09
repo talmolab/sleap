@@ -617,7 +617,18 @@ class LabeledFrameTableModel(GenericTableModel):
                 else:
                     checked = self.is_view_only_checked(instance)
                 return QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked
-            # No text/color/tooltip for the checkbox columns.
+            if (
+                role == QtCore.Qt.BackgroundRole
+                and key == self.VISIBILITY_KEY
+                and self._vis_state.get(VIEW_ONLY_INSTANCE_KEY, default=None)
+                is not None
+            ):
+                # Greyed-but-clickable: tint the visibility column while a
+                # view-only instance is active to show it is overridden. The
+                # cell stays checkable (see `flags`) so clicking it exits
+                # view-only mode.
+                return QtGui.QColor(128, 128, 128, 64)
+            # No text/color/tooltip for the checkbox columns otherwise.
             return None
 
         return super().data(index, role)
@@ -625,23 +636,20 @@ class LabeledFrameTableModel(GenericTableModel):
     def flags(self, index: QtCore.QModelIndex):
         """Overrides Qt method to make the new columns user-checkable.
 
-        The "visibility" column is disabled (greyed out) while a "view only"
-        instance is active, but the row stays selectable so clicking it still
-        selects the instance.
+        Both checkbox columns stay enabled and user-checkable at all times.
+        During view-only mode the "visibility" column is rendered greyed (see
+        `data`) to signal it is overridden, but it remains clickable so that
+        toggling any visibility box exits view-only mode (per the feature spec).
         """
         key = self.properties[index.column()]
         if key not in self._checkbox_keys:
             return super().flags(index)
 
-        flags = QtCore.Qt.ItemIsSelectable
-        view_only_active = (
-            self._vis_state.get(VIEW_ONLY_INSTANCE_KEY, default=None) is not None
+        return (
+            QtCore.Qt.ItemIsSelectable
+            | QtCore.Qt.ItemIsEnabled
+            | QtCore.Qt.ItemIsUserCheckable
         )
-        if key == self.VISIBILITY_KEY and view_only_active:
-            # Disabled (greyed out) and not checkable during view-only mode.
-            return flags
-        flags |= QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable
-        return flags
 
     def setData(self, index: QtCore.QModelIndex, value, role=QtCore.Qt.EditRole):
         """Overrides Qt method to toggle the per-instance visibility state."""
