@@ -79,6 +79,8 @@ class TestCLIBasics:
         assert "binaries" in data
         assert "path_entries" in data
         assert "path_conflicts" in data
+        # Commit provenance: present as a key, value may be None for release installs
+        assert "sleap_commit" in data
         # Check platform has new fields
         assert "ram_used" in data["platform"]
         assert "disk_used" in data["platform"]
@@ -153,6 +155,98 @@ class TestCLIBasics:
         assert result.exit_code == 0
         assert "Tip:" in result.output
         assert "sleap doctor -o" in result.output
+
+    def test_doctor_commit_flag_in_help(self):
+        """Verify the --commit flag is documented and off by default."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["doctor", "--help"])
+        assert result.exit_code == 0
+        assert "--commit" in result.output
+
+    def test_doctor_no_commit_flag_skips_github(self):
+        """Without --commit, doctor never reaches out to GitHub."""
+        from unittest.mock import patch
+
+        runner = CliRunner()
+        with patch("sleap.system_info.resolve_tag_commit") as mock_resolve:
+            result = runner.invoke(cli, ["doctor"])
+        assert result.exit_code == 0
+        mock_resolve.assert_not_called()
+
+    def test_doctor_commit_flag_resolves_release(self):
+        """--commit resolves a release install's commit from its tag."""
+        from unittest.mock import patch
+
+        from sleap.system_info import PackageInfoData
+
+        def fake_pkg(name):
+            if name == "sleap":
+                return PackageInfoData(
+                    name="sleap", version="1.6.3", source="pip", editable=False
+                )
+            return None
+
+        runner = CliRunner()
+        with patch(
+            "sleap.system_info.get_detailed_package_info", side_effect=fake_pkg
+        ), patch(
+            "sleap.system_info.resolve_tag_commit",
+            return_value="e08bdad8353fffcacb9d3012f5a052d37381ca73",
+        ) as mock_resolve:
+            result = runner.invoke(cli, ["doctor", "--commit"])
+        assert result.exit_code == 0
+        mock_resolve.assert_called_once()
+        # Shown as resolved-from-tag, distinct from a local git checkout.
+        assert "github:v1.6.3@e08bdad8" in result.output
+
+    def test_doctor_commit_flag_json(self):
+        """--commit --json populates the top-level sleap_commit field."""
+        import json
+        from unittest.mock import patch
+
+        from sleap.system_info import PackageInfoData
+
+        release = PackageInfoData(
+            name="sleap", version="1.6.3", source="pip", editable=False
+        )
+        runner = CliRunner()
+        with patch(
+            "sleap.system_info.get_detailed_package_info", return_value=release
+        ), patch(
+            "sleap.system_info.resolve_tag_commit",
+            return_value="e08bdad8353fffcacb9d3012f5a052d37381ca73",
+        ):
+            result = runner.invoke(cli, ["doctor", "--json", "--commit"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["sleap_commit"] == "e08bdad8"
+
+    def test_doctor_commit_flag_file_output(self, tmp_path):
+        """--commit -o writes the resolved-from-tag commit into the saved file."""
+        from unittest.mock import patch
+
+        from sleap.system_info import PackageInfoData
+
+        def fake_pkg(name):
+            if name == "sleap":
+                return PackageInfoData(
+                    name="sleap", version="1.6.3", source="pip", editable=False
+                )
+            return None
+
+        output_file = tmp_path / "doctor.txt"
+        runner = CliRunner()
+        with patch(
+            "sleap.system_info.get_detailed_package_info", side_effect=fake_pkg
+        ), patch(
+            "sleap.system_info.resolve_tag_commit",
+            return_value="e08bdad8353fffcacb9d3012f5a052d37381ca73",
+        ):
+            result = runner.invoke(
+                cli, ["doctor", "--commit", "-o", str(output_file)]
+            )
+        assert result.exit_code == 0
+        assert "github:v1.6.3@e08bdad8" in output_file.read_text()
 
 
 class TestSleapIoIntegration:

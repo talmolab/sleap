@@ -1,7 +1,8 @@
 """Tests for the SLEAP system_info module."""
 
+import json
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from rich.console import Console
 
@@ -30,6 +31,11 @@ from sleap.system_info import (
     get_disk_info,
     get_ffmpeg_info,
     analyze_path,
+    # Commit provenance
+    short_sha,
+    get_sleap_commit,
+    resolve_tag_commit,
+    _build_version_line,
 )
 
 
@@ -442,3 +448,160 @@ class TestEdgeCases:
             with patch.dict("sys.modules", {"imageio_ffmpeg": None}):
                 binaries = get_ffmpeg_info()
                 assert isinstance(binaries, list)
+
+
+class _FakeDist:
+    """Minimal importlib.metadata.Distribution stand-in for commit tests."""
+
+    _path = None
+
+    def __init__(self, direct_url_payload, version="1.6.3"):
+        self.version = version
+        self._direct_url_payload = direct_url_payload
+
+    def read_text(self, name):
+        import json
+
+        if name == "direct_url.json" and self._direct_url_payload is not None:
+            return json.dumps(self._direct_url_payload)
+        raise FileNotFoundError(name)
+
+
+class TestCommitInfo:
+    """Tests for git commit provenance in diagnostics and the startup banner."""
+
+    def test_short_sha(self):
+        """Verify short_sha shortens full SHAs and tolerates empty input."""
+        assert short_sha("e08bdad8353fffcacb9d3012f5a052d37381ca73") == "e08bdad8"
+        assert short_sha("abc123") == "abc123"  # already shorter than the limit
+        assert short_sha(None) == ""
+        assert short_sha("") == ""
+
+    def test_git_url_install_captures_commit(self):
+        """pip install git+...@ref: commit/branch/remote come from vcs_info."""
+        payload = {
+            "url": "https://github.com/talmolab/sleap.git",
+            "vcs_info": {
+                "vcs": "git",
+                "commit_id": "e08bdad8353fffcacb9d3012f5a052d37381ca73",
+                "requested_revision": "main",
+            },
+        }
+        with patch(
+            "importlib.metadata.distribution", return_value=_FakeDist(payload)
+        ):
+            pkg = get_detailed_package_info("sleap")
+        assert pkg.source == "git"
+        assert pkg.editable is False
+        assert pkg.git_commit == "e08bdad8353fffcacb9d3012f5a052d37381ca73"
+        assert pkg.git_branch == "main"
+        assert pkg.git_remote == "https://github.com/talmolab/sleap.git"
+
+    def test_git_url_install_without_ref(self):
+        """Git install with no @ref still records the resolved commit."""
+        payload = {
+            "url": "https://github.com/talmolab/sleap.git",
+            "vcs_info": {"vcs": "git", "commit_id": "abcdef1234567890"},
+        }
+        with patch(
+            "importlib.metadata.distribution", return_value=_FakeDist(payload)
+        ):
+            pkg = get_detailed_package_info("sleap")
+        assert pkg.git_commit == "abcdef1234567890"
+        assert pkg.git_branch is None
+
+    def test_get_sleap_commit_with_commit(self):
+        """get_sleap_commit returns the shortened SHA for a git install."""
+        payload = {
+            "url": "https://github.com/talmolab/sleap.git",
+            "vcs_info": {
+                "vcs": "git",
+                "commit_id": "e08bdad8353fffcacb9d3012f5a052d37381ca73",
+            },
+        }
+        with patch(
+            "importlib.metadata.distribution", return_value=_FakeDist(payload)
+        ):
+            assert get_sleap_commit() == "e08bdad8"
+
+    def test_get_sleap_commit_release_install(self):
+        """A plain release install (no direct_url.json) has no commit info."""
+        with patch(
+            "importlib.metadata.distribution", return_value=_FakeDist(None)
+        ):
+            assert get_sleap_commit() is None
+
+    def test_build_version_line_includes_commit(self):
+        """The banner version line shows the commit when one is known."""
+        with patch("sleap.system_info.get_sleap_commit", return_value="e08bdad8"):
+            line = _build_version_line()
+        assert "(e08bdad8)" in line.plain
+
+    def test_build_version_line_omits_commit_when_absent(self):
+        """No commit info -> no empty parens appended to the version line."""
+        with patch("sleap.system_info.get_sleap_commit", return_value=None):
+            line = _build_version_line()
+        assert "()" not in line.plain
+
+    def test_resolve_tag_commit_success(self):
+        """A successful GitHub lookup returns the full commit SHA."""
+        full = "e08bdad8353fffcacb9d3012f5a052d37381ca73"
+        resp = MagicMock()
+        resp.read.return_value = json.dumps({"sha": full}).encode()
+        resp.__enter__.return_value = resp
+        resp.__exit__.return_value = False
+        with patch("urllib.request.urlopen", return_value=resp):
+            assert resolve_tag_commit("talmolab/sleap", "1.6.3") == full
+
+    def test_resolve_tag_commit_offline_returns_none(self):
+        """Network errors degrade to None rather than raising."""
+        import urllib.error
+
+        with patch(
+            "urllib.request.urlopen",
+            side_effect=urllib.error.URLError("offline"),
+        ):
+            assert resolve_tag_commit("talmolab/sleap", "1.6.3") is None
+
+    def test_resolve_tag_commit_empty_inputs(self):
+        """Empty repo/version short-circuits to None (no request made)."""
+        assert resolve_tag_commit("", "1.6.3") is None
+        assert resolve_tag_commit("talmolab/sleap", "") is None
+
+    def test_get_sleap_commit_resolve_remote_for_release(self):
+        """A release install resolves its commit only when resolve_remote=True."""
+        release = PackageInfoData(
+            name="sleap", version="1.6.3", source="pip", editable=False
+        )
+        with patch(
+            "sleap.system_info.get_detailed_package_info", return_value=release
+        ):
+            # Off by default: no network, no commit.
+            assert get_sleap_commit() is None
+            # On: resolve via the (mocked) GitHub lookup.
+            with patch(
+                "sleap.system_info.resolve_tag_commit",
+                return_value="e08bdad8353fffcacb9d3012f5a052d37381ca73",
+            ):
+                assert get_sleap_commit(resolve_remote=True) == "e08bdad8"
+            # On but unresolved (offline / no tag): still None, never "".
+            with patch(
+                "sleap.system_info.resolve_tag_commit", return_value=None
+            ):
+                assert get_sleap_commit(resolve_remote=True) is None
+
+    def test_get_sleap_commit_prefers_local_over_remote(self):
+        """A local commit is used without any network lookup."""
+        local = PackageInfoData(
+            name="sleap",
+            version="1.6.3",
+            source="editable",
+            editable=True,
+            git_commit="e08bdad8353fffcacb9d3012f5a052d37381ca73",
+        )
+        with patch(
+            "sleap.system_info.get_detailed_package_info", return_value=local
+        ):
+            with patch("sleap.system_info.resolve_tag_commit") as mock_resolve:
+                assert get_sleap_commit(resolve_remote=True) == "e08bdad8"
+                mock_resolve.assert_not_called()
