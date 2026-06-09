@@ -1132,6 +1132,34 @@ def test_MergeInstances(min_tracks_2node_labels: Labels):
     context.state["instance"] = None
     context.mergeInstance()
 
+    # Case 7 (regression for #2763): two UNTRACKED instances where the donor is a
+    # pose-superset of the survivor. After the merge the survivor becomes
+    # pose-identical to the donor, so a pose/track-based removal could delete the
+    # survivor. The donor is placed *first* so a backwards pose-search would hit
+    # the survivor first. Removal must therefore be by identity. Assertions use
+    # ``is`` (not ``in``) so value-equality between the two cannot mask the bug.
+    surv = Instance.from_numpy(
+        np.array([[10.0, 20.0, 1, 1], [np.nan, np.nan, 0, 0]]), skeleton=skeleton
+    )
+    dono = Instance.from_numpy(
+        np.array([[10.0, 20.0, 1, 1], [30.0, 40.0, 1, 1]]), skeleton=skeleton
+    )
+    assert surv.track is None and dono.track is None
+    lf5 = _merge_frame(skeleton, video, 1003, [dono, surv])
+    labels.append(lf5)
+    context.state["labeled_frame"] = lf5
+    context.state["instance"] = surv
+    context.mergeInstance()
+
+    # The survivor (by identity) must remain; the donor must be gone.
+    assert any(inst is surv for inst in lf5.instances)
+    assert all(inst is not dono for inst in lf5.instances)
+    assert len(lf5.user_instances) == 1
+    assert context.state["instance"] is surv
+    # Survivor now carries both nodes (its own "head" + the donor's "thorax").
+    assert surv["head"]["xy"].tolist() == [10.0, 20.0]
+    assert surv["thorax"]["xy"].tolist() == [30.0, 40.0]
+
 
 def test_CopyInstanceTrack(min_tracks_2node_labels: Labels):
     """Test that copying a track from one instance to another works."""

@@ -3819,10 +3819,10 @@ class MergeInstances(EditCommand):
           the survivor is not a user ``Instance``, or required state is
           missing, this is a no-op (with a status message when running in the
           GUI).
-        - After merging, the donor is removed from the frame via
-          ``remove_instance`` and ``labels.update()`` is called. There is no
-          dedicated undo (matching ``DeleteSelectedInstance``/``PasteInstance``);
-          ``EditCommand`` only flags the project as having unsaved changes.
+        - After merging, the donor is removed from the frame *by identity* and
+          ``labels.update()`` is called. There is no dedicated undo (matching
+          ``DeleteSelectedInstance``/``PasteInstance``); ``EditCommand`` only
+          flags the project as having unsaved changes.
     """
 
     topics = [UpdateTopic.frame, UpdateTopic.project_instances]
@@ -3893,10 +3893,13 @@ class MergeInstances(EditCommand):
                 s_pt["visible"] = d_pt["visible"]
                 s_pt["complete"] = d_pt["complete"]
 
-        # Remove the donor and persist. The donor's pose is never mutated and
-        # the survivor only gains nodes, so the survivor can never collide with
-        # the donor's pose in `remove_instance`.
-        remove_instance(context.labels, instance=donor, lf=frame)
+        # Remove the donor *by identity* and persist. We must not use pose/track
+        # matching here (e.g. ``remove_instance``): after the merge the survivor
+        # can become pose-identical to the donor (when the donor's labeled nodes
+        # are a superset of the survivor's), so for untracked or same-track
+        # instances a pose-based search could remove the survivor instead. An
+        # ``is``-based filter is unambiguous regardless of ``Instance.__eq__``.
+        frame.instances[:] = [inst for inst in frame.instances if inst is not donor]
         context.labels.update()
 
         # Keep the survivor selected.
