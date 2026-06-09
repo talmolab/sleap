@@ -32,6 +32,7 @@ from sleap.gui.commands import (
     AddMissingInstanceNodes,
     AddUserInstancesFromPredictions,
     AddUserInstancesFromAllPredictions,
+    CommandContext,
 )
 
 
@@ -925,10 +926,11 @@ class TestFillMissingPredictedNodes:
 
     ``make_instance_from_predicted_instance`` keeps the model's detected
     keypoints and leaves undetected nodes at ``xy=NaN`` / ``visible=False``.
-    ``AddUserInstancesFromPredictions.fill_missing_predicted_nodes`` then moves
-    those missing nodes onto the centroid of the instance's own detected
-    keypoints -- so they sit on the animal when "show non-visible nodes" is
-    enabled -- while keeping them ``visible=False``. No GUI/player is required.
+    ``AddUserInstancesFromPredictions.fill_missing_predicted_nodes`` then gives
+    those missing nodes spread-out, template-aligned positions (same placement a
+    brand-new instance uses) so they sit on the animal when "show non-visible
+    nodes" is enabled -- while keeping them ``visible=False``. Nodes the template
+    cannot provide fall back to the detected centroid. No GUI player is required.
     """
 
     @pytest.fixture
@@ -941,16 +943,17 @@ class TestFillMissingPredictedNodes:
         pred.points["visible"] = True
         return pred
 
-    def test_missing_node_anchored_to_centroid_and_hidden(
-        self, prediction_with_nan_node
+    def test_missing_node_filled_hidden_preserves_link(
+        self, simple_skeleton, prediction_with_nan_node
     ):
-        """Undetected node moves to the detected centroid but stays hidden."""
+        """Undetected node gets a finite position but stays HIDDEN; link kept."""
+        context = CommandContext.from_labels(Labels(skeletons=[simple_skeleton]))
         new_inst = (
             AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
                 prediction_with_nan_node
             )
         )
-        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(new_inst)
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(context, new_inst)
 
         names = list(new_inst.points["name"])
         head_idx = names.index("head")
@@ -965,21 +968,87 @@ class TestFillMissingPredictedNodes:
             new_inst.points[abdomen_idx]["xy"], np.array([40.0, 50.0])
         )
         assert bool(new_inst.points[head_idx]["visible"]) is True
-        assert bool(new_inst.points[abdomen_idx]["visible"]) is True
 
-        # Missing node -> centroid of the detected nodes: ((10,20)+(40,50))/2.
-        np.testing.assert_allclose(
-            new_inst.points[thorax_idx]["xy"], np.array([25.0, 35.0])
-        )
-        # ...but it stays HIDDEN and incomplete.
+        # Previously-undetected node now has a finite position but stays HIDDEN.
+        assert np.all(np.isfinite(new_inst.points[thorax_idx]["xy"]))
         assert bool(new_inst.points[thorax_idx]["visible"]) is False
         assert bool(new_inst.points[thorax_idx]["complete"]) is False
 
         # The from_predicted link is preserved.
         assert new_inst.from_predicted is prediction_with_nan_node
 
+    def test_missing_nodes_spread_via_template_and_hidden(self, simple_video):
+        """Missing nodes get template-aligned (spread) positions, kept hidden.
+
+        With a labeled template available, occluded nodes are placed in
+        anatomically-plausible spots aligned to the detected keypoints -- spread
+        out, not clumped at one centroid -- like a brand-new instance.
+        """
+        skeleton = Skeleton(name="quad")
+        for n in ["A", "B", "C", "D"]:
+            skeleton.add_node(n)
+
+        # A fully-labeled instance is the template (asymmetric so aligned C/D
+        # differ from each other and from the A/B centroid).
+        template = Instance.from_numpy(
+            np.array(
+                [
+                    [0.0, 0.0, 1, 1],
+                    [0.0, 30.0, 1, 1],
+                    [20.0, 10.0, 1, 1],
+                    [20.0, 20.0, 1, 1],
+                ]
+            ),
+            skeleton=skeleton,
+        )
+        # A prediction with A, B detected and C, D undetected.
+        pred = PredictedInstance.empty(skeleton=skeleton, score=0.8)
+        pred["A"] = (100.0, 0.0, 0.9)
+        pred["B"] = (100.0, 30.0, 0.9)
+        pred["C"] = (np.nan, np.nan, 0.0)
+        pred["D"] = (np.nan, np.nan, 0.0)
+        pred.points["visible"] = True
+
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[skeleton],
+            labeled_frames=[
+                LabeledFrame(video=simple_video, frame_idx=0, instances=[template]),
+                LabeledFrame(video=simple_video, frame_idx=1, instances=[pred]),
+            ],
+        )
+        context = CommandContext.from_labels(labels)
+
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(pred)
+        )
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(context, new_inst)
+
+        names = list(new_inst.points["name"])
+        ai, bi = names.index("A"), names.index("B")
+        ci, di = names.index("C"), names.index("D")
+
+        # Detected A/B untouched and visible.
+        np.testing.assert_array_equal(new_inst.points[ai]["xy"], np.array([100.0, 0.0]))
+        np.testing.assert_array_equal(
+            new_inst.points[bi]["xy"], np.array([100.0, 30.0])
+        )
+        assert bool(new_inst.points[ai]["visible"]) is True
+
+        c_xy = new_inst.points[ci]["xy"]
+        d_xy = new_inst.points[di]["xy"]
+        # Filled, spread out (distinct -- not clumped at one point), and HIDDEN.
+        assert np.all(np.isfinite(c_xy)) and np.all(np.isfinite(d_xy))
+        assert not np.allclose(c_xy, d_xy), "occluded nodes should spread, not clump"
+        assert bool(new_inst.points[ci]["visible"]) is False
+        assert bool(new_inst.points[di]["visible"]) is False
+        assert bool(new_inst.points[ci]["complete"]) is False
+
     def test_all_nodes_detected_is_noop(self, prediction_with_track):
         """When every node is detected, nothing changes."""
+        context = CommandContext.from_labels(
+            Labels(skeletons=[prediction_with_track.skeleton])
+        )
         new_inst = (
             AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
                 prediction_with_track
@@ -988,7 +1057,7 @@ class TestFillMissingPredictedNodes:
         before = new_inst.numpy().copy()
         before_vis = new_inst.points["visible"].copy()
 
-        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(new_inst)
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(context, new_inst)
 
         np.testing.assert_array_equal(new_inst.numpy(), before)
         np.testing.assert_array_equal(new_inst.points["visible"], before_vis)
@@ -1004,10 +1073,11 @@ class TestFillMissingPredictedNodes:
         pred["abdomen"] = (np.nan, np.nan, 0.0)
         pred.points["visible"] = True
 
+        context = CommandContext.from_labels(Labels(skeletons=[simple_skeleton]))
         new_inst = (
             AddUserInstancesFromPredictions.make_instance_from_predicted_instance(pred)
         )
-        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(new_inst)
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(context, new_inst)
 
         assert np.all(np.isnan(new_inst.numpy()))
         assert not any(bool(v) for v in new_inst.points["visible"])
@@ -1021,10 +1091,11 @@ class TestFillMissingPredictedNodes:
         pred["center"] = (np.nan, np.nan, 0.0)
         pred.points["visible"] = True
 
+        context = CommandContext.from_labels(Labels(skeletons=[skeleton]))
         new_inst = (
             AddUserInstancesFromPredictions.make_instance_from_predicted_instance(pred)
         )
-        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(new_inst)
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(context, new_inst)
 
         assert np.all(np.isnan(new_inst.numpy()))
         assert bool(new_inst.points[0]["visible"]) is False
@@ -1037,10 +1108,8 @@ class TestFillMissingPredictedNodes:
         The helper-level tests would still pass if the
         ``fill_missing_predicted_nodes`` call were removed from ``do_action``;
         this drives the real ``do_action`` and asserts the missing node was
-        anchored. No player is needed (the fill is GUI-free).
+        positioned (finite) and left hidden. No player is needed.
         """
-        from sleap.gui.commands import CommandContext
-
         lf = LabeledFrame(
             video=simple_video, frame_idx=0, instances=[prediction_with_nan_node]
         )
@@ -1061,10 +1130,8 @@ class TestFillMissingPredictedNodes:
         thorax_idx = names.index("thorax")
         head_idx = names.index("head")
 
-        # Missing node anchored to the detected centroid, still hidden.
-        np.testing.assert_allclose(
-            new_inst.points[thorax_idx]["xy"], np.array([25.0, 35.0])
-        )
+        # Missing node positioned (finite) by the do_action -> fill wiring, hidden.
+        assert np.all(np.isfinite(new_inst.points[thorax_idx]["xy"]))
         assert bool(new_inst.points[thorax_idx]["visible"]) is False
         # Detected node preserved.
         np.testing.assert_array_equal(
@@ -1075,8 +1142,6 @@ class TestFillMissingPredictedNodes:
         self, simple_skeleton, simple_video, prediction_with_nan_node
     ):
         """``AddUserInstancesFromAllPredictions.do_action`` runs the fill (wiring)."""
-        from sleap.gui.commands import CommandContext
-
         lf = LabeledFrame(
             video=simple_video, frame_idx=0, instances=[prediction_with_nan_node]
         )
@@ -1093,7 +1158,5 @@ class TestFillMissingPredictedNodes:
         assert len(user) == 1
         new_inst = user[0]
         thorax_idx = list(new_inst.points["name"]).index("thorax")
-        np.testing.assert_allclose(
-            new_inst.points[thorax_idx]["xy"], np.array([25.0, 35.0])
-        )
+        assert np.all(np.isfinite(new_inst.points[thorax_idx]["xy"]))
         assert bool(new_inst.points[thorax_idx]["visible"]) is False

@@ -4818,25 +4818,33 @@ class AddUserInstancesFromPredictions(EditCommand):
         return new_instance
 
     @staticmethod
-    def fill_missing_predicted_nodes(new_instance: Instance):
-        """Anchor undetected (NaN) nodes to the body while keeping them hidden.
+    def fill_missing_predicted_nodes(context: CommandContext, new_instance: Instance):
+        """Position undetected (NaN) nodes anatomically, kept hidden.
 
         The model leaves occluded nodes at NaN coordinates, and
         ``make_instance_from_predicted_instance`` keeps them ``visible=False``
-        (correct -- the converted instance should look like the prediction).
-        But a NaN coordinate renders at a default/garbage location when the user
+        (correct -- the converted instance should look like the prediction). But
+        a NaN coordinate renders at a default/garbage location when the user
         turns on "show non-visible nodes" (``QtInstance`` still creates a node
-        item for every node in that mode, positioned at its ``xy``). Move each
-        missing node onto the centroid of this instance's own *detected*
-        keypoints so it sits on the animal -- ready to drag out -- while staying
-        hidden. Already-detected points, the track, and the ``from_predicted``
-        link are left untouched.
+        item for every node in that mode, positioned at its ``xy``).
 
-        No GUI/player is required, so the single-frame and all-frames/headless
-        conversion paths behave identically. No-op when every node was detected,
-        or when nothing was detected (no anchor to place missing nodes against).
+        Give each missing node a sensible, *spread-out* position using the same
+        template placement as a brand-new instance
+        (``AddMissingInstanceNodes.add_nodes_from_template``): the average
+        labeled pose is aligned onto this instance's detected keypoints, so the
+        occluded nodes land in anatomically-plausible spots -- while staying
+        ``visible=False``. Any node the template cannot provide (never labeled on
+        any instance) falls back to the centroid of the detected keypoints --
+        never random placement across the view. Already-detected points, the
+        track, and the ``from_predicted`` link are left untouched.
+
+        No GUI player is required (the template aligns to the detected points),
+        so the single-frame and all-frames/headless paths behave identically.
+        No-op when every node was detected, or when nothing was detected (no
+        anchor to align/place missing nodes against).
 
         Args:
+            context: The command context (used for the label-derived template).
             new_instance: The user ``Instance`` produced by
                 ``make_instance_from_predicted_instance``; modified in place.
         """
@@ -4846,11 +4854,23 @@ class AddUserInstancesFromPredictions(EditCommand):
         if not missing.any() or not detected.any():
             return
 
-        # Centroid of the detected keypoints -> on the animal.
         center = np.nanmean(xy[detected], axis=0)
-        new_instance.points["xy"][missing] = center
-        new_instance.points["visible"][missing] = False
-        new_instance.points["complete"][missing] = False
+
+        # Spread missing nodes anatomically: align the average labeled pose onto
+        # this instance's detected keypoints (same template placement a
+        # brand-new instance uses), keeping the filled nodes hidden.
+        AddMissingInstanceNodes.add_nodes_from_template(
+            context, new_instance, visible=False
+        )
+
+        # Anything the template could not provide (a node never labeled on any
+        # template instance) -> drop on the detected centroid, still hidden.
+        xy = new_instance.points["xy"]
+        still_missing = np.isnan(xy).any(axis=1)
+        if still_missing.any():
+            new_instance.points["xy"][still_missing] = center
+            new_instance.points["visible"][still_missing] = False
+            new_instance.points["complete"][still_missing] = False
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
@@ -4861,7 +4881,7 @@ class AddUserInstancesFromPredictions(EditCommand):
         unused_predictions = context.state["labeled_frame"].unused_predictions
         for predicted_instance in unused_predictions:
             new_instance = cls.make_instance_from_predicted_instance(predicted_instance)
-            cls.fill_missing_predicted_nodes(new_instance)
+            cls.fill_missing_predicted_nodes(context, new_instance)
             new_instances.append(new_instance)
 
         # Add the instances
@@ -4924,7 +4944,7 @@ class AddUserInstancesFromAllPredictions(EditCommand):
                 new_instance = make.make_instance_from_predicted_instance(
                     predicted_instance
                 )
-                make.fill_missing_predicted_nodes(new_instance)
+                make.fill_missing_predicted_nodes(context, new_instance)
                 if new_instance not in lf.instances:
                     lf.instances.append(new_instance)
                     total_added += 1
