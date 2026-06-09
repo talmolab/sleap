@@ -48,7 +48,8 @@ class QCConfig:
     gmm_min_samples: int = 50
     gmm_percentile_threshold: float = 5.0
 
-    # Calibration
+    # Calibration (reserved: NOT consumed anywhere yet — no auto-calibration is
+    # implemented. Flagging uses the fixed instance_threshold / GUI slider value.)
     auto_calibrate: bool = True
     calibration_percentile: float = 95.0
 

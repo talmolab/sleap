@@ -184,6 +184,10 @@ class TestComputeNodeOverlap:
 
         assert len(result["common_nodes"]) == 0
         assert result["overlap_ratio"] == 0.0
+        # Key parity with the normal-path return so callers never KeyError.
+        assert result["mean_distance"] == float("inf")
+        assert result["min_distance"] == float("inf")
+        assert result["max_distance"] == float("inf")
 
 
 class TestDetectDuplicates:

@@ -359,6 +359,58 @@ class TestLabelQCDetector:
         assert len(detector.feature_names) > 0
         assert "max_edge_zscore" in detector.feature_names
         assert "nn_distance" in detector.feature_names
+        # PR-A: the hull feature name must match the issue_map key
+        # ("hull_area_zscore") so the "Unusual pose extent" label can fire.
+        assert "hull_area_zscore" in detector.feature_names
+        assert "hull_area" not in detector.feature_names
+
+    def test_instance_to_array_forces_invisible_as_nan(self, skeleton):
+        """#2753: invisible nodes are NaN'd regardless of the sleap-io default.
+
+        Invisible (visible=False) nodes keep display-only coordinates; QC must
+        never read them. ``_instance_to_array`` passes ``invisible_as_nan=True``
+        explicitly so this holds even if the sleap-io default changes.
+        """
+        pts = np.array(
+            [[100, 100], [100, 120], [100, 150], [80, 115], [120, 115]], dtype=float
+        )
+        inst = Instance.from_numpy(pts, skeleton=skeleton)
+        inst[3]["visible"] = False
+
+        arr = LabelQCDetector()._instance_to_array(inst)
+
+        assert np.all(np.isnan(arr[3]))
+        assert not np.any(np.isnan(arr[[0, 1, 2, 4]]))
+
+    def test_invisible_far_node_does_not_leak_into_geometry(
+        self, simple_labels, skeleton
+    ):
+        """#2753 regression: a far-away invisible node must not inflate geometry.
+
+        A node dragged far away leaks into edge/angle/distance features ONLY
+        when it is visible; when invisible it must be excluded entirely.
+        """
+        detector = LabelQCDetector()
+        detector.fit(simple_labels)
+        i_edge = detector.feature_names.index("max_edge_zscore")
+
+        far = np.array(
+            [[100, 100], [100, 120], [100, 150], [9999, 9999], [120, 115]],
+            dtype=float,
+        )
+        inst_visible = Instance.from_numpy(far, skeleton=skeleton)
+        inst_invisible = Instance.from_numpy(far, skeleton=skeleton)
+        inst_invisible[3]["visible"] = False
+
+        f_visible = detector._extract_features(
+            detector._instance_to_array(inst_visible)
+        )
+        f_invisible = detector._extract_features(
+            detector._instance_to_array(inst_invisible)
+        )
+
+        assert f_visible[i_edge] > 10.0
+        assert f_invisible[i_edge] < 5.0
 
     def test_skeleton_analyzer_properties(self, simple_labels):
         """Test skeleton analyzer extracts properties."""
