@@ -119,9 +119,7 @@ def _mirror_x(points: np.ndarray) -> np.ndarray:
     return out
 
 
-def _labels_from_poses(
-    skeleton: sio.Skeleton, poses: list[np.ndarray]
-) -> sio.Labels:
+def _labels_from_poses(skeleton: sio.Skeleton, poses: list[np.ndarray]) -> sio.Labels:
     """Build a single-video Labels with one instance per frame."""
     video = sio.Video.from_filename("test_video.mp4")
     labels = sio.Labels()
@@ -577,9 +575,7 @@ class TestMissingNodeChannel:
             gmm_key: {"max_edge_zscore": 5.0},
             both_key: {"max_edge_zscore": 1.0},
         }
-        results.channel_scores = {
-            "missing_node": {chan_only_key: 0.85, both_key: 0.95}
-        }
+        results.channel_scores = {"missing_node": {chan_only_key: 0.85, both_key: 0.95}}
 
         flagged = results.get_flagged(threshold=0.7)
         by_key = {f.instance_key: f for f in flagged}

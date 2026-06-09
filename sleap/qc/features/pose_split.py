@@ -169,9 +169,7 @@ def compute_pose_split_fallback(
     # (nearest pair of points from opposite clusters) to the typical *within*
     # cluster spacing. For two genuine blobs the boundary gap dominates; for a
     # uniform spread they are comparable.
-    cross = np.linalg.norm(
-        pts_a[:, None, :] - pts_b[None, :, :], axis=2
-    )
+    cross = np.linalg.norm(pts_a[:, None, :] - pts_b[None, :, :], axis=2)
     boundary_gap = float(cross.min())
 
     within = _typical_within_spacing(pts_a, pts_b)
@@ -243,9 +241,7 @@ def _silhouette_like(pts_a: np.ndarray, pts_b: np.ndarray) -> float:
         for k in range(len(own)):
             p = own[k]
             if len(own) > 1:
-                a = float(
-                    np.sum(np.linalg.norm(own - p, axis=1)) / (len(own) - 1)
-                )
+                a = float(np.sum(np.linalg.norm(own - p, axis=1)) / (len(own) - 1))
             else:
                 a = 0.0
             b = float(np.mean(np.linalg.norm(other - p, axis=1)))
@@ -427,8 +423,10 @@ def compute_pose_split(
     # many leaves) cannot be split into two balanced clusters by cutting one
     # edge, and very few internal edges also make the bridging test unreliable.
     # In those cases, defer to the geometry-only fallback.
-    if best_edge is None or len(visible_edges) < 2 or _is_star_like(
-        visible_edges, vis_idx
+    if (
+        best_edge is None
+        or len(visible_edges) < 2
+        or _is_star_like(visible_edges, vis_idx)
     ):
         return compute_pose_split_fallback(points, min_visible=min_visible)
 

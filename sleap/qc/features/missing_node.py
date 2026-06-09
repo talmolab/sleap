@@ -86,10 +86,7 @@ def score_missing_nodes(
 
     # Guard against an empty skeleton or a co-visibility matrix that does not
     # match the mask -- there is nothing meaningful to flag in either case.
-    if (
-        n_nodes == 0
-        or co_visibility_matrix.shape != (n_nodes, n_nodes)
-    ):
+    if n_nodes == 0 or co_visibility_matrix.shape != (n_nodes, n_nodes):
         return {
             "missing_node_score": 0.0,
             "suspicious_nodes": [],

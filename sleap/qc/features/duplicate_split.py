@@ -263,8 +263,7 @@ def compute_split_duplicate(
         return {
             "split_duplicate_score": 0.0,
             "reason": (
-                f"node sets overlap (disjointness={disjointness:.2f}); "
-                "not a split"
+                f"node sets overlap (disjointness={disjointness:.2f}); not a split"
             ),
         }
 

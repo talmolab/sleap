@@ -23,9 +23,7 @@ CORRECT_CURVED_TAIL = np.array(
 def _rotate(points: np.ndarray, degrees: float) -> np.ndarray:
     """Rotate points about the origin by ``degrees`` (NaN-safe)."""
     theta = np.deg2rad(degrees)
-    R = np.array(
-        [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
-    )
+    R = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
     return points @ R.T
 
 
@@ -402,9 +400,7 @@ class TestEndToEndWithSleapIO:
 
         skel = self._tail_skeleton()
         # Swap Tail_1 <-> Tail_2 positions (adjacent swap).
-        coords = np.array(
-            [[0, 0], [1, 0.5], [3, 0.9], [2, 0.8], [4, 0.8]], dtype=float
-        )
+        coords = np.array([[0, 0], [1, 0.5], [3, 0.9], [2, 0.8], [4, 0.8]], dtype=float)
         inst = sio.Instance.from_numpy(coords, skeleton=skel)
 
         names = [n.name for n in skel.nodes]

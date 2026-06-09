@@ -256,9 +256,9 @@ def detect_duplicates(
                 instances[i], instances[j], node_distance_threshold
             )
 
-            sd = compute_split_duplicate(
-                instances[i], instances[j], edge_means
-            )["split_duplicate_score"]
+            sd = compute_split_duplicate(instances[i], instances[j], edge_means)[
+                "split_duplicate_score"
+            ]
             dscore = duplicate_score(iou, node_overlap["overlap_ratio"], sd)
 
             is_duplicate = False

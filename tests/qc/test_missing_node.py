@@ -193,9 +193,7 @@ class TestRequireNeighborsVisible:
         assert score_missing_nodes(vis, covis, edges)["suspicious_nodes"] == [3]
         # With the rule, a neighborless node cannot satisfy "all neighbors
         # visible" and is skipped.
-        result = score_missing_nodes(
-            vis, covis, edges, require_neighbors_visible=True
-        )
+        result = score_missing_nodes(vis, covis, edges, require_neighbors_visible=True)
         assert result["suspicious_nodes"] == []
 
 

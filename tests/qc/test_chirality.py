@@ -416,8 +416,14 @@ class TestWithSleapIO:
     def test_skeleton_without_symmetries_uses_name_inference(self):
         """CVAT-style skeleton with no symmetries -> infer pairs from names."""
         skel = sio.Skeleton(
-            ["spine_front", "spine_back", "Ear_L", "Ear_R", "Haunch_left",
-             "Haunch_right"]
+            [
+                "spine_front",
+                "spine_back",
+                "Ear_L",
+                "Ear_R",
+                "Haunch_left",
+                "Haunch_right",
+            ]
         )
         assert skel.symmetries == []  # none defined
 

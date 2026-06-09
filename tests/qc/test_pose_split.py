@@ -51,8 +51,7 @@ def learn_edge_stats(
                 lengths[(i, j)].append(float(np.linalg.norm(p2 - p1)))
     means = {e: (float(np.mean(v)) if v else 0.0) for e, v in lengths.items()}
     stds = {
-        e: max(float(np.std(v)) if v else min_std, min_std)
-        for e, v in lengths.items()
+        e: max(float(np.std(v)) if v else min_std, min_std) for e, v in lengths.items()
     }
     return means, stds
 
@@ -226,9 +225,7 @@ def test_translation_rotation_scale_invariance(normal_chain_stats):
 
     # Rotate 37 degrees + translate.
     theta = np.deg2rad(37.0)
-    rot = np.array(
-        [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
-    )
+    rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
     moved = points @ rot.T + np.array([123.4, -56.7])
     rt = compute_pose_split(moved, adj, means, stds)
 
