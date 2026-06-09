@@ -317,17 +317,27 @@ class MainWindow(QMainWindow):
                 event.accept()
 
     def dragEnterEvent(self, event):
-        # TODO: Parse filenames and accept only if valid ext (or folder)
-        mime_format = 'application/x-qt-windows-mime;value="FileName"'
-        if mime_format in event.mimeData().formats():
-            # This only returns the first filename if multiple files are dropped:
-            event.mimeData().data(mime_format).data().decode()
+        # Accept the drag if it carries file URLs. Files dropped from a file
+        # manager are exposed as a "text/uri-list" payload on all platforms
+        # (Linux/macOS/Windows), which is what dropEvent() parses below.
+        # (Previously this only accepted a Windows-specific MIME type, so
+        # drag-and-drop silently did nothing on Linux and macOS.)
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event):
+        # Keep showing the "accept" cursor while a valid drag hovers the window.
+        if event.mimeData().hasUrls():
             event.acceptProposedAction()
 
     def dropEvent(self, event):
+        if not event.mimeData().hasUrls():
+            return
+
         # Parse filenames
         filenames = event.mimeData().data("text/uri-list").data().decode()
         filenames = [parse_uri_path(f.strip()) for f in filenames.strip().split("\n")]
+        filenames = [f for f in filenames if f]
 
         exts = [Path(f).suffix for f in filenames]
 
@@ -339,15 +349,21 @@ class MainWindow(QMainWindow):
                 # Load
                 self.commands.openProject(filename=filenames[0], first_open=True)
 
-        elif all([ext.lower()[1:] in available_video_exts() for ext in exts]):
+        elif exts and all(ext.lower()[1:] in available_video_exts() for ext in exts):
             # Import videos
             self.commands.showImportVideos(filenames=filenames)
 
         else:
-            raise TypeError(
-                f"Invalid file type(s) dropped: {', '.join(exts)} \n"
-                f"Supported formats: .slp, .{', .'.join(available_video_exts())}"
+            dropped = ", ".join(exts) or "(unknown)"
+            QMessageBox.warning(
+                self,
+                "Unsupported file type",
+                f"Couldn't open the dropped file(s): {dropped}\n\n"
+                f"Supported formats: .slp, .{', .'.join(available_video_exts())}",
             )
+            return
+
+        event.acceptProposedAction()
 
     @property
     def labels(self) -> Labels:
