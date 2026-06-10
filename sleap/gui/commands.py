@@ -4938,6 +4938,65 @@ class AddUserInstancesFromPredictions(EditCommand):
 
         return new_instance
 
+    @staticmethod
+    def fill_missing_predicted_nodes(new_instance: Instance):
+        """Position undetected (NaN) nodes with a force-directed layout, hidden.
+
+        The model leaves occluded nodes at NaN coordinates, and
+        ``make_instance_from_predicted_instance`` keeps them ``visible=False``
+        (correct -- the converted instance should look like the prediction). But
+        a NaN coordinate renders at a default/garbage location when the user
+        enables "show non-visible nodes" (``QtInstance`` still creates a node
+        item for every node in that mode, positioned at its ``xy``).
+
+        Spread the missing nodes with a force-directed (spring) layout of the
+        skeleton graph, centered on the detected keypoints' centroid and scaled
+        to their extent, so they sit on the animal -- spread out and grabbable --
+        regardless of how many nodes the model detected, while staying
+        ``visible=False``. (Template/alignment placement is unreliable when only
+        a few nodes are detected -- there is no way to infer where occluded nodes
+        are from a couple of visible ones -- so a force-directed layout, one of
+        the brand-new-instance init options, is used for robustness.)
+        Already-detected points, the track, and ``from_predicted`` are untouched.
+
+        No GUI player is required. No-op when every node was detected, or when
+        nothing was detected (no anchor for the layout center).
+
+        Args:
+            new_instance: The user ``Instance`` produced by
+                ``make_instance_from_predicted_instance``; modified in place.
+        """
+        import networkx as nx
+
+        xy = new_instance.points["xy"]
+        missing = np.isnan(xy).any(axis=1)
+        detected = ~missing
+        if not missing.any() or not detected.any():
+            return
+
+        det_xy = xy[detected]
+        center = det_xy.mean(axis=0)
+        extent = float(np.linalg.norm(det_xy.max(axis=0) - det_xy.min(axis=0)))
+        scale = max(extent / 2.0, 5.0)
+
+        skeleton = new_instance.skeleton
+        layout = nx.spring_layout(
+            to_graph(skeleton), center=center, scale=scale, seed=0
+        )
+        pos_by_name = {
+            (node if isinstance(node, str) else node.name): pos
+            for node, pos in layout.items()
+        }
+
+        miss_idx = np.nonzero(missing)[0]
+        fill_xy = np.array(
+            [pos_by_name.get(skeleton.node_names[i], center) for i in miss_idx],
+            dtype=float,
+        )
+        new_instance.points["xy"][missing] = fill_xy
+        new_instance.points["visible"][missing] = False
+        new_instance.points["complete"][missing] = False
+
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         if context.state["labeled_frame"] is None:
@@ -4946,9 +5005,9 @@ class AddUserInstancesFromPredictions(EditCommand):
         new_instances = []
         unused_predictions = context.state["labeled_frame"].unused_predictions
         for predicted_instance in unused_predictions:
-            new_instances.append(
-                cls.make_instance_from_predicted_instance(predicted_instance)
-            )
+            new_instance = cls.make_instance_from_predicted_instance(predicted_instance)
+            cls.fill_missing_predicted_nodes(new_instance)
+            new_instances.append(new_instance)
 
         # Add the instances
         for new_instance in new_instances:
@@ -5010,6 +5069,7 @@ class AddUserInstancesFromAllPredictions(EditCommand):
                 new_instance = make.make_instance_from_predicted_instance(
                     predicted_instance
                 )
+                make.fill_missing_predicted_nodes(new_instance)
                 if new_instance not in lf.instances:
                     lf.instances.append(new_instance)
                     total_added += 1

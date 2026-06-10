@@ -32,7 +32,29 @@ from sleap.gui.commands import (
     AddMissingInstanceNodes,
     AddUserInstancesFromPredictions,
     AddUserInstancesFromAllPredictions,
+    CommandContext,
 )
+
+
+class _StubState:
+    """Minimal GuiState stand-in: returns None for unset keys.
+
+    Mirrors ``sleap.gui.state.GuiState`` indexing semantics used by the
+    node-placement helpers (``context.state["skeleton"]``), so tests do not
+    need a full GUI state object.
+    """
+
+    def __init__(self, **initial):
+        self._vars = dict(initial)
+
+    def __getitem__(self, key):
+        return self._vars.get(key)
+
+    def __setitem__(self, key, value):
+        self._vars[key] = value
+
+    def __contains__(self, key):
+        return key in self._vars
 
 
 @pytest.fixture
@@ -897,3 +919,208 @@ class TestAddUserInstancesFromAllPredictions:
         AddUserInstancesFromAllPredictions.do_action(context, {})
 
         assert len(lf.instances) == 1
+
+
+class TestFillMissingPredictedNodes:
+    """Tests for positioning undetected nodes when converting predictions (#2764).
+
+    ``make_instance_from_predicted_instance`` keeps the model's detected
+    keypoints and leaves undetected nodes at ``xy=NaN`` / ``visible=False``.
+    ``AddUserInstancesFromPredictions.fill_missing_predicted_nodes`` then spreads
+    those missing nodes with a force-directed (spring) layout centered on the
+    detected keypoints, so they sit on the animal when "show non-visible nodes"
+    is enabled -- while keeping them ``visible=False``. No GUI player is required.
+    """
+
+    @pytest.fixture
+    def prediction_with_nan_node(self, simple_skeleton):
+        """PredictedInstance with two detected nodes and one undetected node."""
+        pred = PredictedInstance.empty(skeleton=simple_skeleton, score=0.8)
+        pred["head"] = (10.0, 20.0, 0.9)
+        pred["thorax"] = (np.nan, np.nan, 0.0)
+        pred["abdomen"] = (40.0, 50.0, 0.7)
+        pred.points["visible"] = True
+        return pred
+
+    def test_missing_node_filled_hidden_preserves_link(self, prediction_with_nan_node):
+        """Undetected node gets a finite position but stays HIDDEN; link kept."""
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_nan_node
+            )
+        )
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(new_inst)
+
+        names = list(new_inst.points["name"])
+        head_idx = names.index("head")
+        thorax_idx = names.index("thorax")
+        abdomen_idx = names.index("abdomen")
+
+        # Detected points untouched and still visible.
+        np.testing.assert_array_equal(
+            new_inst.points[head_idx]["xy"], np.array([10.0, 20.0])
+        )
+        np.testing.assert_array_equal(
+            new_inst.points[abdomen_idx]["xy"], np.array([40.0, 50.0])
+        )
+        assert bool(new_inst.points[head_idx]["visible"]) is True
+
+        # Previously-undetected node now has a finite position but stays HIDDEN.
+        assert np.all(np.isfinite(new_inst.points[thorax_idx]["xy"]))
+        assert bool(new_inst.points[thorax_idx]["visible"]) is False
+        assert bool(new_inst.points[thorax_idx]["complete"]) is False
+
+        # The from_predicted link is preserved.
+        assert new_inst.from_predicted is prediction_with_nan_node
+
+    def test_missing_nodes_spread_and_hidden(self, simple_skeleton):
+        """Missing nodes get spread-out (force-directed) positions, kept hidden.
+
+        Two occluded nodes land at distinct positions near the detected node --
+        not clumped on one point and not flung off the animal.
+        """
+        pred = PredictedInstance.empty(skeleton=simple_skeleton, score=0.8)
+        pred["head"] = (100.0, 50.0, 0.9)
+        pred["thorax"] = (np.nan, np.nan, 0.0)
+        pred["abdomen"] = (np.nan, np.nan, 0.0)
+        pred.points["visible"] = True
+
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(pred)
+        )
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(new_inst)
+
+        names = list(new_inst.points["name"])
+        head_i = names.index("head")
+        thorax_i = names.index("thorax")
+        abdomen_i = names.index("abdomen")
+
+        # Detected node preserved + visible.
+        np.testing.assert_array_equal(
+            new_inst.points[head_i]["xy"], np.array([100.0, 50.0])
+        )
+        assert bool(new_inst.points[head_i]["visible"]) is True
+
+        t_xy = new_inst.points[thorax_i]["xy"]
+        a_xy = new_inst.points[abdomen_i]["xy"]
+        # Both filled (finite), spread out (distinct -- not clumped), and HIDDEN.
+        assert np.all(np.isfinite(t_xy)) and np.all(np.isfinite(a_xy))
+        assert not np.allclose(t_xy, a_xy), "occluded nodes should spread, not clump"
+        assert bool(new_inst.points[thorax_i]["visible"]) is False
+        assert bool(new_inst.points[abdomen_i]["visible"]) is False
+        assert bool(new_inst.points[thorax_i]["complete"]) is False
+        # Placed near the detected node (on the animal), not flung far away.
+        assert np.linalg.norm(t_xy - np.array([100.0, 50.0])) < 100
+        assert np.linalg.norm(a_xy - np.array([100.0, 50.0])) < 100
+
+    def test_all_nodes_detected_is_noop(self, prediction_with_track):
+        """When every node is detected, nothing changes."""
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(
+                prediction_with_track
+            )
+        )
+        before = new_inst.numpy().copy()
+        before_vis = new_inst.points["visible"].copy()
+
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(new_inst)
+
+        np.testing.assert_array_equal(new_inst.numpy(), before)
+        np.testing.assert_array_equal(new_inst.points["visible"], before_vis)
+
+    def test_no_nodes_detected_is_noop(self, simple_skeleton):
+        """With nothing detected there is no anchor, so the instance is unchanged.
+
+        The occluded nodes stay NaN/hidden -- we can't guess where the animal is.
+        """
+        pred = PredictedInstance.empty(skeleton=simple_skeleton, score=0.1)
+        pred["head"] = (np.nan, np.nan, 0.0)
+        pred["thorax"] = (np.nan, np.nan, 0.0)
+        pred["abdomen"] = (np.nan, np.nan, 0.0)
+        pred.points["visible"] = True
+
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(pred)
+        )
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(new_inst)
+
+        assert np.all(np.isnan(new_inst.numpy()))
+        assert not any(bool(v) for v in new_inst.points["visible"])
+
+    def test_single_node_all_missing_is_noop(self):
+        """Single-node skeleton, node undetected: no anchor -> left unchanged."""
+        skeleton = Skeleton(name="one")
+        skeleton.add_node("center")
+
+        pred = PredictedInstance.empty(skeleton=skeleton, score=0.1)
+        pred["center"] = (np.nan, np.nan, 0.0)
+        pred.points["visible"] = True
+
+        new_inst = (
+            AddUserInstancesFromPredictions.make_instance_from_predicted_instance(pred)
+        )
+        AddUserInstancesFromPredictions.fill_missing_predicted_nodes(new_inst)
+
+        assert np.all(np.isnan(new_inst.numpy()))
+        assert bool(new_inst.points[0]["visible"]) is False
+
+    def test_single_frame_do_action_wires_fill(
+        self, simple_skeleton, simple_video, prediction_with_nan_node
+    ):
+        """``AddUserInstancesFromPredictions.do_action`` runs the fill (wiring).
+
+        The helper-level tests would still pass if the
+        ``fill_missing_predicted_nodes`` call were removed from ``do_action``;
+        this drives the real ``do_action`` and asserts the missing node was
+        positioned (finite) and left hidden. No player is needed.
+        """
+        lf = LabeledFrame(
+            video=simple_video, frame_idx=0, instances=[prediction_with_nan_node]
+        )
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[lf],
+        )
+        context = CommandContext.from_labels(labels)
+        context.state["labeled_frame"] = lf
+
+        AddUserInstancesFromPredictions.do_action(context, {})
+
+        user = [inst for inst in lf.instances if type(inst) is Instance]
+        assert len(user) == 1
+        new_inst = user[0]
+        names = list(new_inst.points["name"])
+        thorax_idx = names.index("thorax")
+        head_idx = names.index("head")
+
+        # Missing node positioned (finite) by the do_action -> fill wiring, hidden.
+        assert np.all(np.isfinite(new_inst.points[thorax_idx]["xy"]))
+        assert bool(new_inst.points[thorax_idx]["visible"]) is False
+        # Detected node preserved.
+        np.testing.assert_array_equal(
+            new_inst.points[head_idx]["xy"], np.array([10.0, 20.0])
+        )
+
+    def test_all_frames_do_action_wires_fill(
+        self, simple_skeleton, simple_video, prediction_with_nan_node
+    ):
+        """``AddUserInstancesFromAllPredictions.do_action`` runs the fill (wiring)."""
+        lf = LabeledFrame(
+            video=simple_video, frame_idx=0, instances=[prediction_with_nan_node]
+        )
+        labels = Labels(
+            videos=[simple_video],
+            skeletons=[simple_skeleton],
+            labeled_frames=[lf],
+        )
+        context = CommandContext.from_labels(labels)
+
+        AddUserInstancesFromAllPredictions.do_action(context, {})
+
+        user = [inst for inst in lf.instances if type(inst) is Instance]
+        assert len(user) == 1
+        new_inst = user[0]
+        thorax_idx = list(new_inst.points["name"]).index("thorax")
+        assert np.all(np.isfinite(new_inst.points[thorax_idx]["xy"]))
+        assert bool(new_inst.points[thorax_idx]["visible"]) is False

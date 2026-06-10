@@ -422,7 +422,17 @@ _DOCTOR_WIDTHS = {
     default=None,
     help="Save output to file. Use '-o auto' for auto-timestamped filename.",
 )
-def doctor(output_json: bool, output_file: Optional[str]) -> None:
+@click.option(
+    "--commit",
+    "show_commit",
+    is_flag=True,
+    default=False,
+    help=(
+        "Resolve and display the SLEAP commit hash for release installs by "
+        "looking up the release tag on GitHub (off by default; needs network)."
+    ),
+)
+def doctor(output_json: bool, output_file: Optional[str], show_commit: bool) -> None:
     """Show system diagnostics for troubleshooting.
 
     Displays detailed information about your system configuration,
@@ -453,10 +463,13 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
         get_disk_info,
         get_ffmpeg_info,
         analyze_path,
+        short_sha,
+        resolve_tag_commit,
+        SLEAP_REPO,
     )
 
     if output_json:
-        _doctor_json()
+        _doctor_json(show_commit)
         return
 
     console = Console()
@@ -696,6 +709,21 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
                 packages.append(pkg_info)
     all_data["packages"] = packages
 
+    # Optionally resolve the SLEAP commit from its release tag via GitHub. Only
+    # done with --commit (it needs network) and only for release installs that
+    # don't already carry a local commit.
+    resolved_commits = {}
+    if show_commit:
+        sleap_pkg = next((p for p in packages if p.name == "sleap"), None)
+        if sleap_pkg and not sleap_pkg.git_commit:
+            with console.status(
+                f"[{DIM}]Resolving commit from GitHub...[/]", spinner="dots"
+            ):
+                sha = resolve_tag_commit(SLEAP_REPO, sleap_pkg.version)
+            if sha:
+                resolved_commits["sleap"] = sha
+    all_data["resolved_commits"] = resolved_commits
+
     console.print("[Packages]", style=f"bold {SLEAP_BLUE}")
     w = max(len(pkg.name) for pkg in packages) + 1 if packages else 10  # +1 for colon
     for pkg in packages:
@@ -710,14 +738,19 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
             f"  [{SLEAP_TEAL}]{(pkg.name + ':'):<{w}}[/] "
             f"[{SLEAP_GREEN}]v{pkg.version}[/] ([{source_color}]{pkg.source}[/])"
         )
-        if pkg.editable and pkg.git_commit:
-            git_info = f"git:{pkg.git_branch or 'HEAD'}@{pkg.git_commit}"
+        if pkg.git_commit:
+            git_info = f"git:{pkg.git_branch or 'HEAD'}@{short_sha(pkg.git_commit)}"
             if pkg.git_dirty:
                 git_info += "*"
             pkg_line += f" [[{SLEAP_PURPLE}]{git_info}[/]]"
+        elif pkg.name in resolved_commits:
+            tag_info = f"github:v{pkg.version}@{short_sha(resolved_commits[pkg.name])}"
+            pkg_line += f" [[{SLEAP_PURPLE}]{tag_info}[/]]"
         console.print(pkg_line)
         if pkg.editable:
             console.print(f"  {'':<{w}} Location: [{SLEAP_CYAN}]{pkg.location}[/]")
+        elif pkg.git_remote:
+            console.print(f"  {'':<{w}} Remote: [{SLEAP_CYAN}]{pkg.git_remote}[/]")
     console.print()
 
     # -------------------------------------------------------------------------
@@ -820,8 +853,13 @@ def doctor(output_json: bool, output_file: Optional[str]) -> None:
     console.print()
 
 
-def _doctor_json() -> None:
-    """Output diagnostics as JSON."""
+def _doctor_json(show_commit: bool = False) -> None:
+    """Output diagnostics as JSON.
+
+    Args:
+        show_commit: If True, resolve the SLEAP commit from its release tag via
+            GitHub for release installs (needs network). See ``doctor --commit``.
+    """
     import dataclasses
     import json
 
@@ -837,6 +875,7 @@ def _doctor_json() -> None:
         get_disk_info,
         get_ffmpeg_info,
         analyze_path,
+        get_sleap_commit,
     )
 
     def to_dict(obj):
@@ -871,6 +910,7 @@ def _doctor_json() -> None:
 
     data = {
         "sleap_version": sleap.__version__,
+        "sleap_commit": get_sleap_commit(resolve_remote=show_commit),
         "platform": {
             "system": platform.system(),
             "release": platform.release(),
@@ -1053,18 +1093,26 @@ def _format_doctor_plain(data: dict) -> str:
     lines.append("")
 
     # Packages
+    from sleap.system_info import short_sha
+
     packages = data.get("packages", [])
+    resolved_commits = data.get("resolved_commits", {})
     lines.append("[Packages]")
     w = max(len(pkg.name) for pkg in packages) + 1 if packages else 10  # +1 for colon
     for pkg in packages:
         pkg_line = f"  {(pkg.name + ':'):<{w}} v{pkg.version} ({pkg.source})"
+        if pkg.git_commit:
+            git_info = f"git:{pkg.git_branch or 'HEAD'}@{short_sha(pkg.git_commit)}"
+            if pkg.git_dirty:
+                git_info += "*"
+            pkg_line += f" [{git_info}]"
+        elif pkg.name in resolved_commits:
+            short = short_sha(resolved_commits[pkg.name])
+            pkg_line += f" [github:v{pkg.version}@{short}]"
         if pkg.editable:
-            if pkg.git_commit:
-                git_info = f"git:{pkg.git_branch or 'HEAD'}@{pkg.git_commit}"
-                if pkg.git_dirty:
-                    git_info += "*"
-                pkg_line += f" [{git_info}]"
             pkg_line += f"\n  {'':<{w}} Location: {pkg.location}"
+        elif pkg.git_remote:
+            pkg_line += f"\n  {'':<{w}} Remote: {pkg.git_remote}"
         lines.append(pkg_line)
     lines.append("")
 

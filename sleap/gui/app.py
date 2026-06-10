@@ -106,7 +106,11 @@ from sleap.gui.overlays.instance import InstanceOverlay
 from sleap.gui.overlays.negative_frame import NegativeFrameOverlay
 from sleap.gui.overlays.tracks import TrackListOverlay, TrackTrailOverlay
 from sleap.gui.shortcuts import Shortcuts
-from sleap.gui.state import GuiState
+from sleap.gui.state import (
+    GuiState,
+    INSTANCE_HIDDEN_KEY,
+    VIEW_ONLY_INSTANCE_KEY,
+)
 from sleap.gui.web import ping_analytics
 from sleap.gui.widgets.docks import (
     InstancesDock,
@@ -193,6 +197,14 @@ class MainWindow(QMainWindow):
         self.state["show instances"] = True
         self.state["show labels"] = True
         self.state["show edges"] = True
+        # Transient per-instance canvas visibility (Instances dock checkboxes).
+        # Reset on each real frame change in `_after_plot_change`; never persisted.
+        self.state[INSTANCE_HIDDEN_KEY] = set()
+        self.state[VIEW_ONLY_INSTANCE_KEY] = None
+        # (video, frame_idx) of the last plotted frame, so `_after_plot_change`
+        # clears the transient visibility above only when the frame truly changes
+        # (not on same-frame replots like marker-size or add-instance).
+        self._vis_last_frame_key = None
         self.state["edge style"] = prefs["edge style"]
         self.state["fit"] = False
         self.state["fit_selection"] = False
@@ -1465,6 +1477,19 @@ class MainWindow(QMainWindow):
             if frame_idx is not None
             else None
         )
+
+        # Reset transient per-instance visibility only when the frame actually
+        # changes: the instances (and thus the id()-keyed visibility state)
+        # differ per frame. `_after_plot_change` also fires on same-frame replots
+        # (marker size, add instance, palette, etc.); resetting there would wipe
+        # the user's hide / view-only selections, so gate on the (video,
+        # frame_idx) key. Must run BEFORE the overlay redraw below so the
+        # instance overlay applies the cleared state.
+        frame_key = (self.state["video"], frame_idx)
+        if frame_key != self._vis_last_frame_key:
+            self._vis_last_frame_key = frame_key
+            self.state[INSTANCE_HIDDEN_KEY] = set()
+            self.state[VIEW_ONLY_INSTANCE_KEY] = None
 
         # Show instances, etc, for this frame
         for overlay in self.overlays.values():

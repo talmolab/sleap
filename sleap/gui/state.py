@@ -27,6 +27,59 @@ from typing import Any, Callable, List, Union, Optional
 GSVarType = str
 NO_ARG = object()
 
+# Transient (session-only) GuiState keys for per-instance canvas visibility.
+# These are intentionally NOT persisted to the `.slp`/`Labels` model; they are a
+# view preference that resets when the frame changes (instances differ per
+# frame). See `sleap.gui.dataviews.LabeledFrameTableModel` (the checkbox columns
+# that drive them) and `sleap.gui.overlays.instance.InstanceOverlay` (which
+# re-applies them on every replot).
+#
+# - INSTANCE_HIDDEN_KEY -> set of ``id(instance)`` whose "Visibility" box is
+#   unchecked (hidden on the canvas).
+# - VIEW_ONLY_INSTANCE_KEY -> ``id(instance)`` of the single "View Only"
+#   instance, or ``None``. When set, only that instance is visible and the whole
+#   Visibility column is disabled (radio-like exclusivity).
+INSTANCE_HIDDEN_KEY = "instance_hidden"
+VIEW_ONLY_INSTANCE_KEY = "view_only_instance"
+
+
+def instance_visible(state: "GuiState", instance: Any) -> bool:
+    """Return the effective canvas visibility for an instance.
+
+    This is the single source of truth shared by the table model (which sets
+    the state) and the instance overlay (which applies it on every replot), so
+    the two cannot drift.
+
+    Args:
+        state: The `GuiState` holding the transient visibility keys.
+        instance: The `Instance`/`PredictedInstance` object (keyed by identity).
+
+    Returns:
+        ``True`` if the instance should be drawn, ``False`` if it should be
+        hidden. The global "show instances" toggle takes precedence: when it is
+        off, every instance is hidden. Otherwise, if a view-only instance is
+        set, only that instance is visible; else an instance is visible unless
+        its id is in the hidden set.
+    """
+    if state is None:
+        return True
+
+    # The global "show instances" toggle wins: per-instance state can only
+    # further hide instances, never force a globally-hidden one back on. Without
+    # this, the per-instance re-apply loop in `InstanceOverlay.add_to_scene`
+    # would override the global Hide toggle on every replot.
+    if not state.get("show instances", default=True):
+        return False
+
+    view_only = state.get(VIEW_ONLY_INSTANCE_KEY, default=None)
+    if view_only is not None:
+        return id(instance) == view_only
+
+    hidden = state.get(INSTANCE_HIDDEN_KEY, default=None)
+    if not hidden:
+        return True
+    return id(instance) not in hidden
+
 
 class GuiState(object):
     """
