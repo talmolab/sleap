@@ -1208,7 +1208,20 @@ class QCWidget(QtWidgets.QWidget):
 
     def _setup_ui(self):
         """Set up the widget UI."""
-        layout = QtWidgets.QVBoxLayout(self)
+        # The whole panel lives in a scroll area so a tall panel (charts +
+        # table + details) scrolls within the dock instead of forcing the dock
+        # and window to grow without bound (issue #2769, item 4 follow-up).
+        outer = QtWidgets.QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        self._scroll = QtWidgets.QScrollArea()
+        self._scroll.setWidgetResizable(True)
+        self._scroll.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self._scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        outer.addWidget(self._scroll)
+
+        container = QtWidgets.QWidget()
+        self._scroll.setWidget(container)
+        layout = QtWidgets.QVBoxLayout(container)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(6)
 
@@ -1308,9 +1321,12 @@ class QCWidget(QtWidgets.QWidget):
 
         self._viz_tabs = QtWidgets.QTabWidget()
         self._viz_tabs.setMinimumHeight(180)
-        # Let the tabs shrink when space is limited but not expand unboundedly
+        # Lock the charts height so the matplotlib canvases can't keep expanding
+        # the panel without bound (issue #2769, item 4 follow-up); the
+        # panel-level scroll area handles any overflow below.
+        self._viz_tabs.setMaximumHeight(300)
         self._viz_tabs.setSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
         )
 
         # Score distribution tab

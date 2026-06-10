@@ -1423,6 +1423,30 @@ class TestQCUXLayout:
         widget._charts_group.setChecked(True)
         assert widget._viz_tabs.isVisible()
 
+    def test_charts_height_capped_and_panel_scrolls(self, qtbot):
+        """Charts can't expand without bound; the panel is scrollable.
+
+        Regression for #2769 item 4: the matplotlib canvases used to grow the
+        panel (and the whole window) without limit, so users couldn't reach the
+        flagged-instances table to review. The charts now have a locked maximum
+        height and the whole panel lives in a resizable scroll area.
+        """
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        # Charts height is locked so the canvases can't expand without bound.
+        assert 0 < widget._viz_tabs.maximumHeight() <= 300
+        assert (
+            widget._viz_tabs.sizePolicy().verticalPolicy()
+            == QtWidgets.QSizePolicy.Maximum
+        )
+        # The whole panel lives inside a resizable scroll area...
+        assert isinstance(widget._scroll, QtWidgets.QScrollArea)
+        assert widget._scroll.widgetResizable()
+        # ...and the table is still reachable through the scroll container.
+        container = widget._scroll.widget()
+        assert container is not None
+        assert widget._table_view in container.findChildren(QtWidgets.QTableView)
+
     # --- Item 7: plain-language Selected Instance + Statistics ------------
 
     def test_friendly_issue_maps_known_labels(self):
