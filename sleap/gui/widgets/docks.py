@@ -12,6 +12,7 @@ from qtpy.QtWidgets import (
     QDockWidget,
     QGroupBox,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
     QLayout,
     QMainWindow,
@@ -586,7 +587,24 @@ class InstancesDock(DockWidget):
             lambda _: self._apply_mean_node_score_visibility(),
         )
 
+        # Keep the per-instance checkbox columns ("visibility"/"view only")
+        # narrow so they don't crowd out the informational columns.
+        self._size_checkbox_columns()
+
         return self.table
+
+    def _size_checkbox_columns(self) -> None:
+        """Resize the visibility/view-only checkbox columns to their contents."""
+        header = self.table.horizontalHeader()
+        for key in (
+            LabeledFrameTableModel.VISIBILITY_KEY,
+            LabeledFrameTableModel.VIEW_ONLY_KEY,
+        ):
+            try:
+                col_idx = self.model.properties.index(key)
+            except ValueError:
+                continue
+            header.setSectionResizeMode(col_idx, QHeaderView.ResizeToContents)
 
     def _apply_mean_node_score_visibility(self) -> None:
         """Hide or show the 'mean node score' column based on the View toggle."""
