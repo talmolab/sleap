@@ -179,11 +179,14 @@ class CheckableFilterMenu(QtWidgets.QMenu):
 
 
 class CollapsibleGroupBox(QtWidgets.QGroupBox):
-    """A checkable group box whose contents collapse when unchecked.
+    """A checkable group box that collapses its body like an HTML ``<details>``.
 
-    Acts as a lightweight collapsible section: the check state of the group box
+    Acts as a lightweight disclosure section: the check state of the group box
     header doubles as an expand/collapse toggle, hiding the body so the panel
-    actually shrinks for a cleaner first-time view (issue #2769, item 4).
+    actually shrinks for a cleaner first-time view (issue #2769, item 4). The
+    header reads like a GitHub ``<details>``/``<summary>`` disclosure -- a
+    ``▶`` arrow when collapsed and a ``▼`` arrow when expanded prefix the title
+    so the click-to-expand affordance is obvious (issue #2769 follow-up).
 
     All body widgets live inside a single inner :attr:`content` frame; callers
     add their layout to ``content`` (e.g. ``QVBoxLayout(group.content)``).
@@ -194,10 +197,14 @@ class CollapsibleGroupBox(QtWidgets.QGroupBox):
     logic.)
 
     Args:
-        title: The header text.
+        title: The header text (shown after the disclosure arrow).
         collapsed: If True, start collapsed (unchecked) with the body hidden.
         parent: Parent widget.
     """
+
+    # Disclosure arrows shown before the title, mirroring an HTML ``<details>``.
+    _ARROW_EXPANDED = "▼"  # ▼
+    _ARROW_COLLAPSED = "▶"  # ▶
 
     def __init__(
         self,
@@ -205,6 +212,9 @@ class CollapsibleGroupBox(QtWidgets.QGroupBox):
         collapsed: bool = False,
         parent: Optional[QtWidgets.QWidget] = None,
     ):
+        # Keep the caller's title separate from the arrow prefix so toggling can
+        # rebuild the displayed title without losing the original text.
+        self._base_title = title
         super().__init__(title, parent)
 
         # Single body frame holding everything the caller adds.
@@ -214,20 +224,39 @@ class CollapsibleGroupBox(QtWidgets.QGroupBox):
         outer.addWidget(self.content)
 
         self.setCheckable(True)
+        # A pointing-hand cursor reinforces that the whole header is clickable,
+        # like a disclosure summary.
+        self.setCursor(QtCore.Qt.PointingHandCursor)
         self.setChecked(not collapsed)
         # Re-apply collapse state whenever the header is toggled.
         self.toggled.connect(self._on_toggled)
         self._on_toggled(self.isChecked())
 
     def _on_toggled(self, checked: bool):
-        """Show/hide the body to match the header check state."""
+        """Show/hide the body and update the disclosure arrow to match state."""
         self.content.setVisible(checked)
         # A checkable QGroupBox disables its direct children when unchecked;
         # undo that on the body frame so the body's own enabled-state logic is
         # preserved (collapse is visibility-only here).
         self.content.setEnabled(True)
+        self._update_title_arrow(checked)
         # Let the layout reclaim/release the space.
         self.updateGeometry()
+
+    def _update_title_arrow(self, expanded: bool):
+        """Prefix the title with a ▶/▼ disclosure arrow for the given state."""
+        arrow = self._ARROW_EXPANDED if expanded else self._ARROW_COLLAPSED
+        # ``setTitle`` triggers no signal, so this is safe inside ``_on_toggled``.
+        super().setTitle(f"{arrow}  {self._base_title}" if self._base_title else arrow)
+
+    def setTitle(self, title: str):  # noqa: N802 (Qt override)
+        """Set the header text, keeping the leading disclosure arrow in sync."""
+        self._base_title = title
+        self._update_title_arrow(self.isChecked())
+
+    def title(self) -> str:  # noqa: N802 (Qt override)
+        """Return the caller-supplied title without the disclosure arrow."""
+        return self._base_title
 
     def apply_collapsed_state(self):
         """Apply the current check state to body visibility.
@@ -674,9 +703,18 @@ class QCSkeletonTraceCanvas(Canvas):
     chain currently being traced, and the canvas highlights the trace in click
     order with numbered badges so the path is obvious at a glance.
 
-    The skeleton is laid out with a deterministic spring layout (seeded) over
-    the skeleton's nodes/edges so the picture is stable across redraws. Clicking
-    selects the nearest node within a small radius and emits
+    Where possible the skeleton is drawn using a *real* labeled animal's node
+    coordinates (like SLEAP's skeleton builder shows the actual animal shape):
+    callers pass a representative per-node position via :meth:`set_node_positions`
+    (e.g. the median over a sample of labeled instances), and the canvas
+    centers/scales those raw label coordinates to fill the view. When no labeled
+    coordinates are available the layout falls back to a deterministic, seeded
+    spring layout (or a horizontal line if networkx is missing) so the picture is
+    still stable across redraws. Either way the node positions are normalized
+    into roughly the same ``[-1, 1]`` frame, so the fixed click-pick radius works
+    against both layouts.
+
+    Clicking selects the nearest node within a small radius and emits
     :attr:`node_clicked`; the owning widget owns the chain list and calls
     :meth:`set_trace` to update the highlighted order.
 
@@ -706,45 +744,101 @@ class QCSkeletonTraceCanvas(Canvas):
         )
         self.setMinimumSize(260, 220)
 
-        # Node display positions keyed by node name: {name: (x, y)}.
+        # Node display positions keyed by node name: {name: (x, y)}. These are
+        # the *normalized* coordinates actually drawn/hit-tested (roughly in
+        # [-1, 1]); see :meth:`_compute_layout`.
         self._positions: dict = {}
         self._node_names: list = []
         self._edges: list = []  # list of (src_name, dst_name)
+        # Optional representative per-node coordinates from real labeled
+        # instances ({name: (x, y)} in raw label/image space). When present
+        # these drive the layout (a real animal shape); when empty the canvas
+        # falls back to the spring/line layout.
+        self._node_coords: dict = {}
         # The chain currently being traced, in click order (node names).
         self._trace: list = []
-        # Click hit-test radius in data coordinates (spring layout is ~[-1, 1]).
+        # Click hit-test radius in data coordinates. Both the spring layout and
+        # the real-coordinate layout are normalized to ~[-1, 1], so this fixed
+        # radius works for either.
         self._pick_radius = 0.18
 
         self.mpl_connect("button_press_event", self._on_click)
         self.update_plot()
 
-    def set_skeleton(self, node_names: list, edges: list):
+    def set_skeleton(self, node_names: list, edges: list, node_positions=None):
         """Set the skeleton to display and recompute the layout.
 
         Args:
             node_names: Ordered list of node-name strings.
             edges: List of ``(source_name, destination_name)`` tuples.
+            node_positions: Optional dict mapping node name to a representative
+                ``(x, y)`` coordinate from real labeled instances (raw label
+                space). When given (and non-empty), the skeleton is drawn using
+                those coordinates so it looks like the actual animal; otherwise
+                the canvas falls back to the spring/line layout. May also be set
+                separately via :meth:`set_node_positions`.
         """
         self._node_names = list(node_names)
         # Keep only edges whose endpoints are present, as name pairs.
         valid = set(self._node_names)
         self._edges = [(s, d) for (s, d) in edges if s in valid and d in valid]
+        if node_positions is not None:
+            # Keep only coords for nodes that exist in this skeleton.
+            self._node_coords = {
+                name: (float(x), float(y))
+                for name, (x, y) in node_positions.items()
+                if name in valid
+            }
+        else:
+            # A new skeleton without coords drops any stale real coordinates.
+            self._node_coords = {}
         self._positions = self._compute_layout()
         # Drop any traced nodes that no longer exist in this skeleton.
         self._trace = [n for n in self._trace if n in valid]
         self.update_plot()
 
-    def _compute_layout(self) -> dict:
-        """Compute a deterministic node layout for the current skeleton.
+    def set_node_positions(self, node_positions: dict):
+        """Set representative per-node coordinates from real labeled instances.
 
-        Uses a seeded spring layout so the drawing is stable across redraws.
-        Falls back to a simple horizontal line if networkx is unavailable.
+        Drives the layout so the skeleton is drawn in the actual animal's shape
+        (like the SLEAP skeleton builder) rather than an abstract spring layout.
+        Coordinates are given in raw label/image space and are centered/scaled to
+        fill the canvas; only nodes present in the current skeleton are kept. An
+        empty dict reverts to the spring/line fallback.
+
+        Args:
+            node_positions: Dict mapping node name to an ``(x, y)`` coordinate.
+        """
+        valid = set(self._node_names)
+        self._node_coords = {
+            name: (float(x), float(y))
+            for name, (x, y) in (node_positions or {}).items()
+            if name in valid
+        }
+        self._positions = self._compute_layout()
+        self.update_plot()
+
+    def _compute_layout(self) -> dict:
+        """Compute a node layout for the current skeleton.
+
+        Prefers a *real* animal layout built from labeled coordinates
+        (:attr:`_node_coords`) so the skeleton looks like the actual animal.
+        When no labeled coordinates are available it falls back to a seeded
+        spring layout (stable across redraws), or a horizontal line if networkx
+        is unavailable. All layouts are normalized to roughly ``[-1, 1]`` so the
+        fixed click-pick radius works regardless of which one is used.
 
         Returns:
-            Dict mapping node name to an ``(x, y)`` position.
+            Dict mapping node name to an ``(x, y)`` position in the normalized
+            display frame.
         """
         if not self._node_names:
             return {}
+        # Prefer real labeled coordinates when we have at least two nodes with
+        # finite positions (a single point gives no scale to normalize against).
+        real = self._layout_from_coords()
+        if real is not None:
+            return real
         try:
             import networkx as nx
 
@@ -763,6 +857,47 @@ class QCSkeletonTraceCanvas(Canvas):
                 name: (-1.0 + 2.0 * i / (n - 1), 0.0)
                 for i, name in enumerate(self._node_names)
             }
+
+    def _layout_from_coords(self):
+        """Build a normalized layout from real labeled node coordinates.
+
+        Centers the labeled coordinates on their centroid and scales them
+        uniformly (preserving the animal's aspect ratio) so the largest extent
+        fills the ``[-1, 1]`` display frame. The image-space y-axis (which grows
+        downward) is flipped so the animal is drawn the right way up. Nodes with
+        no labeled coordinate are skipped entirely (no marker is drawn for them).
+
+        Returns:
+            A dict mapping node name to a normalized ``(x, y)`` position, or
+            ``None`` when fewer than two nodes have finite labeled coordinates
+            (in which case the caller falls back to the spring/line layout).
+        """
+        coords = self._node_coords
+        if not coords:
+            return None
+        names = [
+            name
+            for name in self._node_names
+            if name in coords
+            and np.isfinite(coords[name][0])
+            and np.isfinite(coords[name][1])
+        ]
+        if len(names) < 2:
+            return None
+
+        pts = np.array([coords[name] for name in names], dtype=float)
+        center = pts.mean(axis=0)
+        centered = pts - center
+        # Uniform scale by the largest half-extent keeps the aspect ratio and
+        # maps the widest axis into [-1, 1].
+        half_extent = float(np.max(np.abs(centered))) if centered.size else 0.0
+        scale = 1.0 / half_extent if half_extent > 0 else 1.0
+        normalized = centered * scale
+        # Flip y so image coordinates (y down) draw the animal upright.
+        return {
+            name: (float(normalized[i, 0]), float(-normalized[i, 1]))
+            for i, name in enumerate(names)
+        }
 
     def set_trace(self, trace: list):
         """Set the chain-in-progress (node names, in click order) and redraw.
@@ -801,16 +936,21 @@ class QCSkeletonTraceCanvas(Canvas):
             self.draw()
             return
 
-        # Draw skeleton edges first so nodes sit on top.
+        # Draw skeleton edges first so nodes sit on top. Skip any edge whose
+        # endpoint lacks a position (e.g. a node with no labeled coordinate in
+        # the real-animal layout).
         for src, dst in self._edges:
+            if src not in self._positions or dst not in self._positions:
+                continue
             x0, y0 = self._positions[src]
             x1, y1 = self._positions[dst]
             self.axes.plot([x0, x1], [y0, y1], color="#ced4da", linewidth=1.2, zorder=1)
 
         # Draw the trace path (in click order) as a highlighted poly-line.
-        if len(self._trace) >= 2:
-            tx = [self._positions[n][0] for n in self._trace]
-            ty = [self._positions[n][1] for n in self._trace]
+        drawable_trace = [n for n in self._trace if n in self._positions]
+        if len(drawable_trace) >= 2:
+            tx = [self._positions[n][0] for n in drawable_trace]
+            ty = [self._positions[n][1] for n in drawable_trace]
             self.axes.plot(tx, ty, color="#007bff", linewidth=2.5, zorder=2, alpha=0.9)
 
         # Map node -> 1-based position in the trace (for numbered badges).
@@ -853,13 +993,15 @@ class QCSkeletonTraceCanvas(Canvas):
                 zorder=4,
             )
 
-        # Pad the limits so labels are not clipped.
+        # Pad the limits so labels are not clipped. Use ``adjustable="box"`` so
+        # the equal-aspect constraint resizes the axes box rather than silently
+        # overriding the explicit limits set here (which would emit a warning).
         xs = [p[0] for p in self._positions.values()]
         ys = [p[1] for p in self._positions.values()]
         pad = 0.35
+        self.axes.set_aspect("equal", adjustable="box")
         self.axes.set_xlim(min(xs) - pad, max(xs) + pad)
         self.axes.set_ylim(min(ys) - pad, max(ys) + pad)
-        self.axes.set_aspect("equal", adjustable="datalim")
 
         self.draw()
 
@@ -1151,6 +1293,56 @@ class QCAnalysisWorker(QThread):
             self.error.emit(str(e))
 
 
+class QCChainTraceDialog(QtWidgets.QDialog):
+    """Pop-up dialog that hosts the ordered-chain skeleton-tracing UI.
+
+    The full chain editor (a :class:`QCSkeletonTraceCanvas`, the "Tracing:" chip
+    readout with Undo/Clear/Add-chain, the saved-chains list, and the advanced
+    "type chains as text" box) used to be embedded directly in the Detector
+    Settings panel, which felt cramped. It now lives in this dialog instead
+    (issue #2769 follow-up); the Detector Settings row just has a
+    "Configure chains..." button that opens it.
+
+    The dialog does *not* own any chain state: it simply re-parents and shows the
+    owning :class:`QCWidget`'s live ``_chain_trace_panel``. Tracing therefore
+    edits the widget's ``_traced_chains`` / free-text box directly, so the chains
+    are already written back through :meth:`QCWidget._collect_ordered_chains`
+    when the dialog closes -- no explicit accept/apply step is needed. Closing
+    via the Close button (or the window chrome) simply hides the dialog; the
+    panel is kept alive and reused the next time it is opened.
+
+    Args:
+        parent: The owning :class:`QCWidget`.
+        panel: The chain-trace panel widget to host (built by
+            :meth:`QCWidget._build_chain_trace_panel`).
+    """
+
+    def __init__(self, parent: QtWidgets.QWidget, panel: QtWidgets.QWidget):
+        super().__init__(parent)
+        self.setWindowTitle("Configure ordered chains")
+        # Non-modal would let the underlying project change under the editor;
+        # a modal dialog keeps the chain state edit self-contained.
+        self.setModal(True)
+        self.setMinimumSize(420, 460)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(6)
+
+        # Host the live panel; it stays visible while owned by the dialog.
+        self._panel = panel
+        panel.setParent(self)
+        panel.setVisible(True)
+        layout.addWidget(panel, stretch=1)
+
+        # A single Close button: chains are written back live, so this just
+        # dismisses the editor.
+        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+        buttons.rejected.connect(self.reject)
+        buttons.accepted.connect(self.accept)
+        layout.addWidget(buttons)
+
+
 class QCWidget(QtWidgets.QWidget):
     """Widget for label quality control analysis with visualizations.
 
@@ -1194,6 +1386,9 @@ class QCWidget(QtWidgets.QWidget):
         # (video, frame, instance) so it survives threshold/issue re-filters
         # (item 6). Shared by reference with the table model.
         self._reviewed_keys: set = set()
+        # Guards against stacking multiple deferred "Hide reviewed" re-filters
+        # when several rows are marked reviewed in quick succession (Group C).
+        self._hide_reviewed_refilter_pending: bool = False
 
         # Ordered chains the user has traced on the skeleton (item 2): each
         # entry is a list of node names in order. These feed QCConfig together
@@ -1373,6 +1568,20 @@ class QCWidget(QtWidgets.QWidget):
         # Disabled until results exist (nothing to filter yet).
         self._issue_filter_button.setEnabled(False)
         toolbar.addWidget(self._issue_filter_button)
+
+        # "Hide reviewed" filter (Group C / feedback on #2769): show only the
+        # not-yet-reviewed flagged instances, AND-combined with the issue-type
+        # filter above. Sits next to the issue-type button so both live filters
+        # read together. Disabled until results exist (nothing to hide yet).
+        self._hide_reviewed_check = QtWidgets.QCheckBox("Hide reviewed")
+        self._hide_reviewed_check.setChecked(False)
+        self._hide_reviewed_check.setEnabled(False)
+        self._hide_reviewed_check.setToolTip(
+            "Show only instances you have NOT marked reviewed.\n"
+            "Combined (AND) with the issue-type filter; the table updates live "
+            "as you tick rows reviewed."
+        )
+        toolbar.addWidget(self._hide_reviewed_check)
 
         toolbar.addStretch()
 
@@ -1566,10 +1775,44 @@ class QCWidget(QtWidgets.QWidget):
 
         # Skeleton-tracing UX for defining ordered chains (issue #2769, item 2):
         # a click-to-trace skeleton plus an ordered chip list, instead of forcing
-        # users to type node names. The advanced free-text box is kept inside it
-        # as a fallback. Spans the full grid width.
+        # users to type node names. The full tracing UI lives in a *pop-up*
+        # dialog (issue #2769 follow-up: the inline panel felt too cramped), so
+        # the grid row only carries a "Configure chains..." button and a short
+        # summary of the current chains. The panel is built eagerly (so its
+        # controls exist for callers/tests) but is hosted in the dialog on
+        # demand rather than embedded here.
         self._chain_trace_panel = self._build_chain_trace_panel()
-        grid.addWidget(self._chain_trace_panel, 4, 0, 1, 4)
+        # Hold a Qt parent so the (currently hidden) panel stays alive between
+        # dialog openings; it is reparented into the dialog when opened.
+        self._chain_trace_panel.setParent(self)
+        self._chain_trace_panel.setVisible(False)
+        self._chain_trace_dialog: Optional["QCChainTraceDialog"] = None
+
+        chain_config_row = QtWidgets.QHBoxLayout()
+        chain_config_row.setContentsMargins(0, 0, 0, 0)
+        chain_config_row.setSpacing(6)
+        self._chain_config_btn = QtWidgets.QPushButton("Configure chains...")
+        self._chain_config_btn.setToolTip(
+            "Open the chain editor to trace ordered chains on the skeleton "
+            "(e.g. tail base → tail tip) used by the chain-order detector."
+        )
+        self._chain_config_btn.clicked.connect(self._open_chain_trace_dialog)
+        chain_config_row.addWidget(self._chain_config_btn)
+
+        self._chain_summary_label = QtWidgets.QLabel("No chains")
+        self._chain_summary_label.setWordWrap(True)
+        self._chain_summary_label.setStyleSheet("color:#6c757d;")
+        self._chain_summary_label.setToolTip(
+            "The ordered chains currently configured for the chain-order "
+            "detector. Click 'Configure chains...' to edit them."
+        )
+        chain_config_row.addWidget(self._chain_summary_label, stretch=1)
+
+        chain_config_container = QtWidgets.QWidget()
+        chain_config_container.setLayout(chain_config_row)
+        self._chain_config_container = chain_config_container
+        grid.addWidget(chain_config_container, 4, 0, 1, 4)
+        self._refresh_chain_summary()
 
         # --- Missing labelable node, experimental, default-OFF ---
         self._cb_missing = QtWidgets.QCheckBox("Missing labelable node")
@@ -1650,8 +1893,11 @@ class QCWidget(QtWidgets.QWidget):
         def _set_chain_enabled(on: bool):
             self._sb_chain_angle.setEnabled(on)
             self._sb_order_thr.setEnabled(on)
-            # The whole skeleton-trace panel (canvas, chip list, saved chains and
-            # the advanced free-text fallback) follows the chain checkbox.
+            # The "Configure chains..." button + summary (the inline entry point)
+            # and the trace panel hosted in the pop-up dialog all follow the
+            # chain checkbox.
+            self._chain_config_btn.setEnabled(on)
+            self._chain_summary_label.setEnabled(on)
             self._chain_trace_panel.setEnabled(on)
 
         self._cb_chain.toggled.connect(_set_chain_enabled)
@@ -1666,6 +1912,30 @@ class QCWidget(QtWidgets.QWidget):
         self._cb_insample.toggled.connect(_set_insample_enabled)
         _set_insample_enabled(self._cb_insample.isChecked())
         self._insample_browse_btn.clicked.connect(self._on_browse_insample_model)
+
+        # --- Restore-defaults footer row, spanning the full grid width. ---
+        # A thin separator above a right-aligned "Restore defaults" button that
+        # resets every control back to QCConfig() defaults (issue #2769
+        # follow-up, "restore to default setting").
+        separator = QtWidgets.QFrame()
+        separator.setFrameShape(QtWidgets.QFrame.HLine)
+        separator.setFrameShadow(QtWidgets.QFrame.Sunken)
+        grid.addWidget(separator, 8, 0, 1, 4)
+
+        restore_row = QtWidgets.QHBoxLayout()
+        restore_row.setContentsMargins(0, 0, 0, 0)
+        restore_row.addStretch()
+        self._restore_defaults_btn = QtWidgets.QPushButton("Restore defaults")
+        self._restore_defaults_btn.setToolTip(
+            "Reset every detector setting on this panel (enable toggles, "
+            "thresholds, ordered chains and the in-sample model path) back to "
+            "the shipped defaults."
+        )
+        self._restore_defaults_btn.clicked.connect(self._on_restore_detector_defaults)
+        restore_row.addWidget(self._restore_defaults_btn)
+        restore_container = QtWidgets.QWidget()
+        restore_container.setLayout(restore_row)
+        grid.addWidget(restore_container, 9, 0, 1, 4)
 
         # Apply the (collapsed) start state now that all children exist so the
         # panel actually starts hidden for a clean first-time view.
@@ -1687,7 +1957,10 @@ class QCWidget(QtWidgets.QWidget):
         * an advanced, collapsible free-text fallback (the original typed-chain
           box) for power users / projects with no skeleton.
 
-        Both the traced chains and the free-text box feed
+        The panel is hosted inside the :class:`QCChainTraceDialog` pop-up rather
+        than embedded in the Detector Settings grid (issue #2769 follow-up), but
+        it still reads/writes the same widget state (``_traced_chains`` and the
+        free-text box), so both the traced chains and the free-text box feed
         :meth:`_build_qc_config` via :meth:`_collect_ordered_chains`.
 
         Returns:
@@ -1699,8 +1972,9 @@ class QCWidget(QtWidgets.QWidget):
         outer.setSpacing(4)
 
         heading = QtWidgets.QLabel(
-            "<b>Ordered chains</b> — trace a chain by clicking nodes in order "
-            "(e.g. tail base → tail tip):"
+            "Trace a chain by clicking nodes on the skeleton in order "
+            "(e.g. tail base → tail tip), then click <b>Add chain</b>. "
+            "Repeat to add more chains."
         )
         heading.setWordWrap(True)
         heading.setToolTip(
@@ -1830,6 +2104,59 @@ class QCWidget(QtWidgets.QWidget):
 
         return panel
 
+    def _open_chain_trace_dialog(self):
+        """Open the pop-up chain editor hosting the full tracing UI.
+
+        Lazily creates a :class:`QCChainTraceDialog`, hands it the live
+        :attr:`_chain_trace_panel` (so editing operates directly on the widget's
+        chain state), shows it modally, and refreshes the inline summary on
+        close (issue #2769 follow-up: the embedded panel was too cramped).
+        """
+        if self._chain_trace_dialog is None:
+            self._chain_trace_dialog = QCChainTraceDialog(self, self._chain_trace_panel)
+        dialog = self._chain_trace_dialog
+        # Make sure the trace readout/canvas reflect the current state each time.
+        self._refresh_trace_readout()
+        self._refresh_chains_list()
+        dialog.exec_()
+        # Editing happened in-place on the shared panel; refresh the summary.
+        self._refresh_chain_summary()
+
+    def _chain_summary_text(self) -> str:
+        """Plain-language summary of the configured ordered chains.
+
+        Combines the traced chains with any advanced free-text chains (the same
+        set :meth:`_collect_ordered_chains` feeds into the config) into a short
+        caption like ``"2 chains: TTI→…→TailTip, Head→Neck"``. Returns
+        ``"No chains"`` when nothing is configured.
+
+        Returns:
+            A short caption describing the current chains.
+        """
+        chains = self._collect_ordered_chains()
+        if not chains:
+            return "No chains"
+
+        def _abbrev(chain: list) -> str:
+            # Show endpoints (with an ellipsis between) so long tail chains stay
+            # compact: e.g. ["TTI","Tail_0","TailTip"] -> "TTI→…→TailTip".
+            if len(chain) <= 2:
+                return "→".join(chain)
+            return f"{chain[0]}→…→{chain[-1]}"
+
+        # Cap how many chains we spell out so the label can't run away.
+        shown = [_abbrev(chain) for chain in chains[:3]]
+        summary = ", ".join(shown)
+        if len(chains) > 3:
+            summary += f", +{len(chains) - 3} more"
+        n = len(chains)
+        return f"{n} chain{'s' if n != 1 else ''}: {summary}"
+
+    def _refresh_chain_summary(self):
+        """Update the inline chain summary label from the current chains."""
+        if hasattr(self, "_chain_summary_label"):
+            self._chain_summary_label.setText(self._chain_summary_text())
+
     def _on_trace_node_clicked(self, name: str):
         """Append a clicked node to the chain currently being traced.
 
@@ -1898,7 +2225,11 @@ class QCWidget(QtWidgets.QWidget):
         self._trace_add_btn.setEnabled(len(chain) >= 2)
 
     def _refresh_chains_list(self):
-        """Repopulate the saved-chains list from ``_traced_chains``."""
+        """Repopulate the saved-chains list from ``_traced_chains``.
+
+        Also refreshes the inline summary label, since every saved-chains change
+        (add / remove / reorder / restore) flows through here.
+        """
         self._chains_list.clear()
         for chain in self._traced_chains:
             self._chains_list.addItem(" → ".join(chain))
@@ -1906,6 +2237,7 @@ class QCWidget(QtWidgets.QWidget):
         self._chain_up_btn.setEnabled(has_rows)
         self._chain_down_btn.setEnabled(has_rows)
         self._chain_remove_btn.setEnabled(has_rows)
+        self._refresh_chain_summary()
 
     def _move_selected_chain(self, delta: int):
         """Move the selected saved chain up or down by one.
@@ -1938,7 +2270,11 @@ class QCWidget(QtWidgets.QWidget):
 
         Reads the first skeleton from the loaded labels (if any) and hands its
         nodes/edges to the :class:`QCSkeletonTraceCanvas` so the user can trace
-        on the real skeleton. Clears the canvas when no skeleton is available.
+        on the real skeleton. Also computes a representative per-node position
+        from the labeled instances (:meth:`_representative_node_positions`) so
+        the canvas can draw the actual animal shape rather than an abstract
+        spring layout (issue #2769 follow-up). Clears the canvas when no skeleton
+        is available.
 
         Uses ``labels.skeletons`` (a list) rather than the ``labels.skeleton``
         convenience property, since the latter *raises* when there are zero or
@@ -1947,6 +2283,7 @@ class QCWidget(QtWidgets.QWidget):
         node_names: list = []
         edges: list = []
         labels = self._labels
+        skeleton = None
         try:
             skeletons = (
                 getattr(labels, "skeletons", None) if labels is not None else None
@@ -1958,8 +2295,85 @@ class QCWidget(QtWidgets.QWidget):
                     (edge.source.name, edge.destination.name) for edge in skeleton.edges
                 ]
         except Exception:
-            node_names, edges = [], []
-        self._skeleton_canvas.set_skeleton(node_names, edges)
+            node_names, edges, skeleton = [], [], None
+        node_positions = self._representative_node_positions(skeleton, node_names)
+        self._skeleton_canvas.set_skeleton(
+            node_names, edges, node_positions=node_positions
+        )
+
+    def _representative_node_positions(
+        self, skeleton, node_names: list, max_instances: int = 200
+    ) -> dict:
+        """Median per-node coordinate over a sample of labeled instances.
+
+        For each skeleton node, takes the median ``(x, y)`` over up to
+        ``max_instances`` labeled (user) instances in which that node is
+        visible, in the raw label coordinate frame. The medians give a stable,
+        outlier-resistant "representative animal" the trace canvas can draw in
+        the real animal's shape. Each instance is recentered on its own centroid
+        first so animals labeled in very different parts of the frame still
+        average into a coherent shape rather than smearing across the image.
+
+        Args:
+            skeleton: The skeleton whose ``node_names`` order aligns with each
+                instance's ``numpy()`` rows, or ``None``.
+            node_names: The skeleton node names (used as the result keys).
+            max_instances: Cap on how many labeled instances to sample.
+
+        Returns:
+            Dict mapping node name to ``(x, y)``, restricted to nodes seen
+            visible in at least one sampled instance. Empty when there is no
+            usable labeled data (the canvas then falls back to a spring layout).
+        """
+        labels = self._labels
+        if labels is None or skeleton is None or not node_names:
+            return {}
+
+        n_nodes = len(node_names)
+        # Collect centered point arrays, one (n_nodes, 2) row-block per instance.
+        stacks: list = []
+        try:
+            for lf in labels:
+                for inst in lf.user_instances:
+                    # Only instances sharing this skeleton align row-for-row.
+                    if getattr(inst, "skeleton", None) is not skeleton:
+                        continue
+                    pts = np.asarray(inst.numpy(invisible_as_nan=True), dtype=float)
+                    if pts.shape != (n_nodes, 2):
+                        continue
+                    visible = np.isfinite(pts).all(axis=1)
+                    if not visible.any():
+                        continue
+                    # Recenter on this instance's visible centroid so instances
+                    # in different frame regions overlay coherently.
+                    centroid = np.nanmean(pts[visible], axis=0)
+                    stacks.append(pts - centroid)
+                    if len(stacks) >= max_instances:
+                        raise StopIteration
+        except StopIteration:
+            pass
+        except Exception:
+            return {}
+
+        if not stacks:
+            return {}
+
+        # Shape: (n_instances, n_nodes, 2); median over instances, ignoring NaNs.
+        arr = np.stack(stacks, axis=0)
+        with np.errstate(all="ignore"):
+            # Suppress the all-NaN-slice warning for never-visible nodes.
+            import warnings
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                medians = np.nanmedian(arr, axis=0)  # (n_nodes, 2)
+
+        positions: dict = {}
+        for i, name in enumerate(node_names):
+            x, y = medians[i]
+            if np.isfinite(x) and np.isfinite(y):
+                positions[name] = (float(x), float(y))
+        return positions
 
     def _on_browse_insample_model(self):
         """Open a folder picker and set the in-sample model path line edit."""
@@ -2085,6 +2499,84 @@ class QCWidget(QtWidgets.QWidget):
             insample_model_path=self._insample_model_edit.text().strip(),
         )
 
+    @staticmethod
+    def _config_flag(value, default: bool) -> bool:
+        """Resolve a QCConfig toggle (which may be ``"auto"``) to a checkbox bool.
+
+        Several QCConfig toggles accept a literal ``"auto"`` sentinel as well as
+        a plain ``bool`` (e.g. ``use_chirality``/``use_chain_ordering``). The
+        Detector Settings checkboxes are plain on/off, so map a real bool
+        straight through and fall back to the detector's documented GUI default
+        for ``"auto"`` (or any other non-bool) value.
+
+        Args:
+            value: The QCConfig field value (``bool`` or ``"auto"``).
+            default: The checkbox state to use when ``value`` is not a bool.
+
+        Returns:
+            The boolean checkbox state to apply.
+        """
+        return value if isinstance(value, bool) else default
+
+    def _apply_config_to_widgets(self, config: "QCConfig"):
+        """Push a QCConfig's values back into the Detector Settings controls.
+
+        Inverse of :meth:`_build_qc_config`: every per-detector control that
+        feeds the config is set from the matching field, so the panel can be
+        reset to a known configuration (e.g. the "Restore defaults" button feeds
+        a fresh ``QCConfig()``). Toggles that accept ``"auto"`` fall back to the
+        detector's documented GUI default via :meth:`_config_flag`.
+
+        Args:
+            config: The configuration to display in the controls.
+        """
+        # Enable checkboxes (map "auto" sentinels to the documented GUI default:
+        # reliable detectors ON, experimental detectors OFF).
+        self._cb_flip.setChecked(self._config_flag(config.use_chirality, True))
+        self._cb_chimera.setChecked(self._config_flag(config.use_split_detection, True))
+        self._cb_duplicate.setChecked(
+            self._config_flag(config.use_duplicate_score, True)
+        )
+        self._cb_chain.setChecked(self._config_flag(config.use_chain_ordering, False))
+        self._cb_missing.setChecked(
+            self._config_flag(config.use_missing_node_check, False)
+        )
+        self._cb_appearance.setChecked(self._config_flag(config.use_appearance, False))
+        self._cb_insample.setChecked(
+            self._config_flag(config.use_insample_prediction, False)
+        )
+
+        # Per-detector thresholds.
+        self._sb_flip_thr.setValue(config.chirality_flip_threshold)
+        self._sb_dup_thr.setValue(config.duplicate_score_threshold)
+        self._sb_chain_angle.setValue(int(config.chain_turn_angle_deg))
+        self._sb_order_thr.setValue(config.order_inversion_threshold)
+        self._sb_missing_thr.setValue(config.missing_node_prob_threshold)
+
+        # In-sample model path.
+        self._insample_model_edit.setText(config.insample_model_path or "")
+
+        # Ordered chains: drop the free-text box and any half-finished trace,
+        # then load the config's chains as the saved-chains list.
+        self._ordered_chains_edit.setPlainText("")
+        self._trace_in_progress = []
+        self._traced_chains = [list(chain) for chain in (config.ordered_chains or [])]
+        self._refresh_trace_readout()
+        self._refresh_chains_list()
+
+    def _on_restore_detector_defaults(self):
+        """Reset every Detector Settings control back to ``QCConfig()`` defaults.
+
+        Builds a fresh :class:`~sleap.qc.config.QCConfig` and pushes its values
+        into the controls via :meth:`_apply_config_to_widgets`, so enable
+        checkboxes, thresholds, ordered chains, the in-sample model path and the
+        appearance/missing/prediction toggles all return to the shipped defaults
+        (issue #2769 follow-up, "restore to default setting").
+        """
+        from sleap.qc.config import QCConfig
+
+        self._apply_config_to_widgets(QCConfig())
+
     def _parse_ordered_chains(self) -> list:
         """Parse the ordered-chains text box into a list of node-name lists.
 
@@ -2135,8 +2627,11 @@ class QCWidget(QtWidgets.QWidget):
         )
         self._table_view.doubleClicked.connect(self._on_row_double_clicked)
         # Keep the "X / Y reviewed" counter in sync whenever a Reviewed
-        # checkbox is toggled in the model (item 6).
-        self._table_model.dataChanged.connect(self._update_reviewed_count)
+        # checkbox is toggled in the model (item 6), and -- when "Hide reviewed"
+        # is active -- drop the now-reviewed row from the view live (Group C).
+        self._table_model.dataChanged.connect(self._on_reviewed_changed)
+        # Re-apply the filters whenever the "Hide reviewed" toggle changes.
+        self._hide_reviewed_check.toggled.connect(self._on_hide_reviewed_toggled)
 
     def _update_spinner(self):
         """Update the spinner animation character."""
@@ -2174,6 +2669,13 @@ class QCWidget(QtWidgets.QWidget):
         self._all_flagged = []
         self._visible_issue_types = None
         self._reviewed_keys.clear()
+        # Reset the "Hide reviewed" filter; block its toggled signal so this
+        # reset does not trigger a stray re-filter mid-reset (Group C).
+        self._hide_reviewed_refilter_pending = False
+        self._hide_reviewed_check.blockSignals(True)
+        self._hide_reviewed_check.setChecked(False)
+        self._hide_reviewed_check.setEnabled(False)
+        self._hide_reviewed_check.blockSignals(False)
 
         # Reset the chain being traced (a new project may have a new skeleton);
         # saved chains are kept so the user does not lose deliberate work.
@@ -2319,6 +2821,11 @@ class QCWidget(QtWidgets.QWidget):
         flagged = self._results.get_flagged(threshold=threshold)
         self._all_flagged = flagged
 
+        # The "Hide reviewed" filter is usable as soon as anything is flagged
+        # (Group C); gate it on the full flagged set rather than the issue-type
+        # categories so it works even with a single issue type.
+        self._hide_reviewed_check.setEnabled(bool(flagged))
+
         # Rebuild the issue-type filter to match the categories now present,
         # preserving the user's current show/hide choices where possible.
         # de-dup while keeping first-seen (score-descending) order.
@@ -2456,12 +2963,21 @@ class QCWidget(QtWidgets.QWidget):
             self._issue_filter_button.setText(f"Issue types: {n_sel} of {total}")
 
     def _filtered_flagged(self) -> List["QCFlag"]:
-        """Return the flagged list restricted to the selected issue types."""
+        """Return the flagged list under the active filters.
+
+        Applies the issue-type filter and the "Hide reviewed" filter together
+        (logical AND): when both are active a row must match a selected issue
+        type *and* not be in :attr:`_reviewed_keys` to be shown (Group C).
+        """
         if self._visible_issue_types is None:
-            return list(self._all_flagged)
-        return [
-            f for f in self._all_flagged if f.top_issue in self._visible_issue_types
-        ]
+            flagged = list(self._all_flagged)
+        else:
+            flagged = [
+                f for f in self._all_flagged if f.top_issue in self._visible_issue_types
+            ]
+        if self._hide_reviewed_check.isChecked():
+            flagged = [f for f in flagged if f.instance_key not in self._reviewed_keys]
+        return flagged
 
     def _apply_issue_filter(self):
         """Push the issue-type-filtered flagged subset into the table model."""
@@ -2477,6 +2993,46 @@ class QCWidget(QtWidgets.QWidget):
         total = self._table_model.rowCount()
         reviewed = self._table_model.reviewed_count()
         self._reviewed_count_label.setText(f"{reviewed} / {total} reviewed")
+
+    def _on_reviewed_changed(self, *args):
+        """React to a Reviewed-state change in the model (Group C, item 6).
+
+        Always refreshes the running "X / Y reviewed" counter. When the "Hide
+        reviewed" filter is active, also re-applies the filters so a row just
+        ticked reviewed drops out of the not-reviewed view live. The re-filter is
+        *deferred* to the next event-loop turn because the ``dataChanged`` that
+        triggers this slot is emitted from inside the model's own ``setData`` (or
+        the selection-driven auto-mark); resetting the model's rows synchronously
+        at that point would yank the data out from under the in-flight edit.
+
+        Args:
+            *args: Ignored; lets this slot accept ``dataChanged`` signal args.
+        """
+        self._update_reviewed_count()
+        if (
+            self._hide_reviewed_check.isChecked()
+            and not self._hide_reviewed_refilter_pending
+        ):
+            self._hide_reviewed_refilter_pending = True
+            QtCore.QTimer.singleShot(0, self._apply_hide_reviewed_refilter)
+
+    def _apply_hide_reviewed_refilter(self):
+        """Deferred re-filter after a reviewed change while hiding reviewed rows.
+
+        Runs on the next event-loop turn (scheduled by :meth:`_on_reviewed_changed`)
+        so the model reset happens cleanly after the originating edit returns.
+        """
+        self._hide_reviewed_refilter_pending = False
+        if self._hide_reviewed_check.isChecked():
+            self._apply_issue_filter()
+
+    def _on_hide_reviewed_toggled(self, checked: bool):
+        """Re-apply the filters when the "Hide reviewed" toggle changes (Group C).
+
+        Args:
+            checked: New checkbox state (True hides reviewed rows).
+        """
+        self._apply_issue_filter()
 
     def _update_statistics(self):
         """Update the statistics panel in plain language.

@@ -9,6 +9,7 @@ from sleap.gui.widgets.qc import (
     CheckableFilterMenu,
     CollapsibleGroupBox,
     QCAnalysisWorker,
+    QCChainTraceDialog,
     QCFlagTableModel,
     QCSkeletonTraceCanvas,
     QCWidget,
@@ -1935,6 +1936,7 @@ class TestQCListReviewedIntegration:
         widget = self._make_widget_with_flags(qtbot, flags)
         widget._table_model.set_reviewed(flags[0], True)
         widget._on_issue_type_toggled("Angle", False)
+        widget._hide_reviewed_check.setChecked(True)
         assert widget._reviewed_keys
         assert widget._visible_issue_types is not None
 
@@ -1948,6 +1950,189 @@ class TestQCListReviewedIntegration:
         assert widget._all_flagged == []
         assert widget._reviewed_count_label.text() == "0 / 0 reviewed"
         assert not widget._issue_filter_button.isEnabled()
+        # The "Hide reviewed" filter is reset and disabled for a fresh project.
+        assert not widget._hide_reviewed_check.isChecked()
+        assert not widget._hide_reviewed_check.isEnabled()
+
+
+class TestQCListHideReviewedFilter:
+    """Tests for the "Hide reviewed" not-reviewed filter (Group C / #2769).
+
+    The filter shows only flagged instances NOT in ``_reviewed_keys``, combined
+    (logical AND) with the issue-type filter, and updates the table live as rows
+    are marked reviewed/unreviewed.
+    """
+
+    def _make_widget_with_flags(self, qtbot, flags):
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._results = _fake_results(flags)
+        widget._update_flagged_display()
+        return widget
+
+    def test_hide_reviewed_checkbox_exists_and_gated_on_results(self, qtbot):
+        """The control exists, defaults off, and is disabled before results."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert widget._hide_reviewed_check is not None
+        assert widget._hide_reviewed_check.text() == "Hide reviewed"
+        # Unchecked + disabled until there are flagged rows to hide.
+        assert not widget._hide_reviewed_check.isChecked()
+        assert not widget._hide_reviewed_check.isEnabled()
+
+        # Once results with flags exist, the checkbox becomes usable.
+        flags = [MockQCFlag(0, 1, 0, 0.95, "high", "Flip")]
+        widget._results = _fake_results(flags)
+        widget._update_flagged_display()
+        assert widget._hide_reviewed_check.isEnabled()
+
+    def test_hide_reviewed_shows_only_unreviewed(self, qtbot):
+        """Enabling the filter shows exactly the not-reviewed instances."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+            MockQCFlag(0, 3, 0, 0.85, "medium", "Appearance"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        # Mark two of the three reviewed.
+        widget._table_model.set_reviewed(flags[0], True)
+        widget._table_model.set_reviewed(flags[2], True)
+
+        # Turn on "Hide reviewed": only the single unreviewed flag remains.
+        widget._hide_reviewed_check.setChecked(True)
+        shown = {
+            widget._table_model.items[r].instance_key
+            for r in range(widget._table_model.rowCount())
+        }
+        assert shown == {(0, 2, 0)}
+        # The shown rows are all unreviewed, so the counter reads 0 / 1.
+        assert widget._reviewed_count_label.text() == "0 / 1 reviewed"
+
+        # Unchecking restores the full (issue-filtered) set.
+        widget._hide_reviewed_check.setChecked(False)
+        assert widget._table_model.rowCount() == 3
+
+    def test_hide_reviewed_intersects_with_issue_filter(self, qtbot):
+        """The not-reviewed filter AND-combines with the issue-type filter."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+            MockQCFlag(0, 3, 0, 0.85, "medium", "Angle"),
+            MockQCFlag(0, 4, 0, 0.80, "medium", "Appearance"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        # Review one Angle flag (frame 2) and the Flip flag (frame 1).
+        widget._table_model.set_reviewed(flags[0], True)  # Flip
+        widget._table_model.set_reviewed(flags[1], True)  # Angle (frame 2)
+
+        # Show only the "Angle" issue type...
+        widget._set_all_issue_types(False)
+        widget._on_issue_type_toggled("Angle", True)
+        # ...and hide reviewed. Intersection = unreviewed Angle = frame 3 only.
+        widget._hide_reviewed_check.setChecked(True)
+
+        shown = {
+            widget._table_model.items[r].instance_key
+            for r in range(widget._table_model.rowCount())
+        }
+        assert shown == {(0, 3, 0)}
+
+    def test_marking_shown_row_reviewed_removes_it_live(self, qtbot):
+        """Ticking a shown row reviewed drops it from the unreviewed view live."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        # Hide reviewed with nothing reviewed yet -> both rows show.
+        widget._hide_reviewed_check.setChecked(True)
+        assert widget._table_model.rowCount() == 2
+
+        # Tick the first shown row reviewed via the model (as the checkbox does).
+        idx = widget._table_model.index(0, QCFlagTableModel.REVIEWED_COL)
+        first_key = widget._table_model.items[0].instance_key
+        widget._table_model.setData(idx, QtCore.Qt.Checked, QtCore.Qt.CheckStateRole)
+
+        # The re-filter is deferred to the next event-loop turn; let it run.
+        qtbot.wait(20)
+
+        keys = {
+            widget._table_model.items[r].instance_key
+            for r in range(widget._table_model.rowCount())
+        }
+        assert first_key not in keys
+        assert widget._table_model.rowCount() == 1
+        # Only the remaining unreviewed row is shown -> 0 / 1 reviewed.
+        assert widget._reviewed_count_label.text() == "0 / 1 reviewed"
+
+    def test_navigate_auto_mark_removes_row_live_when_hiding(self, qtbot):
+        """Selecting a row auto-marks it reviewed; it leaves the hidden view."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+        widget._hide_reviewed_check.setChecked(True)
+
+        selected_key = widget._table_model.items[0].instance_key
+        widget._table_view.selectRow(0)
+        # Selection auto-marks reviewed and schedules the deferred re-filter.
+        qtbot.wait(20)
+
+        keys = {
+            widget._table_model.items[r].instance_key
+            for r in range(widget._table_model.rowCount())
+        }
+        assert selected_key not in keys
+        assert selected_key in widget._reviewed_keys
+        assert widget._table_model.rowCount() == 1
+
+    def test_unhiding_brings_reviewed_rows_back(self, qtbot):
+        """Toggling the filter off re-shows reviewed rows (state preserved)."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        widget._table_model.set_reviewed(flags[0], True)
+        widget._hide_reviewed_check.setChecked(True)
+        assert widget._table_model.rowCount() == 1  # only the unreviewed one
+
+        widget._hide_reviewed_check.setChecked(False)
+        # Both rows back; the reviewed mark on frame 1 is intact.
+        assert widget._table_model.rowCount() == 2
+        assert widget._table_model.is_reviewed(flags[0])
+        assert widget._reviewed_count_label.text() == "1 / 2 reviewed"
+
+    def test_hide_reviewed_survives_threshold_refilter(self, qtbot):
+        """A raised threshold re-applies the active not-reviewed filter."""
+        flags = [
+            MockQCFlag(0, 1, 0, 0.95, "high", "Flip"),
+            MockQCFlag(0, 2, 0, 0.90, "high", "Angle"),
+            MockQCFlag(0, 3, 0, 0.80, "medium", "Appearance"),
+        ]
+        widget = self._make_widget_with_flags(qtbot, flags)
+
+        # Review frame 2, then hide reviewed -> frames 1 and 3 show.
+        widget._table_model.set_reviewed(flags[1], True)
+        widget._hide_reviewed_check.setChecked(True)
+        assert widget._table_model.rowCount() == 2
+
+        # Raise the threshold so the 0.80 Appearance flag (frame 3) drops out;
+        # the still-active "Hide reviewed" filter leaves only the unreviewed
+        # frame 1.
+        widget._results.get_flagged.return_value = [f for f in flags if f.score >= 0.85]
+        widget._update_flagged_display()
+
+        shown = {
+            widget._table_model.items[r].instance_key
+            for r in range(widget._table_model.rowCount())
+        }
+        assert shown == {(0, 1, 0)}
 
 
 class _FakeNode:
@@ -2198,3 +2383,479 @@ class TestQCChainTracePanel:
         assert not widget._chain_trace_panel.isEnabled()
         widget._cb_chain.setChecked(True)
         assert widget._chain_trace_panel.isEnabled()
+
+
+class TestCollapsibleDisclosure:
+    """Tests for the ``<details>``-style disclosure arrow on CollapsibleGroupBox.
+
+    The header should read like a GitHub ``<details>``/``<summary>`` disclosure:
+    a ``▶`` arrow when collapsed and a ``▼`` arrow when expanded, while keeping
+    the caller's title queryable without the arrow (issue #2769 follow-up).
+    """
+
+    def test_collapsed_shows_right_arrow(self, qtbot):
+        """A collapsed box prefixes its title with a ▶ arrow."""
+        box = CollapsibleGroupBox("Detector Settings", collapsed=True)
+        qtbot.addWidget(box)
+        # ``title()`` returns the clean caller text; the displayed (Qt) title
+        # carries the arrow prefix.
+        assert box.title() == "Detector Settings"
+        assert QtWidgets.QGroupBox.title(box).startswith("▶")
+        assert "Detector Settings" in QtWidgets.QGroupBox.title(box)
+
+    def test_expanded_shows_down_arrow(self, qtbot):
+        """An expanded box prefixes its title with a ▼ arrow."""
+        box = CollapsibleGroupBox("Charts", collapsed=False)
+        qtbot.addWidget(box)
+        assert QtWidgets.QGroupBox.title(box).startswith("▼")
+
+    def test_arrow_flips_on_toggle(self, qtbot):
+        """Toggling the header flips the disclosure arrow ▶ <-> ▼."""
+        box = CollapsibleGroupBox("Stats", collapsed=True)
+        qtbot.addWidget(box)
+        assert QtWidgets.QGroupBox.title(box).startswith("▶")
+
+        box.setChecked(True)
+        assert QtWidgets.QGroupBox.title(box).startswith("▼")
+
+        box.setChecked(False)
+        assert QtWidgets.QGroupBox.title(box).startswith("▶")
+
+    def test_set_title_keeps_arrow(self, qtbot):
+        """Re-setting the title keeps the leading disclosure arrow in sync."""
+        box = CollapsibleGroupBox("Old", collapsed=False)
+        qtbot.addWidget(box)
+        box.setTitle("New title")
+        assert box.title() == "New title"
+        displayed = QtWidgets.QGroupBox.title(box)
+        assert displayed.startswith("▼")
+        assert "New title" in displayed
+
+    def test_detector_settings_header_has_arrow(self, qtbot):
+        """The Detector Settings panel renders the disclosure arrow."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        group = widget._detector_settings_group
+        # Collapsed by default -> right arrow; clean title still queryable.
+        assert group.title() == "Detector Settings"
+        assert QtWidgets.QGroupBox.title(group).startswith("▶")
+
+
+class TestQCRestoreDefaults:
+    """Tests for the Detector Settings "Restore defaults" button (item #2769).
+
+    Changing several controls and then clicking Restore defaults must put every
+    control back to a fresh ``QCConfig()`` -- enable checkboxes, thresholds,
+    ordered chains, the in-sample model path and the B2 toggles.
+    """
+
+    def test_restore_button_exists_in_panel(self, qtbot):
+        """A "Restore defaults" button lives inside the Detector Settings panel."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert widget._restore_defaults_btn is not None
+        assert widget._restore_defaults_btn.text() == "Restore defaults"
+        # It is a descendant of the Detector Settings group.
+        buttons = widget._detector_settings_group.findChildren(QtWidgets.QPushButton)
+        assert widget._restore_defaults_btn in buttons
+
+    def test_restore_resets_every_control_to_qcconfig_defaults(self, qtbot):
+        """Mutating many controls then restoring matches QCConfig() defaults."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # --- Mutate a wide spread of controls away from their defaults. ---
+        widget._cb_flip.setChecked(False)
+        widget._cb_chimera.setChecked(False)
+        widget._cb_duplicate.setChecked(False)
+        widget._cb_chain.setChecked(True)
+        widget._cb_missing.setChecked(True)
+        widget._cb_appearance.setChecked(True)
+        widget._cb_insample.setChecked(True)
+
+        widget._sb_flip_thr.setValue(0.95)
+        widget._sb_dup_thr.setValue(0.1)
+        widget._sb_chain_angle.setValue(120)
+        widget._sb_order_thr.setValue(0.8)
+        widget._sb_missing_thr.setValue(0.2)
+
+        widget._insample_model_edit.setText("/tmp/some/model")
+        widget._ordered_chains_edit.setPlainText("a, b, c")
+        widget._traced_chains = [["head", "tail"]]
+        widget._trace_in_progress = ["head"]
+
+        # --- Restore. ---
+        widget._restore_defaults_btn.click()
+
+        defaults = QCConfig()
+
+        # Enable checkboxes back to documented GUI defaults.
+        assert widget._cb_flip.isChecked()
+        assert widget._cb_chimera.isChecked()
+        assert widget._cb_duplicate.isChecked()
+        assert not widget._cb_chain.isChecked()
+        assert not widget._cb_missing.isChecked()
+        assert not widget._cb_appearance.isChecked()
+        assert not widget._cb_insample.isChecked()
+
+        # Thresholds back to defaults.
+        assert widget._sb_flip_thr.value() == defaults.chirality_flip_threshold
+        assert widget._sb_dup_thr.value() == defaults.duplicate_score_threshold
+        assert widget._sb_chain_angle.value() == int(defaults.chain_turn_angle_deg)
+        assert widget._sb_order_thr.value() == defaults.order_inversion_threshold
+        assert widget._sb_missing_thr.value() == defaults.missing_node_prob_threshold
+
+        # In-sample path + ordered chains cleared (QCConfig defaults are ""/[]).
+        assert widget._insample_model_edit.text() == defaults.insample_model_path
+        assert widget._ordered_chains_edit.toPlainText() == ""
+        assert widget._traced_chains == []
+        assert widget._trace_in_progress == []
+        assert widget._chains_list.count() == 0
+
+    def test_restore_yields_config_equal_to_defaults(self, qtbot):
+        """After restore, the rebuilt config matches a fresh QCConfig()."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        widget._cb_chain.setChecked(True)
+        widget._sb_missing_thr.setValue(0.42)
+        widget._traced_chains = [["x", "y"]]
+
+        widget._on_restore_detector_defaults()
+
+        built = widget._build_qc_config()
+        defaults = QCConfig()
+        # The GUI exposes a subset of fields; assert each round-trips to default.
+        assert built.use_chirality is True  # "auto" -> ON in GUI
+        assert built.use_split_detection == defaults.use_split_detection
+        assert built.use_duplicate_score == defaults.use_duplicate_score
+        assert built.use_chain_ordering is False
+        assert built.use_missing_node_check is False
+        assert built.use_appearance is False
+        assert built.use_insample_prediction is False
+        assert built.chirality_flip_threshold == defaults.chirality_flip_threshold
+        assert built.duplicate_score_threshold == defaults.duplicate_score_threshold
+        assert built.chain_turn_angle_deg == defaults.chain_turn_angle_deg
+        assert built.order_inversion_threshold == defaults.order_inversion_threshold
+        assert built.missing_node_prob_threshold == defaults.missing_node_prob_threshold
+        assert built.insample_model_path == defaults.insample_model_path
+        assert built.ordered_chains == defaults.ordered_chains
+
+    def test_apply_config_to_widgets_loads_values(self, qtbot):
+        """_apply_config_to_widgets pushes a non-default config into the panel."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        config = QCConfig(
+            use_chirality=False,
+            use_chain_ordering=True,
+            use_appearance=True,
+            chirality_flip_threshold=0.25,
+            chain_turn_angle_deg=90.0,
+            missing_node_prob_threshold=0.55,
+            insample_model_path="/models/best",
+            ordered_chains=[["base", "mid", "tip"]],
+        )
+        widget._apply_config_to_widgets(config)
+
+        assert not widget._cb_flip.isChecked()
+        assert widget._cb_chain.isChecked()
+        assert widget._cb_appearance.isChecked()
+        assert widget._sb_flip_thr.value() == 0.25
+        assert widget._sb_chain_angle.value() == 90
+        assert widget._sb_missing_thr.value() == 0.55
+        assert widget._insample_model_edit.text() == "/models/best"
+        assert widget._traced_chains == [["base", "mid", "tip"]]
+        assert widget._chains_list.count() == 1
+
+
+def _real_labels(node_names, edges, instance_coords):
+    """Build a real sleap-io ``Labels`` with one frame of user instances.
+
+    Args:
+        node_names: Ordered node names for the skeleton.
+        edges: List of ``(src, dst)`` name pairs for skeleton edges.
+        instance_coords: List of ``(n_nodes, 2)`` array-likes, one per instance.
+            ``np.nan`` rows are treated as invisible nodes.
+
+    Returns:
+        A ``Labels`` object whose single frame holds the given user instances,
+        all sharing one ``Skeleton``.
+    """
+    import numpy as np
+    from sleap_io.model.skeleton import Skeleton
+    from sleap_io.model.instance import Instance
+    from sleap_io.model.labeled_frame import LabeledFrame
+    from sleap_io.model.labels import Labels
+    from sleap_io.model.video import Video
+
+    skeleton = Skeleton(list(node_names), edges=[list(e) for e in edges])
+    video = Video(filename="dummy.mp4")
+    instances = [
+        Instance.from_numpy(np.asarray(coords, dtype=float), skeleton=skeleton)
+        for coords in instance_coords
+    ]
+    lf = LabeledFrame(video=video, frame_idx=0, instances=instances)
+    return Labels([lf])
+
+
+class TestQCSkeletonTraceCanvasRealCoords:
+    """Real-animal layout for the trace canvas (issue #2769 follow-up).
+
+    The canvas should draw the skeleton using real labeled coordinates when they
+    are provided, and fall back to the spring/line layout when they are not.
+    """
+
+    def test_set_node_positions_drives_layout(self, qtbot):
+        """Real coords are normalized into the display frame and used as-is."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        # An L-shaped animal: B is right of A, C is below B (image coords, y down).
+        canvas.set_skeleton(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            node_positions={"A": (0.0, 0.0), "B": (100.0, 0.0), "C": (100.0, 50.0)},
+        )
+        pos = canvas._positions
+        assert set(pos) == {"A", "B", "C"}
+        # Normalized to ~[-1, 1] (max half-extent maps to 1).
+        for x, y in pos.values():
+            assert -1.0001 <= x <= 1.0001
+            assert -1.0001 <= y <= 1.0001
+        # Horizontal order from the real coords is preserved (A left of B).
+        assert pos["A"][0] < pos["B"][0]
+        # y is flipped (image y grows down): C is *below* B, so its drawn y is
+        # smaller than B's.
+        assert pos["C"][1] < pos["B"][1]
+        # The layout came from the real coords, not the seeded spring layout.
+        assert canvas._node_coords != {}
+
+    def test_set_node_positions_keeps_hit_testing(self, qtbot):
+        """Click hit-testing works against the real-coordinate positions."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            node_positions={"A": (0.0, 0.0), "B": (100.0, 0.0), "C": (200.0, 0.0)},
+        )
+        bx, by = canvas._positions["B"]
+        assert canvas.node_at(bx, by) == "B"
+        # A far-away point still misses everything.
+        assert canvas.node_at(50.0, 50.0) is None
+
+    def test_falls_back_to_spring_when_no_coords(self, qtbot):
+        """With no real coords the seeded spring/line layout is used."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton(["A", "B", "C"], [("A", "B"), ("B", "C")])
+        assert canvas._node_coords == {}
+        assert set(canvas._positions) == {"A", "B", "C"}
+
+    def test_single_real_coord_falls_back(self, qtbot):
+        """Fewer than two finite coords cannot define a scale -> fall back."""
+        import numpy as np
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (5.0, 5.0), "B": (np.nan, np.nan)},
+        )
+        # Only one finite coord -> _layout_from_coords returns None, spring used,
+        # but both nodes still get a position.
+        assert set(canvas._positions) == {"A", "B"}
+
+    def test_node_without_coord_is_not_drawn(self, qtbot):
+        """A node missing a real coord gets no position (and edges skip it)."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        canvas.set_skeleton(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            node_positions={"A": (0.0, 0.0), "B": (10.0, 0.0)},  # C omitted
+        )
+        assert set(canvas._positions) == {"A", "B"}
+        # Redraw must not raise even though edge B->C references a missing node.
+        canvas.update_plot()
+
+
+class TestQCRealAnimalLayout:
+    """Widget-level real-animal layout fed from labeled instances."""
+
+    def test_set_labels_computes_median_node_positions(self, qtbot):
+        """set_labels derives per-node medians and feeds them to the canvas."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # Three instances of the same L-shaped pose, translated to different
+        # parts of the frame. After per-instance centering the medians recover
+        # the shared shape, so the canvas uses real coords (not a spring layout).
+        base = [[0.0, 0.0], [40.0, 0.0], [40.0, 30.0]]
+
+        def shifted(dx, dy):
+            return [[x + dx, y + dy] for x, y in base]
+
+        labels = _real_labels(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            [shifted(0, 0), shifted(500, 10), shifted(-300, 200)],
+        )
+        widget.set_labels(labels)
+
+        coords = widget._skeleton_canvas._node_coords
+        assert set(coords) == {"A", "B", "C"}
+        # The recovered shape keeps B to the right of A and C below B (the L).
+        assert coords["B"][0] > coords["A"][0]
+        assert coords["C"][1] > coords["B"][1]  # raw image coords: y grows down
+
+    def test_representative_positions_skips_invisible_nodes(self, qtbot):
+        """A node never visible in any instance gets no representative coord."""
+        import numpy as np
+
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        nan = [np.nan, np.nan]
+        labels = _real_labels(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            [
+                [[0.0, 0.0], [10.0, 0.0], nan],
+                [[1.0, 1.0], [11.0, 1.0], nan],
+            ],
+        )
+        widget.set_labels(labels)
+        coords = widget._skeleton_canvas._node_coords
+        # C was invisible everywhere -> no representative position for it.
+        assert "C" not in coords
+        assert {"A", "B"} <= set(coords)
+
+    def test_set_labels_without_instances_uses_spring(self, qtbot):
+        """Labels with a skeleton but no instances fall back to spring layout."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        skeleton = _FakeSkeleton(["A", "B", "C"], [("A", "B"), ("B", "C")])
+        labels = MagicMock()
+        labels.skeletons = [skeleton]
+        labels.__len__ = MagicMock(return_value=0)
+        labels.__iter__ = MagicMock(return_value=iter([]))
+
+        widget.set_labels(labels)
+        # No instances -> no real coords, but the spring layout still positions
+        # every node so the user can trace.
+        assert widget._skeleton_canvas._node_coords == {}
+        assert set(widget._skeleton_canvas._positions) == {"A", "B", "C"}
+
+
+class TestQCChainTraceDialog:
+    """Pop-up ordered-chains editor (issue #2769 follow-up).
+
+    The full tracing UI now lives in a dialog opened from a "Configure
+    chains..." button; the inline summary reflects the configured chains and the
+    chains still feed ``QCConfig.ordered_chains``.
+    """
+
+    def test_configure_button_and_summary_exist(self, qtbot):
+        """The chain row exposes a button + summary instead of the inline panel."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert widget._chain_config_btn is not None
+        assert widget._chain_summary_label is not None
+        # Nothing configured yet.
+        assert widget._chain_summary_label.text() == "No chains"
+        # The trace panel is NOT a child of the detector grid container now; it
+        # is held off to the side for the dialog to host.
+        assert widget._chain_trace_panel is not None
+
+    def test_summary_updates_when_chains_added(self, qtbot):
+        """Adding/removing chains updates the inline summary text."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        widget._traced_chains = [["TTI", "Tail_0", "TailTip"], ["Head", "Neck"]]
+        widget._refresh_chains_list()
+
+        text = widget._chain_summary_label.text()
+        assert text.startswith("2 chains:")
+        # Long chains are abbreviated to endpoints; short ones shown in full.
+        assert "TTI→…→TailTip" in text
+        assert "Head→Neck" in text
+
+        # Removing all chains resets the summary.
+        widget._traced_chains = []
+        widget._refresh_chains_list()
+        assert widget._chain_summary_label.text() == "No chains"
+
+    def test_summary_includes_free_text_chains(self, qtbot):
+        """Advanced free-text chains count toward the summary too."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._ordered_chains_edit.setPlainText("A, B, C")
+        widget._refresh_chain_summary()
+        assert widget._chain_summary_label.text().startswith("1 chain:")
+        assert "A→…→C" in widget._chain_summary_label.text()
+
+    def test_open_dialog_hosts_panel_and_edits_chains(self, qtbot):
+        """Opening the dialog hosts the panel; edits flow back into the config."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        widget._cb_chain.setChecked(True)
+
+        opened = {}
+
+        def _drive_dialog():
+            dialog = widget._chain_trace_dialog
+            opened["dialog"] = dialog
+            # The live trace panel is hosted inside the dialog.
+            assert widget._chain_trace_panel.parent() is dialog
+            assert widget._chain_trace_panel.isVisible()
+            # Trace a chain by clicking nodes, then commit it -- exactly the
+            # interaction a user performs in the pop-up.
+            for name in ["TTI", "Tail_0", "TailTip"]:
+                widget._on_trace_node_clicked(name)
+            widget._on_trace_add_chain()
+            dialog.accept()
+
+        QtCore.QTimer.singleShot(0, _drive_dialog)
+        widget._open_chain_trace_dialog()
+
+        assert isinstance(opened["dialog"], QCChainTraceDialog)
+        # The chain edited in the dialog is now in the saved list + the summary.
+        assert widget._traced_chains == [["TTI", "Tail_0", "TailTip"]]
+        assert widget._chain_summary_label.text().startswith("1 chain:")
+        # ...and feeds QCConfig.ordered_chains so analysis picks it up.
+        config = widget._build_qc_config()
+        assert config.ordered_chains == [["TTI", "Tail_0", "TailTip"]]
+
+    def test_dialog_reused_across_opens(self, qtbot):
+        """The dialog instance is created once and reused on subsequent opens."""
+
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        def _close():
+            widget._chain_trace_dialog.reject()
+
+        QtCore.QTimer.singleShot(0, _close)
+        widget._open_chain_trace_dialog()
+        first = widget._chain_trace_dialog
+
+        QtCore.QTimer.singleShot(0, _close)
+        widget._open_chain_trace_dialog()
+        assert widget._chain_trace_dialog is first
+        # Panel is still hosted by (the same) dialog after reopening.
+        assert widget._chain_trace_panel.parent() is first
+
+    def test_configure_controls_follow_chain_checkbox(self, qtbot):
+        """The button + summary enable/disable with the chain detector."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert not widget._cb_chain.isChecked()
+        assert not widget._chain_config_btn.isEnabled()
+        assert not widget._chain_summary_label.isEnabled()
+        widget._cb_chain.setChecked(True)
+        assert widget._chain_config_btn.isEnabled()
+        assert widget._chain_summary_label.isEnabled()
