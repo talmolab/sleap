@@ -224,6 +224,14 @@ class CollapsibleGroupBox(QtWidgets.QGroupBox):
         outer.addWidget(self.content)
 
         self.setCheckable(True)
+        # Hide the native check-box indicator so the header shows ONLY the ▶/▼
+        # disclosure arrow, not a check box. A checkable QGroupBox otherwise
+        # draws a native checkbox next to the title (very visible on macOS)
+        # (issue #2769 follow-up). The box stays checkable -- isChecked()/
+        # setChecked()/toggled and click-to-expand keep working -- and styling
+        # the indicator to zero size moves rendering onto the stylesheet engine
+        # so the checkbox is gone on every platform.
+        self.setStyleSheet("QGroupBox::indicator { width: 0px; height: 0px; }")
         # A pointing-hand cursor reinforces that the whole header is clickable,
         # like a disclosure summary.
         self.setCursor(QtCore.Qt.PointingHandCursor)

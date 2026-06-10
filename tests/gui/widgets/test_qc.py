@@ -2440,6 +2440,25 @@ class TestCollapsibleDisclosure:
         assert group.title() == "Detector Settings"
         assert QtWidgets.QGroupBox.title(group).startswith("▶")
 
+    def test_disclosure_hides_native_checkbox(self, qtbot):
+        """Header shows only the arrow -- the native checkbox is hidden.
+
+        A checkable QGroupBox draws a native checkbox next to the title (very
+        visible on macOS); we keep it checkable (so isChecked()/setChecked()/
+        click-to-expand work) but style its indicator to zero size so only the
+        ▶/▼ disclosure arrow shows (issue #2769 follow-up).
+        """
+        box = CollapsibleGroupBox("Detector Settings", collapsed=True)
+        qtbot.addWidget(box)
+        # Still checkable, so the toggle API + click-to-expand keep working.
+        assert box.isCheckable()
+        box.setChecked(True)
+        assert box.isChecked()
+        # The native checkbox indicator is styled to nothing.
+        ss = box.styleSheet().replace(" ", "").lower()
+        assert "qgroupbox::indicator" in ss
+        assert "width:0" in ss and "height:0" in ss
+
 
 class TestQCRestoreDefaults:
     """Tests for the Detector Settings "Restore defaults" button (item #2769).
