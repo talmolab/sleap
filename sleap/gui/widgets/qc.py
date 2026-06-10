@@ -711,20 +711,26 @@ class QCSkeletonTraceCanvas(Canvas):
     chain currently being traced, and the canvas highlights the trace in click
     order with numbered badges so the path is obvious at a glance.
 
-    Where possible the skeleton is drawn using a *real* labeled animal's node
-    coordinates (like SLEAP's skeleton builder shows the actual animal shape):
-    callers pass a representative per-node position via :meth:`set_node_positions`
-    (e.g. the median over a sample of labeled instances), and the canvas
-    centers/scales those raw label coordinates to fill the view. When no labeled
-    coordinates are available the layout falls back to a deterministic, seeded
-    spring layout (or a horizontal line if networkx is missing) so the picture is
-    still stable across redraws. Either way the node positions are normalized
-    into roughly the same ``[-1, 1]`` frame, so the fixed click-pick radius works
-    against both layouts.
+    Where possible the skeleton is drawn over a *real* labeled frame: the owning
+    widget picks one labeled instance with as many nodes present as possible,
+    decodes that frame's image, and hands both the image and the instance's
+    per-node *pixel* coordinates to :meth:`set_skeleton`. The canvas then shows
+    the photo as the background (``imshow``, top-left origin like an image) and
+    overlays the markers/edges/trace badges at their true pixel positions, so the
+    user traces directly on the actual animal (issue #2769 follow-up). The view
+    is zoomable (mouse wheel) and pannable (middle/right drag) so a small animal
+    can be enlarged; double-click resets to the full image.
 
-    Clicking selects the nearest node within a small radius and emits
-    :attr:`node_clicked`; the owning widget owns the chain list and calls
-    :meth:`set_trace` to update the highlighted order.
+    When no frame image is available the canvas falls back to the abstract
+    layout: a representative per-node coordinate (or a deterministic seeded
+    spring layout, or a horizontal line if networkx is missing) normalized into a
+    ``[-1, 1]`` frame on a plain white background. Either way the layout is
+    stable across redraws.
+
+    Clicking with the *left* button selects the nearest node within a pick radius
+    and emits :attr:`node_clicked`; the owning widget owns the chain list and
+    calls :meth:`set_trace` to update the highlighted order. The middle/right
+    buttons pan instead of selecting.
 
     Signals:
         node_clicked: Emitted with the node *name* (str) when the user clicks a
@@ -734,7 +740,7 @@ class QCSkeletonTraceCanvas(Canvas):
 
     node_clicked = QtCore.Signal(str)
 
-    def __init__(self, width: int = 5, height: int = 3, dpi: int = 100):
+    def __init__(self, width: int = 7, height: int = 5, dpi: int = 100):
         """Initialize the canvas.
 
         Args:
@@ -748,32 +754,51 @@ class QCSkeletonTraceCanvas(Canvas):
         super().__init__(self.fig)
 
         self.setSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
         )
-        self.setMinimumSize(260, 220)
+        # Bigger minimum so the animal is clearly visible; the user explicitly
+        # asked for a larger, zoomable canvas.
+        self.setMinimumSize(480, 380)
 
-        # Node display positions keyed by node name: {name: (x, y)}. These are
-        # the *normalized* coordinates actually drawn/hit-tested (roughly in
-        # [-1, 1]); see :meth:`_compute_layout`.
+        # Node display positions keyed by node name: {name: (x, y)}. In image
+        # mode these are raw *pixel* coordinates; in the abstract fallback they
+        # are *normalized* (roughly [-1, 1]); see :meth:`_compute_layout`.
         self._positions: dict = {}
         self._node_names: list = []
         self._edges: list = []  # list of (src_name, dst_name)
         # Optional representative per-node coordinates from real labeled
         # instances ({name: (x, y)} in raw label/image space). When present
-        # these drive the layout (a real animal shape); when empty the canvas
-        # falls back to the spring/line layout.
+        # these drive the abstract layout (a real animal shape); when empty the
+        # canvas falls back to the spring/line layout.
         self._node_coords: dict = {}
+        # The labeled frame image to show as the canvas background (np.ndarray,
+        # 2D grayscale or HxWx3 RGB), or None to use the abstract white layout.
+        self._background_image = None
+        # The matplotlib AxesImage handle for the background (when shown).
+        self._image_artist = None
         # The chain currently being traced, in click order (node names).
         self._trace: list = []
-        # Click hit-test radius in data coordinates. Both the spring layout and
-        # the real-coordinate layout are normalized to ~[-1, 1], so this fixed
-        # radius works for either.
+        # Click hit-test radius for the abstract layout (data coords). Both the
+        # spring layout and the real-coordinate layout are normalized to
+        # ~[-1, 1], so this fixed radius works for either. In image (pixel) mode
+        # the pick radius is derived from the current view extent instead, so it
+        # keeps working after zooming/panning -- see :meth:`node_at`.
         self._pick_radius = 0.18
 
+        # Pan bookkeeping: the data-space anchor recorded on a middle/right
+        # button press, used to translate the view on drag.
+        self._pan_anchor = None
+
         self.mpl_connect("button_press_event", self._on_click)
+        self.mpl_connect("scroll_event", self._on_scroll)
+        self.mpl_connect("button_press_event", self._on_pan_press)
+        self.mpl_connect("motion_notify_event", self._on_pan_move)
+        self.mpl_connect("button_release_event", self._on_pan_release)
         self.update_plot()
 
-    def set_skeleton(self, node_names: list, edges: list, node_positions=None):
+    def set_skeleton(
+        self, node_names: list, edges: list, node_positions=None, image=None
+    ):
         """Set the skeleton to display and recompute the layout.
 
         Args:
@@ -782,9 +807,18 @@ class QCSkeletonTraceCanvas(Canvas):
             node_positions: Optional dict mapping node name to a representative
                 ``(x, y)`` coordinate from real labeled instances (raw label
                 space). When given (and non-empty), the skeleton is drawn using
-                those coordinates so it looks like the actual animal; otherwise
-                the canvas falls back to the spring/line layout. May also be set
-                separately via :meth:`set_node_positions`.
+                those coordinates. If an ``image`` is also given these are
+                treated as raw *pixel* coordinates and drawn over the image at
+                their true positions; otherwise they are centered/scaled into the
+                abstract ``[-1, 1]`` frame (like the SLEAP skeleton builder).
+                When omitted the canvas falls back to the spring/line layout.
+                May also be set separately via :meth:`set_node_positions`.
+            image: Optional labeled-frame image (``np.ndarray``; 2D grayscale,
+                ``(H, W, 1)`` grayscale, or ``(H, W, 3)`` RGB) to show as the
+                canvas background. When provided together with ``node_positions``
+                the canvas enters *image mode*: the photo is shown with a
+                top-left origin and the skeleton is overlaid at pixel coords.
+                ``None`` keeps the plain abstract layout.
         """
         self._node_names = list(node_names)
         # Keep only edges whose endpoints are present, as name pairs.
@@ -800,10 +834,63 @@ class QCSkeletonTraceCanvas(Canvas):
         else:
             # A new skeleton without coords drops any stale real coordinates.
             self._node_coords = {}
-        self._positions = self._compute_layout()
+        # Image mode requires both an image and at least one real pixel coord;
+        # otherwise we cannot place the skeleton on the photo, so fall back.
+        self._background_image = self._coerce_image(image)
+        if self._background_image is not None and self._node_coords:
+            # Pixel mode: draw nodes at their true image coordinates (no
+            # normalization), so they line up with the animal in the photo.
+            self._positions = {
+                name: (float(x), float(y))
+                for name, (x, y) in self._node_coords.items()
+                if np.isfinite(x) and np.isfinite(y)
+            }
+        else:
+            self._background_image = None
+            self._positions = self._compute_layout()
         # Drop any traced nodes that no longer exist in this skeleton.
         self._trace = [n for n in self._trace if n in valid]
+        # A new skeleton/image is a structural change: start from the full
+        # extent rather than preserving a stale zoom from a previous project.
+        self.axes.set_xlim(0.0, 1.0)
+        self.axes.set_ylim(0.0, 1.0)
+        self._pan_anchor = None
         self.update_plot()
+
+    @staticmethod
+    def _coerce_image(image):
+        """Normalize a frame image into a 2D/RGB array ``imshow`` can render.
+
+        Squeezes a trailing singleton channel (``(H, W, 1)`` grayscale) down to
+        ``(H, W)`` and passes ``(H, W, 3)`` RGB through unchanged. Anything that
+        is not a usable 2D/RGB image (wrong rank, empty, or not array-like)
+        returns ``None`` so the caller falls back to the abstract layout.
+
+        Args:
+            image: Candidate image (``np.ndarray`` or array-like), or ``None``.
+
+        Returns:
+            A 2D ``(H, W)`` or 3D ``(H, W, 3)`` ``np.ndarray``, or ``None``.
+        """
+        if image is None:
+            return None
+        try:
+            arr = np.asarray(image)
+        except Exception:
+            return None
+        if arr.size == 0:
+            return None
+        # Drop a leading singleton (e.g. a (1, H, W, C) single-frame stack).
+        while arr.ndim > 3 and arr.shape[0] == 1:
+            arr = arr[0]
+        if arr.ndim == 3 and arr.shape[-1] == 1:
+            arr = arr[..., 0]
+        if arr.ndim == 2:
+            return arr
+        if arr.ndim == 3 and arr.shape[-1] in (3, 4):
+            # Keep RGB; drop an alpha channel for a stable imshow.
+            return arr[..., :3]
+        return None
 
     def set_node_positions(self, node_positions: dict):
         """Set representative per-node coordinates from real labeled instances.
@@ -823,7 +910,14 @@ class QCSkeletonTraceCanvas(Canvas):
             for name, (x, y) in (node_positions or {}).items()
             if name in valid
         }
+        # Setting positions without an image is an abstract-layout update; drop
+        # any stale background so we do not draw normalized coords over a photo.
+        self._background_image = None
         self._positions = self._compute_layout()
+        # Structural change: reset any zoom/pan to the full extent.
+        self.axes.set_xlim(0.0, 1.0)
+        self.axes.set_ylim(0.0, 1.0)
+        self._pan_anchor = None
         self.update_plot()
 
     def _compute_layout(self) -> dict:
@@ -922,14 +1016,30 @@ class QCSkeletonTraceCanvas(Canvas):
         return list(self._trace)
 
     def update_plot(self):
-        """Redraw the skeleton, edges, and the highlighted trace path."""
+        """Redraw the skeleton, edges, and the highlighted trace path.
+
+        Draws over the labeled-frame photo at true pixel coordinates when an
+        image is set (image mode), otherwise on a plain white background using
+        the normalized abstract layout. Preserves the current zoom/pan view when
+        only the trace changes, so wheel-zooming and then clicking nodes does not
+        snap the view back to the full extent.
+        """
+        image_mode = self._background_image is not None
+        # Remember the current view so a redraw triggered by a trace edit keeps
+        # the user's zoom/pan. We only restore it when the axes already held a
+        # real view (not the initial 0..1 default) and the data is unchanged.
+        prev_xlim = self.axes.get_xlim()
+        prev_ylim = self.axes.get_ylim()
+        had_view = prev_xlim != (0.0, 1.0) or prev_ylim != (0.0, 1.0)
+
         self.axes.clear()
+        self._image_artist = None
         self.axes.set_xticks([])
         self.axes.set_yticks([])
         for spine in self.axes.spines.values():
             spine.set_visible(False)
 
-        if not self._positions:
+        if not self._positions and not image_mode:
             self.axes.text(
                 0.5,
                 0.5,
@@ -944,22 +1054,55 @@ class QCSkeletonTraceCanvas(Canvas):
             self.draw()
             return
 
+        # --- Background image (image mode) ---------------------------------
+        if image_mode:
+            img = self._background_image
+            kwargs = {"origin": "upper", "interpolation": "nearest", "zorder": 0}
+            if img.ndim == 2:
+                kwargs["cmap"] = "gray"
+            self._image_artist = self.axes.imshow(img, **kwargs)
+
+        # In pixel (image) mode markers/labels are sized in pixels relative to
+        # the image, so scale them off the image size; the abstract layout keeps
+        # the original compact styling.
+        if image_mode:
+            h, w = self._background_image.shape[:2]
+            span = float(max(h, w)) or 1.0
+            marker_s = max(80.0, (span * 0.012) ** 2)
+            edge_lw = max(1.2, span / 400.0)
+            trace_lw = max(2.0, span / 250.0)
+            badge_fs = 9
+            label_fs = 8
+            label_dy = 14
+        else:
+            marker_s = 260
+            edge_lw = 1.2
+            trace_lw = 2.5
+            badge_fs = 9
+            label_fs = 8
+            label_dy = 12
+
         # Draw skeleton edges first so nodes sit on top. Skip any edge whose
         # endpoint lacks a position (e.g. a node with no labeled coordinate in
         # the real-animal layout).
+        edge_color = "#e8f0ff" if image_mode else "#ced4da"
         for src, dst in self._edges:
             if src not in self._positions or dst not in self._positions:
                 continue
             x0, y0 = self._positions[src]
             x1, y1 = self._positions[dst]
-            self.axes.plot([x0, x1], [y0, y1], color="#ced4da", linewidth=1.2, zorder=1)
+            self.axes.plot(
+                [x0, x1], [y0, y1], color=edge_color, linewidth=edge_lw, zorder=1
+            )
 
         # Draw the trace path (in click order) as a highlighted poly-line.
         drawable_trace = [n for n in self._trace if n in self._positions]
         if len(drawable_trace) >= 2:
             tx = [self._positions[n][0] for n in drawable_trace]
             ty = [self._positions[n][1] for n in drawable_trace]
-            self.axes.plot(tx, ty, color="#007bff", linewidth=2.5, zorder=2, alpha=0.9)
+            self.axes.plot(
+                tx, ty, color="#007bff", linewidth=trace_lw, zorder=2, alpha=0.9
+            )
 
         # Map node -> 1-based position in the trace (for numbered badges).
         trace_order = {name: i + 1 for i, name in enumerate(self._trace)}
@@ -970,7 +1113,7 @@ class QCSkeletonTraceCanvas(Canvas):
             self.axes.scatter(
                 [x],
                 [y],
-                s=260,
+                s=marker_s,
                 facecolor="#007bff" if in_trace else "#e9ecef",
                 edgecolor="#0056b3" if in_trace else "#adb5bd",
                 linewidths=1.5,
@@ -984,7 +1127,7 @@ class QCSkeletonTraceCanvas(Canvas):
                     str(trace_order[name]),
                     ha="center",
                     va="center",
-                    fontsize=9,
+                    fontsize=badge_fs,
                     fontweight="bold",
                     color="white",
                     zorder=4,
@@ -992,39 +1135,92 @@ class QCSkeletonTraceCanvas(Canvas):
             self.axes.annotate(
                 name,
                 xy=(x, y),
-                xytext=(0, 12),
+                xytext=(0, label_dy),
                 textcoords="offset points",
                 ha="center",
                 va="bottom",
-                fontsize=8,
-                color="#212529" if in_trace else "#495057",
+                fontsize=label_fs,
+                color=(
+                    "#f1f3f5" if image_mode else ("#212529" if in_trace else "#495057")
+                ),
                 zorder=4,
+                bbox=(
+                    dict(boxstyle="round,pad=0.15", fc="#212529aa", ec="none")
+                    if image_mode
+                    else None
+                ),
             )
 
-        # Pad the limits so labels are not clipped. Use ``adjustable="box"`` so
-        # the equal-aspect constraint resizes the axes box rather than silently
-        # overriding the explicit limits set here (which would emit a warning).
-        xs = [p[0] for p in self._positions.values()]
-        ys = [p[1] for p in self._positions.values()]
-        pad = 0.35
-        self.axes.set_aspect("equal", adjustable="box")
-        self.axes.set_xlim(min(xs) - pad, max(xs) + pad)
-        self.axes.set_ylim(min(ys) - pad, max(ys) + pad)
+        if image_mode:
+            self.axes.set_aspect("equal", adjustable="box")
+            h, w = self._background_image.shape[:2]
+            if had_view:
+                # Preserve the user's zoom/pan across a trace-only redraw.
+                self.axes.set_xlim(prev_xlim)
+                self.axes.set_ylim(prev_ylim)
+            else:
+                # Full image extent; y inverted so (0,0) is top-left like a photo.
+                self.axes.set_xlim(-0.5, w - 0.5)
+                self.axes.set_ylim(h - 0.5, -0.5)
+        else:
+            # Pad the limits so labels are not clipped. Use ``adjustable="box"``
+            # so the equal-aspect constraint resizes the axes box rather than
+            # silently overriding the explicit limits (which would warn).
+            xs = [p[0] for p in self._positions.values()]
+            ys = [p[1] for p in self._positions.values()]
+            pad = 0.35
+            self.axes.set_aspect("equal", adjustable="box")
+            self.axes.set_xlim(min(xs) - pad, max(xs) + pad)
+            self.axes.set_ylim(min(ys) - pad, max(ys) + pad)
 
         self.draw()
 
+    def reset_view(self):
+        """Reset the view to the full image (or layout) extent and redraw."""
+        # Forget any zoom/pan, then let update_plot recompute the full extent.
+        self.axes.set_xlim(0.0, 1.0)
+        self.axes.set_ylim(0.0, 1.0)
+        self.update_plot()
+
+    def _current_pick_radius(self) -> float:
+        """Pick radius in *data* units for the currently active layout.
+
+        The abstract layout is normalized to ``~[-1, 1]`` so a fixed radius
+        works. In image (pixel) mode the data units are image pixels and the
+        view changes with zoom, so the radius is taken as a fraction of the
+        current visible width -- this keeps the clickable target a roughly
+        constant on-screen size after zooming and panning.
+
+        Returns:
+            The hit-test radius in the active data coordinate space.
+        """
+        if self._background_image is None:
+            return self._pick_radius
+        x0, x1 = self.axes.get_xlim()
+        view_w = abs(x1 - x0)
+        if not np.isfinite(view_w) or view_w <= 0:
+            # No real view yet: fall back to a fraction of the image width.
+            view_w = float(self._background_image.shape[1]) or 1.0
+        # ~6% of the visible width; clamp so it never collapses to nothing.
+        return max(view_w * 0.06, 1.0)
+
     def node_at(self, x: float, y: float) -> Optional[str]:
         """Return the node name nearest to ``(x, y)`` within the pick radius.
+
+        Works in whichever coordinate space is currently active: normalized
+        units for the abstract layout, image pixels for the photo overlay. In
+        pixel mode the radius scales with the current view (see
+        :meth:`_current_pick_radius`) so picking keeps working after zoom/pan.
 
         Args:
             x: X position in data coordinates.
             y: Y position in data coordinates.
 
         Returns:
-            The nearest node name within :attr:`_pick_radius`, or None.
+            The nearest node name within the active pick radius, or None.
         """
         best_name = None
-        best_dist = self._pick_radius
+        best_dist = self._current_pick_radius()
         for name, (nx_, ny_) in self._positions.items():
             dist = ((nx_ - x) ** 2 + (ny_ - y) ** 2) ** 0.5
             if dist <= best_dist:
@@ -1033,14 +1229,96 @@ class QCSkeletonTraceCanvas(Canvas):
         return best_name
 
     def _on_click(self, event):
-        """Emit :attr:`node_clicked` for the node nearest the click, if any."""
+        """Handle a left click: select the nearest node, or reset on dbl-click.
+
+        Left-button single clicks emit :attr:`node_clicked` for the nearest node
+        (the tracing interaction). A left-button double-click resets the view to
+        the full extent. Middle/right buttons are reserved for panning and are
+        ignored here.
+        """
         if event.inaxes != self.axes:
+            return
+        # Only the left button drives selection; middle/right pan instead.
+        if event.button not in (1, None):
+            return
+        if getattr(event, "dblclick", False):
+            self.reset_view()
             return
         if event.xdata is None or event.ydata is None:
             return
         name = self.node_at(event.xdata, event.ydata)
         if name is not None:
             self.node_clicked.emit(name)
+
+    def _on_scroll(self, event):
+        """Zoom the view in/out around the cursor on a mouse-wheel scroll.
+
+        Scales the current x/y limits about ``(event.xdata, event.ydata)`` so the
+        point under the cursor stays put: scrolling up zooms in, down zooms out.
+        """
+        if event.inaxes != self.axes:
+            return
+        if event.xdata is None or event.ydata is None:
+            return
+        # Up zooms in (shrink the view), down zooms out (grow it).
+        scale = 0.8 if event.button == "up" else 1.25
+        x0, x1 = self.axes.get_xlim()
+        y0, y1 = self.axes.get_ylim()
+        cx, cy = event.xdata, event.ydata
+        # Keep the cursor anchored: scale each side's distance from the cursor.
+        self.axes.set_xlim(cx + (x0 - cx) * scale, cx + (x1 - cx) * scale)
+        self.axes.set_ylim(cy + (y0 - cy) * scale, cy + (y1 - cy) * scale)
+        self.draw()
+
+    def _on_pan_press(self, event):
+        """Record the pan anchor when a non-left button is pressed in the axes.
+
+        The anchor is the press location in *display pixels* together with the
+        axes limits at press time; tracking pixels (rather than data coords)
+        avoids feedback when the limits move out from under the cursor mid-drag.
+        """
+        if event.inaxes != self.axes:
+            return
+        # Middle (2) or right (3) button starts a pan; left is for selection.
+        if event.button in (2, 3):
+            x0, x1 = self.axes.get_xlim()
+            y0, y1 = self.axes.get_ylim()
+            bbox = self.axes.get_window_extent()
+            # Data units per display pixel, frozen at press time so the mapping
+            # cannot drift as the limits move during the drag.
+            self._pan_anchor = (
+                event.x,
+                event.y,
+                x0,
+                x1,
+                y0,
+                y1,
+                (x1 - x0) / bbox.width if bbox.width else 0.0,
+                (y1 - y0) / bbox.height if bbox.height else 0.0,
+            )
+
+    def _on_pan_move(self, event):
+        """Translate the view to follow the cursor while panning.
+
+        Converts the pixel movement since the press into a data-space shift
+        using the frozen press-time pixel scale, then offsets the press-time
+        limits by that shift so the grabbed point stays under the cursor.
+        """
+        if self._pan_anchor is None:
+            return
+        if event.x is None or event.y is None:
+            return
+        px, py, x0, x1, y0, y1, sx, sy = self._pan_anchor
+        shift_x = (event.x - px) * sx
+        shift_y = (event.y - py) * sy
+        self.axes.set_xlim(x0 - shift_x, x1 - shift_x)
+        self.axes.set_ylim(y0 - shift_y, y1 - shift_y)
+        self.draw()
+
+    def _on_pan_release(self, event):
+        """End the current pan gesture."""
+        if event.button in (2, 3):
+            self._pan_anchor = None
 
 
 class QCFlagTableModel(QtCore.QAbstractTableModel):
@@ -1331,7 +1609,10 @@ class QCChainTraceDialog(QtWidgets.QDialog):
         # Non-modal would let the underlying project change under the editor;
         # a modal dialog keeps the chain state edit self-contained.
         self.setModal(True)
-        self.setMinimumSize(420, 460)
+        # Larger so the real labeled frame is clearly visible for tracing
+        # (issue #2769 follow-up).
+        self.setMinimumSize(640, 680)
+        self.resize(820, 820)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -1993,12 +2274,33 @@ class QCWidget(QtWidgets.QWidget):
         outer.addWidget(heading)
 
         # --- Interactive skeleton canvas: click nodes in order to trace. ---
-        self._skeleton_canvas = QCSkeletonTraceCanvas(width=5, height=2.6)
+        # Bigger + zoomable so the real labeled animal is clearly visible
+        # (issue #2769 follow-up: trace on the actual frame photo).
+        self._skeleton_canvas = QCSkeletonTraceCanvas(width=7, height=5)
         self._skeleton_canvas.setToolTip(
-            "Click nodes in order to trace a chain. Numbered blue nodes show the "
-            "current order; click 'Add chain' to save it."
+            "Click nodes in order to trace a chain. The numbered blue nodes show "
+            "the current order; click 'Add chain' to save it.\n"
+            "Scroll to zoom, drag with the middle/right mouse button to pan, "
+            "and double-click to reset the view."
         )
-        outer.addWidget(self._skeleton_canvas)
+        outer.addWidget(self._skeleton_canvas, stretch=1)
+
+        # A small view-control row: a hint plus an explicit Reset view button
+        # (double-click also resets).
+        view_row = QtWidgets.QHBoxLayout()
+        view_row.setSpacing(4)
+        view_hint = QtWidgets.QLabel(
+            "Scroll to zoom · middle/right-drag to pan · double-click to reset"
+        )
+        view_hint.setStyleSheet("color:#6c757d;")
+        view_row.addWidget(view_hint)
+        view_row.addStretch()
+        self._reset_view_btn = QtWidgets.QToolButton()
+        self._reset_view_btn.setText("Reset view")
+        self._reset_view_btn.setToolTip("Reset zoom/pan to show the whole frame.")
+        self._reset_view_btn.clicked.connect(self._skeleton_canvas.reset_view)
+        view_row.addWidget(self._reset_view_btn)
+        outer.addLayout(view_row)
 
         # --- Current trace readout (ordered chips) + actions. ---
         trace_row = QtWidgets.QHBoxLayout()
@@ -2278,15 +2580,21 @@ class QCWidget(QtWidgets.QWidget):
 
         Reads the first skeleton from the loaded labels (if any) and hands its
         nodes/edges to the :class:`QCSkeletonTraceCanvas` so the user can trace
-        on the real skeleton. Also computes a representative per-node position
-        from the labeled instances (:meth:`_representative_node_positions`) so
-        the canvas can draw the actual animal shape rather than an abstract
-        spring layout (issue #2769 follow-up). Clears the canvas when no skeleton
-        is available.
+        on the real skeleton. It then picks one real labeled instance with as
+        many nodes present as possible and decodes that frame's image
+        (:meth:`_best_labeled_instance_image`), so the canvas can show the actual
+        photo with the skeleton overlaid at true pixel coordinates -- the user
+        traces on the real animal (issue #2769 follow-up). When no image can be
+        decoded (e.g. the video file is missing) it falls back to a centered,
+        abstract layout from a representative instance
+        (:meth:`_representative_node_positions`). Clears the canvas when no
+        skeleton is available.
 
         Uses ``labels.skeletons`` (a list) rather than the ``labels.skeleton``
         convenience property, since the latter *raises* when there are zero or
-        multiple skeletons. Any backend hiccup falls back to an empty canvas.
+        multiple skeletons. Nothing here may throw: any backend hiccup degrades
+        to a less rich view (image -> abstract -> spring -> empty) so the dialog
+        always opens.
         """
         node_names: list = []
         edges: list = []
@@ -2304,10 +2612,99 @@ class QCWidget(QtWidgets.QWidget):
                 ]
         except Exception:
             node_names, edges, skeleton = [], [], None
+
+        # Prefer the real labeled frame: one instance's pixel coords + the photo.
+        pixel_positions, image = self._best_labeled_instance_image(skeleton, node_names)
+        if image is not None and pixel_positions:
+            self._skeleton_canvas.set_skeleton(
+                node_names, edges, node_positions=pixel_positions, image=image
+            )
+            return
+
+        # No usable image: draw an abstract animal shape from a representative
+        # instance (centered/scaled), falling back to the spring layout inside
+        # the canvas when even that is unavailable.
         node_positions = self._representative_node_positions(skeleton, node_names)
         self._skeleton_canvas.set_skeleton(
-            node_names, edges, node_positions=node_positions
+            node_names, edges, node_positions=node_positions, image=None
         )
+
+    def _best_labeled_instance_image(self, skeleton, node_names: list):
+        """Pick the best-labeled instance and decode its frame image.
+
+        Scans every labeled frame for *user* instances that share ``skeleton``
+        and counts how many nodes are present (finite/visible). The instance with
+        the most present nodes wins (preferring one with *all* nodes present;
+        ties break to the first found), since a fully-labeled animal makes the
+        clearest tracing target. That instance's frame image is decoded via
+        ``labeled_frame.image`` (which works for embedded ``pkg.slp`` frames).
+
+        The whole scan is wrapped defensively: a missing video, an undecodable
+        frame, or any backend error returns ``(positions, None)`` (or ``({},
+        None)``) so the caller falls back to the abstract layout and the dialog
+        still opens.
+
+        Args:
+            skeleton: The skeleton whose ``node_names`` order aligns with each
+                instance's ``numpy()`` rows, or ``None``.
+            node_names: The skeleton node names (used as result keys).
+
+        Returns:
+            A ``(positions, image)`` tuple. ``positions`` maps node name to the
+            chosen instance's ``(x, y)`` *pixel* coordinate (present nodes only);
+            ``image`` is the decoded frame as an ``np.ndarray`` or ``None``.
+        """
+        labels = self._labels
+        if labels is None or skeleton is None or not node_names:
+            return {}, None
+
+        n_nodes = len(node_names)
+        best_lf = None
+        best_pts = None
+        best_count = -1
+        try:
+            frames = getattr(labels, "labeled_frames", None)
+            if frames is None:
+                frames = labels  # iterate the Labels object directly
+            for lf in frames:
+                for inst in getattr(lf, "user_instances", []):
+                    # Only instances sharing this skeleton align row-for-row.
+                    if getattr(inst, "skeleton", None) is not skeleton:
+                        continue
+                    pts = np.asarray(inst.numpy(invisible_as_nan=True), dtype=float)
+                    if pts.shape != (n_nodes, 2):
+                        continue
+                    present = int(np.isfinite(pts).all(axis=1).sum())
+                    if present > best_count:
+                        best_count = present
+                        best_pts = pts
+                        best_lf = lf
+                        # A fully-present instance is ideal; stop early.
+                        if present == n_nodes:
+                            raise StopIteration
+        except StopIteration:
+            pass
+        except Exception:
+            return {}, None
+
+        if best_lf is None or best_pts is None or best_count <= 0:
+            return {}, None
+
+        positions = {
+            name: (float(best_pts[i, 0]), float(best_pts[i, 1]))
+            for i, name in enumerate(node_names)
+            if np.isfinite(best_pts[i, 0]) and np.isfinite(best_pts[i, 1])
+        }
+
+        # Decode the frame image; any failure (missing video, bad backend) falls
+        # back to an image-less (abstract) overlay.
+        image = None
+        try:
+            image = np.asarray(best_lf.image)
+        except Exception:
+            image = None
+
+        return positions, image
 
     def _representative_node_positions(
         self, skeleton, node_names: list, max_instances: int = 200

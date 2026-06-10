@@ -1,6 +1,6 @@
 """Tests for QC widget components."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from qtpy import QtCore, QtWidgets
 
@@ -2241,6 +2241,8 @@ class TestQCChainTracePanel:
         assert widget._chains_list is not None
         # The advanced free-text fallback still exists.
         assert widget._ordered_chains_edit is not None
+        # The zoom/pan canvas exposes a Reset view affordance.
+        assert widget._reset_view_btn is not None
 
     def test_clicking_nodes_builds_trace(self, qtbot):
         """Node clicks append to the in-progress trace; the canvas mirrors it."""
@@ -2767,6 +2769,470 @@ class TestQCRealAnimalLayout:
         # every node so the user can trace.
         assert widget._skeleton_canvas._node_coords == {}
         assert set(widget._skeleton_canvas._positions) == {"A", "B", "C"}
+
+
+def _synthetic_image(h=80, w=120, channels=None):
+    """Build a small deterministic image for trace-canvas tests.
+
+    Args:
+        h: Image height in pixels.
+        w: Image width in pixels.
+        channels: ``None`` for a 2D grayscale image, or an int (1 or 3) for a
+            trailing channel dimension.
+
+    Returns:
+        A ``uint8`` ``np.ndarray`` of shape ``(h, w)``, ``(h, w, 1)``, or
+        ``(h, w, 3)``.
+    """
+    import numpy as np
+
+    base = (np.add.outer(np.linspace(0, 200, h), np.linspace(0, 50, w))).astype("uint8")
+    if channels is None:
+        return base
+    if channels == 1:
+        return base[..., None]
+    return np.stack([base, base, base], axis=-1)
+
+
+class TestQCTraceCanvasImageMode:
+    """Image-backed trace canvas: photo background + pixel-space overlay.
+
+    The user traces directly on a real labeled frame, so the canvas shows the
+    frame image and overlays the skeleton at true pixel coordinates, with mouse
+    zoom/pan (issue #2769 follow-up).
+    """
+
+    def test_image_sets_background_and_pixel_positions(self, qtbot):
+        """With an image, the canvas shows it and uses pixel-space node coords."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(80, 120)
+        coords = {"A": (40.0, 30.0), "B": (80.0, 50.0), "C": (100.0, 70.0)}
+        canvas.set_skeleton(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            node_positions=coords,
+            image=img,
+        )
+        # The background image is stored and an AxesImage was drawn.
+        assert canvas._background_image is not None
+        assert canvas._image_artist is not None
+        from matplotlib.image import AxesImage
+
+        assert any(isinstance(a, AxesImage) for a in canvas.axes.get_images())
+        # Nodes sit at their *pixel* coords, not a normalized [-1, 1] value.
+        assert canvas._positions["A"] == (40.0, 30.0)
+        assert canvas._positions["C"] == (100.0, 70.0)
+
+    def test_image_view_uses_top_left_origin(self, qtbot):
+        """The view spans the image extent with y inverted (top-left origin)."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(80, 120)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (10.0, 10.0), "B": (90.0, 70.0)},
+            image=img,
+        )
+        x0, x1 = canvas.axes.get_xlim()
+        y0, y1 = canvas.axes.get_ylim()
+        # x grows left->right over the image width.
+        assert x0 < x1
+        assert abs(x1 - x0 - 120) < 2.0
+        # y is inverted so (0, 0) is at the top, like an image.
+        assert y0 > y1
+
+    def test_grayscale_channel_image_is_squeezed(self, qtbot):
+        """An (H, W, 1) grayscale image is squeezed to 2D for imshow."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(60, 90, channels=1)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (10.0, 10.0), "B": (50.0, 40.0)},
+            image=img,
+        )
+        assert canvas._background_image is not None
+        assert canvas._background_image.ndim == 2
+
+    def test_rgb_image_passes_through(self, qtbot):
+        """An (H, W, 3) RGB image is kept 3-channel for imshow."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(60, 90, channels=3)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (10.0, 10.0), "B": (50.0, 40.0)},
+            image=img,
+        )
+        assert canvas._background_image is not None
+        assert canvas._background_image.ndim == 3
+        assert canvas._background_image.shape[-1] == 3
+
+    def test_node_at_pixel_space(self, qtbot):
+        """node_at hits a node at its pixel coordinate and misses far away."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(100, 150)
+        canvas.set_skeleton(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            node_positions={"A": (20.0, 20.0), "B": (75.0, 50.0), "C": (130.0, 90.0)},
+            image=img,
+        )
+        assert canvas.node_at(75.0, 50.0) == "B"
+        # A pixel between far-apart nodes hits nothing.
+        assert canvas.node_at(0.0, 99.0) is None
+
+    def test_node_at_still_works_after_zoom(self, qtbot):
+        """Hit-testing keeps working after a wheel zoom (pixel pick radius)."""
+        from matplotlib.backend_bases import MouseEvent
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(100, 150)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (20.0, 20.0), "B": (120.0, 80.0)},
+            image=img,
+        )
+        canvas.resize(500, 400)
+        canvas.draw()
+        # Zoom in around node B.
+        disp = canvas.axes.transData.transform((120.0, 80.0))
+        ev = MouseEvent("scroll_event", canvas, disp[0], disp[1], step=1)
+        ev.button = "up"
+        canvas._on_scroll(ev)
+        # B is still selectable at its pixel coordinate after zooming.
+        assert canvas.node_at(120.0, 80.0) == "B"
+
+    def test_scroll_zooms_changes_limits(self, qtbot):
+        """Scrolling up shrinks the view; scrolling down grows it."""
+        from matplotlib.backend_bases import MouseEvent
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(100, 150)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (20.0, 20.0), "B": (120.0, 80.0)},
+            image=img,
+        )
+        canvas.resize(500, 400)
+        canvas.draw()
+
+        def _width():
+            lo, hi = canvas.axes.get_xlim()
+            return abs(hi - lo)
+
+        before = _width()
+        disp = canvas.axes.transData.transform((75.0, 50.0))
+        up = MouseEvent("scroll_event", canvas, disp[0], disp[1], step=1)
+        up.button = "up"
+        canvas._on_scroll(up)
+        zoomed_in = _width()
+        assert zoomed_in < before
+
+        down = MouseEvent("scroll_event", canvas, disp[0], disp[1], step=1)
+        down.button = "down"
+        canvas._on_scroll(down)
+        assert _width() > zoomed_in
+
+    def test_reset_view_restores_full_extent(self, qtbot):
+        """reset_view (and double-click) restores the full image extent."""
+        from matplotlib.backend_bases import MouseEvent
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(100, 150)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (20.0, 20.0), "B": (120.0, 80.0)},
+            image=img,
+        )
+        canvas.resize(500, 400)
+        canvas.draw()
+        # Zoom in, then reset.
+        disp = canvas.axes.transData.transform((75.0, 50.0))
+        up = MouseEvent("scroll_event", canvas, disp[0], disp[1], step=1)
+        up.button = "up"
+        canvas._on_scroll(up)
+        canvas.reset_view()
+        lo, hi = canvas.axes.get_xlim()
+        assert abs(abs(hi - lo) - 150) < 2.0
+
+    def test_trace_edit_preserves_zoom(self, qtbot):
+        """Editing the trace after zooming keeps the user's zoomed view."""
+        from matplotlib.backend_bases import MouseEvent
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(100, 150)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (20.0, 20.0), "B": (120.0, 80.0)},
+            image=img,
+        )
+        canvas.resize(500, 400)
+        canvas.draw()
+        disp = canvas.axes.transData.transform((75.0, 50.0))
+        up = MouseEvent("scroll_event", canvas, disp[0], disp[1], step=1)
+        up.button = "up"
+        canvas._on_scroll(up)
+        zoomed = canvas.axes.get_xlim()
+        # A trace change triggers a redraw but must not snap back to full extent.
+        canvas.set_trace(["A", "B"])
+        assert canvas.axes.get_xlim() == zoomed
+
+    def test_pan_with_right_button_shifts_view(self, qtbot):
+        """Dragging with the right button pans the view; left does not."""
+        from matplotlib.backend_bases import MouseEvent
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(100, 150)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (20.0, 20.0), "B": (120.0, 80.0)},
+            image=img,
+        )
+        canvas.resize(500, 400)
+        canvas.draw()
+        start = canvas.axes.transData.transform((75.0, 50.0))
+        press = MouseEvent("button_press_event", canvas, start[0], start[1], button=3)
+        canvas._on_pan_press(press)
+        # Move 40 display px to the right.
+        move = MouseEvent(
+            "motion_notify_event", canvas, start[0] + 40, start[1], button=3
+        )
+        canvas._on_pan_move(move)
+        x0, x1 = canvas.axes.get_xlim()
+        # Panning right shows smaller-x content (limits decrease).
+        assert x0 < -0.5
+        release = MouseEvent(
+            "button_release_event", canvas, start[0] + 40, start[1], button=3
+        )
+        canvas._on_pan_release(release)
+        assert canvas._pan_anchor is None
+
+    def test_left_click_does_not_pan(self, qtbot):
+        """The left button is reserved for selection and never starts a pan."""
+        from matplotlib.backend_bases import MouseEvent
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(100, 150)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (20.0, 20.0), "B": (120.0, 80.0)},
+            image=img,
+        )
+        canvas.resize(500, 400)
+        canvas.draw()
+        start = canvas.axes.transData.transform((75.0, 50.0))
+        press = MouseEvent("button_press_event", canvas, start[0], start[1], button=1)
+        canvas._on_pan_press(press)
+        assert canvas._pan_anchor is None
+
+    def test_double_click_resets_view(self, qtbot):
+        """A left double-click resets the zoomed view to the full extent."""
+        from matplotlib.backend_bases import MouseEvent
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(100, 150)
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (20.0, 20.0), "B": (120.0, 80.0)},
+            image=img,
+        )
+        canvas.resize(500, 400)
+        canvas.draw()
+        # Zoom in first.
+        disp = canvas.axes.transData.transform((75.0, 50.0))
+        up = MouseEvent("scroll_event", canvas, disp[0], disp[1], step=1)
+        up.button = "up"
+        canvas._on_scroll(up)
+        # A double-click resets.
+        dbl = MouseEvent("button_press_event", canvas, disp[0], disp[1], button=1)
+        dbl.dblclick = True
+        canvas._on_click(dbl)
+        lo, hi = canvas.axes.get_xlim()
+        assert abs(abs(hi - lo) - 150) < 2.0
+
+    def test_image_without_coords_falls_back_to_abstract(self, qtbot):
+        """An image with no real coords cannot place nodes -> abstract layout."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(60, 90)
+        # No node_positions -> nothing to overlay on the photo.
+        canvas.set_skeleton(["A", "B", "C"], [("A", "B"), ("B", "C")], image=img)
+        assert canvas._background_image is None
+        assert set(canvas._positions) == {"A", "B", "C"}
+
+    def test_bad_image_is_ignored(self, qtbot):
+        """A malformed image (wrong rank) is dropped, not drawn."""
+        import numpy as np
+
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        bad = np.zeros((4, 4, 4, 4), dtype="uint8")  # rank-4, not an image
+        canvas.set_skeleton(
+            ["A", "B"],
+            [("A", "B")],
+            node_positions={"A": (1.0, 1.0), "B": (2.0, 2.0)},
+            image=bad,
+        )
+        # Falls back to the abstract layout (no usable background).
+        assert canvas._background_image is None
+
+
+def _real_labels_with_image(node_names, edges, instance_coords, image):
+    """Build a ``Labels`` whose single frame returns ``image`` from ``.image``.
+
+    Mirrors :func:`_real_labels` but returns the frame plus the ``Labels`` so the
+    caller can patch ``LabeledFrame.image`` to yield a synthetic frame without a
+    real video file on disk.
+
+    Args:
+        node_names: Ordered node names for the skeleton.
+        edges: List of ``(src, dst)`` name pairs for skeleton edges.
+        instance_coords: List of ``(n_nodes, 2)`` array-likes, one per instance.
+        image: The synthetic frame image the patched ``.image`` should return.
+
+    Returns:
+        A ``(labels, frame, image)`` tuple.
+    """
+    import numpy as np
+    from sleap_io.model.skeleton import Skeleton
+    from sleap_io.model.instance import Instance
+    from sleap_io.model.labeled_frame import LabeledFrame
+    from sleap_io.model.labels import Labels
+    from sleap_io.model.video import Video
+
+    skeleton = Skeleton(list(node_names), edges=[list(e) for e in edges])
+    video = Video(filename="dummy.mp4")
+    instances = [
+        Instance.from_numpy(np.asarray(coords, dtype=float), skeleton=skeleton)
+        for coords in instance_coords
+    ]
+    lf = LabeledFrame(video=video, frame_idx=0, instances=instances)
+    return Labels([lf]), lf, image
+
+
+class TestQCBestLabeledInstanceImage:
+    """Widget-level best-instance + frame-image feeding (issue #2769 follow-up).
+
+    ``set_labels`` should pick the labeled instance with the most present nodes,
+    decode its frame image, and feed the canvas real pixel coordinates + the
+    photo, degrading gracefully when no image can be decoded.
+    """
+
+    def test_picks_instance_with_most_present_nodes(self, qtbot):
+        """The fully-labeled instance wins over a partially-labeled one."""
+        import numpy as np
+
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        nan = [np.nan, np.nan]
+        # Frame holds two instances: a partial one (2 nodes) and a full one (3).
+        partial = [[10.0, 10.0], [20.0, 20.0], nan]
+        full = [[30.0, 30.0], [40.0, 40.0], [50.0, 60.0]]
+        labels, lf, img = _real_labels_with_image(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            [partial, full],
+            _synthetic_image(80, 120),
+        )
+
+        with patch.object(
+            type(lf), "image", new_callable=PropertyMock, return_value=img
+        ):
+            widget.set_labels(labels)
+
+        canvas = widget._skeleton_canvas
+        # Image mode is active and the FULL instance drove the overlay.
+        assert canvas._background_image is not None
+        assert canvas._positions["A"] == (30.0, 30.0)
+        assert canvas._positions["C"] == (50.0, 60.0)
+
+    def test_best_instance_helper_returns_positions_and_image(self, qtbot):
+        """The helper returns pixel coords for present nodes + the frame image."""
+        import numpy as np
+
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        nan = [np.nan, np.nan]
+        labels, lf, img = _real_labels_with_image(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            [[[5.0, 5.0], [15.0, 25.0], nan]],
+            _synthetic_image(70, 100),
+        )
+        widget._labels = labels
+        skeleton = labels.skeletons[0]
+
+        with patch.object(
+            type(lf), "image", new_callable=PropertyMock, return_value=img
+        ):
+            positions, image = widget._best_labeled_instance_image(
+                skeleton, list(skeleton.node_names)
+            )
+        assert positions["A"] == (5.0, 5.0)
+        assert positions["B"] == (15.0, 25.0)
+        # The invisible node is omitted (no pixel coordinate).
+        assert "C" not in positions
+        assert image is not None
+        assert np.asarray(image).shape == (70, 100)
+
+    def test_falls_back_to_abstract_when_image_decode_fails(self, qtbot):
+        """A frame whose image cannot be decoded uses the abstract layout."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        # No patched image: the dummy video cannot be opened, so .image raises.
+        base = [[0.0, 0.0], [40.0, 0.0], [40.0, 30.0]]
+
+        def shifted(dx, dy):
+            return [[x + dx, y + dy] for x, y in base]
+
+        labels = _real_labels(
+            ["A", "B", "C"],
+            [("A", "B"), ("B", "C")],
+            [shifted(0, 0), shifted(200, 10)],
+        )
+        widget.set_labels(labels)
+        canvas = widget._skeleton_canvas
+        # No image -> abstract layout (normalized coords, no background).
+        assert canvas._background_image is None
+        assert set(canvas._positions) == {"A", "B", "C"}
+        for x, y in canvas._positions.values():
+            assert -1.0001 <= x <= 1.0001
+            assert -1.0001 <= y <= 1.0001
+
+    def test_no_instances_returns_empty(self, qtbot):
+        """With a skeleton but no instances the helper returns no image/coords."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        skeleton = _FakeSkeleton(["A", "B"], [("A", "B")])
+        labels = MagicMock()
+        labels.labeled_frames = []
+        positions, image = widget._best_labeled_instance_image(skeleton, ["A", "B"])
+        assert positions == {}
+        assert image is None
 
 
 class TestQCChainTraceDialog:
