@@ -1153,15 +1153,17 @@ class QCSkeletonTraceCanvas(Canvas):
 
         if image_mode:
             self.axes.set_aspect("equal", adjustable="box")
-            h, w = self._background_image.shape[:2]
             if had_view:
                 # Preserve the user's zoom/pan across a trace-only redraw.
                 self.axes.set_xlim(prev_xlim)
                 self.axes.set_ylim(prev_ylim)
             else:
-                # Full image extent; y inverted so (0,0) is top-left like a photo.
-                self.axes.set_xlim(-0.5, w - 0.5)
-                self.axes.set_ylim(h - 0.5, -0.5)
+                # Default view: fit the instance (node bounding box + a margin)
+                # rather than the whole frame, so the animal is large and easy to
+                # trace (issue #2769 follow-up). y inverted -> top-left origin.
+                xlim, ylim = self._instance_fit_limits()
+                self.axes.set_xlim(xlim)
+                self.axes.set_ylim(ylim)
         else:
             # Pad the limits so labels are not clipped. Use ``adjustable="box"``
             # so the equal-aspect constraint resizes the axes box rather than
@@ -1175,9 +1177,43 @@ class QCSkeletonTraceCanvas(Canvas):
 
         self.draw()
 
+    def _instance_fit_limits(self):
+        """Default image-mode view limits: fit the instance plus a margin.
+
+        Returns ``(xlim, ylim)`` in pixel coordinates (``ylim`` inverted for a
+        top-left origin) framing the instance's node bounding box plus a margin
+        and clamped to the image, so the animal fills the canvas instead of
+        sitting tiny inside the full frame (issue #2769 follow-up). Falls back to
+        the full image extent when there are no finite node positions.
+        """
+        h, w = self._background_image.shape[:2]
+        full = ((-0.5, w - 0.5), (h - 0.5, -0.5))
+        pts = [
+            p
+            for p in self._positions.values()
+            if np.isfinite(p[0]) and np.isfinite(p[1])
+        ]
+        if not pts:
+            return full
+        xs = [p[0] for p in pts]
+        ys = [p[1] for p in pts]
+        xmin, xmax, ymin, ymax = min(xs), max(xs), min(ys), max(ys)
+        # Margin: a quarter of the larger bbox side, with a floor so a tiny or
+        # single-node box still gets a sensible window.
+        span = max(xmax - xmin, ymax - ymin)
+        margin = max(span * 0.25, 0.05 * max(w, h), 10.0)
+        x0 = max(xmin - margin, -0.5)
+        x1 = min(xmax + margin, w - 0.5)
+        y0 = max(ymin - margin, -0.5)
+        y1 = min(ymax + margin, h - 0.5)
+        if x1 <= x0 or y1 <= y0:
+            return full
+        return (x0, x1), (y1, y0)  # ylim inverted -> top-left origin
+
     def reset_view(self):
-        """Reset the view to the full image (or layout) extent and redraw."""
-        # Forget any zoom/pan, then let update_plot recompute the full extent.
+        """Reset to the default view (fit the instance, or the layout extent)."""
+        # Forget any zoom/pan, then let update_plot recompute the default view:
+        # instance-fit in image mode, full layout extent otherwise.
         self.axes.set_xlim(0.0, 1.0)
         self.axes.set_ylim(0.0, 1.0)
         self.update_plot()

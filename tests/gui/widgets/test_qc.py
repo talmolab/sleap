@@ -2837,11 +2837,30 @@ class TestQCTraceCanvasImageMode:
         )
         x0, x1 = canvas.axes.get_xlim()
         y0, y1 = canvas.axes.get_ylim()
-        # x grows left->right over the image width.
+        # x grows left->right; the default view fits the instance, so it spans
+        # at most the full image width and contains the instance's x-extent.
         assert x0 < x1
-        assert abs(x1 - x0 - 120) < 2.0
+        assert (x1 - x0) <= 120 + 2.0
+        assert x0 <= 10.0 and x1 >= 90.0
         # y is inverted so (0, 0) is at the top, like an image.
         assert y0 > y1
+
+    def test_image_mode_defaults_to_instance_fit(self, qtbot):
+        """The default image-mode view zooms to the instance, not the full frame."""
+        canvas = QCSkeletonTraceCanvas()
+        qtbot.addWidget(canvas)
+        img = _synthetic_image(400, 600)  # 600 wide x 400 tall
+        # Instance occupies a small central region of the frame.
+        coords = {"A": (280.0, 190.0), "B": (320.0, 210.0)}
+        canvas.set_skeleton(["A", "B"], [("A", "B")], node_positions=coords, image=img)
+        x0, x1 = canvas.axes.get_xlim()
+        y_bottom, y_top = canvas.axes.get_ylim()  # inverted: bottom > top
+        # Tighter than the full image extent on every side...
+        assert -0.5 < x0 < 280.0 and 320.0 < x1 < 599.5
+        assert -0.5 < y_top < 190.0 and 210.0 < y_bottom < 399.5
+        # ...but still contains the whole instance bounding box.
+        assert x0 <= 280.0 and x1 >= 320.0
+        assert y_top <= 190.0 and y_bottom >= 210.0
 
     def test_grayscale_channel_image_is_squeezed(self, qtbot):
         """An (H, W, 1) grayscale image is squeezed to 2D for imshow."""
@@ -2943,8 +2962,8 @@ class TestQCTraceCanvasImageMode:
         canvas._on_scroll(down)
         assert _width() > zoomed_in
 
-    def test_reset_view_restores_full_extent(self, qtbot):
-        """reset_view (and double-click) restores the full image extent."""
+    def test_reset_view_restores_default_view(self, qtbot):
+        """reset_view returns to the default (instance-fit) view after zooming."""
         from matplotlib.backend_bases import MouseEvent
 
         canvas = QCSkeletonTraceCanvas()
@@ -2958,14 +2977,18 @@ class TestQCTraceCanvasImageMode:
         )
         canvas.resize(500, 400)
         canvas.draw()
+        lo0, hi0 = canvas.axes.get_xlim()
+        default_w = abs(hi0 - lo0)
         # Zoom in, then reset.
         disp = canvas.axes.transData.transform((75.0, 50.0))
         up = MouseEvent("scroll_event", canvas, disp[0], disp[1], step=1)
         up.button = "up"
         canvas._on_scroll(up)
+        zoomed = abs(canvas.axes.get_xlim()[1] - canvas.axes.get_xlim()[0])
+        assert zoomed < default_w
         canvas.reset_view()
         lo, hi = canvas.axes.get_xlim()
-        assert abs(abs(hi - lo) - 150) < 2.0
+        assert abs(abs(hi - lo) - default_w) < 2.0
 
     def test_trace_edit_preserves_zoom(self, qtbot):
         """Editing the trace after zooming keeps the user's zoomed view."""
@@ -3044,7 +3067,7 @@ class TestQCTraceCanvasImageMode:
         assert canvas._pan_anchor is None
 
     def test_double_click_resets_view(self, qtbot):
-        """A left double-click resets the zoomed view to the full extent."""
+        """A left double-click resets the zoomed view to the default view."""
         from matplotlib.backend_bases import MouseEvent
 
         canvas = QCSkeletonTraceCanvas()
@@ -3058,6 +3081,7 @@ class TestQCTraceCanvasImageMode:
         )
         canvas.resize(500, 400)
         canvas.draw()
+        default_w = abs(canvas.axes.get_xlim()[1] - canvas.axes.get_xlim()[0])
         # Zoom in first.
         disp = canvas.axes.transData.transform((75.0, 50.0))
         up = MouseEvent("scroll_event", canvas, disp[0], disp[1], step=1)
@@ -3068,7 +3092,7 @@ class TestQCTraceCanvasImageMode:
         dbl.dblclick = True
         canvas._on_click(dbl)
         lo, hi = canvas.axes.get_xlim()
-        assert abs(abs(hi - lo) - 150) < 2.0
+        assert abs(abs(hi - lo) - default_w) < 2.0
 
     def test_image_without_coords_falls_back_to_abstract(self, qtbot):
         """An image with no real coords cannot place nodes -> abstract layout."""
