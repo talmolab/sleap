@@ -27,6 +27,7 @@ from PIL import Image
 from sleap.gui.dataviews import (
     GenericTableModel,
     GenericTableView,
+    InstancesTableView,
     LabeledFrameTableModel,
     SkeletonEdgesTableModel,
     SkeletonNodeModel,
@@ -572,7 +573,9 @@ class InstancesDock(DockWidget):
         return self.model
 
     def create_tables(self) -> GenericTableView:
-        self.table = GenericTableView(
+        # InstancesTableView adds shift/ctrl multi-select so a second instance
+        # can be picked as the merge donor (see Merge Instance).
+        self.table = InstancesTableView(
             state=self.main_window.state,
             row_name="instance",
             name_prefix="",

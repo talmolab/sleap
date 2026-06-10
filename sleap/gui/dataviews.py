@@ -392,6 +392,74 @@ class GenericTableView(QtWidgets.QTableView):
         return self.model().original_items[idx.row()]
 
 
+class InstancesTableView(GenericTableView):
+    """Instances table with shift/ctrl multi-select for Merge Instance.
+
+    Selecting a second instance (shift- or ctrl-click) marks it as the merge
+    *donor*: the first-selected instance is the survivor (``state["instance"]``,
+    kept) and the second is the donor (``state["merge_partner"]``, merged in and
+    removed). Single selection behaves exactly like the base view. Selection
+    order is tracked explicitly because Qt's "current" index follows the last
+    click, which would otherwise make the donor (2nd) the survivor.
+    """
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("multiple_selection", True)
+        super().__init__(*args, **kwargs)
+        self._merge_order: List[Any] = []
+        self._syncing = False
+
+    def selectionChanged(self, new, old):
+        """Set survivor/donor GuiState from the click-ordered selection."""
+        # Do the visual update via QTableView; we set GuiState ourselves (the
+        # base GenericTableView would set state["instance"] to the last-clicked).
+        QtWidgets.QTableView.selectionChanged(self, new, old)
+
+        # selectionChanged can fire during super().__init__() (setModel), before
+        # our attributes exist; nothing is selected yet, so just bail.
+        if not hasattr(self, "_merge_order"):
+            return
+
+        original_items = self.model().original_items
+        selected, rows = [], set()
+        for qidx in self.selectedIndexes():
+            row = qidx.row()
+            if row in rows or row >= len(original_items):
+                continue
+            rows.add(row)
+            selected.append(original_items[row])
+
+        # Preserve prior click order, drop deselected, append newly selected.
+        selected_ids = {id(i) for i in selected}
+        self._merge_order = [i for i in self._merge_order if id(i) in selected_ids]
+        known = {id(i) for i in self._merge_order}
+        for inst in selected:
+            if id(inst) not in known:
+                self._merge_order.append(inst)
+                known.add(id(inst))
+
+        survivor = self._merge_order[0] if self._merge_order else None
+        donor = self._merge_order[1] if len(self._merge_order) >= 2 else None
+
+        # Setting state["instance"] re-enters selectRowItem (connected); guard so
+        # it can't collapse the multi-selection back to a single row.
+        self._syncing = True
+        try:
+            self.state["instance"] = survivor
+        finally:
+            self._syncing = False
+        self.state["merge_partner"] = donor
+
+        if self.row_name:
+            self.state[f"selected_batch_{self.row_name}"] = set(rows)
+
+    def selectRowItem(self, item: Any):
+        """Skip while syncing so our own state set doesn't clear the selection."""
+        if getattr(self, "_syncing", False):
+            return
+        super().selectRowItem(item)
+
+
 class VideosTableModel(GenericTableModel):
     properties = (
         "name",

@@ -1160,6 +1160,38 @@ def test_MergeInstances(min_tracks_2node_labels: Labels):
     assert surv["head"]["xy"].tolist() == [10.0, 20.0]
     assert surv["thorax"]["xy"].tolist() == [30.0, 40.0]
 
+    # Case 8 (shift-select donor): with THREE user instances the exactly-two
+    # auto-resolve can't fire, so the donor comes from state["merge_partner"]
+    # (the 2nd shift/ctrl-selected instance); survivor is state["instance"].
+    s8 = Instance.from_numpy(
+        np.array([[10.0, 20.0, 1, 1], [np.nan, np.nan, 0, 0]]),
+        skeleton=skeleton,
+        track=Track("s8"),
+    )
+    d8 = Instance.from_numpy(
+        np.array([[np.nan, np.nan, 0, 0], [30.0, 40.0, 1, 1]]),
+        skeleton=skeleton,
+        track=Track("d8"),
+    )
+    other8 = Instance.from_numpy(
+        np.array([[5.0, 6.0, 1, 1], [7.0, 8.0, 1, 1]]),
+        skeleton=skeleton,
+        track=Track("other8"),
+    )
+    lf6 = _merge_frame(skeleton, video, 1004, [s8, d8, other8])
+    labels.append(lf6)
+    context.state["labeled_frame"] = lf6
+    context.state["instance"] = s8
+    context.state["merge_partner"] = d8
+    context.mergeInstance()  # no explicit donor -> uses merge_partner
+
+    assert d8 not in lf6.instances  # donor merged in and removed
+    assert other8 in lf6.instances  # bystander untouched
+    assert any(inst is s8 for inst in lf6.instances)
+    assert s8["thorax"]["xy"].tolist() == [30.0, 40.0]  # gained donor's node
+    assert context.state["instance"] is s8
+    assert context.state["merge_partner"] is None  # cleared after merge
+
 
 def test_CopyInstanceTrack(min_tracks_2node_labels: Labels):
     """Test that copying a track from one instance to another works."""

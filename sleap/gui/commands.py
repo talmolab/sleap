@@ -3839,6 +3839,10 @@ class MergeInstances(EditCommand):
         frame = context.state["labeled_frame"]
         skeleton = context.state["skeleton"]
         donor = params.get("donor", None)
+        if donor is None:
+            # Donor picked by shift/ctrl-selecting a second instance in the list
+            # (first-selected is the survivor, second is the donor).
+            donor = context.state.get("merge_partner", default=None)
 
         if survivor is None or frame is None or skeleton is None:
             return
@@ -3902,8 +3906,9 @@ class MergeInstances(EditCommand):
         frame.instances[:] = [inst for inst in frame.instances if inst is not donor]
         context.labels.update()
 
-        # Keep the survivor selected.
+        # Keep the survivor selected; clear the donor selection.
         context.state["instance"] = survivor
+        context.state["merge_partner"] = None
 
 
 class DeleteDialogCommand(EditCommand):
