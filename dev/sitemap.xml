@@ -401,6 +401,10 @@
          <lastmod>2026-06-15</lastmod>
     </url>
     <url>
+         <loc>https://docs.sleap.ai/dev/api/qc/insample_prediction/</loc>
+         <lastmod>2026-06-15</lastmod>
+    </url>
+    <url>
          <loc>https://docs.sleap.ai/dev/api/qc/results/</loc>
          <lastmod>2026-06-15</lastmod>
     </url>
@@ -409,7 +413,31 @@
          <lastmod>2026-06-15</lastmod>
     </url>
     <url>
+         <loc>https://docs.sleap.ai/dev/api/qc/features/appearance/</loc>
+         <lastmod>2026-06-15</lastmod>
+    </url>
+    <url>
          <loc>https://docs.sleap.ai/dev/api/qc/features/baseline/</loc>
+         <lastmod>2026-06-15</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.sleap.ai/dev/api/qc/features/chirality/</loc>
+         <lastmod>2026-06-15</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.sleap.ai/dev/api/qc/features/duplicate_split/</loc>
+         <lastmod>2026-06-15</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.sleap.ai/dev/api/qc/features/missing_node/</loc>
+         <lastmod>2026-06-15</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.sleap.ai/dev/api/qc/features/ordering/</loc>
+         <lastmod>2026-06-15</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.sleap.ai/dev/api/qc/features/pose_split/</loc>
          <lastmod>2026-06-15</lastmod>
     </url>
     <url>
