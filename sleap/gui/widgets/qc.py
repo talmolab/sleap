@@ -1817,7 +1817,10 @@ class QCWidget(QtWidgets.QWidget):
         self._threshold_label.setMinimumWidth(40)
         self._threshold_label.setAlignment(QtCore.Qt.AlignCenter)
         self._threshold_label.setStyleSheet(
-            "font-weight: bold; background: #f8f9fa; "
+            # Explicit dark text: without it the label inherits the palette text
+            # color, which is white on a dark Linux theme -> white-on-light and
+            # unreadable (issue #2769 follow-up).
+            "color: #212529; font-weight: bold; background: #f8f9fa; "
             "padding: 2px 6px; border-radius: 3px;"
         )
         threshold_layout.addWidget(self._threshold_label)
@@ -2227,6 +2230,9 @@ class QCWidget(QtWidgets.QWidget):
 
         self._cb_chain.toggled.connect(_set_chain_enabled)
         _set_chain_enabled(self._cb_chain.isChecked())
+        # Warn (only on a real user click, not programmatic restore/init) if the
+        # detector is turned on with no chains defined -- it would do nothing.
+        self._cb_chain.clicked.connect(self._on_chain_checked)
 
         # Disable the in-sample model picker + Browse button when its checkbox
         # is off (mirrors the other detectors' disable-on-uncheck behavior).
@@ -2449,6 +2455,32 @@ class QCWidget(QtWidgets.QWidget):
         self._refresh_chains_list()
 
         return panel
+
+    def _on_chain_checked(self, checked: bool):
+        """Prompt to define a chain when chain-order is enabled with none set.
+
+        The "Wrong chain order" detector does nothing without at least one
+        ordered chain, so when the user ticks it on with none configured, offer
+        to open the chain editor right away (issue #2769 follow-up). Connected to
+        ``clicked`` (not ``toggled``) so it never fires on programmatic changes
+        like Restore defaults or initial setup.
+
+        Args:
+            checked: The checkbox's new state from the ``clicked`` signal.
+        """
+        if not checked or self._collect_ordered_chains():
+            return
+        resp = QtWidgets.QMessageBox.question(
+            self,
+            "No chains defined",
+            "The 'Wrong chain order' detector needs at least one ordered chain "
+            "to check, but none are defined yet.\n\n"
+            "Open the chain editor to trace one now?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.Yes,
+        )
+        if resp == QtWidgets.QMessageBox.Yes:
+            self._open_chain_trace_dialog()
 
     def _open_chain_trace_dialog(self):
         """Open the pop-up chain editor hosting the full tracing UI.

@@ -2386,6 +2386,35 @@ class TestQCChainTracePanel:
         widget._cb_chain.setChecked(True)
         assert widget._chain_trace_panel.isEnabled()
 
+    def test_chain_order_warns_when_enabled_without_chains(self, qtbot):
+        """Ticking 'Wrong chain order' with no chains prompts to open the editor."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        assert widget._collect_ordered_chains() == []
+        with patch.object(
+            QtWidgets.QMessageBox,
+            "question",
+            return_value=QtWidgets.QMessageBox.Yes,
+        ) as mq:
+            with patch.object(widget, "_open_chain_trace_dialog") as mopen:
+                widget._on_chain_checked(True)
+        mq.assert_called_once()
+        mopen.assert_called_once()
+
+    def test_chain_order_no_warning_when_chains_exist_or_unchecked(self, qtbot):
+        """No prompt when chains already exist, or when the box is unchecked."""
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+        # Chains already defined -> ticking on does not prompt.
+        with patch.object(widget, "_collect_ordered_chains", return_value=[["A", "B"]]):
+            with patch.object(QtWidgets.QMessageBox, "question") as mq:
+                widget._on_chain_checked(True)
+            mq.assert_not_called()
+        # Unchecking never prompts.
+        with patch.object(QtWidgets.QMessageBox, "question") as mq2:
+            widget._on_chain_checked(False)
+        mq2.assert_not_called()
+
 
 class TestCollapsibleDisclosure:
     """Tests for the ``<details>``-style disclosure arrow on CollapsibleGroupBox.
