@@ -1173,7 +1173,10 @@ class VideoSlider(QtWidgets.QGraphicsView):
         if self._get_val_tooltip:
             hover_frame_idx = self._toVal(self.mapMouseXToHandleX(scenePos.x()))
             tooltip = self._get_val_tooltip(hover_frame_idx)
-            QtWidgets.QToolTip.showText(event.globalPos(), tooltip)
+            # Pass `self` as the parent widget so the tooltip popup has a
+            # transientParent; without it Wayland fails to create the popup and
+            # floods stderr with warnings (see #2779).
+            QtWidgets.QToolTip.showText(event.globalPos(), tooltip, self)
 
         self.mouseMoved.emit(scenePos.x(), scenePos.y())
 
