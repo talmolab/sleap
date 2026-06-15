@@ -416,6 +416,34 @@ class QtVideoPlayer(QWidget):
             )
             self._menu_actions["Mark Frame as Negative"] = negative_action
 
+            # "Merge Instance with >" submenu: merge another user instance in
+            # this frame into the currently selected (user) instance.
+            selected = self.context.state["instance"]
+            if (
+                selected is not None
+                and current_lf is not None
+                and type(selected) is Instance
+            ):
+                others = [
+                    inst
+                    for inst in current_lf.instances
+                    if type(inst) is Instance and inst is not selected
+                ]
+                if others:
+                    self.context_menu.addSeparator()
+                    merge_menu = self.context_menu.addMenu("Merge Instance with")
+                    for donor in others:
+                        if donor.track is not None:
+                            label = f"Track: {donor.track.name}"
+                        else:
+                            label = f"Instance {current_lf.instances.index(donor)}"
+                        merge_menu.addAction(
+                            label,
+                            lambda checked=False, d=donor: self.context.mergeInstance(
+                                donor=d
+                            ),
+                        )
+
         return self.context_menu
 
     def show_contextual_menu(self, where: QtCore.QPoint):

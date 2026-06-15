@@ -1006,6 +1006,193 @@ def test_PasteInstance(min_tracks_2node_labels: Labels):
     paste_instance(lf_to_paste, assertions_prior, assertions_post)
 
 
+def _merge_frame(skeleton, video, frame_idx, instances):
+    """Build a `LabeledFrame` from instances for merge tests."""
+    return LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+
+
+def test_MergeInstances(min_tracks_2node_labels: Labels):
+    """Test merging two user instances into one (union of labeled keypoints).
+
+    Skeleton has nodes ["head", "thorax"]. We build a survivor carrying only
+    "head" and a donor carrying both nodes so the merge fills the survivor's
+    missing "thorax" while keeping the survivor's (conflicting) "head".
+    """
+    labels = min_tracks_2node_labels
+    skeleton = labels.skeletons[0]
+    video = labels.videos[0]
+
+    # Case 1: two user instances + a predicted instance, fast-path merge.
+    survivor = Instance.from_numpy(
+        np.array([[10.0, 20.0, 1, 1], [np.nan, np.nan, 0, 0]]),
+        skeleton=skeleton,
+        track=Track("survivor"),
+    )
+    # Donor "head" conflicts (kept as survivor's), "thorax" fills the survivor.
+    donor = Instance.from_numpy(
+        np.array([[99.0, 99.0, 1, 1], [30.0, 40.0, 1, 1]]),
+        skeleton=skeleton,
+        track=Track("donor"),
+    )
+    predicted = PredictedInstance.from_numpy(
+        np.array([[1.0, 2.0, 0.9], [3.0, 4.0, 0.9]]), skeleton=skeleton
+    )
+    lf = _merge_frame(skeleton, video, 999, [survivor, donor, predicted])
+    labels.append(lf)
+
+    context: CommandContext = CommandContext.from_labels(labels)
+    context.state["labeled_frame"] = lf
+    context.state["skeleton"] = skeleton
+    context.state["instance"] = survivor
+
+    assert len(lf.user_instances) == 2
+    context.mergeInstance()
+
+    # Donor removed, predicted untouched, survivor kept and still selected.
+    assert len(lf.user_instances) == 1
+    assert survivor in lf.instances
+    assert donor not in lf.instances
+    assert predicted in lf.instances
+    assert context.state["instance"] is survivor
+    # Conflict policy: survivor's "head" value is kept.
+    assert survivor["head"]["xy"].tolist() == [10.0, 20.0]
+    # Missing "thorax" filled from donor (xy + visible + complete).
+    assert survivor["thorax"]["xy"].tolist() == [30.0, 40.0]
+    assert bool(survivor["thorax"]["visible"]) is True
+    assert bool(survivor["thorax"]["complete"]) is True
+    # Survivor keeps its own track.
+    assert survivor.track is not None and survivor.track.name == "survivor"
+
+    # Case 2: explicit donor with three user instances merges only that donor.
+    s2 = Instance.from_numpy(
+        np.array([[10.0, 20.0, 1, 1], [np.nan, np.nan, 0, 0]]),
+        skeleton=skeleton,
+        track=Track("s2"),
+    )
+    d2 = Instance.from_numpy(
+        np.array([[np.nan, np.nan, 0, 0], [30.0, 40.0, 1, 1]]),
+        skeleton=skeleton,
+        track=Track("d2"),
+    )
+    bystander = Instance.from_numpy(
+        np.array([[5.0, 6.0, 1, 1], [7.0, 8.0, 1, 1]]),
+        skeleton=skeleton,
+        track=Track("bystander"),
+    )
+    lf2 = _merge_frame(skeleton, video, 1000, [s2, d2, bystander])
+    labels.append(lf2)
+    context.state["labeled_frame"] = lf2
+    context.state["instance"] = s2
+    context.mergeInstance(donor=d2)
+
+    assert d2 not in lf2.instances
+    assert bystander in lf2.instances
+    assert s2["thorax"]["xy"].tolist() == [30.0, 40.0]
+    assert len(lf2.user_instances) == 2
+
+    # Case 3: donor=None with >2 user instances is a no-op (cannot resolve donor).
+    a = Instance.from_numpy(
+        np.array([[1.0, 1.0, 1, 1], [np.nan, np.nan, 0, 0]]), skeleton=skeleton
+    )
+    b = Instance.from_numpy(
+        np.array([[np.nan, np.nan, 0, 0], [2.0, 2.0, 1, 1]]), skeleton=skeleton
+    )
+    c = Instance.from_numpy(
+        np.array([[3.0, 3.0, 1, 1], [4.0, 4.0, 1, 1]]), skeleton=skeleton
+    )
+    lf3 = _merge_frame(skeleton, video, 1001, [a, b, c])
+    labels.append(lf3)
+    context.state["labeled_frame"] = lf3
+    context.state["instance"] = a
+    n_before = len(lf3.instances)
+    context.mergeInstance()
+    assert len(lf3.instances) == n_before
+
+    # Case 4: a single user instance (+ predicted) is a no-op; predicted kept.
+    only = Instance.from_numpy(
+        np.array([[1.0, 1.0, 1, 1], [np.nan, np.nan, 0, 0]]), skeleton=skeleton
+    )
+    pred_only = PredictedInstance.from_numpy(
+        np.array([[9.0, 9.0, 0.9], [8.0, 8.0, 0.9]]), skeleton=skeleton
+    )
+    lf4 = _merge_frame(skeleton, video, 1002, [only, pred_only])
+    labels.append(lf4)
+    context.state["labeled_frame"] = lf4
+    context.state["instance"] = only
+    context.mergeInstance()
+    assert len(lf4.instances) == 2
+    assert only in lf4.instances and pred_only in lf4.instances
+
+    # Case 5: a predicted instance selected as survivor is a no-op.
+    context.state["instance"] = pred_only
+    context.mergeInstance()
+    assert len(lf4.instances) == 2
+
+    # Case 6: no selection does not crash.
+    context.state["instance"] = None
+    context.mergeInstance()
+
+    # Case 7 (regression for #2763): two UNTRACKED instances where the donor is a
+    # pose-superset of the survivor. After the merge the survivor becomes
+    # pose-identical to the donor, so a pose/track-based removal could delete the
+    # survivor. The donor is placed *first* so a backwards pose-search would hit
+    # the survivor first. Removal must therefore be by identity. Assertions use
+    # ``is`` (not ``in``) so value-equality between the two cannot mask the bug.
+    surv = Instance.from_numpy(
+        np.array([[10.0, 20.0, 1, 1], [np.nan, np.nan, 0, 0]]), skeleton=skeleton
+    )
+    dono = Instance.from_numpy(
+        np.array([[10.0, 20.0, 1, 1], [30.0, 40.0, 1, 1]]), skeleton=skeleton
+    )
+    assert surv.track is None and dono.track is None
+    lf5 = _merge_frame(skeleton, video, 1003, [dono, surv])
+    labels.append(lf5)
+    context.state["labeled_frame"] = lf5
+    context.state["instance"] = surv
+    context.mergeInstance()
+
+    # The survivor (by identity) must remain; the donor must be gone.
+    assert any(inst is surv for inst in lf5.instances)
+    assert all(inst is not dono for inst in lf5.instances)
+    assert len(lf5.user_instances) == 1
+    assert context.state["instance"] is surv
+    # Survivor now carries both nodes (its own "head" + the donor's "thorax").
+    assert surv["head"]["xy"].tolist() == [10.0, 20.0]
+    assert surv["thorax"]["xy"].tolist() == [30.0, 40.0]
+
+    # Case 8 (shift-select donor): with THREE user instances the exactly-two
+    # auto-resolve can't fire, so the donor comes from state["merge_partner"]
+    # (the 2nd shift/ctrl-selected instance); survivor is state["instance"].
+    s8 = Instance.from_numpy(
+        np.array([[10.0, 20.0, 1, 1], [np.nan, np.nan, 0, 0]]),
+        skeleton=skeleton,
+        track=Track("s8"),
+    )
+    d8 = Instance.from_numpy(
+        np.array([[np.nan, np.nan, 0, 0], [30.0, 40.0, 1, 1]]),
+        skeleton=skeleton,
+        track=Track("d8"),
+    )
+    other8 = Instance.from_numpy(
+        np.array([[5.0, 6.0, 1, 1], [7.0, 8.0, 1, 1]]),
+        skeleton=skeleton,
+        track=Track("other8"),
+    )
+    lf6 = _merge_frame(skeleton, video, 1004, [s8, d8, other8])
+    labels.append(lf6)
+    context.state["labeled_frame"] = lf6
+    context.state["instance"] = s8
+    context.state["merge_partner"] = d8
+    context.mergeInstance()  # no explicit donor -> uses merge_partner
+
+    assert d8 not in lf6.instances  # donor merged in and removed
+    assert other8 in lf6.instances  # bystander untouched
+    assert any(inst is s8 for inst in lf6.instances)
+    assert s8["thorax"]["xy"].tolist() == [30.0, 40.0]  # gained donor's node
+    assert context.state["instance"] is s8
+    assert context.state["merge_partner"] is None  # cleared after merge
+
+
 def test_CopyInstanceTrack(min_tracks_2node_labels: Labels):
     """Test that copying a track from one instance to another works."""
     labels = min_tracks_2node_labels

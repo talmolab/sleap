@@ -257,3 +257,40 @@ def test_instances_dock_visibility_replot_and_global_toggle(
     qt1 = _qt_instance_for(main_window.player, inst1)
     assert qt0 is not None and not qt0.isVisible()
     assert qt1 is not None and qt1.isVisible()
+
+
+def test_instances_dock_merge_shift_select(qtbot, centered_pair_predictions: Labels):
+    """Shift/ctrl-selecting a 2nd instance in the list marks it as the merge donor.
+
+    First-selected = survivor (state["instance"]); second = donor
+    (state["merge_partner"]). Collapsing back to one row clears the donor.
+    """
+    from qtpy import QtCore
+
+    main_window = MainWindow(labels=centered_pair_predictions)
+    target = centered_pair_predictions.labeled_frames[13]
+    main_window.state["frame_idx"] = target.frame_idx
+
+    table = main_window.instances_dock.table
+    model = table.model()
+    assert model.rowCount() >= 2
+    inst0 = model.original_items[0]
+    inst1 = model.original_items[1]
+
+    # Select row 0 -> survivor; no donor yet.
+    table.selectRow(0)
+    assert main_window.state["instance"] is inst0
+    assert main_window.state["merge_partner"] is None
+
+    # Add row 1 to the selection -> donor (survivor unchanged).
+    table.selectionModel().select(
+        model.index(1, 0),
+        QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Rows,
+    )
+    assert main_window.state["instance"] is inst0
+    assert main_window.state["merge_partner"] is inst1
+
+    # Collapsing back to a single row clears the donor.
+    table.selectRow(1)
+    assert main_window.state["instance"] is inst1
+    assert main_window.state["merge_partner"] is None
