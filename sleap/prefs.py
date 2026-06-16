@@ -34,7 +34,6 @@ class Preferences(object):
         "window state": b"",
         "node label size": 12,
         "show non-visible nodes": True,
-        "qc display mode": "manual",
         "show mean node score": False,
         "share usage data": True,
         "node marker sizes": (1, 2, 3, 4, 6, 8, 12),

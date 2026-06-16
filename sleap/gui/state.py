@@ -130,8 +130,9 @@ def compute_qc_visibility(
     Returns ``{id(instance): (visible, show_non_visible)}``. An empty dict is the
     "manual" sentinel: the caller leaves the per-instance transient state alone.
     Selection match is by ``id()``; if ``selected_instance`` is ``None`` or not in
-    ``instances``, every non-manual mode degrades to ``all_visible_only`` so the
-    canvas is never blank (it narrows once a valid instance is selected).
+    ``instances``, the selection-relative modes fall back to the FIRST instance
+    (so the mode stays visible and the canvas is never blank), narrowing to the
+    real instance once one is selected.
 
     Args:
         mode: One of the ``QC_MODE_*`` constants.
@@ -150,15 +151,20 @@ def compute_qc_visibility(
     ids_present = {id(i) for i in instances}
     sel_present = sel_id in ids_present
 
-    # `selected_only` with no valid on-frame selection would hide every instance
-    # (blank canvas) -- e.g. right after frame navigation (the selection is not
-    # restored until later in `_after_plot_change`) or at startup when the mode
-    # is restored from prefs with no selection yet. Degrade to "all visible" so
-    # the user always sees their data; it narrows to the single instance once a
-    # valid one is selected. (The `*_selected` modes already degrade to
-    # all-visible via `is_sel == False`.)
-    if mode == QC_MODE_SELECTED_ONLY and not sel_present:
-        mode = QC_MODE_ALL_VISIBLE
+    # The selection-relative modes (`selected_only`, `all_plus_selected_invisible`)
+    # need a target instance. When there is no valid on-frame selection -- right
+    # after switching modes, navigating frames, or opening QC before clicking a
+    # flag -- fall back to the FIRST instance so the mode stays visibly meaningful
+    # (it shows/keeps one instance) instead of collapsing to "show all", and so it
+    # never blanks the canvas. It narrows to the real instance once the user
+    # selects one.
+    if (
+        not sel_present
+        and instances
+        and mode in (QC_MODE_SELECTED_ONLY, QC_MODE_ALL_PLUS_SELECTED)
+    ):
+        sel_id = id(instances[0])
+        sel_present = True
 
     flags = {}
     for inst in instances:

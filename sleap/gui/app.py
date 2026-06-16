@@ -208,11 +208,13 @@ class MainWindow(QMainWindow):
         self.state[INSTANCE_HIDDEN_KEY] = set()
         self.state[VIEW_ONLY_INSTANCE_KEY] = None
         self.state[SHOW_NONVISIBLE_OVERRIDE_KEY] = {}
-        # Label QC "display mode" (#2783): a PERSISTED view preference (NOT a
-        # transient per-frame key), so it is restored from prefs and is never
-        # reset on frame change. "manual" keeps the Instances-dock columns in
-        # control; other modes drive the transient keys above on each recompute.
-        self.state[QC_DISPLAY_MODE_KEY] = prefs["qc display mode"]
+        # Label QC "display mode" (#2783): a transient, session-only review aid.
+        # It always starts in "manual" (normal view) and is intentionally NOT
+        # persisted across launches -- a selection-relative mode that hides
+        # instances would look like a bug on the next startup. "manual" keeps the
+        # Instances-dock columns in control; other modes drive the transient keys
+        # above. Not reset on frame change (the mode persists within a session).
+        self.state[QC_DISPLAY_MODE_KEY] = QC_MODE_MANUAL
         # (video, frame_idx) of the last plotted frame, so `_after_plot_change`
         # clears the transient visibility above only when the frame truly changes
         # (not on same-frame replots like marker-size or add-instance).
@@ -309,7 +311,6 @@ class MainWindow(QMainWindow):
         prefs["window state"] = self.saveState()
         prefs["marker size"] = self.state["marker size"]
         prefs["show non-visible nodes"] = self.state["show non-visible nodes"]
-        prefs["qc display mode"] = self.state[QC_DISPLAY_MODE_KEY]
         prefs["show mean node score"] = self.state["show mean node score"]
         prefs["node label size"] = self.state["node label size"]
         prefs["edge style"] = self.state["edge style"]

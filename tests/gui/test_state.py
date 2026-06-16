@@ -226,25 +226,27 @@ def test_compute_qc_visibility_all_plus_selected_invisible():
 
 
 def test_compute_qc_visibility_selected_none_or_foreign():
-    """No/foreign selection degrades every mode to all_visible (never blank)."""
-    instances = [object(), object()]
+    """No/foreign selection falls back to the FIRST instance (never blank)."""
+    a, b = object(), object()
+    instances = [a, b]
 
-    # selected=None -> selected_only degrades to "all visible" so navigation /
-    # startup never blanks the canvas (it narrows once a valid instance is set).
+    # selected=None -> selected_only keeps only the FIRST instance (with its
+    # hidden points), so the mode is visibly doing something and never blanks.
     flags = compute_qc_visibility(QC_MODE_SELECTED_ONLY, None, instances, True)
-    for inst in instances:
-        assert flags[id(inst)] == (True, False)
+    assert flags[id(a)] == (True, True)
+    assert flags[id(b)] == (False, False)
 
-    # selected=None -> *_selected modes also behave like all_visible_only.
+    # selected=None -> all_plus_selected shows all, with the FIRST instance's
+    # hidden points.
     flags = compute_qc_visibility(QC_MODE_ALL_PLUS_SELECTED, None, instances, True)
-    for inst in instances:
-        assert flags[id(inst)] == (True, False)
+    assert flags[id(a)] == (True, True)
+    assert flags[id(b)] == (True, False)
 
     # A selected instance NOT in the list behaves identically to None.
     foreign = object()
     flags = compute_qc_visibility(QC_MODE_SELECTED_ONLY, foreign, instances, True)
-    for inst in instances:
-        assert flags[id(inst)] == (True, False)
+    assert flags[id(a)] == (True, True)
+    assert flags[id(b)] == (False, False)
     flags = compute_qc_visibility(QC_MODE_ALL_PLUS_SELECTED, foreign, instances, True)
-    for inst in instances:
-        assert flags[id(inst)] == (True, False)
+    assert flags[id(a)] == (True, True)
+    assert flags[id(b)] == (True, False)
