@@ -39,8 +39,19 @@ NO_ARG = object()
 # - VIEW_ONLY_INSTANCE_KEY -> ``id(instance)`` of the single "View Only"
 #   instance, or ``None``. When set, only that instance is visible and the whole
 #   Visibility column is disabled (radio-like exclusivity).
+# - SHOW_NONVISIBLE_OVERRIDE_KEY -> dict ``{id(instance): bool}``, a per-instance
+#   override of the global "show non-visible nodes" flag. An absent key means
+#   "use the global default"; an explicit ``True``/``False`` overrides it.
 INSTANCE_HIDDEN_KEY = "instance_hidden"
 VIEW_ONLY_INSTANCE_KEY = "view_only_instance"
+SHOW_NONVISIBLE_OVERRIDE_KEY = "show_nonvisible_override"
+
+# Label QC "display mode" (persisted app preference, NOT per-instance/per-frame).
+QC_DISPLAY_MODE_KEY = "qc_display_mode"
+QC_MODE_MANUAL = "manual"
+QC_MODE_SELECTED_ONLY = "selected_only"
+QC_MODE_ALL_VISIBLE = "all_visible_only"
+QC_MODE_ALL_PLUS_SELECTED = "all_plus_selected_invisible"
 
 
 def instance_visible(state: "GuiState", instance: Any) -> bool:
@@ -79,6 +90,89 @@ def instance_visible(state: "GuiState", instance: Any) -> bool:
     if not hidden:
         return True
     return id(instance) not in hidden
+
+
+def instance_shows_non_visible(
+    state: "GuiState", instance: Any, global_default: bool
+) -> bool:
+    """Return whether THIS instance's non-visible (occluded/NaN) nodes are drawn.
+
+    Orthogonal to `instance_visible`: that decides whether the instance is drawn
+    at all; this decides whether its occluded keypoints draw. Per-instance
+    overrides (the "Invisible Nodes" column / a non-manual QC mode) beat the
+    global "show non-visible nodes" flag; absent override -> the global default.
+
+    Args:
+        state: The `GuiState` holding the transient override key.
+        instance: The `Instance`/`PredictedInstance` object (keyed by identity).
+        global_default: The current global "show non-visible nodes" flag, used
+            when there is no per-instance override.
+
+    Returns:
+        ``True`` if this instance's non-visible nodes should be drawn.
+    """
+    if state is None:
+        return global_default
+    override = state.get(SHOW_NONVISIBLE_OVERRIDE_KEY, default=None)
+    if not override:
+        return global_default
+    return override.get(id(instance), global_default)
+
+
+def compute_qc_visibility(
+    mode: str,
+    selected_instance: Any,
+    instances: list,
+    global_show_non_visible: bool,
+) -> dict:
+    """Map a QC display mode + selection -> per-instance visibility flags.
+
+    Returns ``{id(instance): (visible, show_non_visible)}``. An empty dict is the
+    "manual" sentinel: the caller leaves the per-instance transient state alone.
+    Selection match is by ``id()``; if ``selected_instance`` is ``None`` or not in
+    ``instances``, every non-manual mode degrades to ``all_visible_only`` so the
+    canvas is never blank (it narrows once a valid instance is selected).
+
+    Args:
+        mode: One of the ``QC_MODE_*`` constants.
+        selected_instance: The currently selected instance, or ``None``.
+        instances: The instances shown on the current frame.
+        global_show_non_visible: The global "show non-visible nodes" flag (unused
+            by the locked modes, kept for symmetry / future modes).
+
+    Returns:
+        A dict ``{id(instance): (visible, show_non_visible)}`` (empty for manual).
+    """
+    if mode == QC_MODE_MANUAL:
+        return {}
+
+    sel_id = id(selected_instance) if selected_instance is not None else None
+    ids_present = {id(i) for i in instances}
+    sel_present = sel_id in ids_present
+
+    # `selected_only` with no valid on-frame selection would hide every instance
+    # (blank canvas) -- e.g. right after frame navigation (the selection is not
+    # restored until later in `_after_plot_change`) or at startup when the mode
+    # is restored from prefs with no selection yet. Degrade to "all visible" so
+    # the user always sees their data; it narrows to the single instance once a
+    # valid one is selected. (The `*_selected` modes already degrade to
+    # all-visible via `is_sel == False`.)
+    if mode == QC_MODE_SELECTED_ONLY and not sel_present:
+        mode = QC_MODE_ALL_VISIBLE
+
+    flags = {}
+    for inst in instances:
+        iid = id(inst)
+        is_sel = sel_present and iid == sel_id
+        if mode == QC_MODE_SELECTED_ONLY:
+            flags[iid] = (is_sel, is_sel)  # show only selected; its hidden pts on
+        elif mode == QC_MODE_ALL_VISIBLE:
+            flags[iid] = (True, False)  # all visible, occluded pts hidden
+        elif mode == QC_MODE_ALL_PLUS_SELECTED:
+            flags[iid] = (True, is_sel)  # all visible; selected also shows hidden pts
+        else:
+            flags[iid] = (True, False)  # unknown mode -> safe "all visible"
+    return flags
 
 
 class GuiState(object):

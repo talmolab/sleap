@@ -5,7 +5,7 @@ Overlay for showing instances.
 import attr
 
 from sleap.gui.overlays.base import BaseOverlay
-from sleap.gui.state import GuiState, instance_visible
+from sleap.gui.state import GuiState, instance_visible, instance_shows_non_visible
 from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 
@@ -48,7 +48,11 @@ class InstanceOverlay(BaseOverlay):
                 frame=lf,
                 markerRadius=self.state.get("marker size", 4),
                 nodeLabelSize=self.state.get("node label size", 12),
-                show_non_visible=self.state.get("show non-visible nodes", default=True),
+                show_non_visible=instance_shows_non_visible(
+                    self.state,
+                    instance,
+                    self.state.get("show non-visible nodes", default=True),
+                ),
             )
 
         self.player.showInstances(self.state.get("show instances", default=True))

@@ -323,3 +323,156 @@ def test_instance_visible_respects_global_show_instances():
     state["show instances"] = False
     assert not instance_visible(state, inst_a)
     assert not instance_visible(state, inst_b)
+
+
+# -- "Invisible Nodes" per-instance override column (#2782) ----------------------
+
+
+def test_labeled_frame_invisible_nodes_column_present(qtbot, centered_pair_predictions):
+    """The per-instance "invisible nodes" checkbox column should exist last."""
+    lf = centered_pair_predictions.labeled_frames[13]
+    model = LabeledFrameTableModel(items=lf)
+    assert "invisible nodes" in model.properties
+    # Appended LAST, after the #2755 columns.
+    assert model.properties.index("invisible nodes") > model.properties.index(
+        "view only"
+    )
+
+
+def test_labeled_frame_invisible_nodes_default_checked(
+    qtbot, centered_pair_predictions
+):
+    """With no override and no global flag set, the effective default is True."""
+    lf = centered_pair_predictions.labeled_frames[13]
+    model = LabeledFrameTableModel(items=lf)
+    for row in range(model.rowCount()):
+        assert _checkstate(model, row, "invisible nodes") == QtCore.Qt.Checked
+
+
+def test_labeled_frame_invisible_nodes_default_follows_global(
+    qtbot, centered_pair_predictions
+):
+    """The default checkbox follows the global "show non-visible nodes" flag."""
+    lf = centered_pair_predictions.labeled_frames[13]
+    model = LabeledFrameTableModel(items=lf)
+    model._vis_state["show non-visible nodes"] = False
+    for row in range(model.rowCount()):
+        assert _checkstate(model, row, "invisible nodes") == QtCore.Qt.Unchecked
+
+
+def test_labeled_frame_toggle_invisible_nodes_sets_override(
+    qtbot, centered_pair_predictions
+):
+    """Toggling the column writes an explicit per-instance override."""
+    from sleap.gui.state import (
+        SHOW_NONVISIBLE_OVERRIDE_KEY,
+        instance_shows_non_visible,
+    )
+
+    lf = centered_pair_predictions.labeled_frames[13]
+    model = LabeledFrameTableModel(items=lf)
+
+    inst0 = model.original_items[0]
+    inst1 = model.original_items[1]
+
+    assert _set_checkstate(model, 0, "invisible nodes", False)
+    assert _checkstate(model, 0, "invisible nodes") == QtCore.Qt.Unchecked
+    # Other rows unaffected.
+    assert _checkstate(model, 1, "invisible nodes") == QtCore.Qt.Checked
+
+    override = model._vis_state.get(SHOW_NONVISIBLE_OVERRIDE_KEY)
+    assert override[id(inst0)] is False
+    # Effective value reflects the override for inst0, default for inst1.
+    assert instance_shows_non_visible(model._vis_state, inst0, True) is False
+    assert instance_shows_non_visible(model._vis_state, inst1, True) is True
+
+    # Re-checking stores an explicit True (never popped).
+    assert _set_checkstate(model, 0, "invisible nodes", True)
+    assert _checkstate(model, 0, "invisible nodes") == QtCore.Qt.Checked
+    override = model._vis_state.get(SHOW_NONVISIBLE_OVERRIDE_KEY)
+    assert override[id(inst0)] is True
+
+
+def test_labeled_frame_invisible_nodes_independent_of_visibility(
+    qtbot, centered_pair_predictions
+):
+    """The override map is orthogonal to the visibility / view-only columns."""
+    from sleap.gui.state import SHOW_NONVISIBLE_OVERRIDE_KEY
+
+    lf = centered_pair_predictions.labeled_frames[13]
+    model = LabeledFrameTableModel(items=lf)
+    inst0 = model.original_items[0]
+
+    _set_checkstate(model, 0, "invisible nodes", False)
+    assert model._vis_state.get(SHOW_NONVISIBLE_OVERRIDE_KEY)[id(inst0)] is False
+
+    # Toggling visibility off/on does not touch the override entry.
+    _set_checkstate(model, 0, "visibility", False)
+    _set_checkstate(model, 0, "visibility", True)
+    assert model._vis_state.get(SHOW_NONVISIBLE_OVERRIDE_KEY)[id(inst0)] is False
+    assert _checkstate(model, 0, "invisible nodes") == QtCore.Qt.Unchecked
+
+    # Toggling view only does not touch the override map either.
+    _set_checkstate(model, 0, "view only", True)
+    assert model._vis_state.get(SHOW_NONVISIBLE_OVERRIDE_KEY)[id(inst0)] is False
+
+
+def test_labeled_frame_invisible_nodes_flags_checkable(
+    qtbot, centered_pair_predictions
+):
+    """The "invisible nodes" cell is user-checkable with no DisplayRole text."""
+    lf = centered_pair_predictions.labeled_frames[13]
+    model = LabeledFrameTableModel(items=lf)
+
+    col = model.properties.index("invisible nodes")
+    index = model.index(0, col)
+    flags = model.flags(index)
+    assert flags & QtCore.Qt.ItemIsEnabled
+    assert flags & QtCore.Qt.ItemIsUserCheckable
+    assert flags & QtCore.Qt.ItemIsSelectable
+    assert model.data(index, QtCore.Qt.DisplayRole) is None
+
+
+# -- QC display mode -> shared transient keys (#2783 <-> shared model) ------------
+
+
+def test_qc_mode_maps_onto_transient_keys(qtbot, centered_pair_predictions):
+    """A non-manual QC mode's flags drive the same model the overlay reads.
+
+    Emulates `MainWindow._recompute_qc_flags_into_state` (writing the three
+    transient keys from `compute_qc_visibility`) and confirms `instance_visible`
+    / `instance_shows_non_visible` agree with the computed flags -- i.e. the
+    #2783 mode result is consistent with the shared per-instance model that the
+    instance overlay applies on replot. No player / replot is involved.
+    """
+    from sleap.gui.state import (
+        GuiState,
+        INSTANCE_HIDDEN_KEY,
+        VIEW_ONLY_INSTANCE_KEY,
+        SHOW_NONVISIBLE_OVERRIDE_KEY,
+        QC_MODE_SELECTED_ONLY,
+        compute_qc_visibility,
+        instance_visible,
+        instance_shows_non_visible,
+    )
+    from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
+
+    lf = centered_pair_predictions.labeled_frames[13]
+    instances = get_instances_to_show(lf)
+    assert len(instances) >= 2
+
+    state = GuiState()
+    selected = instances[0]
+    flags = compute_qc_visibility(
+        QC_MODE_SELECTED_ONLY, selected, instances, global_show_non_visible=False
+    )
+    # Write the three transient keys exactly as the app helper does.
+    state[INSTANCE_HIDDEN_KEY] = {iid for iid, (vis, _) in flags.items() if not vis}
+    state[VIEW_ONLY_INSTANCE_KEY] = None
+    state[SHOW_NONVISIBLE_OVERRIDE_KEY] = {iid: snv for iid, (_, snv) in flags.items()}
+
+    # selected_only: only the selected instance is drawn, with its hidden points.
+    assert instance_visible(state, instances[0]) is True
+    assert instance_visible(state, instances[1]) is False
+    assert instance_shows_non_visible(state, instances[0], False) is True
+    assert instance_shows_non_visible(state, instances[1], False) is False

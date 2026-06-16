@@ -12,6 +12,7 @@ from typing import Callable, Optional, TYPE_CHECKING
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 
+from sleap.gui.state import QC_DISPLAY_MODE_KEY, QC_MODE_MANUAL
 from sleap.gui.widgets.qc import QCWidget
 
 if TYPE_CHECKING:
@@ -135,6 +136,9 @@ class QCDockWidget(QtWidgets.QDockWidget):
         if self._navigate_callback is not None:
             self._widget.navigate_to_instance.connect(self._on_navigate)
 
+        # Bridge the QC display-mode selector to the main window's state (#2783).
+        self._widget.display_mode_changed.connect(self._on_display_mode_changed)
+
         # Update dock button text when dock state changes (e.g., via dragging)
         self.topLevelChanged.connect(self._update_dock_button)
 
@@ -151,6 +155,16 @@ class QCDockWidget(QtWidgets.QDockWidget):
             # Connect to state changes
             parent.state.connect("fit_selection", self._on_fit_selection_state_changed)
             self._state_connected = True
+
+            # Initial sync + connect for the QC display mode (#2783). The combo
+            # only reflects the persisted mode here; the app state callback owns
+            # the recompute + replot.
+            self._widget.set_display_mode(
+                parent.state.get(QC_DISPLAY_MODE_KEY, QC_MODE_MANUAL)
+            )
+            parent.state.connect(
+                QC_DISPLAY_MODE_KEY, self._on_display_mode_state_changed
+            )
 
     def _on_visibility_changed(self, visible: bool):
         """Track visibility changes and update labels if needed.
@@ -174,6 +188,10 @@ class QCDockWidget(QtWidgets.QDockWidget):
                 # Sync fit_selection checkbox (connection made in _connect_signals)
                 if hasattr(parent, "state"):
                     self._sync_fit_selection_checkbox()
+                    # Reflect the persisted QC display mode on dock re-show (#2783).
+                    self._widget.set_display_mode(
+                        parent.state.get(QC_DISPLAY_MODE_KEY, QC_MODE_MANUAL)
+                    )
 
     def _on_navigate(self, video_idx: int, frame_idx: int, instance_idx: int):
         """Handle navigation request from widget."""
@@ -240,6 +258,23 @@ class QCDockWidget(QtWidgets.QDockWidget):
         """
         self._sync_fit_selection_checkbox(value)
         self._apply_fit_selection_zoom(value)
+
+    def _on_display_mode_changed(self, mode: str):
+        """Handle the widget's display-mode change: push it into main state (#2783).
+
+        The app's ``QC_DISPLAY_MODE_KEY`` callback does the recompute + replot.
+        """
+        parent = self._main_window
+        if parent is not None and hasattr(parent, "state"):
+            parent.state[QC_DISPLAY_MODE_KEY] = mode
+
+    def _on_display_mode_state_changed(self, value: str):
+        """Sync the combo when the QC display mode changes in state (#2783).
+
+        ``set_display_mode`` blocks the combo's signals, so this does not loop
+        back into state.
+        """
+        self._widget.set_display_mode(value)
 
     def _apply_fit_selection_zoom(self, enabled: bool):
         """Apply or clear the fit-to-selection zoom.

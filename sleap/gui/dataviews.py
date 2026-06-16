@@ -28,7 +28,9 @@ from sleap.gui.state import (
     GuiState,
     INSTANCE_HIDDEN_KEY,
     VIEW_ONLY_INSTANCE_KEY,
+    SHOW_NONVISIBLE_OVERRIDE_KEY,
     instance_visible,
+    instance_shows_non_visible,
 )
 from sleap_io.model.skeleton import Skeleton
 from sleap_io import Video
@@ -542,9 +544,10 @@ class LabeledFrameTableModel(GenericTableModel):
 
     Allows editing track names.
 
-    In addition to the informational columns, two checkbox columns control
+    In addition to the informational columns, three checkbox columns control
     per-instance rendering on the video canvas (transient, session-only state;
-    see `sleap.gui.state.instance_visible`):
+    see `sleap.gui.state.instance_visible` /
+    `sleap.gui.state.instance_shows_non_visible`):
 
     - "visibility": checked by default; unchecking hides that instance on the
       canvas while keeping its row in the table.
@@ -552,16 +555,21 @@ class LabeledFrameTableModel(GenericTableModel):
       that instance visible and disables the whole visibility column. Checking
       another row's "view only" auto-unchecks the previous (radio-like).
       Toggling any "visibility" box exits view-only mode.
+    - "invisible nodes": per-instance override of the global "Show Non-Visible
+      Nodes" flag; defaults to the effective value (override if present, else
+      the global flag). Because non-visible nodes are baked into the canvas
+      instance at creation time, toggling this forces a full replot.
 
     Args:
         labeled_frame: `LabeledFrame` to show
         labels: `Labels` datasource
     """
 
-    # The two checkbox columns are appended LAST so existing name-indexed
+    # The checkbox columns are appended LAST so existing name-indexed
     # lookups (e.g. ``properties.index("mean node score")``) stay valid.
     VISIBILITY_KEY = "visibility"
     VIEW_ONLY_KEY = "view only"
+    SHOW_NONVISIBLE_KEY = "invisible nodes"
 
     properties = (
         "points",
@@ -571,6 +579,7 @@ class LabeledFrameTableModel(GenericTableModel):
         "skeleton",
         VISIBILITY_KEY,
         VIEW_ONLY_KEY,
+        SHOW_NONVISIBLE_KEY,
     )
 
     def object_to_items(self, labeled_frame: LabeledFrame):
@@ -628,7 +637,7 @@ class LabeledFrameTableModel(GenericTableModel):
 
     @property
     def _checkbox_keys(self):
-        return (self.VISIBILITY_KEY, self.VIEW_ONLY_KEY)
+        return (self.VISIBILITY_KEY, self.VIEW_ONLY_KEY, self.SHOW_NONVISIBLE_KEY)
 
     @property
     def _vis_state(self) -> GuiState:
@@ -671,6 +680,11 @@ class LabeledFrameTableModel(GenericTableModel):
         view_only = self._vis_state.get(VIEW_ONLY_INSTANCE_KEY, default=None)
         return view_only is not None and id(instance) == view_only
 
+    def is_show_nonvisible_checked(self, instance) -> bool:
+        """Whether the "invisible nodes" box is checked (effective value)."""
+        global_default = self._vis_state.get("show non-visible nodes", default=True)
+        return instance_shows_non_visible(self._vis_state, instance, global_default)
+
     def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
         """Overrides Qt method to add checkbox state for the new columns."""
         if not index.isValid():
@@ -682,8 +696,10 @@ class LabeledFrameTableModel(GenericTableModel):
                 instance = self.original_items[index.row()]
                 if key == self.VISIBILITY_KEY:
                     checked = self.is_visibility_checked(instance)
-                else:
+                elif key == self.VIEW_ONLY_KEY:
                     checked = self.is_view_only_checked(instance)
+                else:
+                    checked = self.is_show_nonvisible_checked(instance)
                 return QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked
             if (
                 role == QtCore.Qt.BackgroundRole
@@ -733,8 +749,10 @@ class LabeledFrameTableModel(GenericTableModel):
                 checked = getattr(value, "value", value) == QtCore.Qt.Checked.value
                 if key == self.VISIBILITY_KEY:
                     self._set_visibility(instance, checked)
-                else:
+                elif key == self.VIEW_ONLY_KEY:
                     self._set_view_only(instance, checked)
+                else:
+                    self._set_show_nonvisible(instance, checked)
                 return True
 
         return super().setData(index, value, role)
@@ -765,6 +783,14 @@ class LabeledFrameTableModel(GenericTableModel):
 
         self._refresh_after_toggle()
 
+    def _set_show_nonvisible(self, instance, checked: bool):
+        """Toggle an instance's "invisible nodes" override (forces a replot)."""
+        state = self._vis_state
+        override = dict(state.get(SHOW_NONVISIBLE_OVERRIDE_KEY, default=None) or {})
+        override[id(instance)] = checked  # explicit True/False, never popped
+        state[SHOW_NONVISIBLE_OVERRIDE_KEY] = override
+        self._replot_after_show_nonvisible_toggle()
+
     def _refresh_after_toggle(self):
         """Apply the new state to the canvas and repaint the whole table.
 
@@ -773,6 +799,27 @@ class LabeledFrameTableModel(GenericTableModel):
         view-only mode changes).
         """
         self._apply_canvas_visibility()
+        rows = self.rowCount()
+        cols = self.columnCount()
+        if rows and cols:
+            self.dataChanged.emit(
+                self.index(0, 0),
+                self.index(rows - 1, cols - 1),
+            )
+
+    def _replot_after_show_nonvisible_toggle(self):
+        """Full replot after an "invisible nodes" toggle, then repaint the table.
+
+        ``show_non_visible`` is baked into the canvas `QtInstance` at creation
+        time, so ``setVisible`` cannot resurrect node/edge children that were
+        never built -> a full replot is required (unlike the visibility/view-only
+        columns, which only ``setVisible``). The ``getattr`` guard makes this a
+        no-op headless / in unit tests (``context is None``), like
+        `_apply_canvas_visibility`.
+        """
+        app = getattr(self.context, "app", None) if self.context else None
+        if app is not None:
+            app.plotFrame()
         rows = self.rowCount()
         cols = self.columnCount()
         if rows and cols:

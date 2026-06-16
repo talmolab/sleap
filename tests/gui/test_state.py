@@ -1,6 +1,15 @@
 import pytest
 
-from sleap.gui.state import GuiState
+from sleap.gui.state import (
+    GuiState,
+    SHOW_NONVISIBLE_OVERRIDE_KEY,
+    QC_MODE_MANUAL,
+    QC_MODE_SELECTED_ONLY,
+    QC_MODE_ALL_VISIBLE,
+    QC_MODE_ALL_PLUS_SELECTED,
+    instance_shows_non_visible,
+    compute_qc_visibility,
+)
 
 
 def test_gui_state():
@@ -144,3 +153,98 @@ def test_gui_state_callbacks():
         state.connect("y", [f, 5])
 
     state["x"] = "value to trigger callbacks"
+
+
+# -- Per-instance "show non-visible nodes" override (#2782 shared model) ---------
+
+
+def test_instance_shows_non_visible_default():
+    """With no override, the global default is returned verbatim."""
+    state = GuiState()
+    inst = object()
+    assert instance_shows_non_visible(state, inst, True) is True
+    assert instance_shows_non_visible(state, inst, False) is False
+
+
+def test_instance_shows_non_visible_override_wins():
+    """An explicit per-instance override beats the global default."""
+    state = GuiState()
+    inst = object()
+    other = object()
+
+    state[SHOW_NONVISIBLE_OVERRIDE_KEY] = {id(inst): False}
+    assert instance_shows_non_visible(state, inst, True) is False
+    # A second un-overridden instance still falls back to the global default.
+    assert instance_shows_non_visible(state, other, True) is True
+
+    state[SHOW_NONVISIBLE_OVERRIDE_KEY] = {id(inst): True}
+    assert instance_shows_non_visible(state, inst, False) is True
+    assert instance_shows_non_visible(state, other, False) is False
+
+
+def test_instance_shows_non_visible_none_state():
+    """A ``None`` state returns the global default (no override possible)."""
+    assert instance_shows_non_visible(None, object(), True) is True
+    assert instance_shows_non_visible(None, object(), False) is False
+
+
+# -- QC display-mode -> per-instance flags (#2783 pure helper) -------------------
+
+
+def test_compute_qc_visibility_manual_returns_empty():
+    """Manual mode is the no-op sentinel: an empty dict."""
+    instances = [object(), object()]
+    assert compute_qc_visibility(QC_MODE_MANUAL, instances[0], instances, True) == {}
+
+
+def test_compute_qc_visibility_selected_only():
+    """selected_only: only the selected instance is visible (with hidden pts)."""
+    instances = [object(), object(), object()]
+    flags = compute_qc_visibility(QC_MODE_SELECTED_ONLY, instances[1], instances, True)
+    assert flags[id(instances[1])] == (True, True)
+    assert flags[id(instances[0])] == (False, False)
+    assert flags[id(instances[2])] == (False, False)
+
+
+def test_compute_qc_visibility_all_visible_only():
+    """all_visible_only: every instance visible, occluded points hidden."""
+    instances = [object(), object(), object()]
+    flags = compute_qc_visibility(QC_MODE_ALL_VISIBLE, instances[0], instances, True)
+    for inst in instances:
+        assert flags[id(inst)] == (True, False)
+
+
+def test_compute_qc_visibility_all_plus_selected_invisible():
+    """all_plus_selected_invisible: all visible; only selected shows hidden pts."""
+    instances = [object(), object(), object()]
+    flags = compute_qc_visibility(
+        QC_MODE_ALL_PLUS_SELECTED, instances[2], instances, True
+    )
+    assert flags[id(instances[2])] == (True, True)
+    assert flags[id(instances[0])] == (True, False)
+    assert flags[id(instances[1])] == (True, False)
+
+
+def test_compute_qc_visibility_selected_none_or_foreign():
+    """No/foreign selection degrades every mode to all_visible (never blank)."""
+    instances = [object(), object()]
+
+    # selected=None -> selected_only degrades to "all visible" so navigation /
+    # startup never blanks the canvas (it narrows once a valid instance is set).
+    flags = compute_qc_visibility(QC_MODE_SELECTED_ONLY, None, instances, True)
+    for inst in instances:
+        assert flags[id(inst)] == (True, False)
+
+    # selected=None -> *_selected modes also behave like all_visible_only.
+    flags = compute_qc_visibility(QC_MODE_ALL_PLUS_SELECTED, None, instances, True)
+    for inst in instances:
+        assert flags[id(inst)] == (True, False)
+
+    # A selected instance NOT in the list behaves identically to None.
+    foreign = object()
+    flags = compute_qc_visibility(QC_MODE_SELECTED_ONLY, foreign, instances, True)
+    for inst in instances:
+        assert flags[id(inst)] == (True, False)
+    flags = compute_qc_visibility(QC_MODE_ALL_PLUS_SELECTED, foreign, instances, True)
+    for inst in instances:
+        assert flags[id(inst)] == (True, False)

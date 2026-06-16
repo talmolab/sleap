@@ -52,6 +52,7 @@ class Shortcuts(object):
         "goto prev suggestion",
         "goto next track spawn",
         "show instances",
+        "show non-visible nodes",
         "show labels",
         "show edges",
         "show trails",
