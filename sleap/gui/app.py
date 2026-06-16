@@ -774,11 +774,11 @@ class MainWindow(QMainWindow):
         add_menu_check_item(viewMenu, "show edges", "Show Edges")
         add_menu_check_item(viewMenu, "show mean node score", "Show Mean Node Score")
 
-        # Label QC display-mode selector (#2783), mirrored from the QC dock's
-        # "Display:" combo so the modes are reachable from the menu too. Kept in
-        # sync with QC_DISPLAY_MODE_KEY: menu clicks set it; external changes
-        # (e.g. the dock combo) re-check the matching item.
-        qc_display_menu = viewMenu.addMenu("Label QC Display")
+        # Instance-focus display-mode selector (#2783), mirrored from the QC
+        # dock's "Display:" combo so the modes are reachable from the menu too.
+        # Kept in sync with QC_DISPLAY_MODE_KEY: menu clicks set it; external
+        # changes (e.g. the dock combo) re-check the matching item.
+        qc_display_menu = viewMenu.addMenu("Instance Focus")
         self._qc_display_actions = {}
         for _label, _mode in QC_MODE_CHOICES:
             _act = qc_display_menu.addAction(
