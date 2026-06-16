@@ -73,6 +73,25 @@ def test_delete_user_dialog(centered_pair_predictions):
     assert len(context.state["labeled_frame"].user_instances) == 2
 
 
+def test_goto_video_frame_instance_selects_instance(centered_pair_labels):
+    """`gotoVideoAndFrameAndInstance` makes the navigated user instance the
+    app-selected instance (``state["instance"]``), so selection-relative views --
+    e.g. the Label QC display modes (#2783) -- follow the flagged instance the
+    user navigated to, instead of falling back to the first instance.
+    """
+    labels = centered_pair_labels
+    video = labels.videos[0]
+    lf = labels.find(video, 0)[0]
+    user = lf.user_instances
+    assert len(user) >= 2
+
+    context = CommandContext.from_labels(labels)
+    context.gotoVideoAndFrameAndInstance(video, 0, 1)
+    assert context.state["instance"] is user[1]
+    context.gotoVideoAndFrameAndInstance(video, 0, 0)
+    assert context.state["instance"] is user[0]
+
+
 def test_import_labels_from_dlc_folder():
     csv_files = ImportDeepLabCutFolder.find_dlc_files_in_folder(
         "tests/data/dlc_multiple_datasets"

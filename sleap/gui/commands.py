@@ -490,6 +490,15 @@ class CommandContext:
             if 0 <= instance_idx < len(user_instances):
                 instance_to_highlight = user_instances[instance_idx]
 
+        # Make the navigated instance the app-selected instance (not just a
+        # player-view highlight) so anything keyed off ``state["instance"]``
+        # follows it -- in particular the Label QC display modes (#2783), which
+        # focus on the selected instance. Without this, navigating to a flagged
+        # instance left ``state["instance"]`` unchanged, so those modes saw no
+        # on-frame selection and fell back to the first instance.
+        if instance_to_highlight is not None:
+            self.state["instance"] = instance_to_highlight
+
         # Use a timer to highlight and select after the frame is redrawn
         # (state changes trigger plot() which recreates instances via overlay)
         player = getattr(self.app, "player", None)
