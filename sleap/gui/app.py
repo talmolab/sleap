@@ -241,7 +241,7 @@ class MainWindow(QMainWindow):
 
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
-        self.state.connect("show non-visible nodes", self.plotFrame)
+        self.state.connect("show non-visible nodes", self._on_show_non_visible_toggled)
         # Label QC display mode (#2783): a non-manual mode derives the
         # per-instance visibility from the mode + selection and replots; switching
         # back to "manual" clears the mode-driven state. Selection changes are
@@ -1553,6 +1553,19 @@ class MainWindow(QMainWindow):
         """
         if self.state[QC_DISPLAY_MODE_KEY] == QC_MODE_MANUAL:
             return
+        self._recompute_qc_flags_into_state()
+        self.plotFrame()
+
+    def _on_show_non_visible_toggled(self, *args):
+        """Global "Show Non-Visible Nodes" toggled (Shift+V): re-derive + replot.
+
+        The toggle is a master gate even inside an Instance Focus mode (#2783): in
+        a non-manual mode, re-derive the per-instance occluded flags with the new
+        global value (`compute_qc_visibility` ANDs the mode's occluded display with
+        it), so turning it off hides occluded keypoints for every instance. The
+        recompute is a no-op in manual mode, where the global flag is just the
+        per-instance default as before -- either way we then replot.
+        """
         self._recompute_qc_flags_into_state()
         self.plotFrame()
 

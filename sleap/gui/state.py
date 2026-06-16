@@ -148,8 +148,9 @@ def compute_qc_visibility(
         mode: One of the ``QC_MODE_*`` constants.
         selected_instance: The currently selected instance, or ``None``.
         instances: The instances shown on the current frame.
-        global_show_non_visible: The global "show non-visible nodes" flag (unused
-            by the locked modes, kept for symmetry / future modes).
+        global_show_non_visible: The global "show non-visible nodes" flag, used as
+            a master gate: when off, no instance draws occluded keypoints (even the
+            focused one); when on, the mode decides which instances show them.
 
     Returns:
         A dict ``{id(instance): (visible, show_non_visible)}`` (empty for manual).
@@ -180,12 +181,17 @@ def compute_qc_visibility(
     for inst in instances:
         iid = id(inst)
         is_sel = sel_present and iid == sel_id
+        # The global "show non-visible nodes" flag is a master GATE: occluded
+        # keypoints can only be drawn when it is on. The mode then decides WHICH
+        # instances show them (here, the focused/selected one). Off hides occluded
+        # for every instance even inside a focus mode.
+        show_sel_occluded = is_sel and global_show_non_visible
         if mode == QC_MODE_SELECTED_ONLY:
-            flags[iid] = (is_sel, is_sel)  # show only selected; its hidden pts on
+            flags[iid] = (is_sel, show_sel_occluded)  # only selected
         elif mode == QC_MODE_ALL_VISIBLE:
-            flags[iid] = (True, False)  # all visible, occluded pts hidden
+            flags[iid] = (True, False)  # all visible, no occluded
         elif mode == QC_MODE_ALL_PLUS_SELECTED:
-            flags[iid] = (True, is_sel)  # all visible; selected also shows hidden pts
+            flags[iid] = (True, show_sel_occluded)  # all visible + selected's occluded
         else:
             flags[iid] = (True, False)  # unknown mode -> safe "all visible"
     return flags

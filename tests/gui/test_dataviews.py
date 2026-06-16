@@ -485,14 +485,15 @@ def test_qc_mode_maps_onto_transient_keys(qtbot, centered_pair_predictions):
     state = GuiState()
     selected = instances[0]
     flags = compute_qc_visibility(
-        QC_MODE_SELECTED_ONLY, selected, instances, global_show_non_visible=False
+        QC_MODE_SELECTED_ONLY, selected, instances, global_show_non_visible=True
     )
     # Write the three transient keys exactly as the app helper does.
     state[INSTANCE_HIDDEN_KEY] = {iid for iid, (vis, _) in flags.items() if not vis}
     state[VIEW_ONLY_INSTANCE_KEY] = None
     state[SHOW_NONVISIBLE_OVERRIDE_KEY] = {iid: snv for iid, (_, snv) in flags.items()}
 
-    # selected_only: only the selected instance is drawn, with its hidden points.
+    # selected_only with the global gate on: only the selected instance, with its
+    # hidden points.
     assert instance_visible(state, instances[0]) is True
     assert instance_visible(state, instances[1]) is False
     assert instance_shows_non_visible(state, instances[0], False) is True

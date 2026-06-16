@@ -225,6 +225,25 @@ def test_compute_qc_visibility_all_plus_selected_invisible():
     assert flags[id(instances[1])] == (True, False)
 
 
+def test_compute_qc_visibility_global_gate_off():
+    """Global "show non-visible nodes" off gates occluded keypoints off for every
+    instance, even the focused one (master gate)."""
+    instances = [object(), object(), object()]
+
+    # selected_only, gate off: selected is still the only visible instance, but
+    # now with NO occluded keypoints.
+    flags = compute_qc_visibility(QC_MODE_SELECTED_ONLY, instances[1], instances, False)
+    assert flags[id(instances[1])] == (True, False)
+    assert flags[id(instances[0])] == (False, False)
+
+    # all_plus_selected, gate off: all visible, nobody shows occluded points.
+    flags = compute_qc_visibility(
+        QC_MODE_ALL_PLUS_SELECTED, instances[1], instances, False
+    )
+    for inst in instances:
+        assert flags[id(inst)] == (True, False)
+
+
 def test_compute_qc_visibility_selected_none_or_foreign():
     """No/foreign selection falls back to the FIRST instance (never blank)."""
     a, b = object(), object()
