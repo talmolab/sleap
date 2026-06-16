@@ -53,6 +53,16 @@ QC_MODE_SELECTED_ONLY = "selected_only"
 QC_MODE_ALL_VISIBLE = "all_visible_only"
 QC_MODE_ALL_PLUS_SELECTED = "all_plus_selected_invisible"
 
+# (label, mode) pairs for the Label QC display-mode selectors -- the QC dock's
+# "Display:" combo and the View-menu submenu both build from this, so the two
+# selectors cannot drift apart.
+QC_MODE_CHOICES = (
+    ("Manual", QC_MODE_MANUAL),
+    ("Only selected (with hidden points)", QC_MODE_SELECTED_ONLY),
+    ("All instances, visible points only", QC_MODE_ALL_VISIBLE),
+    ("All visible + selected hidden points", QC_MODE_ALL_PLUS_SELECTED),
+)
+
 
 def instance_visible(state: "GuiState", instance: Any) -> bool:
     """Return the effective canvas visibility for an instance.

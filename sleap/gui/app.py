@@ -113,6 +113,7 @@ from sleap.gui.state import (
     SHOW_NONVISIBLE_OVERRIDE_KEY,
     QC_DISPLAY_MODE_KEY,
     QC_MODE_MANUAL,
+    QC_MODE_CHOICES,
     compute_qc_visibility,
 )
 from sleap.gui.web import ping_analytics
@@ -772,6 +773,26 @@ class MainWindow(QMainWindow):
         add_menu_check_item(viewMenu, "show labels", "Show Node Names")
         add_menu_check_item(viewMenu, "show edges", "Show Edges")
         add_menu_check_item(viewMenu, "show mean node score", "Show Mean Node Score")
+
+        # Label QC display-mode selector (#2783), mirrored from the QC dock's
+        # "Display:" combo so the modes are reachable from the menu too. Kept in
+        # sync with QC_DISPLAY_MODE_KEY: menu clicks set it; external changes
+        # (e.g. the dock combo) re-check the matching item.
+        qc_display_menu = viewMenu.addMenu("Label QC Display")
+        self._qc_display_actions = {}
+        for _label, _mode in QC_MODE_CHOICES:
+            _act = qc_display_menu.addAction(
+                _label, lambda m=_mode: self.state.set(QC_DISPLAY_MODE_KEY, m)
+            )
+            _act.setCheckable(True)
+            self._qc_display_actions[_mode] = _act
+
+        def _sync_qc_display_menu(mode):
+            for _m, _a in self._qc_display_actions.items():
+                _a.setChecked(_m == mode)
+
+        self.state.connect(QC_DISPLAY_MODE_KEY, _sync_qc_display_menu)
+        self.state.emit(QC_DISPLAY_MODE_KEY)
 
         add_submenu_choices(
             menu=viewMenu,

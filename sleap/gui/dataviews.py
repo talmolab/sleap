@@ -29,6 +29,8 @@ from sleap.gui.state import (
     INSTANCE_HIDDEN_KEY,
     VIEW_ONLY_INSTANCE_KEY,
     SHOW_NONVISIBLE_OVERRIDE_KEY,
+    QC_DISPLAY_MODE_KEY,
+    QC_MODE_MANUAL,
     instance_visible,
     instance_shows_non_visible,
 )
@@ -747,6 +749,13 @@ class LabeledFrameTableModel(GenericTableModel):
                 # normalize via its ``.value`` before comparing (mirrors the
                 # convention in sleap/gui/dialogs/qc.py:230).
                 checked = getattr(value, "value", value) == QtCore.Qt.Checked.value
+                # A manual per-instance visibility edit means the user is taking
+                # over from any active Label QC display mode (#2783) -- which would
+                # otherwise overwrite this edit on its next recompute. Drop back to
+                # "manual" first so the edit sticks (no-op if already manual; in
+                # manual mode this clears the mode-driven hides, giving a clean
+                # slate the edit below then applies on top of).
+                self._vis_state[QC_DISPLAY_MODE_KEY] = QC_MODE_MANUAL
                 if key == self.VISIBILITY_KEY:
                     self._set_visibility(instance, checked)
                 elif key == self.VIEW_ONLY_KEY:

@@ -29,12 +29,7 @@ else:
 
 from matplotlib.figure import Figure
 
-from sleap.gui.state import (
-    QC_MODE_MANUAL,
-    QC_MODE_SELECTED_ONLY,
-    QC_MODE_ALL_VISIBLE,
-    QC_MODE_ALL_PLUS_SELECTED,
-)
+from sleap.gui.state import QC_MODE_CHOICES
 
 if TYPE_CHECKING:
     import sleap_io as sio
@@ -1931,16 +1926,8 @@ class QCWidget(QtWidgets.QWidget):
         # does the recompute + replot.
         toolbar.addWidget(QtWidgets.QLabel("Display:"))
         self._display_mode_combo = QtWidgets.QComboBox()
-        self._display_mode_combo.addItem("Manual", QC_MODE_MANUAL)
-        self._display_mode_combo.addItem(
-            "Only selected (with hidden points)", QC_MODE_SELECTED_ONLY
-        )
-        self._display_mode_combo.addItem(
-            "All instances, visible points only", QC_MODE_ALL_VISIBLE
-        )
-        self._display_mode_combo.addItem(
-            "All visible + selected hidden points", QC_MODE_ALL_PLUS_SELECTED
-        )
+        for _label, _mode in QC_MODE_CHOICES:
+            self._display_mode_combo.addItem(_label, _mode)
         self._display_mode_combo.setToolTip(
             "How instances are drawn on the canvas while reviewing:\n"
             "- Manual: use the Instances panel checkboxes (default).\n"

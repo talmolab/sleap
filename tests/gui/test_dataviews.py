@@ -433,6 +433,27 @@ def test_labeled_frame_invisible_nodes_flags_checkable(
     assert model.data(index, QtCore.Qt.DisplayRole) is None
 
 
+def test_checkbox_toggle_falls_back_to_manual_qc_mode(
+    qtbot, centered_pair_predictions
+):
+    """A manual per-instance checkbox edit drops an active Label QC display mode
+    back to "manual" (#2783), so the mode stops clobbering the user's edit."""
+    from sleap.gui.state import (
+        QC_DISPLAY_MODE_KEY,
+        QC_MODE_SELECTED_ONLY,
+        QC_MODE_MANUAL,
+    )
+
+    lf = centered_pair_predictions.labeled_frames[13]
+    model = LabeledFrameTableModel(items=lf)
+
+    # Every per-instance checkbox column resets the mode to manual.
+    for column in ("visibility", "view only", "invisible nodes"):
+        model._vis_state[QC_DISPLAY_MODE_KEY] = QC_MODE_SELECTED_ONLY
+        assert _set_checkstate(model, 0, column, False)
+        assert model._vis_state[QC_DISPLAY_MODE_KEY] == QC_MODE_MANUAL
+
+
 # -- QC display mode -> shared transient keys (#2783 <-> shared model) ------------
 
 
