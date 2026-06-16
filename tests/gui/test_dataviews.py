@@ -433,9 +433,7 @@ def test_labeled_frame_invisible_nodes_flags_checkable(
     assert model.data(index, QtCore.Qt.DisplayRole) is None
 
 
-def test_checkbox_toggle_falls_back_to_manual_qc_mode(
-    qtbot, centered_pair_predictions
-):
+def test_checkbox_toggle_falls_back_to_manual_qc_mode(qtbot, centered_pair_predictions):
     """A manual per-instance checkbox edit drops an active Label QC display mode
     back to "manual" (#2783), so the mode stops clobbering the user's edit."""
     from sleap.gui.state import (
