@@ -3397,3 +3397,124 @@ class TestQCChainTraceDialog:
         widget._cb_chain.setChecked(True)
         assert widget._chain_config_btn.isEnabled()
         assert widget._chain_summary_label.isEnabled()
+
+
+class TestQCDisplayMode:
+    """Tests for the #2783 Label QC "Display:" mode selector and its bridge.
+
+    These exercise the combo <-> signal <-> state wiring at the model/state level
+    only; no MainWindow is built and no event loop is started.
+    """
+
+    def test_display_mode_combo_present(self, qtbot):
+        """The combo exists with the four modes and defaults to Manual."""
+        from sleap.gui.state import (
+            QC_MODE_MANUAL,
+            QC_MODE_SELECTED_ONLY,
+            QC_MODE_ALL_VISIBLE,
+            QC_MODE_ALL_PLUS_SELECTED,
+        )
+
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        combo = widget._display_mode_combo
+        assert combo.count() == 4
+        modes = [combo.itemData(i) for i in range(combo.count())]
+        assert modes == [
+            QC_MODE_MANUAL,
+            QC_MODE_SELECTED_ONLY,
+            QC_MODE_ALL_VISIBLE,
+            QC_MODE_ALL_PLUS_SELECTED,
+        ]
+        # Manual is the default (index 0).
+        assert widget.current_display_mode() == QC_MODE_MANUAL
+
+    def test_display_mode_combo_emits_signal(self, qtbot):
+        """Selecting each option emits display_mode_changed with its mode."""
+        from sleap.gui.state import (
+            QC_MODE_MANUAL,
+            QC_MODE_SELECTED_ONLY,
+            QC_MODE_ALL_VISIBLE,
+            QC_MODE_ALL_PLUS_SELECTED,
+        )
+
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        emitted = []
+        widget.display_mode_changed.connect(emitted.append)
+
+        # Start on Manual; switch through the other three and back.
+        for mode in (
+            QC_MODE_SELECTED_ONLY,
+            QC_MODE_ALL_VISIBLE,
+            QC_MODE_ALL_PLUS_SELECTED,
+            QC_MODE_MANUAL,
+        ):
+            idx = widget._display_mode_combo.findData(mode)
+            widget._display_mode_combo.setCurrentIndex(idx)
+
+        assert emitted == [
+            QC_MODE_SELECTED_ONLY,
+            QC_MODE_ALL_VISIBLE,
+            QC_MODE_ALL_PLUS_SELECTED,
+            QC_MODE_MANUAL,
+        ]
+
+    def test_set_display_mode_roundtrip_no_emit(self, qtbot):
+        """set_display_mode selects the right item WITHOUT re-emitting."""
+        from sleap.gui.state import QC_MODE_ALL_VISIBLE
+
+        widget = QCWidget()
+        qtbot.addWidget(widget)
+
+        emitted = []
+        widget.display_mode_changed.connect(emitted.append)
+
+        widget.set_display_mode(QC_MODE_ALL_VISIBLE)
+        assert widget.current_display_mode() == QC_MODE_ALL_VISIBLE
+        # Syncing FROM state must not loop back into state.
+        assert emitted == []
+
+    def test_dock_bridges_display_mode_to_state(self, qtbot):
+        """The dock bridges the combo <-> a real GuiState on the parent (#2783)."""
+        from qtpy.QtWidgets import QMainWindow
+        from sleap.gui.dialogs.qc import QCDockWidget
+        from sleap.gui.state import (
+            GuiState,
+            QC_DISPLAY_MODE_KEY,
+            QC_MODE_MANUAL,
+            QC_MODE_SELECTED_ONLY,
+            QC_MODE_ALL_PLUS_SELECTED,
+        )
+
+        # Minimal parent exposing a real GuiState, mirroring MainWindow.state.
+        class _ParentWindow(QMainWindow):
+            def __init__(self):
+                super().__init__()
+                self.state = GuiState()
+
+        parent = _ParentWindow()
+        parent.state[QC_DISPLAY_MODE_KEY] = QC_MODE_MANUAL
+        qtbot.addWidget(parent)
+
+        mock_labels = MagicMock()
+        mock_labels.__len__ = MagicMock(return_value=10)
+        mock_labels.__iter__ = MagicMock(return_value=iter([]))
+
+        dock = QCDockWidget(labels=mock_labels, parent=parent)
+        qtbot.addWidget(dock)
+
+        # Initial sync: combo reflects the persisted mode.
+        assert dock._widget.current_display_mode() == QC_MODE_MANUAL
+
+        # Combo -> state: changing the widget pushes the mode into parent.state.
+        idx = dock._widget._display_mode_combo.findData(QC_MODE_SELECTED_ONLY)
+        dock._widget._display_mode_combo.setCurrentIndex(idx)
+        assert parent.state[QC_DISPLAY_MODE_KEY] == QC_MODE_SELECTED_ONLY
+
+        # State -> combo: setting the mode from the other side syncs the combo
+        # via the state callback (without feedback-looping back into state).
+        parent.state[QC_DISPLAY_MODE_KEY] = QC_MODE_ALL_PLUS_SELECTED
+        assert dock._widget.current_display_mode() == QC_MODE_ALL_PLUS_SELECTED

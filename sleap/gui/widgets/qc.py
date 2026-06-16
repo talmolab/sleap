@@ -29,6 +29,8 @@ else:
 
 from matplotlib.figure import Figure
 
+from sleap.gui.state import QC_MODE_CHOICES
+
 if TYPE_CHECKING:
     import sleap_io as sio
     from sleap.qc.config import QCConfig
@@ -1677,9 +1679,14 @@ class QCWidget(QtWidgets.QWidget):
     Signals:
         navigate_to_instance: Emitted when user wants to navigate to an instance.
             Arguments are (video_idx, frame_idx, instance_idx).
+        display_mode_changed: Emitted with the new QC display-mode string (one of
+            the ``QC_MODE_*`` constants) when the user picks a "Display:" option.
+            The widget itself never mutates visibility state; the dock bridges
+            this to ``MainWindow.state`` (#2783).
     """
 
     navigate_to_instance = QtCore.Signal(int, int, int)
+    display_mode_changed = QtCore.Signal(str)
 
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None):
         """Initialize the widget.
@@ -1910,6 +1917,28 @@ class QCWidget(QtWidgets.QWidget):
             "as you tick rows reviewed."
         )
         toolbar.addWidget(self._hide_reviewed_check)
+
+        # Display-mode selector (#2783): pick how instances draw on the canvas
+        # while reviewing. "Manual" (default) leaves the Instances-dock columns
+        # (#2755/#2782) fully in control; the other modes drive per-instance
+        # visibility from the selected instance. The widget only EMITS the chosen
+        # mode string -- the dock bridges it to the main window's state, which
+        # does the recompute + replot.
+        toolbar.addWidget(QtWidgets.QLabel("Display:"))
+        self._display_mode_combo = QtWidgets.QComboBox()
+        for _label, _mode in QC_MODE_CHOICES:
+            self._display_mode_combo.addItem(_label, _mode)
+        self._display_mode_combo.setToolTip(
+            "How instances are drawn on the canvas while reviewing:\n"
+            "- Manual: use the Instances panel checkboxes (default).\n"
+            "- Only selected: hide all but the selected instance and show its "
+            "occluded points.\n"
+            "- All instances, visible points only: show every instance but hide "
+            "occluded points.\n"
+            "- All visible + selected hidden points: show every instance; only "
+            "the selected one also shows its occluded points."
+        )
+        toolbar.addWidget(self._display_mode_combo)
 
         toolbar.addStretch()
 
@@ -3105,6 +3134,37 @@ class QCWidget(QtWidgets.QWidget):
         self._table_model.dataChanged.connect(self._on_reviewed_changed)
         # Re-apply the filters whenever the "Hide reviewed" toggle changes.
         self._hide_reviewed_check.toggled.connect(self._on_hide_reviewed_toggled)
+        # Emit the chosen display mode (#2783); the dock bridges it to state.
+        self._display_mode_combo.currentIndexChanged.connect(
+            self._on_display_mode_changed
+        )
+
+    def _on_display_mode_changed(self, _index: int):
+        """Emit the newly selected QC display-mode string (#2783).
+
+        Reads the combo's ``userData`` (a ``QC_MODE_*`` constant) and emits it.
+        Deliberately mutates no visibility state here -- the dock forwards it to
+        the main window's state, which owns the recompute + replot.
+        """
+        mode = self._display_mode_combo.currentData()
+        self.display_mode_changed.emit(mode)
+
+    def set_display_mode(self, mode: str):
+        """Select the combo entry matching ``mode`` without re-emitting (#2783).
+
+        Used to sync the combo FROM the persisted/app state, so combo signals are
+        blocked to avoid a feedback loop back into the state.
+        """
+        idx = self._display_mode_combo.findData(mode)
+        if idx < 0:
+            return
+        self._display_mode_combo.blockSignals(True)
+        self._display_mode_combo.setCurrentIndex(idx)
+        self._display_mode_combo.blockSignals(False)
+
+    def current_display_mode(self) -> str:
+        """Return the current display-mode string (a ``QC_MODE_*`` constant)."""
+        return self._display_mode_combo.currentData()
 
     def _update_spinner(self):
         """Update the spinner animation character."""

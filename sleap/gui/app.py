@@ -110,6 +110,11 @@ from sleap.gui.state import (
     GuiState,
     INSTANCE_HIDDEN_KEY,
     VIEW_ONLY_INSTANCE_KEY,
+    SHOW_NONVISIBLE_OVERRIDE_KEY,
+    QC_DISPLAY_MODE_KEY,
+    QC_MODE_MANUAL,
+    QC_MODE_CHOICES,
+    compute_qc_visibility,
 )
 from sleap.gui.web import ping_analytics
 from sleap.gui.widgets.docks import (
@@ -197,10 +202,20 @@ class MainWindow(QMainWindow):
         self.state["show instances"] = True
         self.state["show labels"] = True
         self.state["show edges"] = True
-        # Transient per-instance canvas visibility (Instances dock checkboxes).
-        # Reset on each real frame change in `_after_plot_change`; never persisted.
+        # Transient per-instance canvas visibility (Instances dock checkboxes:
+        # hidden set, view-only instance, and per-instance "show non-visible
+        # nodes" override). Reset on each real frame change in
+        # `_after_plot_change`; never persisted.
         self.state[INSTANCE_HIDDEN_KEY] = set()
         self.state[VIEW_ONLY_INSTANCE_KEY] = None
+        self.state[SHOW_NONVISIBLE_OVERRIDE_KEY] = {}
+        # Label QC "display mode" (#2783): a transient, session-only review aid.
+        # It always starts in "manual" (normal view) and is intentionally NOT
+        # persisted across launches -- a selection-relative mode that hides
+        # instances would look like a bug on the next startup. "manual" keeps the
+        # Instances-dock columns in control; other modes drive the transient keys
+        # above. Not reset on frame change (the mode persists within a session).
+        self.state[QC_DISPLAY_MODE_KEY] = QC_MODE_MANUAL
         # (video, frame_idx) of the last plotted frame, so `_after_plot_change`
         # clears the transient visibility above only when the frame truly changes
         # (not on same-frame replots like marker-size or add-instance).
@@ -226,7 +241,14 @@ class MainWindow(QMainWindow):
 
         self.state.connect("marker size", self.plotFrame)
         self.state.connect("node label size", self.plotFrame)
-        self.state.connect("show non-visible nodes", self.plotFrame)
+        self.state.connect("show non-visible nodes", self._on_show_non_visible_toggled)
+        # Label QC display mode (#2783): a non-manual mode derives the
+        # per-instance visibility from the mode + selection and replots; switching
+        # back to "manual" clears the mode-driven state. Selection changes are
+        # followed only in a non-manual mode -- in the default "manual" mode
+        # selecting an instance stays lightweight (no replot), as before.
+        self.state.connect(QC_DISPLAY_MODE_KEY, self._on_qc_display_mode_changed)
+        self.state.connect("instance", self._on_qc_selection_changed)
 
         if self.state["share usage data"]:
             ping_analytics()
@@ -751,6 +773,26 @@ class MainWindow(QMainWindow):
         add_menu_check_item(viewMenu, "show labels", "Show Node Names")
         add_menu_check_item(viewMenu, "show edges", "Show Edges")
         add_menu_check_item(viewMenu, "show mean node score", "Show Mean Node Score")
+
+        # Instance-focus display-mode selector (#2783), mirrored from the QC
+        # dock's "Display:" combo so the modes are reachable from the menu too.
+        # Kept in sync with QC_DISPLAY_MODE_KEY: menu clicks set it; external
+        # changes (e.g. the dock combo) re-check the matching item.
+        qc_display_menu = viewMenu.addMenu("Instance Focus")
+        self._qc_display_actions = {}
+        for _label, _mode in QC_MODE_CHOICES:
+            _act = qc_display_menu.addAction(
+                _label, lambda m=_mode: self.state.set(QC_DISPLAY_MODE_KEY, m)
+            )
+            _act.setCheckable(True)
+            self._qc_display_actions[_mode] = _act
+
+        def _sync_qc_display_menu(mode):
+            for _m, _a in self._qc_display_actions.items():
+                _a.setChecked(_m == mode)
+
+        self.state.connect(QC_DISPLAY_MODE_KEY, _sync_qc_display_menu)
+        self.state.emit(QC_DISPLAY_MODE_KEY)
 
         add_submenu_choices(
             menu=viewMenu,
@@ -1455,6 +1497,78 @@ class MainWindow(QMainWindow):
         if _has_topic([UpdateTopic.frame, UpdateTopic.project_instances]):
             self.state["last_interacted_frame"] = self.state["labeled_frame"]
 
+    def _recompute_qc_flags_into_state(self):
+        """Recompute the transient per-instance keys from the QC display mode.
+
+        Does NOT replot -- callers either replot themselves (the QC display-mode
+        callbacks) or are already inside the plot path (`_after_plot_change`). In
+        "manual" mode this is a no-op so the Instances-dock columns (#2755/#2782)
+        stay in control. Otherwise the mode OWNS all three transient keys: it
+        overwrites the hidden set and the show-non-visible override wholesale, and
+        forces view-only off (the mode decides visibility, not a per-row radio).
+        See `sleap.gui.state.compute_qc_visibility` for the mode -> flags mapping.
+        """
+        mode = self.state[QC_DISPLAY_MODE_KEY]
+        if mode == QC_MODE_MANUAL:
+            return
+        instances = get_instances_to_show(self.state["labeled_frame"])
+        selected = self.state["instance"]
+        global_snv = self.state.get("show non-visible nodes", default=True)
+        flags = compute_qc_visibility(mode, selected, instances, global_snv)
+        self.state[INSTANCE_HIDDEN_KEY] = {
+            iid for iid, (vis, _) in flags.items() if not vis
+        }
+        self.state[VIEW_ONLY_INSTANCE_KEY] = None
+        self.state[SHOW_NONVISIBLE_OVERRIDE_KEY] = {
+            iid: snv for iid, (_, snv) in flags.items()
+        }
+
+    def _on_qc_display_mode_changed(self, *args):
+        """The Label QC display mode itself changed (#2783): re-derive + replot.
+
+        A non-manual mode derives the transient per-instance keys from the
+        current selection; switching back to "manual" clears the mode-driven
+        keys so the Instances-dock columns (#2755/#2782) regain control. Either
+        way a full `plotFrame` is REQUIRED because `show_non_visible` is baked
+        into each `QtInstance` at creation -- `setVisible` cannot resurrect
+        node/edge children that were never built.
+        """
+        if self.state[QC_DISPLAY_MODE_KEY] == QC_MODE_MANUAL:
+            # Hand control back to the Instances-dock columns.
+            self.state[INSTANCE_HIDDEN_KEY] = set()
+            self.state[VIEW_ONLY_INSTANCE_KEY] = None
+            self.state[SHOW_NONVISIBLE_OVERRIDE_KEY] = {}
+        else:
+            self._recompute_qc_flags_into_state()
+        self.plotFrame()
+
+    def _on_qc_selection_changed(self, *args):
+        """Selection changed: follow it only when a non-manual QC mode is active.
+
+        In the default "manual" mode selecting an instance must stay lightweight
+        (NO replot), matching pre-#2783 behavior -- otherwise every canvas click
+        would rebuild the whole frame. A non-manual mode re-derives the
+        per-instance flags for the new selection and replots (e.g. `selected_only`
+        follows the active instance).
+        """
+        if self.state[QC_DISPLAY_MODE_KEY] == QC_MODE_MANUAL:
+            return
+        self._recompute_qc_flags_into_state()
+        self.plotFrame()
+
+    def _on_show_non_visible_toggled(self, *args):
+        """Global "Show Non-Visible Nodes" toggled (Shift+V): re-derive + replot.
+
+        The toggle is a master gate even inside an Instance Focus mode (#2783): in
+        a non-manual mode, re-derive the per-instance occluded flags with the new
+        global value (`compute_qc_visibility` ANDs the mode's occluded display with
+        it), so turning it off hides occluded keypoints for every instance. The
+        recompute is a no-op in manual mode, where the global flag is just the
+        per-instance default as before -- either way we then replot.
+        """
+        self._recompute_qc_flags_into_state()
+        self.plotFrame()
+
     def plotFrame(self, *args, **kwargs):
         """Plots (or replots) current frame."""
         if self.state["video"] is None:
@@ -1490,6 +1604,12 @@ class MainWindow(QMainWindow):
             self._vis_last_frame_key = frame_key
             self.state[INSTANCE_HIDDEN_KEY] = set()
             self.state[VIEW_ONLY_INSTANCE_KEY] = None
+            self.state[SHOW_NONVISIBLE_OVERRIDE_KEY] = {}
+            # A non-manual QC display mode (#2783) owns these transient keys, so
+            # re-derive them for the freshly navigated frame. No `plotFrame` here:
+            # we are already inside the plot path and the overlay redraw below
+            # will apply the recomputed state (calling plotFrame would recurse).
+            self._recompute_qc_flags_into_state()
 
         # Show instances, etc, for this frame
         for overlay in self.overlays.values():

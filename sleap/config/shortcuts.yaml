@@ -31,6 +31,7 @@ save: Ctrl+S
 select next: '`'
 select to frame: Ctrl+Shift+J
 show instances: H
+show non-visible nodes: Shift+V
 show edges: Ctrl+Shift+Tab
 show labels: Ctrl+Tab
 show trails: 
