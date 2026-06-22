@@ -413,9 +413,7 @@ class TestNoTrainedModelMessage:
         """Valid config, matching head, no checkpoint, inference mode -> warn."""
         widget = self._make_widget(qtbot)
         cfg = self._make_cfg(tmp_path, trained=False)
-        with patch(
-            "sleap.gui.learning.configs.QtWidgets.QMessageBox"
-        ) as mock_box:
+        with patch("sleap.gui.learning.configs.QtWidgets.QMessageBox") as mock_box:
             widget._add_file_selection_to_menu(cfg)
 
         mock_box.assert_called_once()
@@ -428,9 +426,7 @@ class TestNoTrainedModelMessage:
         """A trained config populates the menu without any warning."""
         widget = self._make_widget(qtbot)
         cfg = self._make_cfg(tmp_path, trained=True)
-        with patch(
-            "sleap.gui.learning.configs.QtWidgets.QMessageBox"
-        ) as mock_box:
+        with patch("sleap.gui.learning.configs.QtWidgets.QMessageBox") as mock_box:
             widget._add_file_selection_to_menu(cfg)
 
         mock_box.assert_not_called()
@@ -440,9 +436,7 @@ class TestNoTrainedModelMessage:
         """In training mode an untrained config is fine -> no warning."""
         widget = self._make_widget(qtbot, require_trained=False)
         cfg = self._make_cfg(tmp_path, trained=False)
-        with patch(
-            "sleap.gui.learning.configs.QtWidgets.QMessageBox"
-        ) as mock_box:
+        with patch("sleap.gui.learning.configs.QtWidgets.QMessageBox") as mock_box:
             widget._add_file_selection_to_menu(cfg)
 
         mock_box.assert_not_called()
@@ -452,9 +446,7 @@ class TestNoTrainedModelMessage:
         """A head mismatch is reported (not the no-trained-model message)."""
         widget = self._make_widget(qtbot, head_name="centroid")
         cfg = self._make_cfg(tmp_path, head_name="centered_instance", trained=False)
-        with patch(
-            "sleap.gui.learning.configs.QtWidgets.QMessageBox"
-        ) as mock_box:
+        with patch("sleap.gui.learning.configs.QtWidgets.QMessageBox") as mock_box:
             widget._add_file_selection_to_menu(cfg)
 
         mock_box.assert_called_once()
