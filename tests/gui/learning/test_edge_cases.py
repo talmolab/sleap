@@ -19,7 +19,12 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
     in_degree_over_one,
     cycles,
 )
-from sleap.gui.learning.configs import ConfigFileInfo, _quick_scan_yaml_metadata
+from sleap.gui.learning.configs import (
+    ConfigFileInfo,
+    TrainingConfigFilesWidget,
+    TrainingConfigsGetter,
+    _quick_scan_yaml_metadata,
+)
 from sleap.gui.learning.runners import InferenceTask
 
 
@@ -339,6 +344,114 @@ trainer_config:
         config_info = ConfigFileInfo(path=str(config_file))
 
         assert config_info.has_trained_model is True
+
+    def test_has_trained_model_honors_ckpt_dir_when_loaded(self, tmp_path):
+        """ckpt_dir fallback finds a checkpoint outside the config's directory,
+        but only once the config is loaded (so bulk scans stay fast)."""
+        model_dir = tmp_path / "model"
+        ckpt_dir = model_dir / "ckpts"
+        ckpt_dir.mkdir(parents=True)
+        config_file = model_dir / "training_config.yaml"
+        config_file.write_text("trainer_config:\n  ckpt_dir: ckpts\n")
+        (ckpt_dir / "best.ckpt").touch()
+
+        # Not loaded: only the fast path (config's own dir) is checked, so the
+        # checkpoint in the custom ckpt_dir is not found.
+        lazy = ConfigFileInfo(path=str(config_file))
+        assert lazy.has_trained_model is False
+
+        # Loaded: the ckpt_dir fallback finds the checkpoint.
+        loaded = ConfigFileInfo(path=str(config_file))
+        loaded._load_full_config()
+        assert loaded.has_trained_model is True
+
+    def test_has_trained_model_honors_absolute_ckpt_dir(self, tmp_path):
+        """ckpt_dir fallback honors an absolute ckpt_dir when loaded."""
+        model_dir = tmp_path / "model"
+        model_dir.mkdir()
+        ckpt_dir = tmp_path / "elsewhere"
+        ckpt_dir.mkdir()
+        config_file = model_dir / "training_config.yaml"
+        config_file.write_text(f"trainer_config:\n  ckpt_dir: {ckpt_dir}\n")
+        (ckpt_dir / "best_model.h5").touch()
+
+        config_info = ConfigFileInfo(path=str(config_file))
+        config_info._load_full_config()
+        assert config_info.has_trained_model is True
+
+
+# =============================================================================
+# No-Trained-Model Message Tests (#2787)
+# =============================================================================
+
+
+class TestNoTrainedModelMessage:
+    """Picking a valid-but-untrained config in inference mode should warn
+    instead of silently leaving the dropdown empty (see #2787)."""
+
+    def _make_widget(self, qtbot, head_name="centered_instance", require_trained=True):
+        getter = TrainingConfigsGetter(dir_paths=[])
+        widget = TrainingConfigFilesWidget(
+            cfg_getter=getter, head_name=head_name, require_trained=require_trained
+        )
+        qtbot.addWidget(widget)
+        widget.update()
+        return widget
+
+    def _make_cfg(self, tmp_path, head_name="centered_instance", trained=False):
+        model_dir = tmp_path / "model"
+        model_dir.mkdir(exist_ok=True)
+        cfg_path = model_dir / "training_config.yaml"
+        cfg_path.write_text("trainer_config:\n  run_name: test\n")
+        if trained:
+            (model_dir / "best.ckpt").touch()
+        return ConfigFileInfo(
+            path=str(cfg_path), filename=cfg_path.name, head_name=head_name
+        )
+
+    def test_untrained_inference_shows_message(self, qtbot, tmp_path):
+        """Valid config, matching head, no checkpoint, inference mode -> warn."""
+        widget = self._make_widget(qtbot)
+        cfg = self._make_cfg(tmp_path, trained=False)
+        with patch("sleap.gui.learning.configs.QtWidgets.QMessageBox") as mock_box:
+            widget._add_file_selection_to_menu(cfg)
+
+        mock_box.assert_called_once()
+        text = mock_box.call_args.kwargs.get("text", "")
+        assert "no trained model" in text
+        # The untrained config is filtered out, so nothing is selected.
+        assert widget.getSelectedConfigInfo() is None
+
+    def test_trained_inference_no_message(self, qtbot, tmp_path):
+        """A trained config populates the menu without any warning."""
+        widget = self._make_widget(qtbot)
+        cfg = self._make_cfg(tmp_path, trained=True)
+        with patch("sleap.gui.learning.configs.QtWidgets.QMessageBox") as mock_box:
+            widget._add_file_selection_to_menu(cfg)
+
+        mock_box.assert_not_called()
+        assert widget.getSelectedConfigInfo() is not None
+
+    def test_untrained_training_mode_no_message(self, qtbot, tmp_path):
+        """In training mode an untrained config is fine -> no warning."""
+        widget = self._make_widget(qtbot, require_trained=False)
+        cfg = self._make_cfg(tmp_path, trained=False)
+        with patch("sleap.gui.learning.configs.QtWidgets.QMessageBox") as mock_box:
+            widget._add_file_selection_to_menu(cfg)
+
+        mock_box.assert_not_called()
+        assert widget.getSelectedConfigInfo() is not None
+
+    def test_head_mismatch_takes_precedence(self, qtbot, tmp_path):
+        """A head mismatch is reported (not the no-trained-model message)."""
+        widget = self._make_widget(qtbot, head_name="centroid")
+        cfg = self._make_cfg(tmp_path, head_name="centered_instance", trained=False)
+        with patch("sleap.gui.learning.configs.QtWidgets.QMessageBox") as mock_box:
+            widget._add_file_selection_to_menu(cfg)
+
+        mock_box.assert_called_once()
+        text = mock_box.call_args.kwargs.get("text", "")
+        assert "cannot be used for" in text
 
 
 # =============================================================================

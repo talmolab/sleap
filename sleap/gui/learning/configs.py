@@ -170,24 +170,42 @@ class ConfigFileInfo:
     def has_trained_model(self) -> bool:
         """Check if this config has a trained model (best.ckpt or best_model.h5).
 
-        This method is optimized to avoid loading the full config. It only checks
+        This is optimized to avoid loading the full config. It first checks
         path_dir (the directory containing the config file), which is where
-        checkpoints are saved by sleap-nn training. The result is cached.
+        sleap-nn saves checkpoints. If the full config happens to be already
+        loaded (e.g., a user-picked file), it also honors a custom
+        ``trainer_config.ckpt_dir`` so genuinely-trained models in non-standard
+        layouts aren't missed. The result is cached.
 
-        Note: This does not check ckpt_dir from the config because:
-        1. sleap-nn saves best.ckpt to the model directory (path_dir)
-        2. Baseline configs don't have ckpt_dir set
-        3. Loading config just for this check is too slow (~30-40ms per file)
+        Note: the ckpt_dir fallback is intentionally guarded on the config
+        already being loaded. Forcing a full load here just for this check is
+        too slow (~30-40ms per file) during bulk config-list population, and
+        baseline configs don't set ckpt_dir anyway.
         """
         if self._has_trained_model_cache is not None:
             return self._has_trained_model_cache
 
-        # Check path_dir for checkpoint files (no config load needed)
+        # Fast path: check path_dir for checkpoint files (no config load needed)
         path_dir = self.path_dir
         for filename in ("best.ckpt", "best_model.h5"):
             if os.path.exists(os.path.join(path_dir, filename)):
                 self._has_trained_model_cache = True
                 return True
+
+        # Fallback: honor a custom ckpt_dir, but only when the config is already
+        # loaded so we never trigger a slow load during bulk list population.
+        if self._config is not None:
+            ckpt_dir = OmegaConf.select(
+                self._config, "trainer_config.ckpt_dir", default=None
+            )
+            if ckpt_dir:
+                # Resolve relative ckpt_dir against the config's own directory.
+                if not os.path.isabs(ckpt_dir):
+                    ckpt_dir = os.path.join(path_dir, ckpt_dir)
+                for filename in ("best.ckpt", "best_model.h5"):
+                    if os.path.exists(os.path.join(ckpt_dir, filename)):
+                        self._has_trained_model_cache = True
+                        return True
 
         self._has_trained_model_cache = False
         return False
@@ -606,7 +624,11 @@ class TrainingConfigFilesWidget(FieldComboWidget):
         if not filename:
             logging.debug("No file selected for training config.")
             return None
-        return self._cfg_getter.try_loading_path(filename)
+        # Fully load the picked file (not just a quick metadata scan) so that
+        # has_trained_model can honor a custom trainer_config.ckpt_dir. This is
+        # a single user-picked file, not bulk list population, so the load cost
+        # is acceptable.
+        return self._cfg_getter.try_loading_path(filename, full_load=True)
 
     def _add_file_selection_to_menu(self, cfg_info: Optional[ConfigFileInfo] = None):
         if cfg_info:
@@ -620,6 +642,18 @@ class TrainingConfigFilesWidget(FieldComboWidget):
                     text=f"The file you selected was a training config for "
                     f"{cfg_info.head_name} and cannot be used for "
                     f"{self._head_name}."
+                ).exec_()
+            elif self._require_trained and not cfg_info.has_trained_model:
+                # Config is valid and matches the head, but has no trained model
+                # checkpoint. In inference mode such configs are filtered out of
+                # the menu, so without this message the dropdown would silently
+                # stay empty and the Run button stay disabled (see #2787).
+                QtWidgets.QMessageBox(
+                    text=f"The selected training config has no trained model "
+                    f"(best.ckpt or best_model.h5) in its model directory:\n\n"
+                    f"{cfg_info.path_dir}\n\n"
+                    f"A trained model is required to run inference. Select a "
+                    f"config from a directory that contains a trained model."
                 ).exec_()
         else:
             # We couldn't load a valid config, so change menu to initial
