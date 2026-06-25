@@ -337,6 +337,31 @@ class TestValidation:
         """Message widget should exist for validation messages."""
         assert training_dialog.message_widget is not None
 
+    def test_message_widget_hidden_when_no_message(self, training_dialog):
+        """Message widget should be hidden when there is nothing to report."""
+        training_dialog.set_pipeline("single")
+        training_dialog._validate_pipeline()
+        assert training_dialog.message_widget.text() == ""
+        # isHidden() reflects the explicit visibility flag regardless of whether
+        # the (un-shown) dialog's ancestors are visible in the test.
+        assert training_dialog.message_widget.isHidden() is True
+
+    def test_message_widget_shown_when_warning_present(self, training_dialog):
+        """Crop-size warnings should make the message widget visible.
+
+        Regression test for #2792: the warning text was being set but the widget
+        lived below the (scrollable) tab content, so it was effectively invisible.
+        """
+        training_dialog.set_pipeline("top-down")
+        ci_tab = training_dialog.tabs["centered_instance"]
+        with patch.object(
+            ci_tab, "get_config_warnings", return_value=["something is off"]
+        ):
+            training_dialog._validate_pipeline()
+
+        assert "something is off" in training_dialog.message_widget.text()
+        assert training_dialog.message_widget.isHidden() is False
+
 
 # =============================================================================
 # Signal Connection Tests
@@ -535,6 +560,164 @@ class TestTrainingEditorWidget:
         assert inference_editor_widget._radio_train_scratch is None
         assert inference_editor_widget._radio_resume is None
         assert inference_editor_widget._radio_use_trained is None
+
+
+# =============================================================================
+# Training Config Warning Tests (#2792)
+# =============================================================================
+
+
+class TestTrainingConfigWarnings:
+    """Tests for crop-size / input-scaling UX guidance (issue #2792)."""
+
+    def _make_editor(self, qtbot, skeleton, cfg_getter, head, labels=None):
+        widget = TrainingEditorWidget(
+            skeleton=skeleton,
+            head=head,
+            cfg_getter=cfg_getter,
+            require_trained=False,
+            labels=labels,
+        )
+        qtbot.addWidget(widget)
+        return widget
+
+    def test_input_scaling_info_button_on_centered_instance(
+        self, qtbot, minimal_skeleton, mock_cfg_getter
+    ):
+        """Centered instance tab gets an info button next to Input Scaling."""
+        from qtpy import QtWidgets
+
+        widget = self._make_editor(
+            qtbot, minimal_skeleton, mock_cfg_getter, "centered_instance"
+        )
+        buttons = widget.form_widgets["data"].findChildren(QtWidgets.QToolButton)
+        assert len(buttons) == 1
+
+    def test_no_info_button_on_single_instance(
+        self, qtbot, minimal_skeleton, mock_cfg_getter
+    ):
+        """Non-crop heads do not get the Input Scaling info button."""
+        from qtpy import QtWidgets
+
+        widget = self._make_editor(
+            qtbot, minimal_skeleton, mock_cfg_getter, "single_instance"
+        )
+        buttons = widget.form_widgets["data"].findChildren(QtWidgets.QToolButton)
+        assert len(buttons) == 0
+
+    def test_warnings_empty_for_non_crop_head(
+        self, qtbot, minimal_skeleton, mock_cfg_getter, minimal_labels
+    ):
+        """Non-crop heads never produce crop-size warnings."""
+        widget = self._make_editor(
+            qtbot,
+            minimal_skeleton,
+            mock_cfg_getter,
+            "single_instance",
+            labels=minimal_labels,
+        )
+        assert widget.get_config_warnings() == []
+
+    def test_warnings_empty_without_labels(
+        self, qtbot, minimal_skeleton, mock_cfg_getter
+    ):
+        """No labels means no instance-based warnings can be computed."""
+        widget = self._make_editor(
+            qtbot, minimal_skeleton, mock_cfg_getter, "centered_instance"
+        )
+        assert widget._labels is None
+        assert widget.get_config_warnings() == []
+
+    def test_warning_when_effective_crop_below_100px(
+        self, qtbot, minimal_skeleton, mock_cfg_getter, minimal_labels
+    ):
+        """Effective (post-scale) crop < 100px warns to use scale 1.0 + Auto."""
+        widget = self._make_editor(
+            qtbot,
+            minimal_skeleton,
+            mock_cfg_getter,
+            "centered_instance",
+            labels=minimal_labels,
+        )
+        with patch(
+            "sleap.gui.learning.dialog.receptivefield.compute_crop_size_from_cfg",
+            return_value=64,
+        ):
+            warnings = widget.get_config_warnings()
+
+        assert any("100px" in w and "Input Scaling" in w for w in warnings)
+
+    def test_no_warning_when_effective_crop_at_or_above_100px(
+        self, qtbot, minimal_skeleton, mock_cfg_getter, minimal_labels
+    ):
+        """Effective crop >= 100px (and Auto crop) produces no warnings."""
+        widget = self._make_editor(
+            qtbot,
+            minimal_skeleton,
+            mock_cfg_getter,
+            "centered_instance",
+            labels=minimal_labels,
+        )
+        with patch(
+            "sleap.gui.learning.dialog.receptivefield.compute_crop_size_from_cfg",
+            return_value=256,
+        ):
+            warnings = widget.get_config_warnings()
+
+        # crop_size is Auto (None) by default, so no clipping warning either.
+        assert warnings == []
+
+    def test_warning_when_crop_smaller_than_largest_instance(
+        self, qtbot, minimal_skeleton, mock_cfg_getter, minimal_labels
+    ):
+        """Explicit crop smaller than the largest instance warns about clipping."""
+        from omegaconf import OmegaConf
+
+        widget = self._make_editor(
+            qtbot,
+            minimal_skeleton,
+            mock_cfg_getter,
+            "centered_instance",
+            labels=minimal_labels,
+        )
+        # Pretend the largest labeled instance spans 500px.
+        widget._max_instance_bbox_size = 500.0
+
+        data_cfg = OmegaConf.create(
+            {"data_config": {"preprocessing": {"crop_size": 64, "scale": 1.0}}}
+        )
+        with patch(
+            "sleap.gui.learning.dialog.get_omegaconf_from_gui_form",
+            return_value=data_cfg,
+        ), patch(
+            "sleap.gui.learning.dialog.receptivefield.compute_crop_size_from_cfg",
+            return_value=64,  # below 100 too, but we assert on the clipping message
+        ):
+            warnings = widget.get_config_warnings()
+
+        assert any("clipped" in w and "64px" in w and "500px" in w for w in warnings)
+
+    def test_max_instance_bbox_size_is_cached(
+        self, qtbot, minimal_skeleton, mock_cfg_getter, minimal_labels
+    ):
+        """The largest-instance scan is computed once and cached."""
+        widget = self._make_editor(
+            qtbot,
+            minimal_skeleton,
+            mock_cfg_getter,
+            "centered_instance",
+            labels=minimal_labels,
+        )
+        with patch(
+            "sleap.gui.learning.dialog.receptivefield.find_max_instance_bbox_size",
+            return_value=123.0,
+        ) as mock_scan:
+            first = widget._get_max_instance_bbox_size()
+            second = widget._get_max_instance_bbox_size()
+
+        assert first == 123.0
+        assert second == 123.0
+        assert mock_scan.call_count == 1
 
 
 # =============================================================================

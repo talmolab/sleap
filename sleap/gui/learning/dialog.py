@@ -164,6 +164,8 @@ class LearningDialog(QtWidgets.QDialog):
 
         self.message_widget = QtWidgets.QLabel("")
         self.message_widget.setWordWrap(True)
+        # Hidden until there is something to say, so it takes no space otherwise.
+        self.message_widget.setVisible(False)
 
         # Frame target selector is now owned by MainTabWidget
         self.frame_target_selector = self.pipeline_form_widget.frame_target_selector
@@ -173,7 +175,6 @@ class LearningDialog(QtWidgets.QDialog):
         content_widget = QtWidgets.QWidget()
         content_layout = QtWidgets.QVBoxLayout(content_widget)
         content_layout.addWidget(self.tab_widget)
-        content_layout.addWidget(self.message_widget)
 
         scroll_area = QtWidgets.QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -181,9 +182,13 @@ class LearningDialog(QtWidgets.QDialog):
         scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        # Main layout: scrollable content + buttons
+        # Main layout: scrollable content + validation message + buttons. The
+        # message widget lives outside the scroll area so warnings/errors are
+        # always visible above the buttons rather than below the (scrollable) tab
+        # content.
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(scroll_area)
+        layout.addWidget(self.message_widget)
         layout.addWidget(buttons_layout_widget)
 
         self.adjust_initial_size()
@@ -1340,8 +1345,10 @@ class LearningDialog(QtWidgets.QDialog):
 
                 can_run = False
 
-        # Non-blocking warning: negative frames enabled but none are marked.
-        warning = ""
+        # Non-blocking warnings.
+        warnings: List[str] = []
+
+        # Negative frames enabled but none are marked.
         if (
             self.mode == "training"
             and self.labels is not None
@@ -1355,21 +1362,46 @@ class LearningDialog(QtWidgets.QDialog):
                 if tab_name in self.tabs
             )
             if uses_negatives:
-                warning = (
+                warnings.append(
                     'The "Use Negative Frames" option is enabled, but no frames '
                     "are marked as negative, so it will have no effect. Mark "
                     "frames in the labeling window with Labels &gt; Mark Frame as "
                     "Negative (N)."
                 )
 
-        if not can_run and message:
-            message = f"<b>Unable to run:</b><br />{message}"
-        if warning:
-            if message:
-                message += "<br />"
-            message += f"<b>Warning:</b><br />{warning}"
+        # Per-head crop size / input scaling warnings (top-down models).
+        if self.mode == "training":
+            for tab_name in self.shown_tab_names:
+                tab = self.tabs.get(tab_name)
+                if tab is not None:
+                    warnings.extend(tab.get_config_warnings())
 
-        self.message_widget.setText(message)
+        # Compose the message with a bold colored header so errors/warnings stand
+        # out above the buttons. Colors are mid-tones that stay legible on both
+        # light and dark themes; no background box (which doesn't adapt to theme).
+        sections = []
+        if not can_run and message:
+            sections.append(
+                '<span style="color:#e74c3c; font-weight:bold; font-size:14px;">'
+                "&#9888; CANNOT RUN</span>"
+                f'<div style="margin-top:2px;">{message}</div>'
+            )
+        if warnings:
+            body = "".join(f"&#8226;&nbsp;{w}<br/>" for w in warnings)
+            sections.append(
+                '<span style="color:#e67e22; font-weight:bold; font-size:14px;">'
+                "&#9888; WARNING</span>"
+                f'<div style="margin-top:2px;">{body}</div>'
+            )
+
+        banner = (
+            '<div style="line-height:135%;">' + "<br/>".join(sections) + "</div>"
+            if sections
+            else ""
+        )
+
+        self.message_widget.setText(banner)
+        self.message_widget.setVisible(bool(banner))
         self.run_button.setEnabled(can_run)
 
     def run(self):
@@ -1606,6 +1638,10 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self._require_trained = require_trained
         self.head = head
 
+        # Cache for the largest labeled instance bounding box (computed lazily and
+        # reused across crop-size validations, see `get_config_warnings`).
+        self._max_instance_bbox_size: Optional[float] = None
+
         yaml_name = "training_editor_form"
 
         self.form_widgets: Dict[str, YamlFormWidget] = dict()
@@ -1645,6 +1681,9 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         # Enable the negative loss weight field only when negative frames are on
         self._setup_negative_frames_toggle()
+
+        # Add an info button next to Input Scaling for crop-based (top-down) heads
+        self._setup_input_scaling_info()
 
         if hasattr(skeleton, "node_names"):
             for field_name in NODE_LIST_FIELDS:
@@ -1995,6 +2034,128 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             crop_field.setVisible(False)
             if crop_label is not None:
                 crop_label.setVisible(False)
+
+    def _setup_input_scaling_info(self):
+        """Add an info button next to Input Scaling for crop-based (top-down) heads.
+
+        Centered instance (and multi-class top-down) models already operate on
+        cropped instances, so input scaling can usually be left at 1.0. This adds a
+        small clickable info button next to the Input Scaling field on those tabs to
+        surface that guidance without disabling the field.
+        """
+        if self.head not in ("centered_instance", "multi_class_topdown"):
+            return
+
+        data_form = self.form_widgets["data"]
+        form_layout = data_form.form_layout
+        scale_field = data_form.fields.get("data_config.preprocessing.scale")
+        if scale_field is None:
+            return
+
+        row, role = form_layout.getWidgetPosition(scale_field)
+        if row < 0:
+            return
+
+        note = (
+            "Centered instance models already operate on cropped instances, so "
+            "input scaling can usually be left at 1.0."
+        )
+
+        info_button = QtWidgets.QToolButton()
+        info_button.setIcon(
+            self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxInformation)
+        )
+        info_button.setAutoRaise(True)
+        info_button.setToolTip(note)
+        info_button.setCursor(QtCore.Qt.WhatsThisCursor)
+        info_button.clicked.connect(
+            lambda: QtWidgets.QMessageBox.information(self, "Input Scaling", note)
+        )
+
+        # Wrap the existing field and the info button in a horizontal container so
+        # the button sits immediately to the right of the Input Scaling field.
+        container = QtWidgets.QWidget()
+        hbox = QtWidgets.QHBoxLayout(container)
+        hbox.setContentsMargins(0, 0, 0, 0)
+        hbox.setSpacing(4)
+        form_layout.removeWidget(scale_field)
+        hbox.addWidget(scale_field)
+        hbox.addWidget(info_button)
+        hbox.addStretch(1)
+        form_layout.setWidget(row, role, container)
+
+    def _get_max_instance_bbox_size(self) -> Optional[float]:
+        """Return the largest labeled-instance bbox dimension (px), cached.
+
+        Labels do not change over the dialog's lifetime, so the (potentially
+        expensive) scan over all instances is computed once and reused.
+        """
+        if self._labels is None:
+            return None
+        if self._max_instance_bbox_size is None:
+            try:
+                self._max_instance_bbox_size = (
+                    receptivefield.find_max_instance_bbox_size(self._labels)
+                )
+            except Exception:
+                self._max_instance_bbox_size = None
+        return self._max_instance_bbox_size
+
+    def get_config_warnings(self) -> List[str]:
+        """Return inline warnings about crop size / input scaling.
+
+        Only crop-based (top-down) heads are checked. Warns when:
+          - the model's effective (post-scale) input crop would be < 100px, since
+            centered instance models perform poorly below that size; and
+          - an explicit crop size is smaller than the largest labeled instance, in
+            which case instances would be clipped by the crop.
+        """
+        warnings: List[str] = []
+        if self.head not in ("centered_instance", "multi_class_topdown"):
+            return warnings
+        if self._labels is None:
+            return warnings
+
+        try:
+            data_cfg = get_omegaconf_from_gui_form(
+                self.form_widgets["data"].get_form_data()
+            )
+            model_cfg = get_omegaconf_from_gui_form(
+                self.form_widgets["model"].get_form_data()
+            )
+            aug_form_data = self.form_widgets["augmentation"].get_form_data()
+        except Exception:
+            return warnings
+
+        # Effective (post-scale) crop size too small for the centered instance model.
+        try:
+            effective_crop = receptivefield.compute_crop_size_from_cfg(
+                data_cfg, model_cfg, self._labels, aug_form_data
+            )
+        except Exception:
+            effective_crop = None
+        if effective_crop is not None and effective_crop < 100:
+            warnings.append(
+                f"The centered instance model's input crop will be only "
+                f"{int(effective_crop)}px after input scaling, but these models "
+                "perform poorly below 100px. Set Input Scaling to 1.0 and Crop Size "
+                "to Auto."
+            )
+
+        # Explicit crop size smaller than the largest labeled instance (clipping).
+        crop_size = OmegaConf.select(
+            data_cfg, "data_config.preprocessing.crop_size", default=None
+        )
+        if crop_size is not None:
+            max_bbox = self._get_max_instance_bbox_size()
+            if max_bbox is not None and crop_size < max_bbox:
+                warnings.append(
+                    f"Crop size ({int(crop_size)}px) is smaller than the largest "
+                    f"labeled instance ({int(round(max_bbox))}px), so instances will "
+                    "be clipped. Increase the crop size or set it to Auto."
+                )
+
+        return warnings
 
     def _setup_ohkm_visibility(self):
         """Hide OHKM fields for centroid models.
