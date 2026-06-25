@@ -67,6 +67,26 @@ SLEAP_RED_HEX = "#e74c3c"
 SLEAP_YELLOW_HEX = "#f1c40f"
 DIM = "dim"
 
+# Number of characters to show for shortened git commit SHAs in display.
+SHORT_SHA_LEN = 8
+
+# GitHub repo used to resolve a release tag back to its commit (sleap doctor).
+SLEAP_REPO = "talmolab/sleap"
+
+
+def short_sha(sha: Optional[str]) -> str:
+    """Shorten a git commit SHA for display.
+
+    Args:
+        sha: Full or short commit SHA, or None.
+
+    Returns:
+        The first ``SHORT_SHA_LEN`` characters of ``sha``, or an empty string
+        if ``sha`` is falsy.
+    """
+    return sha[:SHORT_SHA_LEN] if sha else ""
+
+
 # ASCII art logo
 SLEAP_ASCII = r"""
  ____  _     _____    _    ____
@@ -430,6 +450,11 @@ def _build_version_line() -> Text:
     line.append("SLEAP", style="bold rgb(26,188,156)")
     line.append(f" v{sleap_version}", style="rgb(93,173,226)")
 
+    # Commit hash for editable / git-URL installs (helps pin down the exact build)
+    sleap_commit = get_sleap_commit()
+    if sleap_commit:
+        line.append(f" ({sleap_commit})", style="dim")
+
     # sleap-io (if installed)
     if sleap_io_info["version"]:
         line.append(" | ", style="dim")
@@ -661,8 +686,8 @@ def get_git_info(path: str) -> dict:
 
     info = {}
 
-    # Get commit hash
-    rc, stdout, _ = run_command(["git", "-C", path, "rev-parse", "--short", "HEAD"])
+    # Get commit hash (full SHA; shortened with short_sha() at display time)
+    rc, stdout, _ = run_command(["git", "-C", path, "rev-parse", "HEAD"])
     if rc == 0:
         info["commit"] = stdout
 
@@ -696,6 +721,10 @@ def get_detailed_package_info(name: str) -> Optional[PackageInfoData]:
         is_editable = False
         source = "pip"
         location = ""
+        # Commit info recorded by pip for git-URL installs (vcs_info).
+        vcs_commit: Optional[str] = None
+        vcs_revision: Optional[str] = None
+        vcs_remote: Optional[str] = None
 
         # Check direct_url.json for modern pip installs
         try:
@@ -710,7 +739,12 @@ def get_detailed_package_info(name: str) -> Optional[PackageInfoData]:
                     if url.startswith("file://"):
                         location = url[7:]  # Strip file://
                 elif "vcs_info" in direct_url:
+                    # e.g. pip install git+https://github.com/talmolab/sleap@ref
                     source = "git"
+                    vcs_info = direct_url["vcs_info"]
+                    vcs_commit = vcs_info.get("commit_id")
+                    vcs_revision = vcs_info.get("requested_revision")
+                    vcs_remote = direct_url.get("url") or None
                 elif direct_url.get("url", "").startswith("file://"):
                     source = "local"
         except FileNotFoundError:
@@ -749,7 +783,7 @@ def get_detailed_package_info(name: str) -> Optional[PackageInfoData]:
             editable=is_editable,
         )
 
-        # Get git info for editable installs
+        # Get git info for editable installs (live working tree)
         if is_editable and location:
             git_info = get_git_info(location)
             if git_info:
@@ -758,10 +792,86 @@ def get_detailed_package_info(name: str) -> Optional[PackageInfoData]:
                 pkg_info.git_dirty = git_info.get("dirty", False)
                 pkg_info.git_remote = git_info.get("remote")
 
+        # Git-URL installs (pip install git+...): pip records the exact commit in
+        # direct_url.json, so we get provenance without a working tree or git.
+        if source == "git":
+            pkg_info.git_commit = vcs_commit
+            pkg_info.git_branch = vcs_revision
+            pkg_info.git_remote = vcs_remote
+
         return pkg_info
 
     except importlib.metadata.PackageNotFoundError:
         return None
+
+
+def resolve_tag_commit(repo: str, version: str, timeout: int = 3) -> Optional[str]:
+    """Resolve a release version to its commit SHA via the GitHub REST API.
+
+    Release installs (PyPI/conda) don't record a commit locally, but each release
+    is tagged ``vX.Y.Z``. This looks that tag up on GitHub and returns the commit
+    it points to. It is fully offline-safe: any failure (no network, rate limit,
+    missing tag, unexpected response) returns ``None`` so callers degrade
+    gracefully.
+
+    Args:
+        repo: GitHub "owner/name", e.g. ``"talmolab/sleap"``.
+        version: Package version, e.g. ``"1.6.3"`` (mapped to tag ``"v1.6.3"``).
+        timeout: Per-request timeout in seconds.
+
+    Returns:
+        The full commit SHA the tag points to, or ``None`` if it could not be
+        resolved.
+    """
+    if not repo or not version:
+        return None
+
+    import urllib.error
+    import urllib.request
+
+    # The /commits/{ref} endpoint dereferences tags (lightweight or annotated).
+    url = f"https://api.github.com/repos/{repo}/commits/v{version}"
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "sleap-doctor",  # GitHub rejects requests without a UA
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
+
+    sha = payload.get("sha") if isinstance(payload, dict) else None
+    return sha or None
+
+
+def get_sleap_commit(resolve_remote: bool = False) -> Optional[str]:
+    """Get the short git commit SHA the installed SLEAP was built from.
+
+    Works without a network for editable installs (live git checkout) and for
+    installs from a git URL (e.g. ``pip install git+https://github.com/talmolab/
+    sleap``), where pip records the commit in ``direct_url.json``.
+
+    Args:
+        resolve_remote: If ``True`` and no commit is available locally (a plain
+            PyPI/conda release install), resolve the release tag to its commit
+            via the GitHub API. Off by default since it requires network access.
+
+    Returns:
+        The shortened commit SHA, or ``None`` if it could not be determined.
+    """
+    info = get_detailed_package_info("sleap")
+    if info and info.git_commit:
+        return short_sha(info.git_commit)
+    if resolve_remote:
+        from sleap.version import __version__
+
+        sha = resolve_tag_commit(SLEAP_REPO, __version__)
+        return short_sha(sha) if sha else None
+    return None
 
 
 def get_uv_config_value(key: str) -> str:

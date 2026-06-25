@@ -7,6 +7,8 @@ from typing import Optional
 
 import numpy as np
 
+from sleap.qc.features.duplicate_split import compute_split_duplicate, duplicate_score
+
 
 class InstanceCountChecker:
     """Detect frames with unusual instance counts (incomplete annotation).
@@ -165,7 +167,8 @@ def compute_node_overlap(
         Dictionary with:
         - common_nodes: list of node indices visible in both
         - overlapping_nodes: list of nodes within threshold
-        - mean_distance: mean distance at common nodes
+        - mean_distance / min_distance / max_distance: distance stats at common
+          nodes (all ``inf`` when there are no commonly visible nodes)
         - overlap_ratio: overlapping_nodes / common_nodes
     """
     # Find commonly visible nodes
@@ -179,6 +182,8 @@ def compute_node_overlap(
             "common_nodes": [],
             "overlapping_nodes": [],
             "mean_distance": float("inf"),
+            "min_distance": float("inf"),
+            "max_distance": float("inf"),
             "overlap_ratio": 0.0,
         }
 
@@ -206,23 +211,40 @@ def detect_duplicates(
     iou_threshold: float = 0.5,
     node_distance_threshold: float = 10.0,
     node_overlap_ratio: float = 0.8,
+    edge_means: Optional[dict] = None,
+    duplicate_score_threshold: float = 0.5,
 ) -> list[dict]:
     """Detect duplicate instances in a frame.
 
-    Uses both IOU and node-wise overlap to catch partial duplicates.
+    Uses three complementary signals: bbox IOU and node-wise overlap (both catch
+    overlapping copies), plus the complementary split-duplicate signal (one
+    animal split across two instances labeled on largely disjoint nodes). The
+    three are combined by :func:`~sleap.qc.features.duplicate_split.duplicate_score`
+    into a single graded confidence.
+
+    A pair is flagged when the combined ``dscore >= duplicate_score_threshold``
+    OR the existing IOU / node-overlap criteria fire, so this remains additive
+    and never drops a pair the previous logic would have flagged.
 
     Args:
         instances: List of (N_nodes, 2) arrays.
         iou_threshold: IOU above this = duplicate.
         node_distance_threshold: Distance for node overlap.
         node_overlap_ratio: Min overlap ratio to flag as duplicate.
+        edge_means: Optional learned mean edge lengths (sorted ``(i, j)`` ->
+            length) used to scale the split-duplicate signal. ``None`` falls
+            back to the bbox-diagonal scale inside ``compute_split_duplicate``.
+        duplicate_score_threshold: Combined-score cutoff at/above which a pair is
+            flagged as a duplicate.
 
     Returns:
         List of duplicate pair dictionaries with:
         - index_a, index_b: instance indices
         - iou: IOU value
         - node_overlap: node overlap info
-        - reason: "iou" or "node_overlap"
+        - split_duplicate_score: complementary-split signal (0-1)
+        - duplicate_score: combined graded confidence (0-1)
+        - reason: "iou", "node_overlap", or "split_duplicate"
     """
     duplicates = []
     n_instances = len(instances)
@@ -233,6 +255,11 @@ def detect_duplicates(
             node_overlap = compute_node_overlap(
                 instances[i], instances[j], node_distance_threshold
             )
+
+            sd = compute_split_duplicate(instances[i], instances[j], edge_means)[
+                "split_duplicate_score"
+            ]
+            dscore = duplicate_score(iou, node_overlap["overlap_ratio"], sd)
 
             is_duplicate = False
             reason = None
@@ -250,6 +277,12 @@ def detect_duplicates(
                 is_duplicate = True
                 reason = "node_overlap"
 
+            # Check the combined/split signal (catches complementary splits that
+            # neither IOU nor node-overlap fire on).
+            elif dscore >= duplicate_score_threshold:
+                is_duplicate = True
+                reason = "split_duplicate"
+
             if is_duplicate:
                 duplicates.append(
                     {
@@ -257,6 +290,8 @@ def detect_duplicates(
                         "index_b": j,
                         "iou": iou,
                         "node_overlap": node_overlap,
+                        "split_duplicate_score": sd,
+                        "duplicate_score": dscore,
                         "reason": reason,
                     }
                 )

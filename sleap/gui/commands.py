@@ -490,6 +490,15 @@ class CommandContext:
             if 0 <= instance_idx < len(user_instances):
                 instance_to_highlight = user_instances[instance_idx]
 
+        # Make the navigated instance the app-selected instance (not just a
+        # player-view highlight) so anything keyed off ``state["instance"]``
+        # follows it -- in particular the Label QC display modes (#2783), which
+        # focus on the selected instance. Without this, navigating to a flagged
+        # instance left ``state["instance"]`` unchanged, so those modes saw no
+        # on-frame selection and fell back to the first instance.
+        if instance_to_highlight is not None:
+            self.state["instance"] = instance_to_highlight
+
         # Use a timer to highlight and select after the frame is redrawn
         # (state changes trigger plot() which recreates instances via overlay)
         player = getattr(self.app, "player", None)
@@ -672,6 +681,15 @@ class CommandContext:
     def deleteSelectedInstance(self):
         """Deletes currently selected instance."""
         self.execute(DeleteSelectedInstance)
+
+    def mergeInstance(self, donor: Optional["Instance"] = None):
+        """Merge another user instance in the frame into the selected one.
+
+        The selected instance is kept (survivor) and gains the donor's labeled
+        keypoints for any nodes it is missing. If `donor` is None and the frame
+        has exactly two user instances, the other one is used as the donor.
+        """
+        self.execute(MergeInstances, donor=donor)
 
     def deleteSelectedInstanceTrack(self):
         """Deletes all instances from track of currently selected instance."""
@@ -3785,6 +3803,123 @@ class DeleteSelectedInstanceTrack(EditCommand):
                     remove_instance(context.labels, instance=inst, lf=lf)
 
 
+class MergeInstances(EditCommand):
+    """Merge two user instances in the current frame into a single instance.
+
+    The currently selected instance (``context.state["instance"]``) is the
+    *survivor*. The instance to merge into it is the *donor*, taken from
+    ``params["donor"]``; if no donor is given and the frame has exactly two
+    user instances, the other one is used automatically.
+
+    For every skeleton node, if the survivor's node is missing (NaN coordinates
+    or not visible) and the donor's node is labeled/visible, the donor's
+    ``xy``/``visible``/``complete`` values are copied onto the survivor. This
+    lets a "front keypoints" instance and a "back keypoints" instance be
+    combined into one. The survivor keeps its own track.
+
+    Conflict policy: if BOTH the survivor and the donor have a node
+    labeled/visible, the survivor's value is kept (the donor's value for that
+    node is discarded).
+
+    Scope/behavior decisions:
+        - Only user ``Instance``s participate. ``PredictedInstance``s are never
+          chosen as survivor or donor and are left untouched on the frame.
+        - If there are fewer than two user instances, no donor can be resolved,
+          the survivor is not a user ``Instance``, or required state is
+          missing, this is a no-op (with a status message when running in the
+          GUI).
+        - After merging, the donor is removed from the frame *by identity* and
+          ``labels.update()`` is called. There is no dedicated undo (matching
+          ``DeleteSelectedInstance``/``PasteInstance``); ``EditCommand`` only
+          flags the project as having unsaved changes.
+    """
+
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances]
+
+    @staticmethod
+    def _status(context: "CommandContext", message: str):
+        """Post a status message if the app supports it (no-op when headless)."""
+        if hasattr(context.app, "updateStatusMessage"):
+            context.app.updateStatusMessage(message)
+
+    @staticmethod
+    def do_action(context: "CommandContext", params: dict):
+        survivor = context.state["instance"]
+        frame = context.state["labeled_frame"]
+        skeleton = context.state["skeleton"]
+        donor = params.get("donor", None)
+        if donor is None:
+            # Donor picked by shift/ctrl-selecting a second instance in the list
+            # (first-selected is the survivor, second is the donor).
+            donor = context.state.get("merge_partner", default=None)
+
+        if survivor is None or frame is None or skeleton is None:
+            return
+
+        # Only user instances can be merged (skip PredictedInstance).
+        if type(survivor) is not Instance:
+            MergeInstances._status(
+                context, "Merge Instance: select a user instance first."
+            )
+            return
+
+        user_instances = frame.user_instances
+        if len(user_instances) < 2:
+            MergeInstances._status(
+                context,
+                "Merge Instance: need at least two user instances in the frame.",
+            )
+            return
+
+        # Fast path: exactly two user instances -> donor is the other one.
+        if donor is None and len(user_instances) == 2:
+            donor = next(inst for inst in user_instances if inst is not survivor)
+
+        if donor is None or donor is survivor or type(donor) is not Instance:
+            MergeInstances._status(
+                context, "Merge Instance: no valid instance to merge."
+            )
+            return
+
+        # Guard against mismatched skeletons (all instances in a frame normally
+        # share the project skeleton, but be safe).
+        if not survivor.skeleton.matches(donor.skeleton):
+            MergeInstances._status(
+                context, "Merge Instance: instances have different skeletons."
+            )
+            return
+
+        for node in skeleton.node_names:
+            s_pt = survivor[node]
+            d_pt = donor[node]
+            survivor_missing = bool(np.isnan(s_pt["xy"]).any()) or not bool(
+                s_pt["visible"]
+            )
+            donor_labeled = (not bool(np.isnan(d_pt["xy"]).any())) and bool(
+                d_pt["visible"]
+            )
+            # Conflict policy: only fill nodes the survivor is missing; nodes
+            # the survivor already has are kept as-is.
+            if survivor_missing and donor_labeled:
+                s_pt["xy"][0] = d_pt["xy"][0]
+                s_pt["xy"][1] = d_pt["xy"][1]
+                s_pt["visible"] = d_pt["visible"]
+                s_pt["complete"] = d_pt["complete"]
+
+        # Remove the donor *by identity* and persist. We must not use pose/track
+        # matching here (e.g. ``remove_instance``): after the merge the survivor
+        # can become pose-identical to the donor (when the donor's labeled nodes
+        # are a superset of the survivor's), so for untracked or same-track
+        # instances a pose-based search could remove the survivor instead. An
+        # ``is``-based filter is unambiguous regardless of ``Instance.__eq__``.
+        frame.instances[:] = [inst for inst in frame.instances if inst is not donor]
+        context.labels.update()
+
+        # Keep the survivor selected; clear the donor selection.
+        context.state["instance"] = survivor
+        context.state["merge_partner"] = None
+
+
 class DeleteDialogCommand(EditCommand):
     topics = [
         UpdateTopic.project_instances,
@@ -4817,6 +4952,65 @@ class AddUserInstancesFromPredictions(EditCommand):
 
         return new_instance
 
+    @staticmethod
+    def fill_missing_predicted_nodes(new_instance: Instance):
+        """Position undetected (NaN) nodes with a force-directed layout, hidden.
+
+        The model leaves occluded nodes at NaN coordinates, and
+        ``make_instance_from_predicted_instance`` keeps them ``visible=False``
+        (correct -- the converted instance should look like the prediction). But
+        a NaN coordinate renders at a default/garbage location when the user
+        enables "show non-visible nodes" (``QtInstance`` still creates a node
+        item for every node in that mode, positioned at its ``xy``).
+
+        Spread the missing nodes with a force-directed (spring) layout of the
+        skeleton graph, centered on the detected keypoints' centroid and scaled
+        to their extent, so they sit on the animal -- spread out and grabbable --
+        regardless of how many nodes the model detected, while staying
+        ``visible=False``. (Template/alignment placement is unreliable when only
+        a few nodes are detected -- there is no way to infer where occluded nodes
+        are from a couple of visible ones -- so a force-directed layout, one of
+        the brand-new-instance init options, is used for robustness.)
+        Already-detected points, the track, and ``from_predicted`` are untouched.
+
+        No GUI player is required. No-op when every node was detected, or when
+        nothing was detected (no anchor for the layout center).
+
+        Args:
+            new_instance: The user ``Instance`` produced by
+                ``make_instance_from_predicted_instance``; modified in place.
+        """
+        import networkx as nx
+
+        xy = new_instance.points["xy"]
+        missing = np.isnan(xy).any(axis=1)
+        detected = ~missing
+        if not missing.any() or not detected.any():
+            return
+
+        det_xy = xy[detected]
+        center = det_xy.mean(axis=0)
+        extent = float(np.linalg.norm(det_xy.max(axis=0) - det_xy.min(axis=0)))
+        scale = max(extent / 2.0, 5.0)
+
+        skeleton = new_instance.skeleton
+        layout = nx.spring_layout(
+            to_graph(skeleton), center=center, scale=scale, seed=0
+        )
+        pos_by_name = {
+            (node if isinstance(node, str) else node.name): pos
+            for node, pos in layout.items()
+        }
+
+        miss_idx = np.nonzero(missing)[0]
+        fill_xy = np.array(
+            [pos_by_name.get(skeleton.node_names[i], center) for i in miss_idx],
+            dtype=float,
+        )
+        new_instance.points["xy"][missing] = fill_xy
+        new_instance.points["visible"][missing] = False
+        new_instance.points["complete"][missing] = False
+
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
         if context.state["labeled_frame"] is None:
@@ -4825,9 +5019,9 @@ class AddUserInstancesFromPredictions(EditCommand):
         new_instances = []
         unused_predictions = context.state["labeled_frame"].unused_predictions
         for predicted_instance in unused_predictions:
-            new_instances.append(
-                cls.make_instance_from_predicted_instance(predicted_instance)
-            )
+            new_instance = cls.make_instance_from_predicted_instance(predicted_instance)
+            cls.fill_missing_predicted_nodes(new_instance)
+            new_instances.append(new_instance)
 
         # Add the instances
         for new_instance in new_instances:
@@ -4889,6 +5083,7 @@ class AddUserInstancesFromAllPredictions(EditCommand):
                 new_instance = make.make_instance_from_predicted_instance(
                     predicted_instance
                 )
+                make.fill_missing_predicted_nodes(new_instance)
                 if new_instance not in lf.instances:
                     lf.instances.append(new_instance)
                     total_added += 1

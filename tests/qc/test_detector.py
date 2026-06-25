@@ -359,6 +359,58 @@ class TestLabelQCDetector:
         assert len(detector.feature_names) > 0
         assert "max_edge_zscore" in detector.feature_names
         assert "nn_distance" in detector.feature_names
+        # PR-A: the hull feature name must match the issue_map key
+        # ("hull_area_zscore") so the "Unusual pose extent" label can fire.
+        assert "hull_area_zscore" in detector.feature_names
+        assert "hull_area" not in detector.feature_names
+
+    def test_instance_to_array_forces_invisible_as_nan(self, skeleton):
+        """#2753: invisible nodes are NaN'd regardless of the sleap-io default.
+
+        Invisible (visible=False) nodes keep display-only coordinates; QC must
+        never read them. ``_instance_to_array`` passes ``invisible_as_nan=True``
+        explicitly so this holds even if the sleap-io default changes.
+        """
+        pts = np.array(
+            [[100, 100], [100, 120], [100, 150], [80, 115], [120, 115]], dtype=float
+        )
+        inst = Instance.from_numpy(pts, skeleton=skeleton)
+        inst[3]["visible"] = False
+
+        arr = LabelQCDetector()._instance_to_array(inst)
+
+        assert np.all(np.isnan(arr[3]))
+        assert not np.any(np.isnan(arr[[0, 1, 2, 4]]))
+
+    def test_invisible_far_node_does_not_leak_into_geometry(
+        self, simple_labels, skeleton
+    ):
+        """#2753 regression: a far-away invisible node must not inflate geometry.
+
+        A node dragged far away leaks into edge/angle/distance features ONLY
+        when it is visible; when invisible it must be excluded entirely.
+        """
+        detector = LabelQCDetector()
+        detector.fit(simple_labels)
+        i_edge = detector.feature_names.index("max_edge_zscore")
+
+        far = np.array(
+            [[100, 100], [100, 120], [100, 150], [9999, 9999], [120, 115]],
+            dtype=float,
+        )
+        inst_visible = Instance.from_numpy(far, skeleton=skeleton)
+        inst_invisible = Instance.from_numpy(far, skeleton=skeleton)
+        inst_invisible[3]["visible"] = False
+
+        f_visible = detector._extract_features(
+            detector._instance_to_array(inst_visible)
+        )
+        f_invisible = detector._extract_features(
+            detector._instance_to_array(inst_invisible)
+        )
+
+        assert f_visible[i_edge] > 10.0
+        assert f_invisible[i_edge] < 5.0
 
     def test_skeleton_analyzer_properties(self, simple_labels):
         """Test skeleton analyzer extracts properties."""
@@ -369,6 +421,91 @@ class TestLabelQCDetector:
         assert sa.n_nodes == 5
         assert sa.n_edges == 4
         assert len(sa.symmetry_pairs) >= 1  # left-wing, right-wing
+
+    def test_predicted_instances_excluded(self, skeleton):
+        """Predicted instances are excluded from QC scoring (only user labels)."""
+        from sleap_io.model.instance import PredictedInstance
+
+        from sleap.qc.results import InstanceKey
+
+        video = sio.Video.from_filename("test_video.mp4")
+        labels = sio.Labels()
+
+        base_points = np.array(
+            [
+                [100, 100],  # head
+                [100, 120],  # thorax
+                [100, 150],  # abdomen
+                [80, 115],  # left-wing
+                [120, 115],  # right-wing
+            ],
+            dtype=float,
+        )
+
+        n_user_frames = 50
+        n_frames_with_predicted = 20  # subset of the user frames
+        n_predicted_only_frames = 5
+
+        # Track which frames have ONLY predicted instances.
+        predicted_only_frame_idxs = set()
+        # Track a frame that has both [user, predicted] to verify inst_idx range.
+        mixed_frame_idx = 5
+
+        # ~50 frames each with ONE user Instance; some also contain a predicted.
+        for frame_idx in range(n_user_frames):
+            points_array = base_points + np.random.randn(5, 2) * 2
+            instances = [Instance.from_numpy(points_array, skeleton=skeleton)]
+
+            if frame_idx < n_frames_with_predicted:
+                pred_points = base_points + np.random.randn(5, 2) * 2
+                instances.append(
+                    PredictedInstance.from_numpy(
+                        pred_points, skeleton=skeleton, score=0.9
+                    )
+                )
+
+            lf = LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+            labels.append(lf)
+
+        # A few EXTRA frames containing ONLY predicted instance(s).
+        for i in range(n_predicted_only_frames):
+            frame_idx = n_user_frames + i
+            predicted_only_frame_idxs.add(frame_idx)
+            pred_points = base_points + np.random.randn(5, 2) * 2
+            instances = [
+                PredictedInstance.from_numpy(pred_points, skeleton=skeleton, score=0.9)
+            ]
+            lf = LabeledFrame(video=video, frame_idx=frame_idx, instances=instances)
+            labels.append(lf)
+
+        detector = LabelQCDetector()
+        detector.fit(labels)
+        results = detector.score(labels)
+
+        # (a) Number of scored instances == total USER instances (not total).
+        total_user_instances = sum(len(lf.user_instances) for lf in labels)
+        total_instances = sum(len(lf.instances) for lf in labels)
+        assert total_instances > total_user_instances  # sanity: predicteds exist
+        assert total_user_instances == n_user_frames  # one user inst per user frame
+        assert len(results.instance_scores) == total_user_instances
+
+        # (b) No scored InstanceKey references a predicted-only frame.
+        scored_frame_idxs = {key.frame_idx for key in results.instance_scores}
+        assert scored_frame_idxs.isdisjoint(predicted_only_frame_idxs)
+
+        # (c) For a mixed [user, predicted] frame, scored inst_idx values stay
+        # within range(len(user_instances)) for that frame.
+        mixed_lf = next(lf for lf in labels if lf.frame_idx == mixed_frame_idx)
+        assert len(mixed_lf.instances) == 2  # [user, predicted]
+        assert len(mixed_lf.user_instances) == 1
+        mixed_inst_idxs = [
+            key.instance_idx
+            for key in results.instance_scores
+            if isinstance(key, InstanceKey) and key.frame_idx == mixed_frame_idx
+        ]
+        assert mixed_inst_idxs == [0]
+        for inst_idx in mixed_inst_idxs:
+            assert inst_idx in range(len(mixed_lf.user_instances))
 
 
 class TestLabelQCDetectorWithRealData:

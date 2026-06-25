@@ -335,6 +335,61 @@ def test_app_workflow(
         assert sugg.video == video_clip
 
 
+def test_show_learning_dialog_guard_messages(
+    qtbot, monkeypatch, small_robot_mp4_vid: Video
+):
+    """Empty/unsaved projects show the correct guard message before the learning
+    dialog opens (issue #2749).
+
+    The pre-flight guard in ``_show_learning_dialog`` must distinguish three
+    distinct cases instead of reporting them all as "unsaved changes":
+
+    1. No videos in the project.
+    2. Project never saved (no filename).
+    3. Project saved but with unsaved changes.
+    """
+    from sleap.gui import app as app_module
+
+    shown_messages = []
+
+    class FakeMessageBox:
+        def __init__(self, *args, text="", **kwargs):
+            shown_messages.append(text)
+
+        def exec_(self):
+            return None
+
+    monkeypatch.setattr(app_module, "QMessageBox", FakeMessageBox)
+
+    # 1. Empty project (no videos) -> "no videos" message, dialog not opened.
+    win = MainWindow(no_usage_data=True)
+    qtbot.addWidget(win)
+    win._show_learning_dialog("inference")
+    assert "no videos" in shown_messages[-1].lower()
+    assert "inference" not in win._child_windows
+
+    # 2. Has a video but never saved (no filename) -> "save your project" message.
+    win2 = MainWindow(labels=Labels(videos=[small_robot_mp4_vid]), no_usage_data=True)
+    qtbot.addWidget(win2)
+    win2.state["filename"] = None
+    win2._show_learning_dialog("inference")
+    assert "save your project" in shown_messages[-1].lower()
+    assert "inference" not in win2._child_windows
+
+    # 3. Saved project with unsaved changes -> existing "unsaved changes" message.
+    win3 = MainWindow(labels=Labels(videos=[small_robot_mp4_vid]), no_usage_data=True)
+    qtbot.addWidget(win3)
+    win3.state["filename"] = "project.slp"
+    win3.state["has_changes"] = True
+    win3._show_learning_dialog("inference")
+    assert "unsaved changes" in shown_messages[-1].lower()
+    assert "inference" not in win3._child_windows
+
+    # Reset so windows close without a "save changes?" prompt during teardown.
+    for w in (win, win2, win3):
+        w.state["has_changes"] = False
+
+
 def test_app_new_window(qtbot, min_labels_slp_path, centered_pair_predictions_slp_path):
     app = QApplication.instance()
     app.closeAllWindows()
@@ -387,6 +442,44 @@ def test_app_new_window(qtbot, min_labels_slp_path, centered_pair_predictions_sl
         (1 for widget in app.topLevelWidgets() if isinstance(widget, MainWindow))
     )
     assert wins == (start_wins + 3)
+
+    app.closeAllWindows()
+
+
+def test_app_drag_and_drop_open(qtbot, centered_pair_predictions_slp_path):
+    """Dropping a .slp file onto the window opens it (cross-platform).
+
+    Regression test for drag-and-drop only being accepted on Windows: the
+    drag-enter handler must accept any file-URL drag (``text/uri-list``), not
+    just a Windows-specific MIME type, and the drop handler must then load the
+    dropped ``.slp`` file. See https://github.com/talmolab/sleap/issues/2760.
+    """
+    from qtpy.QtCore import QMimeData, QUrl, QPoint, QPointF, Qt
+    from qtpy.QtGui import QDragEnterEvent, QDropEvent
+
+    app = QApplication.instance()
+    app.closeAllWindows()
+    win = MainWindow(no_usage_data=True)
+    assert not win.state["project_loaded"]
+
+    mime = QMimeData()
+    mime.setUrls([QUrl.fromLocalFile(centered_pair_predictions_slp_path)])
+
+    # Drag-enter must be accepted for a file-URL drag. This is what silently
+    # failed on Linux/macOS before the fix (it only accepted a Windows MIME
+    # type), so the drop was never delivered.
+    enter = QDragEnterEvent(
+        QPoint(0, 0), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier
+    )
+    win.dragEnterEvent(enter)
+    assert enter.isAccepted()
+
+    # Dropping the .slp loads it into the (empty) window.
+    drop = QDropEvent(QPointF(0, 0), Qt.CopyAction, mime, Qt.LeftButton, Qt.NoModifier)
+    win.dropEvent(drop)
+
+    assert win.state["project_loaded"]
+    assert win.state["filename"] == centered_pair_predictions_slp_path
 
     app.closeAllWindows()
 

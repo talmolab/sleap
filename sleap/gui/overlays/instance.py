@@ -5,7 +5,7 @@ Overlay for showing instances.
 import attr
 
 from sleap.gui.overlays.base import BaseOverlay
-from sleap.gui.state import GuiState
+from sleap.gui.state import GuiState, instance_visible, instance_shows_non_visible
 from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
 
@@ -48,12 +48,23 @@ class InstanceOverlay(BaseOverlay):
                 frame=lf,
                 markerRadius=self.state.get("marker size", 4),
                 nodeLabelSize=self.state.get("node label size", 12),
-                show_non_visible=self.state.get("show non-visible nodes", default=True),
+                show_non_visible=instance_shows_non_visible(
+                    self.state,
+                    instance,
+                    self.state.get("show non-visible nodes", default=True),
+                ),
             )
 
         self.player.showInstances(self.state.get("show instances", default=True))
         self.player.showLabels(self.state.get("show labels", default=True))
         self.player.showEdges(self.state.get("show edges", default=True))
+
+        # Re-apply per-instance visibility (driven by the Instances dock
+        # checkboxes). This MUST stay AFTER the global show* calls above, which
+        # un-hide everything; otherwise per-instance hides would be clobbered on
+        # every replot. See `sleap.gui.state.instance_visible`.
+        for qt_inst in self.player.view.all_instances:
+            qt_inst.setVisible(instance_visible(self.state, qt_inst.instance))
 
         if has_user and has_predicted:
             self.player.highlightPredictions("not in training data")

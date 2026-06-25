@@ -24,7 +24,16 @@ import numpy as np
 from qtpy import QtCore, QtGui, QtWidgets
 
 from sleap.gui.commands import CommandContext
-from sleap.gui.state import GuiState
+from sleap.gui.state import (
+    GuiState,
+    INSTANCE_HIDDEN_KEY,
+    VIEW_ONLY_INSTANCE_KEY,
+    SHOW_NONVISIBLE_OVERRIDE_KEY,
+    QC_DISPLAY_MODE_KEY,
+    QC_MODE_MANUAL,
+    instance_visible,
+    instance_shows_non_visible,
+)
 from sleap_io.model.skeleton import Skeleton
 from sleap_io import Video
 from sleap_io import LabeledFrame
@@ -391,6 +400,74 @@ class GenericTableView(QtWidgets.QTableView):
         return self.model().original_items[idx.row()]
 
 
+class InstancesTableView(GenericTableView):
+    """Instances table with shift/ctrl multi-select for Merge Instance.
+
+    Selecting a second instance (shift- or ctrl-click) marks it as the merge
+    *donor*: the first-selected instance is the survivor (``state["instance"]``,
+    kept) and the second is the donor (``state["merge_partner"]``, merged in and
+    removed). Single selection behaves exactly like the base view. Selection
+    order is tracked explicitly because Qt's "current" index follows the last
+    click, which would otherwise make the donor (2nd) the survivor.
+    """
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("multiple_selection", True)
+        super().__init__(*args, **kwargs)
+        self._merge_order: List[Any] = []
+        self._syncing = False
+
+    def selectionChanged(self, new, old):
+        """Set survivor/donor GuiState from the click-ordered selection."""
+        # Do the visual update via QTableView; we set GuiState ourselves (the
+        # base GenericTableView would set state["instance"] to the last-clicked).
+        QtWidgets.QTableView.selectionChanged(self, new, old)
+
+        # selectionChanged can fire during super().__init__() (setModel), before
+        # our attributes exist; nothing is selected yet, so just bail.
+        if not hasattr(self, "_merge_order"):
+            return
+
+        original_items = self.model().original_items
+        selected, rows = [], set()
+        for qidx in self.selectedIndexes():
+            row = qidx.row()
+            if row in rows or row >= len(original_items):
+                continue
+            rows.add(row)
+            selected.append(original_items[row])
+
+        # Preserve prior click order, drop deselected, append newly selected.
+        selected_ids = {id(i) for i in selected}
+        self._merge_order = [i for i in self._merge_order if id(i) in selected_ids]
+        known = {id(i) for i in self._merge_order}
+        for inst in selected:
+            if id(inst) not in known:
+                self._merge_order.append(inst)
+                known.add(id(inst))
+
+        survivor = self._merge_order[0] if self._merge_order else None
+        donor = self._merge_order[1] if len(self._merge_order) >= 2 else None
+
+        # Setting state["instance"] re-enters selectRowItem (connected); guard so
+        # it can't collapse the multi-selection back to a single row.
+        self._syncing = True
+        try:
+            self.state["instance"] = survivor
+        finally:
+            self._syncing = False
+        self.state["merge_partner"] = donor
+
+        if self.row_name:
+            self.state[f"selected_batch_{self.row_name}"] = set(rows)
+
+    def selectRowItem(self, item: Any):
+        """Skip while syncing so our own state set doesn't clear the selection."""
+        if getattr(self, "_syncing", False):
+            return
+        super().selectRowItem(item)
+
+
 class VideosTableModel(GenericTableModel):
     properties = (
         "name",
@@ -482,12 +559,43 @@ class LabeledFrameTableModel(GenericTableModel):
 
     Allows editing track names.
 
+    In addition to the informational columns, three checkbox columns control
+    per-instance rendering on the video canvas (transient, session-only state;
+    see `sleap.gui.state.instance_visible` /
+    `sleap.gui.state.instance_shows_non_visible`):
+
+    - "visibility": checked by default; unchecking hides that instance on the
+      canvas while keeping its row in the table.
+    - "view only": unchecked by default; checking exactly one row makes only
+      that instance visible and disables the whole visibility column. Checking
+      another row's "view only" auto-unchecks the previous (radio-like).
+      Toggling any "visibility" box exits view-only mode.
+    - "invisible nodes": per-instance override of the global "Show Non-Visible
+      Nodes" flag; defaults to the effective value (override if present, else
+      the global flag). Because non-visible nodes are baked into the canvas
+      instance at creation time, toggling this forces a full replot.
+
     Args:
         labeled_frame: `LabeledFrame` to show
         labels: `Labels` datasource
     """
 
-    properties = ("points", "track", "score", "mean node score", "skeleton")
+    # The checkbox columns are appended LAST so existing name-indexed
+    # lookups (e.g. ``properties.index("mean node score")``) stay valid.
+    VISIBILITY_KEY = "visibility"
+    VIEW_ONLY_KEY = "view only"
+    SHOW_NONVISIBLE_KEY = "invisible nodes"
+
+    properties = (
+        "points",
+        "track",
+        "score",
+        "mean node score",
+        "skeleton",
+        VISIBILITY_KEY,
+        VIEW_ONLY_KEY,
+        SHOW_NONVISIBLE_KEY,
+    )
 
     def object_to_items(self, labeled_frame: LabeledFrame):
         if not labeled_frame:
@@ -539,6 +647,208 @@ class LabeledFrameTableModel(GenericTableModel):
     def set_item(self, item, key, value):
         if key == "track":
             self.context.setTrackName(item.track, value)
+
+    # -- Per-instance visibility checkbox columns -------------------------------
+
+    @property
+    def _checkbox_keys(self):
+        return (self.VISIBILITY_KEY, self.VIEW_ONLY_KEY, self.SHOW_NONVISIBLE_KEY)
+
+    @property
+    def _vis_state(self) -> GuiState:
+        """The `GuiState` holding the transient visibility keys.
+
+        Uses the command context's `GuiState` (shared with the app and the
+        instance overlay) when available. Falls back to a private `GuiState`
+        when there is no context (e.g. unit tests that build the model without
+        a `MainWindow`), so the checkbox columns still work in isolation.
+        """
+        if self.context is not None and self.context.state is not None:
+            return self.context.state
+        if getattr(self, "_local_vis_state", None) is None:
+            self._local_vis_state = GuiState()
+        return self._local_vis_state
+
+    def _apply_canvas_visibility(self):
+        """Re-apply effective per-instance visibility to the canvas, if any.
+
+        Iterates the live `QtInstance` objects on the player and shows/hides
+        each according to `instance_visible`. No-op when there is no player
+        (headless/unit-test paths), since the overlay re-applies on the next
+        replot regardless.
+        """
+        app = getattr(self.context, "app", None) if self.context else None
+        player = getattr(app, "player", None)
+        if player is None:
+            return
+        state = self._vis_state
+        for qt_inst in player.view.all_instances:
+            qt_inst.setVisible(instance_visible(state, qt_inst.instance))
+
+    def is_visibility_checked(self, instance) -> bool:
+        """Whether the "visibility" box is checked for the given instance."""
+        hidden = self._vis_state.get(INSTANCE_HIDDEN_KEY, default=None)
+        return not hidden or id(instance) not in hidden
+
+    def is_view_only_checked(self, instance) -> bool:
+        """Whether the "view only" box is checked for the given instance."""
+        view_only = self._vis_state.get(VIEW_ONLY_INSTANCE_KEY, default=None)
+        return view_only is not None and id(instance) == view_only
+
+    def is_show_nonvisible_checked(self, instance) -> bool:
+        """Whether the "invisible nodes" box is checked (effective value)."""
+        global_default = self._vis_state.get("show non-visible nodes", default=True)
+        return instance_shows_non_visible(self._vis_state, instance, global_default)
+
+    def data(self, index: QtCore.QModelIndex, role=QtCore.Qt.DisplayRole):
+        """Overrides Qt method to add checkbox state for the new columns."""
+        if not index.isValid():
+            return None
+
+        key = self.properties[index.column()]
+        if key in self._checkbox_keys:
+            if role == QtCore.Qt.CheckStateRole:
+                instance = self.original_items[index.row()]
+                if key == self.VISIBILITY_KEY:
+                    checked = self.is_visibility_checked(instance)
+                elif key == self.VIEW_ONLY_KEY:
+                    checked = self.is_view_only_checked(instance)
+                else:
+                    checked = self.is_show_nonvisible_checked(instance)
+                return QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked
+            if (
+                role == QtCore.Qt.BackgroundRole
+                and key == self.VISIBILITY_KEY
+                and self._vis_state.get(VIEW_ONLY_INSTANCE_KEY, default=None)
+                is not None
+            ):
+                # Greyed-but-clickable: tint the visibility column while a
+                # view-only instance is active to show it is overridden. The
+                # cell stays checkable (see `flags`) so clicking it exits
+                # view-only mode.
+                return QtGui.QColor(128, 128, 128, 64)
+            # No text/color/tooltip for the checkbox columns otherwise.
+            return None
+
+        return super().data(index, role)
+
+    def flags(self, index: QtCore.QModelIndex):
+        """Overrides Qt method to make the new columns user-checkable.
+
+        Both checkbox columns stay enabled and user-checkable at all times.
+        During view-only mode the "visibility" column is rendered greyed (see
+        `data`) to signal it is overridden, but it remains clickable so that
+        toggling any visibility box exits view-only mode (per the feature spec).
+        """
+        key = self.properties[index.column()]
+        if key not in self._checkbox_keys:
+            return super().flags(index)
+
+        return (
+            QtCore.Qt.ItemIsSelectable
+            | QtCore.Qt.ItemIsEnabled
+            | QtCore.Qt.ItemIsUserCheckable
+        )
+
+    def setData(self, index: QtCore.QModelIndex, value, role=QtCore.Qt.EditRole):
+        """Overrides Qt method to toggle the per-instance visibility state."""
+        if index.isValid() and role == QtCore.Qt.CheckStateRole:
+            key = self.properties[index.column()]
+            if key in self._checkbox_keys:
+                instance = self.original_items[index.row()]
+                # ``value`` may be a plain int (PySide6 passes 0/2 from the view)
+                # or a ``Qt.CheckState`` enum (e.g. our tests, or other
+                # bindings). ``Qt.CheckState`` is a non-int Enum in PySide6, so
+                # normalize via its ``.value`` before comparing (mirrors the
+                # convention in sleap/gui/dialogs/qc.py:230).
+                checked = getattr(value, "value", value) == QtCore.Qt.Checked.value
+                # A manual per-instance visibility edit means the user is taking
+                # over from any active Label QC display mode (#2783) -- which would
+                # otherwise overwrite this edit on its next recompute. Drop back to
+                # "manual" first so the edit sticks (no-op if already manual; in
+                # manual mode this clears the mode-driven hides, giving a clean
+                # slate the edit below then applies on top of).
+                self._vis_state[QC_DISPLAY_MODE_KEY] = QC_MODE_MANUAL
+                if key == self.VISIBILITY_KEY:
+                    self._set_visibility(instance, checked)
+                elif key == self.VIEW_ONLY_KEY:
+                    self._set_view_only(instance, checked)
+                else:
+                    self._set_show_nonvisible(instance, checked)
+                return True
+
+        return super().setData(index, value, role)
+
+    def _set_visibility(self, instance, checked: bool):
+        """Toggle an instance's visibility box (also exits view-only mode)."""
+        state = self._vis_state
+        # Spec: clicking any visibility box exits view-only mode.
+        state[VIEW_ONLY_INSTANCE_KEY] = None
+
+        hidden = set(state.get(INSTANCE_HIDDEN_KEY, default=None) or set())
+        if checked:
+            hidden.discard(id(instance))
+        else:
+            hidden.add(id(instance))
+        state[INSTANCE_HIDDEN_KEY] = hidden
+
+        self._refresh_after_toggle()
+
+    def _set_view_only(self, instance, checked: bool):
+        """Toggle an instance's view-only box (radio-like exclusivity)."""
+        state = self._vis_state
+        if checked:
+            # Overwriting auto-unchecks any previously selected view-only row.
+            state[VIEW_ONLY_INSTANCE_KEY] = id(instance)
+        elif state.get(VIEW_ONLY_INSTANCE_KEY, default=None) == id(instance):
+            state[VIEW_ONLY_INSTANCE_KEY] = None
+
+        self._refresh_after_toggle()
+
+    def _set_show_nonvisible(self, instance, checked: bool):
+        """Toggle an instance's "invisible nodes" override (forces a replot)."""
+        state = self._vis_state
+        override = dict(state.get(SHOW_NONVISIBLE_OVERRIDE_KEY, default=None) or {})
+        override[id(instance)] = checked  # explicit True/False, never popped
+        state[SHOW_NONVISIBLE_OVERRIDE_KEY] = override
+        self._replot_after_show_nonvisible_toggle()
+
+    def _refresh_after_toggle(self):
+        """Apply the new state to the canvas and repaint the whole table.
+
+        The full-table ``dataChanged`` re-queries both `data` (checkbox states)
+        and `flags` (so the visibility column greys out / re-enables when
+        view-only mode changes).
+        """
+        self._apply_canvas_visibility()
+        rows = self.rowCount()
+        cols = self.columnCount()
+        if rows and cols:
+            self.dataChanged.emit(
+                self.index(0, 0),
+                self.index(rows - 1, cols - 1),
+            )
+
+    def _replot_after_show_nonvisible_toggle(self):
+        """Full replot after an "invisible nodes" toggle, then repaint the table.
+
+        ``show_non_visible`` is baked into the canvas `QtInstance` at creation
+        time, so ``setVisible`` cannot resurrect node/edge children that were
+        never built -> a full replot is required (unlike the visibility/view-only
+        columns, which only ``setVisible``). The ``getattr`` guard makes this a
+        no-op headless / in unit tests (``context is None``), like
+        `_apply_canvas_visibility`.
+        """
+        app = getattr(self.context, "app", None) if self.context else None
+        if app is not None:
+            app.plotFrame()
+        rows = self.rowCount()
+        cols = self.columnCount()
+        if rows and cols:
+            self.dataChanged.emit(
+                self.index(0, 0),
+                self.index(rows - 1, cols - 1),
+            )
 
 
 class SuggestionsTableModel(GenericTableModel):

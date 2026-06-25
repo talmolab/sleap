@@ -25,6 +25,15 @@ class FrameKey(NamedTuple):
     frame_idx: int
 
 
+# Human-readable labels for channel-only issues (scored outside the GMM and
+# merged into get_flagged). Keyed by channel name.
+CHANNEL_ISSUE_LABELS = {
+    "missing_node": "Missing labelable node",
+    "appearance": "Appearance outlier",
+    "prediction": "Model expects a labeled part here",
+}
+
+
 @dataclass
 class FrameQC:
     """Quality check results for a single frame."""
@@ -34,6 +43,8 @@ class FrameQC:
     actual_instance_count: int = 0
     duplicate_pairs: list[tuple[int, int]] = field(default_factory=list)
     duplicate_reasons: list[str] = field(default_factory=list)
+    # Combined duplicate confidence (0-1) parallel to duplicate_pairs/reasons.
+    duplicate_scores: list[float] = field(default_factory=list)
     is_negative_with_instances: bool = False
 
 
@@ -73,6 +84,12 @@ class QCResults:
         frame_results: Mapping from frame key to frame-level QC results.
         feature_contributions: Mapping from instance key to per-feature scores.
         feature_names: List of feature names used.
+        forced_issues: Mapping from instance key to a forced top-issue label set
+            by a detector hard rule (e.g. "Whole-instance L/R flip"). Takes
+            precedence over inferred/channel issues in ``get_flagged``.
+        channel_scores: Mapping from channel name (e.g. "missing_node") to a
+            ``{InstanceKey: float}`` of per-instance scores produced outside the
+            GMM. Merged with the GMM score in ``get_flagged``.
     """
 
     instance_scores: dict[InstanceKey, float] = field(default_factory=dict)
@@ -81,37 +98,76 @@ class QCResults:
         default_factory=dict
     )
     feature_names: list[str] = field(default_factory=list)
+    forced_issues: dict[InstanceKey, str] = field(default_factory=dict)
+    channel_scores: dict[str, dict[InstanceKey, float]] = field(default_factory=dict)
 
     def get_flagged(self, threshold: float = 0.7) -> list[QCFlag]:
         """Get instances flagged above threshold.
 
+        Merges the GMM-based ``instance_scores`` with any per-channel scores
+        (e.g. the missing-node channel) scored outside the GMM: the final score
+        for an instance is the max of its GMM score and its best channel score.
+        An instance can therefore be flagged purely on a channel even if it had
+        no GMM score (its ``feature_contributions`` may be absent, in which case
+        an empty dict is used safely).
+
         Args:
-            threshold: Score threshold (0-1). Instances with scores >= threshold
-                are flagged.
+            threshold: Score threshold (0-1). Instances with a final score
+                >= threshold are flagged.
 
         Returns:
             List of QCFlag objects, sorted by score descending.
         """
-        flagged = []
-        for key, score in self.instance_scores.items():
-            if score >= threshold:
-                contributions = self.feature_contributions.get(key, {})
-                top_issue = self._infer_top_issue(contributions)
-                confidence = self._get_confidence(score, contributions)
-                explanation = self._generate_explanation(
-                    score, top_issue, contributions
-                )
+        # Union of all keys: GMM-scored instances plus any channel-only ones.
+        keys = set(self.instance_scores)
+        for channel in self.channel_scores.values():
+            keys.update(channel)
 
-                flagged.append(
-                    QCFlag(
-                        instance_key=key,
-                        score=score,
-                        confidence=confidence,
-                        top_issue=top_issue,
-                        feature_contributions=contributions,
-                        explanation=explanation,
-                    )
+        flagged = []
+        for key in keys:
+            gmm_score = self.instance_scores.get(key, 0.0)
+
+            # Best channel score (and which channel won) for this key.
+            chan = float("-inf")
+            winning_channel = None
+            for channel_name, channel in self.channel_scores.items():
+                value = channel.get(key)
+                if value is not None and value > chan:
+                    chan = value
+                    winning_channel = channel_name
+
+            final = max(gmm_score, chan)
+            if final < threshold:
+                continue
+
+            contributions = self.feature_contributions.get(key, {})
+
+            # Top-issue precedence: a forced hard-rule issue wins; otherwise, if
+            # a channel out-scored the GMM, use that channel's label; otherwise
+            # infer from feature contributions.
+            forced = self.forced_issues.get(key)
+            if forced is not None:
+                top_issue = forced
+            elif winning_channel is not None and chan > gmm_score:
+                top_issue = CHANNEL_ISSUE_LABELS.get(
+                    winning_channel, f"High {winning_channel}"
                 )
+            else:
+                top_issue = self._infer_top_issue(contributions)
+
+            confidence = self._get_confidence(final, contributions)
+            explanation = self._generate_explanation(final, top_issue, contributions)
+
+            flagged.append(
+                QCFlag(
+                    instance_key=key,
+                    score=final,
+                    confidence=confidence,
+                    top_issue=top_issue,
+                    feature_contributions=contributions,
+                    explanation=explanation,
+                )
+            )
 
         # Sort by score descending
         flagged.sort(key=lambda f: f.score, reverse=True)

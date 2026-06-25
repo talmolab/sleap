@@ -21,6 +21,7 @@ goto prev suggestion: Shift+Space
 goto prev labeled: Alt+Left
 learning: Ctrl+L
 mark negative: 'N'
+merge instance:
 new: Ctrl+N
 next video: Alt+Shift+Right
 open: Ctrl+O
@@ -30,6 +31,7 @@ save: Ctrl+S
 select next: '`'
 select to frame: Ctrl+Shift+J
 show instances: H
+show non-visible nodes: Shift+V
 show edges: Ctrl+Shift+Tab
 show labels: Ctrl+Tab
 show trails: 
