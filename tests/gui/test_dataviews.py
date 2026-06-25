@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import sleap_io as sio
 
 from sleap.gui.dataviews import *
@@ -136,6 +137,61 @@ def test_labeled_frame_mean_node_score_all_nan(qtbot, centered_pair_predictions)
 
     model = LabeledFrameTableModel(items=lf)
     assert model._data[0]["mean node score"] == ""
+
+
+def test_videos_table_unreadable_video(qtbot, centered_pair_predictions):
+    """A video whose frame can't be read shows '?' dims instead of raising.
+
+    Reading `img_shape` hits the disk and can fail intermittently (e.g. a video
+    on a flaky network drive). One unreadable video must not blank the whole
+    Videos table (discussion #2742).
+    """
+
+    class UnreadableBackend:
+        filename = "/path/to/unreadable.mp4"
+        frames = 100
+
+        @property
+        def img_shape(self):
+            raise IndexError("Failed to read frame index 0.")
+
+    model = VideosTableModel(items=centered_pair_predictions.videos)
+
+    # The good video still reports real (integer) dimensions.
+    good = model.item_to_data(None, centered_pair_predictions.videos[0])
+    assert isinstance(good["height"], int)
+    assert isinstance(good["width"], int)
+
+    # The unreadable video keeps its row, with placeholder dimensions.
+    bad = model.item_to_data(None, UnreadableBackend())
+    assert bad["name"] == "unreadable.mp4"
+    assert bad["frames"] == 100
+    assert bad["height"] == "?"
+    assert bad["width"] == "?"
+    assert bad["channels"] == "?"
+
+
+def test_items_setter_ends_reset_on_error(qtbot):
+    """If building a row raises, the model still ends the reset.
+
+    Leaving the model in a half-reset state (beginResetModel without a matching
+    endResetModel) is what blanks the table, so endResetModel must always run.
+    """
+
+    class RaisingModel(GenericTableModel):
+        def item_to_data(self, obj, item):
+            raise RuntimeError("boom")
+
+    model = RaisingModel(properties=["a"])
+
+    ended = []
+    real_end = model.endResetModel
+    model.endResetModel = lambda: (ended.append(True), real_end())[1]
+
+    with pytest.raises(RuntimeError):
+        model.items = [object()]
+
+    assert ended == [True]
 
 
 def _checkstate(model, row, key):

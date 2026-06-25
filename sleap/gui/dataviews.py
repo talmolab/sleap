@@ -108,15 +108,19 @@ class GenericTableModel(QtCore.QAbstractTableModel):
         item_list = self.object_to_items(obj)
 
         self.beginResetModel()
-        if hasattr(self, "item_to_data"):
-            self._data = []
-            for item in item_list:
-                item_data = self.item_to_data(obj, item)
-                item_data["_original_item"] = item
-                self._data.append(item_data)
-        else:
-            self._data = item_list
-        self.endResetModel()
+        try:
+            if hasattr(self, "item_to_data"):
+                self._data = []
+                for item in item_list:
+                    item_data = self.item_to_data(obj, item)
+                    item_data["_original_item"] = item
+                    self._data.append(item_data)
+            else:
+                self._data = item_list
+        finally:
+            # Always end the reset, even if building a row raised, so the Qt
+            # model is never left in a half-reset state (which blanks the table).
+            self.endResetModel()
 
     @property
     def original_items(self):
@@ -479,6 +483,15 @@ class VideosTableModel(GenericTableModel):
         if isinstance(item, Video):
             item = item.backend
 
+        # `img_shape` reads a frame from disk, which can fail intermittently for a
+        # video on a flaky network drive or a truncated file. Read it once (instead
+        # of three times) and fall back to a placeholder so a single unreadable
+        # video doesn't blank the entire table (see discussion #2742).
+        try:
+            img_shape = item.img_shape
+        except Exception:
+            img_shape = None
+
         for property in self.properties:
             if property == "name":
                 data[property] = (
@@ -493,11 +506,11 @@ class VideosTableModel(GenericTableModel):
                     else item.filename[0]
                 )
             elif property == "height":
-                data[property] = item.img_shape[0]
+                data[property] = img_shape[0] if img_shape is not None else "?"
             elif property == "width":
-                data[property] = item.img_shape[1]
+                data[property] = img_shape[1] if img_shape is not None else "?"
             elif property == "channels":
-                data[property] = item.img_shape[2]
+                data[property] = img_shape[2] if img_shape is not None else "?"
             else:
                 data[property] = getattr(item, property)
         return data
