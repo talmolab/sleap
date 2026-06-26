@@ -508,6 +508,74 @@ def test_checkbox_toggle_falls_back_to_manual_qc_mode(qtbot, centered_pair_predi
         assert model._vis_state[QC_DISPLAY_MODE_KEY] == QC_MODE_MANUAL
 
 
+# -- Videos table tolerates a Video whose backend failed to open (#2794) ----------
+
+
+def _videos_table_row(video):
+    """Render a single videos-table row dict via VideosTableModel."""
+    model = VideosTableModel(items=[video])
+    return model._data[0]
+
+
+def test_videos_table_unopened_backend_renders_from_metadata(qtbot, tmp_path):
+    """A Video whose file is inaccessible has `backend is None`; the row must
+    fall back to filename + cached shape instead of crashing (#2794).
+
+    Reproduces the reporter's `AttributeError: 'NoneType' object has no
+    attribute 'filename'`: before the fix, `item_to_data` dereferenced the None
+    backend's `.filename` and the whole videos table refresh raised.
+    """
+    missing = tmp_path / "sub" / "1-doi1.mp4"  # never created -> backend stays None
+    video = sio.Video(
+        filename=str(missing),
+        backend_metadata={"shape": [9746, 1080, 1920, 1], "type": "MediaVideo"},
+    )
+    assert video.backend is None  # precondition: the exact crash trigger
+
+    row = _videos_table_row(video)
+    assert row["name"] == "1-doi1.mp4"
+    assert row["filepath"] == str(missing.parent)
+    assert row["frames"] == 9746
+    assert row["height"] == 1080
+    assert row["width"] == 1920
+    assert row["channels"] == 1
+
+
+def test_videos_table_unopened_backend_without_metadata(qtbot, tmp_path):
+    """No cached shape -> '?' placeholders for shape fields, still no crash."""
+    missing = tmp_path / "missing.mp4"
+    video = sio.Video(filename=str(missing))
+    assert video.backend is None
+
+    row = _videos_table_row(video)
+    assert row["name"] == "missing.mp4"
+    assert row["filepath"] == str(missing.parent)
+    assert row["frames"] == "?"
+    assert row["height"] == row["width"] == row["channels"] == "?"
+
+
+def test_videos_table_none_item_does_not_crash(qtbot):
+    """A bare None among the videos renders an all-'?' row rather than crashing."""
+    model = VideosTableModel(items=[None])
+    row = model._data[0]
+    assert all(row[prop] == "?" for prop in model.properties)
+
+
+def test_videos_table_open_backend_row_unchanged(qtbot, centered_pair_predictions):
+    """Regression: a normally-openable video still renders its full row -- the
+    None-backend fallback must not alter the happy path (#2794)."""
+    video = centered_pair_predictions.videos[0]
+    assert video.backend is not None  # fixture video opens normally
+
+    row = _videos_table_row(video)
+    assert row["name"].endswith("centered_pair_low_quality.mp4")
+    assert row["filepath"]  # non-empty parent directory
+    assert isinstance(row["frames"], int) and row["frames"] > 0
+    # height/width/channels come from a frame read; present as int or "?".
+    for key in ("height", "width", "channels"):
+        assert row[key] == "?" or (isinstance(row[key], int) and row[key] > 0)
+
+
 # -- QC display mode -> shared transient keys (#2783 <-> shared model) ------------
 
 
