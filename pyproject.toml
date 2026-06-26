@@ -159,12 +159,17 @@ conflicts = [
 ]
 
 [tool.uv.sources]
-sleap-nn = [
-    { index = "pytorch-cpu", extra = "nn-cpu" },
-    { index = "pytorch-cu118", extra = "nn-cuda118" },
-    { index = "pytorch-cu128", extra = "nn-cuda128" },
-    { index = "pytorch-cu130", extra = "nn-cuda130" },
-]
+# TEMPORARY (remove when sleap-nn 0.3.0 is published to PyPI): the version pins in
+# [project.optional-dependencies] target >=0.3.0,<0.4.0, but 0.3.0 is not yet on
+# PyPI, so resolve sleap-nn from the GitHub main branch meanwhile. Restore the
+# per-CUDA index selection below when dropping this override:
+#   sleap-nn = [
+#       { index = "pytorch-cpu", extra = "nn-cpu" },
+#       { index = "pytorch-cu118", extra = "nn-cuda118" },
+#       { index = "pytorch-cu128", extra = "nn-cuda128" },
+#       { index = "pytorch-cu130", extra = "nn-cuda130" },
+#   ]
+sleap-nn = { git = "https://github.com/talmolab/sleap-nn", branch = "main" }
 markupsafe = { index = "pypi" }
 # For sleap-io dev, uncomment ONE of the following:
 # sleap-io = { git = "https://github.com/talmolab/sleap-io", branch = "main" }

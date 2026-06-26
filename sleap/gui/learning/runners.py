@@ -768,16 +768,18 @@ class InferenceTask:
         # Use replace_predictions when replacing, keep_both when adding
         # See: https://sleap.ai/develop/api/sleap_io.model.labels.html#sleap_io.model.labels.Labels.merge
         #
-        # sleap-io 0.8.0 flipped the default track matcher from "name" to "identity"
-        # (#449). We pin track="name" to preserve pre-0.8.0 behavior: predicted tracks
-        # are merged into the project's same-named tracks instead of accumulating
-        # duplicates (which would regress identity/ID-classification workflows). A
-        # tracker/model-type-aware refinement is tracked in talmolab/sleap#2726.
+        # track="identity" matches SLEAP's original (pre-sleap-io-port) merge
+        # behavior: tracks are matched by object identity, so same-named tracks from
+        # a separate inference run are NOT collapsed into the project's tracks. This
+        # is also sleap-io 0.8.0's default (#449); we pass it explicitly so the
+        # behavior is pinned regardless of future default changes.
         prediction_mode = self.inference_params.get("_prediction_mode", "add")
         if prediction_mode == "replace":
-            self.labels.merge(new_labels, frame="replace_predictions", track="name")
+            self.labels.merge(
+                new_labels, frame="replace_predictions", track="identity"
+            )
         else:
-            self.labels.merge(new_labels, frame="keep_both", track="name")
+            self.labels.merge(new_labels, frame="keep_both", track="identity")
 
         return len(self.results)
 
