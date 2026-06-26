@@ -5,22 +5,23 @@ sleap-io 0.8.0 (talmolab/sleap-io#449) flipped the default track matcher of
 
 - ``"identity"`` (the new default) matches tracks ONLY by Python object identity
   (the same ``Track`` instance). Two distinct ``Track`` objects that happen to
-  share a name are kept as separate tracks -- a correctness-first default that
-  never collapses distinct, tracker-assigned identities.
-- ``"name"`` (the pre-0.8.0 behavior) matches tracks by their ``name`` attribute,
-  collapsing same-named tracks across the two projects into one.
+  share a name are kept as separate tracks.
+- ``"name"`` matches tracks by their ``name`` attribute, collapsing same-named
+  tracks across the two projects into one.
 
-The SLEAP Tier 0 fix pins ``track="name"`` on every ``Labels.merge()`` call site
+SLEAP pins ``track="identity"`` explicitly on every ``Labels.merge()`` call site
 in the GUI (``gui/learning/runners.py``, ``gui/dialogs/merge.py``,
-``gui/commands.py``) to preserve the 1.6.x "merge same-named tracks" behavior
-that identity/ID-classification and HITL workflows rely on.
+``gui/commands.py``). This RESTORES SLEAP's original, pre-sleap-io-port merge
+behavior: tracks were matched by object identity, so same-named tracks coming
+from a separate file or inference run are NOT collapsed into the project's
+tracks. (The ``"name"`` behavior was only ever an artifact of the 0.7.x sleap-io
+default; 0.8.0's identity default lines back up with original SLEAP, and we pass
+it explicitly so the behavior is pinned regardless of future default changes.)
 
-These tests LOCK IN that behavior: they must pass against the current (fixed)
-worktree. If a future change drops the ``track="name"`` pin, the dialog/HITL
-tests here will regress to duplicated tracks and fail.
+These tests LOCK IN that behavior: they must pass against the current worktree.
+If a future change re-introduces ``track="name"`` on these call sites, the
+dialog/HITL tests here will regress to collapsed tracks and fail.
 """
-
-import warnings
 
 import numpy as np
 
@@ -70,7 +71,7 @@ def _unique_track_objs(labels: Labels) -> int:
 
 
 class TestLibraryTrackMatchingContract:
-    """Documents the sleap-io 0.8.0 breaking change + the SLEAP fix rationale.
+    """Documents the sleap-io 0.8.0 breaking change (both matcher options).
 
     Two Labels each contain a ``Track(name="track_0")`` with a predicted instance
     on the SAME frame of the SAME video, with identical coordinates (so no spatial
@@ -100,8 +101,8 @@ class TestLibraryTrackMatchingContract:
         # ...and they reference two distinct track objects (not collapsed).
         assert _unique_track_objs(base) == 2
 
-    def test_track_name_collapses_to_one_track(self):
-        """WITH track="name" same-named tracks collapse (the Tier 0 fix behavior)."""
+    def test_track_name_option_collapses_to_one_track(self):
+        """WITH track="name" same-named tracks collapse (the opt-in alternative)."""
         video = Video(filename="shared_vid.mp4")
         base = _labels_with_named_track("track_0", video)
         new = _labels_with_named_track("track_0", video)
@@ -121,30 +122,28 @@ class TestLibraryTrackMatchingContract:
         assert frame.instances[1].track is base.tracks[0]
 
 
-class TestMergeDialogTrackCollapse:
-    """sleap.gui.dialogs.merge.MergeDialog must pin track="name" (Tier 0 fix).
+class TestMergeDialogTrackIdentity:
+    """sleap.gui.dialogs.merge.MergeDialog pins track="identity".
 
-    Exercises the same public path as tests/gui/test_merge.py would for the
-    dialog: construct the dialog (runs ``_perform_merge_analysis`` on a deepcopy)
-    then call ``_perform_final_merge`` (the committing path that mutates
-    ``base_labels``). Same-named tracks from the two projects must collapse to a
-    single track rather than duplicate.
+    Exercises the same public path tests/gui/test_merge.py uses for the dialog:
+    construct the dialog (runs ``_perform_merge_analysis`` on a deepcopy) then call
+    ``_perform_final_merge`` (the committing path that mutates ``base_labels``).
+    Same-named tracks from the two projects must stay DISTINCT (identity), matching
+    original pre-sleap-io-port SLEAP behavior.
     """
 
-    def test_final_merge_collapses_same_named_tracks(self, qtbot):
+    def test_final_merge_keeps_same_named_tracks_distinct(self, qtbot):
         from sleap.gui.dialogs.merge import MergeDialog
 
         video = Video(filename="dialog_vid.mp4")
-        # Distinct frames so there are no overlapping-frame conflicts and no
-        # spatial-divergence warning -- this isolates the track-collapse behavior.
+        # Distinct frames so there are no overlapping-frame conflicts -- this
+        # isolates the track-matching behavior.
         base = _labels_with_named_track("track_0", video, frame_idx=0)
         new = _labels_with_named_track("track_0", video, frame_idx=1)
 
         # Constructing the dialog runs _perform_merge_analysis on a *deepcopy*,
         # so base_labels itself is untouched until the final merge.
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")  # name-merge divergence would error here
-            dlg = MergeDialog(base_labels=base, new_labels=new)
+        dlg = MergeDialog(base_labels=base, new_labels=new)
 
         # No overlapping frames -> clean merge, no conflicts.
         assert dlg.conflicts == []
@@ -155,40 +154,39 @@ class TestMergeDialogTrackCollapse:
         # Commit the merge (the path wired to the "Finish Merge" button).
         dlg._perform_final_merge()
 
-        # Same-named tracks collapsed: still exactly one "track_0".
-        assert len(base.tracks) == 1
-        assert base.tracks[0].name == "track_0"
-        # Both frames present, all instances share the single track object.
+        # Identity matching: the two same-named tracks stay distinct.
+        assert len(base.tracks) == 2
+        assert [t.name for t in base.tracks] == ["track_0", "track_0"]
+        # Both frames present; instances reference two distinct track objects.
         assert len(base.labeled_frames) == 2
-        assert _unique_track_objs(base) == 1
+        assert _unique_track_objs(base) == 2
 
-    def test_final_merge_without_name_fix_would_duplicate(self, qtbot):
-        """Counter-check: identity matching (the 0.8.0 default) WOULD duplicate.
+    def test_name_option_would_collapse(self, qtbot):
+        """Counter-check: track="name" WOULD collapse the same inputs to one track.
 
-        This is the regression the dialog's ``track="name"`` pin prevents. We
-        reproduce the un-pinned merge directly on the dialog's inputs to show the
-        fix is load-bearing: same inputs, identity default -> 2 tracks.
+        Confirms the dialog's ``track="identity"`` choice is load-bearing -- the
+        alternative matcher produces the (now-unwanted) single-track collapse.
         """
         video = Video(filename="dialog_vid.mp4")
         base = _labels_with_named_track("track_0", video, frame_idx=0)
         new = _labels_with_named_track("track_0", video, frame_idx=1)
 
-        base.merge(new, frame="keep_both")  # identity default, as if unpinned
+        base.merge(new, frame="keep_both", track="name")  # the opt-in alternative
 
-        assert len(base.tracks) == 2
-        assert _unique_track_objs(base) == 2
+        assert len(base.tracks) == 1
+        assert _unique_track_objs(base) == 1
 
 
-class TestInferenceResultTrackMatching:
-    """InferenceTask.merge_results pins track="name" for the post-inference HITL path.
+class TestInferenceResultTrackIdentity:
+    """InferenceTask.merge_results pins track="identity" for the post-inference path.
 
-    Mirrors tests/gui/test_merge.py::TestInferenceResultMerging construction:
-    build an InferenceTask with ``trained_job_paths=[]`` and a ``results`` list of
-    LabeledFrames, then call ``merge_results()``. Same-named predicted tracks must
-    merge into the project's existing same-named track instead of duplicating.
+    Mirrors tests/gui/test_merge.py::TestInferenceResultMerging construction: build
+    an InferenceTask with ``trained_job_paths=[]`` and a ``results`` list of
+    LabeledFrames, then call ``merge_results()``. Same-named predicted tracks from a
+    separate inference run must stay DISTINCT from the project's tracks (identity).
     """
 
-    def test_merge_results_collapses_same_named_track(self):
+    def test_merge_results_keeps_same_named_track_distinct(self):
         from sleap.gui.learning.runners import InferenceTask
 
         video = Video(filename="hitl_vid.mp4")
@@ -219,21 +217,22 @@ class TestInferenceResultTrackMatching:
         )
         task.merge_results()
 
-        # The same-named predicted track merged into the project's existing track
-        # instead of accumulating a duplicate.
-        assert len(labels.tracks) == 1
-        assert labels.tracks[0].name == "track_0"
-        assert _unique_track_objs(labels) == 1
-        # New predictions landed on a new frame, attached to the surviving track.
+        # Identity matching: the same-named predicted track is kept as a distinct
+        # track rather than collapsed into the project's existing one.
+        assert len(labels.tracks) == 2
+        assert [t.name for t in labels.tracks] == ["track_0", "track_0"]
+        assert _unique_track_objs(labels) == 2
+        # New predictions landed on a new frame on a track that is NOT the existing
+        # project track (a separate identity).
         assert len(labels.labeled_frames) == 2
         new_frame = labels.find(video, frame_idx=1)[0]
         assert len(new_frame.instances) == 1
-        assert new_frame.instances[0].track is labels.tracks[0]
+        assert new_frame.instances[0].track is not existing_track
 
-    def test_merge_results_without_name_fix_would_duplicate(self):
-        """Counter-check: identity default would create a second "track_0".
+    def test_name_option_would_collapse(self):
+        """Counter-check: track="name" would collapse to a single "track_0".
 
-        Documents the regression the runners.py ``track="name"`` pin prevents.
+        Confirms the runners.py ``track="identity"`` choice is load-bearing.
         Reproduced at the library level on equivalent inputs.
         """
         video = Video(filename="hitl_vid.mp4")
@@ -251,7 +250,6 @@ class TestInferenceResultTrackMatching:
         res_lf.instances.append(res_pred)
         new_labels = Labels([res_lf])
 
-        # Identity default (no track=) -> the new "track_0" is appended as distinct.
-        labels.merge(new_labels, frame="keep_both")
-        assert len(labels.tracks) == 2
-        assert _unique_track_objs(labels) == 2
+        labels.merge(new_labels, frame="keep_both", track="name")
+        assert len(labels.tracks) == 1
+        assert _unique_track_objs(labels) == 1
