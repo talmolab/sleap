@@ -1028,10 +1028,10 @@ class ImportDeepLabCutFolder(AppCommand):
             if merged_labels is None:
                 merged_labels = labels
             else:
-                # track="name" preserves pre-sleap-io-0.8.0 behavior (default flipped
-                # to "identity" in #449): same-named individuals across DLC CSVs are
-                # merged into one track instead of duplicated.
-                merged_labels.merge(labels, frame="auto", track="name")
+                # track="identity" matches SLEAP's original (pre-sleap-io-port) merge
+                # behavior, matching tracks by object identity (sleap-io 0.8.0
+                # default, #449). Passed explicitly to pin it.
+                merged_labels.merge(labels, frame="auto", track="identity")
         return merged_labels
 
 

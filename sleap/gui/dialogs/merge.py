@@ -83,14 +83,15 @@ class MergeDialog(QtWidgets.QDialog):
             base_copy = deepcopy(self.base_labels)
 
             # Attempt merge with frame strategy.
-            # track="name" preserves pre-sleap-io-0.8.0 behavior (the default flipped
-            # to "identity" in #449); same-named tracks across the two projects are
-            # treated as the same identity. Must match the strategy in
-            # _perform_final_merge so this preview reflects the committed merge.
+            # track="identity" restores SLEAP's original (pre-sleap-io-port) merge
+            # behavior: tracks are matched by object identity, so same-named tracks
+            # across the two projects stay distinct. This is sleap-io 0.8.0's default
+            # (#449); passed explicitly here and in _perform_final_merge so this
+            # preview reflects the committed merge.
             merge_result = base_copy.merge(
                 self.new_labels,
                 frame="keep_both",  # Use sleap-io frame strategy
-                track="name",
+                track="identity",
             )
 
             # Analyze what was merged vs conflicts
@@ -282,11 +283,11 @@ class MergeDialog(QtWidgets.QDialog):
     def _perform_final_merge(self):
         """Perform the final merge operation."""
         # Use sleap-io merge with appropriate frame strategy.
-        # track="name" must match _perform_merge_analysis (see note there).
+        # track="identity" must match _perform_merge_analysis (see note there).
         self.base_labels.merge(
             self.new_labels,
             frame="keep_both",  # Adjust based on user preference
-            track="name",
+            track="identity",
         )
 
 
