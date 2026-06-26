@@ -42,8 +42,14 @@ def video_util_reset(video: Video, filename: str = None, grayscale: bool = None)
         None
     """
     if filename is not None:
-        video.replace_filename(filename, open=False)
-        # No apparent 'test frame'.
+        # open=True reopens the backend on the NEW file so its shape/grayscale/fps
+        # are re-read. With open=False the live backend keeps serving the OLD file;
+        # combined with sleap-io 0.8.0's prefer_metadata=True save default (#483),
+        # a relink-then-save would then persist the OLD video's resolution under the
+        # new filename (the stale recorded shape is invalidated by #490, but the
+        # serializer falls back to the still-old open backend). See regression test
+        # tests/upgrade/test_io08_prefer_metadata_relink.py.
+        video.replace_filename(filename, open=True)
 
     # If none, auto-detects based on first frame load.
     video.grayscale = grayscale
