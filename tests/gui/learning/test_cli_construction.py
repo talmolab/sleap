@@ -309,13 +309,14 @@ class TestInferenceTaskCLI:
         )
 
     def test_basic_cli_call(self, inference_task, video_item):
-        """Basic CLI call should include sleap track and model paths."""
+        """Basic CLI call should invoke `sleap predict` with model paths."""
         cli_args, output_path = inference_task.make_predict_cli_call(
             video_item, output_path="/path/to/output.slp"
         )
 
         assert cli_args[0] == "sleap"
-        assert cli_args[1] == "track"
+        # The GUI drives the sleap-nn 0.3.0 unified inference pipeline via `predict`.
+        assert cli_args[1] == "predict"
         assert "--model_paths" in cli_args
         # Model path should be parent directory (strip training_config.yaml)
         model_idx = cli_args.index("--model_paths") + 1
@@ -323,6 +324,9 @@ class TestInferenceTaskCLI:
         assert Path(cli_args[model_idx]).as_posix() == "/path/to/model"
         assert "-o" in cli_args
         assert "/path/to/output.slp" in cli_args
+        # Preserve legacy save semantics (no source-video restore) so the
+        # post-inference load + merge matches videos by filename.
+        assert "--no-restore_source_videos" in cli_args
 
     def test_batch_size_in_cli(self, inference_task, video_item):
         """Batch size should be included in CLI args."""
@@ -865,7 +869,9 @@ class TestFullCLIIntegration:
 
         # Check base command
         assert cli_args[0] == "sleap"
-        assert cli_args[1] == "track"
+        assert cli_args[1] == "predict"
+        # Legacy save semantics preserved across the predict switch.
+        assert "--no-restore_source_videos" in cli_args
 
         # Check data args
         assert "--data_path" in cli_args

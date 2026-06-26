@@ -540,7 +540,7 @@ class InferenceTask:
         """Makes list of CLI arguments needed for running inference."""
         cli_args = [
             "sleap",
-            "track",
+            "predict",
         ]
         if gui:
             cli_args.append("--gui")
@@ -594,6 +594,14 @@ class InferenceTask:
             cli_args.extend(("--model_paths", job_path))
 
         cli_args.extend(["-o", output_path])
+        # `sleap predict` (the sleap-nn 0.3.0 unified pipeline) defaults
+        # restore_source_videos=True, which rewrites the output's video reference to
+        # the original source media. Legacy `sleap track` saved with
+        # restore_original_videos=False. Pass the negative flag to preserve the exact
+        # legacy save semantics so the post-success load + merge matches videos by
+        # filename: a no-op for non-embedded projects, but required to avoid a
+        # duplicate video when --data_path is an embedded .pkg.slp.
+        cli_args.append("--no-restore_source_videos")
 
         if "_batch_size" in self.inference_params:
             cli_args.extend(["--batch_size", str(self.inference_params["_batch_size"])])
