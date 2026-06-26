@@ -784,26 +784,27 @@ def predict(
     _warn_deprecated("sleap-nn-predict", "sleap predict")
 
     try:
-        from sleap_nn.export.cli import predict as sleap_nn_predict
+        # sleap-nn 0.3.0 (#615) removed `sleap_nn.export.cli.predict` and unified
+        # exported-model inference into the main predict command, selecting the
+        # exported runtime via `--runtime`. Forward this deprecated shim to the new
+        # entry point, mapping the exported model dir to `model_paths` and the video
+        # to `data_path`. Bottom-up-specific knobs without a clean equivalent
+        # (n_points, min_instance_peaks, min_line_scores, peak_conf_threshold,
+        # n_frames) are not forwarded; use `sleap predict` directly for full control.
+        from sleap_nn.cli import predict as sleap_nn_predict
 
-        # Get the Click context and invoke the sleap-nn predict command
         ctx = click.get_current_context()
         ctx.invoke(
             sleap_nn_predict,
-            export_dir=Path(export_dir),
-            video_path=Path(video_path),
-            output=Path(output) if output else None,
+            model_paths=(str(export_dir),),
+            data_path=str(video_path),
+            output_path=str(output) if output else None,
             runtime=runtime,
             device=device,
             batch_size=batch_size,
-            n_frames=n_frames,
+            max_instances=max_instances,
             max_edge_length_ratio=max_edge_length_ratio,
             dist_penalty_weight=dist_penalty_weight,
-            n_points=n_points,
-            min_instance_peaks=min_instance_peaks,
-            min_line_scores=min_line_scores,
-            peak_conf_threshold=peak_conf_threshold,
-            max_instances=max_instances,
         )
 
     except ImportError:
