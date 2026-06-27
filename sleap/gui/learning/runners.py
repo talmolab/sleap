@@ -239,6 +239,15 @@ class InferenceWorker(QtCore.QThread):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,  # Merge stderr into stdout
             text=True,  # Text mode (required for line buffering)
+            # Force UTF-8 decoding of the child's output. Without this, text mode
+            # decodes using the locale default, which is cp1252 on Windows, so any
+            # non-cp1252 byte in the subprocess output (e.g. the UTF-8 box-drawing
+            # glyphs in a `rich`-rendered traceback or progress bar) crashes the
+            # reader with `UnicodeDecodeError: 'charmap' codec can't decode byte ...`,
+            # masking the real error. `errors="replace"` keeps reading even if the
+            # child emits a stray non-UTF-8 byte. (gh discussion #2744)
+            encoding="utf-8",
+            errors="replace",
             bufsize=1,  # Line buffered
             env=env,
         ) as proc:
@@ -700,7 +709,9 @@ class InferenceTask:
             while proc.poll() is None:
                 # Read line.
                 line = proc.stdout.readline()
-                line = line.decode().rstrip()
+                # Decode as UTF-8 with replacement so a stray non-UTF-8 byte in
+                # the subprocess output can't crash the reader (see #2744).
+                line = line.decode("utf-8", errors="replace").rstrip()
 
                 is_json = False
                 if line.startswith("{"):
