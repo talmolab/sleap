@@ -480,8 +480,18 @@ class VideosTableModel(GenericTableModel):
 
     def item_to_data(self, obj, item: "VideoBackend"):
         data = {}
-        if isinstance(item, Video):
-            item = item.backend
+        video = item if isinstance(item, Video) else None
+        if video is not None:
+            item = video.backend
+
+        # sleap-io leaves `Video.backend` as None when the file is inaccessible at
+        # open time (a lock, an AV scan, a flaky/slow drive, or a still-flushing
+        # recording). The `Video` still carries its filename and cached shape, so
+        # render a best-effort row from that instead of dereferencing a None
+        # backend and crashing the whole table (#2794). This extends the #2742
+        # hardening below, which only guarded the per-frame `img_shape` read.
+        if item is None:
+            return self._row_from_unopened_video(video)
 
         # `img_shape` reads a frame from disk, which can fail intermittently for a
         # video on a flaky network drive or a truncated file. Read it once (instead
@@ -514,6 +524,37 @@ class VideosTableModel(GenericTableModel):
             else:
                 data[property] = getattr(item, property)
         return data
+
+    def _row_from_unopened_video(self, video: "Video | None") -> dict:
+        """Build a videos-table row for a `Video` whose backend failed to open.
+
+        Falls back to the `Video`'s filename and cached
+        ``backend_metadata["shape"]`` (``[frames, height, width, channels]``); any
+        field that can't be resolved is shown as ``"?"``. See #2794.
+        """
+        filename = video.filename if video is not None else None
+        shape = (
+            (video.backend_metadata or {}).get("shape") if video is not None else None
+        )
+        if not (isinstance(shape, (list, tuple)) and len(shape) >= 4):
+            shape = None
+
+        if isinstance(filename, str):
+            name, filepath = Path(filename).name, str(Path(filename).parent)
+        elif filename:  # list of filenames (e.g. an image sequence)
+            name = filepath = filename[0]
+        else:
+            name = filepath = "?"
+
+        values = {
+            "name": name,
+            "filepath": filepath,
+            "frames": shape[0] if shape is not None else "?",
+            "height": shape[1] if shape is not None else "?",
+            "width": shape[2] if shape is not None else "?",
+            "channels": shape[3] if shape is not None else "?",
+        }
+        return {prop: values.get(prop, "?") for prop in self.properties}
 
 
 class SkeletonNodesTableModel(GenericTableModel):
