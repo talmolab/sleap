@@ -86,8 +86,18 @@ def instance_visible(state: "GuiState", instance: Any) -> bool:
         return True
 
     # The global "show instances" toggle wins: per-instance state can only
-    # further hide instances, never force a globally-hidden one back on. Without
-    # this, the per-instance re-apply loop in `InstanceOverlay.add_to_scene`
+    # further hide instances, never force a globally-hidden one back on.
+    if not state.get("show_instances", True):
+        return False
+
+    # View-only mode: only the designated instance is visible.
+    view_only = state.get(VIEW_ONLY_INSTANCE_KEY)
+    if view_only is not None:
+        return id(instance) == view_only
+
+    # Check hidden set.
+    hidden = state.get(INSTANCE_HIDDEN_KEY, set())
+    return id(instance) not in hiddenop in `InstanceOverlay.add_to_scene`
     # would override the global Hide toggle on every replot.
     if not state.get("show instances", default=True):
         return False
