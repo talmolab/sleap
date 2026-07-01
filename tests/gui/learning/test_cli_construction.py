@@ -132,6 +132,52 @@ class TestVideoItemForInferenceCLI:
         # -100 becomes -99 (endpoint adjustment)
         assert "-99" in cli_args[frames_idx]
 
+    def test_cli_args_entire_video_omits_frames(self, mock_video):
+        """Entire-video selection should omit --frames (predict all frames).
+
+        The entire video is encoded as ``[0, -len(video)]``; emitting an
+        explicit ``--frames 0,-N`` here pins the endpoint to the GUI's frame
+        count, which can request a frame past the end of the video and crash
+        inference with an ``IndexError`` (see discussion #2807).
+        """
+        mock_video.__len__.return_value = 100
+        item = VideoItemForInference(
+            video=mock_video,
+            frames=[0, -100],  # encode_range(0, len(video)) for a 100-frame video
+            labels_path="/path/to/labels.slp",
+            video_idx=0,
+        )
+
+        assert item.is_entire_video
+        assert "--frames" not in item.cli_args
+
+    def test_cli_args_clip_not_treated_as_entire_video(self, mock_video):
+        """A clip shorter than the video should still emit --frames."""
+        mock_video.__len__.return_value = 100
+        item = VideoItemForInference(
+            video=mock_video,
+            frames=[0, -50],  # frames 0..49 of a 100-frame video
+            labels_path="/path/to/labels.slp",
+            video_idx=0,
+        )
+
+        assert not item.is_entire_video
+        cli_args = item.cli_args
+        assert "--frames" in cli_args
+        assert cli_args[cli_args.index("--frames") + 1] == "0,-49"
+
+    def test_cli_args_explicit_frame_list_not_entire_video(self, mock_video):
+        """An explicit list of frames is never treated as the entire video."""
+        mock_video.__len__.return_value = 5
+        item = VideoItemForInference(
+            video=mock_video,
+            frames=[0, 1, 2, 3, 4],
+            labels_path="/path/to/labels.slp",
+        )
+
+        assert not item.is_entire_video
+        assert "--frames" in item.cli_args
+
     def test_path_property_with_labels(self, mock_video):
         """path property should return labels_path when provided."""
         item = VideoItemForInference(
