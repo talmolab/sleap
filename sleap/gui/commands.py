@@ -566,6 +566,12 @@ class CommandContext:
         """Sets node symmetry in skeleton."""
         self.execute(SetNodeSymmetry, skeleton=skeleton, node=node, symmetry=symmetry)
 
+    def addInferredSymmetries(self, skeleton, symmetry_pairs):
+        """Add name-inferred symmetric node pairs to the skeleton."""
+        self.execute(
+            AddInferredSymmetries, skeleton=skeleton, symmetry_pairs=symmetry_pairs
+        )
+
     def updateEdges(self):
         """Called when edges in skeleton have been changed."""
         self.signal_update([UpdateTopic.skeleton])
@@ -772,6 +778,64 @@ class NewProject(AppCommand):
         window.showMaximized()
 
 
+def find_inferrable_symmetries(
+    labels: Labels,
+) -> List[Tuple[Skeleton, List[Tuple[int, int]]]]:
+    """Skeletons in `labels` with no symmetries but name-inferrable pairs.
+
+    Returns a list of `(skeleton, [(left_idx, right_idx), ...])` for each
+    skeleton that has no symmetries defined yet whose node names imply some (via
+    `Skeleton.infer_symmetries_by_name`). Skeletons that already have
+    symmetries, yield no candidates, or whose sleap-io version predates the
+    resolver are skipped.
+    """
+    results = []
+    for skeleton in labels.skeletons:
+        if skeleton.symmetries:
+            continue
+        infer = getattr(skeleton, "infer_symmetries_by_name", None)
+        if infer is None:
+            continue  # older sleap-io without the resolver
+        pairs = infer()
+        if pairs:
+            results.append((skeleton, pairs))
+    return results
+
+
+def _prompt_inferred_symmetries(context: "CommandContext"):
+    """Ask whether to add name-inferred symmetries to symmetry-less skeletons.
+
+    Shows one confirmation per skeleton flagged by `find_inferrable_symmetries`,
+    adding the pairs to that skeleton if the user accepts.
+    """
+    for skeleton, pairs in find_inferrable_symmetries(context.labels):
+        names = skeleton.node_names
+        pair_lines = "\n".join(f"    {names[a]}  ↔  {names[b]}" for a, b in pairs)
+        count = len(pairs)
+        response = QtWidgets.QMessageBox.question(
+            context.app,
+            "Add symmetric node pairs?",
+            f"This skeleton has no left/right symmetries defined, but {count} "
+            f"likely symmetric pair{'' if count == 1 else 's'} were found from "
+            f"the node names:\n\n{pair_lines}\n\n"
+            "Symmetries are used for left/right flip augmentation and quality "
+            "control. Add them to the skeleton?",
+        )
+        if response == QtWidgets.QMessageBox.Yes:
+            context.addInferredSymmetries(skeleton, pairs)
+
+
+def _maybe_prompt_inferred_symmetries(context: "CommandContext"):
+    """Run `_prompt_inferred_symmetries` only when the main window is visible.
+
+    Skipped when the window is not shown (headless/programmatic loads, e.g. in
+    tests), so a modal dialog never blocks a non-interactive load.
+    """
+    is_visible = getattr(context.app, "isVisible", None)
+    if callable(is_visible) and is_visible():
+        _prompt_inferred_symmetries(context)
+
+
 class LoadLabelsObject(AppCommand):
     @staticmethod
     def do_action(context: "CommandContext", params: dict):
@@ -810,6 +874,12 @@ class LoadLabelsObject(AppCommand):
 
         # This is not listed as an edit command since we want a clean changestack
         context.app.on_data_update([UpdateTopic.project, UpdateTopic.all])
+
+        # Offer to add left/right symmetries inferred from node names when a
+        # loaded skeleton has none defined (used by flip augmentation and QC).
+        # Deferred so it runs once the window is shown, and gated on visibility
+        # so non-interactive/headless loads never block on the dialog.
+        QtCore.QTimer.singleShot(0, lambda: _maybe_prompt_inferred_symmetries(context))
 
 
 class LoadProjectFile(LoadLabelsObject):
@@ -3345,6 +3415,15 @@ class SetNodeSymmetry(EditCommand):
             symmetric_to = get_symmetry_node(skeleton, node)
             if symmetric_to is not None:
                 delete_symmetry(skeleton, node, symmetric_to)
+
+
+class AddInferredSymmetries(EditCommand):
+    topics = [UpdateTopic.skeleton]
+
+    @staticmethod
+    def do_action(context: CommandContext, params: dict):
+        skeleton = params["skeleton"]
+        skeleton.add_symmetries(params["symmetry_pairs"])
 
 
 class NewEdge(EditCommand):
