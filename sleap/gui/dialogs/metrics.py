@@ -14,6 +14,8 @@ from sleap.gui.learning.configs import TrainingConfigsGetter, ConfigFileInfo
 from sleap.gui.learning.dialog import TrainingEditorWidget
 from sleap.gui.config_utils import get_backbone_from_omegaconf
 from sleap.gui.widgets.mpl import MplCanvas
+import logging
+logger = logging.getLogger(__name__)
 
 from typing import Optional, Text
 
