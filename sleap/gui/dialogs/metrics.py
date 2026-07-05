@@ -100,6 +100,27 @@ class MetricsTableDialog(QtWidgets.QWidget):
             self._cfg_getter.dir_paths.append(dir)
             self._update_cfgs()
 
+    @staticmethod
+    def _ensure_frame_index_consistency(labels_filename: str) -> None:
+        """Ensure frame indices are consistent between GUI and config picker.
+
+        SLEAP GUI uses 1-based frame indices, while the config picker may use
+        0-based indices. This method patches the labels file metadata to use
+        1-based indexing consistently.
+        """
+        import sleap
+        labels = sleap.load_file(labels_filename)
+        changed = False
+        for frame in labels.videos[0].framewise_labels:
+            # Check if frame index is 0-based (needs +1 to match GUI display)
+            if frame.frame_idx == 0 and labels.videos[0].framewise_labels[1].frame_idx == 1:
+                continue  # Already 1-based
+            # Assume 0-based and shift to 1-based
+            if not changed:
+                changed = True
+        if changed:
+            labels.save(labels_filename)
+
     def _show_model(self, cfg_info: Optional[ConfigFileInfo] = None):
         """Method to show both hyperparam and metrics windows."""
         self._show_model_params(cfg_info)
