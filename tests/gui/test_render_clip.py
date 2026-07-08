@@ -307,3 +307,128 @@ def test_include_unlabeled_export_params_forward_range(centered_pair_predictions
         assert params["end"] == 18
     finally:
         dialog.deleteLater()
+
+
+def test_trail_params_absent_when_disabled(centered_pair_predictions):
+    """With trails off (the default), no trail kwargs are forwarded so both the
+    preview and export keep sleap-io's ``show_trails=False`` default.
+    """
+    pytest.importorskip("qtpy.QtWidgets")
+
+    from qtpy import QtWidgets
+
+    from sleap.gui.dialogs.render_clip import RenderClipDialog
+
+    _ = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+
+    labels: sio.Labels = centered_pair_predictions
+    video = labels.videos[0]
+
+    dialog = RenderClipDialog(labels=labels, video=video)
+    try:
+        assert not dialog.show_trails.isChecked()
+        params = dialog.get_export_params()
+        for key in (
+            "show_trails",
+            "trail_length",
+            "trail_node",
+            "trail_width",
+            "trail_alpha_fade",
+            "trail_alpha",
+            "trail_color",
+        ):
+            assert key not in params
+    finally:
+        dialog.deleteLater()
+
+
+def test_trail_params_forwarded_when_enabled(centered_pair_predictions):
+    """Enabling trails forwards the full sleap-io trail kwarg set with values
+    read from the widgets. ``trail_color`` is omitted for the "Match poses"
+    default (sleap-io then colors trails by track/instance).
+    """
+    pytest.importorskip("qtpy.QtWidgets")
+
+    from qtpy import QtWidgets
+
+    from sleap.gui.dialogs.render_clip import RenderClipDialog
+
+    _ = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+
+    labels: sio.Labels = centered_pair_predictions
+    video = labels.videos[0]
+
+    dialog = RenderClipDialog(labels=labels, video=video)
+    try:
+        # Node picker offers "Centroid" plus every skeleton node.
+        node_items = [
+            dialog.trail_node.itemData(i) for i in range(dialog.trail_node.count())
+        ]
+        assert node_items[0] == "centroid"
+        for node in labels.skeletons[0].nodes:
+            assert node.name in node_items
+
+        # Sub-controls disabled until the master toggle is on.
+        assert not dialog.trail_length.isEnabled()
+        dialog.show_trails.setChecked(True)
+        assert dialog.trail_length.isEnabled()
+
+        dialog.trail_length.setValue(25)
+        dialog.trail_node.setCurrentIndex(1)  # first real node
+        dialog.trail_width.setValue(3.5)
+        dialog.trail_alpha.setValue(0.5)
+        dialog.trail_fade.setChecked(False)
+
+        params = dialog.get_export_params()
+        assert params["show_trails"] is True
+        assert params["trail_length"] == 25
+        assert params["trail_node"] == labels.skeletons[0].nodes[0].name
+        assert params["trail_width"] == 3.5
+        assert params["trail_alpha"] == 0.5
+        assert params["trail_alpha_fade"] is False
+        # "Match poses" -> no uniform color forwarded.
+        assert "trail_color" not in params
+
+        # A named color is forwarded verbatim.
+        idx = dialog.trail_color.findData("red")
+        dialog.trail_color.setCurrentIndex(idx)
+        params = dialog.get_export_params()
+        assert params["trail_color"] == "red"
+    finally:
+        dialog.deleteLater()
+
+
+def test_trail_params_render_without_tracks():
+    """The trail params the dialog produces must actually render — including for
+    single-instance / untracked data, where sleap-io keys trails by instance
+    position (no tracks required). This guards the end-to-end passthrough into
+    ``sio.render_image``.
+    """
+    skel = _skeleton()
+    video = sio.Video(filename="a.mp4")
+
+    # Single moving instance across several frames, NO tracks assigned.
+    lfs = [
+        sio.LabeledFrame(
+            video=video, frame_idx=i, instances=[_pred(skel, (10.0 + i, 20.0 + i))]
+        )
+        for i in range(6)
+    ]
+    labels = sio.Labels(labeled_frames=lfs, videos=[video], skeletons=[skel])
+    assert len(labels.tracks) == 0
+
+    # Provide a solid background so no real video decode is needed.
+    img = sio.render_image(
+        labels,
+        video=video,
+        frame_idx=5,
+        background="black",
+        show_trails=True,
+        trail_length=5,
+        trail_node="centroid",
+        trail_width=2.0,
+        trail_alpha_fade=True,
+        trail_alpha=1.0,
+    )
+    assert img is not None
+    assert img.shape[-1] in (3, 4)

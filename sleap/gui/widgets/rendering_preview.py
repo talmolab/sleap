@@ -195,8 +195,21 @@ class RenderingPreviewWidget(QtWidgets.QWidget):
         lf = lfs[0]
 
         try:
-            # Render using sleap-io
-            img = sio.render_image(lf, **self._render_params)
+            if self._render_params.get("show_trails"):
+                # Trails need temporal context (the preceding frames), which
+                # render_image only has when the source is the Labels object —
+                # a bare LabeledFrame has no access to past frames, so trails
+                # would silently render nothing. Locate the same frame via
+                # video + frame_idx so the visible frame is unchanged.
+                img = sio.render_image(
+                    self.labels,
+                    video=self.video,
+                    frame_idx=self._current_frame_idx,
+                    **self._render_params,
+                )
+            else:
+                # Render using sleap-io
+                img = sio.render_image(lf, **self._render_params)
             self._display_image(img)
         except Exception as e:
             self._show_error_message(str(e))
