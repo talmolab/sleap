@@ -33,6 +33,7 @@ from sleap.gui.commands import (
     ReplaceVideo,
     OpenSkeleton,
     SaveProjectAs,
+    DeleteAreaPredictions,
     DeleteFrameLimitPredictions,
     get_new_version_filename,
 )
@@ -1353,6 +1354,36 @@ def test_DeleteFrameLimitPredictions(
     )
 
     assert len(instances_to_delete) == 2070
+
+
+def test_DeleteAreaPredictions(centered_pair_predictions: Labels):
+    """Test finding predicted instances contained within a selected area.
+
+    Regression test: `is_bounded` used to access the removed
+    `PredictedInstance.points_array` attribute directly, raising an
+    AttributeError as soon as an area was selected in the GUI.
+    """
+    labels = centered_pair_predictions
+
+    # Set-up command context
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = labels.videos[0]
+
+    total_predicted_instances = sum(
+        1 for lf in labels for inst in lf if isinstance(inst, PredictedInstance)
+    )
+
+    # An area covering the whole frame should contain every predicted instance
+    params = {"min_corner": (0, 0), "max_corner": (384, 384)}
+    instances_in_full_frame = DeleteAreaPredictions.get_frame_instance_list(
+        context, params
+    )
+    assert len(instances_in_full_frame) == total_predicted_instances
+
+    # A small area in the corner of the frame should contain none
+    params = {"min_corner": (0, 0), "max_corner": (10, 10)}
+    instances_in_corner = DeleteAreaPredictions.get_frame_instance_list(context, params)
+    assert len(instances_in_corner) == 0
 
 
 @pytest.mark.parametrize("export_extension", [".slp"])
