@@ -544,8 +544,8 @@ def plot_instance(
 
     else:
         for k, (src_node, dst_node) in enumerate(skeleton.edges):
-            src_pt = instance.points_array[instance.skeleton.node_to_index(src_node)]
-            dst_pt = instance.points_array[instance.skeleton.node_to_index(dst_node)]
+            src_pt = inst_pts[skeleton.node_names.index(src_node.name)]
+            dst_pt = inst_pts[skeleton.node_names.index(dst_node.name)]
 
             x = np.array([src_pt[0], dst_pt[0]])
             y = np.array([src_pt[1], dst_pt[1]])
