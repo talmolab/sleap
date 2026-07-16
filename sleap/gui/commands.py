@@ -93,6 +93,7 @@ from sleap.sleap_io_adaptors.skeleton_utils import (
     to_graph,
 )
 from sleap.sleap_io_adaptors.video_utils import video_util_reset
+from sleap.sleap_io_adaptors.instance_utils import instance_get_points_array
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     get_next_suggestion,
     track_swap,
@@ -3525,7 +3526,7 @@ class DeleteAreaPredictions(InstanceDeleteCommand):
         max_corner = params["max_corner"]
 
         def is_bounded(inst):
-            points_array = inst.points_array
+            points_array = instance_get_points_array(inst)
             valid_points = points_array[~np.isnan(points_array).any(axis=1)]
 
             is_gt_min = np.all(valid_points >= min_corner)
