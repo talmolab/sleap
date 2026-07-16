@@ -1,6 +1,26 @@
 import pytest
+import matplotlib
+
+matplotlib.use("Agg")
 
 from sleap.util import *
+
+
+def test_plot_instance_edge_coloring(centered_pair_predictions):
+    """Test that `plot_instance` can draw skeleton edges.
+
+    Regression test: the `color_by_node=False` branch used to access the
+    removed `PredictedInstance.points_array` attribute and the removed
+    `Skeleton.node_to_index` method directly, raising an AttributeError as
+    soon as it was called on a skeleton with edges.
+    """
+    lf = centered_pair_predictions[0]
+    instance = lf.instances[0]
+    skeleton = instance.skeleton
+    assert len(skeleton.edges) > 0
+
+    h_lines = plot_instance(instance, skeleton=skeleton, color_by_node=False)
+    assert len(h_lines) == len(skeleton.edges)
 
 
 def test_json():
