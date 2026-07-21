@@ -226,7 +226,9 @@ class MainWindow(QMainWindow):
         self.state["actual_size"] = False
         self.state["color predicted"] = prefs["color predicted"]
         self.state["trail_length"] = prefs["trail length"]
-        self.state["trail_shade"] = prefs["trail shade"]
+        self.state["trail_node"] = prefs["trail node"]
+        self.state["trail_alpha"] = prefs["trail alpha"]
+        self.state["trail_alpha_fade"] = prefs["trail alpha fade"]
         self.state["marker size"] = prefs["marker size"]
         self.state["propagate track labels"] = prefs["propagate track labels"]
         self.state["node label size"] = prefs["node label size"]
@@ -318,7 +320,9 @@ class MainWindow(QMainWindow):
         prefs["propagate track labels"] = self.state["propagate track labels"]
         prefs["color predicted"] = self.state["color predicted"]
         prefs["trail length"] = self.state["trail_length"]
-        prefs["trail shade"] = self.state["trail_shade"]
+        prefs["trail node"] = self.state["trail_node"]
+        prefs["trail alpha"] = self.state["trail_alpha"]
+        prefs["trail alpha fade"] = self.state["trail_alpha_fade"]
         prefs["share usage data"] = self.state["share usage data"]
 
         # Save preferences.
@@ -712,6 +716,7 @@ class MainWindow(QMainWindow):
 
         viewMenu = self.menuBar().addMenu("View")
         self.viewMenu = viewMenu  # store as attribute so docks can add items
+        viewMenu.setToolTipsVisible(True)
 
         viewMenu.addSeparator()
         add_menu_check_item(viewMenu, "fit", "Fit View to Instances")
@@ -823,11 +828,22 @@ class MainWindow(QMainWindow):
             options=TrackTrailOverlay.get_length_options(),
             key="trail_length",
         )
+        self.trail_node_menu = viewMenu.addMenu("Trail Node")
+        self.trail_node_menu.setToolTip(
+            "Which point the trail follows: the instance centroid, or a named "
+            "skeleton node.\n\n"
+            "Trails now render for untracked / single-instance data too. "
+            "Without tracks, trail color follows each frame's instance order "
+            "rather than a stable identity, so colors may shift between frames."
+        )
+        self._update_trail_node_menu()
+        self.state.connect("trail_node", self._sync_trail_node_menu)
+        add_menu_check_item(viewMenu, "trail_alpha_fade", "Fade Older Trail Segments")
         add_submenu_choices(
             menu=viewMenu,
-            title="Trail Shade",
-            options=tuple(TrackTrailOverlay.get_shade_options().keys()),
-            key="trail_shade",
+            title="Trail Opacity",
+            options=(0.25, 0.5, 0.75, 1.0),
+            key="trail_alpha",
         )
 
         viewMenu.addSeparator()
@@ -1273,8 +1289,10 @@ class MainWindow(QMainWindow):
         self.overlays["trails"] = TrackTrailOverlay(
             labels=self.labels,
             player=self.player,
-            trail_shade=self.state["trail_shade"],
             trail_length=self.state["trail_length"],
+            trail_node=self.state["trail_node"],
+            trail_alpha=self.state["trail_alpha"],
+            trail_alpha_fade=self.state["trail_alpha_fade"],
         )
         self.overlays["instance"] = InstanceOverlay(
             labels=self.labels, player=self.player, state=self.state
@@ -1297,7 +1315,9 @@ class MainWindow(QMainWindow):
             )
 
         overlay_state_connect(self.overlays["trails"], "trail_length")
-        overlay_state_connect(self.overlays["trails"], "trail_shade")
+        overlay_state_connect(self.overlays["trails"], "trail_node")
+        overlay_state_connect(self.overlays["trails"], "trail_alpha")
+        overlay_state_connect(self.overlays["trails"], "trail_alpha_fade")
 
         overlay_state_connect(self.color_manager, "palette")
         overlay_state_connect(self.color_manager, "distinctly_color")
@@ -1454,6 +1474,9 @@ class MainWindow(QMainWindow):
                 self.suggestions_dock.suggestions_form_widget.set_field_options(
                     "node", self.labels.skeletons[0].node_names
                 )
+
+            if hasattr(self, "trail_node_menu"):
+                self._update_trail_node_menu()
 
         if _has_topic([UpdateTopic.project, UpdateTopic.on_frame]):
             self.instances_dock.table.model().items = self.state["labeled_frame"]
@@ -1738,6 +1761,38 @@ class MainWindow(QMainWindow):
             subprocess.Popen(["open", str(pref_path)])
         else:
             subprocess.Popen(["xdg-open", str(pref_path)])
+
+    @staticmethod
+    def _trail_node_menu_label(option: str) -> str:
+        return "Centroid" if option == "centroid" else option
+
+    def _sync_trail_node_menu(self, value):
+        """Check the Trail Node menu item matching `value`, uncheck the rest."""
+        for action in self.trail_node_menu.actions():
+            action.setChecked(action.text() == self._trail_node_menu_label(value))
+
+    def _update_trail_node_menu(self):
+        """Rebuild the Trail Node menu from the current skeleton.
+
+        Options are per-project (skeleton node names), unlike the other Trail
+        submenus, so this rebuilds on skeleton changes rather than being built
+        once with a fixed option list.
+        """
+        self.trail_node_menu.clear()
+
+        options = TrackTrailOverlay.get_node_options(self.labels)
+        if self.state["trail_node"] not in options:
+            # Stale selection from a previously loaded project with a
+            # different skeleton -- fall back to centroid.
+            self.state["trail_node"] = "centroid"
+
+        for option in options:
+            action = self.trail_node_menu.addAction(
+                self._trail_node_menu_label(option),
+                lambda x=option: self.state.set("trail_node", x),
+            )
+            action.setCheckable(True)
+            action.setChecked(self.state["trail_node"] == option)
 
     def _update_track_menu(self):
         """Updates track menu options."""

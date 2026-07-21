@@ -556,6 +556,52 @@ def test_menu_actions(qtbot, centered_pair_predictions: Labels):
     toggle_and_verify_visibility(True)
 
 
+def test_trail_node_menu(qtbot, centered_pair_predictions: Labels):
+    """The View > Trail Node menu offers Centroid + each skeleton node, syncs its
+    checkmarks with `state["trail_node"]`, and drives the live trail overlay --
+    the GUI-side half of aligning live trails with sleap-io's node vocabulary.
+    """
+    window: MainWindow = MainWindow(no_usage_data=True)
+    window.commands.loadLabelsObject(centered_pair_predictions)
+
+    node_options = [
+        a.text() for a in window.trail_node_menu.actions() if a.text() != ""
+    ]
+    assert node_options[0] == "Centroid"
+    assert node_options[1:] == list(centered_pair_predictions.skeletons[0].node_names)
+
+    # Default is centroid, reflected in both the menu check and the overlay.
+    assert window.state["trail_node"] == "centroid"
+    centroid_action = window.trail_node_menu.actions()[0]
+    assert centroid_action.isChecked()
+    assert window.overlays["trails"].trail_node == "centroid"
+
+    # Selecting a named node updates state, menu checkmarks, and the overlay.
+    head_action = window.trail_node_menu.actions()[1]
+    head_action.trigger()
+    assert window.state["trail_node"] == "head"
+    assert head_action.isChecked()
+    assert not centroid_action.isChecked()
+    assert window.overlays["trails"].trail_node == "head"
+
+
+def test_trail_alpha_fade_menu(qtbot):
+    """The Fade Older Trail Segments toggle replaces the retired Trail Shade
+    option, driving `trail_alpha_fade` on the live trail overlay directly.
+    """
+    window: MainWindow = MainWindow(no_usage_data=True)
+
+    assert "trail_shade" not in window.state
+    assert window.state["trail_alpha_fade"] is True
+
+    action = window._menu_actions["trail_alpha_fade"]
+    assert action.isChecked() is True
+
+    window.state["trail_alpha_fade"] = False
+    assert action.isChecked() is False
+    assert window.overlays["trails"].trail_alpha_fade is False
+
+
 def test_experimental_features_menu(qtbot):
     """The help-menu toggle is labeled "Experimental Features" and drives the
     renamed GUI state key, which still gates the video-worker debug logging.

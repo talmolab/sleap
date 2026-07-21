@@ -1,6 +1,6 @@
 """Track trail and track list overlays."""
 
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import attr
 from qtpy import QtCore, QtGui
@@ -13,6 +13,12 @@ from sleap_io import Video
 from sleap.prefs import prefs
 from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
 
+# Fixed cap on the number of alpha-graded segments drawn per trail, regardless
+# of `trail_length`. Fading needs at least a few segments to look continuous;
+# without a cap, a long trail would turn into hundreds of QGraphicsPathItems
+# redrawn every frame.
+_MAX_FADE_SEGMENTS = 20
+
 
 @attr.s(auto_attribs=True)
 class TrackTrailOverlay(BaseOverlay):
@@ -22,12 +28,23 @@ class TrackTrailOverlay(BaseOverlay):
     scene, and it handles both extracting the relevant data for a given
     frame and plotting it in the output.
 
+    Trails follow the same vocabulary as sleap-io's `render_video`/
+    `render_image` trail options: a single named node (or the instance
+    centroid), a global opacity, and an oldest-to-newest alpha fade. Trails
+    also work without tracks -- when the project has no tracks at all,
+    instances are keyed by their position within each frame instead (matching
+    sleap-io's index-keyed fallback), so single-instance / untracked data
+    still gets a live trail.
+
     Attributes:
         labels: The :class:`Labels` dataset from which to get overlay data.
         player: The video player in which to show overlay.
         trail_length: The maximum number of frames to include in trail.
-        trail_shade: A literal "Dark", "Normal", or "Bright" which determines the shade
-            of the trail color.
+        trail_node: Name of the skeleton node the trail follows, or
+            `"centroid"` to follow the mean of visible points.
+        trail_alpha: Global opacity multiplier for trails (0.0-1.0).
+        trail_alpha_fade: If `True`, fade trails from faint (oldest) to
+            opaque (newest). If `False`, the whole trail uses `trail_alpha`.
 
     Usage:
         After class is instantiated, call :meth:`add_to_scene(frame_idx)`
@@ -35,16 +52,10 @@ class TrackTrailOverlay(BaseOverlay):
     """
 
     trail_length: int = 0
-    trail_shade: str = attr.ib(
-        default="Normal", validator=attr.validators.in_(["Dark", "Normal", "Light"])
-    )
+    trail_node: str = "centroid"
+    trail_alpha: float = 1.0
+    trail_alpha_fade: bool = True
     show: bool = True
-    max_node_count: Optional[int] = None
-
-    def __attrs_post_init__(self):
-        """Initialize the shade options attribute after initalizing the instance."""
-
-        self.shade_options = self.get_shade_options()
 
     @classmethod
     def get_length_options(cls):
@@ -53,64 +64,90 @@ class TrackTrailOverlay(BaseOverlay):
         return (0, 10, 50, 100, 250, 500)
 
     @classmethod
-    def get_shade_options(cls):
-        """Return a dictionary with values to multiply each RGB value by."""
+    def get_node_options(cls, labels) -> List[str]:
+        """Return trail-node choices: `"centroid"` + each primary-skeleton node."""
+        if not labels.skeletons:
+            return ["centroid"]
+        return ["centroid"] + list(labels.skeletons[0].node_names)
 
-        return {"Dark": 0.6, "Normal": 1.0, "Light": 1.25}
+    def _resolve_node_index(self, trail_node: str) -> Optional[int]:
+        """Return the point index for a named node, or `None` for centroid.
+
+        Also falls back to `None` (centroid) for a node name that doesn't
+        exist in the primary skeleton -- e.g. stale state after switching to
+        a project with a different skeleton.
+        """
+        if trail_node == "centroid":
+            return None
+        node_names = self.get_node_options(self.labels)[1:]
+        return node_names.index(trail_node) if trail_node in node_names else None
+
+    @staticmethod
+    def _get_trail_point(
+        inst, node_index: Optional[int]
+    ) -> Optional[Tuple[float, float]]:
+        """Return the (x, y) trail target for an instance.
+
+        `node_index` of `None` selects the centroid (mean of visible points,
+        matching `Instance.centroid_xy`); otherwise the point at that index.
+        """
+        if node_index is None:
+            return inst.centroid_xy
+        if node_index >= len(inst.points) or not inst.points["visible"][node_index]:
+            return None
+        xy = inst.points["xy"][node_index]
+        return (float(xy[0]), float(xy[1]))
 
     def get_track_trails(
         self, frame_selection: Iterable["LabeledFrame"]
-    ) -> Optional[Dict[Track, List[List[Tuple[float, float]]]]]:
-        """Get data needed to draw track trail.
+    ) -> Optional[Dict[Union[Track, int], List[Tuple[float, float]]]]:
+        """Get data needed to draw track trails.
 
         Args:
             frame_selection: an iterable with the :class:`LabeledFrame`
-                objects to include in trail.
+                objects to include in trail, oldest to newest.
 
         Returns:
-            Dictionary keyed by track, value is list of lists of (x, y) tuples
-                i.e., for every node in instance, we get a list of positions
+            Dictionary keyed by `Track` (when the project has tracks) or by
+            instance position index within each frame (when it does not --
+            mirroring sleap-io's trackless trail fallback). Value is a list
+            of (x, y) points, oldest to newest.
         """
-
-        all_track_trails = dict()
+        all_trails: Dict[Union[Track, int], List[Tuple[float, float]]] = {}
 
         if not frame_selection:
-            return
+            return None
 
-        nodes = self.labels.skeletons[0].nodes
-        max_node_count = self.max_node_count or prefs["trail node count"]
-        if len(nodes) > max_node_count:
-            nodes = nodes[:max_node_count]
+        # Project-wide, matching sleap-io: if the project has any tracks at
+        # all, untracked instances are dropped (rather than mixing real
+        # tracks and positional fallbacks); if it has none, every instance is
+        # keyed by its position in the frame instead.
+        has_tracks = len(self.labels.tracks) > 0
+        node_index = self._resolve_node_index(self.trail_node)
 
         for frame in frame_selection:
             # Prefer user instances over predicted instances
-            for inst in get_instances_to_show(frame):
-                if inst.track is not None:
-                    if inst.track not in all_track_trails:
-                        all_track_trails[inst.track] = [[] for _ in range(len(nodes))]
+            for inst_idx, inst in enumerate(get_instances_to_show(frame)):
+                if has_tracks:
+                    if inst.track is None:
+                        continue
+                    key = inst.track
+                else:
+                    key = inst_idx
 
-                    # loop through all nodes
-                    for node_i, node in enumerate(nodes):
-                        if (
-                            node.name in inst.points["name"]
-                            and inst.points["visible"][node_i]
-                        ):
-                            point = (
-                                inst.points["xy"][node_i][0],
-                                inst.points["xy"][node_i][1],
-                            )
+                point = self._get_trail_point(inst, node_index)
 
-                        # Add last location of node so that we can easily
-                        # calculate trail length (since we adjust opacity).
-                        elif len(all_track_trails[inst.track][node_i]):
-                            point = all_track_trails[inst.track][node_i][-1]
-                        else:
-                            point = None
+                if key not in all_trails:
+                    all_trails[key] = []
+                elif point is None and all_trails[key]:
+                    # Carry the last known position forward so a missed
+                    # detection doesn't break trail length/fade bookkeeping.
+                    point = all_trails[key][-1]
 
-                        if point is not None:
-                            all_track_trails[inst.track][node_i].append(point)
+                if point is not None:
+                    all_trails[key].append(point)
 
-        return all_track_trails
+        return all_trails
 
     def get_frame_selection(self, video: Video, frame_idx: int):
         """Return `LabeledFrame` objects to include in trail for specified frame."""
@@ -160,49 +197,53 @@ class TrackTrailOverlay(BaseOverlay):
 
         frame_selection = self.get_frame_selection(video, frame_idx)
 
-        all_track_trails = self.get_track_trails(frame_selection)
-        if all_track_trails is None:
+        all_trails = self.get_track_trails(frame_selection)
+        if not all_trails:
             return
 
-        for track, trails in all_track_trails.items():
-            trail_color = tuple(
-                min(c * self.shade_options[self.trail_shade], 255)
-                for c in self.player.color_manager.get_track_color(track)
-            )
-            color = QtGui.QColor(*trail_color)
+        width = prefs["trail width"]
+
+        for key, trail in all_trails.items():
+            n_points = len(trail)
+            if n_points < 2:
+                continue
+
+            # `get_track_color` accepts either a `Track` or a plain int, so the
+            # untracked (positional-index) case falls out of the same call --
+            # no separate color path needed.
+            color = self.player.color_manager.get_track_color(key)
+            qcolor = QtGui.QColor(*color)
             pen = QtGui.QPen()
             pen.setCosmetic(True)
-            pen.setColor(color)
+            pen.setWidthF(width)
 
-            seg_count = 2 if self.trail_length <= 50 else 3
-            seg_len = self.trail_length // seg_count
+            # Segments fade oldest -> newest, matching sleap-io's
+            # `draw_trails`, capped at `_MAX_FADE_SEGMENTS` so a long trail
+            # doesn't turn into hundreds of scene items.
+            n_segments = (
+                min(n_points - 1, _MAX_FADE_SEGMENTS) if self.trail_alpha_fade else 1
+            )
+            boundaries = [
+                round(i * (n_points - 1) / n_segments) for i in range(n_segments + 1)
+            ]
 
-            for trail in trails:
-                if not trail:
+            for seg_idx in range(n_segments):
+                start, end = boundaries[seg_idx], boundaries[seg_idx + 1]
+                if end <= start:
                     continue
 
-                # Break list into fixed length segments so that shorter trails
-                # will still have the same number of frames in the earlier
-                # segments and will just have shorter or missing later segments.
+                if self.trail_alpha_fade:
+                    # Newest segment is fully opaque; oldest stays faintly
+                    # visible rather than fully transparent.
+                    seg_frac = max((seg_idx + 1) / n_segments, 0.05)
+                else:
+                    seg_frac = 1.0
 
-                segments = []
-                for seg_idx in range(seg_count):
-                    start = max(0, len(trail) - (seg_idx + 1) * seg_len)
-                    end = min(len(trail), 1 + len(trail) - seg_idx * seg_len)
-                    segments.append(trail[start:end])
-                    if start == 0:
-                        break
-
-                # Draw each segment, which each later segment (i.e., the part of
-                # trail further back from current frame) with a thinner line.
-
-                width = prefs["trail width"]
-                for segment in segments:
-                    pen.setWidthF(width)
-                    path = self.map_to_qt_path(segment)
-                    item = self.player.scene.addPath(path, pen)
-                    self.items.append(item)
-                    width /= 2
+                qcolor.setAlphaF(max(0.0, min(1.0, seg_frac * self.trail_alpha)))
+                pen.setColor(qcolor)
+                path = self.map_to_qt_path(trail[start : end + 1])
+                item = self.player.scene.addPath(path, pen)
+                self.items.append(item)
 
     @staticmethod
     def map_to_qt_path(point_list):
