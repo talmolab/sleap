@@ -1631,6 +1631,20 @@ class ExportLabeledClip(AppCommand):
         params["start"] = export_params.get("start")
         params["end"] = export_params.get("end")
 
+        # Motion trail params are only present in export_params when the user
+        # enabled trails; copy through whatever is there.
+        for key in (
+            "show_trails",
+            "trail_length",
+            "trail_node",
+            "trail_width",
+            "trail_alpha_fade",
+            "trail_alpha",
+            "trail_color",
+        ):
+            if key in export_params:
+                params[key] = export_params[key]
+
         return True
 
     @classmethod
@@ -1662,6 +1676,22 @@ class ExportLabeledClip(AppCommand):
         # Add background if not "video"
         if params.get("background"):
             render_params["background"] = params["background"]
+
+        # Motion trails. Only forward when enabled so the default render path is
+        # untouched. trail_color / trail_alpha_fade may legitimately be falsy,
+        # so guard on presence rather than truthiness once trails are on.
+        if params.get("show_trails"):
+            render_params["show_trails"] = True
+            for key in (
+                "trail_length",
+                "trail_node",
+                "trail_width",
+                "trail_alpha_fade",
+                "trail_alpha",
+                "trail_color",
+            ):
+                if key in params:
+                    render_params[key] = params[key]
 
         # When the user opts in to include unlabeled frames, hand sleap-io the
         # full range instead of a labeled-only frame_inds list — otherwise the

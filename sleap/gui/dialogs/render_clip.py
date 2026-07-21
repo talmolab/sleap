@@ -149,6 +149,9 @@ class RenderClipDialog(QtWidgets.QDialog):
         # Appearance
         layout.addWidget(self._create_appearance_group())
 
+        # Motion trails
+        layout.addWidget(self._create_trails_group())
+
         # Quality
         layout.addWidget(self._create_quality_group())
 
@@ -383,6 +386,115 @@ class RenderClipDialog(QtWidgets.QDialog):
 
         return group
 
+    def _skeleton_node_names(self) -> list[str]:
+        """Return the node names of the first skeleton, or ``[]`` if none.
+
+        Used to populate the trail-node picker. Guarded because a Labels object
+        may have no skeleton (e.g. an empty project) or an unusual node type.
+        """
+        try:
+            skeletons = self.labels.skeletons
+        except Exception:
+            return []
+        if not skeletons:
+            return []
+        names = []
+        for node in skeletons[0].nodes:
+            names.append(getattr(node, "name", None) or str(node))
+        return names
+
+    def _create_trails_group(self) -> QtWidgets.QGroupBox:
+        """Create motion-trail options group.
+
+        These map 1:1 to sleap-io's `render_video`/`render_image` trail kwargs.
+        Trails work for untracked / single-instance data too: sleap-io keys
+        trails by instance position when no tracks are present, so no track
+        assignment is required.
+        """
+        group = QtWidgets.QGroupBox("Motion Trails")
+        layout = QtWidgets.QFormLayout(group)
+        layout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+
+        # Master toggle
+        self.show_trails = QtWidgets.QCheckBox("Show motion trails")
+        self.show_trails.setToolTip(
+            "Draw motion trails tracing node/centroid positions over past "
+            "frames.\n"
+            "Works for single-instance / untracked data — trails follow each "
+            "instance's position across frames, no tracks required."
+        )
+        layout.addRow("", self.show_trails)
+
+        # Trail length (past frames)
+        self.trail_length = QtWidgets.QSpinBox()
+        self.trail_length.setRange(1, 1000)
+        self.trail_length.setValue(10)
+        self.trail_length.setToolTip("Number of past frames included in each trail")
+        layout.addRow("Length (frames):", self.trail_length)
+
+        # Trail node (which point the trail follows)
+        self.trail_node = QtWidgets.QComboBox()
+        self.trail_node.addItem("Centroid", "centroid")
+        for name in self._skeleton_node_names():
+            self.trail_node.addItem(name, name)
+        self.trail_node.setToolTip(
+            "Which point each trail follows: the instance centroid (mean of "
+            "visible nodes) or a specific skeleton node"
+        )
+        layout.addRow("Node:", self.trail_node)
+
+        # Trail width
+        self.trail_width = QtWidgets.QDoubleSpinBox()
+        self.trail_width.setRange(0.5, 15.0)
+        self.trail_width.setValue(2.0)
+        self.trail_width.setSingleStep(0.5)
+        self.trail_width.setToolTip("Trail line width in pixels")
+        layout.addRow("Width:", self.trail_width)
+
+        # Trail opacity
+        self.trail_alpha = QtWidgets.QDoubleSpinBox()
+        self.trail_alpha.setRange(0.0, 1.0)
+        self.trail_alpha.setSingleStep(0.1)
+        self.trail_alpha.setValue(1.0)
+        self.trail_alpha.setToolTip("Global trail opacity (0.0-1.0)")
+        layout.addRow("Opacity:", self.trail_alpha)
+
+        # Fade
+        self.trail_fade = QtWidgets.QCheckBox("Fade older segments")
+        self.trail_fade.setChecked(True)
+        self.trail_fade.setToolTip("Fade trails from faint (oldest) to opaque (newest)")
+        layout.addRow("", self.trail_fade)
+
+        # Trail color (uniform override, or match pose colors)
+        self.trail_color = QtWidgets.QComboBox()
+        self.trail_color.addItem("Match poses", None)
+        for c in ["white", "black", "red", "green", "blue", "yellow", "cyan"]:
+            self.trail_color.addItem(c, c)
+        self.trail_color.setToolTip(
+            "Uniform trail color, or 'Match poses' to color trails by "
+            "track/instance like the skeleton"
+        )
+        layout.addRow("Color:", self.trail_color)
+
+        # Sub-controls are only meaningful when trails are enabled.
+        self._trail_controls = [
+            self.trail_length,
+            self.trail_node,
+            self.trail_width,
+            self.trail_alpha,
+            self.trail_fade,
+            self.trail_color,
+        ]
+        self.show_trails.toggled.connect(self._on_show_trails_toggled)
+        self._on_show_trails_toggled(self.show_trails.isChecked())
+
+        return group
+
+    def _on_show_trails_toggled(self, checked: bool):
+        """Enable/disable trail sub-controls with the master toggle."""
+        for widget in self._trail_controls:
+            widget.setEnabled(checked)
+
     def _create_quality_group(self) -> QtWidgets.QGroupBox:
         """Create quality/encoding options group."""
         group = QtWidgets.QGroupBox("Quality")
@@ -552,6 +664,15 @@ class RenderClipDialog(QtWidgets.QDialog):
         self.show_edges.toggled.connect(self._update_preview)
         self.background.currentTextChanged.connect(self._update_preview)
 
+        # Motion trail controls
+        self.show_trails.toggled.connect(self._update_preview)
+        self.trail_length.valueChanged.connect(self._update_preview)
+        self.trail_node.currentTextChanged.connect(self._update_preview)
+        self.trail_width.valueChanged.connect(self._update_preview)
+        self.trail_alpha.valueChanged.connect(self._update_preview)
+        self.trail_fade.toggled.connect(self._update_preview)
+        self.trail_color.currentTextChanged.connect(self._update_preview)
+
         # Quality controls that affect preview
         self.preset.currentTextChanged.connect(self._update_preview)
         self.scale.valueChanged.connect(self._update_preview)
@@ -592,6 +713,20 @@ class RenderClipDialog(QtWidgets.QDialog):
         bg = self.background.currentText()
         if bg != "video":
             params["background"] = bg
+
+        # Motion trails. Only forwarded when enabled so that, when off, both the
+        # preview and export keep sleap-io's default (show_trails=False) and the
+        # preview stays on its lightweight bare-LabeledFrame render path.
+        if self.show_trails.isChecked():
+            params["show_trails"] = True
+            params["trail_length"] = self.trail_length.value()
+            params["trail_node"] = self.trail_node.currentData()
+            params["trail_width"] = self.trail_width.value()
+            params["trail_alpha_fade"] = self.trail_fade.isChecked()
+            params["trail_alpha"] = self.trail_alpha.value()
+            trail_color = self.trail_color.currentData()
+            if trail_color is not None:
+                params["trail_color"] = trail_color
 
         # Scale: always 1.0 for preview (accurate display), use setting for export
         if for_preview:
