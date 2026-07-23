@@ -1,0 +1,210 @@
+/* Custom fonts */
+:root {
+  --md-text-font: "PT Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --md-code-font: "Fira Mono", "Fira Code", monospace;
+}
+
+.md-typeset .admonition,
+.md-typeset details {
+    font-size: inherit; /* Ensures it matches the surrounding text */
+}
+
+/* Markdown source link button - positioned in top-right like Material action buttons */
+.md-source-file {
+    float: right;
+    margin: 0 0 0.5em 0.5em;
+}
+
+.md-source-file a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2em;
+    height: 2em;
+    border-radius: 0.2em;
+    color: var(--md-default-fg-color--light);
+    transition: color 0.25s, background-color 0.25s;
+}
+
+.md-source-file a:hover {
+    color: var(--md-accent-fg-color);
+    background-color: var(--md-accent-fg-color--transparent);
+}
+
+.md-source-file svg {
+    width: 1.2em;
+    height: 1.2em;
+    fill: currentColor;
+}
+
+/* Hero section */
+.hero {
+  text-align: center;
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+}
+
+.hero img {
+  max-width: 600px;
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Grid cards - modern shadow style */
+.grid.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.grid.cards > ul {
+  display: contents;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.grid.cards > ul > li {
+  background: var(--md-default-bg-color);
+  border: none;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.grid.cards > ul > li:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.grid.cards > ul > li > hr {
+  margin: 0.75rem 0;
+  border: none;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+/* Card titles */
+.grid.cards > ul > li > p:first-child {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Better code blocks */
+.md-typeset pre {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Buttons/links styling */
+.md-typeset a.md-button {
+  border-radius: 8px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.md-typeset a.md-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Section spacing */
+.md-typeset h2 {
+  margin-top: 2rem;
+}
+
+/* Feature list styling */
+.md-typeset ul li {
+  margin-bottom: 0.4rem;
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] .grid.cards > ul > li {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-md-color-scheme="slate"] .grid.cards > ul > li:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-md-color-scheme="slate"] .hero img {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Plain toggles - no colored box */
+.md-typeset details.plain {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin: 0.75em 0;
+  padding: 0;
+}
+
+.md-typeset details.plain > summary {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest) !important;
+  padding: 0.6em 0 0.6em 1.2em !important;
+  margin: 0;
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 0;
+  position: relative;
+  display: block;
+  list-style: none;
+}
+
+.md-typeset details.plain > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Custom arrow */
+.md-typeset details.plain > summary::before {
+  content: "▸" !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0.6em !important;
+  width: auto !important;
+  height: auto !important;
+  background: none !important;
+  transform: none !important;
+  mask: none !important;
+  -webkit-mask: none !important;
+  font-size: 0.9em;
+  color: var(--md-default-fg-color--light);
+  transition: transform 0.15s ease;
+}
+
+.md-typeset details.plain[open] > summary::before {
+  content: "▾" !important;
+}
+
+.md-typeset details.plain > summary::after {
+  display: none !important;
+}
+
+.md-typeset details.plain > *:not(summary) {
+  margin-left: 0;
+  padding: 0.5em 0;
+}
+
+/* Changelog - prevent long lines from overflowing */
+.md-content pre {
+  overflow-x: auto;
+}
+
+.md-content code {
+  word-break: break-word;
+}
+
+/* Colored phase icons */
+.icon-blue { color: #2196F3; }
+.icon-green { color: #4CAF50; }
+.icon-orange { color: #FF9800; }
+.icon-purple { color: #9C27B0; }
+.icon-red { color: #F44336; }
+.icon-teal { color: #009688; }
