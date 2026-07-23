@@ -890,15 +890,16 @@ def write_pipeline_files(
                 # "run.n=181") to survive Hydra's own override grammar. Shell
                 # quoting alone doesn't do this: bash strips shell-level quotes
                 # before the value ever reaches Hydra's parser. So we embed a
-                # literal quote pair in the override value itself, then use
-                # shlex.quote() to shell-escape the whole token so those inner
-                # quote characters (and any other shell metacharacters) survive
+                # literal double-quote pair (Hydra accepts either quote style)
+                # in the override value itself, then use shlex.quote() to
+                # shell-escape the whole token with single quotes so the inner
+                # double quotes (and any other shell metacharacters) survive
                 # bash's argument parsing intact.
                 ckpt_dir_override = shlex.quote(
-                    f"trainer_config.ckpt_dir='{Path(ckpt_path).parent.as_posix()}'"
+                    f'trainer_config.ckpt_dir="{Path(ckpt_path).parent.as_posix()}"'
                 )
                 run_name_override = shlex.quote(
-                    f"trainer_config.run_name='{Path(ckpt_path).name}'"
+                    f'trainer_config.run_name="{Path(ckpt_path).name}"'
                 )
                 train_script += (
                     f"sleap train --config-name {new_cfg_filename} "
