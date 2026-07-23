@@ -773,6 +773,106 @@ class TestWritePipelineFiles:
         assert "--config-name" in train_script_content
         assert "--config-dir" in train_script_content
 
+    def test_train_script_run_name_with_equals_survives_shell_and_hydra(
+        self, tmp_path, mock_labels
+    ):
+        """Regression test for issue #2611.
+
+        Auto-generated run names include "n=<num_labeled_frames>" (e.g.
+        "260212_121024.centroid.n=181"), which contains a literal "=". The
+        fix in #2612 wrapped Hydra override values in shell single quotes,
+        but bash strips shell-level quotes before "sleap" ever sees the
+        argument, so Hydra's own override parser still choked on the
+        embedded "=" with `OverrideParseException`. The values must carry
+        literal quote characters that survive shell word-splitting and are
+        still present when Hydra parses argv.
+        """
+        import shlex
+
+        from sleap.gui.learning.runners import write_pipeline_files
+        from sleap.gui.learning.configs import ConfigFileInfo
+        from omegaconf import OmegaConf
+        from hydra.core.override_parser.overrides_parser import OverridesParser
+
+        # No custom run_name, so write_pipeline_files auto-generates one that
+        # includes "n=<num_user_labeled_frames>" (matches training behavior).
+        config_dict = {
+            "trainer_config": {
+                "ckpt_dir": str(tmp_path / "models"),
+                "run_name": "",
+                "save_ckpt": True,
+            },
+            "data_config": {
+                "train_labels_path": ["labels.slp"],
+            },
+            "model_config": {
+                "head_configs": {},
+            },
+        }
+        config = OmegaConf.create(config_dict)
+
+        cfg_info = ConfigFileInfo(
+            config=config,
+            path="test_config.yaml",
+            filename="test_config.yaml",
+            head_name="centroid",
+            dont_retrain=False,
+        )
+
+        output_dir = tmp_path / "export"
+        output_dir.mkdir()
+        labels_path = tmp_path / "labels.slp"
+        labels_path.touch()
+
+        video_item = VideoItemForInference(
+            video=mock_labels.videos[0],
+            frames=[0, 1, 2],
+            labels_path=str(labels_path),
+            video_idx=0,
+        )
+        items_for_inference = ItemsForInference(
+            items=[video_item],
+            total_frame_count=3,
+        )
+
+        with patch(
+            "sleap_nn.config.training_job_config.verify_training_cfg",
+            side_effect=lambda cfg: cfg,
+        ), patch(
+            "sleap.gui.config_utils.filter_cfg",
+            side_effect=lambda cfg: cfg,
+        ):
+            write_pipeline_files(
+                output_dir=str(output_dir),
+                labels_filename=str(labels_path),
+                config_info_list=[cfg_info],
+                inference_params={},
+                items_for_inference=items_for_inference,
+                num_user_labeled_frames=181,
+            )
+
+        train_script_content = (output_dir / "train-script.sh").read_text()
+        train_line = next(
+            line for line in train_script_content.splitlines() if "sleap train" in line
+        )
+
+        # Sanity check: the auto-generated run_name does contain "=".
+        assert "run_name=" in train_line
+        assert ".n=181" in train_line
+
+        # Emulate bash's word-splitting/quote-stripping (shlex.split matches
+        # bash here since we only use single/double quotes, no globs/vars),
+        # then feed the resulting argv to Hydra's real override parser --
+        # this is the exact failure point from the traceback in #2611.
+        argv = shlex.split(train_line)
+        overrides = [a for a in argv if a.startswith("trainer_config.")]
+        assert len(overrides) == 2
+
+        parser = OverridesParser.create()
+        parsed = parser.parse_overrides(overrides)  # must not raise
+        values = {p.key_or_group: p.value() for p in parsed}
+        assert values["trainer_config.run_name"].endswith(".centroid.n=181")
+
 
 class TestOutputPathGeneration:
     """Tests for output path generation."""
