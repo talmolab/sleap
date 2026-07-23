@@ -2318,9 +2318,13 @@ class TrainingEditorWidget(QtWidgets.QWidget):
 
         # Filter out system-specific settings that should come from preferences,
         # not from the training profile. These are machine-specific (GPU count,
-        # workers) and should default to "auto" regardless of what the profile says.
+        # accelerator, workers) and should default to "auto" regardless of what
+        # the profile says. Without this, a profile trained on one machine (e.g.
+        # `trainer_accelerator: mps` from a Mac) would silently carry that stale,
+        # possibly-unavailable value over when reloaded on a different machine.
         system_specific_keys = [
             "trainer_config.trainer_devices",
+            "trainer_config.trainer_accelerator",
             "trainer_config.train_data_loader.num_workers",
         ]
         for key in system_specific_keys:
