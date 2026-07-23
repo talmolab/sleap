@@ -542,6 +542,39 @@ class TestTrainingEditorWidget:
         with qtbot.waitSignal(editor_widget.valueChanged, timeout=1000):
             editor_widget.emitValueChanged()
 
+    def test_load_config_strips_system_specific_keys(self, editor_widget):
+        """`_load_config` should not carry machine-specific settings over from a
+        saved profile (#accelerator-staleness): trainer_devices, num_workers, and
+        trainer_accelerator should all come from the current machine's
+        preferences/defaults, not from whatever machine the profile was saved on.
+
+        Reproduces the reported bug: a profile trained on a Mac
+        (`trainer_accelerator: mps`) should not silently populate the accelerator
+        field with `"mps"` when reloaded on a different machine (e.g. Linux+CUDA),
+        where that accelerator may not even exist.
+        """
+        from omegaconf import OmegaConf
+        from sleap.gui.learning.configs import ConfigFileInfo
+
+        saved_cfg = OmegaConf.create(
+            {
+                "trainer_config": {
+                    "trainer_accelerator": "mps",
+                    "trainer_devices": 2,
+                    "train_data_loader": {"num_workers": 4},
+                }
+            }
+        )
+        cfg_info = ConfigFileInfo(config=saved_cfg)
+
+        with patch.object(editor_widget, "set_fields_from_key_val_dict") as mock_set:
+            editor_widget._load_config(cfg_info)
+
+        applied_dict = mock_set.call_args[0][0]
+        assert "trainer_config.trainer_accelerator" not in applied_dict
+        assert "trainer_config.trainer_devices" not in applied_dict
+        assert "trainer_config.train_data_loader.num_workers" not in applied_dict
+
     @pytest.fixture
     def inference_editor_widget(self, qtbot, minimal_skeleton, mock_cfg_getter):
         """Create a TrainingEditorWidget for inference (require_trained=True)."""
