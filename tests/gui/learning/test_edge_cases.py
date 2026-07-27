@@ -454,6 +454,31 @@ class TestNoTrainedModelMessage:
         assert "cannot be used for" in text
 
 
+class TestFileSelectionFilter:
+    """The file browser for picking a training config should default to
+    showing both JSON and YAML files instead of requiring the user to
+    switch the filter dropdown."""
+
+    def test_default_filter_includes_both_extensions(self, qtbot):
+        getter = TrainingConfigsGetter(dir_paths=[])
+        widget = TrainingConfigFilesWidget(
+            cfg_getter=getter, head_name="centered_instance"
+        )
+        qtbot.addWidget(widget)
+
+        with patch(
+            "sleap.gui.learning.configs.FileDialog.open", return_value=("", "")
+        ) as mock_dialog:
+            widget.doFileSelection()
+
+        mock_dialog.assert_called_once()
+        filter_arg = mock_dialog.call_args.kwargs["filter"]
+        default_filter = filter_arg.split(";;")[0]
+        assert "*.json" in default_filter
+        assert "*.yaml" in default_filter
+        assert "*.yml" in default_filter
+
+
 # =============================================================================
 # Subprocess Error Handling Tests
 # =============================================================================
