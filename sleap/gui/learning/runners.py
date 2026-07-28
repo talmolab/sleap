@@ -779,11 +779,19 @@ class InferenceTask:
         # Merge pred results into base labels
         # Use replace_predictions when replacing, keep_both when adding
         # See: https://sleap.ai/develop/api/sleap_io.model.labels.html#sleap_io.model.labels.Labels.merge
+        #
+        # track="identity" matches SLEAP's original (pre-sleap-io-port) merge
+        # behavior: tracks are matched by object identity, so same-named tracks from
+        # a separate inference run are NOT collapsed into the project's tracks. This
+        # is also sleap-io 0.8.0's default (#449); we pass it explicitly so the
+        # behavior is pinned regardless of future default changes.
         prediction_mode = self.inference_params.get("_prediction_mode", "add")
         if prediction_mode == "replace":
-            self.labels.merge(new_labels, frame="replace_predictions")
+            self.labels.merge(
+                new_labels, frame="replace_predictions", track="identity"
+            )
         else:
-            self.labels.merge(new_labels, frame="keep_both")
+            self.labels.merge(new_labels, frame="keep_both", track="identity")
 
         return len(self.results)
 

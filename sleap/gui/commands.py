@@ -1029,7 +1029,10 @@ class ImportDeepLabCutFolder(AppCommand):
             if merged_labels is None:
                 merged_labels = labels
             else:
-                merged_labels.merge(labels, frame="auto")
+                # track="identity" matches SLEAP's original (pre-sleap-io-port) merge
+                # behavior, matching tracks by object identity (sleap-io 0.8.0
+                # default, #449). Passed explicitly to pin it.
+                merged_labels.merge(labels, frame="auto", track="identity")
         return merged_labels
 
 
