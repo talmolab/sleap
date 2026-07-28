@@ -67,10 +67,10 @@ try:
         track as nn_track,
         eval as nn_eval,
         system as nn_system,
+        predict as nn_predict,
     )
     from sleap_nn.export.cli import (
         export as nn_export,
-        predict as nn_predict,
     )
 
     _SLEAP_NN_AVAILABLE = True
