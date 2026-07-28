@@ -52,7 +52,7 @@ dependencies = [
     "seaborn",
     "requests",
     "matplotlib",
-    "sleap-io[all]>=0.7.1,<0.8.0",
+    "sleap-io[all]>=0.9.2,<0.10.0",
 ]
 
 [tool.setuptools.dynamic]
@@ -66,38 +66,38 @@ jupyter = [
 ]
 
 nn = [
-    "sleap-nn[torch]>=0.2.0,<0.3.0"
+    "sleap-nn[torch]>=0.3.1,<0.4.0"
 ]
 
 nn-cpu = [
-    "sleap-nn[torch]>=0.2.0,<0.3.0"
+    "sleap-nn[torch]>=0.3.1,<0.4.0"
 ]
 
 nn-cuda128 = [
-    "sleap-nn[torch]>=0.2.0,<0.3.0"
+    "sleap-nn[torch]>=0.3.1,<0.4.0"
 ]
 
 nn-cuda118 = [
-    "sleap-nn[torch]>=0.2.0,<0.3.0"
+    "sleap-nn[torch]>=0.3.1,<0.4.0"
 ]
 
 nn-cuda130 = [
-    "sleap-nn[torch]>=0.2.0,<0.3.0"
+    "sleap-nn[torch]>=0.3.1,<0.4.0"
 ]
 
 # Export extras - self-contained with torch
 # Can be used alone (defaults to cu128) or combined with nn-cuda* for specific CUDA version
 nn-export = [
-    "sleap-nn[torch,export]>=0.2.0,<0.3.0"
+    "sleap-nn[torch,export]>=0.3.1,<0.4.0"
 ]
 
 nn-export-gpu = [
-    "sleap-nn[torch,export-gpu]>=0.2.0,<0.3.0"
+    "sleap-nn[torch,export-gpu]>=0.3.1,<0.4.0"
 ]
 
 # TensorRT - Linux/Windows only (not supported on macOS)
 nn-tensorrt = [
-    "sleap-nn[torch,tensorrt]>=0.2.0,<0.3.0; sys_platform != 'darwin'"
+    "sleap-nn[torch,tensorrt]>=0.3.1,<0.4.0; sys_platform != 'darwin'"
 ]
 
 [dependency-groups]
