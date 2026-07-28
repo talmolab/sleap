@@ -781,9 +781,9 @@ class InferenceTask:
         # See: https://sleap.ai/develop/api/sleap_io.model.labels.html#sleap_io.model.labels.Labels.merge
         prediction_mode = self.inference_params.get("_prediction_mode", "add")
         if prediction_mode == "replace":
-            self.labels.merge(new_labels, frame="replace_predictions")
+            self.labels.merge(new_labels, track="name", frame="replace_predictions")
         else:
-            self.labels.merge(new_labels, frame="keep_both")
+            self.labels.merge(new_labels, track="name", frame="keep_both")
 
         return len(self.results)
 
