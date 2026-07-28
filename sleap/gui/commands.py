@@ -1029,7 +1029,7 @@ class ImportDeepLabCutFolder(AppCommand):
             if merged_labels is None:
                 merged_labels = labels
             else:
-                merged_labels.merge(labels, frame="auto")
+                merged_labels.merge(labels, track="name", frame="auto")
         return merged_labels
 
 
