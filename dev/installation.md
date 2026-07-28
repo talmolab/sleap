@@ -170,7 +170,7 @@ The SLEAP ecosystem is three packages that release together. Use compatible vers
 
 | SLEAP | sleap-io | sleap-nn |
 |-------|----------|----------|
-| 1.6.3 | 0.7.1 | 0.2.0 |
+| 1.6.4 | 0.9.2 | 0.3.1 |
 | 1.6.1 | 0.6.4 | 0.1.0 |
 
 ??? note "Older versions"
@@ -186,7 +186,7 @@ The SLEAP ecosystem is three packages that release together. Use compatible vers
 **Reproducible install** (exact versions — e.g. to match a collaborator):
 
 ```bash
-uv tool install --python 3.13 "sleap[nn]==1.6.3" --with "sleap-io==0.7.1" --with "sleap-nn==0.2.0" --torch-backend auto
+uv tool install --python 3.13 "sleap[nn]==1.6.4" --with "sleap-io==0.9.2" --with "sleap-nn==0.3.1" --torch-backend auto
 ```
 
 ??? note "Try a pre-release"
