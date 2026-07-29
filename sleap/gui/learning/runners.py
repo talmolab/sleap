@@ -272,7 +272,15 @@ class InferenceWorker(QtCore.QThread):
                     except (json.JSONDecodeError, ValueError):
                         is_json = False
 
-                if is_json:
+                if is_json and line_data.get("error"):
+                    # Structured --gui error line (sleap-nn's _emit_gui_error):
+                    # {"error": true, "type": ..., "message": ...}. Without this
+                    # branch it's silently dropped, since it's valid JSON but
+                    # doesn't match the progress-line shape below.
+                    err_type = line_data.get("type", "Error")
+                    err_message = line_data.get("message", "")
+                    self.logOutput.emit(f"Error: {err_type}: {err_message}")
+                elif is_json:
                     # Extract progress info
                     n_processed = line_data.get("n_processed")
                     n_total = line_data.get("n_total")

@@ -50,3 +50,49 @@ def test_inference_worker_reads_non_utf8_subprocess_output(qtbot, tmp_path):
     assert ret == 1  # non-zero exit propagated; no decode crash
     # The malformed line was still captured (with the bad byte replaced).
     assert any("progress" in line and "line" in line for line in logged)
+
+
+def test_inference_worker_surfaces_structured_gui_error(qtbot, tmp_path):
+    """A sleap-nn ``--gui`` structured error line must reach the log pane.
+
+    sleap-nn's ``--gui`` mode emits ``{"error": true, "type": ..., "message":
+    ...}`` on stdout before re-raising (``_emit_gui_error``/``_run_guarded``),
+    specifically so a GUI reader can show a clean message instead of a raw
+    traceback. Without handling this shape, it's valid JSON but doesn't match
+    the progress-line shape (``n_processed``/``n_total``), so it was silently
+    dropped: no progress update, no log line, nothing shown to the user.
+    """
+    script = (
+        "import json, sys; "
+        "print(json.dumps({'n_processed': 1, 'n_total': 10, "
+        "'rate': 5.0, 'eta': 2.0}), flush=True); "
+        "print(json.dumps({'error': True, 'type': 'FileNotFoundError', "
+        "'message': 'Model path does not exist: /bogus'}), flush=True); "
+        "sys.exit(1)"
+    )
+    output_path = str(tmp_path / "out.slp")
+
+    task = MagicMock()
+    task.make_predict_cli_call.return_value = (
+        [sys.executable, "-c", script],
+        output_path,
+    )
+
+    items = MagicMock()
+    items.total_frame_count = 0
+
+    worker = InferenceWorker(task, items)
+
+    logged = []
+    progress = []
+    worker.logOutput.connect(logged.append)
+    worker.progressUpdate.connect(lambda n, total: progress.append((n, total)))
+
+    out_path, ret = worker._run_inference_item(MagicMock(), 0, 1)
+
+    assert ret == 1
+    assert progress == [(1, 10)]  # the progress line before the error still works
+    assert any(
+        "FileNotFoundError" in line and "Model path does not exist" in line
+        for line in logged
+    )
