@@ -152,7 +152,7 @@ def train_command(
 
     try:
         from sleap_nn.training.model_trainer import ModelTrainer
-        from sleap_nn.predict import run_inference as predict
+        from sleap_nn.legacy_predict import run_inference as predict
         from sleap_nn.config.training_job_config import TrainingJobConfig
         from sleap_nn.evaluation import Evaluator
 
@@ -680,7 +680,7 @@ def track_command(
 
     try:
         import torch
-        from sleap_nn.predict import run_inference as predict
+        from sleap_nn.legacy_predict import run_inference as predict
 
         # Build kwargs for the tracking function
         kwargs = {}

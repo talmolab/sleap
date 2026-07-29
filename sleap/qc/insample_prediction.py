@@ -360,7 +360,7 @@ def run_insample_prediction(
     # lives below this point so importing this module stays cheap and safe. ---
     _report("In-sample prediction", 0.0, "Loading model")
     try:
-        from sleap_nn.predict import run_inference
+        from sleap_nn.legacy_predict import run_inference
     except Exception as e:  # pragma: no cover - environment-dependent
         return _empty_result(f"sleap_nn unavailable ({e!r}); skipping")
 

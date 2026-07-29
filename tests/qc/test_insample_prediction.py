@@ -2,7 +2,7 @@
 
 These unit tests exercise the matching + disagreement logic and the graceful
 no-op behavior WITHOUT requiring torch. The model inference call
-(``sleap_nn.predict.run_inference``) is monkeypatched to return canned
+(``sleap_nn.legacy_predict.run_inference``) is monkeypatched to return canned
 ``sio.PredictedInstance`` objects, so the whole pipeline can be tested
 deterministically and cheaply.
 """
@@ -58,11 +58,12 @@ def _labels_one_frame(skeleton, user_arrays):
 
 
 def _patch_run_inference(monkeypatch, predicted_labels):
-    """Install a fake ``sleap_nn.predict`` module returning canned predictions.
+    """Install a fake ``sleap_nn.legacy_predict`` module returning canned
+    predictions.
 
     Avoids importing the real (torch-backed) ``sleap_nn`` entirely.
     """
-    fake_predict = types.ModuleType("sleap_nn.predict")
+    fake_predict = types.ModuleType("sleap_nn.legacy_predict")
 
     def fake_run_inference(*args, **kwargs):  # noqa: ANN001, ANN002
         return predicted_labels
@@ -73,7 +74,7 @@ def _patch_run_inference(monkeypatch, predicted_labels):
     if fake_pkg is None:
         fake_pkg = types.ModuleType("sleap_nn")
         monkeypatch.setitem(sys.modules, "sleap_nn", fake_pkg)
-    monkeypatch.setitem(sys.modules, "sleap_nn.predict", fake_predict)
+    monkeypatch.setitem(sys.modules, "sleap_nn.legacy_predict", fake_predict)
 
 
 # ---------------------------------------------------------------------------
@@ -336,7 +337,7 @@ class TestRunInsamplePredictionMocked:
         assert out["instance_scores"] == {}
 
     def test_sleap_nn_unavailable_is_graceful(self, monkeypatch):
-        # Simulate an environment where importing sleap_nn.predict fails.
+        # Simulate an environment where importing sleap_nn.legacy_predict fails.
         skel = _skeleton()
         labels = _labels_one_frame(skel, [np.zeros((4, 2))])
 
@@ -345,12 +346,12 @@ class TestRunInsamplePredictionMocked:
         real_import = builtins.__import__
 
         def boom(name, *args, **kwargs):
-            if name == "sleap_nn.predict" or name.startswith("sleap_nn"):
+            if name == "sleap_nn.legacy_predict" or name.startswith("sleap_nn"):
                 raise ImportError("simulated missing sleap_nn")
             return real_import(name, *args, **kwargs)
 
         # Remove cached module so the import is re-attempted and fails.
-        monkeypatch.delitem(sys.modules, "sleap_nn.predict", raising=False)
+        monkeypatch.delitem(sys.modules, "sleap_nn.legacy_predict", raising=False)
         monkeypatch.setattr(builtins, "__import__", boom)
 
         out = run_insample_prediction(labels, model_path="/fake/model")
@@ -361,7 +362,7 @@ class TestRunInsamplePredictionMocked:
         skel = _skeleton()
         labels = _labels_one_frame(skel, [np.zeros((4, 2))])
 
-        fake_predict = types.ModuleType("sleap_nn.predict")
+        fake_predict = types.ModuleType("sleap_nn.legacy_predict")
 
         def boom_inference(*args, **kwargs):
             raise RuntimeError("CUDA OOM simulated")
@@ -369,7 +370,7 @@ class TestRunInsamplePredictionMocked:
         fake_predict.run_inference = boom_inference
         fake_pkg = sys.modules.get("sleap_nn") or types.ModuleType("sleap_nn")
         monkeypatch.setitem(sys.modules, "sleap_nn", fake_pkg)
-        monkeypatch.setitem(sys.modules, "sleap_nn.predict", fake_predict)
+        monkeypatch.setitem(sys.modules, "sleap_nn.legacy_predict", fake_predict)
 
         out = run_insample_prediction(labels, model_path="/fake/model")
         assert out["ran"] is False
