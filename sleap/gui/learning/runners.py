@@ -550,7 +550,7 @@ class InferenceTask:
         """Makes list of CLI arguments needed for running inference."""
         cli_args = [
             "sleap",
-            "track",
+            "predict",
         ]
         if gui:
             cli_args.append("--gui")
@@ -670,10 +670,13 @@ class InferenceTask:
                         ]
                     )
 
-            if self.inference_params["tracking.similarity"] == "oks":
+            if self.inference_params["tracking.similarity"] in ("oks", "instance"):
                 cli_args.extend(["--features", "keypoints"])
                 cli_args.extend(["--scoring_method", "oks"])
-            elif self.inference_params["tracking.similarity"] == "centroids":
+            elif self.inference_params["tracking.similarity"] in (
+                "centroids",
+                "centroid",
+            ):
                 cli_args.extend(["--features", "centroids"])
                 cli_args.extend(["--scoring_method", "euclidean_dist"])
             elif self.inference_params["tracking.similarity"] == "iou":

@@ -315,7 +315,7 @@ class TestInferenceTaskCLI:
         )
 
         assert cli_args[0] == "sleap"
-        assert cli_args[1] == "track"
+        assert cli_args[1] == "predict"
         assert "--model_paths" in cli_args
         # Model path should be parent directory (strip training_config.yaml)
         model_idx = cli_args.index("--model_paths") + 1
@@ -559,6 +559,60 @@ class TestTrackerCLI:
         assert "--scoring_method" in cli_args
         score_idx = cli_args.index("--scoring_method") + 1
         assert cli_args[score_idx] == "iou"
+
+    def test_similarity_centroid_cli(self, mock_labels, video_item):
+        """similarity=centroid (non-flow tracker dropdown value) should map the
+        same as centroids, not be silently dropped."""
+        task = InferenceTask(
+            trained_job_paths=["/path/to/model"],
+            inference_params={
+                "tracking.tracker": "simple",
+                "tracking.match": "greedy",
+                "tracking.track_window": 5,
+                "tracking.max_tracks": None,
+                "tracking.post_connect_single_breaks": 0,
+                "tracking.robust": 1.0,
+                "tracking.similarity": "centroid",
+            },
+            labels=mock_labels,
+            labels_filename="/path/to/labels.slp",
+        )
+
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
+
+        assert "--features" in cli_args
+        feat_idx = cli_args.index("--features") + 1
+        assert cli_args[feat_idx] == "centroids"
+        assert "--scoring_method" in cli_args
+        score_idx = cli_args.index("--scoring_method") + 1
+        assert cli_args[score_idx] == "euclidean_dist"
+
+    def test_similarity_instance_cli(self, mock_labels, video_item):
+        """similarity=instance (non-flow tracker "object keypoint" dropdown
+        value) should map the same as oks, not be silently dropped."""
+        task = InferenceTask(
+            trained_job_paths=["/path/to/model"],
+            inference_params={
+                "tracking.tracker": "simple",
+                "tracking.match": "greedy",
+                "tracking.track_window": 5,
+                "tracking.max_tracks": None,
+                "tracking.post_connect_single_breaks": 0,
+                "tracking.robust": 1.0,
+                "tracking.similarity": "instance",
+            },
+            labels=mock_labels,
+            labels_filename="/path/to/labels.slp",
+        )
+
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
+
+        assert "--features" in cli_args
+        feat_idx = cli_args.index("--features") + 1
+        assert cli_args[feat_idx] == "keypoints"
+        assert "--scoring_method" in cli_args
+        score_idx = cli_args.index("--scoring_method") + 1
+        assert cli_args[score_idx] == "oks"
 
     def test_robust_quantile_cli(self, mock_labels, video_item):
         """robust != 1.0 should add robust quantile args."""
@@ -965,7 +1019,7 @@ class TestFullCLIIntegration:
 
         # Check base command
         assert cli_args[0] == "sleap"
-        assert cli_args[1] == "track"
+        assert cli_args[1] == "predict"
 
         # Check data args
         assert "--data_path" in cli_args
