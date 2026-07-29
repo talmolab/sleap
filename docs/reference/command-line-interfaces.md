@@ -28,7 +28,7 @@ Run `sleap --help` to see all available commands, or `sleap <command> --help` fo
 | [`sleap track`](#sleap-track) | Run inference and tracking |
 | [`sleap eval`](#other-neural-network-commands) | Evaluate predictions against ground truth |
 | [`sleap export-model`](#other-neural-network-commands) | Export model for deployment |
-| [`sleap predict`](#other-neural-network-commands) | Run inference with exported model |
+| [`sleap predict`](#other-neural-network-commands) | Unified inference pipeline (also supports ONNX/TensorRT-exported models) |
 | [`sleap system`](#other-neural-network-commands) | Show sleap-nn system information |
 
 **Data Commands** (from sleap-io)
@@ -146,7 +146,7 @@ sleap track -i video.mp4 -m models/centroid/ -m models/instance/ --tracking
 |---------|-------------|
 | `sleap eval` | Evaluate model predictions against ground truth |
 | `sleap export-model` | Export model to ONNX for deployment |
-| `sleap predict` | Run inference with exported ONNX model |
+| `sleap predict` | Run inference on videos or labels files (unified pipeline; also supports ONNX/TensorRT-exported models via `--runtime`) |
 | `sleap system` | Show sleap-nn system information |
 
 [:octicons-arrow-right-24: Exporting models to ONNX](https://nn.sleap.ai/latest/guides/export/)
