@@ -51,7 +51,7 @@ The new `sleap` command provides a single entry point for all SLEAP functionalit
 sleap                    # Launch the GUI
 sleap doctor             # System diagnostics
 sleap train ...          # Training (via sleap-nn)
-sleap track ...          # Inference (via sleap-nn)
+sleap predict ...        # Inference (via sleap-nn)
 sleap show labels.slp    # View labels summary (via sleap-io)
 ```
 
