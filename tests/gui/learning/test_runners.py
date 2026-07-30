@@ -144,3 +144,48 @@ def test_inference_worker_drains_output_from_fast_exiting_subprocess(qtbot, tmp_
         assert len(captured) == n_lines, (
             f"expected all {n_lines} lines, only captured {len(captured)}: {captured}"
         )
+
+
+def test_inference_worker_strips_local_rank_from_subprocess_env(
+    qtbot, tmp_path, monkeypatch
+):
+    """A leftover LOCAL_RANK in the environment must not reach the subprocess.
+
+    sleap-nn's logger only emits INFO-level messages when LOCAL_RANK is 0 or
+    unset (a distributed-training concept -- only one worker should log).
+    Inference is never a multi-rank job, but if LOCAL_RANK is set to
+    something else in the shell (e.g. left over from an unrelated
+    torchrun/accelerate invocation earlier in the same session), the
+    inference subprocess would silently drop all of its own log output while
+    the JSON progress lines (plain prints, not routed through the logger)
+    keep working -- exactly a "progress bar works, no logs show up" report.
+    """
+    monkeypatch.setenv("LOCAL_RANK", "3")
+
+    # Child process reports back exactly what LOCAL_RANK it actually sees.
+    script = (
+        "import os; "
+        "print('LOCAL_RANK seen by subprocess: ' "
+        "+ os.environ.get('LOCAL_RANK', '<unset>'))"
+    )
+    output_path = str(tmp_path / "out.slp")
+
+    task = MagicMock()
+    task.make_predict_cli_call.return_value = (
+        [sys.executable, "-c", script],
+        output_path,
+    )
+    items = MagicMock()
+    items.total_frame_count = 0
+
+    worker = InferenceWorker(task, items)
+    logged = []
+    worker.logOutput.connect(logged.append)
+
+    with patch("sleap.gui.learning.runners.sio") as mock_sio:
+        mock_sio.load_slp.return_value = MagicMock(labeled_frames=[])
+        worker._run_inference_item(MagicMock(), 0, 1)
+
+    assert any("LOCAL_RANK seen by subprocess: <unset>" in line for line in logged), (
+        logged
+    )

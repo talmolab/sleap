@@ -235,6 +235,15 @@ class InferenceWorker(QtCore.QThread):
         # Use unbuffered mode for real-time log streaming
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
+        # sleap-nn gates its INFO-level logging on LOCAL_RANK being 0/unset (a
+        # distributed-training concept, so only one worker logs). Inference is
+        # never a multi-rank job, but a leftover LOCAL_RANK from something
+        # else running in this shell (e.g. a manual torchrun/accelerate
+        # invocation elsewhere in the same session) would otherwise silently
+        # suppress every log line here while leaving the JSON progress lines
+        # (plain prints, not routed through the logger) unaffected -- exactly
+        # the "progress bar works but no logs show up" symptom.
+        env.pop("LOCAL_RANK", None)
         with subprocess.Popen(
             cli_args,
             stdout=subprocess.PIPE,
