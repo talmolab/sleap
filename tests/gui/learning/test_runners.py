@@ -2,7 +2,7 @@
 
 import sys
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from sleap.gui.learning.runners import InferenceWorker
 
@@ -50,3 +50,97 @@ def test_inference_worker_reads_non_utf8_subprocess_output(qtbot, tmp_path):
     assert ret == 1  # non-zero exit propagated; no decode crash
     # The malformed line was still captured (with the bad byte replaced).
     assert any("progress" in line and "line" in line for line in logged)
+
+
+def test_inference_worker_surfaces_structured_gui_error(qtbot, tmp_path):
+    """A sleap-nn ``--gui`` structured error line must reach the log pane.
+
+    sleap-nn's ``--gui`` mode emits ``{"error": true, "type": ..., "message":
+    ...}`` on stdout before re-raising (``_emit_gui_error``/``_run_guarded``),
+    specifically so a GUI reader can show a clean message instead of a raw
+    traceback. Without handling this shape, it's valid JSON but doesn't match
+    the progress-line shape (``n_processed``/``n_total``), so it was silently
+    dropped: no progress update, no log line, nothing shown to the user.
+    """
+    script = (
+        "import json, sys; "
+        "print(json.dumps({'n_processed': 1, 'n_total': 10, "
+        "'rate': 5.0, 'eta': 2.0}), flush=True); "
+        "print(json.dumps({'error': True, 'type': 'FileNotFoundError', "
+        "'message': 'Model path does not exist: /bogus'}), flush=True); "
+        "sys.exit(1)"
+    )
+    output_path = str(tmp_path / "out.slp")
+
+    task = MagicMock()
+    task.make_predict_cli_call.return_value = (
+        [sys.executable, "-c", script],
+        output_path,
+    )
+
+    items = MagicMock()
+    items.total_frame_count = 0
+
+    worker = InferenceWorker(task, items)
+
+    logged = []
+    progress = []
+    worker.logOutput.connect(logged.append)
+    worker.progressUpdate.connect(lambda n, total: progress.append((n, total)))
+
+    out_path, ret = worker._run_inference_item(MagicMock(), 0, 1)
+
+    assert ret == 1
+    assert progress == [(1, 10)]  # the progress line before the error still works
+    assert any(
+        "FileNotFoundError" in line and "Model path does not exist" in line
+        for line in logged
+    )
+
+
+def test_inference_worker_drains_output_from_fast_exiting_subprocess(qtbot, tmp_path):
+    """All subprocess output must be read, even if the process exits instantly.
+
+    Regression test: the read loop used to be gated on ``while proc.poll() is
+    None:``, checked *before* each read. ``poll()`` only reports whether the
+    process has exited -- it says nothing about whether stdout has been fully
+    drained. For a subprocess that finishes fast enough, the loop's next
+    ``poll()`` check would already see it as exited and stop reading, silently
+    dropping whatever output was still buffered in the pipe. Reproduced
+    deterministically (10/10 trials) with a subprocess that prints 20 lines and
+    exits immediately: only 1 line was ever captured. Fixed by looping until
+    ``readline()`` itself hits true EOF instead of relying on ``poll()``.
+    """
+    n_lines = 20
+    script = (
+        f"import sys; [print(f'log line {{i}}') for i in range({n_lines})]; sys.exit(0)"
+    )
+    output_path = tmp_path / "out.slp"
+
+    task = MagicMock()
+    task.make_predict_cli_call.return_value = (
+        [sys.executable, "-c", script],
+        str(output_path),
+    )
+
+    items = MagicMock()
+    items.total_frame_count = 0
+
+    for _ in range(10):
+        # Each successful run tries to load the (nonexistent) output .slp;
+        # patch sio.load_slp so the test doesn't need a real prediction file.
+        import sleap.gui.learning.runners as runners_mod
+
+        with patch.object(
+            runners_mod.sio, "load_slp", return_value=MagicMock(labeled_frames=[])
+        ):
+            worker = InferenceWorker(task, items)
+            logged = []
+            worker.logOutput.connect(logged.append)
+            out_path, ret = worker._run_inference_item(MagicMock(), 0, 1)
+
+        assert ret == "success"
+        captured = [line for line in logged if line.startswith("log line")]
+        assert len(captured) == n_lines, (
+            f"expected all {n_lines} lines, only captured {len(captured)}: {captured}"
+        )

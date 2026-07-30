@@ -255,14 +255,25 @@ class InferenceWorker(QtCore.QThread):
             # Track process for cancellation from main thread
             self._current_process = proc
 
-            while proc.poll() is None:
+            while True:
                 if self._canceled:
                     kill_process(proc.pid)
                     self._current_process = None
                     return "", "canceled"
 
-                # Read line (already decoded in text mode)
-                line = proc.stdout.readline().rstrip()
+                # Read line (already decoded in text mode). readline() blocks
+                # until a full line is available or the stream hits true EOF
+                # (empty string) -- checking that instead of proc.poll() is
+                # required: poll() only reports whether the process has
+                # exited, not whether its buffered-but-unread stdout has been
+                # drained. Gating the loop on poll() races a fast-exiting
+                # subprocess -- once poll() sees it's done, the loop stops
+                # without a final read, silently dropping whatever output was
+                # still sitting in the pipe.
+                raw_line = proc.stdout.readline()
+                if raw_line == "":
+                    break
+                line = raw_line.rstrip()
 
                 is_json = False
                 if line.startswith("{"):
@@ -272,7 +283,15 @@ class InferenceWorker(QtCore.QThread):
                     except (json.JSONDecodeError, ValueError):
                         is_json = False
 
-                if is_json:
+                if is_json and line_data.get("error"):
+                    # Structured --gui error line (sleap-nn's _emit_gui_error):
+                    # {"error": true, "type": ..., "message": ...}. Without this
+                    # branch it's silently dropped, since it's valid JSON but
+                    # doesn't match the progress-line shape below.
+                    err_type = line_data.get("type", "Error")
+                    err_message = line_data.get("message", "")
+                    self.logOutput.emit(f"Error: {err_type}: {err_message}")
+                elif is_json:
                     # Extract progress info
                     n_processed = line_data.get("n_processed")
                     n_total = line_data.get("n_total")
@@ -301,7 +320,10 @@ class InferenceWorker(QtCore.QThread):
                     if line:
                         self.logOutput.emit(line)
 
-                time.sleep(0.02)
+            # readline() hitting EOF means the write end closed, which in
+            # practice means the process exited -- but wait() to be certain
+            # it's been reaped and proc.returncode is populated.
+            proc.wait()
 
             # Clear process reference now that it's finished
             self._current_process = None
@@ -550,7 +572,7 @@ class InferenceTask:
         """Makes list of CLI arguments needed for running inference."""
         cli_args = [
             "sleap",
-            "track",
+            "predict",
         ]
         if gui:
             cli_args.append("--gui")
@@ -670,10 +692,13 @@ class InferenceTask:
                         ]
                     )
 
-            if self.inference_params["tracking.similarity"] == "oks":
+            if self.inference_params["tracking.similarity"] in ("oks", "instance"):
                 cli_args.extend(["--features", "keypoints"])
                 cli_args.extend(["--scoring_method", "oks"])
-            elif self.inference_params["tracking.similarity"] == "centroids":
+            elif self.inference_params["tracking.similarity"] in (
+                "centroids",
+                "centroid",
+            ):
                 cli_args.extend(["--features", "centroids"])
                 cli_args.extend(["--scoring_method", "euclidean_dist"])
             elif self.inference_params["tracking.similarity"] == "iou":

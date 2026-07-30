@@ -543,7 +543,7 @@ def track(**kwargs):
 
     # Import sleap-nn modules inside function
     try:
-        from sleap_nn.predict import run_inference, frame_list
+        from sleap_nn.legacy_predict import run_inference, frame_list
 
         # Convert model_paths from tuple to list
         if "model_paths" in kwargs and kwargs["model_paths"]:
