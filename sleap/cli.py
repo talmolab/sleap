@@ -243,7 +243,9 @@ def wrap_sio_command(sio_cmd: click.Command) -> click.Command:
     return new_cmd
 
 
-def wrap_nn_command(nn_cmd: click.Command) -> click.Command:
+def wrap_nn_command(
+    nn_cmd: click.Command, deprecated_note: Optional[str] = None
+) -> click.Command:
     """Wrap a sleap-nn CLI command with SLEAP branding.
 
     This creates a new command that:
@@ -253,6 +255,8 @@ def wrap_nn_command(nn_cmd: click.Command) -> click.Command:
 
     Args:
         nn_cmd: A Click Command object from sleap-nn.
+        deprecated_note: If given, printed as a warning to stderr every time the
+            command runs, and prepended to its help text.
 
     Returns:
         A new Command object with SLEAP branding applied.
@@ -268,6 +272,16 @@ def wrap_nn_command(nn_cmd: click.Command) -> click.Command:
         new_cmd.help = new_cmd.help.replace("$ sleap-nn ", "$ sleap ")
         # Also replace any "sleap-nn" command references in the docs
         new_cmd.help = new_cmd.help.replace("[bold]sleap-nn[/]", "[bold]sleap[/]")
+
+    if deprecated_note is not None:
+        original_callback = new_cmd.callback
+
+        def _callback_with_deprecation_warning(*args: Any, **kwargs: Any) -> Any:
+            click.echo(click.style(deprecated_note, fg="yellow"), err=True)
+            return original_callback(*args, **kwargs)
+
+        new_cmd.callback = _callback_with_deprecation_warning
+        new_cmd.help = f"[dim](Legacy)[/] {new_cmd.help or ''}".strip()
 
     # Apply SLEAP's rich-click configuration
     # RichCommand stores config in _rich_config attribute
@@ -1212,7 +1226,18 @@ def _make_nn_stub(command_name: str) -> click.Command:
 # Add wrapped sleap-nn commands to the CLI group (if sleap-nn is installed)
 if _SLEAP_NN_AVAILABLE:
     cli.add_command(wrap_nn_command(nn_train), name="train")
-    cli.add_command(wrap_nn_command(nn_track), name="track")
+    cli.add_command(
+        wrap_nn_command(
+            nn_track,
+            deprecated_note=(
+                "Note: 'sleap track' runs sleap-nn's legacy inference pipeline and "
+                "is kept for backwards compatibility. Consider using 'sleap "
+                "predict' instead, which supports everything 'sleap track' does, "
+                "plus more."
+            ),
+        ),
+        name="track",
+    )
     cli.add_command(wrap_nn_command(nn_eval), name="eval")
     cli.add_command(wrap_nn_command(nn_export), name="export-model")
     cli.add_command(wrap_nn_command(nn_predict), name="predict")
