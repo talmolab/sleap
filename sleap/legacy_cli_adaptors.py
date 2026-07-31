@@ -676,7 +676,7 @@ def track_command(
     tracking_of_max_levels,
 ):
     """Track instances in video data using trained SLEAP models."""
-    _warn_deprecated("sleap-track", "sleap track")
+    _warn_deprecated("sleap-track", "sleap predict")
 
     try:
         import torch
