@@ -2795,6 +2795,10 @@
 <li>Assigns each instance to an existing track or creates a new one</li>
 </ol>
 <p>Prediction and tracking are distinct processes—you can run tracking separately after inference to try different methods and parameters.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Examples below use <a href="../../reference/command-line-interfaces/#sleap-predict"><code>sleap predict</code></a>, the recommended inference command. The legacy <a href="../../reference/command-line-interfaces/#sleap-track"><code>sleap track</code></a> command accepts the same tracking flags.</p>
+</div>
 <p><a href="https://nn.sleap.ai/latest/guides/tracking/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> sleap-nn Tracking Reference</a></p>
 <hr />
 <h2 id="tracking-methods">Tracking Methods<a class="headerlink" href="#tracking-methods" title="Permanent link">&para;</a></h2>
@@ -2809,7 +2813,7 @@
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>              window_size=3
 </span></code></pre></div>
 <p>All instances from frames within the window are collected into a single candidate pool. When matching instances in the current frame, each is compared against this entire pool, and the best matches are assigned.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--candidates_method<span class="w"> </span>fixed_window<span class="w"> </span>--tracking_window_size<span class="w"> </span><span class="m">10</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--candidates_method<span class="w"> </span>fixed_window<span class="w"> </span>--tracking_window_size<span class="w"> </span><span class="m">10</span>
 </span></code></pre></div>
 <p><strong>Pros:</strong></p>
 <ul>
@@ -2831,7 +2835,7 @@
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>Frame t:  ? ?  ← each detection matched against per-track histories
 </span></code></pre></div>
 <p>When an instance disappears temporarily (e.g., due to occlusion), its track queue preserves its history. When the instance reappears, it can still be matched to its original track even if many frames have passed.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--candidates_method<span class="w"> </span>local_queues<span class="w"> </span>--tracking_window_size<span class="w"> </span><span class="m">5</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--candidates_method<span class="w"> </span>local_queues<span class="w"> </span>--tracking_window_size<span class="w"> </span><span class="m">5</span>
 </span></code></pre></div>
 <p><strong>Pros:</strong></p>
 <ul>
@@ -2849,7 +2853,7 @@
 <p><a href="https://nn.sleap.ai/latest/guides/tracking/#local-queues"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Local Queues Details</a></p>
 <h4 id="optical-flow">Optical Flow<a class="headerlink" href="#optical-flow" title="Permanent link">&para;</a></h4>
 <p>Uses optical flow (<a href="https://arxiv.org/abs/1804.06208">Xiao et al., 2018</a>) to predict where instances will move, then uses these shifted positions as candidates.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--use_flow
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--use_flow
 </span></code></pre></div>
 <p><strong>Best for</strong>: Fast-moving animals where position changes significantly between frames.</p>
 <p><a href="https://nn.sleap.ai/latest/guides/tracking/#optical-flow"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Optical Flow Details</a></p>
@@ -2888,7 +2892,7 @@
 </tbody>
 </table>
 <p>Set with <code>--scoring_method</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--scoring_method<span class="w"> </span>oks
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--scoring_method<span class="w"> </span>oks
 </span></code></pre></div>
 <hr />
 <h3 id="feature-types">Feature Types<a class="headerlink" href="#feature-types" title="Permanent link">&para;</a></h3>
@@ -2920,7 +2924,7 @@
 </tbody>
 </table>
 <p>Set with <code>--features</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--features<span class="w"> </span>centroids<span class="w"> </span>--scoring_method<span class="w"> </span>euclidean_dist
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--features<span class="w"> </span>centroids<span class="w"> </span>--scoring_method<span class="w"> </span>euclidean_dist
 </span></code></pre></div>
 <hr />
 <h3 id="matching-methods">Matching Methods<a class="headerlink" href="#matching-methods" title="Permanent link">&para;</a></h3>
@@ -2944,13 +2948,13 @@
 </tbody>
 </table>
 <p>Set with <code>--track_matching_method</code>:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--track_matching_method<span class="w"> </span>hungarian
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--track_matching_method<span class="w"> </span>hungarian
 </span></code></pre></div>
 <hr />
 <h2 id="track-settings">Track Settings<a class="headerlink" href="#track-settings" title="Permanent link">&para;</a></h2>
 <h3 id="maximum-tracks">Maximum Tracks<a class="headerlink" href="#maximum-tracks" title="Permanent link">&para;</a></h3>
 <p>Limit the number of track identities. Once reached, no new tracks are created.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--max_tracks<span class="w"> </span><span class="m">5</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--max_tracks<span class="w"> </span><span class="m">5</span>
 </span></code></pre></div>
 <p>In the GUI, set via <strong>Predict &gt; Run Inference</strong>:</p>
 <p><img alt="set-instance-count" src="../../assets/images/set-instance-count.jpg" /></p>
@@ -2958,25 +2962,25 @@
 <p>When exactly one track is lost in frame N and exactly one new track appears in frame N+1, automatically connect them. Enable with the <code>Connect Single Track Breaks</code> checkbox in the GUI.</p>
 <h3 id="track-window-size">Track Window Size<a class="headerlink" href="#track-window-size" title="Permanent link">&para;</a></h3>
 <p>How many previous frames to consider when building candidates. Larger windows are more robust but slower.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--tracking_window_size<span class="w"> </span><span class="m">10</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--tracking_window_size<span class="w"> </span><span class="m">10</span>
 </span></code></pre></div>
 <hr />
 <h2 id="track-only-mode">Track-Only Mode<a class="headerlink" href="#track-only-mode" title="Permanent link">&para;</a></h2>
 <p>Re-run tracking on existing predictions without re-running inference:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>predictions.slp<span class="w"> </span>--tracking
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>predictions.slp<span class="w"> </span>--tracking
 </span></code></pre></div>
 <p>This is useful for trying different tracking parameters without recomputing poses.</p>
 <p><a href="https://nn.sleap.ai/latest/guides/tracking/#track-only-mode"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Track-Only Mode</a></p>
 <hr />
 <h2 id="example-configurations">Example Configurations<a class="headerlink" href="#example-configurations" title="Permanent link">&para;</a></h2>
 <h3 id="fast-moving-animals">Fast-Moving Animals<a class="headerlink" href="#fast-moving-animals" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--use_flow<span class="w"> </span>--of_img_scale<span class="w"> </span><span class="m">0</span>.5
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--use_flow<span class="w"> </span>--of_img_scale<span class="w"> </span><span class="m">0</span>.5
 </span></code></pre></div>
 <h3 id="crowded-scenes">Crowded Scenes<a class="headerlink" href="#crowded-scenes" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--candidates_method<span class="w"> </span>local_queues<span class="w"> </span>--tracking_window_size<span class="w"> </span><span class="m">10</span><span class="w"> </span>--max_tracks<span class="w"> </span><span class="m">10</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--candidates_method<span class="w"> </span>local_queues<span class="w"> </span>--tracking_window_size<span class="w"> </span><span class="m">10</span><span class="w"> </span>--max_tracks<span class="w"> </span><span class="m">10</span>
 </span></code></pre></div>
 <h3 id="high-accuracy">High Accuracy<a class="headerlink" href="#high-accuracy" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--scoring_method<span class="w"> </span>oks<span class="w"> </span>--scoring_reduction<span class="w"> </span>mean<span class="w"> </span>--track_matching_method<span class="w"> </span>hungarian
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/<span class="w"> </span>-t<span class="w"> </span>--scoring_method<span class="w"> </span>oks<span class="w"> </span>--scoring_reduction<span class="w"> </span>mean<span class="w"> </span>--track_matching_method<span class="w"> </span>hungarian
 </span></code></pre></div>
 <p><a href="https://nn.sleap.ai/latest/guides/tracking/#example-configurations"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> More Examples</a></p>
 <hr />
