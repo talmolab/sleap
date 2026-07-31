@@ -14,6 +14,9 @@ Tracking connects frame-by-frame pose predictions into continuous **tracks** (id
 
 Prediction and tracking are distinct processes—you can run tracking separately after inference to try different methods and parameters.
 
+!!! note
+    Examples below use [`sleap predict`](../reference/command-line-interfaces.md#sleap-predict), the recommended inference command. The legacy [`sleap track`](../reference/command-line-interfaces.md#sleap-track) command accepts the same tracking flags.
+
 [:octicons-arrow-right-24: sleap-nn Tracking Reference](https://nn.sleap.ai/latest/guides/tracking/)
 
 ---
@@ -39,7 +42,7 @@ Instances │ A B   A B   A B  │  ? ?  ← match against pooled candidates
 All instances from frames within the window are collected into a single candidate pool. When matching instances in the current frame, each is compared against this entire pool, and the best matches are assigned.
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --candidates_method fixed_window --tracking_window_size 10
+sleap predict -i video.mp4 -m models/ -t --candidates_method fixed_window --tracking_window_size 10
 ```
 
 **Pros:**
@@ -70,7 +73,7 @@ Frame t:  ? ?  ← each detection matched against per-track histories
 When an instance disappears temporarily (e.g., due to occlusion), its track queue preserves its history. When the instance reappears, it can still be matched to its original track even if many frames have passed.
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --candidates_method local_queues --tracking_window_size 5
+sleap predict -i video.mp4 -m models/ -t --candidates_method local_queues --tracking_window_size 5
 ```
 
 **Pros:**
@@ -94,7 +97,7 @@ sleap-nn track -i video.mp4 -m models/ -t --candidates_method local_queues --tra
 Uses optical flow ([Xiao et al., 2018](https://arxiv.org/abs/1804.06208)) to predict where instances will move, then uses these shifted positions as candidates.
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --use_flow
+sleap predict -i video.mp4 -m models/ -t --use_flow
 ```
 
 **Best for**: Fast-moving animals where position changes significantly between frames.
@@ -117,7 +120,7 @@ How similarity is measured between instances and candidates.
 Set with `--scoring_method`:
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --scoring_method oks
+sleap predict -i video.mp4 -m models/ -t --scoring_method oks
 ```
 
 ---
@@ -136,7 +139,7 @@ What features are used for matching.
 Set with `--features`:
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --features centroids --scoring_method euclidean_dist
+sleap predict -i video.mp4 -m models/ -t --features centroids --scoring_method euclidean_dist
 ```
 
 ---
@@ -153,7 +156,7 @@ How instances are paired with candidates once similarity is computed.
 Set with `--track_matching_method`:
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --track_matching_method hungarian
+sleap predict -i video.mp4 -m models/ -t --track_matching_method hungarian
 ```
 
 ---
@@ -165,7 +168,7 @@ sleap-nn track -i video.mp4 -m models/ -t --track_matching_method hungarian
 Limit the number of track identities. Once reached, no new tracks are created.
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --max_tracks 5
+sleap predict -i video.mp4 -m models/ -t --max_tracks 5
 ```
 
 In the GUI, set via **Predict > Run Inference**:
@@ -181,7 +184,7 @@ When exactly one track is lost in frame N and exactly one new track appears in f
 How many previous frames to consider when building candidates. Larger windows are more robust but slower.
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --tracking_window_size 10
+sleap predict -i video.mp4 -m models/ -t --tracking_window_size 10
 ```
 
 ---
@@ -191,7 +194,7 @@ sleap-nn track -i video.mp4 -m models/ -t --tracking_window_size 10
 Re-run tracking on existing predictions without re-running inference:
 
 ```bash
-sleap-nn track -i predictions.slp --tracking
+sleap predict -i predictions.slp --tracking
 ```
 
 This is useful for trying different tracking parameters without recomputing poses.
@@ -205,19 +208,19 @@ This is useful for trying different tracking parameters without recomputing pose
 ### Fast-Moving Animals
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --use_flow --of_img_scale 0.5
+sleap predict -i video.mp4 -m models/ -t --use_flow --of_img_scale 0.5
 ```
 
 ### Crowded Scenes
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --candidates_method local_queues --tracking_window_size 10 --max_tracks 10
+sleap predict -i video.mp4 -m models/ -t --candidates_method local_queues --tracking_window_size 10 --max_tracks 10
 ```
 
 ### High Accuracy
 
 ```bash
-sleap-nn track -i video.mp4 -m models/ -t --scoring_method oks --scoring_reduction mean --track_matching_method hungarian
+sleap predict -i video.mp4 -m models/ -t --scoring_method oks --scoring_reduction mean --track_matching_method hungarian
 ```
 
 [:octicons-arrow-right-24: More Examples](https://nn.sleap.ai/latest/guides/tracking/#example-configurations)
