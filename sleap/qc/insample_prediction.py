@@ -38,8 +38,6 @@ unit-tested with canned predicted instances and without any torch dependency.
 from __future__ import annotations
 
 import logging
-import os
-import tempfile
 from typing import TYPE_CHECKING, Optional
 
 import numpy as np
@@ -360,28 +358,26 @@ def run_insample_prediction(
     # lives below this point so importing this module stays cheap and safe. ---
     _report("In-sample prediction", 0.0, "Loading model")
     try:
-        from sleap_nn.legacy_predict import run_inference
+        from sleap_nn.inference import predict
+        from sleap_nn.inference.providers import LabelsProvider
     except Exception as e:  # pragma: no cover - environment-dependent
         return _empty_result(f"sleap_nn unavailable ({e!r}); skipping")
 
-    # ``run_inference`` ALWAYS writes the predicted Labels to disk when
-    # make_labels=True (defaulting to ``./results.predictions.slp``), with no
-    # flag to disable it. We are only after the in-memory predictions, so direct
-    # the output into a throwaway temp dir and remove it afterward to avoid
-    # littering the user's working directory.
+    # Unlike the legacy `run_inference` (which always wrote a `.slp` to disk),
+    # the new pipeline's `predict()` returns predictions purely in-memory when
+    # `output_path` is left unset.
     try:
-        with tempfile.TemporaryDirectory(prefix="sleap_qc_insample_") as tmpdir:
-            out_path = os.path.join(tmpdir, "insample.predictions.slp")
-            predicted_labels = run_inference(
-                input_labels=labels,
-                model_paths=[model_path],
-                only_labeled_frames=True,
-                exclude_user_labeled=False,
-                peak_threshold=peak_threshold,
-                make_labels=True,
-                device=device,
-                output_path=out_path,
-            )
+        source = LabelsProvider(
+            labels=labels,
+            only_labeled_frames=True,
+            exclude_user_labeled=False,
+        )
+        predicted_labels = predict(
+            source,
+            model_paths=[model_path],
+            peak_threshold=peak_threshold,
+            device=device,
+        )
     except Exception as e:
         return _empty_result(f"inference failed ({e!r}); skipping")
 

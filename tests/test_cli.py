@@ -3,9 +3,11 @@
 This module tests the main CLI entry point and sleap-io command integration.
 """
 
+import click
+import pytest
 from click.testing import CliRunner
 
-from sleap.cli import cli
+from sleap.cli import cli, wrap_nn_command
 
 
 class TestCLIBasics:
@@ -562,3 +564,64 @@ class TestSleapNNCLICommands:
         assert "--device" in result.output
         assert "--batch-size" in result.output
         assert "--n-frames" in result.output
+
+
+class TestWrapNNCommandDeprecation:
+    """Tests for `wrap_nn_command`'s optional deprecation-warning behavior."""
+
+    @staticmethod
+    def _make_dummy_command() -> click.Command:
+        @click.command(help="Do the thing.")
+        def dummy():
+            click.echo("ran")
+
+        return dummy
+
+    def test_no_deprecated_note_runs_silently(self):
+        wrapped = wrap_nn_command(self._make_dummy_command())
+
+        runner = CliRunner()
+        result = runner.invoke(wrapped, [])
+
+        assert result.exit_code == 0
+        assert "ran" in result.output
+        assert "Legacy" not in (wrapped.help or "")
+
+    def test_deprecated_note_warns_and_still_runs_the_command(self):
+        wrapped = wrap_nn_command(
+            self._make_dummy_command(),
+            deprecated_note="Note: dummy is deprecated, use 'thing' instead.",
+        )
+
+        runner = CliRunner()
+        result = runner.invoke(wrapped, [])
+
+        assert result.exit_code == 0
+        assert "Note: dummy is deprecated, use 'thing' instead." in result.output
+        assert "ran" in result.output
+        assert "(Legacy)" in wrapped.help
+
+    def test_sleap_track_is_registered_as_legacy(self):
+        """`sleap track` should be labeled legacy in the top-level command list."""
+        pytest.importorskip("sleap_nn")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help"])
+
+        assert result.exit_code == 0
+        assert "(Legacy)" in result.output
+
+    def test_sleap_track_warns_on_invocation(self):
+        """Invoking `sleap track` should print the deprecation note pointing at
+        `sleap predict`. `--data_path` is sleap-nn's only required option and
+        isn't validated for existence, so this satisfies Click's own argument
+        parsing and reaches the wrapped callback; the underlying command then
+        fails for its own unrelated reasons (no such video/model), which is
+        fine since we only care that the warning fired before that."""
+        pytest.importorskip("sleap_nn")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["track", "-i", "nonexistent_video.mp4"])
+
+        assert "sleap track" in result.output
+        assert "sleap predict" in result.output

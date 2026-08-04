@@ -539,7 +539,7 @@ def track(**kwargs):
 
     (From `sleap-nn`: `sleap-nn track`)
     """
-    _warn_deprecated("sleap-nn-track", "sleap track")
+    _warn_deprecated("sleap-nn-track", "sleap predict")
 
     # Import sleap-nn modules inside function
     try:

@@ -25,10 +25,10 @@ Run `sleap --help` to see all available commands, or `sleap <command> --help` fo
 | Command | Description |
 |---------|-------------|
 | [`sleap train`](#sleap-train) | Train pose estimation models |
-| [`sleap track`](#sleap-track) | Run inference and tracking |
+| [`sleap predict`](#sleap-predict) | Run inference and tracking (recommended; also supports ONNX/TensorRT-exported models) |
+| [`sleap track`](#sleap-track) | Run inference and tracking (legacy pipeline; use `sleap predict` instead) |
 | [`sleap eval`](#other-neural-network-commands) | Evaluate predictions against ground truth |
 | [`sleap export-model`](#other-neural-network-commands) | Export model for deployment |
-| [`sleap predict`](#other-neural-network-commands) | Unified inference pipeline (also supports ONNX/TensorRT-exported models) |
 | [`sleap system`](#other-neural-network-commands) | Show sleap-nn system information |
 
 **Data Commands** (from sleap-io)
@@ -126,9 +126,31 @@ sleap train --config configs/baseline.yaml
 
 [:octicons-arrow-right-24: Full training documentation](https://nn.sleap.ai/latest/guides/training/)
 
+### `sleap predict`
+
+Run inference and tracking on videos. This is the recommended inference command — it
+reproduces every model type `sleap track` supports, plus centroid-only and
+segmentation-only models that `sleap track` doesn't, and can also run
+ONNX/TensorRT-exported models via `--runtime`.
+
+```bash
+sleap predict [OPTIONS] -i <video> -m <model>
+
+# Examples
+sleap predict -i video.mp4 -m models/centroid/
+sleap predict -i video.mp4 -m models/centroid/ -m models/instance/ --tracking
+```
+
+[:octicons-arrow-right-24: Full inference documentation](https://nn.sleap.ai/latest/guides/inference/)
+
 ### `sleap track`
 
-Run inference and tracking on videos.
+!!! warning "Legacy command"
+    `sleap track` runs sleap-nn's legacy inference pipeline and is kept for backwards
+    compatibility. **Use [`sleap predict`](#sleap-predict) for new projects** — it
+    supports everything `sleap track` does, plus more.
+
+Run inference and tracking on videos using the legacy pipeline.
 
 ```bash
 sleap track [OPTIONS] -i <video> -m <model>
@@ -146,7 +168,6 @@ sleap track -i video.mp4 -m models/centroid/ -m models/instance/ --tracking
 |---------|-------------|
 | `sleap eval` | Evaluate model predictions against ground truth |
 | `sleap export-model` | Export model to ONNX for deployment |
-| `sleap predict` | Run inference on videos or labels files (unified pipeline; also supports ONNX/TensorRT-exported models via `--runtime`) |
 | `sleap system` | Show sleap-nn system information |
 
 [:octicons-arrow-right-24: Exporting models to ONNX](https://nn.sleap.ai/latest/guides/export/)
@@ -325,7 +346,7 @@ optional arguments:
 <details class="plain" markdown>
 <summary>sleap-track</summary>
 
-Legacy inference command. **Use `sleap track` for new projects.**
+Legacy inference command. **Use `sleap predict` for new projects.**
 
 ```none
 usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [-o OUTPUT] [--batch_size BATCH_SIZE]
@@ -384,9 +405,11 @@ sleap-track --tracking.tracker simple -o "retracked.slp" "predictions.slp"
 <details class="plain" markdown>
 <summary>sleap-nn-train / sleap-nn-track</summary>
 
-Direct sleap-nn entry points. **Use `sleap train` and `sleap track` for new projects.**
+Direct sleap-nn entry points. **Use `sleap train` and `sleap predict` for new projects.**
 
-These commands provide the same functionality as `sleap train` and `sleap track` but bypass the unified CLI wrapper.
+These commands provide the same functionality as `sleap train` and `sleap track` (the
+legacy pipeline) but bypass the unified CLI wrapper. For the recommended inference
+pipeline, use `sleap predict` instead.
 
 **sleap-nn-train:**
 ```bash

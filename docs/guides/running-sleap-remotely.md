@@ -90,7 +90,7 @@ You'll need both of these files for each model you're going to use for inference
 
 !!! note "Legacy SLEAP Model Support"
     SLEAP-NN supports running inference on models trained with legacy SLEAP (version 1.4.1 or earlier).  
-    You can use the `sleap-nn track` command with legacy model files (`.h5` and `.json`) as described in the [Legacy SLEAP Model Support documentation](https://nn.sleap.ai/latest/guides/inference/#legacy-sleap-model-support).  
+    You can use `sleap-nn predict` with legacy model files (`.h5` and `.json`) as described in the [Legacy SLEAP Model Support documentation](https://nn.sleap.ai/latest/guides/inference/#legacy-sleap-model-support).  
     This allows you to run inference on older models without needing to retrain them with the new backend.
 
 
@@ -102,14 +102,14 @@ For this example, let's suppose you have two models: centroids and instance-cent
 
 sleap-nn (which uses `sleap-io`) uses OpenCV to read a variety of video formats including `mp4` and `avi` files. You'll just need the file path to run inference on such a video file.
 
-For this example, let's suppose you're working with an HDF5 video at `path/to/video.mp4`.
+For this example, let's suppose you're working with a video at `path/to/video.mp4`.
 
 **Command-line inference**:
 
-To run inference, you'll call [`sleap-nn track`](https://nn.sleap.ai/latest/guides/inference/#running-inference) with the paths to each trained model and your video file, like so:
+To run inference, you'll call [`sleap-nn predict`](https://nn.sleap.ai/latest/guides/inference/#running-inference) — the recommended inference pipeline — with the paths to each trained model and your video file, like so:
 
 ```sh
-sleap-nn track -i path/to/video.mp4 --video_dataset video --video_input_format channels_last -m path/to/models/centroid -m path/to/models/centered-instance
+sleap-nn predict -i path/to/video.mp4 --video_dataset video --video_input_format channels_last -m path/to/models/centroid -m path/to/models/centered-instance
 ```
 
 This will run inference on the entire video. If you only want to run inference on some range of frames, you can specify this with the `--frames 123-456` command-line argument.

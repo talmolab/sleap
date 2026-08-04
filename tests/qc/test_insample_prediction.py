@@ -2,7 +2,7 @@
 
 These unit tests exercise the matching + disagreement logic and the graceful
 no-op behavior WITHOUT requiring torch. The model inference call
-(``sleap_nn.legacy_predict.run_inference``) is monkeypatched to return canned
+(``sleap_nn.inference.predict``) is monkeypatched to return canned
 ``sio.PredictedInstance`` objects, so the whole pipeline can be tested
 deterministically and cheaply.
 """
@@ -57,24 +57,42 @@ def _labels_one_frame(skeleton, user_arrays):
     return sio.Labels(labeled_frames=[lf], videos=[video], skeletons=[skeleton])
 
 
-def _patch_run_inference(monkeypatch, predicted_labels):
-    """Install a fake ``sleap_nn.legacy_predict`` module returning canned
+class _FakeLabelsProvider:
+    """Stand-in for ``sleap_nn.inference.providers.LabelsProvider``.
+
+    Just records what it was constructed with; the fake ``predict`` below
+    ignores it and returns canned predictions regardless.
+    """
+
+    def __init__(self, labels, **kwargs):  # noqa: ANN001, ANN003
+        self.labels = labels
+        self.kwargs = kwargs
+
+
+def _patch_predict(monkeypatch, predicted_labels):
+    """Install a fake ``sleap_nn.inference`` module tree returning canned
     predictions.
 
     Avoids importing the real (torch-backed) ``sleap_nn`` entirely.
     """
-    fake_predict = types.ModuleType("sleap_nn.legacy_predict")
+    fake_inference = types.ModuleType("sleap_nn.inference")
+    fake_providers = types.ModuleType("sleap_nn.inference.providers")
 
-    def fake_run_inference(*args, **kwargs):  # noqa: ANN001, ANN002
+    def fake_predict(source, *args, **kwargs):  # noqa: ANN001, ANN002
         return predicted_labels
 
-    fake_predict.run_inference = fake_run_inference
+    fake_inference.predict = fake_predict
+    fake_inference.providers = fake_providers
+    fake_providers.LabelsProvider = _FakeLabelsProvider
 
     fake_pkg = sys.modules.get("sleap_nn")
     if fake_pkg is None:
         fake_pkg = types.ModuleType("sleap_nn")
         monkeypatch.setitem(sys.modules, "sleap_nn", fake_pkg)
-    monkeypatch.setitem(sys.modules, "sleap_nn.legacy_predict", fake_predict)
+    fake_pkg.inference = fake_inference
+
+    monkeypatch.setitem(sys.modules, "sleap_nn.inference", fake_inference)
+    monkeypatch.setitem(sys.modules, "sleap_nn.inference.providers", fake_providers)
 
 
 # ---------------------------------------------------------------------------
@@ -220,7 +238,7 @@ class TestRunInsamplePredictionMocked:
         pred_labels = sio.Labels(
             labeled_frames=[pred_lf], videos=[pred_video], skeletons=[skel]
         )
-        _patch_run_inference(monkeypatch, pred_labels)
+        _patch_predict(monkeypatch, pred_labels)
 
         out = run_insample_prediction(
             labels, model_path="/fake/model", min_confidence=0.5
@@ -255,7 +273,7 @@ class TestRunInsamplePredictionMocked:
         pred_labels = sio.Labels(
             labeled_frames=[pred_lf], videos=[pred_video], skeletons=[skel]
         )
-        _patch_run_inference(monkeypatch, pred_labels)
+        _patch_predict(monkeypatch, pred_labels)
 
         out = run_insample_prediction(
             labels, model_path="/fake/model", min_confidence=0.5
@@ -288,7 +306,7 @@ class TestRunInsamplePredictionMocked:
         pred_labels = sio.Labels(
             labeled_frames=[pred_lf], videos=[pred_video], skeletons=[skel]
         )
-        _patch_run_inference(monkeypatch, pred_labels)
+        _patch_predict(monkeypatch, pred_labels)
 
         out = run_insample_prediction(labels, model_path="/fake/model")
         # Only instance 0 has a blank node, and only it should be flagged.
@@ -313,7 +331,7 @@ class TestRunInsamplePredictionMocked:
         pred_labels = sio.Labels(
             labeled_frames=[pred_lf], videos=[pred_video], skeletons=[wrong_skel]
         )
-        _patch_run_inference(monkeypatch, pred_labels)
+        _patch_predict(monkeypatch, pred_labels)
 
         out = run_insample_prediction(labels, model_path="/fake/model")
         assert out["ran"] is False
@@ -337,7 +355,7 @@ class TestRunInsamplePredictionMocked:
         assert out["instance_scores"] == {}
 
     def test_sleap_nn_unavailable_is_graceful(self, monkeypatch):
-        # Simulate an environment where importing sleap_nn.legacy_predict fails.
+        # Simulate an environment where importing sleap_nn.inference fails.
         skel = _skeleton()
         labels = _labels_one_frame(skel, [np.zeros((4, 2))])
 
@@ -346,12 +364,13 @@ class TestRunInsamplePredictionMocked:
         real_import = builtins.__import__
 
         def boom(name, *args, **kwargs):
-            if name == "sleap_nn.legacy_predict" or name.startswith("sleap_nn"):
+            if name.startswith("sleap_nn"):
                 raise ImportError("simulated missing sleap_nn")
             return real_import(name, *args, **kwargs)
 
         # Remove cached module so the import is re-attempted and fails.
-        monkeypatch.delitem(sys.modules, "sleap_nn.legacy_predict", raising=False)
+        monkeypatch.delitem(sys.modules, "sleap_nn.inference", raising=False)
+        monkeypatch.delitem(sys.modules, "sleap_nn.inference.providers", raising=False)
         monkeypatch.setattr(builtins, "__import__", boom)
 
         out = run_insample_prediction(labels, model_path="/fake/model")
@@ -362,15 +381,21 @@ class TestRunInsamplePredictionMocked:
         skel = _skeleton()
         labels = _labels_one_frame(skel, [np.zeros((4, 2))])
 
-        fake_predict = types.ModuleType("sleap_nn.legacy_predict")
+        fake_inference = types.ModuleType("sleap_nn.inference")
+        fake_providers = types.ModuleType("sleap_nn.inference.providers")
 
         def boom_inference(*args, **kwargs):
             raise RuntimeError("CUDA OOM simulated")
 
-        fake_predict.run_inference = boom_inference
+        fake_inference.predict = boom_inference
+        fake_inference.providers = fake_providers
+        fake_providers.LabelsProvider = _FakeLabelsProvider
+
         fake_pkg = sys.modules.get("sleap_nn") or types.ModuleType("sleap_nn")
+        fake_pkg.inference = fake_inference
         monkeypatch.setitem(sys.modules, "sleap_nn", fake_pkg)
-        monkeypatch.setitem(sys.modules, "sleap_nn.legacy_predict", fake_predict)
+        monkeypatch.setitem(sys.modules, "sleap_nn.inference", fake_inference)
+        monkeypatch.setitem(sys.modules, "sleap_nn.inference.providers", fake_providers)
 
         out = run_insample_prediction(labels, model_path="/fake/model")
         assert out["ran"] is False
