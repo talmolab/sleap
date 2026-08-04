@@ -2362,17 +2362,17 @@ Command Prompt:
 <div class="admonition note">
 <p class="admonition-title">Legacy SLEAP Model Support</p>
 <p>SLEAP-NN supports running inference on models trained with legacy SLEAP (version 1.4.1 or earlier).<br />
-You can use the <code>sleap-nn track</code> command with legacy model files (<code>.h5</code> and <code>.json</code>) as described in the <a href="https://nn.sleap.ai/latest/guides/inference/#legacy-sleap-model-support">Legacy SLEAP Model Support documentation</a>.<br />
+You can use <code>sleap-nn predict</code> with legacy model files (<code>.h5</code> and <code>.json</code>) as described in the <a href="https://nn.sleap.ai/latest/guides/inference/#legacy-sleap-model-support">Legacy SLEAP Model Support documentation</a>.<br />
 This allows you to run inference on older models without needing to retrain them with the new backend.</p>
 </div>
 <p>Inference will run in different modes depending on the output types of the models you supply. See the instructions for <a href="https://nn.sleap.ai/latest/reference/models/">Model Configuration</a>.</p>
 <p>For this example, let's suppose you have two models: centroids and instance-centered confidence maps. This is the typical "top-down" case for multi-instance predictions.</p>
 <p><strong>Video</strong></p>
 <p>sleap-nn (which uses <code>sleap-io</code>) uses OpenCV to read a variety of video formats including <code>mp4</code> and <code>avi</code> files. You'll just need the file path to run inference on such a video file.</p>
-<p>For this example, let's suppose you're working with an HDF5 video at <code>path/to/video.mp4</code>.</p>
+<p>For this example, let's suppose you're working with a video at <code>path/to/video.mp4</code>.</p>
 <p><strong>Command-line inference</strong>:</p>
-<p>To run inference, you'll call <a href="https://nn.sleap.ai/latest/guides/inference/#running-inference"><code>sleap-nn track</code></a> with the paths to each trained model and your video file, like so:</p>
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sleap-nn<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>path/to/video.mp4<span class="w"> </span>--video_dataset<span class="w"> </span>video<span class="w"> </span>--video_input_format<span class="w"> </span>channels_last<span class="w"> </span>-m<span class="w"> </span>path/to/models/centroid<span class="w"> </span>-m<span class="w"> </span>path/to/models/centered-instance
+<p>To run inference, you'll call <a href="https://nn.sleap.ai/latest/guides/inference/#running-inference"><code>sleap-nn predict</code></a> — the recommended inference pipeline — with the paths to each trained model and your video file, like so:</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sleap-nn<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>path/to/video.mp4<span class="w"> </span>--video_dataset<span class="w"> </span>video<span class="w"> </span>--video_input_format<span class="w"> </span>channels_last<span class="w"> </span>-m<span class="w"> </span>path/to/models/centroid<span class="w"> </span>-m<span class="w"> </span>path/to/models/centered-instance
 </span></code></pre></div>
 <p>This will run inference on the entire video. If you only want to run inference on some range of frames, you can specify this with the <code>--frames 123-456</code> command-line argument.</p>
 <p>This will give you predictions frame-by-frame, but will not connect those predictions across frames into <code>tracks</code>. If you want cross-frame identity tracking, set <code>--tracking</code> argument. For optical flow, use <code>--use_flow</code>. For matching identities without optical flow and using each instance centroid (rather than all the predicted nodes), use <code>--features centroids --scoring_method euclidean_dist</code>.</p>

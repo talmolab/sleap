@@ -2174,6 +2174,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sleap-predict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sleap predict
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sleap-track" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2566,6 +2577,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sleap-predict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sleap predict
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sleap-track" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2762,8 +2784,12 @@
 <td>Train pose estimation models</td>
 </tr>
 <tr>
+<td><a href="#sleap-predict"><code>sleap predict</code></a></td>
+<td>Run inference and tracking (recommended; also supports ONNX/TensorRT-exported models)</td>
+</tr>
+<tr>
 <td><a href="#sleap-track"><code>sleap track</code></a></td>
-<td>Run inference and tracking</td>
+<td>Run inference and tracking (legacy pipeline; use <code>sleap predict</code> instead)</td>
 </tr>
 <tr>
 <td><a href="#other-neural-network-commands"><code>sleap eval</code></a></td>
@@ -2772,10 +2798,6 @@
 <tr>
 <td><a href="#other-neural-network-commands"><code>sleap export-model</code></a></td>
 <td>Export model for deployment</td>
-</tr>
-<tr>
-<td><a href="#other-neural-network-commands"><code>sleap predict</code></a></td>
-<td>Unified inference pipeline (also supports ONNX/TensorRT-exported models)</td>
 </tr>
 <tr>
 <td><a href="#other-neural-network-commands"><code>sleap system</code></a></td>
@@ -2940,13 +2962,31 @@
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>sleap<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>configs/baseline.yaml
 </span></code></pre></div>
 <p><a href="https://nn.sleap.ai/latest/guides/training/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Full training documentation</a></p>
-<h3 id="sleap-track"><code>sleap track</code><a class="headerlink" href="#sleap-track" title="Permanent link">&para;</a></h3>
-<p>Run inference and tracking on videos.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap<span class="w"> </span>track<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>-i<span class="w"> </span>&lt;video&gt;<span class="w"> </span>-m<span class="w"> </span>&lt;model&gt;
+<h3 id="sleap-predict"><code>sleap predict</code><a class="headerlink" href="#sleap-predict" title="Permanent link">&para;</a></h3>
+<p>Run inference and tracking on videos. This is the recommended inference command — it
+reproduces every model type <code>sleap track</code> supports, plus centroid-only and
+segmentation-only models that <code>sleap track</code> doesn't, and can also run
+ONNX/TensorRT-exported models via <code>--runtime</code>.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sleap<span class="w"> </span>predict<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>-i<span class="w"> </span>&lt;video&gt;<span class="w"> </span>-m<span class="w"> </span>&lt;model&gt;
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Examples</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>sleap<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/centroid/
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>sleap<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/centroid/<span class="w"> </span>-m<span class="w"> </span>models/instance/<span class="w"> </span>--tracking
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/centroid/
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>sleap<span class="w"> </span>predict<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/centroid/<span class="w"> </span>-m<span class="w"> </span>models/instance/<span class="w"> </span>--tracking
+</span></code></pre></div>
+<p><a href="https://nn.sleap.ai/latest/guides/inference/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Full inference documentation</a></p>
+<h3 id="sleap-track"><code>sleap track</code><a class="headerlink" href="#sleap-track" title="Permanent link">&para;</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Legacy command</p>
+<p><code>sleap track</code> runs sleap-nn's legacy inference pipeline and is kept for backwards
+compatibility. <strong>Use <a href="#sleap-predict"><code>sleap predict</code></a> for new projects</strong> — it
+supports everything <code>sleap track</code> does, plus more.</p>
+</div>
+<p>Run inference and tracking on videos using the legacy pipeline.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sleap<span class="w"> </span>track<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>-i<span class="w"> </span>&lt;video&gt;<span class="w"> </span>-m<span class="w"> </span>&lt;model&gt;
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Examples</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>sleap<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/centroid/
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>sleap<span class="w"> </span>track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/centroid/<span class="w"> </span>-m<span class="w"> </span>models/instance/<span class="w"> </span>--tracking
 </span></code></pre></div>
 <p><a href="https://nn.sleap.ai/latest/guides/inference/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Full inference documentation</a></p>
 <h3 id="other-neural-network-commands">Other Neural Network Commands<a class="headerlink" href="#other-neural-network-commands" title="Permanent link">&para;</a></h3>
@@ -2967,10 +3007,6 @@
 <td>Export model to ONNX for deployment</td>
 </tr>
 <tr>
-<td><code>sleap predict</code></td>
-<td>Run inference on videos or labels files (unified pipeline; also supports ONNX/TensorRT-exported models via <code>--runtime</code>)</td>
-</tr>
-<tr>
 <td><code>sleap system</code></td>
 <td>Show sleap-nn system information</td>
 </tr>
@@ -2984,12 +3020,12 @@
 <p><a href="https://io.sleap.ai/latest/cli/"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Full sleap-io CLI documentation</a></p>
 <h3 id="sleap-convert"><code>sleap convert</code><a class="headerlink" href="#sleap-convert" title="Permanent link">&para;</a></h3>
 <p>Convert between pose data formats.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sleap<span class="w"> </span>convert<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;input&gt;<span class="w"> </span>-o<span class="w"> </span>&lt;output&gt;
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Examples</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>sleap<span class="w"> </span>convert<span class="w"> </span>labels.slp<span class="w"> </span>-o<span class="w"> </span>labels.nwb<span class="w">           </span><span class="c1"># SLP to NWB</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>sleap<span class="w"> </span>convert<span class="w"> </span>labels.slp<span class="w"> </span>-o<span class="w"> </span>labels.pkg.slp<span class="w"> </span>--embed<span class="w"> </span>user<span class="w">  </span><span class="c1"># Embed frames</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>sleap<span class="w"> </span>convert<span class="w"> </span>annotations.json<span class="w"> </span>-o<span class="w"> </span>labels.slp<span class="w"> </span>--from<span class="w"> </span>coco<span class="w">  </span><span class="c1"># COCO to SLP</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sleap<span class="w"> </span>convert<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;input&gt;<span class="w"> </span>-o<span class="w"> </span>&lt;output&gt;
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># Examples</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>sleap<span class="w"> </span>convert<span class="w"> </span>labels.slp<span class="w"> </span>-o<span class="w"> </span>labels.nwb<span class="w">           </span><span class="c1"># SLP to NWB</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>sleap<span class="w"> </span>convert<span class="w"> </span>labels.slp<span class="w"> </span>-o<span class="w"> </span>labels.pkg.slp<span class="w"> </span>--embed<span class="w"> </span>user<span class="w">  </span><span class="c1"># Embed frames</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>sleap<span class="w"> </span>convert<span class="w"> </span>annotations.json<span class="w"> </span>-o<span class="w"> </span>labels.slp<span class="w"> </span>--from<span class="w"> </span>coco<span class="w">  </span><span class="c1"># COCO to SLP</span>
 </span></code></pre></div>
 <p><strong>Supported formats:</strong></p>
 <ul>
@@ -2999,15 +3035,15 @@
 <h3 id="sleap-export"><code>sleap export</code><a class="headerlink" href="#sleap-export" title="Permanent link">&para;</a></h3>
 <p>Export pose data to analysis-ready formats (CSV, HDF5).</p>
 <p>Unlike <code>convert</code> which transforms between label formats, <code>export</code> creates dense outputs optimized for analysis with full control over frame padding, video selection, and output structure.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;input&gt;<span class="w"> </span>-o<span class="w"> </span>&lt;output&gt;
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># Examples</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>predictions.slp<span class="w"> </span>-o<span class="w"> </span>analysis.csv<span class="w">      </span><span class="c1"># Export as CSV</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>predictions.slp<span class="w"> </span>-o<span class="w"> </span>analysis.h5<span class="w">       </span><span class="c1"># Export as HDF5</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>labels.slp<span class="w"> </span>-o<span class="w"> </span>sparse.csv<span class="w"> </span>--no-empty-frames<span class="w">  </span><span class="c1"># Only frames with instances</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>multi.slp<span class="w"> </span>-o<span class="w"> </span>export.csv<span class="w"> </span>-v<span class="w"> </span><span class="m">0</span><span class="w">         </span><span class="c1"># Export specific video</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>multi.slp<span class="w"> </span>-o<span class="w"> </span>export.csv<span class="w"> </span>-v<span class="w"> </span>all<span class="w">       </span><span class="c1"># Export all videos</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>large.slp<span class="w"> </span>-o<span class="w"> </span>data.csv<span class="w"> </span>--chunk-size<span class="w"> </span><span class="m">10000</span><span class="w">  </span><span class="c1"># Memory-efficient</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;input&gt;<span class="w"> </span>-o<span class="w"> </span>&lt;output&gt;
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># Examples</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>predictions.slp<span class="w"> </span>-o<span class="w"> </span>analysis.csv<span class="w">      </span><span class="c1"># Export as CSV</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>predictions.slp<span class="w"> </span>-o<span class="w"> </span>analysis.h5<span class="w">       </span><span class="c1"># Export as HDF5</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>labels.slp<span class="w"> </span>-o<span class="w"> </span>sparse.csv<span class="w"> </span>--no-empty-frames<span class="w">  </span><span class="c1"># Only frames with instances</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>multi.slp<span class="w"> </span>-o<span class="w"> </span>export.csv<span class="w"> </span>-v<span class="w"> </span><span class="m">0</span><span class="w">         </span><span class="c1"># Export specific video</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>multi.slp<span class="w"> </span>-o<span class="w"> </span>export.csv<span class="w"> </span>-v<span class="w"> </span>all<span class="w">       </span><span class="c1"># Export all videos</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>sleap<span class="w"> </span><span class="nb">export</span><span class="w"> </span>large.slp<span class="w"> </span>-o<span class="w"> </span>data.csv<span class="w"> </span>--chunk-size<span class="w"> </span><span class="m">10000</span><span class="w">  </span><span class="c1"># Memory-efficient</span>
 </span></code></pre></div>
 <p><strong>Key options:</strong></p>
 <table>
@@ -3055,23 +3091,23 @@
 <p><a href="https://io.sleap.ai/latest/cli/#sio-export"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> Full export documentation</a></p>
 <h3 id="sleap-show"><code>sleap show</code><a class="headerlink" href="#sleap-show" title="Permanent link">&para;</a></h3>
 <p>Print a summary of a labels file.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>sleap<span class="w"> </span>show<span class="w"> </span>labels.slp
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sleap<span class="w"> </span>show<span class="w"> </span>labels.slp
 </span></code></pre></div>
 <h3 id="sleap-render"><code>sleap render</code><a class="headerlink" href="#sleap-render" title="Permanent link">&para;</a></h3>
 <p>Render pose predictions as video or image.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sleap<span class="w"> </span>render<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;labels.slp&gt;<span class="w"> </span>-o<span class="w"> </span>&lt;output.mp4&gt;
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="c1"># Examples</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>sleap<span class="w"> </span>render<span class="w"> </span>predictions.slp<span class="w"> </span>-o<span class="w"> </span>video.mp4
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>sleap<span class="w"> </span>render<span class="w"> </span>predictions.slp<span class="w"> </span>-o<span class="w"> </span>frame.png<span class="w"> </span>--frames<span class="w"> </span><span class="m">100</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sleap<span class="w"> </span>render<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>&lt;labels.slp&gt;<span class="w"> </span>-o<span class="w"> </span>&lt;output.mp4&gt;
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># Examples</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>sleap<span class="w"> </span>render<span class="w"> </span>predictions.slp<span class="w"> </span>-o<span class="w"> </span>video.mp4
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>sleap<span class="w"> </span>render<span class="w"> </span>predictions.slp<span class="w"> </span>-o<span class="w"> </span>frame.png<span class="w"> </span>--frames<span class="w"> </span><span class="m">100</span>
 </span></code></pre></div>
 <h3 id="sleap-merge"><code>sleap merge</code><a class="headerlink" href="#sleap-merge" title="Permanent link">&para;</a></h3>
 <p>Merge multiple labels files into one.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>sleap<span class="w"> </span>merge<span class="w"> </span>file1.slp<span class="w"> </span>file2.slp<span class="w"> </span>-o<span class="w"> </span>merged.slp
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sleap<span class="w"> </span>merge<span class="w"> </span>file1.slp<span class="w"> </span>file2.slp<span class="w"> </span>-o<span class="w"> </span>merged.slp
 </span></code></pre></div>
 <h3 id="sleap-split"><code>sleap split</code><a class="headerlink" href="#sleap-split" title="Permanent link">&para;</a></h3>
 <p>Split labels into train/validation/test sets.</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>sleap<span class="w"> </span>split<span class="w"> </span>labels.slp<span class="w"> </span>-o<span class="w"> </span>output_dir/<span class="w"> </span>--val<span class="w"> </span><span class="m">0</span>.1<span class="w"> </span>--test<span class="w"> </span><span class="m">0</span>.1
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sleap<span class="w"> </span>split<span class="w"> </span>labels.slp<span class="w"> </span>-o<span class="w"> </span>output_dir/<span class="w"> </span>--val<span class="w"> </span><span class="m">0</span>.1<span class="w"> </span>--test<span class="w"> </span><span class="m">0</span>.1
 </span></code></pre></div>
 <h3 id="other-data-commands">Other Data Commands<a class="headerlink" href="#other-data-commands" title="Permanent link">&para;</a></h3>
 <table>
@@ -3122,177 +3158,179 @@
 <details class="plain">
 <summary>sleap-label</summary>
 <p>Legacy entry point for the GUI. <strong>Use <code>sleap label</code> instead.</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>usage: sleap-label [-h] [--nonnative] [--profiling] [--reset] [labels_path]
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>positional arguments:
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>  labels_path  Path to labels file
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>optional arguments:
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>  -h, --help   show this help message and exit
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>  --nonnative  Don&#39;t use native file dialogs
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>  --profiling  Enable performance profiling
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>  --reset      Reset GUI state and preferences
+<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>usage: sleap-label [-h] [--nonnative] [--profiling] [--reset] [labels_path]
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>positional arguments:
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>  labels_path  Path to labels file
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>optional arguments:
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>  -h, --help   show this help message and exit
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>  --nonnative  Don&#39;t use native file dialogs
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>  --profiling  Enable performance profiling
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>  --reset      Reset GUI state and preferences
 </span></code></pre></div>
 </details>
 <details class="plain">
 <summary>sleap-train</summary>
 <p>Legacy training command. <strong>Use <code>sleap train</code> for new projects.</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>                   [--test_labels TEST_LABELS] [--save_viz] [--keep_viz] [--zmq]
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>                   [--run_name RUN_NAME] [--prefix PREFIX] [--suffix SUFFIX]
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>                   [--cpu] [--first-gpu] [--last-gpu] [--gpu GPU]
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>                   training_job_path [labels_path]
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>positional arguments:
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>  training_job_path     Path to training job profile JSON/YAML file
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>  labels_path           Path to labels file for training
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>optional arguments:
-</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>  --video-paths         List of paths for finding videos
-</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>  --val_labels, --val   Path to validation labels file
-</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>  --test_labels, --test Path to test labels file
-</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>  --base_checkpoint     Path to checkpoint to resume from
-</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>  --save_viz            Save prediction visualizations
-</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>  --keep_viz            Keep visualization images after training
-</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>  --zmq                 Enable ZMQ logging (for GUI)
-</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>  --run_name            Run name for saving files
-</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>  --prefix              Prefix to prepend to run name
-</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>  --suffix              Suffix to append to run name
-</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a>  --cpu                 Run on CPU only
-</span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a>  --first-gpu           Run on first GPU
-</span><span id="__span-12-24"><a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a>  --last-gpu            Run on last GPU
-</span><span id="__span-12-25"><a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a>  --gpu GPU             Run on specific GPU (or &#39;auto&#39;)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>usage: sleap-train [-h] [--video-paths VIDEO_PATHS] [--val_labels VAL_LABELS]
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>                   [--test_labels TEST_LABELS] [--save_viz] [--keep_viz] [--zmq]
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>                   [--run_name RUN_NAME] [--prefix PREFIX] [--suffix SUFFIX]
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>                   [--cpu] [--first-gpu] [--last-gpu] [--gpu GPU]
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>                   training_job_path [labels_path]
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>positional arguments:
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>  training_job_path     Path to training job profile JSON/YAML file
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>  labels_path           Path to labels file for training
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>optional arguments:
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>  --video-paths         List of paths for finding videos
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>  --val_labels, --val   Path to validation labels file
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>  --test_labels, --test Path to test labels file
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>  --base_checkpoint     Path to checkpoint to resume from
+</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>  --save_viz            Save prediction visualizations
+</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>  --keep_viz            Keep visualization images after training
+</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>  --zmq                 Enable ZMQ logging (for GUI)
+</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>  --run_name            Run name for saving files
+</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>  --prefix              Prefix to prepend to run name
+</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a>  --suffix              Suffix to append to run name
+</span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>  --cpu                 Run on CPU only
+</span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a>  --first-gpu           Run on first GPU
+</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a>  --last-gpu            Run on last GPU
+</span><span id="__span-13-25"><a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a>  --gpu GPU             Run on specific GPU (or &#39;auto&#39;)
 </span></code></pre></div>
 </details>
 <details class="plain">
 <summary>sleap-track</summary>
-<p>Legacy inference command. <strong>Use <code>sleap track</code> for new projects.</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [-o OUTPUT] [--batch_size BATCH_SIZE]
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>                   [--peak_threshold PEAK_THRESHOLD] [-n MAX_INSTANCES]
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>                   [--tracking.tracker TRACKER] [--tracking.max_tracks MAX_TRACKS]
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>                   [--cpu | --first-gpu | --last-gpu | --gpu GPU]
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>                   [data_path]
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>positional arguments:
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>  data_path             Path to video, .slp file, or folder of videos
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>optional arguments:
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>  -m, --model           Path to trained model directory (can specify multiple)
-</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>  --frames              Frames to predict (e.g., &quot;1,2,3&quot; or &quot;1-100&quot;)
-</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>  --only-labeled-frames Only predict on labeled frames
-</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>  --only-suggested-frames Only predict on suggested frames
-</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>  -o, --output          Output filename (default: [data_path].predictions.slp)
-</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a>  --no-empty-frames     Clear empty frames before saving
-</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>  --batch_size          Frames per batch (default: 4)
-</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>  --peak_threshold      Minimum confidence threshold
-</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>  -n, --max_instances   Limit instances per frame
-</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>  --open-in-gui         Open results in GUI when done
-</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a>
-</span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>Tracking options:
-</span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a>  --tracking.tracker    Tracker type: simple, flow, simplemaxtracks, flowmaxtracks
-</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a>  --tracking.max_tracks Maximum number of tracks
-</span><span id="__span-13-25"><a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a>  --tracking.track_window Frames to look back for matches (default: 5)
-</span><span id="__span-13-26"><a id="__codelineno-13-26" name="__codelineno-13-26" href="#__codelineno-13-26"></a>  --tracking.similarity Similarity metric: instance, centroid, iou
-</span><span id="__span-13-27"><a id="__codelineno-13-27" name="__codelineno-13-27" href="#__codelineno-13-27"></a>  --tracking.match      Matching algorithm: hungarian, greedy
-</span><span id="__span-13-28"><a id="__codelineno-13-28" name="__codelineno-13-28" href="#__codelineno-13-28"></a>
-</span><span id="__span-13-29"><a id="__codelineno-13-29" name="__codelineno-13-29" href="#__codelineno-13-29"></a>GPU options:
-</span><span id="__span-13-30"><a id="__codelineno-13-30" name="__codelineno-13-30" href="#__codelineno-13-30"></a>  --cpu                 Run on CPU only
-</span><span id="__span-13-31"><a id="__codelineno-13-31" name="__codelineno-13-31" href="#__codelineno-13-31"></a>  --first-gpu           Run on first GPU
-</span><span id="__span-13-32"><a id="__codelineno-13-32" name="__codelineno-13-32" href="#__codelineno-13-32"></a>  --last-gpu            Run on last GPU
-</span><span id="__span-13-33"><a id="__codelineno-13-33" name="__codelineno-13-33" href="#__codelineno-13-33"></a>  --gpu GPU             Run on specific GPU (or &#39;auto&#39;)
+<p>Legacy inference command. <strong>Use <code>sleap predict</code> for new projects.</strong></p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>usage: sleap-track [-h] [-m MODELS] [--frames FRAMES] [-o OUTPUT] [--batch_size BATCH_SIZE]
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>                   [--peak_threshold PEAK_THRESHOLD] [-n MAX_INSTANCES]
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>                   [--tracking.tracker TRACKER] [--tracking.max_tracks MAX_TRACKS]
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>                   [--cpu | --first-gpu | --last-gpu | --gpu GPU]
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>                   [data_path]
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>positional arguments:
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>  data_path             Path to video, .slp file, or folder of videos
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>optional arguments:
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>  -m, --model           Path to trained model directory (can specify multiple)
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>  --frames              Frames to predict (e.g., &quot;1,2,3&quot; or &quot;1-100&quot;)
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>  --only-labeled-frames Only predict on labeled frames
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>  --only-suggested-frames Only predict on suggested frames
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>  -o, --output          Output filename (default: [data_path].predictions.slp)
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>  --no-empty-frames     Clear empty frames before saving
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>  --batch_size          Frames per batch (default: 4)
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>  --peak_threshold      Minimum confidence threshold
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>  -n, --max_instances   Limit instances per frame
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>  --open-in-gui         Open results in GUI when done
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a>
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a>Tracking options:
+</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>  --tracking.tracker    Tracker type: simple, flow, simplemaxtracks, flowmaxtracks
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a>  --tracking.max_tracks Maximum number of tracks
+</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a>  --tracking.track_window Frames to look back for matches (default: 5)
+</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a>  --tracking.similarity Similarity metric: instance, centroid, iou
+</span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a>  --tracking.match      Matching algorithm: hungarian, greedy
+</span><span id="__span-14-28"><a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a>
+</span><span id="__span-14-29"><a id="__codelineno-14-29" name="__codelineno-14-29" href="#__codelineno-14-29"></a>GPU options:
+</span><span id="__span-14-30"><a id="__codelineno-14-30" name="__codelineno-14-30" href="#__codelineno-14-30"></a>  --cpu                 Run on CPU only
+</span><span id="__span-14-31"><a id="__codelineno-14-31" name="__codelineno-14-31" href="#__codelineno-14-31"></a>  --first-gpu           Run on first GPU
+</span><span id="__span-14-32"><a id="__codelineno-14-32" name="__codelineno-14-32" href="#__codelineno-14-32"></a>  --last-gpu            Run on last GPU
+</span><span id="__span-14-33"><a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a>  --gpu GPU             Run on specific GPU (or &#39;auto&#39;)
 </span></code></pre></div>
 <p><strong>Examples:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Simple inference</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/my_model&quot;</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span><span class="w"> </span><span class="s2">&quot;video.mp4&quot;</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># Multi-model pipeline (top-down)</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/centroid&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/instance&quot;</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span><span class="w"> </span><span class="s2">&quot;video.mp4&quot;</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="c1"># With tracking</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/my_model&quot;</span><span class="w"> </span>--tracking.tracker<span class="w"> </span>simple<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span><span class="w"> </span><span class="s2">&quot;video.mp4&quot;</span>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="c1"># Re-track existing predictions</span>
-</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>sleap-track<span class="w"> </span>--tracking.tracker<span class="w"> </span>simple<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;retracked.slp&quot;</span><span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Simple inference</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/my_model&quot;</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span><span class="w"> </span><span class="s2">&quot;video.mp4&quot;</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Multi-model pipeline (top-down)</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/centroid&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/instance&quot;</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span><span class="w"> </span><span class="s2">&quot;video.mp4&quot;</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="c1"># With tracking</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/my_model&quot;</span><span class="w"> </span>--tracking.tracker<span class="w"> </span>simple<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span><span class="w"> </span><span class="s2">&quot;video.mp4&quot;</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="c1"># Re-track existing predictions</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>sleap-track<span class="w"> </span>--tracking.tracker<span class="w"> </span>simple<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;retracked.slp&quot;</span><span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span>
 </span></code></pre></div>
 </details>
 <details class="plain">
 <summary>sleap-nn-train / sleap-nn-track</summary>
-<p>Direct sleap-nn entry points. <strong>Use <code>sleap train</code> and <code>sleap track</code> for new projects.</strong></p>
-<p>These commands provide the same functionality as <code>sleap train</code> and <code>sleap track</code> but bypass the unified CLI wrapper.</p>
+<p>Direct sleap-nn entry points. <strong>Use <code>sleap train</code> and <code>sleap predict</code> for new projects.</strong></p>
+<p>These commands provide the same functionality as <code>sleap train</code> and <code>sleap track</code> (the
+legacy pipeline) but bypass the unified CLI wrapper. For the recommended inference
+pipeline, use <code>sleap predict</code> instead.</p>
 <p><strong>sleap-nn-train:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>sleap-nn-train<span class="w"> </span>--config<span class="w"> </span>&lt;config.yaml&gt;<span class="w"> </span><span class="o">[</span>overrides<span class="o">]</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="c1"># Examples</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>sleap-nn-train<span class="w"> </span>--config<span class="w"> </span>/path/to/config/baseline.yaml
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>sleap-nn-train<span class="w"> </span>--config<span class="w"> </span>baseline.yaml<span class="w"> </span>trainer_config.max_epochs<span class="o">=</span><span class="m">100</span>
-</span></code></pre></div></p>
-<p><strong>sleap-nn-track:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>sleap-nn-track<span class="w"> </span>--data_path<span class="w"> </span>&lt;video&gt;<span class="w"> </span>--model_paths<span class="w"> </span>&lt;model&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>sleap-nn-train<span class="w"> </span>--config<span class="w"> </span>&lt;config.yaml&gt;<span class="w"> </span><span class="o">[</span>overrides<span class="o">]</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="c1"># Examples</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>sleap-nn-track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/ckpt_folder/
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>sleap-nn-track<span class="w"> </span>--data_path<span class="w"> </span>video.mp4<span class="w"> </span>--model_paths<span class="w"> </span>models/<span class="w"> </span>--tracking
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>sleap-nn-train<span class="w"> </span>--config<span class="w"> </span>/path/to/config/baseline.yaml
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>sleap-nn-train<span class="w"> </span>--config<span class="w"> </span>baseline.yaml<span class="w"> </span>trainer_config.max_epochs<span class="o">=</span><span class="m">100</span>
+</span></code></pre></div></p>
+<p><strong>sleap-nn-track:</strong>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>sleap-nn-track<span class="w"> </span>--data_path<span class="w"> </span>&lt;video&gt;<span class="w"> </span>--model_paths<span class="w"> </span>&lt;model&gt;<span class="w"> </span><span class="o">[</span>options<span class="o">]</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="c1"># Examples</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>sleap-nn-track<span class="w"> </span>-i<span class="w"> </span>video.mp4<span class="w"> </span>-m<span class="w"> </span>models/ckpt_folder/
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>sleap-nn-track<span class="w"> </span>--data_path<span class="w"> </span>video.mp4<span class="w"> </span>--model_paths<span class="w"> </span>models/<span class="w"> </span>--tracking
 </span></code></pre></div></p>
 <p>See <a href="https://nn.sleap.ai">sleap-nn documentation</a> for full details.</p>
 </details>
 <details class="plain">
 <summary>sleap-convert (legacy)</summary>
 <p>Legacy conversion command. <strong>Use <code>sleap convert</code> instead.</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>usage: sleap-convert [-h] [-o OUTPUT] [--format FORMAT] [--video VIDEO] input_path
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>positional arguments:
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>  input_path    Path to input file
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>optional arguments:
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>  -o, --output  Path to output file
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>  --format      Output format: slp, analysis, analysis.nix, analysis.csv, h5, json
-</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>  --video       Path to video (if needed)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>usage: sleap-convert [-h] [-o OUTPUT] [--format FORMAT] [--video VIDEO] input_path
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>positional arguments:
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>  input_path    Path to input file
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>optional arguments:
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>  -o, --output  Path to output file
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>  --format      Output format: slp, analysis, analysis.nix, analysis.csv, h5, json
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>  --video       Path to video (if needed)
 </span></code></pre></div>
 <p><strong>Example:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>sleap-convert<span class="w"> </span>--format<span class="w"> </span>analysis<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.analysis.h5&quot;</span><span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>sleap-convert<span class="w"> </span>--format<span class="w"> </span>analysis<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.analysis.h5&quot;</span><span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span>
 </span></code></pre></div></p>
 </details>
 <details class="plain">
 <summary>sleap-inspect</summary>
 <p>Legacy inspection command. <strong>Use <code>sleap show</code> instead.</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>usage: sleap-inspect [-h] [--verbose] data_path
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>positional arguments:
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>  data_path   Path to labels file (.slp) or model folder
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>optional arguments:
-</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>  --verbose   Show detailed information
+<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>usage: sleap-inspect [-h] [--verbose] data_path
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>positional arguments:
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>  data_path   Path to labels file (.slp) or model folder
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>optional arguments:
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>  --verbose   Show detailed information
 </span></code></pre></div>
 </details>
 <details class="plain">
 <summary>sleap-render (legacy)</summary>
 <p>Legacy render command. <strong>Use <code>sleap render</code> instead.</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>usage: sleap-render [-h] [-o OUTPUT] [-f FPS] [--scale SCALE] [--frames FRAMES]
-</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>                    [--video-index VIDEO_INDEX] [--palette PALETTE] data_path
-</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>positional arguments:
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>  data_path             Path to labels file
-</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>
-</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>optional arguments:
-</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>  -o, --output          Output path
-</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>  --video-index         Video index in labels (default: 0)
-</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>  --frames              Frames to render (e.g., &quot;1,2,3&quot; or &quot;1-100&quot;)
-</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>  -f, --fps             Output FPS (default: 25)
-</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>  --scale               Image scale (default: 1.0)
-</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>  --show_edges          Draw lines between nodes (default: 1)
-</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a>  --marker_size         Marker size in pixels (default: 4)
-</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a>  --palette             Color palette: alphabet, five+, solarized, standard
-</span><span id="__span-20-16"><a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a>  --distinctly_color    Color by: instances, edges, nodes
+<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>usage: sleap-render [-h] [-o OUTPUT] [-f FPS] [--scale SCALE] [--frames FRAMES]
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>                    [--video-index VIDEO_INDEX] [--palette PALETTE] data_path
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>positional arguments:
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>  data_path             Path to labels file
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>optional arguments:
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>  -o, --output          Output path
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>  --video-index         Video index in labels (default: 0)
+</span><span id="__span-21-10"><a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a>  --frames              Frames to render (e.g., &quot;1,2,3&quot; or &quot;1-100&quot;)
+</span><span id="__span-21-11"><a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a>  -f, --fps             Output FPS (default: 25)
+</span><span id="__span-21-12"><a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a>  --scale               Image scale (default: 1.0)
+</span><span id="__span-21-13"><a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a>  --show_edges          Draw lines between nodes (default: 1)
+</span><span id="__span-21-14"><a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a>  --marker_size         Marker size in pixels (default: 4)
+</span><span id="__span-21-15"><a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a>  --palette             Color palette: alphabet, five+, solarized, standard
+</span><span id="__span-21-16"><a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a>  --distinctly_color    Color by: instances, edges, nodes
 </span></code></pre></div>
 </details>
 <details class="plain">
 <summary>sleap-diagnostic</summary>
 <p>Legacy diagnostics command. <strong>Use <code>sleap doctor</code> instead.</strong></p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>optional arguments:
-</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>  -o, --output   Path for saving output
-</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>  --gui-check    Check if Qt GUI widgets can be used
+<div class="language-text highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>optional arguments:
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>  -o, --output   Path for saving output
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>  --gui-check    Check if Qt GUI widgets can be used
 </span></code></pre></div>
 </details>
 <hr />

@@ -75,7 +75,7 @@ Documentation: [nn.sleap.ai](https://nn.sleap.ai)
 | Step | Tool | Description |
 |------|------|-------------|
 | Configure model | GUI or config file | Choose model type, backbone, hyperparameters |
-| Train | GUI or `sleap nn-train` | Train on labeled data with augmentation |
+| Train | GUI or `sleap train` | Train on labeled data with augmentation |
 | Monitor | TensorBoard or WandB | Track loss, metrics, visualizations |
 | Evaluate | GUI | Check precision, recall on validation data |
 
@@ -83,7 +83,7 @@ Documentation: [nn.sleap.ai](https://nn.sleap.ai)
 
 | Step | Tool | Description |
 |------|------|-------------|
-| Run inference | GUI or `sleap nn-track` | Predict poses on new videos |
+| Run inference | GUI or `sleap predict` | Predict poses on new videos |
 | Track identities | Automatic | Link instances across frames |
 | Proofread | GUI | Fix tracking errors |
 | Export | GUI or `sleap convert` | Save to HDF5, CSV, NWB, COCO, etc. |
@@ -97,8 +97,8 @@ The unified `sleap` CLI provides access to all functionality:
 ```bash
 sleap label [FILE]      # Launch GUI
 sleap doctor            # Check installation
-sleap nn-train ...      # Train models (sleap-nn)
-sleap nn-track ...      # Run inference (sleap-nn)
+sleap train ...         # Train models (sleap-nn)
+sleap predict ...       # Run inference (sleap-nn)
 sleap convert ...       # Convert formats (sleap-io)
 sleap show ...          # Inspect files (sleap-io)
 ```
