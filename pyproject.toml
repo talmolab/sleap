@@ -130,17 +130,12 @@ Documentation = "https://sleap.ai/"
 [project.scripts]
 sleap = "sleap.cli:cli"
 sleap-convert = "sleap.io.convert:main"
-sleap-render = "sleap.io.visuals:main"
+sleap-render = "sleap.io.visuals:main" # deprecation warning
 sleap-label = "sleap.gui.app:main"
-sleap-inspect = "sleap.info.labels:main"
-sleap-diagnostic = "sleap.diagnostic:main"
-sleap-train = "sleap.legacy_cli_adaptors:train_command"
-sleap-track = "sleap.legacy_cli_adaptors:track_command"
-sleap-nn-train = "sleap.nn_cli:train"
-sleap-nn-track = "sleap.nn_cli:track"
-sleap-nn-export = "sleap.nn_cli:export"
-sleap-nn-predict = "sleap.nn_cli:predict"
-# sleap-export = "sleap.legacy_cli_adaptors:export_cli"
+sleap-inspect = "sleap.info.labels:main" # deprecation warning
+sleap-diagnostic = "sleap.diagnostic:main" # deprecation warning
+sleap-train = "sleap.legacy_cli_adaptors:train_command" # deprecation warning
+sleap-track = "sleap.legacy_cli_adaptors:track_command" # deprecation warning
 
 [tool.uv]
 index-url = "https://download.pytorch.org/whl/cu128"

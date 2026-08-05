@@ -3,11 +3,17 @@ Command line utility which prints data about labels file.
 """
 
 import os
+import click
 from sleap.sleap_io_adaptors.instance_utils import bounding_box
 from sleap.sleap_io_adaptors.lf_labels_utils import get_labeled_frame_count
 from sleap.sleap_io_adaptors.lf_labels_utils import labels_load_file
 from sleap.util import show_sleap_nn_installation_message
 from sleap.gui.learning.load_legacy_metrics import load_npz_extract_arrays
+
+
+def _warn_deprecated(message: str) -> None:
+    """Print a deprecation warning for the legacy sleap-inspect command."""
+    click.echo(click.style(message, fg="yellow"), err=True)
 
 
 def describe_labels(data_path, verbose=False):
@@ -232,12 +238,21 @@ def main():
     args = parser.parse_args()
 
     if args.data_path.endswith(".slp"):
+        _warn_deprecated(
+            "Note: 'sleap-inspect' is a legacy command. "
+            "Consider using 'sleap show' instead."
+        )
         describe_labels(args.data_path, verbose=args.verbose)
 
     elif os.path.isdir(args.data_path):
         if os.path.exists(
             os.path.join(args.data_path, "training_config.yaml")
         ) or os.path.exists(os.path.join(args.data_path, "training_config.json")):
+            _warn_deprecated(
+                "Note: 'sleap-inspect' is a legacy command. There is currently no "
+                "equivalent in the unified 'sleap' CLI for inspecting model "
+                "directories."
+            )
             describe_model(args.data_path, verbose=args.verbose)
 
 
