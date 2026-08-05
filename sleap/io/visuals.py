@@ -21,6 +21,7 @@ from time import perf_counter
 from typing import List, Optional, Tuple
 import os
 
+import click
 import cv2
 import numpy as np
 
@@ -727,6 +728,16 @@ def main(args: list = None):
     #     ),
     # )
     args = parser.parse_args(args=args)
+
+    click.echo(
+        click.style(
+            "Note: 'sleap-render' is a legacy command. "
+            "Consider using 'sleap render' instead.",
+            fg="yellow",
+        ),
+        err=True,
+    )
+
     labels = load_labels_video_search(
         args.data_path, video_search=[os.path.dirname(args.data_path)]
     )

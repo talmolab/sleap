@@ -403,37 +403,6 @@ sleap-track --tracking.tracker simple -o "retracked.slp" "predictions.slp"
 </details>
 
 <details class="plain" markdown>
-<summary>sleap-nn-train / sleap-nn-track</summary>
-
-Direct sleap-nn entry points. **Use `sleap train` and `sleap predict` for new projects.**
-
-These commands provide the same functionality as `sleap train` and `sleap track` (the
-legacy pipeline) but bypass the unified CLI wrapper. For the recommended inference
-pipeline, use `sleap predict` instead.
-
-**sleap-nn-train:**
-```bash
-sleap-nn-train --config <config.yaml> [overrides]
-
-# Examples
-sleap-nn-train --config /path/to/config/baseline.yaml
-sleap-nn-train --config baseline.yaml trainer_config.max_epochs=100
-```
-
-**sleap-nn-track:**
-```bash
-sleap-nn-track --data_path <video> --model_paths <model> [options]
-
-# Examples
-sleap-nn-track -i video.mp4 -m models/ckpt_folder/
-sleap-nn-track --data_path video.mp4 --model_paths models/ --tracking
-```
-
-See [sleap-nn documentation](https://nn.sleap.ai) for full details.
-
-</details>
-
-<details class="plain" markdown>
 <summary>sleap-convert (legacy)</summary>
 
 Legacy conversion command. **Use `sleap convert` instead.**
@@ -460,7 +429,8 @@ sleap-convert --format analysis -o "predictions.analysis.h5" "predictions.slp"
 <details class="plain" markdown>
 <summary>sleap-inspect</summary>
 
-Legacy inspection command. **Use `sleap show` instead.**
+Legacy inspection command. **For labels files, use `sleap show` instead.** Model
+directory inspection has no equivalent in the unified `sleap` CLI yet.
 
 ```none
 usage: sleap-inspect [-h] [--verbose] data_path
@@ -503,7 +473,9 @@ optional arguments:
 <details class="plain" markdown>
 <summary>sleap-diagnostic</summary>
 
-Legacy diagnostics command. **Use `sleap doctor` instead.**
+Legacy diagnostics command. **Use `sleap doctor` instead.** Note that `sleap
+doctor` does not include a full `pip freeze`/`conda list` dump or the
+`--gui-check` Qt smoke test; use `sleap-diagnostic` if you need those.
 
 ```none
 usage: sleap-diagnostic [-h] [-o OUTPUT] [--gui-check]

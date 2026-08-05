@@ -772,7 +772,7 @@ def doctor(output_json: bool, output_file: Optional[str], show_commit: bool) -> 
     # -------------------------------------------------------------------------
     with console.status(f"[{DIM}]Checking CLI binaries...[/]", spinner="dots"):
         binaries = []
-        bin_names = ["sleap", "sleap-nn", "sleap-nn-track", "sio"]
+        bin_names = ["sleap", "sleap-nn", "sio"]
         for bin_name in bin_names:
             bin_info = get_binary_info(bin_name)
             if bin_info:
@@ -914,7 +914,7 @@ def _doctor_json(show_commit: bool = False) -> None:
             packages.append(pkg_info)
 
     binaries = []
-    for bin_name in ["sleap", "sleap-nn", "sleap-nn-track", "sio"]:
+    for bin_name in ["sleap", "sleap-nn", "sio"]:
         bin_info = get_binary_info(bin_name)
         if bin_info:
             binaries.append(bin_info)

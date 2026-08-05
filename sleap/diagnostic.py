@@ -174,6 +174,8 @@ def gui_check():
 def main():
     import argparse
 
+    import click
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-o", "--output", help="Path for saving output", type=str, default=None
@@ -189,8 +191,27 @@ def main():
     args = parser.parse_args()
 
     if args.gui_check:
+        click.echo(
+            click.style(
+                "Note: 'sleap-diagnostic' is a legacy command. There is currently "
+                "no equivalent in the unified 'sleap' CLI for the --gui-check "
+                "option.",
+                fg="yellow",
+            ),
+            err=True,
+        )
         gui_check()
     else:
+        click.echo(
+            click.style(
+                "Note: 'sleap-diagnostic' is a legacy command. Consider using "
+                "'sleap doctor' instead. Note that 'sleap doctor' does not include "
+                "a full 'pip freeze'/'conda list' dump; use 'sleap-diagnostic' if "
+                "you need that.",
+                fg="yellow",
+            ),
+            err=True,
+        )
         get_diagnostics(output_path=args.output)
 
 
