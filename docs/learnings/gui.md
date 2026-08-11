@@ -25,7 +25,8 @@ The SLEAP labeling interface is launched via the `sleap label` command (or legac
 
 | Command | Description |
 |---------|-------------|
-| **Next Labeled Frame** | Jump to next frame with any labels (user or predicted) |
+| **Next Predicted Frame** / **Previous Predicted Frame** | Jump to next/previous frame with any instances (user or predicted) |
+| **Next Labeled Frame** / **Previous Labeled Frame** | Jump to next/previous frame with user-confirmed instances only |
 | **Next User Labeled Frame** | Jump to next frame with user labels only |
 | **Previous User Labeled Frame** | Jump to previous frame with user labels only |
 | **Next Suggestion** | Jump to the next suggested frame |
