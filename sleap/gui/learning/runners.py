@@ -455,6 +455,30 @@ class VideoItemForInference(ItemForInference):
         return self.video.filename
 
     @property
+    def is_entire_video(self) -> bool:
+        """Whether `frames` selects every frame of the video.
+
+        The "entire video" option encodes its selection as the half-open range
+        ``[0, len(video))`` (i.e. ``frames == [0, -len(video)]`` via the
+        ``encode_range`` helper in `MainWindow._get_frames_for_prediction`).
+        Detecting this lets `cli_args` omit ``--frames`` so the inference CLI
+        predicts on all frames using its own frame count, rather than a count
+        derived from the GUI (which may differ by one).
+        """
+        if self.frames is None:
+            return False
+        frames = list(self.frames)
+        negatives = [f for f in frames if f < 0]
+        non_negatives = [f for f in frames if f >= 0]
+        if len(negatives) != 1 or len(non_negatives) != 1:
+            return False
+        try:
+            video_length = len(self.video)
+        except (TypeError, AttributeError):
+            return False
+        return non_negatives[0] == 0 and -negatives[0] == video_length
+
+    @property
     def cli_args(self):
         arg_list = list()
         arg_list.extend(["--data_path", f"{self.path}"])
@@ -476,12 +500,25 @@ class VideoItemForInference(ItemForInference):
         ):
             arg_list.extend(("--video_input_format", self.video.backend.input_format))
 
-        # -Y represents endpoint of [X, Y) range but inference cli expects
-        # [X, Y-1] range (so add 1 since negative).
-        frame_int_list = list(set([i + 1 if i < 0 else i for i in self.frames]))
-        frame_int_list.sort(reverse=min(frame_int_list) < 0)  # Assumes len of 2 if neg.
+        # `frames` is either an explicit list of (non-negative) frame indices or
+        # a half-open range [X, Y) whose exclusive endpoint Y is stored as a
+        # negative value (see `MainWindow._get_frames_for_prediction`).
+        #
+        # For the entire video, omit `--frames` and let the inference CLI default
+        # to predicting on all frames. This avoids emitting the fragile "0,-N"
+        # range encoding, and avoids pinning the endpoint to the frame count seen
+        # by the GUI -- which can be one greater than the number of frames the
+        # inference video reader actually decodes, causing an out-of-range
+        # `IndexError` on the final frame.
+        if not self.is_entire_video:
+            # -Y represents endpoint of [X, Y) range but inference cli expects
+            # [X, Y-1] range (so add 1 since negative).
+            frame_int_list = list(set([i + 1 if i < 0 else i for i in self.frames]))
+            frame_int_list.sort(
+                reverse=min(frame_int_list) < 0
+            )  # Assumes len of 2 if neg.
 
-        arg_list.extend(("--frames", ",".join(map(str, frame_int_list))))
+            arg_list.extend(("--frames", ",".join(map(str, frame_int_list))))
 
         return arg_list
 
