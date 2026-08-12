@@ -48,6 +48,32 @@ def mock_video_with_backend():
 
 
 @pytest.fixture
+def mock_embedded_video():
+    """Create a mock Video whose images are embedded in a `.pkg.slp`.
+
+    Matches what sleap-io reports for an embedded project: `filename` is the
+    `.pkg.slp` itself and `backend.dataset` names the embedded video.
+    """
+    video = MagicMock(spec=Video)
+    video.filename = "/path/to/train.pkg.slp"
+    video.backend = MagicMock()
+    video.backend.dataset = "video3/video"
+    video.backend.input_format = "channels_last"
+    return video
+
+
+@pytest.fixture
+def mock_image_sequence_video():
+    """Create a mock Video backed by a list of image files."""
+    video = MagicMock(spec=Video)
+    video.filename = ["/path/to/imgs/img0.png", "/path/to/imgs/img1.png"]
+    video.backend = MagicMock()
+    video.backend.dataset = None
+    video.backend.input_format = None
+    return video
+
+
+@pytest.fixture
 def mock_labels(mock_video):
     """Create a mock Labels object."""
     labels = MagicMock(spec=Labels)
@@ -64,7 +90,7 @@ class TestVideoItemForInferenceCLI:
     """Tests for VideoItemForInference CLI argument construction."""
 
     def test_basic_cli_args(self, mock_video):
-        """Basic CLI args should include data path and frames."""
+        """Basic CLI args should include the video data path and frames."""
         item = VideoItemForInference(
             video=mock_video,
             frames=[0, 1, 2, 3, 4],
@@ -75,14 +101,23 @@ class TestVideoItemForInferenceCLI:
         cli_args = item.cli_args
 
         assert "--data_path" in cli_args
-        assert "/path/to/labels.slp" in cli_args
+        data_idx = cli_args.index("--data_path") + 1
+        assert cli_args[data_idx] == "/path/to/video.mp4"
+        assert "/path/to/labels.slp" not in cli_args
         assert "--frames" in cli_args
         # Frames should be comma-separated
         frames_idx = cli_args.index("--frames") + 1
         assert cli_args[frames_idx] == "0,1,2,3,4"
 
-    def test_cli_args_with_video_index(self, mock_video):
-        """CLI args should include video index when labels_path is provided."""
+    def test_cli_args_never_include_video_index(self, mock_video):
+        """CLI args should not include --video_index even with a labels_path.
+
+        Regression test: `--data_path` is the video file itself, so there is
+        exactly one video and no index to select. Passing a `.slp` data path plus
+        `--video_index`/`--frames` routed sleap-nn through `LabelsProvider`, which
+        can only subset frames that are *already labeled* in the project -- so
+        "predict on entire video" silently capped at the labeled-frame count.
+        """
         item = VideoItemForInference(
             video=mock_video,
             frames=[0, 1, 2],
@@ -92,9 +127,100 @@ class TestVideoItemForInferenceCLI:
 
         cli_args = item.cli_args
 
+        assert "--video_index" not in cli_args
+        data_idx = cli_args.index("--data_path") + 1
+        assert cli_args[data_idx] == "/path/to/video.mp4"
+
+    def test_entire_video_range_targets_video_file(self, mock_video):
+        """Entire-video mode on a sparsely labeled project must target the video.
+
+        Regression test for the frame-count cap: a project with 20 labeled frames
+        out of 2560 asked for `--frames 0,-1499` against the `.slp`, and sleap-nn
+        logged `source=LabelsProvider | frames=20`. The full frame range must go to
+        the video file so `VideoProvider` reads every requested index.
+        """
+        # "Entire video" encodes the full range as [0, -num_frames] (see
+        # `MainWindow._get_frame_selection`); 1500 frames requested here.
+        item = VideoItemForInference(
+            video=mock_video,
+            frames=[0, -1500],
+            labels_path="/path/to/labels.slp",
+            video_idx=0,
+        )
+
+        cli_args = item.cli_args
+
+        data_idx = cli_args.index("--data_path") + 1
+        assert cli_args[data_idx] == "/path/to/video.mp4"
+        assert not cli_args[data_idx].endswith(".slp")
+        assert "--video_index" not in cli_args
+        frames_idx = cli_args.index("--frames") + 1
+        assert cli_args[frames_idx] == "0,-1499"
+
+    def test_embedded_pkg_slp_keeps_labels_path_and_video_index(
+        self, mock_embedded_video
+    ):
+        """An embedded `.pkg.slp` video must stay on the project + --video_index.
+
+        There is no separate video file for an embedded video -- `video.filename` is
+        the `.pkg.slp` itself -- so pointing `--data_path` at it would hand sleap-nn a
+        `.slp` with no `--video_index`, running unscoped across every video in the
+        project. The frames that exist for an embedded video are exactly the ones
+        stored in the project, so `LabelsProvider` is the right source here.
+        """
+        item = VideoItemForInference(
+            video=mock_embedded_video,
+            frames=[0, -80],
+            labels_path="/path/to/train.pkg.slp",
+            video_idx=3,
+        )
+
+        assert item.uses_labels_path
+        assert item.path == "/path/to/train.pkg.slp"
+
+        cli_args = item.cli_args
+        data_idx = cli_args.index("--data_path") + 1
+        assert cli_args[data_idx] == "/path/to/train.pkg.slp"
         assert "--video_index" in cli_args
-        idx_pos = cli_args.index("--video_index") + 1
-        assert cli_args[idx_pos] == "2"
+        assert cli_args[cli_args.index("--video_index") + 1] == "3"
+
+    def test_image_sequence_video_keeps_labels_path(self, mock_image_sequence_video):
+        """A video backed by a list of images must stay on the project path.
+
+        `Video.filename` is a list for image-sequence backends, which cannot be
+        expressed as a single `--data_path` (and would be stringified into a Python
+        list repr on the command line).
+        """
+        item = VideoItemForInference(
+            video=mock_image_sequence_video,
+            frames=[0, -2],
+            labels_path="/path/to/labels.slp",
+            video_idx=1,
+        )
+
+        assert item.uses_labels_path
+        assert item.path == "/path/to/labels.slp"
+
+        cli_args = item.cli_args
+        data_idx = cli_args.index("--data_path") + 1
+        assert cli_args[data_idx] == "/path/to/labels.slp"
+        assert "[" not in cli_args[data_idx]
+        assert "--video_index" in cli_args
+
+    def test_absolute_path_not_applied_to_list_filename(
+        self, mock_image_sequence_video
+    ):
+        """use_absolute_path must not try to abspath() a list of image paths."""
+        item = VideoItemForInference(
+            video=mock_image_sequence_video,
+            frames=[0, -2],
+            labels_path="/path/to/labels.slp",
+            video_idx=0,
+            use_absolute_path=True,
+        )
+
+        # Would raise TypeError if abspath() were handed the list.
+        assert item.path == "/path/to/labels.slp"
 
     def test_cli_args_with_hdf5_backend(self, mock_video_with_backend):
         """CLI args should include video_dataset and video_input_format for HDF5."""
@@ -132,8 +258,58 @@ class TestVideoItemForInferenceCLI:
         # -100 becomes -99 (endpoint adjustment)
         assert "-99" in cli_args[frames_idx]
 
+    def test_remote_url_video_not_mangled_by_absolute_path(self):
+        """A remote video URL must pass through verbatim.
+
+        `os.path.abspath()` would rewrite `https://h/v.mp4` into
+        `<cwd>/https:/h/v.mp4`. sleap-nn passes URL data paths through as-is.
+        """
+        video = MagicMock(spec=Video)
+        video.filename = "https://host/videos/vid.mp4"
+        video.backend = MagicMock()
+        video.backend.dataset = None
+        video.backend.input_format = None
+
+        item = VideoItemForInference(
+            video=video,
+            frames=[0, -100],
+            labels_path="/path/to/labels.slp",
+            video_idx=0,
+            use_absolute_path=True,
+        )
+
+        assert not item.uses_labels_path
+        assert item.path == "https://host/videos/vid.mp4"
+
+    def test_no_labels_path_still_uses_video(self, mock_video):
+        """An empty labels_path must not be used as the data path."""
+        for labels_path in (None, ""):
+            item = VideoItemForInference(
+                video=mock_video,
+                frames=[0],
+                labels_path=labels_path,
+                video_idx=0,
+            )
+            assert not item.uses_labels_path
+            assert item.path == mock_video.filename
+
+    def test_no_frames_omits_frames_arg(self, mock_video):
+        """frames=None means all frames, which is `--frames` omitted, not a crash."""
+        item = VideoItemForInference(
+            video=mock_video,
+            frames=None,
+            labels_path="/path/to/labels.slp",
+            video_idx=0,
+        )
+
+        cli_args = item.cli_args  # Used to raise TypeError.
+
+        assert "--frames" not in cli_args
+        data_idx = cli_args.index("--data_path") + 1
+        assert cli_args[data_idx] == "/path/to/video.mp4"
+
     def test_path_property_with_labels(self, mock_video):
-        """path property should return labels_path when provided."""
+        """path property should return the video filename even with a labels_path."""
         item = VideoItemForInference(
             video=mock_video,
             frames=[0],
@@ -141,7 +317,7 @@ class TestVideoItemForInferenceCLI:
             video_idx=0,
         )
 
-        assert item.path == "/path/to/labels.slp"
+        assert item.path == mock_video.filename
 
     def test_path_property_without_labels(self, mock_video):
         """path property should return video filename when no labels_path."""
@@ -190,6 +366,20 @@ class TestDatasetItemForInferenceCLI:
         assert "--only_suggested_frames" in cli_args
         assert "--only_labeled_frames" not in cli_args
 
+    def test_predicted_frames_cli_args(self):
+        """Predicted frames should add --only_predicted_frames."""
+        item = DatasetItemForInference(
+            labels_path="/path/to/labels.slp",
+            frame_filter="predicted",
+        )
+
+        cli_args = item.cli_args
+
+        assert "--data_path" in cli_args
+        assert "--only_predicted_frames" in cli_args
+        assert "--only_labeled_frames" not in cli_args
+        assert "--only_suggested_frames" not in cli_args
+
     def test_path_property(self):
         """path property should return labels_path."""
         item = DatasetItemForInference(
@@ -235,6 +425,27 @@ class TestItemsForInference:
         assert len(items) == 1
         assert items.total_frame_count == 5
         assert isinstance(items.items[0], VideoItemForInference)
+
+    def test_from_video_frames_dict_targets_video_not_labels(
+        self, mock_video, mock_labels
+    ):
+        """Frame-range items must run on the video file, not the project .slp.
+
+        `labels_path`/`video_idx` are still recorded on the item (they identify the
+        project the video came from), they just no longer choose `--data_path`.
+        """
+        items = ItemsForInference.from_video_frames_dict(
+            video_frames_dict={mock_video: [0, -2560]},
+            total_frame_count=2560,
+            labels=mock_labels,
+            labels_path="/path/to/labels.slp",
+        )
+
+        item = items.items[0]
+        assert item.path == "/path/to/video.mp4"
+        assert item.labels_path == "/path/to/labels.slp"
+        assert item.video_idx == 0
+        assert "--video_index" not in item.cli_args
 
     def test_from_video_frames_dict_multiple_videos(self, mock_labels):
         """from_video_frames_dict should handle multiple videos."""
@@ -974,6 +1185,96 @@ class TestOutputPathGeneration:
         # Should contain predictions and timestamp pattern
         assert "predictions" in output_path
         assert ".predictions.slp" in output_path
+
+    def test_auto_output_path_named_after_video(self, mock_labels, video_item):
+        """Auto-generated output path should be named after the video, once.
+
+        The video name used to be added as a *prefix* to the `.slp` basename
+        (`video.mp4_labels.slp....`) because `--data_path` was the project `.slp`.
+        Now that `--data_path` is the video itself, the basename carries the video
+        name directly -- so it must neither be duplicated nor lost.
+        """
+        task = InferenceTask(
+            trained_job_paths=["/path/to/model"],
+            inference_params={},
+            labels=mock_labels,
+            labels_filename="/tmp/test_labels.slp",
+        )
+
+        with patch("sleap.gui.learning.runners.os.makedirs"):
+            _, output_path = task.make_predict_cli_call(video_item)
+
+        name = Path(output_path).name
+        assert name.startswith("video.mp4.")
+        assert name.endswith(".predictions.slp")
+        assert name.count("video.mp4") == 1
+        assert "video_None" not in name
+        assert "test_labels.slp" not in name
+        # Predictions still land in a `predictions` dir next to the project file.
+        assert Path(output_path).parent.as_posix() == "/tmp/predictions"
+
+    def test_auto_output_path_without_labels_filename_uses_video_dir(
+        self, mock_labels, video_item
+    ):
+        """With no project filename, predictions land next to the video."""
+        task = InferenceTask(
+            trained_job_paths=["/path/to/model"],
+            inference_params={},
+            labels=mock_labels,
+            labels_filename=None,
+        )
+
+        _, output_path = task.make_predict_cli_call(video_item)
+
+        assert Path(output_path).parent.as_posix() == "/path/to"
+        assert Path(output_path).name.startswith("video.mp4.")
+
+    def test_auto_output_path_disambiguates_embedded_videos(
+        self, mock_labels, mock_embedded_video
+    ):
+        """Embedded videos share one filename, so the index must disambiguate.
+
+        Every video in a `.pkg.slp` reports the same `filename` (the project file), so
+        per-video runs would otherwise collide on a single output path.
+        """
+        task = InferenceTask(
+            trained_job_paths=["/path/to/model"],
+            inference_params={},
+            labels=mock_labels,
+            labels_filename="/tmp/train.pkg.slp",
+        )
+        item = VideoItemForInference(
+            video=mock_embedded_video,
+            frames=[0, -80],
+            labels_path="/tmp/train.pkg.slp",
+            video_idx=3,
+        )
+
+        with patch("sleap.gui.learning.runners.os.makedirs"):
+            _, output_path = task.make_predict_cli_call(item)
+
+        name = Path(output_path).name
+        assert name.startswith("video3_train.pkg.slp.")
+        assert name.endswith(".predictions.slp")
+
+    def test_auto_output_path_for_dataset_item_unchanged(self, mock_labels):
+        """Annotation-status items should still be named after the project .slp."""
+        task = InferenceTask(
+            trained_job_paths=["/path/to/model"],
+            inference_params={},
+            labels=mock_labels,
+            labels_filename="/tmp/test_labels.slp",
+        )
+        item = DatasetItemForInference(
+            labels_path="/tmp/test_labels.slp", frame_filter="user"
+        )
+
+        with patch("sleap.gui.learning.runners.os.makedirs"):
+            _, output_path = task.make_predict_cli_call(item)
+
+        name = Path(output_path).name
+        assert name.startswith("test_labels.slp.")
+        assert name.endswith(".predictions.slp")
 
 
 # =============================================================================
