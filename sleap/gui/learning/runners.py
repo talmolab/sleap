@@ -430,14 +430,15 @@ class VideoItemForInference(ItemForInference):
     This allows for inference on an arbitrary list of frames from video.
 
     Attributes:
-        video: the :py:class:`Video` object (which already stores its own path)
-        frames: list of frames for inference; if None, then all frames are used
-        use_absolute_path: whether to use absolute path for inference cli call
         video: The :py:class:`Video` object (which already stores its own path)
         frames: List of frames for inference; if None, then all frames are used
-        labels_path: Path to .slp project; if None, then use video path instead.
-        video_idx: Video index for inference; if None, then first video is used. Only
-            used if labels_path is specified.
+        use_absolute_path: Whether to use absolute path for inference cli call
+        labels_path: Path to the .slp project the video belongs to, if any. Used as
+            `--data_path` only when the video has no video file of its own to point at
+            (see `uses_labels_path`); a video with its own file is inferred on
+            directly, so unlabeled frames aren't skipped.
+        video_idx: Index of this video within the project's videos. Passed as
+            `--video_index` only when `--data_path` is the project .slp.
     """
 
     video: Video
@@ -447,18 +448,55 @@ class VideoItemForInference(ItemForInference):
     video_idx: int = 0
 
     @property
+    def uses_labels_path(self) -> bool:
+        """Whether inference has to run on the project rather than a video file.
+
+        True only when the video has no single video file of its own to point
+        `--data_path` at:
+
+        * Embedded projects (`.pkg.slp`): the images live inside the project file, so
+          `video.filename` *is* a `.slp` (with `backend.dataset` naming the embedded
+          video). This is also the only correct source -- the frames that exist for an
+          embedded video are exactly the ones stored in the project.
+        * Image-sequence videos: `filename` is a list of image paths, which is not
+          something a single `--data_path` can express.
+
+        Both cases need `--video_index` to scope the run to this video. Falls back to
+        the video file when there is no project path to use.
+        """
+        if not self.labels_path:
+            return False
+        filename = self.video.filename
+        if not isinstance(filename, (str, Path)):
+            # Image sequence: a list of per-frame image paths.
+            return True
+        return str(filename).endswith(".slp")
+
+    @property
     def path(self):
-        if self.labels_path is not None:
+        # Prefer the video's own file: this item runs on an arbitrary list of frame
+        # *indices*, most of which are typically unlabeled (e.g. "entire video"). A
+        # .slp `--data_path` routes sleap-nn through `LabelsProvider`, which can only
+        # subset the frames already labeled in the project, so the run would silently
+        # cap at the labeled-frame count. Pointing at the video instead uses
+        # `VideoProvider`, which reads any frame index.
+        if self.uses_labels_path:
             return self.labels_path
-        if self.use_absolute_path:
-            return os.path.abspath(self.video.filename)
-        return self.video.filename
+        filename = self.video.filename
+        # Remote videos are passed through verbatim; `abspath` would rewrite a URL
+        # into a cwd-relative path. Local relative paths are already resolved
+        # against the project location by `sleap_io.load_slp`.
+        if self.use_absolute_path and "://" not in str(filename):
+            return os.path.abspath(filename)
+        return filename
 
     @property
     def cli_args(self):
         arg_list = list()
         arg_list.extend(["--data_path", f"{self.path}"])
-        if self.labels_path is not None:
+        # `--video_index` picks one video out of a `.slp`; it has no meaning when
+        # `--data_path` is the video file itself (there is only one video then).
+        if self.uses_labels_path:
             arg_list.extend(["--video_index", str(self.video_idx)])
 
         # TODO: better support for video params
@@ -476,12 +514,15 @@ class VideoItemForInference(ItemForInference):
         ):
             arg_list.extend(("--video_input_format", self.video.backend.input_format))
 
-        # -Y represents endpoint of [X, Y) range but inference cli expects
-        # [X, Y-1] range (so add 1 since negative).
-        frame_int_list = list(set([i + 1 if i < 0 else i for i in self.frames]))
-        frame_int_list.sort(reverse=min(frame_int_list) < 0)  # Assumes len of 2 if neg.
+        # No frames means every frame, which is what omitting `--frames` does.
+        if self.frames:
+            # -Y represents endpoint of [X, Y) range but inference cli expects
+            # [X, Y-1] range (so add 1 since negative).
+            frame_int_list = list(set([i + 1 if i < 0 else i for i in self.frames]))
+            # Assumes len of 2 if neg.
+            frame_int_list.sort(reverse=min(frame_int_list) < 0)
 
-        arg_list.extend(("--frames", ",".join(map(str, frame_int_list))))
+            arg_list.extend(("--frames", ",".join(map(str, frame_int_list))))
 
         return arg_list
 
@@ -578,7 +619,7 @@ class InferenceTask:
             cli_args.append("--gui")
         cli_args.extend(
             item_for_inference.cli_args
-        )  # sample inference CLI args: ['--data_path', '...', '--video_index', '0',
+        )  # sample inference CLI args: ['--data_path', '.../video.mp4',
         # '--video_input_format', 'channels_last', '--frames', '0,-2559']
 
         # Make path where we'll save predictions (if not specified)
@@ -594,23 +635,22 @@ class InferenceTask:
                 # as the video
                 predictions_dir = os.path.dirname(item_for_inference.video.filename)
 
-            # Build filename with video name and timestamp
+            # Build filename with source name and timestamp. The basename of `path`
+            # identifies the source on its own when it's a video file. When it's a
+            # project .slp scoped by `--video_index` (embedded/image-sequence videos,
+            # which all share one filename), add the index so per-video runs don't
+            # collide on a single output path.
             timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
             video_name_prefix = ""
             if "--video_index" in item_for_inference.cli_args:
-                video_index = int(
-                    item_for_inference.cli_args[
-                        item_for_inference.cli_args.index("--video_index") + 1
-                    ]
-                )
-                video_name_prefix = Path(self.labels.videos[video_index].filename).name
-            video_name_prefix = (
-                video_name_prefix + "_" if video_name_prefix != "" else ""
-            )
+                video_index = item_for_inference.cli_args[
+                    item_for_inference.cli_args.index("--video_index") + 1
+                ]
+                video_name_prefix = f"video{video_index}_"
             output_path = os.path.join(
                 predictions_dir,
-                f"{video_name_prefix}{os.path.basename(item_for_inference.path)}.{timestamp}."
-                "predictions.slp",
+                f"{video_name_prefix}{os.path.basename(item_for_inference.path)}"
+                f".{timestamp}.predictions.slp",
             )
 
         for job_path in self.trained_job_paths:
