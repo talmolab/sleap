@@ -3165,7 +3165,7 @@ supports everything <code>sleap track</code> does, plus more.</p>
 </span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
 </span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>optional arguments:
 </span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>  -h, --help   show this help message and exit
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>  --nonnative  Don&#39;t use native file dialogs
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>  --nonnative  Don't use native file dialogs
 </span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>  --profiling  Enable performance profiling
 </span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>  --reset      Reset GUI state and preferences
 </span></code></pre></div>
@@ -3197,7 +3197,7 @@ supports everything <code>sleap track</code> does, plus more.</p>
 </span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>  --cpu                 Run on CPU only
 </span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a>  --first-gpu           Run on first GPU
 </span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a>  --last-gpu            Run on last GPU
-</span><span id="__span-13-25"><a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a>  --gpu GPU             Run on specific GPU (or &#39;auto&#39;)
+</span><span id="__span-13-25"><a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a>  --gpu GPU             Run on specific GPU (or 'auto')
 </span></code></pre></div>
 </details>
 <details class="plain">
@@ -3214,7 +3214,7 @@ supports everything <code>sleap track</code> does, plus more.</p>
 </span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>
 </span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>optional arguments:
 </span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>  -m, --model           Path to trained model directory (can specify multiple)
-</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>  --frames              Frames to predict (e.g., &quot;1,2,3&quot; or &quot;1-100&quot;)
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>  --frames              Frames to predict (e.g., "1,2,3" or "1-100")
 </span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>  --only-labeled-frames Only predict on labeled frames
 </span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>  --only-suggested-frames Only predict on suggested frames
 </span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>  -o, --output          Output filename (default: [data_path].predictions.slp)
@@ -3235,20 +3235,20 @@ supports everything <code>sleap track</code> does, plus more.</p>
 </span><span id="__span-14-30"><a id="__codelineno-14-30" name="__codelineno-14-30" href="#__codelineno-14-30"></a>  --cpu                 Run on CPU only
 </span><span id="__span-14-31"><a id="__codelineno-14-31" name="__codelineno-14-31" href="#__codelineno-14-31"></a>  --first-gpu           Run on first GPU
 </span><span id="__span-14-32"><a id="__codelineno-14-32" name="__codelineno-14-32" href="#__codelineno-14-32"></a>  --last-gpu            Run on last GPU
-</span><span id="__span-14-33"><a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a>  --gpu GPU             Run on specific GPU (or &#39;auto&#39;)
+</span><span id="__span-14-33"><a id="__codelineno-14-33" name="__codelineno-14-33" href="#__codelineno-14-33"></a>  --gpu GPU             Run on specific GPU (or 'auto')
 </span></code></pre></div>
 <p><strong>Examples:</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Simple inference</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/my_model&quot;</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span><span class="w"> </span><span class="s2">&quot;video.mp4&quot;</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">"models/my_model"</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">"predictions.slp"</span><span class="w"> </span><span class="s2">"video.mp4"</span>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Multi-model pipeline (top-down)</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/centroid&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/instance&quot;</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span><span class="w"> </span><span class="s2">&quot;video.mp4&quot;</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">"models/centroid"</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">"models/instance"</span><span class="w"> </span>-o<span class="w"> </span><span class="s2">"predictions.slp"</span><span class="w"> </span><span class="s2">"video.mp4"</span>
 </span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
 </span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="c1"># With tracking</span>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;models/my_model&quot;</span><span class="w"> </span>--tracking.tracker<span class="w"> </span>simple<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span><span class="w"> </span><span class="s2">&quot;video.mp4&quot;</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>sleap-track<span class="w"> </span>-m<span class="w"> </span><span class="s2">"models/my_model"</span><span class="w"> </span>--tracking.tracker<span class="w"> </span>simple<span class="w"> </span>-o<span class="w"> </span><span class="s2">"predictions.slp"</span><span class="w"> </span><span class="s2">"video.mp4"</span>
 </span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>
 </span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="c1"># Re-track existing predictions</span>
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>sleap-track<span class="w"> </span>--tracking.tracker<span class="w"> </span>simple<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;retracked.slp&quot;</span><span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span>
+</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a>sleap-track<span class="w"> </span>--tracking.tracker<span class="w"> </span>simple<span class="w"> </span>-o<span class="w"> </span><span class="s2">"retracked.slp"</span><span class="w"> </span><span class="s2">"predictions.slp"</span>
 </span></code></pre></div>
 </details>
 <details class="plain">
@@ -3265,7 +3265,7 @@ supports everything <code>sleap track</code> does, plus more.</p>
 </span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>  --video       Path to video (if needed)
 </span></code></pre></div>
 <p><strong>Example:</strong>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>sleap-convert<span class="w"> </span>--format<span class="w"> </span>analysis<span class="w"> </span>-o<span class="w"> </span><span class="s2">&quot;predictions.analysis.h5&quot;</span><span class="w"> </span><span class="s2">&quot;predictions.slp&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>sleap-convert<span class="w"> </span>--format<span class="w"> </span>analysis<span class="w"> </span>-o<span class="w"> </span><span class="s2">"predictions.analysis.h5"</span><span class="w"> </span><span class="s2">"predictions.slp"</span>
 </span></code></pre></div></p>
 </details>
 <details class="plain">
@@ -3293,7 +3293,7 @@ directory inspection has no equivalent in the unified <code>sleap</code> CLI yet
 </span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>optional arguments:
 </span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>  -o, --output          Output path
 </span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>  --video-index         Video index in labels (default: 0)
-</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>  --frames              Frames to render (e.g., &quot;1,2,3&quot; or &quot;1-100&quot;)
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>  --frames              Frames to render (e.g., "1,2,3" or "1-100")
 </span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>  -f, --fps             Output FPS (default: 25)
 </span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>  --scale               Image scale (default: 1.0)
 </span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>  --show_edges          Draw lines between nodes (default: 1)

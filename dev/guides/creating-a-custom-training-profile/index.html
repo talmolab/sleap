@@ -2312,7 +2312,7 @@
 </ul>
 <p>(There will also be a <code>train-script.sh</code> file with the command-line command you could use to train your dataset using these training profiles, and possibly an <code>inference-script.sh</code> file if you selected frames for inference after training.)</p>
 <p>If you're running training on a remote machine (including Colab), export your training job package into the remote machine. Then call:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>/path/to/profile.yaml<span class="w"> </span><span class="s2">&quot;data_config.train_labels_path=[path/to/dataset.pkg.slp]&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sleap-nn<span class="w"> </span>train<span class="w"> </span>--config<span class="w"> </span>/path/to/profile.yaml<span class="w"> </span><span class="s2">"data_config.train_labels_path=[path/to/dataset.pkg.slp]"</span>
 </span></code></pre></div>
 <p>for each model you want to train (where <code>path/to/custom/profile.yaml</code> should be replaced with the path to your custom training profile and <code>path/to/dataset.pkg.slp</code> replaced with the path to your training job package). See our guide to <a href="../running-sleap-remotely/">remote training</a> for more details.</p>
 <div class="admonition note">
