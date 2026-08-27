@@ -24,6 +24,7 @@ from sleap.gui.commands import (
     ExportAnalysisFile,
     ExportDatasetWithImages,
     ExportFullPackage,
+    ExportPackageThread,
     ExportVideoClip,
     GenerateSuggestionsThread,
     ImportDeepLabCutFolder,
@@ -1472,6 +1473,49 @@ def test_exportLabelsPackage(export_extension, centered_pair_labels: Labels, tmp
     context = CommandContext.from_labels(deepcopy(centered_pair_labels))
     context.exportFullPackage()
     assert_loaded_package_similar(path_to_pkg, sugg=True, pred=True)
+
+
+def test_ExportPackageThread_progress_callback(
+    qtbot, centered_pair_labels: Labels, tmpdir
+):
+    """Regression test for #2854.
+
+    sleap-io >= 0.9.0 calls `save_slp`'s `progress_callback` with three
+    positional args `(current, total, phase)` where `phase` is "embed" or
+    "write" (sleap-io PR #543). `ExportPackageThread.run`'s `on_progress`
+    callback must accept the extra `phase` argument, otherwise embedding a
+    package raises `TypeError: on_progress() takes 2 positional arguments but 3
+    were given`. This test runs the real embed path (not the `verbose=False`
+    shortcut that skips the callback) to catch future signature drift.
+    """
+    out_path = Path(tmpdir, "test_export_progress.pkg.slp")
+
+    thread = ExportPackageThread(
+        labels=centered_pair_labels,
+        filename=out_path.as_posix(),
+        embed_option="user",
+    )
+
+    progress_events: List[tuple] = []
+    finished_files: List[str] = []
+    errors: List[str] = []
+
+    thread.progress.connect(
+        lambda current, total: progress_events.append((current, total))
+    )
+    thread.finished.connect(lambda fname: finished_files.append(fname))
+    thread.error.connect(lambda msg: errors.append(msg))
+
+    # Run synchronously in the current thread so the direct signal connections
+    # fire before we make assertions (no event loop needed).
+    thread.run()
+
+    # The callback must not have blown up on the 3-arg invocation.
+    assert errors == [], f"Export errored: {errors}"
+    assert finished_files == [out_path.as_posix()]
+    assert out_path.exists()
+    # sleap-io reports progress during the "embed" and "write" phases.
+    assert len(progress_events) > 0
 
 
 def test_newInstance(qtbot, centered_pair_predictions: Labels):

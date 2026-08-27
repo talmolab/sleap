@@ -1821,7 +1821,11 @@ class ExportPackageThread(QtCore.QThread):
     def run(self):
         """Run the export in background thread."""
 
-        def on_progress(current, total):
+        def on_progress(current, total, phase=None):
+            # `phase` ("embed" or "write") is passed by sleap-io >= 0.9.0's
+            # save_slp progress_callback (see sleap-io PR #543). Accept it as an
+            # optional arg so the callback stays compatible with both the newer
+            # 3-arg API and any 2-arg caller. See issue #2854.
             self.progress.emit(current, total)
             return not self._cancelled
 
