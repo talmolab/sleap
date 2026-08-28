@@ -43,6 +43,8 @@ class Shortcuts(object):
         "propagate track labels",
         "select next",
         "clear selection",
+        "goto next pred",
+        "goto prev pred",
         "goto next labeled",
         "goto prev labeled",
         "goto last interacted",
