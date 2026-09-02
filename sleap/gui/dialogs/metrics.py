@@ -155,6 +155,30 @@ class MetricsTableDialog(QtWidgets.QWidget):
         metric_detail_widgets[key].activateWindow()
 
 
+def _legacy_backbone_name(cfg: ConfigFileInfo) -> Optional[str]:
+    """Read the backbone name from a legacy training_config.json on disk.
+
+    Returns the first non-null backbone key (e.g. ``"pretrained_encoder"``,
+    ``"hourglass"``), suffixed with ``" (legacy)"``, or ``None`` if the file
+    can't be read or parsed.
+    """
+    import json
+
+    config_path = getattr(cfg, "path", None)
+    if not config_path or not str(config_path).endswith(".json"):
+        return None
+    try:
+        with open(config_path) as f:
+            raw = json.load(f)
+        backbone = raw.get("model", {}).get("backbone", {})
+        for key, val in backbone.items():
+            if val is not None:
+                return f"{key} (legacy)"
+    except Exception:
+        pass
+    return None
+
+
 class MetricsTableModel(GenericTableModel):
     """
     Model (i.e. Qt model/view) for table in MetricsTableDialog.
@@ -194,11 +218,14 @@ class MetricsTableModel(GenericTableModel):
 
         arch_str = get_backbone_from_omegaconf(cfg.config)
 
-        backbone = cfg.config.model_config.backbone_config[arch_str]
-        if "max_stride" in backbone:
-            arch_str = f"{arch_str}, max stride: {backbone.max_stride}"
-        if "filters" in backbone:
-            arch_str = f"{arch_str}, filters: {backbone.filters}"
+        if arch_str is not None:
+            backbone = cfg.config.model_config.backbone_config[arch_str]
+            if "max_stride" in backbone:
+                arch_str = f"{arch_str}, max stride: {backbone.max_stride}"
+            if "filters" in backbone:
+                arch_str = f"{arch_str}, filters: {backbone.filters}"
+        else:
+            arch_str = _legacy_backbone_name(cfg) or "unknown"
 
         # scale = cfg.config.data.preprocessing.input_scaling
         # if scale != 1.0:

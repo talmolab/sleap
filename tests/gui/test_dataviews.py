@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 import sleap_io as sio
 
 from sleap.gui.dataviews import *
@@ -171,27 +170,25 @@ def test_videos_table_unreadable_video(qtbot, centered_pair_predictions):
     assert bad["channels"] == "?"
 
 
-def test_items_setter_ends_reset_on_error(qtbot):
-    """If building a row raises, the model still ends the reset.
+def test_items_setter_skips_bad_rows(qtbot):
+    """A failing item_to_data skips that row instead of crashing the table.
 
-    Leaving the model in a half-reset state (beginResetModel without a matching
-    endResetModel) is what blanks the table, so endResetModel must always run.
+    Regression test for #2861: one unreadable model config took down the
+    entire Evaluation Metrics dialog.
     """
 
-    class RaisingModel(GenericTableModel):
+    class PartiallyRaisingModel(GenericTableModel):
         def item_to_data(self, obj, item):
-            raise RuntimeError("boom")
+            if item == "bad":
+                raise RuntimeError("boom")
+            return {"a": item}
 
-    model = RaisingModel(properties=["a"])
+    model = PartiallyRaisingModel(properties=["a"])
+    model.items = ["good", "bad", "also_good"]
 
-    ended = []
-    real_end = model.endResetModel
-    model.endResetModel = lambda: (ended.append(True), real_end())[1]
-
-    with pytest.raises(RuntimeError):
-        model.items = [object()]
-
-    assert ended == [True]
+    assert len(model._data) == 2
+    assert model._data[0]["a"] == "good"
+    assert model._data[1]["a"] == "also_good"
 
 
 def _checkstate(model, row, key):
