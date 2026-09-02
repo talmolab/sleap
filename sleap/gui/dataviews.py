@@ -118,9 +118,7 @@ class GenericTableModel(QtCore.QAbstractTableModel):
                     try:
                         item_data = self.item_to_data(obj, item)
                     except Exception as e:
-                        logger.warning(
-                            "Skipping unreadable item in table: %s", e
-                        )
+                        logger.warning("Skipping unreadable item in table: %s", e)
                         continue
                     item_data["_original_item"] = item
                     self._data.append(item_data)
