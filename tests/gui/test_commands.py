@@ -20,6 +20,8 @@ from sleap.gui.app import MainWindow
 from sleap.gui.commands import (
     AddInstance,
     CommandContext,
+    find_inferrable_symmetries,
+    _prompt_inferred_symmetries,
     DeleteNode,
     ExportAnalysisFile,
     ExportDatasetWithImages,
@@ -2159,3 +2161,72 @@ def test_AddInstance_clears_negative(qtbot, centered_pair_predictions: Labels):
     context.newInstance()
 
     assert not lf.is_negative
+
+
+# The symmetry-inference features need sleap-io#534
+# (`Skeleton.infer_symmetries_by_name`), which is unreleased at the time of
+# writing. Skip until the pinned sleap-io provides it (see PR #2810).
+requires_infer = pytest.mark.skipif(
+    not hasattr(Skeleton, "infer_symmetries_by_name"),
+    reason="requires sleap-io#534 (Skeleton.infer_symmetries_by_name)",
+)
+
+
+@requires_infer
+def test_find_inferrable_symmetries():
+    """Skeletons with L/R node names but no symmetries are flagged."""
+    skel = Skeleton(["nose", "eye_L", "eye_R"])
+    labels = Labels(skeletons=[skel])
+    assert find_inferrable_symmetries(labels) == [(skel, [(1, 2)])]
+
+    # Once symmetries are defined, the skeleton is no longer flagged.
+    skel.add_symmetry("eye_L", "eye_R")
+    assert find_inferrable_symmetries(labels) == []
+
+    # A skeleton whose names imply no pairs is skipped.
+    plain = Labels(skeletons=[Skeleton(["a", "b", "c"])])
+    assert find_inferrable_symmetries(plain) == []
+
+
+@requires_infer
+def test_add_inferred_symmetries_command():
+    """`addInferredSymmetries` adds the pairs and marks the project changed."""
+    skel = Skeleton(["nose", "eye_L", "eye_R", "ear_L", "ear_R"])
+    context = CommandContext.from_labels(Labels(skeletons=[skel]))
+
+    context.addInferredSymmetries(skel, skel.infer_symmetries_by_name())
+
+    assert skel.symmetry_names == [("eye_L", "eye_R"), ("ear_L", "ear_R")]
+    assert context.state["has_changes"]
+
+
+@requires_infer
+def test_prompt_inferred_symmetries_accept(qtbot, monkeypatch):
+    """Accepting the prompt adds the inferred symmetries."""
+    skel = Skeleton(["nose", "eye_L", "eye_R"])
+    context = CommandContext.from_labels(Labels(skeletons=[skel]))
+    monkeypatch.setattr(
+        QtWidgets.QMessageBox,
+        "question",
+        lambda *args, **kwargs: QtWidgets.QMessageBox.Yes,
+    )
+
+    _prompt_inferred_symmetries(context)
+
+    assert skel.symmetry_names == [("eye_L", "eye_R")]
+
+
+@requires_infer
+def test_prompt_inferred_symmetries_decline(qtbot, monkeypatch):
+    """Declining the prompt leaves the skeleton unchanged."""
+    skel = Skeleton(["nose", "eye_L", "eye_R"])
+    context = CommandContext.from_labels(Labels(skeletons=[skel]))
+    monkeypatch.setattr(
+        QtWidgets.QMessageBox,
+        "question",
+        lambda *args, **kwargs: QtWidgets.QMessageBox.No,
+    )
+
+    _prompt_inferred_symmetries(context)
+
+    assert skel.symmetries == []

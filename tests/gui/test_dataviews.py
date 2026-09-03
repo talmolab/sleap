@@ -617,3 +617,39 @@ def test_qc_mode_maps_onto_transient_keys(qtbot, centered_pair_predictions):
     assert instance_visible(state, instances[1]) is False
     assert instance_shows_non_visible(state, instances[0], False) is True
     assert instance_shows_non_visible(state, instances[1], False) is False
+
+
+def test_node_symmetry_combo_delegate(qtbot):
+    """The Nodes table symmetry column edits via a node-name dropdown."""
+    from sleap.gui.commands import CommandContext
+    from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
+
+    skeleton = sio.Skeleton(["nose", "eye_L", "eye_R"])
+    labels = sio.Labels(skeletons=[skeleton])
+    context = CommandContext.from_labels(labels)
+    model = SkeletonNodesTableModel(items=skeleton, context=context)
+    table = GenericTableView(model=model)
+    delegate = NodeSymmetryComboDelegate(table)
+    sym_col = model.properties.index("symmetry")
+
+    # The editor for the "nose" row lists the OTHER nodes plus a blank, and
+    # excludes the row's own node (no self-symmetry, no free-text phantom nodes).
+    index = model.index(0, sym_col)
+    editor = delegate.createEditor(table, None, index)
+    assert [editor.itemText(i) for i in range(editor.count())] == [
+        "",
+        "eye_L",
+        "eye_R",
+    ]
+
+    # Choosing a partner routes through the command and sets the symmetry.
+    editor.setCurrentText("eye_L")
+    delegate.setModelData(editor, model, index)
+    assert get_symmetry_node(skeleton, "nose") == "eye_L"
+
+    # setEditorData reflects the current partner back into the combo box.
+    model.items = skeleton  # refresh cached rows after the edit
+    index = model.index(0, sym_col)
+    editor = delegate.createEditor(table, None, index)
+    delegate.setEditorData(editor, index)
+    assert editor.currentText() == "eye_L"
