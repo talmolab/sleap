@@ -15,6 +15,7 @@ as is. For example::
 
 """
 
+import logging
 import os
 from operator import itemgetter
 from pathlib import Path
@@ -41,6 +42,8 @@ from sleap_io.io.video_reading import VideoBackend
 from sleap.sleap_io_adaptors.skeleton_utils import get_symmetry_node
 from sleap.sleap_io_adaptors.instance_utils import get_nodes_from_instance
 from sleap.sleap_io_adaptors.lf_labels_utils import get_instances_to_show
+
+logger = logging.getLogger(__name__)
 
 
 class GenericTableModel(QtCore.QAbstractTableModel):
@@ -112,7 +115,11 @@ class GenericTableModel(QtCore.QAbstractTableModel):
             if hasattr(self, "item_to_data"):
                 self._data = []
                 for item in item_list:
-                    item_data = self.item_to_data(obj, item)
+                    try:
+                        item_data = self.item_to_data(obj, item)
+                    except Exception as e:
+                        logger.warning("Skipping unreadable item in table: %s", e)
+                        continue
                     item_data["_original_item"] = item
                     self._data.append(item_data)
             else:
