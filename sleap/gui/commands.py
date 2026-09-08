@@ -4127,6 +4127,7 @@ class GenerateSuggestionsThread(QtCore.QThread):
 
     finished = QtCore.Signal(list)
     error = QtCore.Signal(str)
+    progress = QtCore.Signal(int, int)
 
     def __init__(self, labels, params, parent=None):
         super().__init__(parent)
@@ -4136,7 +4137,9 @@ class GenerateSuggestionsThread(QtCore.QThread):
     def run(self):
         try:
             suggestions = VideoFrameSuggestions.suggest(
-                labels=self.labels, params=self.params
+                labels=self.labels,
+                params=self.params,
+                progress_callback=self.progress.emit,
             )
             self.finished.emit(suggestions)
         except Exception as e:
@@ -4164,6 +4167,9 @@ class GenerateSuggestions(EditCommand):
         else:
             params["videos"] = context.labels.videos
 
+        # Starts out indeterminate (0, 0) and becomes a real bar as soon as the
+        # first video reports in, so methods that never report progress still
+        # show a sensible busy indicator.
         win = QtWidgets.QProgressDialog(
             "Generating suggested frames...", "Cancel", 0, 0, context.app
         )
@@ -4179,6 +4185,15 @@ class GenerateSuggestions(EditCommand):
 
         worker = GenerateSuggestionsThread(labels=context.labels, params=params)
 
+        def on_progress(n_done, n_total):
+            # Set the label before the value: `setValue` is what triggers the
+            # repaint, so updating it last would leave the text a step behind.
+            win.setMaximum(n_total)
+            win.setLabelText(
+                f"Generating suggested frames... ({n_done}/{n_total} videos)"
+            )
+            win.setValue(n_done)
+
         def on_finished(suggestions):
             result["status"] = "finished"
             result["suggestions"] = suggestions
@@ -4187,6 +4202,7 @@ class GenerateSuggestions(EditCommand):
             result["status"] = "error"
             result["error"] = msg
 
+        worker.progress.connect(on_progress)
         worker.finished.connect(on_finished)
         worker.error.connect(on_error)
 
@@ -4199,6 +4215,7 @@ class GenerateSuggestions(EditCommand):
         worker.wait()
         QtWidgets.QApplication.instance().processEvents()
 
+        worker.progress.disconnect()
         worker.finished.disconnect()
         worker.error.disconnect()
         worker.deleteLater()

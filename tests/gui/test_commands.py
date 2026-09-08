@@ -26,6 +26,7 @@ from sleap.gui.commands import (
     ExportFullPackage,
     ExportPackageThread,
     ExportVideoClip,
+    GenerateSuggestions,
     GenerateSuggestionsThread,
     ImportDeepLabCutFolder,
     NewEdge,
@@ -2008,6 +2009,77 @@ class TestGenerateSuggestionsThread:
         error_msg = blocker.args[0]
         assert isinstance(error_msg, str)
         assert len(error_msg) > 0
+
+    def test_thread_emits_progress_per_video(self, qtbot, centered_pair_labels):
+        """Thread should relay per-video progress as (n_done, n_total)."""
+        labels = centered_pair_labels
+        params = {
+            "method": "sample",
+            "target": "all videos",
+            "videos": labels.videos,
+            "per_video": 5,
+            "sampling_method": "random",
+        }
+
+        worker = GenerateSuggestionsThread(labels=labels, params=params)
+        progress = []
+        worker.progress.connect(
+            lambda n_done, n_total: progress.append((n_done, n_total))
+        )
+
+        with qtbot.waitSignal(worker.finished, timeout=10000):
+            worker.start()
+
+        n_videos = len(labels.videos)
+        assert progress == [(i, n_videos) for i in range(1, n_videos + 1)]
+
+    def test_generate_suggestions_updates_progress_dialog(
+        self, qtbot, centered_pair_labels, monkeypatch
+    ):
+        """The dialog should become determinate and track completed videos."""
+        labels = centered_pair_labels
+        n_videos = len(labels.videos)
+
+        recorded = {"maximum": [], "value": [], "label": []}
+
+        class FakeProgressDialog:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def setMaximum(self, value):
+                recorded["maximum"].append(value)
+
+            def setValue(self, value):
+                recorded["value"].append(value)
+
+            def setLabelText(self, text):
+                recorded["label"].append(text)
+
+            def __getattr__(self, name):
+                return lambda *args, **kwargs: None
+
+        monkeypatch.setattr(
+            QtWidgets, "QProgressDialog", FakeProgressDialog, raising=True
+        )
+
+        context = CommandContext.from_labels(labels)
+        context.state["video"] = labels.videos[0]
+        GenerateSuggestions.do_action(
+            context,
+            {
+                "method": "sample",
+                "target": "all videos",
+                "per_video": 5,
+                "sampling_method": "random",
+            },
+        )
+
+        assert recorded["maximum"] == [n_videos] * n_videos
+        assert recorded["value"] == list(range(1, n_videos + 1))
+        assert recorded["label"][-1] == (
+            f"Generating suggested frames... ({n_videos}/{n_videos} videos)"
+        )
+        assert len(labels.suggestions) > 0
 
     def test_thread_does_not_block_event_loop(self, qtbot, centered_pair_labels):
         """Main event loop should remain responsive while thread is running."""

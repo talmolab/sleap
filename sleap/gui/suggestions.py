@@ -5,7 +5,7 @@ Module for generating lists of suggested frames (for labeling or reviewing).
 import numpy as np
 import random
 
-from typing import Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 from sleap_io import Video, Labels, SuggestionFrame
 from sleap.info.feature_suggestions import (
@@ -31,7 +31,12 @@ class VideoFrameSuggestions(object):
     """
 
     @classmethod
-    def suggest(cls, params: dict, labels: "Labels" = None) -> List[SuggestionFrame]:
+    def suggest(
+        cls,
+        params: dict,
+        labels: "Labels" = None,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> List[SuggestionFrame]:
         """
         This is the main entry point for generating lists of suggested frames.
 
@@ -40,6 +45,11 @@ class VideoFrameSuggestions(object):
                 suggestions, minimally this will have a "method" key with
                 the name of one of the class methods.
             labels: A `Labels` object for which we are generating suggestions.
+            progress_callback: Optional callable invoked as
+                `progress_callback(n_completed, n_total)` as each video is
+                finished, where `n_total` is the number of videos being
+                processed. Methods that cannot report incremental progress
+                simply never call it.
 
         Returns:
             List of `SuggestionFrame` objects.
@@ -57,7 +67,9 @@ class VideoFrameSuggestions(object):
 
         method = str.replace(params["method"], " ", "_")
         if method_functions.get(method, None) is not None:
-            suggestions = method_functions[method](labels=labels, **params)
+            suggestions = method_functions[method](
+                labels=labels, progress_callback=progress_callback, **params
+            )
         else:
             raise ValueError(
                 f"No {'' if method == '_' else method + ' '}method found for "
@@ -85,6 +97,7 @@ class VideoFrameSuggestions(object):
         videos: List[Video],
         per_video: int = 20,
         sampling_method: str = "random",
+        progress_callback: Optional[Callable[[int, int], None]] = None,
         **kwargs,
     ):
         """Generate suggestions randomly or by taking strides through video."""
@@ -94,7 +107,7 @@ class VideoFrameSuggestions(object):
         for sugg in labels.suggestions:
             sugg_idx_dict[sugg.video].append(sugg.frame_idx)
 
-        for video in videos:
+        for n_done, video in enumerate(videos, start=1):
             # Get unique sample space
             vid_idx = cls._get_frame_range(video, **kwargs)
             vid_sugg_idx = sugg_idx_dict[video]
@@ -119,6 +132,7 @@ class VideoFrameSuggestions(object):
             suggestions.extend(
                 cls.idx_list_to_frame_list(vid_suggestions, video, group)
             )
+            cls._report_progress(progress_callback, n_done, len(videos))
 
         return suggestions
 
@@ -135,6 +149,7 @@ class VideoFrameSuggestions(object):
         pca_components,
         n_clusters,
         per_cluster,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
         **kwargs,
     ):
         """
@@ -161,11 +176,16 @@ class VideoFrameSuggestions(object):
         )
 
         if merge_video_features == "across all videos":
-            # Run single pipeline with all videos
+            # Run single pipeline with all videos. Features are clustered jointly
+            # so there is no per-video boundary to report progress at; just mark
+            # the whole job done once it returns.
             proposed_suggestions = pipeline.get_suggestion_frames(videos=videos)
+            cls._report_progress(progress_callback, len(videos), len(videos))
         else:
             # Run pipeline separately (in parallel) for each video
-            proposed_suggestions = ParallelFeaturePipeline.run(pipeline, videos)
+            proposed_suggestions = ParallelFeaturePipeline.run(
+                pipeline, videos, progress_callback=progress_callback
+            )
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
             labels, videos, proposed_suggestions
@@ -181,6 +201,7 @@ class VideoFrameSuggestions(object):
         score_limit,
         instance_limit_upper,
         instance_limit_lower,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
         **kwargs,
     ):
         """Method to generate suggestions for proofreading frames with low score."""
@@ -189,7 +210,7 @@ class VideoFrameSuggestions(object):
         instance_limit_lower = int(instance_limit_lower)
 
         proposed_suggestions = []
-        for video in videos:
+        for n_done, video in enumerate(videos, start=1):
             proposed_suggestions.extend(
                 cls._prediction_score_video(
                     video,
@@ -199,6 +220,7 @@ class VideoFrameSuggestions(object):
                     instance_limit_lower,
                 )
             )
+            cls._report_progress(progress_callback, n_done, len(videos))
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
             labels, videos, proposed_suggestions
@@ -250,6 +272,7 @@ class VideoFrameSuggestions(object):
         videos: List[Video],
         node: Union[int, str],
         threshold: float,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
         **kwargs,
     ):
         """Finds frames for proofreading with high node velocity."""
@@ -263,10 +286,11 @@ class VideoFrameSuggestions(object):
                 node_name = ""
 
         proposed_suggestions = []
-        for video in videos:
+        for n_done, video in enumerate(videos, start=1):
             proposed_suggestions.extend(
                 cls._velocity_video(video, labels, node_name, threshold)
             )
+            cls._report_progress(progress_callback, n_done, len(videos))
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
             labels, videos, proposed_suggestions
@@ -303,15 +327,17 @@ class VideoFrameSuggestions(object):
         labels: "Labels",
         videos: List[Video],
         displacement_threshold: float,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
         **kwargs,
     ):
         """Finds frames with maximum point displacement above a threshold."""
 
         proposed_suggestions = []
-        for video in videos:
+        for n_done, video in enumerate(videos, start=1):
             proposed_suggestions.extend(
                 cls._max_point_displacement_video(video, labels, displacement_threshold)
             )
+            cls._report_progress(progress_callback, n_done, len(videos))
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
             labels, videos, proposed_suggestions
@@ -354,6 +380,7 @@ class VideoFrameSuggestions(object):
         videos: List[Video],
         frame_from: int,
         frame_to: int,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
         **kwargs,
     ):
         """Add consecutive frame chunk to label suggestion"""
@@ -364,15 +391,15 @@ class VideoFrameSuggestions(object):
         if frame_from > frame_to:
             return proposed_suggestions
 
-        for video in videos:
+        for n_done, video in enumerate(videos, start=1):
             # Make sure when targeting all videos the from and to do not exceed
             # frame number
-            if frame_from > len(video):
-                continue
-            this_video_frame_to = min(frame_to, len(video))
-            # Generate list of frame numbers
-            idx = list(range(frame_from - 1, this_video_frame_to))
-            proposed_suggestions.extend(cls.idx_list_to_frame_list(idx, video))
+            if frame_from <= len(video):
+                this_video_frame_to = min(frame_to, len(video))
+                # Generate list of frame numbers
+                idx = list(range(frame_from - 1, this_video_frame_to))
+                proposed_suggestions.extend(cls.idx_list_to_frame_list(idx, video))
+            cls._report_progress(progress_callback, n_done, len(videos))
 
         suggestions = VideoFrameSuggestions.filter_unique_suggestions(
             labels, videos, proposed_suggestions
@@ -380,6 +407,16 @@ class VideoFrameSuggestions(object):
         return suggestions
 
     # Utility functions
+
+    @staticmethod
+    def _report_progress(
+        progress_callback: Optional[Callable[[int, int], None]],
+        n_done: int,
+        n_total: int,
+    ):
+        """Invoke `progress_callback` if one was given."""
+        if progress_callback is not None:
+            progress_callback(n_done, n_total)
 
     @staticmethod
     def _get_frame_range(video: "Video", **kwargs) -> list:
