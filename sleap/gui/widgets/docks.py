@@ -29,6 +29,7 @@ from sleap.gui.dataviews import (
     GenericTableView,
     InstancesTableView,
     LabeledFrameTableModel,
+    NodeSymmetryComboDelegate,
     SkeletonEdgesTableModel,
     SkeletonNodeModel,
     SkeletonNodesTableModel,
@@ -250,6 +251,13 @@ class SkeletonDock(DockWidget):
             state=main_window.state,
             row_name="node",
             model=self.nodes_model,
+        )
+        # Edit the "symmetry" column via a node-name dropdown instead of free
+        # text, so a symmetric partner can only be an existing node (a typo
+        # would otherwise create a phantom node via ``add_symmetry``).
+        self.nodes_table.setItemDelegateForColumn(
+            self.nodes_model.properties.index("symmetry"),
+            NodeSymmetryComboDelegate(self.nodes_table),
         )
 
         self.edges_table = GenericTableView(

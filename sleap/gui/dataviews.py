@@ -586,6 +586,39 @@ class SkeletonNodesTableModel(GenericTableModel):
             self.context.setNodeSymmetry(skeleton=self.obj, node=item, symmetry=value)
 
 
+class NodeSymmetryComboDelegate(QtWidgets.QStyledItemDelegate):
+    """Combo-box editor for the skeleton Nodes table "symmetry" column.
+
+    Constrains the symmetric partner to an existing node name (or blank to
+    clear the symmetry) instead of a free-text field. Besides being easier to
+    use, this prevents a typo from silently creating a phantom node: setting a
+    symmetry routes through ``Skeleton.add_symmetry``, which adds any unknown
+    partner name as a brand new node.
+    """
+
+    def createEditor(self, parent, option, index):
+        """Return a combo box listing the other node names (plus a blank)."""
+        combo = QtWidgets.QComboBox(parent)
+        combo.addItem("")  # blank clears the symmetry
+        model = index.model()
+        skeleton = getattr(model, "skeleton", None)
+        names = list(skeleton.node_names) if skeleton is not None else []
+        # A node can't be symmetric with itself, so drop this row's own node.
+        own_name = model.data(model.index(index.row(), 0), QtCore.Qt.EditRole)
+        combo.addItems([name for name in names if name != own_name])
+        return combo
+
+    def setEditorData(self, editor, index):
+        """Select the current symmetric partner in the combo box."""
+        value = index.model().data(index, QtCore.Qt.EditRole) or ""
+        pos = editor.findText(value)
+        editor.setCurrentIndex(pos if pos >= 0 else 0)
+
+    def setModelData(self, editor, model, index):
+        """Write the chosen node name (or blank) back through the model."""
+        model.setData(index, editor.currentText(), QtCore.Qt.EditRole)
+
+
 class SkeletonEdgesTableModel(GenericTableModel):
     """Table model for skeleton edges."""
 
