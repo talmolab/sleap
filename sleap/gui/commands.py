@@ -410,13 +410,13 @@ class CommandContext:
 
     # Navigation Commands
 
-    def previousLabeledFrame(self):
-        """Goes to labeled frame prior to current frame."""
-        self.execute(GoPreviousLabeledFrame)
+    def previousPredFrame(self):
+        """Goes to nearest frame before current with any instances (user or pred)."""
+        self.execute(GoPreviousPredFrame)
 
-    def nextLabeledFrame(self):
-        """Goes to labeled frame after current frame."""
-        self.execute(GoNextLabeledFrame)
+    def nextPredFrame(self):
+        """Goes to nearest frame after current with any instances (user or pred)."""
+        self.execute(GoNextPredFrame)
 
     def nextUserLabeledFrame(self):
         """Goes to next labeled frame with user instances."""
@@ -2604,7 +2604,7 @@ class GoIteratorCommand(AppCommand):
         cls._plot_if_next(context, frames)
 
 
-class GoPreviousLabeledFrame(GoIteratorCommand):
+class GoPreviousPredFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
         return iterate_labeled_frames(
@@ -2615,7 +2615,7 @@ class GoPreviousLabeledFrame(GoIteratorCommand):
         )
 
 
-class GoNextLabeledFrame(GoIteratorCommand):
+class GoNextPredFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
         return iterate_labeled_frames(
