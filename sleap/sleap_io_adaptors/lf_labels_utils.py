@@ -1218,6 +1218,49 @@ def clear_suggestion(labels: Labels):
     labels.suggestions.clear()
 
 
+def remove_suggestions(labels: Labels, frames: List) -> int:
+    """Delete the given suggestions, matching on content.
+
+    Args:
+        labels: The `Labels` to prune, mutated in place.
+        frames: The suggestion frames to remove. Each is matched by frame index
+            plus video content (`Video.matches_content`), not by identity or
+            position, so a frame read off a sorted table -- or one carrying an
+            equivalent but distinct `Video` -- still resolves.
+
+    Returns:
+        The index the first removed suggestion held, or ``-1`` if none of
+        `frames` matched. Callers use it to move a selection onto a neighbor.
+    """
+    if not frames:
+        return -1
+
+    exact = {(id(frame.video), frame.frame_idx) for frame in frames}
+
+    def is_target(suggestion) -> bool:
+        if (id(suggestion.video), suggestion.frame_idx) in exact:
+            return True
+        return any(
+            suggestion.frame_idx == frame.frame_idx
+            and suggestion.video.matches_content(frame.video)
+            for frame in frames
+        )
+
+    keep = []
+    first_removed = -1
+    for idx, suggestion in enumerate(labels.suggestions):
+        if is_target(suggestion):
+            if first_removed < 0:
+                first_removed = idx
+        else:
+            keep.append(suggestion)
+
+    if first_removed >= 0:
+        # Mutate in place: the suggestions table model is handed this very list.
+        labels.suggestions[:] = keep
+    return first_removed
+
+
 # Labels API Compatibility Functions
 # These functions provide backward compatibility with legacy SLEAP Labels API
 

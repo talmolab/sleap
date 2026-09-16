@@ -406,6 +406,21 @@ class GenericTableView(QtWidgets.QTableView):
             return None
         return self.model().original_items[idx.row()]
 
+    def getSelectedRowItems(self) -> List[Any]:
+        """Return the items for every selected row, in display order.
+
+        Rows are resolved to items through `original_items`, which follows the
+        table's current sort order, so a caller never has to map view rows back
+        onto the underlying list itself.
+
+        Returns:
+            The selected items. A single-selection table returns at most one;
+            an empty selection returns an empty list.
+        """
+        items = self.model().original_items
+        rows = sorted({index.row() for index in self.selectedIndexes()})
+        return [items[row] for row in rows if 0 <= row < len(items)]
+
 
 class InstancesTableView(GenericTableView):
     """Instances table with shift/ctrl multi-select for Merge Instance.
@@ -666,8 +681,10 @@ class LabeledFrameTableModel(GenericTableModel):
         if pts is not None and getattr(pts, "dtype", None) is not None:
             names = pts.dtype.names or ()
             if "score" in names and "xy" in names:
-                # Visibility = non-NaN xy (matches sleap-nn's filter definition
-                # and the "Points" column above).
+                # Visibility = non-NaN xy (matches sleap-nn's filter
+                # definition). Only predicted points carry scores, and there
+                # NaN xy and visible=False coincide, so this agrees with the
+                # "Points" column above.
                 visible = ~np.isnan(pts["xy"]).any(axis=1)
                 visible_scores = pts["score"][visible]
                 visible_scores = visible_scores[~np.isnan(visible_scores)]
