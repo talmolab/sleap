@@ -666,8 +666,10 @@ class LabeledFrameTableModel(GenericTableModel):
         if pts is not None and getattr(pts, "dtype", None) is not None:
             names = pts.dtype.names or ()
             if "score" in names and "xy" in names:
-                # Visibility = non-NaN xy (matches sleap-nn's filter definition
-                # and the "Points" column above).
+                # Visibility = non-NaN xy (matches sleap-nn's filter
+                # definition). Only predicted points carry scores, and there
+                # NaN xy and visible=False coincide, so this agrees with the
+                # "Points" column above.
                 visible = ~np.isnan(pts["xy"]).any(axis=1)
                 visible_scores = pts["score"][visible]
                 visible_scores = visible_scores[~np.isnan(visible_scores)]
