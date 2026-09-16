@@ -294,3 +294,115 @@ def test_instances_dock_merge_shift_select(qtbot, centered_pair_predictions: Lab
     table.selectRow(1)
     assert main_window.state["instance"] is inst1
     assert main_window.state["merge_partner"] is None
+
+
+def _select_suggestion_rows(table, rows):
+    """Select the given view rows in a multi-select table."""
+    from qtpy import QtCore
+
+    selection_model = table.selectionModel()
+    selection_model.clearSelection()
+    for row in rows:
+        selection_model.select(
+            table.model().createIndex(row, 0),
+            QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Rows,
+        )
+
+
+def test_suggestions_dock_batch_remove(qtbot, centered_pair_predictions: Labels):
+    """ "Remove" prunes every selected suggestion, not just the current row.
+
+    Pruning a large suggestion set one click per row was the only option before
+    (#2697).
+    """
+    from sleap.sleap_io_adaptors.lf_labels_utils import add_suggestion
+
+    labels = centered_pair_predictions
+    labels.suggestions.clear()
+    video = labels.videos[0]
+    for frame_idx in (10, 20, 30, 40, 50):
+        add_suggestion(labels, video, frame_idx)
+
+    main_window = MainWindow()
+    main_window.commands.loadLabelsObject(labels)
+    dock = main_window.suggestions_dock
+
+    # The table must allow a range/toggle selection in the first place.
+    assert dock.table.multiple_selection
+
+    # Nothing selected removes nothing.
+    dock.table.selectionModel().clearSelection()
+    main_window.commands.removeSuggestion()
+    assert len(labels.suggestions) == 5
+
+    # A three-row selection goes in one click.
+    _select_suggestion_rows(dock.table, [1, 2, 3])
+    main_window.commands.removeSuggestion()
+    assert [s.frame_idx for s in labels.suggestions] == [10, 50]
+
+    # A single row still works -- it is the one-element case.
+    _select_suggestion_rows(dock.table, [0])
+    main_window.commands.removeSuggestion()
+    assert [s.frame_idx for s in labels.suggestions] == [50]
+
+
+def test_suggestions_dock_batch_remove_follows_sort_order(
+    qtbot, centered_pair_predictions: Labels
+):
+    """Selected rows are resolved through the table's sort, not by position.
+
+    The suggestions table is sortable, so a view row is not an index into
+    `labels.suggestions`.
+    """
+    from sleap.sleap_io_adaptors.lf_labels_utils import add_suggestion
+
+    labels = centered_pair_predictions
+    labels.suggestions.clear()
+    video = labels.videos[0]
+    for frame_idx in (30, 10, 20):
+        add_suggestion(labels, video, frame_idx)
+
+    main_window = MainWindow()
+    main_window.commands.loadLabelsObject(labels)
+    dock = main_window.suggestions_dock
+
+    # Sort by frame, so display order (10, 20, 30) differs from stored order.
+    from qtpy import QtCore
+
+    frame_col = dock.table.model().properties.index("frame")
+    dock.table.model().sort(frame_col, QtCore.Qt.SortOrder.AscendingOrder)
+    assert [s.frame_idx for s in dock.table.model().original_items] == [10, 20, 30]
+
+    # Removing the first displayed row must drop frame 10, not stored frame 30.
+    _select_suggestion_rows(dock.table, [0])
+    main_window.commands.removeSuggestion()
+    assert sorted(s.frame_idx for s in labels.suggestions) == [20, 30]
+
+
+def test_suggestions_dock_remove_keeps_selection_on_a_neighbor(
+    qtbot, centered_pair_predictions: Labels
+):
+    """Repeated pruning should not require re-aiming after every click."""
+    from sleap.sleap_io_adaptors.lf_labels_utils import add_suggestion
+
+    labels = centered_pair_predictions
+    labels.suggestions.clear()
+    video = labels.videos[0]
+    for frame_idx in (10, 20, 30):
+        add_suggestion(labels, video, frame_idx)
+
+    main_window = MainWindow()
+    main_window.commands.loadLabelsObject(labels)
+    dock = main_window.suggestions_dock
+
+    _select_suggestion_rows(dock.table, [1])
+    main_window.commands.removeSuggestion()
+    # Frame 30 took the removed row's index, so it is what stays selected.
+    assert main_window.state["suggestion_idx"] == 1
+    assert dock.table.getSelectedRowItem().frame_idx == 30
+
+    # Removing the last remaining row clamps onto what is left.
+    _select_suggestion_rows(dock.table, [1])
+    main_window.commands.removeSuggestion()
+    assert main_window.state["suggestion_idx"] == 0
+    assert dock.table.getSelectedRowItem().frame_idx == 10

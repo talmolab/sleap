@@ -406,6 +406,21 @@ class GenericTableView(QtWidgets.QTableView):
             return None
         return self.model().original_items[idx.row()]
 
+    def getSelectedRowItems(self) -> List[Any]:
+        """Return the items for every selected row, in display order.
+
+        Rows are resolved to items through `original_items`, which follows the
+        table's current sort order, so a caller never has to map view rows back
+        onto the underlying list itself.
+
+        Returns:
+            The selected items. A single-selection table returns at most one;
+            an empty selection returns an empty list.
+        """
+        items = self.model().original_items
+        rows = sorted({index.row() for index in self.selectedIndexes()})
+        return [items[row] for row in rows if 0 <= row < len(items)]
+
 
 class InstancesTableView(GenericTableView):
     """Instances table with shift/ctrl multi-select for Merge Instance.

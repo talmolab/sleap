@@ -117,6 +117,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     remove_instance,
     remove_frames,
     add_suggestion,
+    remove_suggestions,
 )
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     iterate_labeled_frames,
@@ -4245,19 +4246,31 @@ class AddSuggestion(EditCommand):
 
 
 class RemoveSuggestion(EditCommand):
+    """Remove every suggestion selected in the suggestions table.
+
+    The table is multi-select, so pruning a large suggestion set does not cost
+    one click per row (#2697). Removing a single row is the one-element case.
+    """
+
     topics = [UpdateTopic.suggestions]
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        selected_frame = context.app.suggestions_dock.table.getSelectedRowItem()
-        if selected_frame is not None:
-            for sug_idx, suggestion in enumerate(context.labels.suggestions):
-                if (
-                    suggestion.video.matches_content(selected_frame.video)
-                    and suggestion.frame_idx == selected_frame.frame_idx
-                ):
-                    context.labels.suggestions.pop(sug_idx)
-                    break
+        table = context.app.suggestions_dock.table
+        selected_frames = table.getSelectedRowItems()
+        if not selected_frames:
+            return
+
+        first_removed = remove_suggestions(context.labels, selected_frames)
+        if first_removed < 0:
+            return
+
+        # Leave the selection on a neighbor so repeated pruning stays a single
+        # click, rather than dropping it and making the user re-aim.
+        remaining = len(context.labels.suggestions)
+        if remaining:
+            context.state["suggestion_idx"] = min(first_removed, remaining - 1)
+
         context.labels.update()
 
 

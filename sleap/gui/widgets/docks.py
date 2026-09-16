@@ -460,6 +460,9 @@ class SuggestionsDock(DockWidget):
             state=self.main_window.state,
             is_sortable=True,
             model=self.model,
+            # Shift/Ctrl-click a range of suggestions to prune them in one go;
+            # "Remove" acts on the whole selection.
+            multiple_selection=True,
         )
 
         # Connect some actions to the table
@@ -539,7 +542,7 @@ class SuggestionsDock(DockWidget):
             hb,
             "Remove",
             main_window.process_events_then(main_window.commands.removeSuggestion),
-            "remove suggestion",
+            "remove selected suggestions (shift/ctrl-click to select several)",
         )
 
         self.add_button(
