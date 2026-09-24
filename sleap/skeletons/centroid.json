@@ -1,0 +1,28 @@
+{
+ "description": "Single-node centroid skeleton for centroid-only models.",
+ "nx_graph": {
+  "directed": true,
+  "graph": {
+   "name": "centroid",
+   "num_edges_inserted": 0
+  },
+  "links": [],
+  "multigraph": true,
+  "nodes": [
+   {
+    "id": {
+     "py/object": "sleap.skeleton.Node",
+     "py/state": {
+      "py/tuple": [
+       "centroid",
+       1.0
+      ]
+     }
+    }
+   }
+  ]
+ },
+ "preview_image": {
+  "py/b64": "iVBORw0KGgoAAAANSUhEUgAAAMgAAACWCAYAAACb3McZAAABQElEQVR4nO3cwQ3CMBBFwUAZ1EMplEUp1EMbUAGLlOSvg5m5IhQJ/Lw+WFkWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADiTvlH8M3lcX99+ux5vfmPBvLjHzCKT8TS7zzgmX9vTRxbvsd6JkijPRe4adLDBGmy9+5vmvQQSIPUYhZJnkCgIJCw9C5vimQJZILFK5IcgUBBIFAQyCTHHsesDIFAQSBQEAgUBAIFgUBBIFAQSEj3dXTX3zMEAgWBQEEgExx7HK9yBPLji1ccWQKBgkAapHZ50yNPIE32Xszi6OG1PwNsuZoujF4myABrF7k4+pkgB+DdvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwTO8NFK1ENqv3Iq8AAAAASUVORK5CYII="
+ }
+}
