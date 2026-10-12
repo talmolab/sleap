@@ -361,7 +361,9 @@ def frame_list(frame_str: str) -> Optional[List[int]]:
     help=(
         "List of frames to predict when running on a video. Can be specified as a "
         "comma separated list (e.g. 1,2,3) or a range separated by hyphen (e.g., 1-3, "
-        "for 1,2,3). If not provided, defaults to predicting on the entire video."
+        "for 1,2,3). Frame numbers are 0-based, so the first frame is 0 (the GUI "
+        "displays frame numbers starting at 1). If not provided, defaults to "
+        "predicting on the entire video."
     ),
 )
 @click.option(
