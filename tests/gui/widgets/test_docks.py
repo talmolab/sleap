@@ -108,6 +108,21 @@ def test_suggestions_dock(qtbot):
     assert dock.wgt_layout is dock.widget().layout()
 
 
+def test_suggestions_dock_elides_long_video_names(qtbot):
+    """Long video names are elided on one line, not wrapped out of view (#2885).
+
+    The video cell is "N: filename"; with word wrap on, Qt broke it after "N:"
+    and the filename landed on a hidden second line, so every row read "1: ...".
+    """
+    from qtpy import QtCore
+
+    main_window = MainWindow()
+    table = main_window.suggestions_dock.table
+
+    assert not table.wordWrap()
+    assert table.textElideMode() == QtCore.Qt.ElideLeft
+
+
 def test_instances_dock(qtbot, centered_pair_predictions: Labels):
     """Test the `DockWidget` class."""
     main_window = MainWindow(labels=centered_pair_predictions)
