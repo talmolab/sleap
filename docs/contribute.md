@@ -14,7 +14,7 @@ Github has made it easy to separate issues from discussions. Generally speaking,
 ### Issues
 
 * Check [open/closed issues](https://github.com/talmolab/sleap/issues), [ideas](https://github.com/talmolab/sleap/discussions/categories/ideas), and [the help page](https://github.com/talmolab/sleap/discussions/categories/help) to make sure issue doesn't already exist / has been solved.
-* Create new issue using the [issue template](https://github.com/talmolab/sleap/blob/arlo/contributing_guide/.github/ISSUE_TEMPLATE/bug_report.md).
+* Create new issue using the [issue template](https://github.com/talmolab/sleap/blob/develop/.github/ISSUE_TEMPLATE/bug_report.md).
 
 ### Discussions
 
@@ -45,11 +45,11 @@ Github has made it easy to separate issues from discussions. Generally speaking,
    * Optionally assign a reviewer on the right of the screen - otherwise a member of the SLEAP developer team will self-assign themselves.
 8. If the reviewer requests changes, repeat steps 3-5 and `Re-request review`.
 9. Once the reviewer signs off they will squash + merge the PR into the `develop` branch.
-   * New feautures will be available on the `main` branch when a new release of SLEAP is released.
+   * New features will be available on the `main` branch when a new release of SLEAP is released.
 
 ## Style Guides
 
-* **Lint** - [Black](https://black.readthedocs.io/en/stable/) version 21.6b0 (see [dev_requirements](https://github.com/talmolab/sleap/blob/develop/dev_requirements.txt) for any changes).
+* **Lint** - [Ruff](https://docs.astral.sh/ruff/) (see the `[tool.ruff]` section of [pyproject.toml](https://github.com/talmolab/sleap/blob/develop/pyproject.toml) for the configuration): `uv run ruff format sleap tests && uv run ruff check --fix sleap tests`.
 * **Code** - Generally follow [PEP8](https://peps.python.org/pep-0008/). Type hinting is encouraged.
 * **Documentation** - Use [Google-style comments and docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) to document code.
 
