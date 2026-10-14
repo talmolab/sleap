@@ -33,6 +33,7 @@ class FrameLoaderThread(QThread):
         self.stop_flag = threading.Event()
         self.current_video = None
         self.local_video_copy = None
+        self._local_grayscale = None  # grayscale setting the local copy was made with
 
         # Performance tracking
         self._frame_load_times = deque(maxlen=100)
@@ -138,8 +139,12 @@ class FrameLoaderThread(QThread):
         if self.debug_mode:
             print(f"[MAIN] Requesting frame {frame_idx}")
 
+        # Grayscale setting recorded on the video (e.g., set by "Toggle Grayscale").
+        grayscale = video.backend_metadata.get("grayscale")
+
         # Update the current video if a new one was provided
-        if self.current_video is not video:
+        # Check if the Grayscale setting changed since last copy
+        if self.current_video is not video or grayscale != self._local_grayscale:
             if self.debug_mode:
                 print("[MAIN] Switching to new video")
 
@@ -156,6 +161,7 @@ class FrameLoaderThread(QThread):
 
             # Make a thread-local copy
             self.local_video_copy = deepcopy(video)
+            self._local_grayscale = grayscale  # remember the copy's setting
 
             # Set it to open the backend on first read
             self.local_video_copy.open_backend = True
