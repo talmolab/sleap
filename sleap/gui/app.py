@@ -630,15 +630,27 @@ class MainWindow(QMainWindow):
 
         add_menu_item(
             goMenu,
+            "goto next pred",
+            "Next Predicted Frame",
+            self.commands.nextPredFrame,
+        )
+        add_menu_item(
+            goMenu,
+            "goto prev pred",
+            "Previous Predicted Frame",
+            self.commands.previousPredFrame,
+        )
+        add_menu_item(
+            goMenu,
             "goto next labeled",
             "Next Labeled Frame",
-            self.commands.nextLabeledFrame,
+            self.commands.nextUserLabeledFrame,
         )
         add_menu_item(
             goMenu,
             "goto prev labeled",
             "Previous Labeled Frame",
-            self.commands.previousLabeledFrame,
+            self.commands.prevUserLabeledFrame,
         )
         add_menu_item(
             goMenu,
@@ -1392,8 +1404,8 @@ class MainWindow(QMainWindow):
         self._menu_actions["next video"].setEnabled(has_multiple_videos)
         self._menu_actions["prev video"].setEnabled(has_multiple_videos)
 
-        self._menu_actions["goto next labeled"].setEnabled(has_labeled_frames)
-        self._menu_actions["goto prev labeled"].setEnabled(has_labeled_frames)
+        self._menu_actions["goto next pred"].setEnabled(has_labeled_frames)
+        self._menu_actions["goto prev pred"].setEnabled(has_labeled_frames)
 
         # Enable suggestion navigation if there are suggestions OR QC flags
         has_qc_flags = hasattr(self, "_qc_dock") and self._qc_dock.has_flags
