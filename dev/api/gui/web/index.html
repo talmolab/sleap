@@ -2352,33 +2352,33 @@
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>sleap/gui/web.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-11">11</a></span>
-<span class="normal"><a href="#__codelineno-0-12">12</a></span>
-<span class="normal"><a href="#__codelineno-0-13">13</a></span>
-<span class="normal"><a href="#__codelineno-0-14">14</a></span>
-<span class="normal"><a href="#__codelineno-0-15">15</a></span>
-<span class="normal"><a href="#__codelineno-0-16">16</a></span>
-<span class="normal"><a href="#__codelineno-0-17">17</a></span>
-<span class="normal"><a href="#__codelineno-0-18">18</a></span>
-<span class="normal"><a href="#__codelineno-0-19">19</a></span>
-<span class="normal"><a href="#__codelineno-0-20">20</a></span>
-<span class="normal"><a href="#__codelineno-0-21">21</a></span>
-<span class="normal"><a href="#__codelineno-0-22">22</a></span>
-<span class="normal"><a href="#__codelineno-0-23">23</a></span>
-<span class="normal"><a href="#__codelineno-0-24">24</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_analytics_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="w">    </span><span class="sd">"""Gather data to be transmitted to analytics backend."""</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">sleap</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a>    <span class="k">return</span> <span class="p">{</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19"></a>        <span class="s2">"sleap_version"</span><span class="p">:</span> <span class="n">sleap</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a>        <span class="s2">"python_version"</span><span class="p">:</span> <span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">(),</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a>        <span class="s2">"tf_version"</span><span class="p">:</span> <span class="s2">"N/A"</span><span class="p">,</span>  <span class="c1"># TensorFlow no longer bundled with GUI</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22"></a>        <span class="s2">"conda_env"</span><span class="p">:</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"CONDA_PREFIX"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a>        <span class="s2">"platform"</span><span class="p">:</span> <span class="n">platform</span><span class="o">.</span><span class="n">platform</span><span class="p">(),</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="p">}</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-13">13</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#sleap.gui.web.get_analytics_data--source--__codelineno-0-24">24</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="sleap.gui.web.get_analytics_data--source--__span-0-11"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-11" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_analytics_data</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-12"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-12" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-12"></a><span class="w">    </span><span class="sd">"""Gather data to be transmitted to analytics backend."""</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-13"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-13" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-13"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-14"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-14" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-14"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">sleap</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-15"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-15" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-15"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-16"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-16" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-16"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-17"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-17" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-17"></a>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-18"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-18" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-18"></a>    <span class="k">return</span> <span class="p">{</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-19"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-19" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-19"></a>        <span class="s2">"sleap_version"</span><span class="p">:</span> <span class="n">sleap</span><span class="o">.</span><span class="n">__version__</span><span class="p">,</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-20"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-20" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-20"></a>        <span class="s2">"python_version"</span><span class="p">:</span> <span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">(),</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-21"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-21" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-21"></a>        <span class="s2">"tf_version"</span><span class="p">:</span> <span class="s2">"N/A"</span><span class="p">,</span>  <span class="c1"># TensorFlow no longer bundled with GUI</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-22"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-22" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-22"></a>        <span class="s2">"conda_env"</span><span class="p">:</span> <span class="n">Path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"CONDA_PREFIX"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-23"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-23" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-23"></a>        <span class="s2">"platform"</span><span class="p">:</span> <span class="n">platform</span><span class="o">.</span><span class="n">platform</span><span class="p">(),</span>
+</span><span id="sleap.gui.web.get_analytics_data--source--__span-0-24"><a id="sleap.gui.web.get_analytics_data--source--__codelineno-0-24" name="sleap.gui.web.get_analytics_data--source--__codelineno-0-24"></a>    <span class="p">}</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2408,53 +2408,53 @@ collection.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>sleap/gui/web.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-27">27</a></span>
-<span class="normal"><a href="#__codelineno-0-28">28</a></span>
-<span class="normal"><a href="#__codelineno-0-29">29</a></span>
-<span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span>
-<span class="normal"><a href="#__codelineno-0-43">43</a></span>
-<span class="normal"><a href="#__codelineno-0-44">44</a></span>
-<span class="normal"><a href="#__codelineno-0-45">45</a></span>
-<span class="normal"><a href="#__codelineno-0-46">46</a></span>
-<span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span>
-<span class="normal"><a href="#__codelineno-0-50">50</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="k">def</span><span class="w"> </span><span class="nf">ping_analytics</span><span class="p">():</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="w">    </span><span class="sd">"""Ping analytics service with anonymous usage data.</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">    Notes:</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">        This only gets called when the GUI starts and obeys user preferences for data</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">        collection.</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="sd">        See https://docs.sleap.ai/latest/help/#usage for more information.</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    """</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="n">analytics_data</span> <span class="o">=</span> <span class="n">get_analytics_data</span><span class="p">()</span>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_ping_analytics</span><span class="p">():</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a>            <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a>                <span class="n">ANALYTICS_ENDPOINT</span><span class="p">,</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a>                <span class="n">json</span><span class="o">=</span><span class="n">analytics_data</span><span class="p">,</span>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a>            <span class="p">)</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a>        <span class="k">except</span> <span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">Timeout</span><span class="p">):</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a>            <span class="k">pass</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="c1"># Fire and forget.</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a>    <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_ping_analytics</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#sleap.gui.web.ping_analytics--source--__codelineno-0-50">50</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="sleap.gui.web.ping_analytics--source--__span-0-27"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-27" name="sleap.gui.web.ping_analytics--source--__codelineno-0-27"></a><span class="k">def</span><span class="w"> </span><span class="nf">ping_analytics</span><span class="p">():</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-28"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-28" name="sleap.gui.web.ping_analytics--source--__codelineno-0-28"></a><span class="w">    </span><span class="sd">"""Ping analytics service with anonymous usage data.</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-29"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-29" name="sleap.gui.web.ping_analytics--source--__codelineno-0-29"></a>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-30"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-30" name="sleap.gui.web.ping_analytics--source--__codelineno-0-30"></a><span class="sd">    Notes:</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-31"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-31" name="sleap.gui.web.ping_analytics--source--__codelineno-0-31"></a><span class="sd">        This only gets called when the GUI starts and obeys user preferences for data</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-32"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-32" name="sleap.gui.web.ping_analytics--source--__codelineno-0-32"></a><span class="sd">        collection.</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-33"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-33" name="sleap.gui.web.ping_analytics--source--__codelineno-0-33"></a>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-34"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-34" name="sleap.gui.web.ping_analytics--source--__codelineno-0-34"></a><span class="sd">        See https://docs.sleap.ai/latest/help/#usage for more information.</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-35"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-35" name="sleap.gui.web.ping_analytics--source--__codelineno-0-35"></a><span class="sd">    """</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-36"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-36" name="sleap.gui.web.ping_analytics--source--__codelineno-0-36"></a>    <span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-37"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-37" name="sleap.gui.web.ping_analytics--source--__codelineno-0-37"></a>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-38"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-38" name="sleap.gui.web.ping_analytics--source--__codelineno-0-38"></a>    <span class="n">analytics_data</span> <span class="o">=</span> <span class="n">get_analytics_data</span><span class="p">()</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-39"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-39" name="sleap.gui.web.ping_analytics--source--__codelineno-0-39"></a>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-40"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-40" name="sleap.gui.web.ping_analytics--source--__codelineno-0-40"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_ping_analytics</span><span class="p">():</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-41"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-41" name="sleap.gui.web.ping_analytics--source--__codelineno-0-41"></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-42"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-42" name="sleap.gui.web.ping_analytics--source--__codelineno-0-42"></a>            <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-43"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-43" name="sleap.gui.web.ping_analytics--source--__codelineno-0-43"></a>                <span class="n">ANALYTICS_ENDPOINT</span><span class="p">,</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-44"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-44" name="sleap.gui.web.ping_analytics--source--__codelineno-0-44"></a>                <span class="n">json</span><span class="o">=</span><span class="n">analytics_data</span><span class="p">,</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-45"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-45" name="sleap.gui.web.ping_analytics--source--__codelineno-0-45"></a>            <span class="p">)</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-46"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-46" name="sleap.gui.web.ping_analytics--source--__codelineno-0-46"></a>        <span class="k">except</span> <span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">Timeout</span><span class="p">):</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-47"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-47" name="sleap.gui.web.ping_analytics--source--__codelineno-0-47"></a>            <span class="k">pass</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-48"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-48" name="sleap.gui.web.ping_analytics--source--__codelineno-0-48"></a>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-49"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-49" name="sleap.gui.web.ping_analytics--source--__codelineno-0-49"></a>    <span class="c1"># Fire and forget.</span>
+</span><span id="sleap.gui.web.ping_analytics--source--__span-0-50"><a id="sleap.gui.web.ping_analytics--source--__codelineno-0-50" name="sleap.gui.web.ping_analytics--source--__codelineno-0-50"></a>    <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">_ping_analytics</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>

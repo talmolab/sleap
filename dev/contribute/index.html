@@ -2297,7 +2297,7 @@
 <h3 id="issues">Issues<a class="headerlink" href="#issues" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Check <a href="https://github.com/talmolab/sleap/issues">open/closed issues</a>, <a href="https://github.com/talmolab/sleap/discussions/categories/ideas">ideas</a>, and <a href="https://github.com/talmolab/sleap/discussions/categories/help">the help page</a> to make sure issue doesn't already exist / has been solved.</li>
-<li>Create new issue using the <a href="https://github.com/talmolab/sleap/blob/arlo/contributing_guide/.github/ISSUE_TEMPLATE/bug_report.md">issue template</a>.</li>
+<li>Create new issue using the <a href="https://github.com/talmolab/sleap/blob/develop/.github/ISSUE_TEMPLATE/bug_report.md">issue template</a>.</li>
 </ul>
 <h3 id="discussions">Discussions<a class="headerlink" href="#discussions" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2328,11 +2328,11 @@
 <li>Optionally assign a reviewer on the right of the screen - otherwise a member of the SLEAP developer team will self-assign themselves.</li>
 <li>If the reviewer requests changes, repeat steps 3-5 and <code>Re-request review</code>.</li>
 <li>Once the reviewer signs off they will squash + merge the PR into the <code>develop</code> branch.</li>
-<li>New feautures will be available on the <code>main</code> branch when a new release of SLEAP is released.</li>
+<li>New features will be available on the <code>main</code> branch when a new release of SLEAP is released.</li>
 </ol>
 <h2 id="style-guides">Style Guides<a class="headerlink" href="#style-guides" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Lint</strong> - <a href="https://black.readthedocs.io/en/stable/">Black</a> version 21.6b0 (see <a href="https://github.com/talmolab/sleap/blob/develop/dev_requirements.txt">dev_requirements</a> for any changes).</li>
+<li><strong>Lint</strong> - <a href="https://docs.astral.sh/ruff/">Ruff</a> (see the <code>[tool.ruff]</code> section of <a href="https://github.com/talmolab/sleap/blob/develop/pyproject.toml">pyproject.toml</a> for the configuration): <code>uv run ruff format sleap tests &amp;&amp; uv run ruff check --fix sleap tests</code>.</li>
 <li><strong>Code</strong> - Generally follow <a href="https://peps.python.org/pep-0008/">PEP8</a>. Type hinting is encouraged.</li>
 <li><strong>Documentation</strong> - Use <a href="https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings">Google-style comments and docstrings</a> to document code.</li>
 </ul>
