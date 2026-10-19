@@ -2629,16 +2629,19 @@ class GoNextLabeledFrame(GoIteratorCommand):
 class GoNextUserLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        from sleap.sleap_io_adaptors.lf_labels_utils import iterate_labeled_frames
+        from sleap.sleap_io_adaptors.lf_labels_utils import (
+            is_user_or_negative_frame,
+            iterate_labeled_frames,
+        )
 
         iterate_labeled_frames = iterate_labeled_frames(
             context.labels,
             context.state["video"],
             from_frame_idx=context.state["frame_idx"],
         )
-        # Filter to frames with user instances
+        # Filter to frames the user labeled (user instances or marked negative)
         iterate_labeled_frames = filter(
-            lambda lf: lf.has_user_instances, iterate_labeled_frames
+            is_user_or_negative_frame, iterate_labeled_frames
         )
         return iterate_labeled_frames
 
@@ -2646,7 +2649,10 @@ class GoNextUserLabeledFrame(GoIteratorCommand):
 class GoPrevUserLabeledFrame(GoIteratorCommand):
     @staticmethod
     def _get_frame_iterator(context: CommandContext):
-        from sleap.sleap_io_adaptors.lf_labels_utils import iterate_labeled_frames
+        from sleap.sleap_io_adaptors.lf_labels_utils import (
+            is_user_or_negative_frame,
+            iterate_labeled_frames,
+        )
 
         iterate_labeled_frames = iterate_labeled_frames(
             context.labels,
@@ -2655,7 +2661,7 @@ class GoPrevUserLabeledFrame(GoIteratorCommand):
             reverse=True,
         )
         iterate_labeled_frames = filter(
-            lambda lf: lf.has_user_instances, iterate_labeled_frames
+            is_user_or_negative_frame, iterate_labeled_frames
         )
         return iterate_labeled_frames
 

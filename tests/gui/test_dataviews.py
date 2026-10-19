@@ -683,3 +683,26 @@ def test_labeled_frame_points_column_stable_across_conversion(
     model = LabeledFrameTableModel(items=lf)
     user_row = list(get_instances_to_show(lf)).index(user_inst)
     assert model._data[user_row]["points"] == expected
+
+
+def test_suggestions_table_labeled_column_negative_frame(qtbot):
+    """A suggested negative frame shows as "negative" in the labeled column."""
+    from sleap.gui.commands import CommandContext
+
+    video = sio.Video(filename="test.mp4")
+    skeleton = sio.Skeleton(["A"])
+    user_lf = sio.LabeledFrame(
+        video=video,
+        frame_idx=0,
+        instances=[sio.Instance.from_numpy([[1.0, 2.0]], skeleton=skeleton)],
+    )
+    negative_lf = sio.LabeledFrame(video=video, frame_idx=1, is_negative=True)
+    labels = sio.Labels(
+        labeled_frames=[user_lf, negative_lf], videos=[video], skeletons=[skeleton]
+    )
+    suggestions = [sio.SuggestionFrame(video, i) for i in (0, 1, 2)]
+    labels.suggestions = suggestions
+
+    model = SuggestionsTableModel(context=CommandContext.from_labels(labels))
+    labeled = [model.item_to_data(None, s)["labeled"] for s in suggestions]
+    assert labeled == ["1", "negative", ""]

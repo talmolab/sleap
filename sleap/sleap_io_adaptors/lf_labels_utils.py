@@ -389,10 +389,15 @@ def get_labeled_frame_count(labels, video=None, filter: str = "") -> int:
     Args:
         labels: A Labels object containing labeled frames
         video: Optional Video object to filter by. If None, counts all videos
-        filter: Filter string. Must be one of: "", "user", "predicted"
+        filter: Filter string. Must be one of: "", "user", "predicted",
+            "negative", "user_or_negative"
             - "": All labeled frames
             - "user": Only frames with user-labeled instances
             - "predicted": Only frames with predicted instances
+            - "negative": Only frames marked as negative (background) frames
+            - "user_or_negative": Frames with user instances or marked as
+              negative, i.e. every frame the user has labeled (matches
+              sleap-io's `Labels.user_labeled_frames`)
 
     Returns:
         Count of frames matching the criteria
@@ -400,7 +405,7 @@ def get_labeled_frame_count(labels, video=None, filter: str = "") -> int:
     Raises:
         ValueError: If filter is not one of the valid options
     """
-    if filter not in ("", "user", "predicted"):
+    if filter not in ("", "user", "predicted", "negative", "user_or_negative"):
         raise ValueError(f"get_labeled_frame_count() invalid filter: {filter}")
 
     # Get all labeled frames
@@ -440,8 +445,48 @@ def get_labeled_frame_count(labels, video=None, filter: str = "") -> int:
                 if hasattr(lf, "has_predicted_instances") and lf.has_predicted_instances
             ]
         )
+    elif filter == "negative":
+        # Only frames explicitly marked as negative (background)
+        return len([lf for lf in frames if getattr(lf, "is_negative", False)])
+    elif filter == "user_or_negative":
+        # Every frame the user has labeled: user instances or a negative mark
+        return len([lf for lf in frames if is_user_or_negative_frame(lf)])
 
     return 0
+
+
+def is_user_or_negative_frame(lf) -> bool:
+    """Return True if the user has labeled this frame.
+
+    A frame counts as labeled when it has user instances or is explicitly marked
+    as a negative (background) frame. Negative frames have no instances but are
+    still a deliberate user label, and sleap-io counts them in
+    `Labels.user_labeled_frames`.
+    """
+    return bool(
+        getattr(lf, "has_user_instances", False) or getattr(lf, "is_negative", False)
+    )
+
+
+def format_labeled_frame_count(labels, video=None) -> str:
+    """Return the labeled-frame count for display, noting negative frames.
+
+    Negative frames are included in the count. The breakdown is only shown when
+    there is at least one negative frame, e.g. "6 (2 negative frames)".
+
+    Args:
+        labels: A Labels object containing labeled frames.
+        video: Optional Video to restrict the count to.
+
+    Returns:
+        The formatted count.
+    """
+    total = get_labeled_frame_count(labels, video, "user_or_negative")
+    n_negative = get_labeled_frame_count(labels, video, "negative")
+    if n_negative == 0:
+        return str(total)
+    noun = "frame" if n_negative == 1 else "frames"
+    return f"{total} ({n_negative} negative {noun})"
 
 
 def find_first(labels, video, frame_idx=None, use_cache: bool = False):

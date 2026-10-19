@@ -133,8 +133,10 @@ from sleap.prefs import prefs
 from sleap_io.model.skeleton import Skeleton
 from sleap.util import parse_uri_path, get_config_file
 from sleap.sleap_io_adaptors.lf_labels_utils import (
+    format_labeled_frame_count,
     get_labeled_frame_count,
     get_instances_to_show,
+    is_user_or_negative_frame,
     find_last,
     get_video_suggestions,
 )
@@ -1506,13 +1508,14 @@ class MainWindow(QMainWindow):
             suggestion_status_text = ""
             suggestion_list = self.labels.suggestions
             if suggestion_list:
-                # Build set of (video, frame_idx) for frames with user instances
+                # Build set of (video, frame_idx) for frames the user has labeled
+                # (user instances or marked negative).
                 # O(m) where m = labeled frames, then O(n) lookups for n suggestions
                 # Total: O(n + m) instead of O(n * m) from calling find() per suggestion
                 user_labeled_frames = {
                     (lf.video, lf.frame_idx)
                     for lf in self.labels
-                    if lf.has_user_instances
+                    if is_user_or_negative_frame(lf)
                 }
                 labeled_count = sum(
                     1
@@ -1700,19 +1703,16 @@ class MainWindow(QMainWindow):
                 message += spacer
                 message += f"Selection: {start + 1:,}-{end:,} ({end - start:,} frames)"
 
+            # Negative frames count as labeled; the breakdown only appears when
+            # there are any, e.g. "Labeled Frames: 6 (2 negative frames)".
             message += f"{spacer}Labeled Frames: "
             if current_video is not None:
-                message += str(
-                    get_labeled_frame_count(self.labels, current_video, "user")
-                )
+                message += format_labeled_frame_count(self.labels, current_video)
 
                 if len(self.labels.videos) > 1:
                     message += " in video, "
             if len(self.labels.videos) > 1:
-                project_user_frame_count = get_labeled_frame_count(
-                    self.labels, filter="user"
-                )
-                message += f"{project_user_frame_count} in project"
+                message += f"{format_labeled_frame_count(self.labels)} in project"
 
             if current_video is not None:
                 pred_frame_count = get_labeled_frame_count(
