@@ -439,6 +439,9 @@ class VideoItemForInference(ItemForInference):
             directly, so unlabeled frames aren't skipped.
         video_idx: Index of this video within the project's videos. Passed as
             `--video_index` only when `--data_path` is the project .slp.
+        tracking_only: Whether this item is run without models, i.e. only retracking
+            the predictions already in the project. Forces the project .slp as
+            `--data_path` (see `uses_labels_path`).
     """
 
     video: Video
@@ -446,6 +449,7 @@ class VideoItemForInference(ItemForInference):
     use_absolute_path: bool = False
     labels_path: Optional[str] = None
     video_idx: int = 0
+    tracking_only: bool = False
 
     @property
     def uses_labels_path(self) -> bool:
@@ -461,11 +465,16 @@ class VideoItemForInference(ItemForInference):
         * Image-sequence videos: `filename` is a list of image paths, which is not
           something a single `--data_path` can express.
 
-        Both cases need `--video_index` to scope the run to this video. Falls back to
-        the video file when there is no project path to use.
+        Tracking-only runs (no models) also need the project: they retrack the
+        predictions stored in it, and sleap-nn rejects a video `--data_path` for them.
+
+        All of these need `--video_index` to scope the run to this video. Falls back
+        to the video file when there is no project path to use.
         """
         if not self.labels_path:
             return False
+        if self.tracking_only:
+            return True
         filename = self.video.filename
         if not isinstance(filename, (str, Path)):
             # Image sequence: a list of per-frame image paths.
@@ -611,6 +620,12 @@ class InferenceTask:
         gui: bool = True,
     ) -> List[Text]:
         """Makes list of CLI arguments needed for running inference."""
+        if not self.trained_job_paths and isinstance(
+            item_for_inference, VideoItemForInference
+        ):
+            # Tracking-only: retrack the project's predictions instead of a video.
+            item_for_inference = attr.evolve(item_for_inference, tracking_only=True)
+
         cli_args = [
             "sleap",
             "predict",

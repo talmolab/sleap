@@ -293,6 +293,34 @@ class TestVideoItemForInferenceCLI:
             assert not item.uses_labels_path
             assert item.path == mock_video.filename
 
+    def test_tracking_only_keeps_labels_path_and_video_index(self, mock_video):
+        """Tracking-only must retrack the project, not the video file.
+
+        Regression test: tracking-only has no models, and sleap-nn rejects a video
+        `--data_path` for it ("Tracking-only mode requires --data_path to be a .slp
+        file"), so even a video with its own file has to go through the project.
+        """
+        item = VideoItemForInference(
+            video=mock_video,
+            frames=[0, -1500],
+            labels_path="/path/to/labels.slp",
+            video_idx=2,
+            tracking_only=True,
+        )
+
+        assert item.uses_labels_path
+        cli_args = item.cli_args
+        assert cli_args[cli_args.index("--data_path") + 1] == "/path/to/labels.slp"
+        assert cli_args[cli_args.index("--video_index") + 1] == "2"
+
+    def test_tracking_only_without_labels_path_uses_video(self, mock_video):
+        """With no project to point at, tracking-only falls back to the video."""
+        item = VideoItemForInference(
+            video=mock_video, frames=[0], labels_path=None, tracking_only=True
+        )
+        assert not item.uses_labels_path
+        assert item.path == mock_video.filename
+
     def test_no_frames_omits_frames_arg(self, mock_video):
         """frames=None means all frames, which is `--frames` omitted, not a crash."""
         item = VideoItemForInference(
@@ -518,6 +546,32 @@ class TestInferenceTaskCLI:
             labels_path="/path/to/labels.slp",
             video_idx=0,
         )
+
+    def test_tracking_only_targets_labels_path(self, mock_labels, video_item):
+        """With no models (tracking-only), the project .slp is the data path."""
+        task = InferenceTask(
+            trained_job_paths=[],
+            inference_params={},
+            labels=mock_labels,
+            labels_filename="/path/to/labels.slp",
+        )
+
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/o.slp")
+
+        assert "--model_paths" not in cli_args
+        assert cli_args[cli_args.index("--data_path") + 1] == "/path/to/labels.slp"
+        assert cli_args[cli_args.index("--video_index") + 1] == "0"
+        # The caller's item is left as-is.
+        assert not video_item.tracking_only
+
+    def test_with_models_targets_video_file(self, inference_task, video_item):
+        """With models, a video with its own file is still inferred on directly."""
+        cli_args, _ = inference_task.make_predict_cli_call(
+            video_item, output_path="/tmp/o.slp"
+        )
+
+        assert cli_args[cli_args.index("--data_path") + 1] == "/path/to/video.mp4"
+        assert "--video_index" not in cli_args
 
     def test_basic_cli_call(self, inference_task, video_item):
         """Basic CLI call should include sleap track and model paths."""
