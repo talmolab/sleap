@@ -441,6 +441,40 @@ class TestCrossComponentSignals:
         training_dialog._validate_pipeline()
         assert training_dialog.message_widget is not None
 
+    @pytest.mark.parametrize(
+        "overrides, can_run",
+        [
+            ({}, False),
+            ({"tracking.max_tracks": 2}, True),
+            ({"_max_instances": 2}, True),
+            ({"tracking.post_connect_single_breaks": False}, True),
+            ({"tracking.tracker": "none"}, True),
+        ],
+    )
+    def test_connect_single_breaks_needs_instance_count(
+        self, training_dialog, overrides, can_run
+    ):
+        """Connect Single Track Breaks without max tracks/instances can't run."""
+        form_data = {
+            "tracking.tracker": "simple",
+            "tracking.post_connect_single_breaks": True,
+            "tracking.max_tracks": None,
+            "_max_instances": None,
+        }
+        form_data.update(overrides)
+
+        with patch.object(
+            training_dialog.pipeline_form_widget,
+            "get_form_data",
+            return_value=form_data,
+        ):
+            training_dialog._validate_pipeline()
+
+        assert training_dialog.run_button.isEnabled() == can_run
+        assert (
+            "Connect Single Track Breaks" in training_dialog.message_widget.text()
+        ) != can_run
+
 
 # =============================================================================
 # Data Pipeline Tests
