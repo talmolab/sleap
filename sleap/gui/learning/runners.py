@@ -485,19 +485,17 @@ class VideoItemForInference(ItemForInference):
             arg_list.extend(["--video_index", str(self.video_idx)])
 
         # TODO: better support for video params
-        if (
-            self.video.backend
-            and hasattr(self.video.backend, "dataset")
-            and self.video.backend.dataset
-        ):
-            arg_list.extend(("--video_dataset", self.video.backend.dataset))
+        # Don't test `backend` for truthiness: that calls `len()`, which reads the
+        # video and raises for one that can't be decoded -- before sleap-nn gets the
+        # chance to report it properly.
+        backend = self.video.backend
+        dataset = getattr(backend, "dataset", None)
+        if dataset:
+            arg_list.extend(("--video_dataset", dataset))
 
-        if (
-            self.video.backend
-            and hasattr(self.video.backend, "input_format")
-            and self.video.backend.input_format
-        ):
-            arg_list.extend(("--video_input_format", self.video.backend.input_format))
+        input_format = getattr(backend, "input_format", None)
+        if input_format:
+            arg_list.extend(("--video_input_format", input_format))
 
         # No frames means every frame, which is what omitting `--frames` does.
         if self.frames:

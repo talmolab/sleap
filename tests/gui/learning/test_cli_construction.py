@@ -236,6 +236,34 @@ class TestVideoItemForInferenceCLI:
         format_idx = cli_args.index("--video_input_format") + 1
         assert cli_args[format_idx] == "channels_last"
 
+    def test_cli_args_dont_read_undecodable_video(self):
+        """Building args must not read the video (via `len(backend)`).
+
+        sleap-io reads frame 0 to compute a backend's length, which raises for a
+        video it can't decode. sleap-nn reports that clearly itself, so the GUI must
+        hand it the command rather than crash first.
+        """
+
+        class UndecodableBackend:
+            dataset = None
+            input_format = None
+
+            def __len__(self):
+                raise IndexError("Failed to read frame index 0.")
+
+        video = MagicMock(spec=Video)
+        video.filename = "/path/to/broken.mp4"
+        video.backend = UndecodableBackend()
+
+        item = VideoItemForInference(
+            video=video, frames=[0, -10], labels_path="/path/to/labels.slp"
+        )
+
+        cli_args = item.cli_args
+
+        assert cli_args[cli_args.index("--data_path") + 1] == "/path/to/labels.slp"
+        assert "--video_dataset" not in cli_args
+
     def test_cli_args_frame_range(self, mock_video):
         """CLI args should handle frame ranges (negative end marker)."""
         # Negative values indicate range endpoints
