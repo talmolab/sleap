@@ -5,6 +5,7 @@ from sleap.info.feature_suggestions import (
     FrameGroupSet,
     ItemStack,
     FeatureSuggestionPipeline,
+    ParallelFeaturePipeline,
 )
 
 
@@ -155,3 +156,57 @@ def test_feature_suggestion_pipeline(centered_pair_vid):
     suggestions = pipeline.get_suggestion_frames(videos)
 
     assert len(suggestions) == 2
+
+
+def _small_pipeline():
+    return FeatureSuggestionPipeline(
+        per_video=5,
+        scale=0.1,
+        sample_method="stride",
+        feature_type="raw",
+        n_components=2,
+        n_clusters=2,
+        per_cluster=1,
+    )
+
+
+def test_parallel_pipeline_progress_callback(centered_pair_vid, small_robot_mp4_vid):
+    """`run` should report (n_done, n_total) once per video."""
+    videos = [centered_pair_vid, small_robot_mp4_vid]
+
+    calls = []
+    suggestions = ParallelFeaturePipeline.run(
+        _small_pipeline(),
+        videos,
+        parallel=False,
+        progress_callback=lambda n_done, n_total: calls.append((n_done, n_total)),
+    )
+
+    assert calls == [(1, 2), (2, 2)]
+    assert len(suggestions) > 0
+
+
+def test_parallel_pipeline_progress_callback_optional(
+    centered_pair_vid, small_robot_mp4_vid
+):
+    """Omitting the callback keeps the previous behaviour."""
+    videos = [centered_pair_vid, small_robot_mp4_vid]
+
+    suggestions = ParallelFeaturePipeline.run(_small_pipeline(), videos, parallel=False)
+
+    assert len(suggestions) > 0
+
+
+def test_parallel_pipeline_preserves_video_order(
+    centered_pair_vid, small_robot_mp4_vid, small_robot_3_frame_vid
+):
+    """`imap_unordered` results are re-sorted, so videos stay in input order."""
+    videos = [centered_pair_vid, small_robot_mp4_vid, small_robot_3_frame_vid]
+
+    suggestions = ParallelFeaturePipeline.run(_small_pipeline(), videos, parallel=True)
+
+    # Every video must contribute, and its suggestions must appear as one
+    # contiguous run in the same order the videos were passed in.
+    video_order = [videos.index(s.video) for s in suggestions]
+    assert set(video_order) == {0, 1, 2}
+    assert video_order == sorted(video_order)

@@ -117,6 +117,7 @@ from sleap.sleap_io_adaptors.lf_labels_utils import (
     remove_instance,
     remove_frames,
     add_suggestion,
+    remove_suggestions,
 )
 from sleap.sleap_io_adaptors.lf_labels_utils import (
     iterate_labeled_frames,
@@ -4127,6 +4128,7 @@ class GenerateSuggestionsThread(QtCore.QThread):
 
     finished = QtCore.Signal(list)
     error = QtCore.Signal(str)
+    progress = QtCore.Signal(int, int)
 
     def __init__(self, labels, params, parent=None):
         super().__init__(parent)
@@ -4136,7 +4138,9 @@ class GenerateSuggestionsThread(QtCore.QThread):
     def run(self):
         try:
             suggestions = VideoFrameSuggestions.suggest(
-                labels=self.labels, params=self.params
+                labels=self.labels,
+                params=self.params,
+                progress_callback=self.progress.emit,
             )
             self.finished.emit(suggestions)
         except Exception as e:
@@ -4164,6 +4168,9 @@ class GenerateSuggestions(EditCommand):
         else:
             params["videos"] = context.labels.videos
 
+        # Starts out indeterminate (0, 0) and becomes a real bar as soon as the
+        # first video reports in, so methods that never report progress still
+        # show a sensible busy indicator.
         win = QtWidgets.QProgressDialog(
             "Generating suggested frames...", "Cancel", 0, 0, context.app
         )
@@ -4179,6 +4186,15 @@ class GenerateSuggestions(EditCommand):
 
         worker = GenerateSuggestionsThread(labels=context.labels, params=params)
 
+        def on_progress(n_done, n_total):
+            # Set the label before the value: `setValue` is what triggers the
+            # repaint, so updating it last would leave the text a step behind.
+            win.setMaximum(n_total)
+            win.setLabelText(
+                f"Generating suggested frames... ({n_done}/{n_total} videos)"
+            )
+            win.setValue(n_done)
+
         def on_finished(suggestions):
             result["status"] = "finished"
             result["suggestions"] = suggestions
@@ -4187,6 +4203,7 @@ class GenerateSuggestions(EditCommand):
             result["status"] = "error"
             result["error"] = msg
 
+        worker.progress.connect(on_progress)
         worker.finished.connect(on_finished)
         worker.error.connect(on_error)
 
@@ -4199,6 +4216,7 @@ class GenerateSuggestions(EditCommand):
         worker.wait()
         QtWidgets.QApplication.instance().processEvents()
 
+        worker.progress.disconnect()
         worker.finished.disconnect()
         worker.error.disconnect()
         worker.deleteLater()
@@ -4228,19 +4246,31 @@ class AddSuggestion(EditCommand):
 
 
 class RemoveSuggestion(EditCommand):
+    """Remove every suggestion selected in the suggestions table.
+
+    The table is multi-select, so pruning a large suggestion set does not cost
+    one click per row (#2697). Removing a single row is the one-element case.
+    """
+
     topics = [UpdateTopic.suggestions]
 
     @classmethod
     def do_action(cls, context: CommandContext, params: dict):
-        selected_frame = context.app.suggestions_dock.table.getSelectedRowItem()
-        if selected_frame is not None:
-            for sug_idx, suggestion in enumerate(context.labels.suggestions):
-                if (
-                    suggestion.video.matches_content(selected_frame.video)
-                    and suggestion.frame_idx == selected_frame.frame_idx
-                ):
-                    context.labels.suggestions.pop(sug_idx)
-                    break
+        table = context.app.suggestions_dock.table
+        selected_frames = table.getSelectedRowItems()
+        if not selected_frames:
+            return
+
+        first_removed = remove_suggestions(context.labels, selected_frames)
+        if first_removed < 0:
+            return
+
+        # Leave the selection on a neighbor so repeated pruning stays a single
+        # click, rather than dropping it and making the user re-aim.
+        remaining = len(context.labels.suggestions)
+        if remaining:
+            context.state["suggestion_idx"] = min(first_removed, remaining - 1)
+
         context.labels.update()
 
 

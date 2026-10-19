@@ -52,10 +52,43 @@ solarized:
 - 133,153,0
 
 standard:
-- 0,114,189
-- 217,83,25
-- 237,177,32
-- 126,47,142
-- 119,172,48
-- 77,190,238
-- 162,20,47
+# The first 7 colors are the MATLAB default palette, kept unchanged so that
+# projects look the same as they always have. Since the palette cycles, those
+# 7 alone meant that track 8 was drawn in exactly the same color as track 1,
+# which made projects with ~10+ tracks very hard to read.
+#
+# The remaining colors extend the palette by greedy farthest-point sampling in
+# CIEDE2000 (perceptual) color space, so each added color is as far as possible
+# from every color before it. Candidates were restricted to L* 45-85 and
+# chroma >= 38 to stay legible over both dark and bright video.
+#
+# Minimum pairwise CIEDE2000 distance: 24.0 at 12 colors, 18.9 at 16, 14.8 at
+# all 28 (a distance of ~2.3 is the just-noticeable difference).
+- 0,114,189  # blue
+- 217,83,25  # orange
+- 237,177,32  # gold
+- 126,47,142  # purple
+- 119,172,48  # green
+- 77,190,238  # light blue
+- 162,20,47  # dark red
+- 255,180,255  # pink
+- 0,225,195  # turquoise
+- 135,105,15  # olive
+- 255,15,150  # magenta
+- 0,135,105  # teal
+- 165,105,255  # violet
+- 255,165,150  # salmon
+- 165,180,255  # periwinkle
+- 15,240,105  # spring green
+- 75,120,15  # forest green
+- 210,210,135  # khaki
+- 255,30,75  # red
+- 255,135,0  # bright orange
+- 165,150,75  # tan
+- 165,105,165  # mauve
+- 225,135,165  # rose
+- 105,105,180  # slate blue
+- 255,90,240  # orchid
+- 60,180,120  # sea green
+- 165,225,0  # chartreuse
+- 180,90,105  # dusty rose

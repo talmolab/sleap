@@ -1492,6 +1492,14 @@ class MainWindow(QMainWindow):
 
         if _has_topic([UpdateTopic.suggestions]):
             self.suggestions_dock.table.model().items = self.labels.suggestions
+            # Assigning `items` resets the model, which drops the selection.
+            # Re-apply it so removing a suggestion leaves the next one selected
+            # and repeated pruning stays a single click (#2697).
+            suggestion_idx = self.state["suggestion_idx"]
+            if suggestion_idx is not None and 0 <= suggestion_idx < len(
+                self.labels.suggestions
+            ):
+                self.suggestions_dock.table.selectRow(suggestion_idx)
 
         if _has_topic([UpdateTopic.project_instances, UpdateTopic.suggestions]):
             # update count of suggested frames w/ labeled instances

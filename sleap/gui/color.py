@@ -41,6 +41,13 @@ class ColorManager:
         palette: String with the color palette name to use.
     """
 
+    # Upper bound on colors generated to extend a palette. Past roughly this
+    # many, no set of colors is reliably distinguishable, so we stop and cycle.
+    max_generated_colors = 128
+
+    # Candidate colors to pick from; identical for every instance, so built once.
+    _candidate_cache = None
+
     def __init__(self, labels: Labels = None, palette: str = "standard"):
         self.labels = labels
 
@@ -48,6 +55,8 @@ class ColorManager:
             self._palettes = yaml.load(f, Loader=yaml.SafeLoader)
 
         self._color_map = []
+        self._generated_color_map = None
+        self._generated_nearest = None
         self.distinctly_color = "instances"
         self.color_predicted = True
 
@@ -85,6 +94,8 @@ class ColorManager:
     @palette.setter
     def palette(self, palette: Union[Text, Iterable[ColorTupleStringType]]):
         self._palette = palette
+        self._generated_color_map = None
+        self._generated_nearest = None
 
         if isinstance(palette, Text):
             self.index_mode = "clip" if palette.endswith("+") else "cycle"
@@ -117,12 +128,118 @@ class ColorManager:
 
     def fix_index(self, idx: int) -> int:
         """Returns an index within range of color palette."""
-        return self._index_mode_functions[self.index_mode](idx, len(self._color_map))
+        color_map = self._color_map_for_idx(idx)
+        return self._index_mode_functions[self.index_mode](idx, len(color_map))
+
+    @staticmethod
+    def _to_lab(colors):
+        """Converts (r, g, b) colors to CIELAB, where distances match perception."""
+        import numpy as np
+        from skimage.color import rgb2lab
+
+        rgb = np.asarray(colors, dtype=float).reshape(-1, 1, 3) / 255.0
+        return rgb2lab(rgb).reshape(-1, 3)
+
+    @classmethod
+    def _color_candidates(cls):
+        """Returns the colors we are allowed to pick from, and their CIELAB values.
+
+        This is a coarse sample of every color the screen can show, keeping only
+        those with mid lightness and enough saturation to stay visible over both
+        dark and bright video. It never changes, so it is built once and shared.
+        """
+        if cls._candidate_cache is None:
+            import numpy as np
+
+            step = 15
+            grid = np.array(
+                [
+                    (r, g, b)
+                    for r in range(0, 256, step)
+                    for g in range(0, 256, step)
+                    for b in range(0, 256, step)
+                ],
+                dtype=float,
+            )
+            grid_lab = cls._to_lab(grid)
+            chroma = np.hypot(grid_lab[:, 1], grid_lab[:, 2])
+            usable = (grid_lab[:, 0] >= 45) & (grid_lab[:, 0] <= 85) & (chroma >= 38)
+            cls._candidate_cache = (grid[usable], grid_lab[usable])
+
+        return cls._candidate_cache
+
+    def _grow_color_map(self, n_colors: int) -> Iterable[ColorTupleType]:
+        """Extends the palette so that more items than colors still look distinct.
+
+        The palette is kept as the first colors, so items already on screen never
+        change color; the extra colors are picked one at a time, each as far as
+        possible in perceptual (CIEDE2000) color space from every color already
+        picked. Candidates are limited to mid lightness and reasonable saturation
+        so they stay visible over both dark and bright video.
+
+        Args:
+            n_colors: Total number of colors needed.
+
+        Returns:
+            List of (r, g, b)-tuples of length `n_colors`.
+        """
+        import numpy as np
+        from skimage.color import deltaE_ciede2000
+
+        grid, grid_lab = self._color_candidates()
+
+        if self._generated_color_map is not None:
+            # Picking is greedy, so the colors already generated are exactly the
+            # ones we would pick again; carry on from where we left off instead
+            # of starting over.
+            colors = list(self._generated_color_map)
+            nearest = self._generated_nearest.copy()
+        else:
+            colors = [self.color_to_tuple(c) for c in self._color_map]
+            # Distance from every candidate to the nearest color already chosen.
+            nearest = np.full(len(grid), np.inf)
+            for lab in self._to_lab(colors):
+                nearest = np.minimum(
+                    nearest,
+                    deltaE_ciede2000(np.tile(lab, (len(grid_lab), 1)), grid_lab),
+                )
+
+        while len(colors) < n_colors:
+            pick = int(np.argmax(nearest))
+            colors.append(tuple(int(v) for v in grid[pick]))
+            nearest = np.minimum(
+                nearest,
+                deltaE_ciede2000(np.tile(grid_lab[pick], (len(grid_lab), 1)), grid_lab),
+            )
+
+        self._generated_nearest = nearest
+        return colors
+
+    def _color_map_for_idx(self, idx: int) -> Iterable[ColorTupleType]:
+        """Returns a color map long enough to have a distinct color for `idx`."""
+        if idx < len(self._color_map) or self.index_mode != "cycle":
+            return self._color_map
+
+        # Past the cap the colors are too close together to tell apart anyway,
+        # so stop growing and let the generated map cycle.
+        # Grow in blocks so that adding one track doesn't rebuild the map.
+        n_needed = min(((idx // 32) + 1) * 32, self.max_generated_colors)
+
+        if self._generated_color_map is None or (
+            len(self._generated_color_map) < n_needed
+        ):
+            try:
+                self._generated_color_map = self._grow_color_map(n_needed)
+            except Exception:
+                # Never let coloring break drawing; fall back to cycling.
+                return self._color_map
+
+        return self._generated_color_map
 
     def get_color_by_idx(self, idx: int) -> ColorTupleType:
         """Returns color tuple corresponding to item index."""
-        color_idx = self.fix_index(idx)
-        return self.color_to_tuple(self._color_map[color_idx])
+        color_map = self._color_map_for_idx(idx)
+        return self.color_to_tuple(color_map[self.fix_index(idx)])
 
     @staticmethod
     def color_to_tuple(color: Union[Text, Iterable[int]]) -> ColorTupleType:

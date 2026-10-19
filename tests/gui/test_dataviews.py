@@ -617,3 +617,69 @@ def test_qc_mode_maps_onto_transient_keys(qtbot, centered_pair_predictions):
     assert instance_visible(state, instances[1]) is False
     assert instance_shows_non_visible(state, instances[0], False) is True
     assert instance_shows_non_visible(state, instances[1], False) is False
+
+
+def test_labeled_frame_points_column_ignores_hidden_nodes(qtbot):
+    """Hidden nodes must not count toward the "Points" column.
+
+    A user instance created from a prediction gets real coordinates for the
+    nodes the model did not detect, kept `visible=False` (see
+    `AddInstance.fill_missing_nodes`). Counting only non-NaN coordinates made a
+    12/15 prediction read as 15/15 right after conversion.
+    """
+    skeleton = sio.Skeleton(["a", "b", "c"])
+    video = sio.Video.from_filename("fake.mp4")
+
+    pts = np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]])
+    inst = sio.Instance.from_numpy(pts, skeleton=skeleton)
+    # Node "c" is positioned but hidden, exactly like a filled-in missing node.
+    inst.points[2]["visible"] = False
+
+    lf = sio.LabeledFrame(video=video, frame_idx=0, instances=[inst])
+    model = LabeledFrameTableModel(items=lf)
+
+    assert model._data[0]["points"] == "2/3"
+
+
+def test_labeled_frame_points_column_stable_across_conversion(
+    qtbot, centered_pair_predictions
+):
+    """Converting a prediction to a user instance must not change the count."""
+    from sleap.gui.app import MainWindow
+
+    labels = centered_pair_predictions
+    skeleton = labels.skeleton
+    n_nodes = len(skeleton.nodes)
+
+    lf = labels.labeled_frames[13]
+    pred_inst = lf.instances[1]
+
+    # Undetected nodes come back from the model as NaN.
+    n_missing = int(np.isnan(pred_inst.points["xy"]).any(axis=1).sum())
+    assert n_missing > 0
+    expected = f"{n_nodes - n_missing}/{n_nodes}"
+
+    model = LabeledFrameTableModel(items=lf)
+    pred_row = list(get_instances_to_show(lf)).index(pred_inst)
+    assert model._data[pred_row]["points"] == expected
+
+    # Double click the prediction to convert it to a user instance.
+    main_window = MainWindow(labels=labels)
+    main_window.commands.state["labeled_frame"] = lf
+    main_window.commands.state["frame_idx"] = lf.frame_idx
+    main_window.commands.state["skeleton"] = skeleton
+    main_window.commands.state["video"] = labels.videos[0]
+    main_window._handle_instance_double_click(instance=pred_inst)
+
+    user_inst = [
+        inst
+        for inst in lf.instances
+        if getattr(inst, "from_predicted", None) is not None
+    ][0]
+    # The missing nodes now have real coordinates, just hidden.
+    assert not np.isnan(user_inst.points["xy"]).any()
+    assert int((~user_inst.points["visible"]).sum()) == n_missing
+
+    model = LabeledFrameTableModel(items=lf)
+    user_row = list(get_instances_to_show(lf)).index(user_inst)
+    assert model._data[user_row]["points"] == expected

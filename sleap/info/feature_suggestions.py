@@ -692,20 +692,51 @@ class ParallelFeaturePipeline(object):
         return suggestions
 
     @classmethod
-    def run(cls, pipeline, videos, parallel=True):
-        """Runs pipeline on all videos in parallel and returns suggestions."""
+    def run(cls, pipeline, videos, parallel=True, progress_callback=None):
+        """Runs pipeline on all videos in parallel and returns suggestions.
+
+        Args:
+            pipeline: The `FeatureSuggestionPipeline` to apply to each video.
+            videos: List of videos to generate suggestions for.
+            parallel: Whether to distribute the videos over a process pool.
+            progress_callback: Optional callable invoked as
+                `progress_callback(n_completed, n_total)` each time a video
+                finishes, where `n_total` is the number of videos.
+
+        Returns:
+            List of `SuggestionFrame` objects.
+        """
         from multiprocessing import Pool
 
         pp = cls.make(pipeline, videos)
         video_idxs = list(range(len(videos)))
+        n_total = len(video_idxs)
 
+        per_video_tuples = []
         if parallel:
             pool = Pool()
-
-            per_video_tuples = pool.map(pp.get, video_idxs)
-
+            try:
+                # `imap_unordered` yields each video's result as soon as it is
+                # done, which is what lets us report incremental progress.
+                results = pool.imap_unordered(pp.get, video_idxs)
+                for n_done, video_tuples in enumerate(results, start=1):
+                    per_video_tuples.append(video_tuples)
+                    if progress_callback is not None:
+                        progress_callback(n_done, n_total)
+            finally:
+                pool.close()
+                pool.join()
         else:
-            per_video_tuples = map(pp.get, video_idxs)
+            for n_done, video_idx in enumerate(video_idxs, start=1):
+                per_video_tuples.append(pp.get(video_idx))
+                if progress_callback is not None:
+                    progress_callback(n_done, n_total)
+
+        # Videos can come back out of order from `imap_unordered`, so sort by
+        # video index to keep the returned suggestions in a stable order. Each
+        # inner list holds tuples for a single video, so the first tuple's
+        # video index identifies the whole group.
+        per_video_tuples.sort(key=lambda tups: tups[0][0] if tups else -1)
 
         tuples = list(itertools.chain.from_iterable(per_video_tuples))
 

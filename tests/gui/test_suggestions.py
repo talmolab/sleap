@@ -559,3 +559,189 @@ def test_limits_prediction_score(centered_pair_predictions: Labels):
         },
     )
     assert_suggestions_unique(labels, suggestions)
+
+
+class TestSuggestionProgress:
+    """Progress reporting from `VideoFrameSuggestions.suggest`."""
+
+    @staticmethod
+    def _two_video_labels(centered_pair_vid, small_robot_mp4_vid) -> Labels:
+        return Labels(
+            videos=[centered_pair_vid, small_robot_mp4_vid],
+            skeletons=[Skeleton(["a"])],
+        )
+
+    def test_sample_reports_progress_per_video(
+        self, centered_pair_vid, small_robot_mp4_vid
+    ):
+        labels = self._two_video_labels(centered_pair_vid, small_robot_mp4_vid)
+        calls = []
+
+        VideoFrameSuggestions.suggest(
+            labels=labels,
+            params=dict(
+                method="sample",
+                videos=labels.videos,
+                per_video=3,
+                sampling_method="stride",
+            ),
+            progress_callback=lambda n_done, n_total: calls.append((n_done, n_total)),
+        )
+
+        assert calls == [(1, 2), (2, 2)]
+
+    def test_frame_chunk_reports_progress_per_video(
+        self, centered_pair_vid, small_robot_mp4_vid
+    ):
+        labels = self._two_video_labels(centered_pair_vid, small_robot_mp4_vid)
+        calls = []
+
+        VideoFrameSuggestions.suggest(
+            labels=labels,
+            params=dict(
+                method="frame chunk",
+                videos=labels.videos,
+                frame_from=1,
+                frame_to=3,
+            ),
+            progress_callback=lambda n_done, n_total: calls.append((n_done, n_total)),
+        )
+
+        assert calls == [(1, 2), (2, 2)]
+
+    def test_frame_chunk_reports_progress_for_skipped_video(
+        self, centered_pair_vid, small_robot_mp4_vid
+    ):
+        """Videos too short for the requested range still advance the bar."""
+        labels = self._two_video_labels(centered_pair_vid, small_robot_mp4_vid)
+        calls = []
+
+        VideoFrameSuggestions.suggest(
+            labels=labels,
+            params=dict(
+                method="frame chunk",
+                videos=labels.videos,
+                frame_from=10**9,
+                frame_to=10**9 + 1,
+            ),
+            progress_callback=lambda n_done, n_total: calls.append((n_done, n_total)),
+        )
+
+        assert calls == [(1, 2), (2, 2)]
+
+    def test_velocity_reports_progress_per_video(self, centered_pair_predictions):
+        calls = []
+
+        VideoFrameSuggestions.suggest(
+            labels=centered_pair_predictions,
+            params=dict(
+                videos=centered_pair_predictions.videos,
+                method="velocity",
+                node="",
+                threshold=0.5,
+            ),
+            progress_callback=lambda n_done, n_total: calls.append((n_done, n_total)),
+        )
+
+        assert calls == [(1, 1)]
+
+    def test_max_point_displacement_reports_progress_per_video(
+        self, centered_pair_predictions
+    ):
+        calls = []
+
+        VideoFrameSuggestions.suggest(
+            labels=centered_pair_predictions,
+            params=dict(
+                videos=centered_pair_predictions.videos,
+                method="max_point_displacement",
+                displacement_threshold=6,
+            ),
+            progress_callback=lambda n_done, n_total: calls.append((n_done, n_total)),
+        )
+
+        assert calls == [(1, 1)]
+
+    def test_prediction_score_reports_progress_per_video(
+        self, centered_pair_predictions
+    ):
+        calls = []
+
+        VideoFrameSuggestions.suggest(
+            labels=centered_pair_predictions,
+            params=dict(
+                videos=centered_pair_predictions.videos,
+                method="prediction score",
+                score_limit=2,
+                instance_limit_upper=2,
+                instance_limit_lower=1,
+            ),
+            progress_callback=lambda n_done, n_total: calls.append((n_done, n_total)),
+        )
+
+        assert calls == [(1, 1)]
+
+    def test_image_features_per_video_reports_progress_per_video(
+        self, centered_pair_vid, small_robot_mp4_vid
+    ):
+        labels = self._two_video_labels(centered_pair_vid, small_robot_mp4_vid)
+        calls = []
+
+        VideoFrameSuggestions.suggest(
+            labels=labels,
+            params=dict(
+                method="image features",
+                videos=labels.videos,
+                per_video=5,
+                sample_method="stride",
+                scale=0.1,
+                merge_video_features="per video",
+                feature_type="raw images",
+                pca_components=2,
+                n_clusters=2,
+                per_cluster=1,
+            ),
+            progress_callback=lambda n_done, n_total: calls.append((n_done, n_total)),
+        )
+
+        assert calls == [(1, 2), (2, 2)]
+
+    def test_image_features_across_videos_reports_progress_once(
+        self, centered_pair_vid, small_robot_mp4_vid
+    ):
+        """Joint clustering has no per-video boundary, so it reports only at the end."""
+        labels = self._two_video_labels(centered_pair_vid, small_robot_mp4_vid)
+        calls = []
+
+        VideoFrameSuggestions.suggest(
+            labels=labels,
+            params=dict(
+                method="image features",
+                videos=labels.videos,
+                per_video=5,
+                sample_method="stride",
+                scale=0.1,
+                merge_video_features="across all videos",
+                feature_type="raw images",
+                pca_components=2,
+                n_clusters=2,
+                per_cluster=1,
+            ),
+            progress_callback=lambda n_done, n_total: calls.append((n_done, n_total)),
+        )
+
+        assert calls == [(2, 2)]
+
+    def test_progress_callback_is_optional(self, centered_pair_predictions):
+        """Omitting the callback must not change existing behaviour."""
+        suggestions = VideoFrameSuggestions.suggest(
+            labels=centered_pair_predictions,
+            params=dict(
+                videos=centered_pair_predictions.videos,
+                method="velocity",
+                node="",
+                threshold=0.5,
+            ),
+        )
+
+        assert len(suggestions) == 45

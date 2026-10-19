@@ -9,6 +9,7 @@ from unittest.mock import patch, MagicMock
 
 from sleap_io import Labels, Skeleton, Video
 
+from sleap.gui.learning import receptivefield
 from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
 from sleap.gui.learning.main_tab import MainTabWidget
 from sleap.gui.widgets.frame_target_selector import (
@@ -700,10 +701,14 @@ class TestTrainingConfigWarnings:
         # crop_size is Auto (None) by default, so no clipping warning either.
         assert warnings == []
 
-    def test_warning_when_crop_smaller_than_largest_instance(
+    def test_warning_when_crop_clips_instances(
         self, qtbot, minimal_skeleton, mock_cfg_getter, minimal_labels
     ):
-        """Explicit crop smaller than the largest instance warns about clipping."""
+        """An explicit crop that clips instances warns, and says what would fit.
+
+        The comparison is against what each instance needs to reach every node
+        from its crop center, not its bbox extent (sleap-nn #748).
+        """
         from omegaconf import OmegaConf
 
         widget = self._make_editor(
@@ -713,8 +718,6 @@ class TestTrainingConfigWarnings:
             "centered_instance",
             labels=minimal_labels,
         )
-        # Pretend the largest labeled instance spans 500px.
-        widget._max_instance_bbox_size = 500.0
 
         data_cfg = OmegaConf.create(
             {"data_config": {"preprocessing": {"crop_size": 64, "scale": 1.0}}}
@@ -725,15 +728,22 @@ class TestTrainingConfigWarnings:
         ), patch(
             "sleap.gui.learning.dialog.receptivefield.compute_crop_size_from_cfg",
             return_value=64,  # below 100 too, but we assert on the clipping message
+        ), patch(
+            "sleap.gui.learning.dialog.receptivefield.iter_required_crop_sizes",
+            return_value=iter([40.0, 500.0]),
         ):
             warnings = widget.get_config_warnings()
 
-        assert any("clipped" in w and "64px" in w and "500px" in w for w in warnings)
+        assert any(
+            "clips 1 of 2" in w and "64px" in w and "500px" in w for w in warnings
+        )
 
-    def test_max_instance_bbox_size_is_cached(
+    def test_no_clipping_warning_when_crop_contains_every_instance(
         self, qtbot, minimal_skeleton, mock_cfg_getter, minimal_labels
     ):
-        """The largest-instance scan is computed once and cached."""
+        """An explicit crop that reaches every node must not warn."""
+        from omegaconf import OmegaConf
+
         widget = self._make_editor(
             qtbot,
             minimal_skeleton,
@@ -741,16 +751,87 @@ class TestTrainingConfigWarnings:
             "centered_instance",
             labels=minimal_labels,
         )
-        with patch(
-            "sleap.gui.learning.dialog.receptivefield.find_max_instance_bbox_size",
-            return_value=123.0,
-        ) as mock_scan:
-            first = widget._get_max_instance_bbox_size()
-            second = widget._get_max_instance_bbox_size()
 
-        assert first == 123.0
-        assert second == 123.0
+        data_cfg = OmegaConf.create(
+            {"data_config": {"preprocessing": {"crop_size": 512, "scale": 1.0}}}
+        )
+        with patch(
+            "sleap.gui.learning.dialog.get_omegaconf_from_gui_form",
+            return_value=data_cfg,
+        ), patch(
+            "sleap.gui.learning.dialog.receptivefield.compute_crop_size_from_cfg",
+            return_value=512,
+        ), patch(
+            "sleap.gui.learning.dialog.receptivefield.iter_required_crop_sizes",
+            return_value=iter([40.0, 500.0]),
+        ):
+            warnings = widget.get_config_warnings()
+
+        assert warnings == []
+
+    def test_required_crop_sizes_are_cached(
+        self, qtbot, minimal_skeleton, mock_cfg_getter, minimal_labels
+    ):
+        """The per-instance scan is computed once and reused."""
+        from omegaconf import OmegaConf
+
+        widget = self._make_editor(
+            qtbot,
+            minimal_skeleton,
+            mock_cfg_getter,
+            "centered_instance",
+            labels=minimal_labels,
+        )
+        data_cfg = OmegaConf.create({"data_config": {"preprocessing": {}}})
+        model_cfg = OmegaConf.create({"model_config": {}})
+
+        with patch(
+            "sleap.gui.learning.dialog.receptivefield.iter_required_crop_sizes",
+            return_value=iter([123.0]),
+        ) as mock_scan:
+            first = widget._get_required_crop_sizes(data_cfg, model_cfg)
+            second = widget._get_required_crop_sizes(data_cfg, model_cfg)
+
+        assert first == [123.0]
+        assert second == [123.0]
         assert mock_scan.call_count == 1
+
+    def test_required_crop_sizes_rescan_when_anchor_changes(
+        self, qtbot, minimal_skeleton, mock_cfg_getter, minimal_labels
+    ):
+        """Changing the anchor part moves the crop center, so it must rescan."""
+        from omegaconf import OmegaConf
+
+        widget = self._make_editor(
+            qtbot,
+            minimal_skeleton,
+            mock_cfg_getter,
+            "centered_instance",
+            labels=minimal_labels,
+        )
+        data_cfg = OmegaConf.create({"data_config": {"preprocessing": {}}})
+        node_names = minimal_labels.skeletons[0].node_names
+
+        def model_cfg_for(anchor):
+            return OmegaConf.create(
+                {
+                    "model_config": {
+                        "head_configs": {
+                            "centered_instance": {"confmaps": {"anchor_part": anchor}}
+                        }
+                    }
+                }
+            )
+
+        with patch(
+            "sleap.gui.learning.dialog.receptivefield.iter_required_crop_sizes",
+            side_effect=lambda *a, **kw: iter([1.0]),
+        ) as mock_scan:
+            widget._get_required_crop_sizes(data_cfg, model_cfg_for(node_names[0]))
+            widget._get_required_crop_sizes(data_cfg, model_cfg_for(node_names[0]))
+            widget._get_required_crop_sizes(data_cfg, model_cfg_for(node_names[-1]))
+
+        assert mock_scan.call_count == 2
 
 
 # =============================================================================
@@ -999,3 +1080,63 @@ class TestNegativeFrames:
         training_dialog._validate_pipeline()
 
         assert "negative" in training_dialog.message_widget.text().lower()
+
+
+class TestCropPreviewWiring:
+    """`update_receptive_field` has to hand the size-matcher target to the box."""
+
+    def test_crop_config_receives_the_resolved_max_hw(
+        self, qtbot, mock_cfg_getter, centered_pair_predictions
+    ):
+        """The target is derived from the videos when the form does not set it.
+
+        Training fills in an unset `max_height`/`max_width` the same way, so
+        leaving it out here would measure the crop in the wrong pixel space.
+        """
+        labels = centered_pair_predictions
+        widget = TrainingEditorWidget(
+            skeleton=labels.skeletons[0],
+            head="centered_instance",
+            cfg_getter=mock_cfg_getter,
+            require_trained=False,
+            labels=labels,
+        )
+        qtbot.addWidget(widget)
+
+        # A crop head with real labels must actually build the preview, or this
+        # test would pass without exercising anything.
+        assert widget._receptive_field_widget is not None
+
+        expected = receptivefield.resolve_max_hw(labels)
+        assert expected is not None
+
+        with patch.object(
+            widget._receptive_field_widget, "setCropConfig"
+        ) as mock_set_crop:
+            widget.update_receptive_field()
+
+        assert mock_set_crop.call_count == 1
+        assert mock_set_crop.call_args.kwargs["max_hw"] == expected
+
+    def test_crop_box_is_only_shown_for_crop_heads(
+        self, qtbot, mock_cfg_getter, centered_pair_predictions
+    ):
+        """A non-crop head builds the preview without a crop box."""
+        labels = centered_pair_predictions
+        widget = TrainingEditorWidget(
+            skeleton=labels.skeletons[0],
+            head="centroid",
+            cfg_getter=mock_cfg_getter,
+            require_trained=False,
+            labels=labels,
+        )
+        qtbot.addWidget(widget)
+
+        assert widget._receptive_field_widget is not None
+        assert not widget._receptive_field_widget._show_crop_box
+
+        # setCropConfig is a no-op for these heads, so nothing is drawn.
+        widget._receptive_field_widget.setCropConfig(
+            crop_size=200, scale=1.0, max_hw=(1024, 1024)
+        )
+        assert widget._receptive_field_widget._field_image_widget._crop_scale is None

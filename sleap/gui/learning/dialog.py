@@ -2,6 +2,7 @@
 Dialogs for running training and/or inference in GUI.
 """
 
+import math
 import shutil
 import tempfile
 from pathlib import Path
@@ -1638,9 +1639,11 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         self._require_trained = require_trained
         self.head = head
 
-        # Cache for the largest labeled instance bounding box (computed lazily and
-        # reused across crop-size validations, see `get_config_warnings`).
-        self._max_instance_bbox_size: Optional[float] = None
+        # Cache for the crop size each labeled instance needs (computed lazily
+        # and reused across crop-size validations, see `get_config_warnings`),
+        # keyed by what the measurement depends on.
+        self._required_crop_sizes: Optional[List[float]] = None
+        self._required_crop_sizes_key: Optional[tuple] = None
 
         yaml_name = "training_editor_form"
 
@@ -2084,22 +2087,43 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         hbox.addStretch(1)
         form_layout.setWidget(row, role, container)
 
-    def _get_max_instance_bbox_size(self) -> Optional[float]:
-        """Return the largest labeled-instance bbox dimension (px), cached.
+    def _get_required_crop_sizes(
+        self, data_cfg: OmegaConf, model_cfg: OmegaConf
+    ) -> Optional[List[float]]:
+        """Return the crop size each labeled instance needs, in px, cached.
 
-        Labels do not change over the dialog's lifetime, so the (potentially
-        expensive) scan over all instances is computed once and reused.
+        A crop is centered on the instance's centroid, so what an instance needs
+        is twice its greatest node offset from that centroid -- not its bounding
+        box extent (sleap-nn #748). That depends on the anchor part and on the
+        size-matcher target, so the scan is cached against those rather than for
+        the dialog's lifetime: the labels do not change, but the anchor can.
+
+        Args:
+            data_cfg: Data configuration OmegaConf from the data form.
+            model_cfg: Model configuration OmegaConf from the model form.
+
+        Returns:
+            The required crop sizes in size-matched pixels, or ``None`` if they
+            could not be computed.
         """
         if self._labels is None:
             return None
-        if self._max_instance_bbox_size is None:
-            try:
-                self._max_instance_bbox_size = (
-                    receptivefield.find_max_instance_bbox_size(self._labels)
+        try:
+            inputs = receptivefield.resolve_crop_inputs(
+                data_cfg, model_cfg, self._labels
+            )
+            inputs.pop("anchor_part")
+            inputs.pop("min_crop_size")
+            key = tuple(sorted((k, str(v)) for k, v in inputs.items()))
+            if self._required_crop_sizes_key != key:
+                self._required_crop_sizes = list(
+                    receptivefield.iter_required_crop_sizes(self._labels, **inputs)
                 )
-            except Exception:
-                self._max_instance_bbox_size = None
-        return self._max_instance_bbox_size
+                self._required_crop_sizes_key = key
+        except Exception:
+            self._required_crop_sizes = None
+            self._required_crop_sizes_key = None
+        return self._required_crop_sizes
 
     def get_config_warnings(self) -> List[str]:
         """Return inline warnings about crop size / input scaling.
@@ -2142,18 +2166,25 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                 "to Auto."
             )
 
-        # Explicit crop size smaller than the largest labeled instance (clipping).
+        # Explicit crop size that clips labeled instances. Training warns but
+        # never overrides this -- accepting a clipped tail tip to save GPU memory
+        # is a legitimate trade -- so the dialog warns in the same terms.
         crop_size = OmegaConf.select(
             data_cfg, "data_config.preprocessing.crop_size", default=None
         )
         if crop_size is not None:
-            max_bbox = self._get_max_instance_bbox_size()
-            if max_bbox is not None and crop_size < max_bbox:
-                warnings.append(
-                    f"Crop size ({int(crop_size)}px) is smaller than the largest "
-                    f"labeled instance ({int(round(max_bbox))}px), so instances will "
-                    "be clipped. Increase the crop size or set it to Auto."
-                )
+            required = self._get_required_crop_sizes(data_cfg, model_cfg)
+            if required:
+                n_clipped = sum(1 for r in required if r > crop_size)
+                if n_clipped:
+                    needed = int(math.ceil(max(required)))
+                    warnings.append(
+                        f"Crop size ({int(crop_size)}px) clips {n_clipped} of "
+                        f"{len(required)} labeled instances, whose nodes would be "
+                        f"dropped from the training targets. {needed}px would "
+                        "contain all of them. Increase the crop size or set it to "
+                        "Auto."
+                    )
 
         return warnings
 
@@ -2292,10 +2323,31 @@ class TrainingEditorWidget(QtWidgets.QWidget):
                         default=None,
                     )
 
+                # The crop size is measured after size matching, so the box
+                # needs the same target to be drawn over a native-resolution
+                # preview frame.
+                try:
+                    max_hw = receptivefield.resolve_max_hw(
+                        self._labels,
+                        max_height=OmegaConf.select(
+                            data_form_data,
+                            "data_config.preprocessing.max_height",
+                            default=None,
+                        ),
+                        max_width=OmegaConf.select(
+                            data_form_data,
+                            "data_config.preprocessing.max_width",
+                            default=None,
+                        ),
+                    )
+                except Exception:
+                    max_hw = None
+
                 self._receptive_field_widget.setCropConfig(
                     crop_size=crop_size,
                     scale=rf_image_scale,
                     anchor_part=anchor_part,
+                    max_hw=max_hw,
                 )
 
             self._receptive_field_widget.repaint()

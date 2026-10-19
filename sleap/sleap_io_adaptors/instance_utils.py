@@ -44,16 +44,25 @@ def node_points(instance) -> List[Tuple[Node, np.ndarray]]:
 
 
 def get_nodes_from_instance(instance: Instance) -> Tuple[Node, ...]:
-    """Return nodes that have been labelled (non-nan) for this instance."""
-    node_names = instance.points["name"]
+    """Return nodes that are labelled (non-nan) *and* visible for this instance.
 
+    Both conditions matter. Predictions leave undetected nodes at NaN, so for a
+    `PredictedInstance` the two are equivalent (the .slp readers and
+    `PointsArray.from_numpy` set ``visible = ~isnan(x)``). But a user instance
+    created from a prediction gets *real* coordinates for the undetected nodes
+    with ``visible=False`` (see `AddInstance.fill_missing_nodes`, which spreads
+    them with a random/template/force-directed layout so they are grabbable).
+    Counting only non-NaN coordinates would include those hidden nodes, so
+    converting a 12/15 prediction would read as 15/15.
+    """
     labeled_nodes = []
-    for i, (node_name, point_data) in enumerate(zip(node_names, instance.points)):
-        # Check if the point has valid coordinates (not NaN)
-        if not np.isnan(point_data["xy"][0]) and not np.isnan(point_data["xy"][1]):
-            # Check if the node exists in the skeleton
-            if node_name in instance.skeleton.node_names:
-                labeled_nodes.append(node_name)
+    for node_name, point_data in zip(instance.points["name"], instance.points):
+        # Skip undetected points and points the user has hidden.
+        if np.isnan(point_data["xy"]).any() or not point_data["visible"]:
+            continue
+        # Check if the node exists in the skeleton
+        if node_name in instance.skeleton.node_names:
+            labeled_nodes.append(node_name)
 
     return tuple(labeled_nodes)
 

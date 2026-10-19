@@ -460,6 +460,12 @@ class SuggestionsDock(DockWidget):
             state=self.main_window.state,
             is_sortable=True,
             model=self.model,
+            # Keep "N: name" on one line and elide the front of long video names
+            # (like the Videos dock); with word wrap the name was hidden as "N: ...".
+            ellipsis_left=True,
+            # Shift/Ctrl-click a range of suggestions to prune them in one go;
+            # "Remove" acts on the whole selection.
+            multiple_selection=True,
         )
 
         # Connect some actions to the table
@@ -539,7 +545,7 @@ class SuggestionsDock(DockWidget):
             hb,
             "Remove",
             main_window.process_events_then(main_window.commands.removeSuggestion),
-            "remove suggestion",
+            "remove selected suggestions (shift/ctrl-click to select several)",
         )
 
         self.add_button(
