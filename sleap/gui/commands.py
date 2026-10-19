@@ -4722,7 +4722,10 @@ class ToggleNegativeFrame(EditCommand):
     empty frames, which reduces false positives.
     """
 
-    topics = [UpdateTopic.frame]
+    # Marking can clear instances, and a negative frame counts as labeled, so
+    # refresh the same views as adding an instance does (incl. the Suggestions
+    # table's labeled column and its "N/M labeled" summary).
+    topics = [UpdateTopic.frame, UpdateTopic.project_instances, UpdateTopic.suggestions]
 
     @staticmethod
     def ask(context: CommandContext, params: dict) -> bool:
