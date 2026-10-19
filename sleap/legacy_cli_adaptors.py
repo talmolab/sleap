@@ -693,8 +693,6 @@ def track_command(
 
         if models is not None:
             kwargs["model_paths"] = models
-        if frames is not None:
-            kwargs["frames"] = frames
         if only_labeled_frames is not None and only_labeled_frames:
             kwargs["only_labeled_frames"] = True
         if only_suggested_frames is not None and only_suggested_frames:

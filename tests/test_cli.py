@@ -507,3 +507,23 @@ class TestWrapNNCommandDeprecation:
 
         assert "sleap track" in result.output
         assert "sleap predict" in result.output
+
+
+@pytest.mark.parametrize(
+    "frames_arg, expected",
+    [("1-3", [1, 2, 3]), ("0,5,7", [0, 5, 7])],
+)
+def test_sleap_track_parses_frames(frames_arg, expected):
+    """`sleap-track --frames` must hand sleap-nn a list of ints, not the raw string."""
+    pytest.importorskip("sleap_nn")
+    from unittest.mock import patch
+
+    from sleap.legacy_cli_adaptors import track_command
+
+    with patch("sleap_nn.legacy_predict.run_inference") as run_inference:
+        result = CliRunner().invoke(
+            track_command, ["video.mp4", "-m", "model_dir", "--frames", frames_arg]
+        )
+
+    assert result.exit_code == 0, result.output
+    assert run_inference.call_args.kwargs["frames"] == expected
