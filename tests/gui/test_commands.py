@@ -2231,3 +2231,24 @@ def test_AddInstance_clears_negative(qtbot, centered_pair_predictions: Labels):
     context.newInstance()
 
     assert not lf.is_negative
+
+
+def test_GoUserLabeledFrame_stops_on_negative_frames():
+    """Next/previous user-labeled-frame navigation includes negative frames."""
+    from sleap.gui.commands import GoNextUserLabeledFrame, GoPrevUserLabeledFrame
+
+    labels, video, skeleton = _negative_frame_labels()
+    inst = Instance.from_numpy(np.array([[1.0, 2.0]]), skeleton=skeleton)
+    labels.append(LabeledFrame(video=video, frame_idx=10, instances=[inst]))
+    labels.append(LabeledFrame(video=video, frame_idx=20, is_negative=True))
+
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video
+    context.state["frame_idx"] = 10
+
+    nxt = next(GoNextUserLabeledFrame._get_frame_iterator(context))
+    assert nxt.frame_idx == 20 and nxt.is_negative
+
+    context.state["frame_idx"] = 20
+    prev = next(GoPrevUserLabeledFrame._get_frame_iterator(context))
+    assert prev.frame_idx == 10

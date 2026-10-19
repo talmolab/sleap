@@ -633,3 +633,32 @@ def test_experimental_features_menu(qtbot):
     window.state["experimental features"] = False
     assert action.isChecked() is False
     assert worker.debug_mode is False
+
+
+def test_marking_suggested_frame_negative_updates_suggestions(
+    qtbot, small_robot_mp4_vid
+):
+    """Marking a suggested frame negative refreshes the Suggestions table (#2874)."""
+    from sleap_io import SuggestionFrame
+
+    labels = Labels(videos=[small_robot_mp4_vid])
+    labels.suggestions = [SuggestionFrame(small_robot_mp4_vid, 1)]
+    win = MainWindow(labels=labels, no_usage_data=True)
+    qtbot.addWidget(win)
+
+    try:
+        win.commands.gotoVideoAndFrame(small_robot_mp4_vid, 1)
+        win.commands.toggleCurrentFrameNegative()
+
+        model = win.suggestions_dock.table.model()
+        labeled_col = model.properties.index("labeled")
+        assert model.data(model.index(0, labeled_col)) == "negative"
+        assert "1/1 labeled" in win.suggestions_dock.suggested_count_label.text()
+
+        # Unmarking clears it again.
+        win.commands.toggleCurrentFrameNegative()
+        assert model.data(model.index(0, labeled_col)) == ""
+        assert "0/1 labeled" in win.suggestions_dock.suggested_count_label.text()
+    finally:
+        # Close without a "save changes?" prompt, even if an assertion failed.
+        win.state["has_changes"] = False

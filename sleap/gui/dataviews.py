@@ -934,11 +934,17 @@ class SuggestionsTableModel(GenericTableModel):
         item_dict["video"] = video_string
         item_dict["frame"] = int(item.frame_idx) + 1  # start at frame 1 rather than 0
 
-        # show how many labeled instances are in this frame
+        # show how many labeled instances are in this frame, or "negative" for a
+        # frame the user marked as negative (labeled, but with no instances)
         lf = labels.find(item.video, item.frame_idx)
         lf = lf[0] if lf else None
         val = 0 if lf is None else len(lf.user_instances)
-        val = str(val) if val > 0 else ""
+        if val > 0:
+            val = str(val)
+        elif lf is not None and lf.is_negative:
+            val = "negative"
+        else:
+            val = ""
         item_dict["labeled"] = val
 
         # calculate score for frame

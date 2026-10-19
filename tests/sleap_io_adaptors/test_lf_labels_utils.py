@@ -3,7 +3,12 @@
 import pytest
 from sleap_io import Labels, LabeledFrame, Video
 
-from sleap.sleap_io_adaptors.lf_labels_utils import iterate_labeled_frames
+from sleap.sleap_io_adaptors.lf_labels_utils import (
+    format_labeled_frame_count,
+    get_labeled_frame_count,
+    is_user_or_negative_frame,
+    iterate_labeled_frames,
+)
 
 
 @pytest.fixture
@@ -146,3 +151,66 @@ class TestIterateLabeledFrames:
             iterate_labeled_frames(labels, video, from_frame_idx=30, reverse=True)
         )
         assert [f.frame_idx for f in frames] == [25]
+
+
+class TestNegativeFrameCounts:
+    """Negative frames count as user-labeled frames."""
+
+    @pytest.fixture
+    def labels_with_negatives(self):
+        """Labels with 2 user-labeled frames and 2 negative frames."""
+        from sleap_io import Instance, Skeleton
+
+        video = Video(filename="test.mp4")
+        skeleton = Skeleton(["A"])
+        user_frames = [
+            LabeledFrame(
+                video=video,
+                frame_idx=i,
+                instances=[Instance.from_numpy([[1.0, 2.0]], skeleton=skeleton)],
+            )
+            for i in (0, 10)
+        ]
+        negative_frames = [
+            LabeledFrame(video=video, frame_idx=i, is_negative=True) for i in (20, 30)
+        ]
+        labels = Labels(
+            labeled_frames=user_frames + negative_frames,
+            videos=[video],
+            skeletons=[skeleton],
+        )
+        return labels, video
+
+    def test_counts(self, labels_with_negatives):
+        labels, video = labels_with_negatives
+        assert get_labeled_frame_count(labels, video, "user") == 2
+        assert get_labeled_frame_count(labels, video, "negative") == 2
+        assert get_labeled_frame_count(labels, video, "user_or_negative") == 4
+        # Matches sleap-io's notion of user-labeled frames.
+        assert len(labels.user_labeled_frames) == 4
+
+    def test_is_user_or_negative_frame(self, labels_with_negatives):
+        labels, _ = labels_with_negatives
+        assert all(is_user_or_negative_frame(lf) for lf in labels)
+        assert not is_user_or_negative_frame(
+            LabeledFrame(video=labels.video, frame_idx=99)
+        )
+
+    def test_format_with_negatives(self, labels_with_negatives):
+        labels, video = labels_with_negatives
+        assert format_labeled_frame_count(labels, video) == "4 (2 negative frames)"
+
+    def test_format_singular_negative(self, labels_with_negatives):
+        labels, video = labels_with_negatives
+        labels.labeled_frames.pop()  # drop one of the two negative frames
+        assert format_labeled_frame_count(labels, video) == "3 (1 negative frame)"
+
+    def test_format_without_negatives(self, labels_with_negatives):
+        labels, video = labels_with_negatives
+        labels.labeled_frames = [lf for lf in labels if not lf.is_negative]
+        assert format_labeled_frame_count(labels, video) == "2"
+
+    def test_invalid_filter(self, labels_with_negatives):
+        labels, _ = labels_with_negatives
+        with pytest.raises(ValueError):
+            get_labeled_frame_count(labels, filter="bogus")
