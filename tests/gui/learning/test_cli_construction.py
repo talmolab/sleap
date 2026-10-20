@@ -620,6 +620,28 @@ class TestInferenceTaskCLI:
 
         assert "--max_instances" not in cli_args
 
+    @pytest.mark.parametrize("device", ["cpu", "cuda", "mps"])
+    def test_accelerator_sent_as_device(self, inference_task, video_item, device):
+        """The Accelerator dropdown is passed to sleap-nn as --device."""
+        inference_task.inference_params["trainer_config.trainer_accelerator"] = device
+
+        cli_args, _ = inference_task.make_predict_cli_call(
+            video_item, output_path="/tmp/out.slp"
+        )
+
+        assert cli_args[cli_args.index("--device") + 1] == device
+
+    @pytest.mark.parametrize("device", ["auto", None])
+    def test_auto_accelerator_omits_device(self, inference_task, video_item, device):
+        """ "auto" (or no choice) leaves --device at sleap-nn's own "auto"."""
+        inference_task.inference_params["trainer_config.trainer_accelerator"] = device
+
+        cli_args, _ = inference_task.make_predict_cli_call(
+            video_item, output_path="/tmp/out.slp"
+        )
+
+        assert "--device" not in cli_args
+
 
 # =============================================================================
 # Tracker CLI Construction Tests
@@ -758,17 +780,18 @@ class TestTrackerCLI:
         assert cli_args[count_idx] == "5"
 
     def test_similarity_oks_cli(self, inference_task_with_tracker, video_item):
-        """similarity=oks should add --features keypoints and --scoring_method oks."""
+        """similarity=oks leaves --features/--scoring_method to sleap-nn.
+
+        sleap-nn defaults them to keypoints/oks, and only switches single-node
+        skeletons to centroid distance when they are not given explicitly.
+        """
         cli_args, _ = inference_task_with_tracker.make_predict_cli_call(
             video_item, output_path="/tmp/out.slp"
         )
 
-        assert "--features" in cli_args
-        feat_idx = cli_args.index("--features") + 1
-        assert cli_args[feat_idx] == "keypoints"
-        assert "--scoring_method" in cli_args
-        score_idx = cli_args.index("--scoring_method") + 1
-        assert cli_args[score_idx] == "oks"
+        assert "--tracking" in cli_args
+        assert "--features" not in cli_args
+        assert "--scoring_method" not in cli_args
 
     def test_similarity_centroids_cli(self, mock_labels, video_item):
         """similarity=centroids should add correct args."""
@@ -869,12 +892,37 @@ class TestTrackerCLI:
 
         cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
 
-        assert "--features" in cli_args
-        feat_idx = cli_args.index("--features") + 1
-        assert cli_args[feat_idx] == "keypoints"
-        assert "--scoring_method" in cli_args
-        score_idx = cli_args.index("--scoring_method") + 1
-        assert cli_args[score_idx] == "oks"
+        assert "--tracking" in cli_args
+        assert "--features" not in cli_args
+        assert "--scoring_method" not in cli_args
+
+    @pytest.mark.parametrize("robust", [1.0, None])
+    def test_use_max_sends_max_reduction(self, mock_labels, video_item, robust):
+        """ "Use max (non-robust)" must send --scoring_reduction max.
+
+        sleap-nn's default reduction is "mean", so omitting it would silently score
+        against the mean of a track's recent instances instead of the best one.
+        """
+        task = InferenceTask(
+            trained_job_paths=["/path/to/model"],
+            inference_params={
+                "tracking.tracker": "flow",
+                "tracking.match": "greedy",
+                "tracking.track_window": 5,
+                "tracking.max_tracks": None,
+                "tracking.post_connect_single_breaks": 0,
+                "tracking.robust": robust,
+                "tracking.similarity": "oks",
+            },
+            labels=mock_labels,
+            labels_filename="/path/to/labels.slp",
+        )
+
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/out.slp")
+
+        red_idx = cli_args.index("--scoring_reduction") + 1
+        assert cli_args[red_idx] == "max"
+        assert "--robust_best_instance" not in cli_args
 
     def test_robust_quantile_cli(self, mock_labels, video_item):
         """robust != 1.0 should add robust quantile args."""
@@ -1400,11 +1448,9 @@ class TestFullCLIIntegration:
         assert "--post_connect_single_breaks" in cli_args
         assert "--tracking_target_instance_count" in cli_args
 
-        # Check similarity
-        assert "--features" in cli_args
-        assert "keypoints" in cli_args
-        assert "--scoring_method" in cli_args
-        assert "oks" in cli_args
+        # Check similarity (oks is sleap-nn's default, so it is left unset)
+        assert "--features" not in cli_args
+        assert "--scoring_method" not in cli_args
 
         # Check robust
         assert "--scoring_reduction" in cli_args

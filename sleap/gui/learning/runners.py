@@ -657,6 +657,11 @@ class InferenceTask:
 
         cli_args.extend(["-o", output_path])
 
+        # The Accelerator dropdown; omitting `--device` means "auto" in sleap-nn.
+        device = self.inference_params.get("trainer_config.trainer_accelerator")
+        if device and device != "auto":
+            cli_args.extend(["--device", str(device)])
+
         if "_batch_size" in self.inference_params:
             cli_args.extend(["--batch_size", str(self.inference_params["_batch_size"])])
 
@@ -712,20 +717,20 @@ class InferenceTask:
                         ]
                     )
 
-            if self.inference_params["tracking.robust"] != 1.0:
+            # "Use max (non-robust)" (robust == 1.0) has to be sent explicitly:
+            # sleap-nn's `--scoring_reduction` defaults to "mean".
+            robust = self.inference_params["tracking.robust"]
+            if robust is None or robust == 1.0:
+                cli_args.extend(["--scoring_reduction", "max"])
+            else:
                 cli_args.extend(["--scoring_reduction", "robust_quantile"])
-                if self.inference_params["tracking.robust"] is not None:
-                    cli_args.extend(
-                        [
-                            "--robust_best_instance",
-                            str(self.inference_params["tracking.robust"]),
-                        ]
-                    )
+                cli_args.extend(["--robust_best_instance", str(robust)])
 
-            if self.inference_params["tracking.similarity"] in ("oks", "instance"):
-                cli_args.extend(["--features", "keypoints"])
-                cli_args.extend(["--scoring_method", "oks"])
-            elif self.inference_params["tracking.similarity"] in (
+            # OKS ("oks"/"instance") leaves `--features`/`--scoring_method` unset:
+            # sleap-nn defaults them to keypoints/oks, and only when they are unset
+            # does it switch single-node skeletons to centroid distance (OKS of a
+            # one-node skeleton is 0 for any motion).
+            if self.inference_params["tracking.similarity"] in (
                 "centroids",
                 "centroid",
             ):
@@ -835,7 +840,11 @@ class InferenceTask:
         # Use replace_predictions when replacing, keep_both when adding
         # See: https://sleap.ai/develop/api/sleap_io.model.labels.html#sleap_io.model.labels.Labels.merge
         prediction_mode = self.inference_params.get("_prediction_mode", "add")
-        if prediction_mode == "replace":
+        # Tracking-only (no models) writes back the project's own instances, user
+        # instances included, with new tracks. Merging that with "keep_both" would
+        # duplicate every instance, so always replace the predictions instead.
+        tracking_only = not self.trained_job_paths
+        if prediction_mode == "replace" or tracking_only:
             self.labels.merge(new_labels, track="name", frame="replace_predictions")
         else:
             self.labels.merge(new_labels, track="name", frame="keep_both")

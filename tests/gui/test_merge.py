@@ -135,9 +135,10 @@ class TestInferenceResultMerging:
             lf.instances.append(pred)
             results.append(lf)
 
-        # Create InferenceTask with add mode (trained_job_paths=[] for testing)
+        # Create InferenceTask with add mode. It needs a model path: with none, the
+        # run is tracking-only, which always replaces predictions.
         task = InferenceTask(
-            trained_job_paths=[],
+            trained_job_paths=["/path/to/model"],
             labels=labels,
             results=results,
             inference_params={"_prediction_mode": "add"},

@@ -1229,7 +1229,33 @@ class LearningDialog(QtWidgets.QDialog):
         selection = self.frame_target_selector.get_selection()
         target_key = selection.target_key
 
-        if target_key == "user_labeled":
+        tracking_only = (
+            self.mode == "inference"
+            and self.pipeline_form_widget.current_pipeline_key == "tracking-only"
+        )
+        if tracking_only and target_key in ("user_labeled", "suggestions", "predicted"):
+            # sleap-nn's tracking-only path scopes by `--video_index`/`--frames` and
+            # ignores the `--only_*_frames` filters, so name each video's frames.
+            if target_key == "predicted":
+                # Retracking only touches predictions, so the whole video is the
+                # same as its predicted frames (and keeps the command line short).
+                frame_selection = {
+                    video: None for video, frames in frame_selection.items() if frames
+                }
+            items_for_inference = runners.ItemsForInference(
+                items=[
+                    runners.VideoItemForInference(
+                        video=video,
+                        frames=frames,
+                        labels_path=self.labels_filename,
+                        video_idx=self.labels.videos.index(video),
+                    )
+                    for video, frames in frame_selection.items()
+                    if frames is None or frames
+                ],
+                total_frame_count=frame_count,
+            )
+        elif target_key == "user_labeled":
             items_for_inference = runners.ItemsForInference(
                 items=[
                     runners.DatasetItemForInference(
