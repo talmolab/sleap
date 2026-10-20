@@ -477,6 +477,89 @@ class TestCrossComponentSignals:
 
 
 # =============================================================================
+# Tracking-only Target Tests
+# =============================================================================
+
+
+class TestTrackingOnlyTargets:
+    """Tracking-only targets that sleap-nn can't filter are sent as explicit frames.
+
+    sleap-nn's tracking-only path scopes by `--video_index`/`--frames` and ignores
+    `--only_*_frames`, so those targets used to retrack every frame of the project.
+    """
+
+    @pytest.fixture
+    def videos(self):
+        return [
+            Video(filename="a.mp4", open_backend=False),
+            Video(filename="b.mp4", open_backend=False),
+        ]
+
+    @pytest.fixture
+    def dialog(self, qtbot, minimal_skeleton, videos, tmp_path, mock_cfg_getter):
+        labels = Labels(skeletons=[minimal_skeleton], videos=videos)
+        labels_file = tmp_path / "project.slp"
+        labels_file.touch()
+        with patch(
+            "sleap.gui.learning.dialog.configs.TrainingConfigsGetter.make_from_labels_filename",
+            return_value=mock_cfg_getter,
+        ):
+            dialog = LearningDialog(
+                mode="inference",
+                labels_filename=str(labels_file),
+                labels=labels,
+                skeleton=minimal_skeleton,
+            )
+            qtbot.addWidget(dialog)
+        dialog._frame_selection = {
+            "suggestions": {videos[0]: [3, 7], videos[1]: []},
+            "user": {videos[0]: [1], videos[1]: [2, 4]},
+            "predicted": {videos[0]: [0, 1, 2], videos[1]: []},
+        }
+        return dialog
+
+    def items_for(self, dialog, pipeline_key, target_key):
+        combo = dialog.pipeline_form_widget._pipeline_combo
+        combo.setCurrentIndex(combo.findData(pipeline_key))
+        assert dialog.pipeline_form_widget.current_pipeline_key == pipeline_key
+        dialog.frame_target_selector.set_selection(
+            FrameTargetSelection(target_key=target_key)
+        )
+        return dialog.get_items_for_inference({}).items
+
+    @pytest.mark.parametrize(
+        "target_key, expected",
+        [
+            ("suggestions", {0: "3,7"}),
+            ("user_labeled", {0: "1", 1: "2,4"}),
+            ("predicted", {0: None}),
+        ],
+    )
+    def test_tracking_only_targets_are_per_video_frames(
+        self, dialog, target_key, expected
+    ):
+        items = self.items_for(dialog, "tracking-only", target_key)
+
+        got = {}
+        for item in items:
+            args = item.cli_args
+            assert not any(a.startswith("--only_") for a in args)
+            assert args[args.index("--data_path") + 1] == dialog.labels_filename
+            video_idx = int(args[args.index("--video_index") + 1])
+            got[video_idx] = (
+                args[args.index("--frames") + 1] if "--frames" in args else None
+            )
+        assert got == expected
+
+    def test_model_inference_keeps_dataset_filter(self, dialog):
+        """With models, sleap-nn honors `--only_suggested_frames` as before."""
+        items = self.items_for(dialog, "single animal", "suggestions")
+
+        assert len(items) == 1
+        assert "--only_suggested_frames" in items[0].cli_args
+
+
+# =============================================================================
 # Data Pipeline Tests
 # =============================================================================
 
