@@ -437,7 +437,7 @@ class SizeDistributionWidget(QtWidgets.QWidget):
         self._custom_angle_spin.setValue(45)
         self._custom_angle_spin.setSuffix(" deg")
         self._custom_angle_spin.setEnabled(False)
-        self._custom_angle_spin.setFixedWidth(80)
+        self._custom_angle_spin.setMinimumWidth(100)
         rotation_layout.addWidget(QtWidgets.QLabel("Custom:"))
         rotation_layout.addWidget(self._custom_angle_spin)
 
@@ -459,7 +459,7 @@ class SizeDistributionWidget(QtWidgets.QWidget):
         self._bins_spin = QtWidgets.QSpinBox()
         self._bins_spin.setRange(5, 100)
         self._bins_spin.setValue(30)
-        self._bins_spin.setFixedWidth(60)
+        self._bins_spin.setMinimumWidth(80)
         self._bins_spin.setEnabled(False)
         view_layout.addWidget(self._bins_spin)
 
@@ -468,7 +468,7 @@ class SizeDistributionWidget(QtWidgets.QWidget):
         self._xmin_spin.setRange(0, 10000)
         self._xmin_spin.setValue(0)
         self._xmin_spin.setSpecialValueText("Auto")
-        self._xmin_spin.setFixedWidth(70)
+        self._xmin_spin.setMinimumWidth(90)
         self._xmin_spin.setEnabled(False)
         view_layout.addWidget(self._xmin_spin)
 
@@ -477,7 +477,7 @@ class SizeDistributionWidget(QtWidgets.QWidget):
         self._xmax_spin.setRange(0, 10000)
         self._xmax_spin.setValue(0)
         self._xmax_spin.setSpecialValueText("Auto")
-        self._xmax_spin.setFixedWidth(70)
+        self._xmax_spin.setMinimumWidth(90)
         self._xmax_spin.setEnabled(False)
         view_layout.addWidget(self._xmax_spin)
 

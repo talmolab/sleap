@@ -885,3 +885,33 @@ class TestFrameTargetSelectorIntegration:
         with qtbot.waitSignal(training_widget.valueChanged, timeout=1000):
             # Toggle skip user labeled checkbox
             training_widget.frame_target_selector.skip_user_labeled_cb.setChecked(True)
+
+
+def test_tracker_spinboxes_are_not_fixed_width(inference_widget):
+    """Spin boxes can grow to fit their value on every platform style (#2884).
+
+    On Windows 11 the up/down arrows sit side by side, so a 60 px fixed-width
+    spin box (Max Tracks, Elapsed Frame Window, Robust Quantile) had no room
+    left to draw its value.
+    """
+    from qtpy.QtWidgets import QAbstractSpinBox
+
+    fields = inference_widget._fields
+    names = [
+        name
+        for name in fields
+        if name.startswith("tracking.")
+        and isinstance(fields[name], QAbstractSpinBox)
+        and any(k in name for k in ("max_tracks.", "track_window.", "robust."))
+    ]
+    assert names, "expected the tracker spin boxes to be registered"
+
+    spinboxes = [fields[n] for n in names]
+    spinboxes += [
+        w
+        for w in inference_widget.findChildren(QAbstractSpinBox)
+        if "similar" in (w.toolTip() or "").lower()
+    ]
+    for spin in spinboxes:
+        assert spin.minimumWidth() >= 80, spin
+        assert spin.maximumWidth() > spin.minimumWidth(), spin
