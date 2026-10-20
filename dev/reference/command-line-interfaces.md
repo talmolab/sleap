@@ -360,7 +360,7 @@ positional arguments:
 
 optional arguments:
   -m, --model           Path to trained model directory (can specify multiple)
-  --frames              Frames to predict (e.g., "1,2,3" or "1-100")
+  --frames              Frames to predict, 0-based (e.g., "0,1,2" or "0-99")
   --only-labeled-frames Only predict on labeled frames
   --only-suggested-frames Only predict on suggested frames
   -o, --output          Output filename (default: [data_path].predictions.slp)
@@ -459,7 +459,7 @@ positional arguments:
 optional arguments:
   -o, --output          Output path
   --video-index         Video index in labels (default: 0)
-  --frames              Frames to render (e.g., "1,2,3" or "1-100")
+  --frames              Frames to render, 0-based (e.g., "0,1,2" or "0-99")
   -f, --fps             Output FPS (default: 25)
   --scale               Image scale (default: 1.0)
   --show_edges          Draw lines between nodes (default: 1)
