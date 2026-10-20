@@ -674,7 +674,8 @@ def main(args: list = None):
         type=frame_list,
         default="",
         help="list of frames to predict. Either comma separated list (e.g. 1,2,3) or "
-        "a range separated by hyphen (e.g. 1-3). (default is entire video)",
+        "a range separated by hyphen (e.g. 1-3). Frame numbers are 0-based (the GUI "
+        "displays frame numbers starting at 1). (default is entire video)",
     )
     parser.add_argument(
         "--video-index",
