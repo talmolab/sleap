@@ -615,11 +615,11 @@ class TestConfigTransforms:
         assert data["trainer_config.trainer_devices"] == 1
 
     def test_rotation_preset_off_transform(self):
-        """Rotation preset Off should set rotation_p to None."""
+        """Rotation preset Off should set rotation_p to 0.0 (None means affine_p)."""
         data = self._make_data(_rotation_preset="Off")
         apply_cfg_transforms_to_key_val_dict(data)
 
-        assert data["data_config.augmentation_config.geometric.rotation_p"] is None
+        assert data["data_config.augmentation_config.geometric.rotation_p"] == 0.0
 
     def test_rotation_preset_15_transform(self):
         """Rotation preset ±15° should set rotation to ±15."""
@@ -656,11 +656,11 @@ class TestConfigTransforms:
         assert data["data_config.augmentation_config.geometric.scale_p"] == 1.0
 
     def test_scale_disabled_transform(self):
-        """_scale_enabled=False should set scale_p=None."""
+        """_scale_enabled=False should set scale_p=0.0 (None means affine_p)."""
         data = self._make_data(_scale_enabled=False)
         apply_cfg_transforms_to_key_val_dict(data)
 
-        assert data["data_config.augmentation_config.geometric.scale_p"] is None
+        assert data["data_config.augmentation_config.geometric.scale_p"] == 0.0
 
     def test_uniform_noise_enabled_transform(self):
         """_uniform_noise_enabled=True should set uniform_noise_p=1.0."""
