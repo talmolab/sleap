@@ -568,7 +568,7 @@ class MainTabWidget(QWidget):
         threshold_spinbox.setSingleStep(0.05)
         threshold_spinbox.setValue(0.8)
         threshold_spinbox.setDecimals(2)
-        threshold_spinbox.setFixedWidth(70)
+        threshold_spinbox.setMinimumWidth(80)
         threshold_spinbox.setToolTip(
             "Similarity threshold above which instances are considered "
             "overlapping and removed (keeping higher-scoring instance).\n"
@@ -689,7 +689,7 @@ class MainTabWidget(QWidget):
         max_tracks = QSpinBox()
         max_tracks.setRange(1, 100)
         max_tracks.setValue(1)
-        max_tracks.setFixedWidth(60)
+        max_tracks.setMinimumWidth(80)
         self._fields[f"tracking.max_tracks.{tracker_type}"] = max_tracks
         max_tracks_row.addWidget(max_tracks)
 
@@ -732,7 +732,7 @@ class MainTabWidget(QWidget):
         track_window = QSpinBox()
         track_window.setRange(1, 100)
         track_window.setValue(5)
-        track_window.setFixedWidth(60)
+        track_window.setMinimumWidth(80)
         self._fields[f"tracking.track_window.{tracker_type}"] = track_window
         form.addRow("Elapsed Frame Window:", track_window)
 
@@ -743,7 +743,7 @@ class MainTabWidget(QWidget):
         robust_spinbox.setRange(0.0, 1.0)
         robust_spinbox.setSingleStep(0.05)
         robust_spinbox.setValue(0.95)
-        robust_spinbox.setFixedWidth(60)
+        robust_spinbox.setMinimumWidth(80)
         robust_spinbox.setDecimals(2)
         self._fields[f"tracking.robust.{tracker_type}"] = robust_spinbox
         robust_row.addWidget(robust_spinbox)

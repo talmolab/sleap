@@ -229,3 +229,16 @@ class TestSizeDistributionWidget:
         # Should handle empty data without crashing
         assert widget._data == []
         assert "No data" in widget._stats_label.text()
+
+
+def test_size_distribution_spinboxes_are_not_fixed_width(qtbot):
+    """Spin boxes can grow to fit their value on every platform style (#2884)."""
+    from qtpy.QtWidgets import QAbstractSpinBox
+
+    widget = SizeDistributionWidget()
+    qtbot.addWidget(widget)
+    spinboxes = widget.findChildren(QAbstractSpinBox)
+    assert spinboxes
+    for spin in spinboxes:
+        assert spin.minimumWidth() >= 80, spin.objectName() or spin
+        assert spin.maximumWidth() > spin.minimumWidth(), spin
