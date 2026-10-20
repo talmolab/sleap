@@ -1083,13 +1083,20 @@ class LearningDialog(QtWidgets.QDialog):
                 )
                 apply_cfg_transforms_to_key_val_dict(tab_cfg_key_val_dict)
 
-                if trained_cfg_info is None:
+                # Base on the selected config: the trained model's, or else the
+                # selected profile/config file without a trained model.
+                base_cfg_info = (
+                    trained_cfg_info
+                    if trained_cfg_info is not None
+                    else self.tabs[tab_name].untrained_config_info_to_use
+                )
+                if base_cfg_info is None:
                     # Config could not be loaded, just use the values from the GUI
                     loaded_cfg_scoped: dict = tab_cfg_key_val_dict
                 else:
                     # Config was loaded, override with the values from the GUI
                     loaded_cfg_scoped = LearningDialog.update_loaded_config(
-                        get_keyval_dict_from_omegaconf(trained_cfg_info.config),
+                        get_keyval_dict_from_omegaconf(base_cfg_info.config),
                         tab_cfg_key_val_dict,
                     )
 
@@ -2564,6 +2571,56 @@ class TrainingEditorWidget(QtWidgets.QWidget):
             return True
         return False
 
+    @staticmethod
+    def _reset_dataset_specific_params(config):
+        """Clear the params of a base config that belong to its own dataset/run."""
+        for key, value in (
+            ("data_config.val_labels_path", None),
+            ("data_config.test_file_path", None),
+            ("data_config.skeletons", []),
+            ("trainer_config.ckpt_dir", None),
+            ("trainer_config.run_name", None),
+        ):
+            # `update` also works when a hand-written config lacks the section.
+            OmegaConf.update(config, key, value, force_add=True)
+
+    @property
+    def untrained_config_info_to_use(self) -> Optional[configs.ConfigFileInfo]:
+        """The selected config when it has no trained model (e.g. a profile).
+
+        Used as the base config for training, so settings the form doesn't show
+        (optimizer, LR scheduler, init weights, ...) come from the selected config
+        instead of falling back to sleap-nn defaults.
+        """
+        if self._cfg_list_widget is None:
+            return None
+
+        selected_config_info: Optional[configs.ConfigFileInfo] = (
+            self._cfg_list_widget.getSelectedConfigInfo()
+        )
+        if (
+            selected_config_info is None
+            or selected_config_info.has_trained_model
+            or not selected_config_info.path
+        ):
+            return None
+
+        # Load a fresh copy so the menu's cached config isn't modified.
+        config_info = configs.ConfigFileInfo.from_config_file(selected_config_info.path)
+        self._reset_dataset_specific_params(config_info.config)
+        # Untrained configs always train from scratch (no trained weights to use).
+        # The bundled profiles hard-code ZMQ ports; GUI runs set live ones and
+        # exported jobs shouldn't open sockets, so clear them as well.
+        # `wandb.name` is cleared for new runs in `get_every_head_config_data`.
+        for key in (
+            "model_config.pretrained_backbone_weights",
+            "model_config.pretrained_head_weights",
+            "trainer_config.zmq.controller_port",
+            "trainer_config.zmq.publish_port",
+        ):
+            OmegaConf.update(config_info.config, key, None, force_add=True)
+        return config_info
+
     @property
     def trained_config_info_to_use(self) -> Optional[configs.ConfigFileInfo]:
         # If `TrainingEditorWidget` was initialized with a config getter, then
@@ -2585,13 +2642,7 @@ class TrainingEditorWidget(QtWidgets.QWidget):
         if self.use_trained:
             trained_config_info.dont_retrain = True
         else:
-            # Set certain parameters to defaults
-            trained_config = trained_config_info.config
-            trained_config.data_config.val_labels_path = None
-            trained_config.data_config.test_file_path = None
-            trained_config.data_config.skeletons = []
-            trained_config.trainer_config.ckpt_dir = None
-            trained_config.trainer_config.run_name = None
+            self._reset_dataset_specific_params(trained_config_info.config)
 
         if self.resume_training:
             # Get the folder path of trained config and find checkpoint file

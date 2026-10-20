@@ -201,12 +201,15 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
 
     # Transform augmentation checkboxes/presets to probability values.
     # Geometric augmentations use new independent probability params from sleap-nn.
+    # "Off" is 0.0, not None: when rotation_p, scale_p and translate_p are all None,
+    # sleap-nn falls back to the bundled `affine_p` (1.0 in the bundled profiles),
+    # which applies rotation and scaling anyway.
 
     # Handle rotation preset dropdown
     if "_rotation_preset" in key_val_dict:
         preset = key_val_dict["_rotation_preset"]
         if preset == "Off":
-            key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = None
+            key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = 0.0
         else:
             key_val_dict["data_config.augmentation_config.geometric.rotation_p"] = 1.0
             # Determine angle from preset or custom value
@@ -225,7 +228,7 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
     if "_scale_enabled" in key_val_dict:
         scale_enabled = key_val_dict["_scale_enabled"]
         key_val_dict["data_config.augmentation_config.geometric.scale_p"] = (
-            1.0 if scale_enabled else None
+            1.0 if scale_enabled else 0.0
         )
 
     # Intensity augmentations use legacy probability params
