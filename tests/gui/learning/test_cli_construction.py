@@ -90,7 +90,7 @@ class TestVideoItemForInferenceCLI:
     """Tests for VideoItemForInference CLI argument construction."""
 
     def test_basic_cli_args(self, mock_video):
-        """Basic CLI args should include the video data path and frames."""
+        """Basic CLI args should include the project data path, index and frames."""
         item = VideoItemForInference(
             video=mock_video,
             frames=[0, 1, 2, 3, 4],
@@ -102,21 +102,20 @@ class TestVideoItemForInferenceCLI:
 
         assert "--data_path" in cli_args
         data_idx = cli_args.index("--data_path") + 1
-        assert cli_args[data_idx] == "/path/to/video.mp4"
-        assert "/path/to/labels.slp" not in cli_args
+        assert cli_args[data_idx] == "/path/to/labels.slp"
+        assert cli_args[cli_args.index("--video_index") + 1] == "0"
         assert "--frames" in cli_args
         # Frames should be comma-separated
         frames_idx = cli_args.index("--frames") + 1
         assert cli_args[frames_idx] == "0,1,2,3,4"
 
-    def test_cli_args_never_include_video_index(self, mock_video):
-        """CLI args should not include --video_index even with a labels_path.
+    def test_cli_args_target_project_and_video_index(self, mock_video):
+        """A video in a saved project runs on the project + --video_index.
 
-        Regression test: `--data_path` is the video file itself, so there is
-        exactly one video and no index to select. Passing a `.slp` data path plus
-        `--video_index`/`--frames` routed sleap-nn through `LabelsProvider`, which
-        can only subset frames that are *already labeled* in the project -- so
-        "predict on entire video" silently capped at the labeled-frame count.
+        Since sleap-nn 0.3.4 (sleap-nn#762), `.slp` + `--video_index` predicts on any
+        frame of the video, filtered by the project's annotations. That's the only
+        way sleap-nn can honor "skip user labeled frames" (#2875) and retrack
+        (tracking-only); a bare video file has no annotations.
         """
         item = VideoItemForInference(
             video=mock_video,
@@ -127,17 +126,16 @@ class TestVideoItemForInferenceCLI:
 
         cli_args = item.cli_args
 
-        assert "--video_index" not in cli_args
-        data_idx = cli_args.index("--data_path") + 1
-        assert cli_args[data_idx] == "/path/to/video.mp4"
+        assert cli_args[cli_args.index("--data_path") + 1] == "/path/to/labels.slp"
+        assert cli_args[cli_args.index("--video_index") + 1] == "2"
+        assert "/path/to/video.mp4" not in cli_args
 
-    def test_entire_video_range_targets_video_file(self, mock_video):
-        """Entire-video mode on a sparsely labeled project must target the video.
+    def test_entire_video_range_keeps_full_frame_range(self, mock_video):
+        """Entire-video mode sends the full range with the project + video index.
 
-        Regression test for the frame-count cap: a project with 20 labeled frames
-        out of 2560 asked for `--frames 0,-1499` against the `.slp`, and sleap-nn
-        logged `source=LabelsProvider | frames=20`. The full frame range must go to
-        the video file so `VideoProvider` reads every requested index.
+        sleap-nn 0.3.4 reads every requested index of the video for `.slp` +
+        `--video_index`, so the range isn't capped at the frames already labeled in
+        the project (the bug #2848 worked around by sending the video file).
         """
         # "Entire video" encodes the full range as [0, -num_frames] (see
         # `MainWindow._get_frame_selection`); 1500 frames requested here.
@@ -150,12 +148,9 @@ class TestVideoItemForInferenceCLI:
 
         cli_args = item.cli_args
 
-        data_idx = cli_args.index("--data_path") + 1
-        assert cli_args[data_idx] == "/path/to/video.mp4"
-        assert not cli_args[data_idx].endswith(".slp")
-        assert "--video_index" not in cli_args
-        frames_idx = cli_args.index("--frames") + 1
-        assert cli_args[frames_idx] == "0,-1499"
+        assert cli_args[cli_args.index("--data_path") + 1] == "/path/to/labels.slp"
+        assert cli_args[cli_args.index("--video_index") + 1] == "0"
+        assert cli_args[cli_args.index("--frames") + 1] == "0,-1499"
 
     def test_embedded_pkg_slp_keeps_labels_path_and_video_index(
         self, mock_embedded_video
@@ -241,6 +236,34 @@ class TestVideoItemForInferenceCLI:
         format_idx = cli_args.index("--video_input_format") + 1
         assert cli_args[format_idx] == "channels_last"
 
+    def test_cli_args_dont_read_undecodable_video(self):
+        """Building args must not read the video (via `len(backend)`).
+
+        sleap-io reads frame 0 to compute a backend's length, which raises for a
+        video it can't decode. sleap-nn reports that clearly itself, so the GUI must
+        hand it the command rather than crash first.
+        """
+
+        class UndecodableBackend:
+            dataset = None
+            input_format = None
+
+            def __len__(self):
+                raise IndexError("Failed to read frame index 0.")
+
+        video = MagicMock(spec=Video)
+        video.filename = "/path/to/broken.mp4"
+        video.backend = UndecodableBackend()
+
+        item = VideoItemForInference(
+            video=video, frames=[0, -10], labels_path="/path/to/labels.slp"
+        )
+
+        cli_args = item.cli_args
+
+        assert cli_args[cli_args.index("--data_path") + 1] == "/path/to/labels.slp"
+        assert "--video_dataset" not in cli_args
+
     def test_cli_args_frame_range(self, mock_video):
         """CLI args should handle frame ranges (negative end marker)."""
         # Negative values indicate range endpoints
@@ -273,7 +296,7 @@ class TestVideoItemForInferenceCLI:
         item = VideoItemForInference(
             video=video,
             frames=[0, -100],
-            labels_path="/path/to/labels.slp",
+            labels_path=None,
             video_idx=0,
             use_absolute_path=True,
         )
@@ -306,10 +329,10 @@ class TestVideoItemForInferenceCLI:
 
         assert "--frames" not in cli_args
         data_idx = cli_args.index("--data_path") + 1
-        assert cli_args[data_idx] == "/path/to/video.mp4"
+        assert cli_args[data_idx] == "/path/to/labels.slp"
 
     def test_path_property_with_labels(self, mock_video):
-        """path property should return the video filename even with a labels_path."""
+        """path property should return the project path when there is one."""
         item = VideoItemForInference(
             video=mock_video,
             frames=[0],
@@ -317,7 +340,7 @@ class TestVideoItemForInferenceCLI:
             video_idx=0,
         )
 
-        assert item.path == mock_video.filename
+        assert item.path == "/path/to/labels.slp"
 
     def test_path_property_without_labels(self, mock_video):
         """path property should return video filename when no labels_path."""
@@ -426,14 +449,8 @@ class TestItemsForInference:
         assert items.total_frame_count == 5
         assert isinstance(items.items[0], VideoItemForInference)
 
-    def test_from_video_frames_dict_targets_video_not_labels(
-        self, mock_video, mock_labels
-    ):
-        """Frame-range items must run on the video file, not the project .slp.
-
-        `labels_path`/`video_idx` are still recorded on the item (they identify the
-        project the video came from), they just no longer choose `--data_path`.
-        """
+    def test_from_video_frames_dict_targets_project(self, mock_video, mock_labels):
+        """Frame-range items run on the project .slp, scoped by --video_index."""
         items = ItemsForInference.from_video_frames_dict(
             video_frames_dict={mock_video: [0, -2560]},
             total_frame_count=2560,
@@ -442,10 +459,9 @@ class TestItemsForInference:
         )
 
         item = items.items[0]
-        assert item.path == "/path/to/video.mp4"
-        assert item.labels_path == "/path/to/labels.slp"
+        assert item.path == "/path/to/labels.slp"
         assert item.video_idx == 0
-        assert "--video_index" not in item.cli_args
+        assert item.cli_args[item.cli_args.index("--video_index") + 1] == "0"
 
     def test_from_video_frames_dict_multiple_videos(self, mock_labels):
         """from_video_frames_dict should handle multiple videos."""
@@ -518,6 +534,41 @@ class TestInferenceTaskCLI:
             labels_path="/path/to/labels.slp",
             video_idx=0,
         )
+
+    def test_tracking_only_targets_labels_path(self, mock_labels, video_item):
+        """With no models (tracking-only), the project .slp is the data path.
+
+        sleap-nn rejects a video `--data_path` for tracking-only ("Tracking-only mode
+        requires --data_path to be a .slp file"): it retracks the project's
+        predictions.
+        """
+        task = InferenceTask(
+            trained_job_paths=[],
+            inference_params={},
+            labels=mock_labels,
+            labels_filename="/path/to/labels.slp",
+        )
+
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/o.slp")
+
+        assert "--model_paths" not in cli_args
+        assert cli_args[cli_args.index("--data_path") + 1] == "/path/to/labels.slp"
+        assert cli_args[cli_args.index("--video_index") + 1] == "0"
+
+    def test_exclude_user_labeled_goes_with_project(self, mock_labels, video_item):
+        """Skip-user-labeled is sent with the project, which has the annotations."""
+        task = InferenceTask(
+            trained_job_paths=["/path/to/model"],
+            inference_params={"_exclude_user_labeled": True},
+            labels=mock_labels,
+            labels_filename="/path/to/labels.slp",
+        )
+
+        cli_args, _ = task.make_predict_cli_call(video_item, output_path="/tmp/o.slp")
+
+        assert "--exclude_user_labeled" in cli_args
+        assert cli_args[cli_args.index("--data_path") + 1] == "/path/to/labels.slp"
+        assert "--video_index" in cli_args
 
     def test_basic_cli_call(self, inference_task, video_item):
         """Basic CLI call should include sleap track and model paths."""

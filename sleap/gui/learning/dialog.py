@@ -1306,6 +1306,23 @@ class LearningDialog(QtWidgets.QDialog):
             if not can_run:
                 message = "Cannot run ID model training without tracks."
 
+        # Connecting single track breaks needs a target instance count, which
+        # sleap-nn takes from max tracks (falling back to max instances). Without
+        # either it fails only after inference has finished, so catch it here.
+        if can_run:
+            form_data = self.pipeline_form_widget.get_form_data()
+            if (
+                form_data.get("tracking.tracker", "none") != "none"
+                and form_data.get("tracking.post_connect_single_breaks")
+                and form_data.get("tracking.max_tracks") is None
+                and form_data.get("_max_instances") is None
+            ):
+                can_run = False
+                message = (
+                    '"Connect Single Track Breaks" needs the number of animals: '
+                    "set Max Tracks (or Max Instances)."
+                )
+
         # Make sure skeleton will be valid for bottom-up inference.
         if self.mode == "training" and self.current_pipeline == "bottom-up":
             skeleton = self.labels.skeletons[0]
