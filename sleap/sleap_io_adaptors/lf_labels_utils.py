@@ -107,14 +107,30 @@ def remove_all_tracks(labels: Labels):
 
 
 def remove_frames(labels: Labels, frames: List[LabeledFrame]):
-    """Remove a list of frames from the labels dataset."""
+    """Remove a list of frames from the labels dataset.
+
+    A frame is removed if it's one of `frames`, or matches one by video
+    content and frame index. The frame list is scanned once, rather than once
+    per frame to remove (#2907).
+    """
+    if not frames:
+        return
+    remove_ids = {id(lf) for lf in frames}
+    by_frame_idx = {}
     for lf in frames:
-        for lf_idx, lab_fr in enumerate(labels):
-            if (
-                lab_fr.video.matches_content(lf.video)
-                and lab_fr.frame_idx == lf.frame_idx
-            ):
-                labels_pop(labels, lf_idx)
+        by_frame_idx.setdefault(lf.frame_idx, []).append(lf.video)
+
+    def should_remove(lab_fr: LabeledFrame) -> bool:
+        if id(lab_fr) in remove_ids:
+            return True
+        return any(
+            lab_fr.video.matches_content(video)
+            for video in by_frame_idx.get(lab_fr.frame_idx, ())
+        )
+
+    labels.labeled_frames[:] = [
+        lab_fr for lab_fr in labels.labeled_frames if not should_remove(lab_fr)
+    ]
     labels.update()
 
 

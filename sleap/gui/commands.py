@@ -3470,20 +3470,37 @@ class InstanceDeleteCommand(EditCommand):
         return True
 
     @staticmethod
-    def _do_deletion(context: CommandContext, lf_inst_list: List[int]):
-        # Delete the instances
-        lfs_to_remove = []
+    def _do_deletion(context: CommandContext, lf_inst_list: List[Tuple]):
+        """Delete the given (labeled frame, instance) pairs in one pass.
+
+        The pairs hold the project's own frame and instance objects, so each
+        instance is removed by identity: each affected frame's instance list is
+        filtered once, and frames left empty by this deletion are dropped with
+        one pass over the frame list. Frames that were already empty (negative
+        frames) are kept. Looking each one up again made large deletions
+        quadratic (#2907).
+        """
+        to_delete = {}  # id(frame) -> (frame, ids of its instances to delete)
         for lf, inst in lf_inst_list:
-            remove_instance(context.labels, instance=inst, lf=lf)
-            if context.state["instance"] == inst:
-                context.state["instance"] = None
+            to_delete.setdefault(id(lf), (lf, set()))[1].add(id(inst))
+
+        emptied = set()
+        for lf, inst_ids in to_delete.values():
+            lf.instances = [inst for inst in lf.instances if id(inst) not in inst_ids]
             if len(lf.instances) == 0:
-                lfs_to_remove.append(lf)
+                emptied.add(id(lf))
 
-        remove_frames(context.labels, lfs_to_remove)
+        selected = context.state["instance"]
+        if selected is not None and any(
+            id(selected) in inst_ids for _, inst_ids in to_delete.values()
+        ):
+            context.state["instance"] = None
 
-        # # Update caches since we skipped doing this after each deletion
-        # context.labels.update_cache()
+        if emptied:
+            context.labels.labeled_frames[:] = [
+                lf for lf in context.labels.labeled_frames if id(lf) not in emptied
+            ]
+        context.labels.update()
 
         # Update visuals
         context.changestack_push("delete instances")
@@ -3668,16 +3685,19 @@ class DeleteFrameLimitPredictions(InstanceDeleteCommand):
     def get_frame_instance_list(context: CommandContext, params: Dict):
         """Called from the parent `InstanceDeleteCommand.ask` method.
 
+        The dialog's range is 1-based and is what to keep; predictions of the
+        current video outside it are deleted. User instances and other videos
+        (whose frame numbers don't line up with this one) are left alone.
+
         Returns:
-            List of instances to be deleted.
+            List of (labeled frame, predicted instance) pairs to be deleted.
         """
+        min_idx = params["min_frame_idx"] - 1
+        max_idx = params["max_frame_idx"] - 1
         instances = []
-        # Select the instances to be deleted
-        for lf in context.labels.labeled_frames:
-            if lf.frame_idx < (params["min_frame_idx"] - 1) or lf.frame_idx > (
-                params["max_frame_idx"] - 1
-            ):
-                instances.extend([(lf, inst) for inst in lf.instances])
+        for lf in context.labels.find(context.state["video"]):
+            if lf.frame_idx < min_idx or lf.frame_idx > max_idx:
+                instances.extend((lf, inst) for inst in lf.predicted_instances)
         return instances
 
     @classmethod
