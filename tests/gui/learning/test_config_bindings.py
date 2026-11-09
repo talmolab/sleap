@@ -387,6 +387,31 @@ class TestPreprocessingFieldMapping:
         assert data["_max_instances_disabled"] is True
 
 
+class TestDataPipelineTransform:
+    """The Data Pipeline dropdown choice reaches data_pipeline_fw (#2910)."""
+
+    @pytest.mark.parametrize(
+        "choice, expected",
+        [
+            ("stream", "torch_dataset"),
+            ("cache_disk", "torch_dataset_cache_img_disk"),
+        ],
+    )
+    def test_dropdown_choice_end_to_end(self, training_widget, choice, expected):
+        """Choosing in the dropdown should change data_pipeline_fw (#2910)."""
+        combo = training_widget._fields["_data_pipeline_fw"]
+        combo.setCurrentIndex(combo.findData(choice))
+        # The transform also needs the loader keys a full pipeline form carries.
+        key_val_dict = {
+            **TestConfigTransforms.BASE_DATA,
+            **training_widget.get_form_data(),
+        }
+
+        apply_cfg_transforms_to_key_val_dict(key_val_dict)
+
+        assert key_val_dict["data_config.data_pipeline_fw"] == expected
+
+
 # =============================================================================
 # Tracker Field Mapping Tests (Inference Only)
 # =============================================================================
@@ -537,6 +562,25 @@ class TestConfigTransforms:
         data = self.BASE_DATA.copy()
         data.update(kwargs)
         return data
+
+    @pytest.mark.parametrize(
+        "choice, expected",
+        [
+            ("stream", "torch_dataset"),
+            ("cache_memory", "torch_dataset_cache_img_memory"),
+            ("cache_disk", "torch_dataset_cache_img_disk"),
+            # Display names, as an older saved preference may hold them.
+            ("Stream (no caching)", "torch_dataset"),
+            ("Cache in Memory", "torch_dataset_cache_img_memory"),
+            ("Cache to Disk", "torch_dataset_cache_img_disk"),
+        ],
+    )
+    def test_data_pipeline_transform(self, choice, expected):
+        """The Data Pipeline choice should reach data_pipeline_fw (#2910)."""
+        data = self._make_data(_data_pipeline_fw=choice)
+        apply_cfg_transforms_to_key_val_dict(data)
+
+        assert data["data_config.data_pipeline_fw"] == expected
 
     def test_ensure_channels_rgb_transform(self):
         """_ensure_channels='RGB' should set ensure_rgb=True."""

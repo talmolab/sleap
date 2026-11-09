@@ -160,16 +160,21 @@ def apply_cfg_transforms_to_key_val_dict(key_val_dict):
         key_val_dict["data_config.preprocessing.ensure_rgb"] = ensure_rgb
         key_val_dict["data_config.preprocessing.ensure_grayscale"] = ensure_grayscale
 
-    # Map friendly data pipeline names to sleap-nn enum values
+    # Map the Data Pipeline dropdown's choice to sleap-nn enum values. The
+    # dropdown sends its item data ("stream", ...); display names are kept for
+    # preferences saved before that.
     if "_data_pipeline_fw" in key_val_dict:
         pipeline_map = {
+            "stream": "torch_dataset",
+            "cache_memory": "torch_dataset_cache_img_memory",
+            "cache_disk": "torch_dataset_cache_img_disk",
             "Stream (no caching)": "torch_dataset",
             "Cache in Memory": "torch_dataset_cache_img_memory",
             "Cache to Disk": "torch_dataset_cache_img_disk",
         }
-        friendly_name = key_val_dict["_data_pipeline_fw"]
+        choice = key_val_dict["_data_pipeline_fw"]
         key_val_dict["data_config.data_pipeline_fw"] = pipeline_map.get(
-            friendly_name, "torch_dataset_cache_img_memory"
+            choice, "torch_dataset_cache_img_memory"
         )
 
     # Handle trainer devices auto-selection
