@@ -37,6 +37,7 @@ from sleap.gui.commands import (
     SaveProjectAs,
     DeleteAreaPredictions,
     DeleteFrameLimitPredictions,
+    DeleteLowScorePredictions,
     get_new_version_filename,
 )
 from sleap.io.convert import default_analysis_filename
@@ -1338,15 +1339,13 @@ def test_LoadProjectFile(
         shutil.move(new_video_path, expected_video_path)
 
 
-def test_DeleteFrameLimitPredictions(
-    centered_pair_predictions: Labels, centered_pair_vid: Video
-):
+def test_DeleteFrameLimitPredictions(centered_pair_predictions: Labels):
     """Test deleting instances beyond a certain frame limit."""
     labels = centered_pair_predictions
 
-    # Set-up command context
+    # Set-up command context (the GUI's current video is one of labels.videos)
     context = CommandContext.from_labels(labels)
-    context.state["video"] = centered_pair_vid
+    context.state["video"] = labels.videos[0]
 
     # Set-up params for the command
     params = {"min_frame_idx": 900, "max_frame_idx": 1000}
@@ -1356,6 +1355,135 @@ def test_DeleteFrameLimitPredictions(
     )
 
     assert len(instances_to_delete) == 2070
+
+
+def _frame_limit_project(n_frames: int = 10):
+    """Two videos; video A has a user label on frames 0 and 7 and an empty
+    (negative) frame 8; every other frame of both videos has predictions."""
+    skeleton = Skeleton(["a", "b"])
+    video_a = Video(filename="a.mp4")
+    video_b = Video(filename="b.mp4")
+    pts = np.array([[1.0, 2.0], [3.0, 4.0]])
+
+    def pred():
+        return PredictedInstance.from_numpy(
+            pts, skeleton=skeleton, point_scores=np.ones(2), score=0.9
+        )
+
+    frames = []
+    for i in range(n_frames):
+        if i == 8:
+            frames.append(LabeledFrame(video=video_a, frame_idx=i))
+            continue
+        instances = [pred(), pred()]
+        if i in (0, 7):
+            instances.append(Instance.from_numpy(pts, skeleton=skeleton))
+        frames.append(LabeledFrame(video=video_a, frame_idx=i, instances=instances))
+    for i in range(n_frames):
+        frames.append(LabeledFrame(video=video_b, frame_idx=i, instances=[pred()]))
+    labels = Labels(labeled_frames=frames)
+    return labels, video_a, video_b
+
+
+def test_DeleteFrameLimitPredictions_only_predictions_in_current_video():
+    """Only predictions of the current video outside the kept range (#2907)."""
+    labels, video_a, video_b = _frame_limit_project()
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video_a
+
+    # Keep frames 3-5 (1-based), i.e. frame indices 2-4.
+    params = {"min_frame_idx": 3, "max_frame_idx": 5}
+    pairs = DeleteFrameLimitPredictions.get_frame_instance_list(context, params)
+
+    assert all(isinstance(inst, PredictedInstance) for _, inst in pairs)
+    assert all(lf.video is video_a for lf, _ in pairs)
+    assert sorted({lf.frame_idx for lf, _ in pairs}) == [0, 1, 5, 6, 7, 9]
+    assert len(pairs) == 12  # 2 predictions on each of those 6 frames
+
+
+def test_DeleteFrameLimitPredictions_deletes_and_keeps_the_right_frames():
+    """User labels, other videos and negative frames survive the deletion."""
+    labels, video_a, video_b = _frame_limit_project()
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video_a
+    deleted_pred = labels.find(video_a, 0)[0].predicted_instances[0]
+    context.state["instance"] = deleted_pred
+
+    params = {"min_frame_idx": 3, "max_frame_idx": 5}
+    params["lf_instance_list"] = DeleteFrameLimitPredictions.get_frame_instance_list(
+        context, params
+    )
+    DeleteFrameLimitPredictions.do_action(context, params)
+
+    frames_a = {lf.frame_idx: lf for lf in labels.labeled_frames if lf.video is video_a}
+    # Kept range untouched; frames 0 and 7 keep only their user label; the
+    # negative frame 8 stays; frames emptied by the deletion are removed.
+    assert sorted(frames_a) == [0, 2, 3, 4, 7, 8]
+    for i in (2, 3, 4):
+        assert len(frames_a[i].predicted_instances) == 2
+    for i in (0, 7):
+        assert len(frames_a[i].instances) == 1
+        assert not frames_a[i].predicted_instances
+    assert len(frames_a[8].instances) == 0
+    # The other video is untouched.
+    assert len([lf for lf in labels.labeled_frames if lf.video is video_b]) == 10
+    assert context.state["instance"] is None
+
+
+def test_instance_deletion_removes_the_exact_instance():
+    """Of two identical untracked predictions, the selected one is removed."""
+    labels, video_a, _ = _frame_limit_project()
+    context = CommandContext.from_labels(labels)
+    context.state["video"] = video_a
+    lf = labels.find(video_a, 2)[0]
+    first, second = lf.predicted_instances
+
+    DeleteLowScorePredictions.do_action(context, {"lf_instance_list": [(lf, second)]})
+
+    assert lf.predicted_instances == [first]
+    assert lf.predicted_instances[0] is first
+
+
+def test_instance_deletion_scales_linearly():
+    """Deleting predictions across many frames doesn't rescan the frame list.
+
+    Each frame used to be found with a scan of every frame, so doubling the
+    frames quadrupled the time; 4x the frames took ~16x as long (#2907).
+    """
+    skeleton = Skeleton(["a"])
+    video = Video(filename="v.mp4")
+
+    def time_deletion(n_frames: int) -> float:
+        best = float("inf")
+        for _ in range(3):
+            frames = [
+                LabeledFrame(
+                    video=video,
+                    frame_idx=i,
+                    instances=[
+                        PredictedInstance.from_numpy(
+                            np.array([[1.0, 1.0]]),
+                            skeleton=skeleton,
+                            point_scores=np.ones(1),
+                            score=0.5,
+                        )
+                    ],
+                )
+                for i in range(n_frames)
+            ]
+            labels = Labels(labeled_frames=frames)
+            context = CommandContext.from_labels(labels)
+            context.state["video"] = video
+            pairs = [(lf, inst) for lf in labels.labeled_frames for inst in lf]
+            start = time.perf_counter()
+            DeleteLowScorePredictions.do_action(context, {"lf_instance_list": pairs})
+            best = min(best, time.perf_counter() - start)
+            assert len(labels.labeled_frames) == 0
+        return best
+
+    small, large = time_deletion(1_000), time_deletion(4_000)
+    # Linear: ~4x. Quadratic: ~16x.
+    assert large / max(small, 1e-4) < 8
 
 
 def test_DeleteAreaPredictions(centered_pair_predictions: Labels):
