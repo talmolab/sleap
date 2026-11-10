@@ -939,10 +939,18 @@ class LossViewer(QtWidgets.QMainWindow):
                 epoch_size=self.epoch_size,
             )
 
-    def _check_messages(
-        self, timeout: int = 10, times_to_check: int = 10, do_update: bool = True
-    ):
-        """Poll for ZMQ messages and adds any received data to graph.
+    # Longest one poll tick may spend reading messages that are already queued (ms).
+    # Keeps the window responsive if a large backlog ever builds up.
+    max_drain_time_ms = 200
+
+    def _check_messages(self, timeout: int = 10, do_update: bool = True):
+        """Poll for ZMQ messages and add any received data to the graph.
+
+        Reads every message that is already queued, not just the first few. The
+        trainer sends two messages per batch, and while training runs the GUI only
+        processes Qt events about every 100 ms (see `train_subprocess`), so reading a
+        fixed number of messages per tick could not keep up: the queue grew until
+        ZMQ dropped messages, leaving gaps in the plot.
 
         The message is a dictionary encoded as JSON:
             * event - options include
@@ -955,20 +963,20 @@ class LossViewer(QtWidgets.QMainWindow):
                 ensures that we ignore old messages when we start monitoring
                 a new training session (when we're training multiple types
                 of models in a sequence, as for the top-down pipeline).
+            * epoch - the epoch number (epoch_begin, epoch_end, batch_end)
             * logs - dictionary with data relevant for plotting, can include
                 * train_loss
                 * val_loss
 
         Args:
-            timeout: Message polling timeout in milliseconds. This is how often we will
-                check for new command messages.
-            times_to_check: How many times to check for new messages in the queue before
-                going back to polling with a timeout. Helps to clear backlogs of
-                messages if necessary.
+            timeout: How long to wait for the first message, in milliseconds.
             do_update: If True (the default), update the GUI text.
         """
-        if self.sub and self.sub.poll(timeout, zmq.POLLIN):
+        deadline = perf_counter() + self.max_drain_time_ms / 1000
+        while self.sub and self.sub.poll(timeout, zmq.POLLIN):
             msg = jsonpickle.decode(self.sub.recv_string())
+            # The rest of the queue is read without waiting.
+            timeout = 0
 
             if msg["event"] == "train_begin":
                 self._set_start_time(perf_counter())
@@ -991,6 +999,7 @@ class LossViewer(QtWidgets.QMainWindow):
                     self.epoch = msg["epoch"]
                     self.epoch_start_time = perf_counter()
                 elif msg["event"] == "epoch_end":
+                    self._follow_message_epoch(msg)
                     self.epoch_size = max(self.epoch_size, self.last_batch_number + 1)
                     # Support both sleap-nn naming (train/loss) and legacy (train_loss)
                     train_loss = msg["logs"].get(
@@ -1047,6 +1056,7 @@ class LossViewer(QtWidgets.QMainWindow):
                                 self.best_epoch_loss = self.last_epoch_val_loss
                     self.on_epoch.emit()
                 elif msg["event"] == "batch_end":
+                    self._follow_message_epoch(msg)
                     self.last_batch_number = msg["batch"]
                     # Support both sleap-nn naming (loss) and legacy (train_loss)
                     batch_loss = msg["logs"].get("loss", msg["logs"].get("train_loss"))
@@ -1057,14 +1067,23 @@ class LossViewer(QtWidgets.QMainWindow):
                             which="batch",
                         )
 
-            # Check for messages again (up to times_to_check times).
-            if times_to_check > 0:
-                self._check_messages(
-                    timeout=timeout, times_to_check=times_to_check - 1, do_update=False
-                )
+            if perf_counter() >= deadline:
+                break
 
         if do_update:
             self._update_runtime()
+
+    def _follow_message_epoch(self, msg: dict):
+        """Take the epoch number from a batch_end or epoch_end message.
+
+        Points are placed by `self.epoch`, which `epoch_begin` sets. Following the
+        epoch the message itself carries means a missed `epoch_begin` can't draw a
+        whole epoch on top of the previous one.
+        """
+        epoch = msg.get("epoch")
+        if epoch is not None and epoch != self.epoch:
+            self.epoch = epoch
+            self.epoch_start_time = None
 
     def _add_datapoint(self, x: int, y: float, which: str):
         """Add a data point to graph.

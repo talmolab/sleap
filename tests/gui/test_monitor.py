@@ -1,3 +1,6 @@
+from collections import deque
+
+import jsonpickle
 import numpy as np
 
 from sleap.gui.widgets.monitor import LossPlot, LossViewer
@@ -158,4 +161,98 @@ def test_batch_subsample_thins_scatter_data(qtbot):
         expected = (n + 9) // 10
         assert len(xs) == expected
     finally:
+        win.close()
+
+
+class _QueuedSub:
+    """Stands in for the window's ZMQ socket: hands out already-queued messages."""
+
+    def __init__(self, messages):
+        self.queue = deque(jsonpickle.encode(m) for m in messages)
+
+    def poll(self, timeout=0, flags=None):
+        return len(self.queue) > 0
+
+    def recv_string(self):
+        return self.queue.popleft()
+
+
+def _training_messages(epochs, batches, skip_epoch_begin=()):
+    """Messages in the order sleap-nn's ProgressReporterZMQ sends them."""
+    msgs = [dict(what="centroid", event="train_begin", logs=None)]
+    for e in range(epochs):
+        if e not in skip_epoch_begin:
+            msgs.append(dict(what="centroid", event="epoch_begin", epoch=e, logs=None))
+        for b in range(batches):
+            msgs.append(dict(what="centroid", event="batch_start", batch=b, logs=None))
+            msgs.append(
+                dict(
+                    what="centroid",
+                    event="batch_end",
+                    epoch=e,
+                    batch=b,
+                    logs={"loss": 1.0 / (1 + e * batches + b)},
+                )
+            )
+        msgs.append(
+            dict(
+                what="centroid",
+                event="epoch_end",
+                epoch=e,
+                logs={"train/loss": 1.0 / (e + 1), "val/loss": 1.0 / (e + 1)},
+            )
+        )
+    return msgs
+
+
+def _with_queued_messages(win, messages):
+    real_sub = win.sub
+    win.sub = _QueuedSub(messages)
+    return real_sub
+
+
+def test_check_messages_reads_whole_queue(qtbot):
+    """One poll tick reads every queued message, so a backlog can't build up."""
+    win = LossViewer()
+    win.reset(what="centroid")
+    real_sub = _with_queued_messages(win, _training_messages(epochs=3, batches=200))
+    try:
+        win._check_messages()
+        assert len(win.sub.queue) == 0
+        assert len(win.X) == 3 * 200
+        assert list(win.canvas.series["train_loss"].get_xdata()) == [200, 400, 600]
+        assert win.epoch == 2
+    finally:
+        win.sub = real_sub
+        win.close()
+
+
+def test_check_messages_stops_at_time_budget(qtbot):
+    """A huge backlog is read over several ticks, not in one long freeze."""
+    win = LossViewer()
+    win.reset(what="centroid")
+    win.max_drain_time_ms = 0
+    real_sub = _with_queued_messages(win, _training_messages(epochs=1, batches=5))
+    try:
+        n = len(win.sub.queue)
+        win._check_messages()
+        assert len(win.sub.queue) == n - 1
+    finally:
+        win.sub = real_sub
+        win.close()
+
+
+def test_missed_epoch_begin_keeps_points_in_place(qtbot):
+    """Batch and epoch points follow the epoch in the message, not epoch_begin."""
+    win = LossViewer()
+    win.reset(what="centroid")
+    messages = _training_messages(epochs=4, batches=10, skip_epoch_begin={1, 2})
+    real_sub = _with_queued_messages(win, messages)
+    try:
+        win._check_messages()
+        assert win.X == list(range(40))
+        assert list(win.canvas.series["train_loss"].get_xdata()) == [10, 20, 30, 40]
+        assert win.best_val_x == 40
+    finally:
+        win.sub = real_sub
         win.close()
