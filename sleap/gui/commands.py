@@ -3486,7 +3486,9 @@ class InstanceDeleteCommand(EditCommand):
 
         emptied = set()
         for lf, inst_ids in to_delete.values():
-            lf.instances = [inst for inst in lf.instances if id(inst) not in inst_ids]
+            lf.instances[:] = [
+                inst for inst in lf.instances if id(inst) not in inst_ids
+            ]
             if len(lf.instances) == 0:
                 emptied.add(id(lf))
 
