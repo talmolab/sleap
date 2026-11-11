@@ -1105,11 +1105,12 @@ def get_nvidia_info() -> tuple[str, str, list[GPUInfo]]:
         driver = stdout.split("\n")[0]
 
     # System CUDA version (from nvidia-smi header)
-    # nvidia-smi shows "CUDA Version: X.Y" in the header
+    # nvidia-smi shows "CUDA Version: X.Y" in the header; drivers 595+ show
+    # "CUDA UMD Version: X.Y" instead (617+ drop the old field)
     cuda_version = ""
     rc, stdout, _ = run_command(["nvidia-smi"])
     if rc == 0:
-        match = re.search(r"CUDA Version:\s*(\d+\.\d+)", stdout)
+        match = re.search(r"CUDA (?:UMD )?Version:\s*(\d+\.\d+)", stdout)
         if match:
             cuda_version = match.group(1)
 

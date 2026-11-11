@@ -311,6 +311,23 @@ class TestDiagnosticFunctions:
         assert isinstance(cuda, str)
         assert isinstance(gpus, list)
 
+    def test_get_nvidia_info_reads_old_and_new_cuda_header(self):
+        """CUDA version is read from both the old and the 595+ nvidia-smi header."""
+        headers = {
+            "| NVIDIA-SMI 580.95  Driver Version: 580.95  CUDA Version: 13.0 |": "13.0",
+            "| NVIDIA-SMI 617.02 KMD Version: 617.02 CUDA UMD Version: 13.4 |": "13.4",
+        }
+        for header, expected in headers.items():
+
+            def fake_run(cmd, header=header):
+                return (0, header, "") if cmd == ["nvidia-smi"] else (0, "", "")
+
+            which = patch("sleap.system_info.shutil.which", return_value="nvidia-smi")
+            run = patch("sleap.system_info.run_command", side_effect=fake_run)
+            with which, run:
+                _, cuda, _ = get_nvidia_info()
+            assert cuda == expected
+
     def test_get_pytorch_info_detailed_tuple(self):
         """Verify get_pytorch_info_detailed returns a tuple."""
         version, accelerator, cuda = get_pytorch_info_detailed()
