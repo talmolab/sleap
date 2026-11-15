@@ -3,11 +3,12 @@
 This module tests the main dialog for training/inference configuration.
 """
 
+import numpy as np
 import pytest
 from unittest.mock import patch, MagicMock
 
 
-from sleap_io import Labels, Skeleton, Video
+from sleap_io import Instance, LabeledFrame, Labels, PredictedInstance, Skeleton, Video
 
 from sleap.gui.learning import receptivefield
 from sleap.gui.learning.dialog import LearningDialog, TrainingEditorWidget
@@ -424,6 +425,170 @@ class TestGetFormData:
         frames = training_dialog.get_selected_frames_to_predict({})
         assert mock_video in frames
         assert frames[mock_video] == [5]
+
+
+# =============================================================================
+# Random Sampling Tests
+# =============================================================================
+
+
+@pytest.fixture
+def sampling_dialog(training_dialog, minimal_skeleton):
+    """Populate a real dialog with user, negative, and predicted frames."""
+
+    def populate(video_count):
+        videos = [
+            Video(filename=f"sample-{i}.mp4", open_backend=False)
+            for i in range(video_count)
+        ]
+        frames = []
+        for video in videos:
+            frames.extend(
+                [
+                    LabeledFrame(
+                        video=video,
+                        frame_idx=0,
+                        instances=[
+                            Instance.from_numpy(
+                                np.zeros((2, 2)), skeleton=minimal_skeleton
+                            )
+                        ],
+                    ),
+                    LabeledFrame(video=video, frame_idx=1, is_negative=True),
+                    LabeledFrame(
+                        video=video,
+                        frame_idx=2,
+                        instances=[
+                            PredictedInstance.from_numpy(
+                                np.zeros((2, 2)), skeleton=minimal_skeleton
+                            )
+                        ],
+                    ),
+                ]
+            )
+        training_dialog.labels = Labels(frames)
+        pool = {video: [0, 1, 2, 3, 3] for video in videos}
+        training_dialog.frame_selection = {
+            "random": pool,
+            "random_video": {videos[0]: pool[videos[0]]},
+        }
+        training_dialog.frame_target_selector.set_selection(
+            FrameTargetSelection(
+                target_key="random", sample_count=20, exclude_user_labeled=True
+            )
+        )
+        return training_dialog, videos, frames
+
+    return populate
+
+
+@pytest.fixture
+def user_label_visits(monkeypatch):
+    """Count frame classification while retaining the real property behavior."""
+    visits = []
+    original = LabeledFrame.is_user_labeled.fget
+
+    def counted(frame):
+        visits.append(frame)
+        return original(frame)
+
+    monkeypatch.setattr(LabeledFrame, "is_user_labeled", property(counted))
+    return visits
+
+
+@pytest.mark.parametrize("video_count", [1, 4, 16])
+def test_random_sample_counts_scan_labels_once_per_pool(
+    sampling_dialog, user_label_visits, video_count
+):
+    """Count each labeled frame once per pool when updating sample counts."""
+    dialog, videos, frames = sampling_dialog(video_count)
+    user_label_visits.clear()
+
+    dialog._update_random_sample_frame_counts()
+
+    assert (
+        dialog.frame_target_selector._options["random"].frame_count == 2 * video_count
+    )
+    assert dialog.frame_target_selector._options["random_video"].frame_count == 2
+    assert len(user_label_visits) == 2 * len(frames)
+
+
+@pytest.mark.parametrize("video_count", [1, 4, 16])
+def test_random_sample_selection_scans_labels_once(
+    sampling_dialog, user_label_visits, video_count
+):
+    """Classify each labeled frame once when selecting random samples."""
+    dialog, videos, frames = sampling_dialog(video_count)
+    user_label_visits.clear()
+
+    selected = dialog.get_selected_frames_to_predict({})
+
+    assert selected == {video: [2, 3] for video in videos}
+    assert len(user_label_visits) == len(frames)
+
+
+def test_random_sampling_without_exclusion_does_not_scan_labels(
+    sampling_dialog, user_label_visits
+):
+    """Keep labeled frames eligible without scanning when exclusion is disabled."""
+    dialog, videos, _ = sampling_dialog(4)
+    dialog.frame_target_selector.set_selection(
+        FrameTargetSelection(
+            target_key="random", sample_count=20, exclude_user_labeled=False
+        )
+    )
+    user_label_visits.clear()
+
+    dialog._update_random_sample_frame_counts()
+    selected = dialog.get_selected_frames_to_predict({})
+
+    assert dialog.frame_target_selector._options["random"].frame_count == 16
+    assert selected == {video: [0, 1, 2, 3] for video in videos}
+    assert user_label_visits == []
+
+
+def test_random_sampling_refreshes_exclusions_after_label_edits(
+    sampling_dialog, minimal_skeleton
+):
+    """Reflect added and removed user annotations on the next sampling call."""
+    dialog, videos, frames = sampling_dialog(4)
+    # A prediction becomes a mixed user/predicted frame while the dialog is open.
+    frames[2].instances.append(
+        Instance.from_numpy(np.zeros((2, 2)), skeleton=minimal_skeleton)
+    )
+    dialog._update_random_sample_frame_counts()
+    selected = dialog.get_selected_frames_to_predict({})
+    assert dialog.frame_target_selector._options["random"].frame_count == 7
+    assert selected[videos[0]] == [3]
+
+    # Removing that annotation restores the prediction-only frame to the pool.
+    frames[2].instances.pop()
+    dialog._update_random_sample_frame_counts()
+    selected = dialog.get_selected_frames_to_predict({})
+    assert dialog.frame_target_selector._options["random"].frame_count == 8
+    assert selected[videos[0]] == [2, 3]
+
+
+def test_random_sampling_handles_unlabeled_videos_and_empty_pools(sampling_dialog):
+    """Sample unique eligible frames and retain empty video entries."""
+    dialog, videos, _ = sampling_dialog(1)
+    unlabeled = Video(filename="unlabeled.mp4", open_backend=False)
+    empty = Video(filename="empty.mp4", open_backend=False)
+    dialog.frame_selection = {
+        "random": {videos[0]: [0, 1, 2, 3, 3], unlabeled: [4, 2, 4], empty: []}
+    }
+    dialog.frame_target_selector.set_selection(
+        FrameTargetSelection(
+            target_key="random", sample_count=1, exclude_user_labeled=True
+        )
+    )
+    selected = dialog.get_selected_frames_to_predict({})
+    assert dialog.frame_target_selector._options["random"].frame_count == 2
+    assert len(selected[videos[0]]) == 1
+    assert set(selected[videos[0]]) <= {2, 3}
+    assert len(selected[unlabeled]) == 1
+    assert set(selected[unlabeled]) <= {2, 4}
+    assert selected[empty] == []
 
 
 # =============================================================================
