@@ -515,11 +515,12 @@ class LearningDialog(QtWidgets.QDialog):
         self._target_selection_user_changed = True
         self._update_random_sample_frame_counts()
 
-    def _get_user_labeled_frame_indices(self, video: Video) -> Set[int]:
-        """Get set of frame indices that have user-labeled instances for a video."""
-        return {
-            lf.frame_idx for lf in self.labels.user_labeled_frames if lf.video == video
-        }
+    def _get_user_labeled_frame_indices_by_video(self) -> Dict[Video, Set[int]]:
+        """Index user-labeled frame indices by video in one pass."""
+        indices = {}
+        for lf in self.labels.user_labeled_frames:
+            indices.setdefault(lf.video, set()).add(lf.frame_idx)
+        return indices
 
     def _sample_frames_from_pool(
         self,
@@ -541,6 +542,11 @@ class LearningDialog(QtWidgets.QDialog):
             The actual number of frames that would be sampled.
         """
         total_sampled = 0
+        user_labeled_by_video = (
+            self._get_user_labeled_frame_indices_by_video()
+            if exclude_user_labeled
+            else {}
+        )
 
         for video, candidates in candidate_pool.items():
             if not candidates:
@@ -551,7 +557,7 @@ class LearningDialog(QtWidgets.QDialog):
 
             # Filter out user-labeled frames if requested
             if exclude_user_labeled:
-                user_labeled = self._get_user_labeled_frame_indices(video)
+                user_labeled = user_labeled_by_video.get(video, set())
                 available = available - user_labeled
 
             # Sample up to sample_count from available frames
@@ -1197,6 +1203,11 @@ class LearningDialog(QtWidgets.QDialog):
                 sample_count = selection.sample_count
                 exclude_user_labeled = selection.exclude_user_labeled
 
+                user_labeled_by_video = (
+                    self._get_user_labeled_frame_indices_by_video()
+                    if exclude_user_labeled
+                    else {}
+                )
                 frames_to_predict = {}
                 for video, candidates in candidate_frames.items():
                     if not candidates:
@@ -1208,7 +1219,7 @@ class LearningDialog(QtWidgets.QDialog):
 
                     # Filter out user-labeled frames if requested
                     if exclude_user_labeled:
-                        user_labeled = self._get_user_labeled_frame_indices(video)
+                        user_labeled = user_labeled_by_video.get(video, set())
                         available = available - user_labeled
 
                     # Sample from available frames
